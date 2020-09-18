@@ -1,0 +1,158 @@
+// Copyright © 2020 Attestant Limited.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package prysmgrpc
+
+import (
+	"context"
+	"regexp"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
+	client "github.com/attestantio/go-eth2-client"
+	"github.com/pkg/errors"
+	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
+	"github.com/rs/zerolog"
+	zerologger "github.com/rs/zerolog/log"
+	"google.golang.org/grpc"
+)
+
+// Service is an Ethereum 2 client service.
+type Service struct {
+	// Hold the initialising context to allow for streams to use it.
+	ctx context.Context
+
+	// Client connection.
+	conn    *grpc.ClientConn
+	timeout time.Duration
+
+	maxPageSize int32
+
+	// Various information from the node that never changes once we have it.
+	genesisTime                   *time.Time
+	genesisValidatorsRoot         []byte
+	slotDuration                  *time.Duration
+	slotsPerEpoch                 *uint64
+	farFutureEpoch                *uint64
+	targetAggregatorsPerCommittee *uint64
+	beaconAttesterDomain          []byte
+	beaconProposerDomain          []byte
+	randaoDomain                  []byte
+	depositDomain                 []byte
+	voluntaryExitDomain           []byte
+	selectionProofDomain          []byte
+	aggregateAndProofDomain       []byte
+	genesisForkVersion            []byte
+
+	// Event handlers.
+	beaconChainHeadUpdatedMutex    sync.RWMutex
+	beaconChainHeadUpdatedHandlers []client.BeaconChainHeadUpdatedHandler
+}
+
+// log is a service-wide logger.
+var log zerolog.Logger
+
+// New creates a new Ethereum 2 client service, connecting with Prysm GRPC.
+func New(ctx context.Context, params ...Parameter) (*Service, error) {
+	parameters, err := parseAndCheckParameters(params...)
+	if err != nil {
+		return nil, errors.Wrap(err, "problem with parameters")
+	}
+
+	// Set logging.
+	log = zerologger.With().Str("service", "client").Str("impl", "prysmgrpc").Logger()
+	if parameters.logLevel != log.GetLevel() {
+		log = log.Level(parameters.logLevel)
+	}
+
+	grpcOpts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		// Maximum receive value 32 MB
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(32 * 1024 * 1024)),
+	}
+
+	dialCtx, cancel := context.WithTimeout(ctx, parameters.timeout)
+	defer cancel()
+	conn, err := grpc.DialContext(dialCtx, parameters.address, grpcOpts...)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to dial connection")
+	}
+
+	s := &Service{
+		ctx:         ctx,
+		conn:        conn,
+		timeout:     parameters.timeout,
+		maxPageSize: 250, // Prysm default.
+	}
+
+	// Obtain the node version to confirm the connection is good.
+	if _, err := s.NodeVersion(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to confirm node connection")
+	}
+
+	// Obtain the page size.
+	if maxPageSize, err := s.obtainMaxPageSize(ctx); err != nil {
+		log.Warn().Err(err).Msg("Failed to obtain largest page size")
+	} else {
+		s.maxPageSize = maxPageSize
+		log.Trace().Int32("max_page_size", maxPageSize).Msg("Set maximum page size")
+	}
+
+	return s, nil
+}
+
+// Name provides the name of the service.
+func (s *Service) Name() string {
+	return "Prysm (gRPC)"
+}
+
+// Close the service, freeing up resources.
+func (s *Service) Close(ctx context.Context) error {
+	if err := s.conn.Close(); err != nil {
+		return errors.Wrap(err, "failed to close connection")
+	}
+	return nil
+}
+
+func (s *Service) obtainMaxPageSize(ctx context.Context) (int32, error) {
+	beaconChainClient := ethpb.NewBeaconChainClient(s.conn)
+	if beaconChainClient == nil {
+		return -1, errors.New("failed to obtain beacon chain client")
+	}
+
+	validatorsReq := &ethpb.ListValidatorsRequest{
+		PageSize: 9999999,
+	}
+
+	_, err := beaconChainClient.ListValidators(ctx, validatorsReq)
+	if err == nil {
+		// Max page size is > 9999999, that'll do for us
+		return 9999999, nil
+	}
+	if !strings.Contains(err.Error(), "Requested page size 9999999 can not be greater than max size ") {
+		return -1, errors.New("failed to obtain message with max size")
+	}
+
+	re := regexp.MustCompile(`^.*Requested page size 9999999 can not be greater than max size ([0-9]+)`)
+	res := re.FindStringSubmatch(err.Error())
+	if len(res) != 2 {
+		return -1, errors.New("unexpected error response; cannot parse for max page size")
+	}
+	maxPageSize, err := strconv.ParseInt(res[1], 10, 32)
+	if err != nil {
+		return -1, errors.New("invalid value for max page size")
+	}
+	return int32(maxPageSize), nil
+}
