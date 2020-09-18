@@ -23,19 +23,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-//// mockValidatorIDProvider implements ValidatorIDProvider.
-//type mockValidatorIDProvider struct {
-//	index  uint64
-//	pubKey []byte
-//}
-//
-//func (m *mockValidatorIDProvider) Index(ctx context.Context) (uint64, error) {
-//	return m.index, nil
-//}
-//func (m *mockValidatorIDProvider) PubKey(ctx context.Context) ([]byte, error) {
-//	return m.pubKey, nil
-//}
-//
 func TestProposerDuties(t *testing.T) {
 	tests := []struct {
 		name       string
