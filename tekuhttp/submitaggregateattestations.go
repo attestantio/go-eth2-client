@@ -53,7 +53,6 @@ func (s *Service) SubmitAggregateAttestations(ctx context.Context, aggregateAndP
 				resp = nil
 			}
 		}
-		resp, err = ioutil.ReadAll(respBodyReader)
 		if err != nil {
 			return errors.Wrap(err, "failed to obtain error message for beacon block proposal")
 		}

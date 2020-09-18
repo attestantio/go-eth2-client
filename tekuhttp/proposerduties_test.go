@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// mockValidatorIDProvider implementes ValidatorIDProvider.
+// mockValidatorIDProvider implements ValidatorIDProvider.
 type mockValidatorIDProvider struct {
 	index  uint64
 	pubKey []byte

@@ -52,7 +52,7 @@ func (s *Service) GenesisValidatorsRoot(ctx context.Context) ([]byte, error) {
 		if err := json.NewDecoder(respBodyReader).Decode(&genesisValidatorsRootJSON); err != nil {
 			return nil, errors.Wrap(err, "failed to parse beacon state")
 		}
-		genesisValidatorsRootHex := strings.TrimSuffix(strings.TrimPrefix(string(genesisValidatorsRootJSON.GenesisValidatorsRoot), `"`), `"`)
+		genesisValidatorsRootHex := strings.TrimSuffix(strings.TrimPrefix(genesisValidatorsRootJSON.GenesisValidatorsRoot, `"`), `"`)
 		genesisValidatorsRoot, err := hex.DecodeString(strings.TrimPrefix(genesisValidatorsRootHex, "0x"))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to parse genesis validators root")

@@ -109,16 +109,17 @@ func (a *AttesterDuty) UnmarshalJSON(input []byte) error {
 	if a.CommitteeLength == 0 {
 		return errors.New("committee length cannot be 0")
 	}
-	// TODO At current this is not implemented by teku, so allow it to be missing without error.
-	//if attesterDutyJSON.CommitteesAtSlot == "" {
-	//		return errors.New("committees at slot missing")
-	//}
-	if a.CommitteesAtSlot, err = strconv.ParseUint(attesterDutyJSON.CommitteesAtSlot, 10, 64); err != nil {
-		//	return errors.Wrap(err, "invalid value for committees at slot")
-	}
-	//if a.CommitteesAtSlot == 0 {
-	//	return errors.New("committees at slot cannot be 0")
-	//}
+	// At current this is not implemented by teku, so allow it to be missing without error.
+	a.CommitteesAtSlot, _ = strconv.ParseUint(attesterDutyJSON.CommitteesAtSlot, 10, 64)
+	// if attesterDutyJSON.CommitteesAtSlot == "" {
+	// 		return errors.New("committees at slot missing")
+	// }
+	// if a.CommitteesAtSlot, err = strconv.ParseUint(attesterDutyJSON.CommitteesAtSlot, 10, 64); err != nil {
+	// 	return errors.Wrap(err, "invalid value for committees at slot")
+	// }
+	// if a.CommitteesAtSlot == 0 {
+	// 	return errors.New("committees at slot cannot be 0")
+	// }
 	if attesterDutyJSON.ValidatorCommitteeIndex == "" {
 		return errors.New("validator committee index missing")
 	}

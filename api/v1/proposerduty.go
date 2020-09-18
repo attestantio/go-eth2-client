@@ -47,7 +47,7 @@ func (p *ProposerDuty) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (a *ProposerDuty) UnmarshalJSON(input []byte) error {
+func (p *ProposerDuty) UnmarshalJSON(input []byte) error {
 	var err error
 
 	var proposerDutyJSON proposerDutyJSON
@@ -57,22 +57,22 @@ func (a *ProposerDuty) UnmarshalJSON(input []byte) error {
 	if proposerDutyJSON.PubKey == "" {
 		return errors.New("public key missing")
 	}
-	if a.PubKey, err = hex.DecodeString(strings.TrimPrefix(proposerDutyJSON.PubKey, "0x")); err != nil {
+	if p.PubKey, err = hex.DecodeString(strings.TrimPrefix(proposerDutyJSON.PubKey, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for public key")
 	}
-	if len(a.PubKey) != publicKeyLength {
-		return fmt.Errorf("incorrect length %d for public key", len(a.PubKey))
+	if len(p.PubKey) != publicKeyLength {
+		return fmt.Errorf("incorrect length %d for public key", len(p.PubKey))
 	}
 	if proposerDutyJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
-	if a.Slot, err = strconv.ParseUint(proposerDutyJSON.Slot, 10, 64); err != nil {
+	if p.Slot, err = strconv.ParseUint(proposerDutyJSON.Slot, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
 	if proposerDutyJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
-	if a.ValidatorIndex, err = strconv.ParseUint(proposerDutyJSON.ValidatorIndex, 10, 64); err != nil {
+	if p.ValidatorIndex, err = strconv.ParseUint(proposerDutyJSON.ValidatorIndex, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
 

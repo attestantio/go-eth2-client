@@ -22,8 +22,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// AggregateAttestation fetches the aggregate attestation given an attestation.
-func (s *Service) AggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey []byte, slotSignature []byte) (*spec.Attestation, error) {
+// NonSpecAggregateAttestation fetches the aggregate attestation given an attestation.
+func (s *Service) NonSpecAggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey []byte, slotSignature []byte) (*spec.Attestation, error) {
 	ssz, err := attestation.Data.MarshalSSZ()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain SSZ format attestation data")

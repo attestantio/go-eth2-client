@@ -51,25 +51,23 @@ func (s *Service) pollBeaconChainHead() {
 		head, err := s.beaconHead(s.ctx)
 		if err != nil {
 			log.Warn().Err(err).Msg("Failed to poll for /beacon/head")
-		} else {
-			if !bytes.Equal(head.BlockRoot, lastBlockRoot) {
-				log.Trace().Uint64("slot", head.Slot).Msg("Received beacon chain head")
+		} else if !bytes.Equal(head.BlockRoot, lastBlockRoot) {
+			log.Trace().Uint64("slot", head.Slot).Msg("Received beacon chain head")
 
-				slotsPerEpoch, err := s.SlotsPerEpoch(s.ctx)
-				if err != nil {
-					log.Warn().Err(err).Msg("Failed to obtain slots per epoch")
-				}
-
-				lastBlockRoot = head.BlockRoot
-				s.beaconChainHeadUpdatedMutex.RLock()
-				for i := range s.beaconChainHeadUpdatedHandlers {
-					go func(handler client.BeaconChainHeadUpdatedHandler, stateRoot []byte, blockRoot []byte, slot uint64, lastSlot uint64, slotsPerEpoch uint64) {
-						handler.OnBeaconChainHeadUpdated(s.ctx, slot, blockRoot, stateRoot, lastSlot/slotsPerEpoch != slot/slotsPerEpoch)
-					}(s.beaconChainHeadUpdatedHandlers[i], head.StateRoot, head.BlockRoot, head.Slot, lastSlot, slotsPerEpoch)
-				}
-				lastSlot = head.Slot
-				s.beaconChainHeadUpdatedMutex.RUnlock()
+			slotsPerEpoch, err := s.SlotsPerEpoch(s.ctx)
+			if err != nil {
+				log.Warn().Err(err).Msg("Failed to obtain slots per epoch")
 			}
+
+			lastBlockRoot = head.BlockRoot
+			s.beaconChainHeadUpdatedMutex.RLock()
+			for i := range s.beaconChainHeadUpdatedHandlers {
+				go func(handler client.BeaconChainHeadUpdatedHandler, stateRoot []byte, blockRoot []byte, slot uint64, lastSlot uint64, slotsPerEpoch uint64) {
+					handler.OnBeaconChainHeadUpdated(s.ctx, slot, blockRoot, stateRoot, lastSlot/slotsPerEpoch != slot/slotsPerEpoch)
+				}(s.beaconChainHeadUpdatedHandlers[i], head.StateRoot, head.BlockRoot, head.Slot, lastSlot, slotsPerEpoch)
+			}
+			lastSlot = head.Slot
+			s.beaconChainHeadUpdatedMutex.RUnlock()
 		}
 		select {
 		case <-time.After(pollPeriod):

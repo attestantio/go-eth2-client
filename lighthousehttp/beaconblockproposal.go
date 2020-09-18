@@ -37,6 +37,9 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot uint64, randaoRe
 	}
 
 	specReader, err := lhToSpec(ctx, respBodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to convert lighthouse response to spec response")
+	}
 	var block *spec.BeaconBlock
 	if err := json.NewDecoder(specReader).Decode(&block); err != nil {
 		return nil, errors.Wrap(err, "failed to parse beacon block proposal")

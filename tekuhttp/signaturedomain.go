@@ -69,8 +69,3 @@ func (s *Service) SignatureDomain(ctx context.Context, domain []byte, epoch uint
 	copy(signatureDomain[4:], root[:])
 	return signatureDomain, nil
 }
-
-type forkData struct {
-	CurrentVersion        []byte `ssz-size:"4"`
-	GenesisValidatorsRoot []byte `ssz-size:"32"`
-}

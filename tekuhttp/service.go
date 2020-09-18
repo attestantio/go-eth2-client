@@ -36,19 +36,8 @@ type Service struct {
 	timeout time.Duration
 
 	// Various information from the node that never changes once we have it.
-	genesisTime                   *time.Time
-	genesisValidatorsRoot         []byte
-	slotDuration                  *time.Duration
-	slotsPerEpoch                 *uint64
-	farFutureEpoch                *uint64
-	targetAggregatorsPerCommittee *uint64
-	beaconAttesterDomain          []byte
-	beaconProposerDomain          []byte
-	randaoDomain                  []byte
-	depositDomain                 []byte
-	voluntaryExitDomain           []byte
-	selectionProofDomain          []byte
-	aggregateAndProofDomain       []byte
+	genesisTime           *time.Time
+	genesisValidatorsRoot []byte
 
 	// Event handlers.
 	beaconChainHeadUpdatedMutex    sync.RWMutex

@@ -19,10 +19,5 @@ import (
 
 // SlotsPerEpoch provides the slots per epoch of the chain.
 func (s *Service) SlotsPerEpoch(ctx context.Context) (uint64, error) {
-	if s.slotsPerEpoch == nil {
-		// Teku does not provide spec; supply it manually.
-		slotsPerEpoch := uint64(32)
-		s.slotsPerEpoch = &slotsPerEpoch
-	}
-	return *s.slotsPerEpoch, nil
+	return uint64(32), nil
 }

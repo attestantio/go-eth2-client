@@ -149,10 +149,10 @@ type DepositContractProvider interface {
 	DepositContractNetworkID(ctx context.Context) (uint64, error)
 }
 
-// OldForkProvider provides the fork at a given epoch.
-type OldForkProvider interface {
-	// OldFork provides the fork at a given epoch.
-	OldFork(ctx context.Context, epoch uint64) (*spec.Fork, error)
+// NonSpecAggregateAttestationProvider is the interface for providing aggregate attestations.
+type NonSpecAggregateAttestationProvider interface {
+	// NonSpecAggregateAttestation fetches the aggregate attestation given an attestation.
+	NonSpecAggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey []byte, slotSignature []byte) (*spec.Attestation, error)
 }
 
 // SignatureDomainProvider provides a full signature domain for a given domain at an epoch.
@@ -270,6 +270,6 @@ type AttestationDataProvider interface {
 // AggregateAttestationProvider is the interface for providing aggregate attestations.
 type AggregateAttestationProvider interface {
 	// AggregateAttestation fetches the aggregate attestation given an attestation.
-	// TODO spec only requires attestation data root and slot.
-	AggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey []byte, slotSignature []byte) (*spec.Attestation, error)
+	NonSpecAggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey []byte, slotSignature []byte) (*spec.Attestation, error)
+	AggregateAttestation(ctx context.Context, slot uint64, attestationDataRoot []byte) (*spec.Attestation, error)
 }

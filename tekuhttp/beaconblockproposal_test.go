@@ -58,7 +58,7 @@ func TestBeaconBlockProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, test := range tests {
-		nextSlot := uint64(time.Now().Sub(genesisTime).Seconds()/slotDuration.Seconds()) + 1
+		nextSlot := uint64(time.Since(genesisTime).Seconds()/slotDuration.Seconds()) + 1
 		t.Run(test.name, func(t *testing.T) {
 			block, err := service.BeaconBlockProposal(context.Background(), nextSlot, test.randaoReveal, test.graffiti)
 			require.NoError(t, err)

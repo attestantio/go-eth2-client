@@ -19,11 +19,5 @@ import (
 
 // FarFutureEpoch provides the value of the far future epoch of the chain.
 func (s *Service) FarFutureEpoch(ctx context.Context) (uint64, error) {
-	if s.farFutureEpoch == nil {
-		// At current there is no teku endpoint that provides this value,
-		// so supply it directly.
-		farFutureEpoch := uint64(18446744073709551615)
-		s.farFutureEpoch = &farFutureEpoch
-	}
-	return *s.farFutureEpoch, nil
+	return uint64(18446744073709551615), nil
 }

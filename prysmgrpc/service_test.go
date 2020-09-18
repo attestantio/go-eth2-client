@@ -37,7 +37,6 @@ func TestInterfaces(t *testing.T) {
 	require.NotNil(t, s)
 
 	// Standard API.
-	assert.Implements(t, (*client.AggregateAttestationProvider)(nil), s)
 	assert.Implements(t, (*client.AggregateAttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttestationDataProvider)(nil), s)
 	assert.Implements(t, (*client.AttestationSubmitter)(nil), s)
@@ -52,6 +51,8 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.ValidatorsProvider)(nil), s)
 	assert.Implements(t, (*client.ValidatorBalancesProvider)(nil), s)
 
+	// Non-standard APIs.
+	assert.Implements(t, (*client.NonSpecAggregateAttestationProvider)(nil), s)
 	assert.Implements(t, (*client.AggregateAndProofDomainProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconAttesterDomainProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockRootProvider)(nil), s)

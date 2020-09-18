@@ -48,7 +48,6 @@ func (s *Service) SubmitAttestation(ctx context.Context, specAttestation *spec.A
 			resp = nil
 		}
 	}
-	resp, err = ioutil.ReadAll(respBodyReader)
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain error message for attestation")
 	}

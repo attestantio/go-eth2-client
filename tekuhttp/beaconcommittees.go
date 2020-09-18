@@ -35,7 +35,11 @@ func (s *Service) BeaconCommittees(ctx context.Context, stateID string) ([]*api.
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse state ID")
 	}
-	epoch := slot / (*s.slotsPerEpoch)
+	slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain slots per epoch")
+	}
+	epoch := slot / slotsPerEpoch
 
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/beacon/committees?epoch=%d", epoch))
 	if err != nil {

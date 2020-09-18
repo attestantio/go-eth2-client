@@ -32,7 +32,7 @@ func (s *Service) SubmitAggregateAttestations(ctx context.Context, aggregateAndP
 	}
 	lhReader, err := specToLH(ctx, bytes.NewReader(specJSON))
 	if err != nil {
-		return errors.Wrap(err, "failed to convert spec JSON to lighthouse JSON")
+		return errors.Wrap(err, "failed to convert lighthouse response to spec response")
 	}
 
 	aggregateAttestations, err := ioutil.ReadAll(lhReader)
@@ -51,6 +51,9 @@ func (s *Service) SubmitAggregateAttestations(ctx context.Context, aggregateAndP
 	}()
 
 	resp, err := ioutil.ReadAll(respBodyReader)
+	if err != nil {
+		return errors.Wrap(err, "failed to read response")
+	}
 	if resp != nil && !bytes.Equal(resp, []byte("null")) {
 		return fmt.Errorf("failed to submit aggregate attestation: %s", string(resp))
 	}

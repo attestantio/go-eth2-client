@@ -20,10 +20,6 @@ import (
 
 // SlotDuration provides the duration of a slot of the chain.
 func (s *Service) SlotDuration(ctx context.Context) (time.Duration, error) {
-	if s.slotDuration == nil {
-		// Teku does not provide spec; supply it manually.
-		slotDuration := 12 * time.Second
-		s.slotDuration = &slotDuration
-	}
-	return *s.slotDuration, nil
+	// Teku does not provide spec; supply it manually.
+	return 12 * time.Second, nil
 }

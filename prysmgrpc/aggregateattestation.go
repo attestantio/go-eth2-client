@@ -22,8 +22,8 @@ import (
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
-// AggregateAttestation fetches the aggregate attestation given an attestation.
-func (s *Service) AggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey []byte, slotSignature []byte) (*spec.Attestation, error) {
+// NonSpecAggregateAttestation fetches the aggregate attestation given an attestation.
+func (s *Service) NonSpecAggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey []byte, slotSignature []byte) (*spec.Attestation, error) {
 	client := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	log.Trace().Msg("Calling SubmitAggregateSelectionProof()")
 	resp, err := client.SubmitAggregateSelectionProof(ctx, &ethpb.AggregateSelectionRequest{
@@ -40,7 +40,7 @@ func (s *Service) AggregateAttestation(ctx context.Context, attestation *spec.At
 		AggregationBits: resp.AggregateAndProof.Aggregate.AggregationBits,
 		Data: &spec.AttestationData{
 			Slot:            resp.AggregateAndProof.Aggregate.Data.Slot,
-			Index:  resp.AggregateAndProof.Aggregate.Data.CommitteeIndex,
+			Index:           resp.AggregateAndProof.Aggregate.Data.CommitteeIndex,
 			BeaconBlockRoot: resp.AggregateAndProof.Aggregate.Data.BeaconBlockRoot,
 			Source: &spec.Checkpoint{
 				Epoch: resp.AggregateAndProof.Aggregate.Data.Source.Epoch,

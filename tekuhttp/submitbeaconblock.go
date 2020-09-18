@@ -49,7 +49,6 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, specBlock *spec.SignedB
 			resp = nil
 		}
 	}
-	resp, err = ioutil.ReadAll(respBodyReader)
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain error message for beacon block proposal")
 	}

@@ -13,11 +13,9 @@
 
 package phase0
 
-const domainLength = 4
 const forkVersionLength = 4
 const hashLength = 32
 const rootLength = 32
-const privateKeyLength = 32
 const publicKeyLength = 48
 const signatureLength = 96
 const graffitiLength = 32
