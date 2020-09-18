@@ -85,6 +85,13 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		return nil, errors.Wrap(err, "failed to confirm node connection")
 	}
 
+	// Close the service on context done.
+	go func(s *Service) {
+		<-ctx.Done()
+		log.Trace().Msg("Context done; closing connection")
+		s.close()
+	}(s)
+
 	return s, nil
 }
 
@@ -139,7 +146,9 @@ func (s *Service) Name() string {
 	return "Teku (HTTP)"
 }
 
-// Close the service, freeing up resources.
-func (s *Service) Close(ctx context.Context) error {
-	return nil
+// close frees up any resources held.
+func (s *Service) close() {
+	s.beaconChainHeadUpdatedMutex.Lock()
+	s.beaconChainHeadUpdatedHandlers = make([]client.BeaconChainHeadUpdatedHandler, 0)
+	s.beaconChainHeadUpdatedMutex.Unlock()
 }

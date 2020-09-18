@@ -110,6 +110,13 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		log.Trace().Int32("max_page_size", maxPageSize).Msg("Set maximum page size")
 	}
 
+	// Close the service on context done.
+	go func(s *Service) {
+		<-ctx.Done()
+		log.Trace().Msg("Context done; closing connection")
+		s.close()
+	}(s)
+
 	return s, nil
 }
 
@@ -119,11 +126,10 @@ func (s *Service) Name() string {
 }
 
 // Close the service, freeing up resources.
-func (s *Service) Close(ctx context.Context) error {
+func (s *Service) close() {
 	if err := s.conn.Close(); err != nil {
-		return errors.Wrap(err, "failed to close connection")
+		log.Warn().Err(err).Msg("Failed to close connection")
 	}
-	return nil
 }
 
 func (s *Service) obtainMaxPageSize(ctx context.Context) (int32, error) {
