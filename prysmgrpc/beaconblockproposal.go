@@ -98,7 +98,7 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot uint64, randaoRe
 				AttestingIndices: resp.Body.AttesterSlashings[i].Attestation_1.AttestingIndices,
 				Data: &spec.AttestationData{
 					Slot:            resp.Body.AttesterSlashings[i].Attestation_1.Data.Slot,
-					Index:  resp.Body.AttesterSlashings[i].Attestation_1.Data.CommitteeIndex,
+					Index:           resp.Body.AttesterSlashings[i].Attestation_1.Data.CommitteeIndex,
 					BeaconBlockRoot: resp.Body.AttesterSlashings[i].Attestation_1.Data.BeaconBlockRoot,
 					Source: &spec.Checkpoint{
 						Epoch: resp.Body.AttesterSlashings[i].Attestation_1.Data.Source.Epoch,
@@ -115,7 +115,7 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot uint64, randaoRe
 				AttestingIndices: resp.Body.AttesterSlashings[i].Attestation_2.AttestingIndices,
 				Data: &spec.AttestationData{
 					Slot:            resp.Body.AttesterSlashings[i].Attestation_2.Data.Slot,
-					Index:  resp.Body.AttesterSlashings[i].Attestation_2.Data.CommitteeIndex,
+					Index:           resp.Body.AttesterSlashings[i].Attestation_2.Data.CommitteeIndex,
 					BeaconBlockRoot: resp.Body.AttesterSlashings[i].Attestation_2.Data.BeaconBlockRoot,
 					Source: &spec.Checkpoint{
 						Epoch: resp.Body.AttesterSlashings[i].Attestation_2.Data.Source.Epoch,
@@ -136,7 +136,7 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot uint64, randaoRe
 			AggregationBits: resp.Body.Attestations[i].AggregationBits,
 			Data: &spec.AttestationData{
 				Slot:            resp.Body.Attestations[i].Data.Slot,
-				Index:  resp.Body.Attestations[i].Data.CommitteeIndex,
+				Index:           resp.Body.Attestations[i].Data.CommitteeIndex,
 				BeaconBlockRoot: resp.Body.Attestations[i].Data.BeaconBlockRoot,
 				Source: &spec.Checkpoint{
 					Epoch: resp.Body.Attestations[i].Data.Source.Epoch,

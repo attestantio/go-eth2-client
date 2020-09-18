@@ -34,6 +34,7 @@ type depositJSON struct {
 	Data  *DepositData `json:"data"`
 }
 
+// MarshalJSON implements json.Marshaler.
 func (d *Deposit) MarshalJSON() ([]byte, error) {
 	proof := make([]string, len(d.Proof))
 	for i := range d.Proof {

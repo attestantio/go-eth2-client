@@ -44,7 +44,7 @@ func (s *Service) AttestationData(ctx context.Context, slot uint64, committeeInd
 
 	attestationData := &spec.AttestationData{
 		Slot:            resp.Slot,
-		Index:  resp.CommitteeIndex,
+		Index:           resp.CommitteeIndex,
 		BeaconBlockRoot: resp.BeaconBlockRoot,
 		Source: &spec.Checkpoint{
 			Epoch: resp.Source.Epoch,

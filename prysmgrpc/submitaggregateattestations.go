@@ -21,7 +21,7 @@ import (
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
-// SubmitAggregateAttestation submits aggregate attestations.
+// SubmitAggregateAttestations submits aggregate attestations.
 func (s *Service) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*spec.SignedAggregateAndProof) error {
 	client := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	for _, aggregateAndProof := range aggregateAndProofs {

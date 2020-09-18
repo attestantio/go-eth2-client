@@ -91,7 +91,7 @@ func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*sp
 				AttestingIndices: block.Block.Body.AttesterSlashings[i].Attestation_1.AttestingIndices,
 				Data: &spec.AttestationData{
 					Slot:            block.Block.Body.AttesterSlashings[i].Attestation_1.Data.Slot,
-					Index:  block.Block.Body.AttesterSlashings[i].Attestation_1.Data.CommitteeIndex,
+					Index:           block.Block.Body.AttesterSlashings[i].Attestation_1.Data.CommitteeIndex,
 					BeaconBlockRoot: block.Block.Body.AttesterSlashings[i].Attestation_1.Data.BeaconBlockRoot,
 					Source: &spec.Checkpoint{
 						Epoch: block.Block.Body.AttesterSlashings[i].Attestation_1.Data.Source.Epoch,
@@ -108,7 +108,7 @@ func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*sp
 				AttestingIndices: block.Block.Body.AttesterSlashings[i].Attestation_2.AttestingIndices,
 				Data: &spec.AttestationData{
 					Slot:            block.Block.Body.AttesterSlashings[i].Attestation_2.Data.Slot,
-					Index:  block.Block.Body.AttesterSlashings[i].Attestation_2.Data.CommitteeIndex,
+					Index:           block.Block.Body.AttesterSlashings[i].Attestation_2.Data.CommitteeIndex,
 					BeaconBlockRoot: block.Block.Body.AttesterSlashings[i].Attestation_2.Data.BeaconBlockRoot,
 					Source: &spec.Checkpoint{
 						Epoch: block.Block.Body.AttesterSlashings[i].Attestation_2.Data.Source.Epoch,
@@ -129,7 +129,7 @@ func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*sp
 			AggregationBits: block.Block.Body.Attestations[i].AggregationBits,
 			Data: &spec.AttestationData{
 				Slot:            block.Block.Body.Attestations[i].Data.Slot,
-				Index:  block.Block.Body.Attestations[i].Data.CommitteeIndex,
+				Index:           block.Block.Body.Attestations[i].Data.CommitteeIndex,
 				BeaconBlockRoot: block.Block.Body.Attestations[i].Data.BeaconBlockRoot,
 				Source: &spec.Checkpoint{
 					Epoch: block.Block.Body.Attestations[i].Data.Source.Epoch,

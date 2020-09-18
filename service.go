@@ -189,7 +189,7 @@ type GenesisProvider interface {
 	Genesis(ctx context.Context) (*api.Genesis, error)
 }
 
-// GenesisProvider is the interface for providing fork information.
+// ForkProvider is the interface for providing fork information.
 type ForkProvider interface {
 	// Fork fetches fork information for the given state.
 	Fork(ctx context.Context, stateID string) (*spec.Fork, error)

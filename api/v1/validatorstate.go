@@ -42,7 +42,7 @@ const (
 	ValidatorStateExitedSlashed
 	// ValidatorStateWithdrawalPossible means it is possible to withdraw funds from the validator.
 	ValidatorStateWithdrawalPossible
-	// ValidatorStateWithdrawalPossible means funds have been withdrawn from the validator.
+	// ValidatorStateWithdrawalDone means funds have been withdrawn from the validator.
 	ValidatorStateWithdrawalDone
 )
 

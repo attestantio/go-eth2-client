@@ -21,7 +21,7 @@ import (
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
-// Validators provides the validators, with their balance and status, for a given state.
+// ValidatorBalances provides the validator balances for a given state.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
 func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]uint64, error) {

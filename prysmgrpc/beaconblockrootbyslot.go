@@ -20,6 +20,7 @@ import (
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
+// BeaconBlockRootBySlot fetches a block's root given its slot.
 func (s *Service) BeaconBlockRootBySlot(ctx context.Context, slot uint64) ([]byte, error) {
 	conn := ethpb.NewBeaconChainClient(s.conn)
 
