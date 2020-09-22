@@ -13,11 +13,86 @@
 
 package v1
 
-import "time"
+import (
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/pkg/errors"
+)
 
 // Genesis provides information about the genesis of a chain.
 type Genesis struct {
-	Time           time.Time
-	ValidatorsRoot []byte
-	ForkVersion    []byte
+	GenesisTime           time.Time
+	GenesisValidatorsRoot []byte
+	GenesisForkVersion    []byte
+}
+
+// genesisJSON is the spec representation of the struct.
+type genesisJSON struct {
+	GenesisTime           string `json:"genesis_time"`
+	GenesisValidatorsRoot string `json:"genesis_validators_root"`
+	GenesisForkVersion    string `json:"genesis_fork_version"`
+}
+
+// MarshalJSON implements json.Marshaler.
+func (g *Genesis) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&genesisJSON{
+		GenesisTime:           fmt.Sprintf("%d", g.GenesisTime.Unix()),
+		GenesisValidatorsRoot: fmt.Sprintf("%#x", g.GenesisValidatorsRoot),
+		GenesisForkVersion:    fmt.Sprintf("%#x", g.GenesisForkVersion),
+	})
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (g *Genesis) UnmarshalJSON(input []byte) error {
+	var err error
+
+	var genesisJSON genesisJSON
+	if err = json.Unmarshal(input, &genesisJSON); err != nil {
+		return errors.Wrap(err, "invalid JSON")
+	}
+
+	if genesisJSON.GenesisTime == "" {
+		return errors.New("genesis time missing")
+	}
+	genesisTime, err := strconv.ParseInt(genesisJSON.GenesisTime, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for genesis time")
+	}
+	g.GenesisTime = time.Unix(genesisTime, 0)
+
+	if genesisJSON.GenesisValidatorsRoot == "" {
+		return errors.New("genesis validators root missing")
+	}
+	if g.GenesisValidatorsRoot, err = hex.DecodeString(strings.TrimPrefix(genesisJSON.GenesisValidatorsRoot, "0x")); err != nil {
+		return errors.Wrap(err, "invalid value for genesis validators root")
+	}
+	if len(g.GenesisValidatorsRoot) != rootLength {
+		return fmt.Errorf("incorrect length %d for genesis validators root", len(g.GenesisValidatorsRoot))
+	}
+
+	if genesisJSON.GenesisForkVersion == "" {
+		return errors.New("genesis fork version missing")
+	}
+	if g.GenesisForkVersion, err = hex.DecodeString(strings.TrimPrefix(genesisJSON.GenesisForkVersion, "0x")); err != nil {
+		return errors.Wrap(err, "invalid value for genesis fork version")
+	}
+	if len(g.GenesisForkVersion) != forkLength {
+		return fmt.Errorf("incorrect length %d for genesis fork version", len(g.GenesisForkVersion))
+	}
+
+	return nil
+}
+
+// String returns a string version of the structure.
+func (g *Genesis) String() string {
+	data, err := json.Marshal(g)
+	if err != nil {
+		return fmt.Sprintf("ERR: %v", err)
+	}
+	return string(data)
 }

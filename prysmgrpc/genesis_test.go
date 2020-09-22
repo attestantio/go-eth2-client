@@ -39,9 +39,9 @@ func TestGenesis(t *testing.T) {
 			genesis, err := service.Genesis(context.Background())
 			require.NoError(t, err)
 			require.NotNil(t, genesis)
-			require.NotNil(t, genesis.Time)
-			require.NotNil(t, genesis.ValidatorsRoot)
-			require.NotNil(t, genesis.ForkVersion)
+			require.NotNil(t, genesis.GenesisTime)
+			require.NotNil(t, genesis.GenesisValidatorsRoot)
+			require.NotNil(t, genesis.GenesisForkVersion)
 		})
 	}
 }

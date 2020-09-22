@@ -38,8 +38,8 @@ func (s *Service) Genesis(ctx context.Context) (*api.Genesis, error) {
 	}
 
 	return &api.Genesis{
-		Time:           genesisTime,
-		ValidatorsRoot: genesisValidatorsRoot,
-		ForkVersion:    genesisForkVersion.CurrentVersion,
+		GenesisTime:           genesisTime,
+		GenesisValidatorsRoot: genesisValidatorsRoot,
+		GenesisForkVersion:    genesisForkVersion.CurrentVersion,
 	}, nil
 }
