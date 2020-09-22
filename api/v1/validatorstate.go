@@ -104,6 +104,11 @@ func (v ValidatorState) IsAttesting() bool {
 	return v == ValidatorStateActiveOngoing || v == ValidatorStateActiveExiting
 }
 
+// HasBalance returns true if the validator has a balance.
+func (v ValidatorState) HasBalance() bool {
+	return v != ValidatorStateUnknown
+}
+
 // ValidatorToState is a helper that calculates the validator state given a validator struct.
 func ValidatorToState(validator *spec.Validator, currentEpoch uint64, farFutureEpoch uint64) ValidatorState {
 	if validator == nil {

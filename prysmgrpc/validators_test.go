@@ -23,33 +23,41 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestProposerDuties(t *testing.T) {
+func TestValidators(t *testing.T) {
 	tests := []struct {
 		name       string
-		epoch      uint64
+		stateID    string
 		validators []client.ValidatorIDProvider
-		expected   int
 	}{
 		{
-			name:     "Old",
-			epoch:    1,
-			expected: 32,
-		},
-		{
-			name:     "Current",
-			epoch:    10989,
-			expected: 32,
-		},
-		{
-			name:  "GoodWithValidators",
-			epoch: 10758,
+			name:    "Single",
+			stateID: "head",
 			validators: []client.ValidatorIDProvider{
 				&testValidatorIDProvider{
-					index:  46752,
-					pubKey: "0x93972e226623bd0c19d98d7774bb5da8230d37d3e629352d969fa7b76d03a5960c6f7e494b186940d3e4c8464d24d74a",
+					index:  1000,
+					pubKey: "0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26",
 				},
 			},
-			expected: 1,
+		},
+		{
+			name:    "Unknown",
+			stateID: "head",
+			validators: []client.ValidatorIDProvider{
+				&testValidatorIDProvider{
+					// Known.
+					index:  1000,
+					pubKey: "0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26",
+				},
+				&testValidatorIDProvider{
+					// Unknown.
+					index:  9999999,
+					pubKey: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				},
+			},
+		},
+		{
+			name:    "All",
+			stateID: "head",
 		},
 	}
 
@@ -58,10 +66,10 @@ func TestProposerDuties(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			duties, err := service.ProposerDuties(context.Background(), test.epoch, test.validators)
+			balances, err := service.Validators(context.Background(), test.stateID, test.validators)
 			require.NoError(t, err)
-			require.NotNil(t, duties)
-			require.Equal(t, test.expected, len(duties))
+			require.NotNil(t, balances)
+			require.NotEqual(t, 0, len(balances))
 		})
 	}
 }

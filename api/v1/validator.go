@@ -14,6 +14,7 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -84,4 +85,9 @@ func (v *Validator) String() string {
 		return fmt.Sprintf("ERR: %v", err)
 	}
 	return string(data)
+}
+
+// Index implements ValidatorPubKeyProvider
+func (v *Validator) PubKey(ctx context.Context) ([]byte, error) {
+	return v.Validator.PublicKey, nil
 }
