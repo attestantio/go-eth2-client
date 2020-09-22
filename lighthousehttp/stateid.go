@@ -18,6 +18,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"strconv"
 	"strings"
 
@@ -25,7 +26,7 @@ import (
 )
 
 // slotFromStateID parses the state ID and returns the relevant slot.
-func (s *Service) slotFromStateID(ctx context.Context, stateID string) (uint64, error) {
+func (s *Service) SlotFromStateID(ctx context.Context, stateID string) (uint64, error) {
 	var slot uint64
 	var err error
 	switch {
@@ -70,9 +71,9 @@ func (s *Service) slotFromStateID(ctx context.Context, stateID string) (uint64, 
 	return slot, nil
 }
 
-// epochFromStateID parses the state ID and returns the relevant epoch.
-func (s *Service) epochFromStateID(ctx context.Context, stateID string) (uint64, error) {
-	slot, err := s.slotFromStateID(ctx, stateID)
+// EpochFromStateID parses the state ID and returns the relevant epoch.
+func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (uint64, error) {
+	slot, err := s.SlotFromStateID(ctx, stateID)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain slot for state ID")
 	}
@@ -83,8 +84,8 @@ func (s *Service) epochFromStateID(ctx context.Context, stateID string) (uint64,
 	return slot / slotsPerEpoch, nil
 }
 
-// stateRootFromStateID parses the state ID and returns the relevant state root.
-func (s *Service) stateRootFromStateID(ctx context.Context, stateID string) ([]byte, error) {
+// StateRootFromStateID parses the state ID and returns the relevant state root.
+func (s *Service) StateRootFromStateID(ctx context.Context, stateID string) ([]byte, error) {
 	var stateRoot []byte
 	var err error
 	switch {
@@ -140,14 +141,10 @@ func (s *Service) stateRootFromStateID(ctx context.Context, stateID string) ([]b
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("failed to parse state ID %s as a slot", stateID))
 		}
-		signedBeaconBlock, err := s.SignedBeaconBlockBySlot(ctx, slot)
+		stateRoot, err = s.slotToState(ctx, slot)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain genesis beacon block")
+			return nil, errors.Wrap(err, fmt.Sprintf("failed to obtain state root for slot %d", slot))
 		}
-		if signedBeaconBlock == nil {
-			return nil, errors.New("failed to fetch genesis beacon block")
-		}
-		stateRoot = signedBeaconBlock.Message.StateRoot
 	}
 
 	log.Trace().Str("state", stateID).Str("state_root", fmt.Sprintf("%#x", stateRoot)).Msg("Calculated from state ID")
@@ -252,4 +249,27 @@ func (s *Service) stateToSlot(ctx context.Context, stateRoot []byte) (uint64, er
 	}
 
 	return stateResponse.BeaconState.Slot, nil
+}
+
+func (s *Service) slotToState(ctx context.Context, slot uint64) ([]byte, error) {
+	respBodyReader, err := s.get(ctx, fmt.Sprintf("/beacon/state_root?slot=%d", slot))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to request state")
+	}
+	defer func() {
+		if err := respBodyReader.Close(); err != nil {
+			log.Warn().Err(err).Msg("Failed to close HTTP body")
+		}
+	}()
+
+	stateRootBytes, err := ioutil.ReadAll(respBodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read state root")
+	}
+	stateRootHex := strings.TrimSuffix(strings.TrimPrefix(string(stateRootBytes), `"0x`), `"`)
+	stateRoot, err := hex.DecodeString(stateRootHex)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse state root")
+	}
+	return stateRoot, nil
 }

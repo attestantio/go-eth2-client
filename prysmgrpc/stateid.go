@@ -24,9 +24,9 @@ import (
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
-// epochFromStateID obtains the epoch given the state ID.
-func (s *Service) epochFromStateID(ctx context.Context, stateID string) (uint64, error) {
-	slot, err := s.slotFromStateID(ctx, stateID)
+// EpochFromStateID obtains the epoch given the state ID.
+func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (uint64, error) {
+	slot, err := s.SlotFromStateID(ctx, stateID)
 	if err != nil {
 		return 0, err
 	}
@@ -37,8 +37,8 @@ func (s *Service) epochFromStateID(ctx context.Context, stateID string) (uint64,
 	return slot / slotsPerEpoch, nil
 }
 
-// slotFromStateID obtains the slot given the state ID.
-func (s *Service) slotFromStateID(ctx context.Context, stateID string) (uint64, error) {
+// SlotFromStateID obtains the slot given the state ID.
+func (s *Service) SlotFromStateID(ctx context.Context, stateID string) (uint64, error) {
 	var slot uint64
 	var err error
 	switch {

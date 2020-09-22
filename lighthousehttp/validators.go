@@ -39,23 +39,9 @@ type validatorsJSON struct {
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
 func (s *Service) Validators(ctx context.Context, stateID string, validatorIDs []client.ValidatorIDProvider) (map[uint64]*api.Validator, error) {
-	stateRoot, err := s.stateRootFromStateID(ctx, stateID)
+	stateRoot, err := s.StateRootFromStateID(ctx, stateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain state root")
-	}
-	slot, err := s.slotFromStateID(ctx, stateID)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain slot")
-	}
-
-	slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain slots per epoch")
-	}
-	epoch := slot / slotsPerEpoch
-	farFutureEpoch, err := s.FarFutureEpoch(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain far future epoch")
 	}
 
 	// Lighthouse has different calls depending on if the caller wants all or a filtered set of validators.
@@ -102,6 +88,19 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIDs [
 		return nil, errors.Wrap(err, "failed to parse validators")
 	}
 
+	slot, err := s.SlotFromStateID(ctx, stateID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain slot")
+	}
+	slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain slots per epoch")
+	}
+	epoch := slot / slotsPerEpoch
+	farFutureEpoch, err := s.FarFutureEpoch(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain far future epoch")
+	}
 	res := make(map[uint64]*api.Validator)
 	for _, validator := range validators {
 		if validator.Index == "" {

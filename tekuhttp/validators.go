@@ -41,7 +41,7 @@ type validatorsValidatorJSON struct {
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
 func (s *Service) Validators(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]*api.Validator, error) {
-	slot, err := s.slotFromStateID(ctx, stateID)
+	slot, err := s.SlotFromStateID(ctx, stateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain slot")
 	}

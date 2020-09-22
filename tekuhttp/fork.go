@@ -41,7 +41,7 @@ func (s *Service) Fork(ctx context.Context, stateID string) (*spec.Fork, error) 
 	// There is no way to obtain the fork version at a given epoch.  The only
 	// check we can make here is to ensure that the epoch of the fork is before
 	// the requested epoch.
-	epoch, err := s.epochFromStateID(ctx, stateID)
+	epoch, err := s.EpochFromStateID(ctx, stateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain epoch from state ID")
 	}

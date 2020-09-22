@@ -30,7 +30,7 @@ type beaconCommitteesResponse struct {
 
 // BeaconCommittees fetches the chain's beacon committees given a state.
 func (s *Service) BeaconCommittees(ctx context.Context, stateID string) ([]*api.BeaconCommittee, error) {
-	slot, err := s.slotFromStateID(ctx, stateID)
+	slot, err := s.SlotFromStateID(ctx, stateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse state ID")
 	}

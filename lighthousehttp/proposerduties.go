@@ -26,9 +26,8 @@ import (
 
 // ProposerDuties obtains proposer duties.
 func (s *Service) ProposerDuties(ctx context.Context, epoch uint64, validators []client.ValidatorIDProvider) ([]*api.ProposerDuty, error) {
-	// Lighthouse requires validator IDs.
 	if len(validators) == 0 {
-		return nil, errors.New("no validator IDs specified")
+		return s.proposerDuties(ctx, epoch)
 	}
 
 	var reqBodyReader bytes.Buffer
@@ -67,6 +66,35 @@ func (s *Service) ProposerDuties(ctx context.Context, epoch uint64, validators [
 	}
 
 	respBodyReader, err := s.post(ctx, "/validator/duties", &reqBodyReader)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to request proposer duties")
+	}
+	defer func() {
+		if err := respBodyReader.Close(); err != nil {
+			log.Warn().Err(err).Msg("Failed to close HTTP body")
+		}
+	}()
+
+	var resp []*dutyJSON
+	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
+		return nil, errors.Wrap(err, "failed to parse proposer duties response")
+	}
+
+	proposerDuties := make([]*api.ProposerDuty, 0, len(resp))
+	for i := range resp {
+		for _, slot := range resp[i].BlockProposalSlots {
+			proposerDuties = append(proposerDuties, &api.ProposerDuty{
+				ValidatorIndex: resp[i].ValidatorIndex,
+				Slot:           slot,
+			})
+		}
+	}
+
+	return proposerDuties, nil
+}
+
+func (s *Service) proposerDuties(ctx context.Context, epoch uint64) ([]*api.ProposerDuty, error) {
+	respBodyReader, err := s.get(ctx, fmt.Sprintf("/validator/duties/all?epoch=%d", epoch))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request proposer duties")
 	}

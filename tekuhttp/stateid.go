@@ -24,8 +24,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// slotFromStateID parses the state ID and returns the relevant slot.
-func (s *Service) slotFromStateID(ctx context.Context, stateID string) (uint64, error) {
+// SlotFromStateID parses the state ID and returns the relevant slot.
+func (s *Service) SlotFromStateID(ctx context.Context, stateID string) (uint64, error) {
 	var slot uint64
 	var err error
 	switch {
@@ -70,9 +70,9 @@ func (s *Service) slotFromStateID(ctx context.Context, stateID string) (uint64, 
 	return slot, nil
 }
 
-// epochFromStateID parses the state ID and returns the relevant epoch.
-func (s *Service) epochFromStateID(ctx context.Context, stateID string) (uint64, error) {
-	slot, err := s.slotFromStateID(ctx, stateID)
+// EpochFromStateID parses the state ID and returns the relevant epoch.
+func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (uint64, error) {
+	slot, err := s.SlotFromStateID(ctx, stateID)
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to obtain slot for state ID")
 	}

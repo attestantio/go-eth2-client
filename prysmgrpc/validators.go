@@ -38,7 +38,7 @@ func (s *Service) Validators(ctx context.Context, stateID string, validators []c
 func (s *Service) validators(ctx context.Context, stateID string) (map[uint64]*api.Validator, error) {
 	// The state ID could by dynamic ('head', 'finalized', etc.).  Becase we are making multiple calls and don't want to
 	// fetch data from different states we resolve it to an epoch and use that.
-	epoch, err := s.epochFromStateID(ctx, stateID)
+	epoch, err := s.EpochFromStateID(ctx, stateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to lock state ID")
 	}
@@ -93,7 +93,16 @@ func (s *Service) validators(ctx context.Context, stateID string) (map[uint64]*a
 			}
 		}
 
+		highest := uint64(0)
+		for i := range res {
+			if res[i].Index > highest {
+				highest = res[i].Index
+			}
+		}
+		log.Warn().Int("validators", len(validatorsResp.ValidatorList)).Int("parsed_validators", len(res)).Uint64("highest", highest).Msg("Parsed validators")
+
 		if validatorsResp.NextPageToken == "" {
+			// Means we're done.
 			break
 		}
 		pageToken = validatorsResp.NextPageToken
@@ -120,7 +129,7 @@ func (s *Service) validators(ctx context.Context, stateID string) (map[uint64]*a
 func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]*api.Validator, error) {
 	// The state ID could by dynamic ('head', 'finalized', etc.).  Becase we are making multiple calls and don't want to
 	// fetch data from different states we resolve it to an epoch and use that.
-	epoch, err := s.epochFromStateID(ctx, stateID)
+	epoch, err := s.EpochFromStateID(ctx, stateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to lock state ID")
 	}

@@ -37,7 +37,7 @@ func TestProposerDuties(t *testing.T) {
 		},
 		{
 			name:     "Current",
-			epoch:    10989,
+			epoch:    10990,
 			expected: 32,
 		},
 		{

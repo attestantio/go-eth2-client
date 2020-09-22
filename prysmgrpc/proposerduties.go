@@ -37,6 +37,7 @@ func (s *Service) ProposerDuties(ctx context.Context, epoch uint64, validators [
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain validators")
 		}
+		log.Trace().Int("validators", len(prysmValidators)).Msg("Obtained validators")
 
 		validators = make([]client.ValidatorIDProvider, 0, len(prysmValidators))
 		for _, prysmValidator := range prysmValidators {

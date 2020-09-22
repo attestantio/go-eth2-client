@@ -41,7 +41,7 @@ func (s *Service) validatorBalances(ctx context.Context, stateID string) (map[ui
 		PageSize: s.maxPageSize,
 	}
 
-	epoch, err := s.epochFromStateID(ctx, stateID)
+	epoch, err := s.EpochFromStateID(ctx, stateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain epoch from state ID")
 	}
@@ -91,7 +91,7 @@ func (s *Service) validatorBalancesByPubKeys(ctx context.Context, stateID string
 		PageSize: s.maxPageSize,
 	}
 
-	epoch, err := s.epochFromStateID(ctx, stateID)
+	epoch, err := s.EpochFromStateID(ctx, stateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain epoch from state ID")
 	}

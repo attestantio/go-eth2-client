@@ -49,7 +49,7 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.ReadCloser, erro
 		if err := resp.Body.Close(); err != nil {
 			log.Warn().Err(err).Msg("Failed to close response body")
 		}
-		return nil, fmt.Errorf("HTTP call to lighthouse endpoint failed with status %d", resp.StatusCode)
+		return nil, fmt.Errorf("HTTP call to lighthouse endpoint %s failed with status %d", url, resp.StatusCode)
 	}
 
 	if e := log.Trace(); e.Enabled() {

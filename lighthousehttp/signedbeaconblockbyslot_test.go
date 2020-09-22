@@ -28,6 +28,10 @@ func TestSignedBeaconBlockBySlot(t *testing.T) {
 		slot uint64
 	}{
 		{
+			name: "Genesis",
+			slot: 0,
+		},
+		{
 			name: "Missing",
 			slot: 1,
 		},

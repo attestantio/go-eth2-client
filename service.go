@@ -25,6 +25,12 @@ import (
 type Service interface {
 	// Name returns the name of the client.
 	Name() string
+
+	// EpochFromStateID converts a state ID to its epoch.
+	EpochFromStateID(ctx context.Context, stateID string) (uint64, error)
+
+	// SlotFromStateID converts a state ID to its slot.
+	SlotFromStateID(ctx context.Context, stateID string) (uint64, error)
 }
 
 // NodeVersionProvider is the interface for providing the node version.

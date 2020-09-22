@@ -47,6 +47,10 @@ func TestProposerDuties(t *testing.T) {
 			epoch: 1,
 		},
 		{
+			name:  "Current",
+			epoch: 10989,
+		},
+		{
 			name:  "GoodWithValidators",
 			epoch: 4092,
 			validators: []client.ValidatorIDProvider{
