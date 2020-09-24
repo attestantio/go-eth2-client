@@ -24,15 +24,11 @@ import (
 // BeaconAttesterDomain provides the beacon attester domain of the chain.
 func (s *Service) BeaconAttesterDomain(ctx context.Context) ([]byte, error) {
 	if s.beaconAttesterDomain == nil {
-		respBodyReader, err := s.get(ctx, "/spec")
+		respBodyReader, cancel, err := s.get(ctx, "/spec")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain configuration")
 		}
-		defer func() {
-			if err := respBodyReader.Close(); err != nil {
-				log.Warn().Err(err).Msg("Failed to close HTTP body")
-			}
-		}()
+		defer cancel()
 		var cfg map[string]interface{}
 		if err := json.NewDecoder(respBodyReader).Decode(&cfg); err != nil {
 			return nil, errors.Wrap(err, "failed to parse configuration")

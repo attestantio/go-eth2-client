@@ -30,7 +30,9 @@ func (s *Service) BeaconBlockRootBySlot(ctx context.Context, slot uint64) ([]byt
 	} else {
 		req.QueryFilter = &ethpb.ListBlocksRequest_Slot{Slot: slot}
 	}
-	resp, err := conn.ListBlocks(ctx, req)
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	resp, err := conn.ListBlocks(opCtx, req)
+	cancel()
 	if err != nil {
 		return nil, errors.Wrap(err, "call to ListBlocks() failed")
 	}

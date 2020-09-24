@@ -41,32 +41,39 @@ func TestProposerDuties(t *testing.T) {
 		name       string
 		epoch      uint64
 		validators []client.ValidatorIDProvider
+		expected   int
 	}{
 		{
-			name:  "Good",
-			epoch: 1,
+			name:     "Old",
+			epoch:    1,
+			expected: 32,
 		},
 		{
-			name:  "Current",
-			epoch: 10989,
+			name:     "Current",
+			epoch:    10989,
+			expected: 32,
 		},
 		{
 			name:  "GoodWithValidators",
 			epoch: 4092,
 			validators: []client.ValidatorIDProvider{
-				&mockValidatorIDProvider{
-					index:  3243,
-					pubKey: []byte{0x82, 0x37, 0x68, 0xb7, 0xd7, 0x94, 0x94, 0xf9, 0x50, 0xe3, 0x5d, 0x6d, 0xe9, 0xef, 0x4c, 0x0b, 0x4b, 0x1a, 0x5f, 0xef, 0xa4, 0xff, 0xba, 0x5f, 0x64, 0x88, 0xde, 0x99, 0x6b, 0x64, 0x44, 0x0b, 0x04, 0xc6, 0x03, 0xae, 0x13, 0x2c, 0xc4, 0x1e, 0x98, 0xe6, 0xe6, 0x55, 0xf1, 0x83, 0xcc, 0xd6},
+				&testValidatorIDProvider{
+					index:  16056,
+					pubKey: "0x9553a63a58d3a776a2483184e5af37aedf131b82ef1e0bcba7b3c01818f490371aac0c6f9a327fb7eb89190af7b085a5",
 				},
-				&mockValidatorIDProvider{
-					index:  3284,
-					pubKey: []byte{0xb8, 0x02, 0xF8, 0xE6, 0x6B, 0x5A, 0xB0, 0x35, 0xE8, 0x1C, 0xD2, 0x66, 0xB3, 0x1A, 0xB4, 0xCF, 0x04, 0x9F, 0x80, 0xAE, 0x14, 0x7F, 0x96, 0x41, 0xDe, 0x14, 0x47, 0x6f, 0x13, 0x0b, 0xfc, 0x1d, 0x3f, 0xfb, 0x8d, 0xc6, 0x43, 0x08, 0xc0, 0x64, 0x90, 0xe9, 0x7a, 0x73, 0xda, 0x78, 0x2f, 0xfa},
+				&testValidatorIDProvider{
+					index:  35476,
+					pubKey: "0x9216091f3e4fe0b0562a6c5bf6e8c35cf0c3b321b6f415de6631d7d12e58603e1e23c8d78f449b601f8d244d26f70aa7",
 				},
 			},
+			expected: 2,
 		},
 	}
 
-	service, err := tekuhttp.New(context.Background(), tekuhttp.WithAddress(os.Getenv("TEKUHTTP_ADDRESS")))
+	service, err := tekuhttp.New(context.Background(),
+		tekuhttp.WithAddress(os.Getenv("TEKUHTTP_ADDRESS")),
+		tekuhttp.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	for _, test := range tests {
@@ -74,6 +81,7 @@ func TestProposerDuties(t *testing.T) {
 			duties, err := service.ProposerDuties(context.Background(), test.epoch, test.validators)
 			require.NoError(t, err)
 			require.NotNil(t, duties)
+			require.Equal(t, test.expected, len(duties))
 		})
 	}
 }

@@ -25,7 +25,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// slotFromStateID parses the state ID and returns the relevant slot.
+// SlotFromStateID parses the state ID and returns the relevant slot.
 func (s *Service) SlotFromStateID(ctx context.Context, stateID string) (uint64, error) {
 	var slot uint64
 	var err error
@@ -176,15 +176,11 @@ type beaconHeadJSON struct {
 }
 
 func (s *Service) beaconHead(ctx context.Context) (*beaconHead, error) {
-	respBodyReader, err := s.get(ctx, "/beacon/head")
+	respBodyReader, cancel, err := s.get(ctx, "/beacon/head")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon head")
 	}
-	defer func() {
-		if err := respBodyReader.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close HTTP body")
-		}
-	}()
+	defer cancel()
 
 	beaconHeadResponse := beaconHeadJSON{}
 	if err := json.NewDecoder(respBodyReader).Decode(&beaconHeadResponse); err != nil {
@@ -233,15 +229,11 @@ type beaconStateJSON struct {
 }
 
 func (s *Service) stateToSlot(ctx context.Context, stateRoot []byte) (uint64, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/beacon/state?root=%#x", stateRoot))
+	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/beacon/state?root=%#x", stateRoot))
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to request state")
 	}
-	defer func() {
-		if err := respBodyReader.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close HTTP body")
-		}
-	}()
+	defer cancel()
 
 	stateResponse := stateJSON{}
 	if err := json.NewDecoder(respBodyReader).Decode(&stateResponse); err != nil {
@@ -252,15 +244,11 @@ func (s *Service) stateToSlot(ctx context.Context, stateRoot []byte) (uint64, er
 }
 
 func (s *Service) slotToState(ctx context.Context, slot uint64) ([]byte, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/beacon/state_root?slot=%d", slot))
+	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/beacon/state_root?slot=%d", slot))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request state")
 	}
-	defer func() {
-		if err := respBodyReader.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close HTTP body")
-		}
-	}()
+	defer cancel()
 
 	stateRootBytes, err := ioutil.ReadAll(respBodyReader)
 	if err != nil {

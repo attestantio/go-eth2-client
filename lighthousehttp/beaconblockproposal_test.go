@@ -47,14 +47,16 @@ func TestBeaconBlockProposal(t *testing.T) {
 		},
 	}
 
-	ctx := context.Background()
-	service, err := lighthousehttp.New(ctx, lighthousehttp.WithAddress("localhost:15200"), lighthousehttp.WithAddress(os.Getenv("LIGHTHOUSEHTTP_ADDRESS")))
+	service, err := lighthousehttp.New(context.Background(),
+		lighthousehttp.WithAddress(os.Getenv("LIGHTHOUSEHTTP_ADDRESS")),
+		lighthousehttp.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	// Need to fetch current slot for proposal.
-	genesisTime, err := service.GenesisTime(ctx)
+	genesisTime, err := service.GenesisTime(context.Background())
 	require.NoError(t, err)
-	slotDuration, err := service.SlotDuration(ctx)
+	slotDuration, err := service.SlotDuration(context.Background())
 	require.NoError(t, err)
 
 	for _, test := range tests {

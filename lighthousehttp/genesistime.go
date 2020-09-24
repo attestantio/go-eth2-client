@@ -25,15 +25,12 @@ import (
 // GenesisTime provides the genesis time of the chain.
 func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
 	if s.genesisTime == nil {
-		respBodyReader, err := s.get(ctx, "/beacon/genesis_time")
+		respBodyReader, cancel, err := s.get(ctx, "/beacon/genesis_time")
 		if err != nil {
 			return time.Now(), errors.Wrap(err, "failed to obtain genesis time")
 		}
-		defer func() {
-			if err := respBodyReader.Close(); err != nil {
-				log.Warn().Err(err).Msg("Failed to close HTTP body")
-			}
-		}()
+		defer cancel()
+
 		genesisTimeBytes, err := ioutil.ReadAll(respBodyReader)
 		if err != nil {
 			return time.Now(), errors.Wrap(err, "failed to read genesis time")

@@ -31,15 +31,11 @@ func (s *Service) SubmitAttestation(ctx context.Context, specAttestation *spec.A
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	respBodyReader, err := s.post(ctx, "/validator/attestation", bytes.NewReader(specJSON))
+	respBodyReader, cancel, err := s.post(ctx, "/validator/attestation", bytes.NewReader(specJSON))
 	if err != nil {
 		return errors.Wrap(err, "failed to POST to /validator/attestation")
 	}
-	defer func() {
-		if err := respBodyReader.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close HTTP body")
-		}
-	}()
+	defer cancel()
 
 	var resp []byte
 	if respBodyReader != nil {

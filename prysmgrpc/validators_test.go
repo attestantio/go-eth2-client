@@ -30,6 +30,14 @@ func TestValidators(t *testing.T) {
 		validators []client.ValidatorIDProvider
 	}{
 		{
+			name:    "Genesis",
+			stateID: "genesis",
+		},
+		{
+			name:    "Old",
+			stateID: "32",
+		},
+		{
 			name:    "Single",
 			stateID: "head",
 			validators: []client.ValidatorIDProvider{
@@ -61,7 +69,10 @@ func TestValidators(t *testing.T) {
 		},
 	}
 
-	service, err := prysmgrpc.New(context.Background(), prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")))
+	service, err := prysmgrpc.New(context.Background(),
+		prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")),
+		prysmgrpc.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	for _, test := range tests {

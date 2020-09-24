@@ -38,15 +38,11 @@ func (s *Service) GenesisValidatorsRoot(ctx context.Context) ([]byte, error) {
 		if slot > 0 {
 			slot--
 		}
-		respBodyReader, err := s.get(ctx, fmt.Sprintf("/beacon/state?slot=%d", slot))
+		respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/beacon/state?slot=%d", slot))
 		if err != nil {
 			return nil, errors.Wrap(err, fmt.Sprintf("failed to obtain beacon state for slot %d", slot))
 		}
-		defer func() {
-			if err := respBodyReader.Close(); err != nil {
-				log.Warn().Err(err).Msg("Failed to close HTTP body")
-			}
-		}()
+		defer cancel()
 
 		var genesisValidatorsRootJSON *genesisValidatorsRootJSON
 		if err := json.NewDecoder(respBodyReader).Decode(&genesisValidatorsRootJSON); err != nil {

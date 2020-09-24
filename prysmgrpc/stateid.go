@@ -77,6 +77,10 @@ func (s *Service) SlotFromStateID(ctx context.Context, stateID string) (uint64, 
 }
 
 func (s *Service) beaconHead(ctx context.Context) (*ethpb.ChainHead, error) {
-	beaconChainClient := ethpb.NewBeaconChainClient(s.conn)
-	return beaconChainClient.GetChainHead(ctx, &types.Empty{})
+	conn := ethpb.NewBeaconChainClient(s.conn)
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	head, err := conn.GetChainHead(opCtx, &types.Empty{})
+	cancel()
+
+	return head, err
 }

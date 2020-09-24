@@ -63,35 +63,3 @@ func (s *Service) CurrentSlot(ctx context.Context) (uint64, error) {
 
 	return currentSlot, nil
 }
-
-//func (s *Service) beaconHead(ctx context.Context) ([]byte, []byte, uint64, error) {
-//	respBodyReader, err := s.get(ctx, "/beacon/head")
-//	if err != nil {
-//		log.Trace().Err(err).Msg("Request failed")
-//		return nil, nil, 0, errors.Wrap(err, "failed to request beacon head")
-//	}
-//	specReader, err := lhToSpec(ctx, respBodyReader)
-//	beaconHeadResponse := &struct {
-//		Slot      string `json:"slot"`
-//		StateRoot string `json:"state_root"`
-//		BlockRoot string `json:"block_root"`
-//	}{}
-//	if err := json.NewDecoder(specReader).Decode(&beaconHeadResponse); err != nil {
-//		return nil, nil, 0, errors.Wrap(err, "failed to parse beacon head")
-//	}
-//
-//	slot, err := strconv.ParseUint(beaconHeadResponse.Slot, 10, 64)
-//	if err != nil {
-//		return nil, nil, 0, errors.Wrap(err, "failed to parse beacon head slot")
-//	}
-//	stateRoot, err := hex.DecodeString(strings.TrimPrefix(beaconHeadResponse.StateRoot, "0x"))
-//	if err != nil {
-//		return nil, nil, 0, errors.Wrap(err, "failed to parse beacon head state root")
-//	}
-//	blockRoot, err := hex.DecodeString(strings.TrimPrefix(beaconHeadResponse.BlockRoot, "0x"))
-//	if err != nil {
-//		return nil, nil, 0, errors.Wrap(err, "failed to parse beacon head block root")
-//	}
-//
-//	return stateRoot, blockRoot, slot, nil
-//}

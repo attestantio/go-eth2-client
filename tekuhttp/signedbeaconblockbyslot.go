@@ -35,17 +35,16 @@ var signedBeaconBlockRe1 = regexp.MustCompile(`"header_([12])"`)
 
 // SignedBeaconBlockBySlot fetches a signed beacon block given its slot.
 func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*spec.SignedBeaconBlock, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/beacon/block?slot=%d", slot))
+	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/beacon/block?slot=%d", slot))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request signed beacon block")
 	}
+	defer cancel()
+
 	// Need to munge the data, so read it in.
 	data, err := ioutil.ReadAll(respBodyReader)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read signed beacon block")
-	}
-	if err := respBodyReader.Close(); err != nil {
-		log.Warn().Err(err).Msg("Failed to close HTTP body")
 	}
 	data = signedBeaconBlockRe1.ReplaceAll(data, []byte(`"signed_header_$1"`))
 

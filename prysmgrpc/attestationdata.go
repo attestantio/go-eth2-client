@@ -24,12 +24,14 @@ import (
 
 // AttestationData obtains attestation data for a slot.
 func (s *Service) AttestationData(ctx context.Context, slot uint64, committeeIndex uint64) (*spec.AttestationData, error) {
-	beaconNodeClient := ethpb.NewBeaconNodeValidatorClient(s.conn)
+	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	log.Trace().Msg("Calling GetAttestationData()")
-	resp, err := beaconNodeClient.GetAttestationData(ctx, &ethpb.AttestationDataRequest{
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	resp, err := conn.GetAttestationData(opCtx, &ethpb.AttestationDataRequest{
 		Slot:           slot,
 		CommitteeIndex: committeeIndex,
 	})
+	cancel()
 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain attestation data")

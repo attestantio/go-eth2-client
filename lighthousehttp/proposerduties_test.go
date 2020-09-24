@@ -15,7 +15,9 @@ package lighthousehttp_test
 
 import (
 	"context"
+	"encoding/hex"
 	"os"
+	"strings"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -23,17 +25,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// mockValidatorIDProvider implements ValidatorIDProvider.
-type mockValidatorIDProvider struct {
+// testValidatorIDProvider implements ValidatorIDProvider.
+type testValidatorIDProvider struct {
 	index  uint64
-	pubKey []byte
+	pubKey string
 }
 
-func (m *mockValidatorIDProvider) Index(ctx context.Context) (uint64, error) {
-	return m.index, nil
+func (t *testValidatorIDProvider) Index(ctx context.Context) (uint64, error) {
+	return t.index, nil
 }
-func (m *mockValidatorIDProvider) PubKey(ctx context.Context) ([]byte, error) {
-	return m.pubKey, nil
+func (t *testValidatorIDProvider) PubKey(ctx context.Context) ([]byte, error) {
+	return hex.DecodeString(strings.TrimPrefix(t.pubKey, "0x"))
 }
 
 func TestProposerDuties(t *testing.T) {
@@ -44,36 +46,36 @@ func TestProposerDuties(t *testing.T) {
 		expected   int
 	}{
 		{
-			name:     "Good",
-			epoch:    4092,
+			name:     "Old",
+			epoch:    1,
+			expected: 32,
+		},
+		{
+			name:     "Recent",
+			epoch:    10989,
 			expected: 32,
 		},
 		{
 			name:  "GoodWithValidators",
 			epoch: 4092,
 			validators: []client.ValidatorIDProvider{
-				&mockValidatorIDProvider{
-					index: 16056,
-					pubKey: []byte{
-						0x95, 0x53, 0xa6, 0x3a, 0x58, 0xd3, 0xa7, 0x76, 0xa2, 0x48, 0x31, 0x84, 0xe5, 0xaf, 0x37, 0xae,
-						0xdf, 0x13, 0x1b, 0x82, 0xef, 0x1e, 0x0b, 0xcb, 0xa7, 0xb3, 0xc0, 0x18, 0x18, 0xf4, 0x90, 0x37,
-						0x1a, 0xac, 0x0c, 0x6f, 0x9a, 0x32, 0x7f, 0xb7, 0xeb, 0x89, 0x19, 0x0a, 0xf7, 0xb0, 0x85, 0xa5,
-					},
+				&testValidatorIDProvider{
+					index:  16056,
+					pubKey: "0x9553a63a58d3a776a2483184e5af37aedf131b82ef1e0bcba7b3c01818f490371aac0c6f9a327fb7eb89190af7b085a5",
 				},
-				&mockValidatorIDProvider{
-					index: 35476,
-					pubKey: []byte{
-						0x92, 0x16, 0x09, 0x1f, 0x3e, 0x4f, 0xe0, 0xb0, 0x56, 0x2a, 0x6c, 0x5b, 0xf6, 0xe8, 0xc3, 0x5c,
-						0xf0, 0xc3, 0xb3, 0x21, 0xb6, 0xf4, 0x15, 0xde, 0x66, 0x31, 0xd7, 0xd1, 0x2e, 0x58, 0x60, 0x3e,
-						0x1e, 0x23, 0xc8, 0xd7, 0x8f, 0x44, 0x9b, 0x60, 0x1f, 0x8d, 0x24, 0x4d, 0x26, 0xf7, 0x0a, 0xa7,
-					},
+				&testValidatorIDProvider{
+					index:  35476,
+					pubKey: "0x9216091f3e4fe0b0562a6c5bf6e8c35cf0c3b321b6f415de6631d7d12e58603e1e23c8d78f449b601f8d244d26f70aa7",
 				},
 			},
 			expected: 2,
 		},
 	}
 
-	service, err := lighthousehttp.New(context.Background(), lighthousehttp.WithAddress(os.Getenv("LIGHTHOUSEHTTP_ADDRESS")))
+	service, err := lighthousehttp.New(context.Background(),
+		lighthousehttp.WithAddress(os.Getenv("LIGHTHOUSEHTTP_ADDRESS")),
+		lighthousehttp.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	for _, test := range tests {

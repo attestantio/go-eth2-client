@@ -41,9 +41,11 @@ func (s *Service) SubmitAttestation(ctx context.Context, attestation *spec.Attes
 		Signature: attestation.Signature,
 	}
 
-	client := ethpb.NewBeaconNodeValidatorClient(s.conn)
+	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	log.Trace().Msg("Calling ProposeAttestation()")
-	_, err := client.ProposeAttestation(ctx, prysmAttestation)
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	_, err := conn.ProposeAttestation(opCtx, prysmAttestation)
+	cancel()
 	if err != nil {
 		return errors.Wrap(err, "failed to submit attestation")
 	}

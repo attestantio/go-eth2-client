@@ -32,15 +32,11 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, specBlock *spec.SignedB
 	}
 
 	log.Trace().Msg("Sending to /validator/block")
-	respBodyReader, err := s.post(ctx, "/validator/block", bytes.NewBuffer(specJSON))
+	respBodyReader, cancel, err := s.post(ctx, "/validator/block", bytes.NewBuffer(specJSON))
 	if err != nil {
 		return errors.Wrap(err, "failed to send to /validator/block")
 	}
-	defer func() {
-		if err := respBodyReader.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close HTTP body")
-		}
-	}()
+	defer cancel()
 
 	var resp []byte
 	if respBodyReader != nil {

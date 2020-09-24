@@ -31,7 +31,10 @@ func TestNodeVersion(t *testing.T) {
 		},
 	}
 
-	service, err := prysmgrpc.New(context.Background(), prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")))
+	service, err := prysmgrpc.New(context.Background(),
+		prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")),
+		prysmgrpc.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	for _, test := range tests {

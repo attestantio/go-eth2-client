@@ -25,8 +25,10 @@ import (
 // SlotsPerEpoch provides the number of slots per epoch of the chain.
 func (s *Service) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 	if s.slotsPerEpoch == nil {
-		client := ethpb.NewBeaconChainClient(s.conn)
-		config, err := client.GetBeaconConfig(ctx, &types.Empty{})
+		conn := ethpb.NewBeaconChainClient(s.conn)
+		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+		config, err := conn.GetBeaconConfig(opCtx, &types.Empty{})
+		cancel()
 		if err != nil {
 			return 0, errors.Wrap(err, "failed to obtain configuration")
 		}

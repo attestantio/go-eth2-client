@@ -49,15 +49,11 @@ func (s *Service) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscr
 		return errors.Wrap(err, "failed to encode beacon committee subscriptions request")
 	}
 
-	respBodyReader, err := s.post(ctx, "/validator/subscribe", &reqBodyReader)
+	respBodyReader, cancel, err := s.post(ctx, "/validator/subscribe", &reqBodyReader)
 	if err != nil {
 		return errors.Wrap(err, "failed to request beacon committee subscriptions")
 	}
-	defer func() {
-		if err := respBodyReader.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close HTTP body")
-		}
-	}()
+	defer cancel()
 
 	body, err := ioutil.ReadAll(respBodyReader)
 	if err != nil {

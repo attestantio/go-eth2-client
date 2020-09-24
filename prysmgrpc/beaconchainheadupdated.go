@@ -43,9 +43,9 @@ func (s *Service) AddOnBeaconChainHeadUpdatedHandler(ctx context.Context, handle
 
 // streamBeaconChainHead streams beacon chain head to feed beacon chain head update events.
 func (s *Service) streamBeaconChainHead(ctx context.Context) {
-	beaconClient := ethpb.NewBeaconChainClient(s.conn)
+	conn := ethpb.NewBeaconChainClient(s.conn)
 	log.Trace().Msg("Calling StreamChainHead()")
-	stream, err := beaconClient.StreamChainHead(s.ctx, &types.Empty{})
+	stream, err := conn.StreamChainHead(s.ctx, &types.Empty{})
 	if err != nil {
 		log.Warn().Err(err).Msg("failed to open chain head stream")
 		return
@@ -74,6 +74,10 @@ func (s *Service) streamBeaconChainHead(ctx context.Context) {
 			signedBeaconBlock, err := s.SignedBeaconBlockBySlot(ctx, beaconChainHead.HeadSlot)
 			if err != nil {
 				log.Warn().Err(err).Msg("failed to obtain block for slot")
+				return
+			}
+			if signedBeaconBlock == nil {
+				log.Warn().Err(err).Msg("obtained nil block for slot")
 				return
 			}
 

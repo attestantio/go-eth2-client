@@ -25,9 +25,11 @@ import (
 // BeaconProposerDomain provides the beacon proposer domain of the chain.
 func (s *Service) BeaconProposerDomain(ctx context.Context) ([]byte, error) {
 	if s.beaconProposerDomain == nil {
-		client := ethpb.NewBeaconChainClient(s.conn)
+		conn := ethpb.NewBeaconChainClient(s.conn)
 		log.Trace().Msg("Fetching beacon proposer domain")
-		config, err := client.GetBeaconConfig(ctx, &types.Empty{})
+		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+		config, err := conn.GetBeaconConfig(opCtx, &types.Empty{})
+		cancel()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain configuration")
 		}

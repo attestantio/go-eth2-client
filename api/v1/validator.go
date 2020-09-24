@@ -87,7 +87,7 @@ func (v *Validator) String() string {
 	return string(data)
 }
 
-// Index implements ValidatorPubKeyProvider
+// PubKey implements ValidatorPubKeyProvider
 func (v *Validator) PubKey(ctx context.Context) ([]byte, error) {
 	return v.Validator.PublicKey, nil
 }

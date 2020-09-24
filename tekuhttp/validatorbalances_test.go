@@ -15,25 +15,55 @@ package tekuhttp_test
 
 import (
 	"context"
+	"encoding/hex"
 	"os"
+	"strings"
 	"testing"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/tekuhttp"
 	"github.com/stretchr/testify/require"
 )
 
+type testValidatorIDProvider struct {
+	index  uint64
+	pubKey string
+}
+
+func (t *testValidatorIDProvider) Index(ctx context.Context) (uint64, error) {
+	return t.index, nil
+}
+
+func (t *testValidatorIDProvider) PubKey(ctx context.Context) ([]byte, error) {
+	return hex.DecodeString(strings.TrimPrefix(t.pubKey, "0x"))
+}
+
 func TestValidatorBalances(t *testing.T) {
 	tests := []struct {
-		name    string
-		stateID string
+		name       string
+		stateID    string
+		validators []client.ValidatorIDProvider
 	}{
 		{
-			name:    "Good",
-			stateID: "genesis",
+			name:    "Single",
+			stateID: "head",
+			validators: []client.ValidatorIDProvider{
+				&testValidatorIDProvider{
+					index:  1000,
+					pubKey: "0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26",
+				},
+			},
+		},
+		{
+			name:    "All",
+			stateID: "head",
 		},
 	}
 
-	service, err := tekuhttp.New(context.Background(), tekuhttp.WithAddress(os.Getenv("TEKUHTTP_ADDRESS")))
+	service, err := tekuhttp.New(context.Background(),
+		tekuhttp.WithAddress(os.Getenv("TEKUHTTP_ADDRESS")),
+		tekuhttp.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	for _, test := range tests {

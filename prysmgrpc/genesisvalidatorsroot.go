@@ -24,8 +24,10 @@ import (
 // GenesisValidatorsRoot provides the genesis validators root of the chain.
 func (s *Service) GenesisValidatorsRoot(ctx context.Context) ([]byte, error) {
 	if s.genesisValidatorsRoot == nil {
-		client := ethpb.NewNodeClient(s.conn)
-		res, err := client.GetGenesis(ctx, &types.Empty{})
+		conn := ethpb.NewNodeClient(s.conn)
+		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+		res, err := conn.GetGenesis(opCtx, &types.Empty{})
+		cancel()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain genesis validators root")
 		}

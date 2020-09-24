@@ -32,8 +32,8 @@ func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validat
 }
 
 func (s *Service) validatorBalances(ctx context.Context, stateID string) (map[uint64]uint64, error) {
-	beaconChainClient := ethpb.NewBeaconChainClient(s.conn)
-	if beaconChainClient == nil {
+	conn := ethpb.NewBeaconChainClient(s.conn)
+	if conn == nil {
 		return nil, errors.New("failed to obtain beacon chain client")
 	}
 
@@ -59,7 +59,9 @@ func (s *Service) validatorBalances(ctx context.Context, stateID string) (map[ui
 	for i := int32(0); ; i += s.maxPageSize {
 		log.Trace().Msg("Calling ListValidators()")
 		validatorBalancesReq.PageToken = pageToken
-		validatorBalancesResp, err := beaconChainClient.ListValidatorBalances(ctx, validatorBalancesReq)
+		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+		validatorBalancesResp, err := conn.ListValidatorBalances(opCtx, validatorBalancesReq)
+		cancel()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain validator balances")
 		}
@@ -82,8 +84,8 @@ func (s *Service) validatorBalances(ctx context.Context, stateID string) (map[ui
 
 // validatorsByPubKeys returns a subset of validator balances.
 func (s *Service) validatorBalancesByPubKeys(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]uint64, error) {
-	beaconChainClient := ethpb.NewBeaconChainClient(s.conn)
-	if beaconChainClient == nil {
+	conn := ethpb.NewBeaconChainClient(s.conn)
+	if conn == nil {
 		return nil, errors.New("failed to obtain beacon chain client")
 	}
 
@@ -121,7 +123,9 @@ func (s *Service) validatorBalancesByPubKeys(ctx context.Context, stateID string
 		validatorBalancesReq.PublicKeys = pubKeys[i:lastIndex]
 
 		log.Trace().Msg("Calling ListValidatorBalances()")
-		validatorBalancesResp, err := beaconChainClient.ListValidatorBalances(ctx, validatorBalancesReq)
+		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+		validatorBalancesResp, err := conn.ListValidatorBalances(opCtx, validatorBalancesReq)
+		cancel()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain validator balances")
 		}

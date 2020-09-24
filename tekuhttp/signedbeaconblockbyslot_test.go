@@ -49,8 +49,10 @@ func TestSignedBeaconBlockBySlot(t *testing.T) {
 		},
 	}
 
-	ctx := context.Background()
-	service, err := tekuhttp.New(ctx, tekuhttp.WithAddress(os.Getenv("TEKUHTTP_ADDRESS")))
+	service, err := tekuhttp.New(context.Background(),
+		tekuhttp.WithAddress(os.Getenv("TEKUHTTP_ADDRESS")),
+		tekuhttp.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	for _, test := range tests {

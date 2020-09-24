@@ -24,14 +24,16 @@ import (
 
 // NonSpecAggregateAttestation fetches the aggregate attestation given an attestation.
 func (s *Service) NonSpecAggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey []byte, slotSignature []byte) (*spec.Attestation, error) {
-	client := ethpb.NewBeaconNodeValidatorClient(s.conn)
+	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	log.Trace().Msg("Calling SubmitAggregateSelectionProof()")
-	resp, err := client.SubmitAggregateSelectionProof(ctx, &ethpb.AggregateSelectionRequest{
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	resp, err := conn.SubmitAggregateSelectionProof(opCtx, &ethpb.AggregateSelectionRequest{
 		Slot:           attestation.Data.Slot,
 		CommitteeIndex: attestation.Data.Index,
 		PublicKey:      validatorPubKey,
 		SlotSignature:  slotSignature,
 	})
+	cancel()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain attestation data")
 	}

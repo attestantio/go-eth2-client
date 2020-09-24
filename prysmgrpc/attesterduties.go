@@ -47,7 +47,9 @@ func (s *Service) AttesterDuties(ctx context.Context, epoch uint64, validators [
 			log.Trace().Str("req", string(jsonData)).Msg("Calling GetDuties()")
 		}
 	}
-	resp, err := conn.GetDuties(ctx, req)
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	resp, err := conn.GetDuties(opCtx, req)
+	cancel()
 	if err != nil {
 		return nil, errors.Wrap(err, "call to GetDuties() failed")
 	}

@@ -27,12 +27,14 @@ func (s *Service) SignatureDomain(ctx context.Context, domain []byte, epoch uint
 		return nil, errors.New("invalid domain supplied")
 	}
 
-	client := ethpb.NewBeaconNodeValidatorClient(s.conn)
+	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	log.Trace().Msg("Calling DomainData()")
-	resp, err := client.DomainData(ctx, &ethpb.DomainRequest{
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	resp, err := conn.DomainData(opCtx, &ethpb.DomainRequest{
 		Epoch:  epoch,
 		Domain: domain,
 	})
+	cancel()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain signature domain")
 	}

@@ -42,15 +42,11 @@ func (s *Service) AttesterDuties(ctx context.Context, epoch uint64, validators [
 	}
 
 	url := fmt.Sprintf("/eth/v1/validator/duties/attester/%d?index=%s", epoch, strings.Join(validatorIndices, ","))
-	respBodyReader, err := s.get(ctx, url)
+	respBodyReader, cancel, err := s.get(ctx, url)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request attester duties")
 	}
-	defer func() {
-		if err := respBodyReader.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close HTTP body")
-		}
-	}()
+	defer cancel()
 
 	var resp attesterDutiesJSON
 	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {

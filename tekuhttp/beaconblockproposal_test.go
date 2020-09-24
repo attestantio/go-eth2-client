@@ -47,14 +47,16 @@ func TestBeaconBlockProposal(t *testing.T) {
 		},
 	}
 
-	ctx := context.Background()
-	service, err := tekuhttp.New(ctx, tekuhttp.WithAddress("localhost:15200"), tekuhttp.WithAddress(os.Getenv("TEKUHTTP_ADDRESS")))
+	service, err := tekuhttp.New(context.Background(),
+		tekuhttp.WithAddress(os.Getenv("TEKUHTTP_ADDRESS")),
+		tekuhttp.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	// Need to fetch current slot for proposal.
-	genesisTime, err := service.GenesisTime(ctx)
+	genesisTime, err := service.GenesisTime(context.Background())
 	require.NoError(t, err)
-	slotDuration, err := service.SlotDuration(ctx)
+	slotDuration, err := service.SlotDuration(context.Background())
 	require.NoError(t, err)
 
 	for _, test := range tests {

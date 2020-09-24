@@ -43,8 +43,8 @@ func (s *Service) validators(ctx context.Context, stateID string) (map[uint64]*a
 		return nil, errors.Wrap(err, "failed to lock state ID")
 	}
 
-	beaconChainClient := ethpb.NewBeaconChainClient(s.conn)
-	if beaconChainClient == nil {
+	conn := ethpb.NewBeaconChainClient(s.conn)
+	if conn == nil {
 		return nil, errors.New("failed to obtain beacon chain client")
 	}
 
@@ -67,7 +67,9 @@ func (s *Service) validators(ctx context.Context, stateID string) (map[uint64]*a
 		log.Trace().Msg("Calling ListValidators()")
 		validatorsReq.PageToken = pageToken
 		validatorsReq.PageSize = s.maxPageSize
-		validatorsResp, err := beaconChainClient.ListValidators(ctx, validatorsReq)
+		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+		validatorsResp, err := conn.ListValidators(opCtx, validatorsReq)
+		cancel()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain validators")
 		}
@@ -114,7 +116,7 @@ func (s *Service) validators(ctx context.Context, stateID string) (map[uint64]*a
 	}
 	balances, err := s.validatorBalances(ctx, fmt.Sprintf("%d", epoch*slotsPerEpoch))
 	if err != nil {
-		return nil, errors.New("failed to obtain validator balances")
+		return nil, errors.Wrap(err, "failed to obtain validator balances")
 	}
 	for index, balance := range balances {
 		if _, exists := res[index]; exists {
@@ -134,8 +136,8 @@ func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, valid
 		return nil, errors.Wrap(err, "failed to lock state ID")
 	}
 
-	beaconChainClient := ethpb.NewBeaconChainClient(s.conn)
-	if beaconChainClient == nil {
+	conn := ethpb.NewBeaconChainClient(s.conn)
+	if conn == nil {
 		return nil, errors.New("failed to obtain beacon chain client")
 	}
 
@@ -183,7 +185,9 @@ func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, valid
 		validatorsReq.PublicKeys = pubKeys[i:lastIndex]
 
 		log.Trace().Msg("Calling ListValidators()")
-		validatorsResp, err := beaconChainClient.ListValidators(ctx, validatorsReq)
+		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+		validatorsResp, err := conn.ListValidators(opCtx, validatorsReq)
+		cancel()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain validators")
 		}
@@ -231,7 +235,9 @@ func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, valid
 		validatorBalancesReq.PublicKeys = balancePubKeys[i:lastIndex]
 
 		log.Trace().Msg("Calling ListValidatorBalances()")
-		validatorBalancesResp, err := beaconChainClient.ListValidatorBalances(ctx, validatorBalancesReq)
+		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+		validatorBalancesResp, err := conn.ListValidatorBalances(opCtx, validatorBalancesReq)
+		cancel()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain validator balances")
 		}

@@ -24,7 +24,7 @@ import (
 
 // SyncState provides the state of the node's synchronization with the chain.
 func (s *Service) SyncState(ctx context.Context) (*api.SyncState, error) {
-	beaconClient := ethpb.NewBeaconChainClient(s.conn)
+	conn := ethpb.NewBeaconChainClient(s.conn)
 
 	// Work out expected head slot.
 	slot, err := s.CurrentSlot(ctx)
@@ -32,7 +32,9 @@ func (s *Service) SyncState(ctx context.Context) (*api.SyncState, error) {
 		return nil, errors.Wrap(err, "failed to obtain current slot")
 	}
 
-	head, err := beaconClient.GetChainHead(ctx, &types.Empty{})
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	head, err := conn.GetChainHead(opCtx, &types.Empty{})
+	cancel()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain current head")
 	}

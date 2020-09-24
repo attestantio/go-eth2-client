@@ -42,11 +42,13 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot uint64, randaoRe
 			log.Trace().Str("data", string(jsonData)).Msg("Calling GetBlock()")
 		}
 	}
-	resp, err := conn.GetBlock(ctx, &ethpb.BlockRequest{
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	resp, err := conn.GetBlock(opCtx, &ethpb.BlockRequest{
 		Slot:         slot,
 		RandaoReveal: randaoReveal,
 		Graffiti:     fixedGraffiti,
 	})
+	cancel()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain beacon block data")
 	}

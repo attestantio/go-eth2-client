@@ -25,9 +25,11 @@ import (
 // DepositDomain provides the deposit domain of the chain.
 func (s *Service) DepositDomain(ctx context.Context) ([]byte, error) {
 	if s.depositDomain == nil {
-		client := ethpb.NewBeaconChainClient(s.conn)
+		conn := ethpb.NewBeaconChainClient(s.conn)
 		log.Trace().Msg("Fetching deposit domain")
-		config, err := client.GetBeaconConfig(ctx, &types.Empty{})
+		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+		config, err := conn.GetBeaconConfig(opCtx, &types.Empty{})
+		cancel()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain configuration")
 		}

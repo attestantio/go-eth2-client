@@ -29,20 +29,50 @@ type proposerDutiesJSON struct {
 
 // ProposerDuties obtains proposer duties.
 func (s *Service) ProposerDuties(ctx context.Context, epoch uint64, validators []client.ValidatorIDProvider) ([]*api.ProposerDuty, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", epoch))
+	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", epoch))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request proposer duties")
 	}
-	defer func() {
-		if err := respBodyReader.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close HTTP body")
-		}
-	}()
+	defer cancel()
 
 	var resp proposerDutiesJSON
 	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
 		return nil, errors.Wrap(err, "failed to parse proposer duties response")
 	}
 
-	return resp.Data, nil
+	// Validate the duties.
+	slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain slots per epoch")
+	}
+	startSlot := epoch * slotsPerEpoch
+	endSlot := epoch*slotsPerEpoch + slotsPerEpoch - 1
+	for _, duty := range resp.Data {
+		if duty.Slot < startSlot || duty.Slot > endSlot {
+			return nil, fmt.Errorf("received proposal for slot %d outside of range [%d,%d]", duty.Slot, startSlot, endSlot)
+		}
+	}
+
+	if len(validators) == 0 {
+		// Return all duties.
+		return resp.Data, nil
+	}
+
+	// Filter duties based on supplied validators.
+	validatorIndexMap := make(map[uint64]bool, len(validators))
+	for _, validator := range validators {
+		index, err := validator.Index(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain validator index")
+		}
+		validatorIndexMap[index] = true
+	}
+	duties := make([]*api.ProposerDuty, 0, len(resp.Data))
+	for _, duty := range resp.Data {
+		if _, exists := validatorIndexMap[duty.ValidatorIndex]; exists {
+			duties = append(duties, duty)
+		}
+	}
+
+	return duties, nil
 }

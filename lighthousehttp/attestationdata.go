@@ -24,10 +24,11 @@ import (
 
 // AttestationData obtains attestation data for a slot.
 func (s *Service) AttestationData(ctx context.Context, slot uint64, committeeIndex uint64) (*spec.AttestationData, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/validator/attestation?slot=%d&committee_index=%d", slot, committeeIndex))
+	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/validator/attestation?slot=%d&committee_index=%d", slot, committeeIndex))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request attestation")
 	}
+	defer cancel()
 
 	specReader, err := lhToSpec(ctx, respBodyReader)
 	if err != nil {

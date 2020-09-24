@@ -36,24 +36,31 @@ func TestProposerDuties(t *testing.T) {
 			expected: 32,
 		},
 		{
-			name:     "Current",
+			name:     "Recent",
 			epoch:    10990,
 			expected: 32,
 		},
 		{
 			name:  "GoodWithValidators",
-			epoch: 10758,
+			epoch: 4092,
 			validators: []client.ValidatorIDProvider{
 				&testValidatorIDProvider{
-					index:  46752,
-					pubKey: "0x93972e226623bd0c19d98d7774bb5da8230d37d3e629352d969fa7b76d03a5960c6f7e494b186940d3e4c8464d24d74a",
+					index:  16056,
+					pubKey: "0x9553a63a58d3a776a2483184e5af37aedf131b82ef1e0bcba7b3c01818f490371aac0c6f9a327fb7eb89190af7b085a5",
+				},
+				&testValidatorIDProvider{
+					index:  35476,
+					pubKey: "0x9216091f3e4fe0b0562a6c5bf6e8c35cf0c3b321b6f415de6631d7d12e58603e1e23c8d78f449b601f8d244d26f70aa7",
 				},
 			},
-			expected: 1,
+			expected: 2,
 		},
 	}
 
-	service, err := prysmgrpc.New(context.Background(), prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")))
+	service, err := prysmgrpc.New(context.Background(),
+		prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")),
+		prysmgrpc.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	for _, test := range tests {

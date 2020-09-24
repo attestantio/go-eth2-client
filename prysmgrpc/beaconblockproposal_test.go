@@ -44,14 +44,16 @@ func TestBeaconBlockProposal(t *testing.T) {
 		},
 	}
 
-	ctx := context.Background()
-	service, err := prysmgrpc.New(ctx, prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")))
+	service, err := prysmgrpc.New(context.Background(),
+		prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")),
+		prysmgrpc.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	// Need to fetch current slot for proposal.
-	genesisTime, err := service.GenesisTime(ctx)
+	genesisTime, err := service.GenesisTime(context.Background())
 	require.NoError(t, err)
-	slotDuration, err := service.SlotDuration(ctx)
+	slotDuration, err := service.SlotDuration(context.Background())
 	require.NoError(t, err)
 
 	for _, test := range tests {

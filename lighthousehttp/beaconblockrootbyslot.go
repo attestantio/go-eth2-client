@@ -25,17 +25,11 @@ import (
 
 // BeaconBlockRootBySlot fetches a block's root given its slot.
 func (s *Service) BeaconBlockRootBySlot(ctx context.Context, slot uint64) ([]byte, error) {
-	url := fmt.Sprintf("/beacon/block_root?slot=%d", slot)
-	respBodyReader, err := s.get(ctx, url)
+	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/beacon/block_root?slot=%d", slot))
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request beacon block root")
 	}
-	defer func() {
-		if err := respBodyReader.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close HTTP body")
-		}
-	}()
+	defer cancel()
 
 	rootBytes, err := ioutil.ReadAll(respBodyReader)
 	if err != nil {

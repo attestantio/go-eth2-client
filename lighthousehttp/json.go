@@ -49,14 +49,10 @@ var specToLHRe4 = regexp.MustCompile(`"([0-9]+)"\]`)
 
 // lhToSpec converts lighthouse JSON to spec JSON.
 // This consumes (and closes) the input.
-func lhToSpec(ctx context.Context, input io.ReadCloser) (io.Reader, error) {
+func lhToSpec(ctx context.Context, input io.Reader) (io.Reader, error) {
 	data, err := ioutil.ReadAll(input)
 	if err != nil {
 		return nil, err
-	}
-
-	if err := input.Close(); err != nil {
-		log.Warn().Err(err).Msg("Failed to close HTTP body")
 	}
 
 	// Lighthouse sends numbers unquoted.

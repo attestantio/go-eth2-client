@@ -154,9 +154,11 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaco
 		}
 	}
 
-	client := ethpb.NewBeaconNodeValidatorClient(s.conn)
+	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	log.Trace().Msg("Calling ProposeBlock()")
-	_, err := client.ProposeBlock(ctx, proposal)
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	_, err := conn.ProposeBlock(opCtx, proposal)
+	cancel()
 
 	if err != nil {
 		return errors.Wrap(err, "failed to submit beacon block")

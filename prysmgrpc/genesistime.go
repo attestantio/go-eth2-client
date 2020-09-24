@@ -25,8 +25,10 @@ import (
 // GenesisTime provides the genesis time of the chain.
 func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
 	if s.genesisTime == nil {
-		client := ethpb.NewNodeClient(s.conn)
-		res, err := client.GetGenesis(ctx, &types.Empty{})
+		conn := ethpb.NewNodeClient(s.conn)
+		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+		res, err := conn.GetGenesis(opCtx, &types.Empty{})
+		cancel()
 		if err != nil {
 			return time.Now(), errors.Wrap(err, "failed to obtain genesis time")
 		}

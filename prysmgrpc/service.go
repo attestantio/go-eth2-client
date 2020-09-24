@@ -133,8 +133,8 @@ func (s *Service) close() {
 }
 
 func (s *Service) obtainMaxPageSize(ctx context.Context) (int32, error) {
-	beaconChainClient := ethpb.NewBeaconChainClient(s.conn)
-	if beaconChainClient == nil {
+	conn := ethpb.NewBeaconChainClient(s.conn)
+	if conn == nil {
 		return -1, errors.New("failed to obtain beacon chain client")
 	}
 
@@ -142,7 +142,9 @@ func (s *Service) obtainMaxPageSize(ctx context.Context) (int32, error) {
 		PageSize: 9999999,
 	}
 
-	_, err := beaconChainClient.ListValidators(ctx, validatorsReq)
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	_, err := conn.ListValidators(opCtx, validatorsReq)
+	cancel()
 	if err == nil {
 		// Max page size is > 9999999, that'll do for us
 		return 9999999, nil

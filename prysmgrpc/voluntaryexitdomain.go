@@ -24,8 +24,10 @@ import (
 // VoluntaryExitDomain provides the voluntary exit domain of the chain.
 func (s *Service) VoluntaryExitDomain(ctx context.Context) ([]byte, error) {
 	if s.voluntaryExitDomain == nil {
-		client := ethpb.NewBeaconChainClient(s.conn)
-		config, err := client.GetBeaconConfig(ctx, &types.Empty{})
+		conn := ethpb.NewBeaconChainClient(s.conn)
+		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+		config, err := conn.GetBeaconConfig(opCtx, &types.Empty{})
+		cancel()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain configuration")
 		}

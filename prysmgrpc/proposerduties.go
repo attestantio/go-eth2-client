@@ -63,7 +63,10 @@ func (s *Service) ProposerDuties(ctx context.Context, epoch uint64, validators [
 		PublicKeys: pubKeys,
 	}
 	log.Trace().Msg("Calling GetDuties()")
-	resp, err := conn.GetDuties(ctx, req)
+
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	resp, err := conn.GetDuties(opCtx, req)
+	cancel()
 	if err != nil {
 		return nil, errors.Wrap(err, "call to GetDuties() failed")
 	}
@@ -88,9 +91,12 @@ type proposerDutiesValidatorIDProvider struct {
 	pubKey []byte
 }
 
+// Index returns the index of the validator.
 func (p *proposerDutiesValidatorIDProvider) Index(ctx context.Context) (uint64, error) {
 	return p.index, nil
 }
+
+// PubKey returns the public key of the validator.
 func (p *proposerDutiesValidatorIDProvider) PubKey(ctx context.Context) ([]byte, error) {
 	return p.pubKey, nil
 }

@@ -23,7 +23,7 @@ import (
 
 // SubmitAggregateAttestations submits aggregate attestations.
 func (s *Service) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*spec.SignedAggregateAndProof) error {
-	client := ethpb.NewBeaconNodeValidatorClient(s.conn)
+	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	for _, aggregateAndProof := range aggregateAndProofs {
 		prysmAggregateAndProof := &ethpb.SignedAggregateAttestationAndProof{
 			Message: &ethpb.AggregateAttestationAndProof{
@@ -51,9 +51,11 @@ func (s *Service) SubmitAggregateAttestations(ctx context.Context, aggregateAndP
 		}
 
 		log.Trace().Msg("Calling ProposeSignedAggregateSelectionProof()")
-		_, err := client.SubmitSignedAggregateSelectionProof(ctx, &ethpb.SignedAggregateSubmitRequest{
+		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+		_, err := conn.SubmitSignedAggregateSelectionProof(opCtx, &ethpb.SignedAggregateSubmitRequest{
 			SignedAggregateAndProof: prysmAggregateAndProof,
 		})
+		cancel()
 		if err != nil {
 			return errors.Wrap(err, "failed to submit signed aggregate attestation")
 		}

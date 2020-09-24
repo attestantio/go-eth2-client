@@ -177,15 +177,11 @@ type chainHeadJSON struct {
 }
 
 func (s *Service) chainHead(ctx context.Context) (*chainHead, error) {
-	respBodyReader, err := s.get(ctx, "/beacon/chainhead")
+	respBodyReader, cancel, err := s.get(ctx, "/beacon/chainhead")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon head")
 	}
-	defer func() {
-		if err := respBodyReader.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close HTTP body")
-		}
-	}()
+	defer cancel()
 
 	chainHeadResponse := chainHeadJSON{}
 	if err := json.NewDecoder(respBodyReader).Decode(&chainHeadResponse); err != nil {
@@ -250,15 +246,11 @@ type beaconHeadJSON struct {
 }
 
 func (s *Service) beaconHead(ctx context.Context) (*beaconHead, error) {
-	respBodyReader, err := s.get(ctx, "/beacon/head")
+	respBodyReader, cancel, err := s.get(ctx, "/beacon/head")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon head")
 	}
-	defer func() {
-		if err := respBodyReader.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close HTTP body")
-		}
-	}()
+	defer cancel()
 
 	beaconHeadResponse := beaconHeadJSON{}
 	if err := json.NewDecoder(respBodyReader).Decode(&beaconHeadResponse); err != nil {
@@ -290,15 +282,11 @@ type beaconStateJSON struct {
 }
 
 func (s *Service) stateToSlot(ctx context.Context, stateRoot []byte) (uint64, error) {
-	respBodyReader, err := s.get(ctx, "/beacon/state")
+	respBodyReader, cancel, err := s.get(ctx, "/beacon/state")
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to request beacon state")
 	}
-	defer func() {
-		if err := respBodyReader.Close(); err != nil {
-			log.Warn().Err(err).Msg("Failed to close HTTP body")
-		}
-	}()
+	defer cancel()
 
 	beaconStateResponse := beaconStateJSON{}
 	if err := json.NewDecoder(respBodyReader).Decode(&beaconStateResponse); err != nil {

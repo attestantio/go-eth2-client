@@ -49,7 +49,10 @@ func TestSubmitBeaconCommitteeSubscriptions(t *testing.T) {
 		},
 	}
 
-	service, err := tekuhttp.New(context.Background(), tekuhttp.WithAddress(os.Getenv("TEKUHTTP_ADDRESS")))
+	service, err := tekuhttp.New(context.Background(),
+		tekuhttp.WithAddress(os.Getenv("TEKUHTTP_ADDRESS")),
+		tekuhttp.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	for _, test := range tests {

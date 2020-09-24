@@ -49,8 +49,10 @@ func TestSignedBeaconBlockBySlot(t *testing.T) {
 		},
 	}
 
-	ctx := context.Background()
-	service, err := prysmgrpc.New(ctx, prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")))
+	service, err := prysmgrpc.New(context.Background(),
+		prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")),
+		prysmgrpc.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	for _, test := range tests {

@@ -33,7 +33,10 @@ func TestFork(t *testing.T) {
 		},
 	}
 
-	service, err := lighthousehttp.New(context.Background(), lighthousehttp.WithAddress(os.Getenv("LIGHTHOUSEHTTP_ADDRESS")))
+	service, err := lighthousehttp.New(context.Background(),
+		lighthousehttp.WithAddress(os.Getenv("LIGHTHOUSEHTTP_ADDRESS")),
+		lighthousehttp.WithTimeout(timeout),
+	)
 	require.NoError(t, err)
 
 	for _, test := range tests {

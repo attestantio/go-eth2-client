@@ -45,9 +45,10 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIDs [
 	}
 
 	// Lighthouse has different calls depending on if the caller wants all or a filtered set of validators.
-	var respBodyReader io.ReadCloser
+	var respBodyReader io.Reader
+	var cancel context.CancelFunc
 	if len(validatorIDs) == 0 {
-		respBodyReader, err = s.get(ctx, fmt.Sprintf("/beacon/validators/all?state_root=%#x", stateRoot))
+		respBodyReader, cancel, err = s.get(ctx, fmt.Sprintf("/beacon/validators/all?state_root=%#x", stateRoot))
 	} else {
 		reqBodyReader := new(bytes.Buffer)
 		if _, err := reqBodyReader.WriteString(`{"pubkeys":[`); err != nil {
@@ -72,11 +73,12 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIDs [
 		if _, err := reqBodyReader.WriteString(`]}`); err != nil {
 			return nil, errors.Wrap(err, "failed to write end of pubkeys")
 		}
-		respBodyReader, err = s.post(ctx, fmt.Sprintf("/beacon/validators?state_root=%#x", stateRoot), reqBodyReader)
+		respBodyReader, cancel, err = s.post(ctx, fmt.Sprintf("/beacon/validators?state_root=%#x", stateRoot), reqBodyReader)
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request validators")
 	}
+	defer cancel()
 
 	specReader, err := lhToSpec(ctx, respBodyReader)
 	if err != nil {

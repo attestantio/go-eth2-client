@@ -23,8 +23,10 @@ import (
 
 // NodeVersion returns a free-text string with the node version.
 func (s *Service) NodeVersion(ctx context.Context) (string, error) {
-	client := ethpb.NewNodeClient(s.conn)
-	version, err := client.GetVersion(ctx, &types.Empty{})
+	conn := ethpb.NewNodeClient(s.conn)
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	version, err := conn.GetVersion(opCtx, &types.Empty{})
+	cancel()
 	if err != nil {
 		return "", errors.Wrap(err, "failed to obtain node version")
 	}

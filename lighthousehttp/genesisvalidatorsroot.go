@@ -25,15 +25,12 @@ import (
 // GenesisValidatorsRoot provides the genesis validators root of the chain.
 func (s *Service) GenesisValidatorsRoot(ctx context.Context) ([]byte, error) {
 	if s.genesisValidatorsRoot == nil {
-		respBodyReader, err := s.get(ctx, "/beacon/genesis_validators_root")
+		respBodyReader, cancel, err := s.get(ctx, "/beacon/genesis_validators_root")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain genesis validators root")
 		}
-		defer func() {
-			if err := respBodyReader.Close(); err != nil {
-				log.Warn().Err(err).Msg("Failed to close HTTP body")
-			}
-		}()
+		defer cancel()
+
 		genesisValidatorsRootBytes, err := ioutil.ReadAll(respBodyReader)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read genesis validators root")

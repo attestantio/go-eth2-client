@@ -23,7 +23,7 @@ import (
 
 // SubmitBeaconCommitteeSubscriptions subscribes to beacon committees.
 func (s *Service) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*client.BeaconCommitteeSubscription) error {
-	client := ethpb.NewBeaconNodeValidatorClient(s.conn)
+	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	slots := make([]uint64, len(subscriptions))
 	committeeIds := make([]uint64, len(subscriptions))
 	isAggregator := make([]bool, len(subscriptions))
@@ -34,11 +34,13 @@ func (s *Service) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscr
 	}
 
 	log.Trace().Msg("Calling SubscribeCommitteeSubnets()")
-	_, err := client.SubscribeCommitteeSubnets(ctx, &ethpb.CommitteeSubnetsSubscribeRequest{
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	_, err := conn.SubscribeCommitteeSubnets(opCtx, &ethpb.CommitteeSubnetsSubscribeRequest{
 		Slots:        slots,
 		CommitteeIds: committeeIds,
 		IsAggregator: isAggregator,
 	})
+	cancel()
 	if err != nil {
 		return errors.Wrap(err, "failed to subscribe to beacon committees")
 	}
