@@ -65,7 +65,7 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	parameters := parameters{
 		logLevel: zerolog.GlobalLevel(),
 		address:  "http://localhost:5052",
-		timeout:  2 * time.Second,
+		timeout:  2 * time.Minute,
 	}
 	for _, p := range params {
 		if params != nil {

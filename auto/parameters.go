@@ -62,7 +62,7 @@ func WithTimeout(timeout time.Duration) Parameter {
 func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	parameters := parameters{
 		logLevel: zerolog.GlobalLevel(),
-		timeout:  2 * time.Second,
+		timeout:  2 * time.Minute,
 	}
 	for _, p := range params {
 		if params != nil {
