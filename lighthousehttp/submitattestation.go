@@ -48,11 +48,10 @@ func (s *Service) SubmitAttestation(ctx context.Context, specAttestation *spec.A
 	// - if it succeeds, done
 	// - if not, fetch the requested subnet ID from the error message and try again.
 	attestations := fmt.Sprintf("[[%s,0]]", string(attestation))
-	respBodyReader, cancel, err := s.post(ctx, "/validator/attestations", bytes.NewReader([]byte(attestations)))
+	respBodyReader, err := s.post(ctx, "/validator/attestations", bytes.NewReader([]byte(attestations)))
 	if err != nil {
 		return errors.Wrap(err, "failed to post attestation for 0-subnet attestation")
 	}
-	defer cancel()
 
 	resp, err := ioutil.ReadAll(respBodyReader)
 	if err != nil {
@@ -74,11 +73,10 @@ func (s *Service) SubmitAttestation(ctx context.Context, specAttestation *spec.A
 	//}
 	// Go again with the "borrowed" subnet ID.
 	attestations = fmt.Sprintf("[[%s,%s]]", string(attestation), string(match[1]))
-	respBodyReader, cancel, err = s.post(ctx, "/validator/attestations", bytes.NewReader([]byte(attestations)))
+	respBodyReader, err = s.post(ctx, "/validator/attestations", bytes.NewReader([]byte(attestations)))
 	if err != nil {
 		return errors.Wrap(err, "failed to POST to /validator/attestations")
 	}
-	defer cancel()
 
 	resp, err = ioutil.ReadAll(respBodyReader)
 	if err != nil {

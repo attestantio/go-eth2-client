@@ -26,11 +26,10 @@ import (
 // GenesisTime provides the genesis time of the chain.
 func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
 	if s.genesisTime == nil {
-		respBodyReader, cancel, err := s.get(ctx, "/node/genesis_time")
+		respBodyReader, err := s.get(ctx, "/node/genesis_time")
 		if err != nil {
 			return time.Now(), errors.Wrap(err, "failed to obtain genesis time")
 		}
-		defer cancel()
 
 		genesisTimeBytes, err := ioutil.ReadAll(respBodyReader)
 		if err != nil {

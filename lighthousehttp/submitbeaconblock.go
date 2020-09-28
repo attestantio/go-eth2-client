@@ -36,11 +36,10 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, specBlock *spec.SignedB
 	}
 
 	log.Trace().Msg("Sending to /validator/block")
-	respBodyReader, cancel, err := s.post(ctx, "/validator/block", lhReader)
+	respBodyReader, err := s.post(ctx, "/validator/block", lhReader)
 	if err != nil {
 		return errors.Wrap(err, "failed to send to /validator/block")
 	}
-	defer cancel()
 
 	var resp []byte
 	if respBodyReader != nil {

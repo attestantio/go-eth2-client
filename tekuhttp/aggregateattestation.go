@@ -28,11 +28,10 @@ func (s *Service) NonSpecAggregateAttestation(ctx context.Context, attestation *
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain hash tree root for attestation data")
 	}
-	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/validator/aggregate_attestation?attestation_data_root=%#x&slot=%d", root, attestation.Data.Slot))
+	respBodyReader, err := s.get(ctx, fmt.Sprintf("/validator/aggregate_attestation?attestation_data_root=%#x&slot=%d", root, attestation.Data.Slot))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request aggregate attestation")
 	}
-	defer cancel()
 
 	var aggregateAttestation *spec.Attestation
 	if err := json.NewDecoder(respBodyReader).Decode(&aggregateAttestation); err != nil {

@@ -29,11 +29,10 @@ type proposerDutiesJSON struct {
 
 // ProposerDuties obtains proposer duties.
 func (s *Service) ProposerDuties(ctx context.Context, epoch uint64, validators []client.ValidatorIDProvider) ([]*api.ProposerDuty, error) {
-	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", epoch))
+	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", epoch))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request proposer duties")
 	}
-	defer cancel()
 
 	var resp proposerDutiesJSON
 	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {

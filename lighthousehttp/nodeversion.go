@@ -23,11 +23,10 @@ import (
 
 // NodeVersion returns a free-text string with the node version.
 func (s *Service) NodeVersion(ctx context.Context) (string, error) {
-	respBodyReader, cancel, err := s.get(ctx, "/node/version")
+	respBodyReader, err := s.get(ctx, "/node/version")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to obtain node version")
 	}
-	defer cancel()
 
 	version, err := ioutil.ReadAll(respBodyReader)
 	if err != nil {

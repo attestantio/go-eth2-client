@@ -24,11 +24,10 @@ import (
 // SlotDuration provides the duration of a slot of the chain.
 func (s *Service) SlotDuration(ctx context.Context) (time.Duration, error) {
 	if s.slotDuration == nil {
-		respBodyReader, cancel, err := s.get(ctx, "/spec")
+		respBodyReader, err := s.get(ctx, "/spec")
 		if err != nil {
 			return time.Duration(0), errors.Wrap(err, "failed to obtain configuration")
 		}
-		defer cancel()
 
 		var cfg map[string]interface{}
 		if err := json.NewDecoder(respBodyReader).Decode(&cfg); err != nil {

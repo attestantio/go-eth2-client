@@ -26,13 +26,12 @@ import (
 )
 
 // get sends an HTTP get request and returns the body.
-// The cancel function must be called once use of the returned reader is complete.
-func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, context.CancelFunc, error) {
+func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	log.Trace().Str("endpoint", endpoint).Msg("GET request")
 
 	reference, err := url.Parse(endpoint)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "invalid endpoint")
+		return nil, errors.Wrap(err, "invalid endpoint")
 	}
 	url := s.base.ResolveReference(reference).String()
 	log.Trace().Str("url", url).Msg("GET request")
@@ -40,50 +39,44 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, context.
 	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, url, nil)
 	if err != nil {
 		cancel()
-		return nil, nil, errors.Wrap(err, "failed to create GET request")
+		return nil, errors.Wrap(err, "failed to create GET request")
 	}
 	resp, err := s.client.Do(req)
 	if err != nil {
 		cancel()
-		return nil, nil, errors.Wrap(err, "failed to connect to teku GET endpoint")
+		return nil, errors.Wrap(err, "failed to connect to GET endpoint")
 	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		cancel()
+		return nil, errors.Wrap(err, "failed to read GET response")
+	}
+
 	statusFamily := resp.StatusCode / 100
 	if statusFamily != 2 {
-		data, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Warn().Err(err).Msg("Failed to read response body")
-		}
 		cancel()
-		return nil, nil, fmt.Errorf("HTTP call to teku endpoint failed with status %d: %s", resp.StatusCode, string(data))
+		return nil, fmt.Errorf("GET failed with status %d: %s", resp.StatusCode, string(data))
 	}
+	cancel()
 
-	if e := log.Trace(); e.Enabled() {
-		data, err := ioutil.ReadAll(resp.Body)
-		if err == nil {
-			log.Trace().Str("response", string(data)).Msg("GET response")
-			if err := resp.Body.Close(); err != nil {
-				log.Warn().Err(err).Msg("Failed to close response body")
-			}
-			resp.Body = ioutil.NopCloser(bytes.NewReader(data))
-		}
-	}
+	log.Trace().Str("response", string(data)).Msg("GET response")
 
-	return resp.Body, cancel, nil
+	return bytes.NewReader(data), nil
 }
 
 // post sends an HTTP post request and returns the body.
-// The cancel function must be called once use of the returned reader is complete.
-func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io.Reader, context.CancelFunc, error) {
+func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io.Reader, error) {
 	reference, err := url.Parse(endpoint)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "invalid endpoint")
+		return nil, errors.Wrap(err, "invalid endpoint")
 	}
 	url := s.base.ResolveReference(reference).String()
 
 	if e := log.Trace(); e.Enabled() {
 		bodyBytes, err := ioutil.ReadAll(body)
 		if err != nil {
-			return nil, nil, errors.New("failed to read request body")
+			return nil, errors.New("failed to read request body")
 		}
 		body = bytes.NewReader(bodyBytes)
 
@@ -94,33 +87,28 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, url, body)
 	if err != nil {
 		cancel()
-		return nil, nil, errors.Wrap(err, "failed to create POST request")
+		return nil, errors.Wrap(err, "failed to create POST request")
 	}
 	resp, err := s.client.Do(req)
 	if err != nil {
 		cancel()
-		return nil, nil, errors.Wrap(err, "failed to connect to teku HTTP endpoint")
+		return nil, errors.Wrap(err, "failed to connect to POST endpoint")
 	}
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		cancel()
+		return nil, errors.Wrap(err, "failed to read POST response")
+	}
+
 	statusFamily := resp.StatusCode / 100
 	if statusFamily != 2 {
-		data, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			log.Warn().Err(err).Msg("Failed to read response body")
-		}
 		cancel()
-		return nil, nil, fmt.Errorf("HTTP call to teku endpoint failed with status %d: %s", resp.StatusCode, string(data))
+		return nil, fmt.Errorf("POST failed with status %d: %s", resp.StatusCode, string(data))
 	}
+	cancel()
 
-	if e := log.Trace(); e.Enabled() {
-		data, err := ioutil.ReadAll(resp.Body)
-		if err == nil {
-			log.Trace().Str("response", string(data)).Msg("POST response")
-			if err := resp.Body.Close(); err != nil {
-				log.Warn().Err(err).Msg("Failed to close response body")
-			}
-			resp.Body = ioutil.NopCloser(bytes.NewReader(data))
-		}
-	}
+	log.Trace().Str("response", string(data)).Msg("POST response")
 
-	return resp.Body, cancel, nil
+	return bytes.NewReader(data), nil
 }

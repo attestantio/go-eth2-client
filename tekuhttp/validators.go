@@ -55,11 +55,10 @@ func (s *Service) Validators(ctx context.Context, stateID string, validators []c
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain far future epoch")
 	}
-	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/beacon/validators?pageSize=9999999&epoch=%d", epoch))
+	respBodyReader, err := s.get(ctx, fmt.Sprintf("/beacon/validators?pageSize=9999999&epoch=%d", epoch))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request validators")
 	}
-	defer cancel()
 
 	validatorsResponse := &validatorsJSON{}
 	if err := json.NewDecoder(respBodyReader).Decode(&validatorsResponse); err != nil {

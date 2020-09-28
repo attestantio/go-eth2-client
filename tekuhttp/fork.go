@@ -23,11 +23,10 @@ import (
 
 // Fork provides the fork of the chain at a given epoch.
 func (s *Service) Fork(ctx context.Context, stateID string) (*spec.Fork, error) {
-	respBodyReader, cancel, err := s.get(ctx, "/node/fork")
+	respBodyReader, err := s.get(ctx, "/node/fork")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain current fork")
 	}
-	defer cancel()
 
 	var fork *spec.Fork
 	if err := json.NewDecoder(respBodyReader).Decode(&fork); err != nil {

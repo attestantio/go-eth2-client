@@ -23,11 +23,10 @@ import (
 // TargetAggregatorsPerCommittee provides the target number of aggregators for each attestation committee.
 func (s *Service) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error) {
 	if s.targetAggregatorsPerCommittee == nil {
-		respBodyReader, cancel, err := s.get(ctx, "/spec")
+		respBodyReader, err := s.get(ctx, "/spec")
 		if err != nil {
 			return 0, errors.Wrap(err, "failed to obtain configuration")
 		}
-		defer cancel()
 
 		var cfg map[string]interface{}
 		if err := json.NewDecoder(respBodyReader).Decode(&cfg); err != nil {

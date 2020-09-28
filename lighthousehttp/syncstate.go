@@ -30,11 +30,10 @@ type syncingStatusJSON struct {
 
 // SyncState provides the state of the node's synchronization with the chain.
 func (s *Service) SyncState(ctx context.Context) (*api.SyncState, error) {
-	respBodyReader, cancel, err := s.get(ctx, "/node/syncing")
+	respBodyReader, err := s.get(ctx, "/node/syncing")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain sync status")
 	}
-	defer cancel()
 
 	// Work out expected head slot.
 	slot, err := s.CurrentSlot(ctx)

@@ -28,11 +28,10 @@ func (s *Service) NonSpecAggregateAttestation(ctx context.Context, attestation *
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain SSZ format attestation data")
 	}
-	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/validator/aggregate_attestation?attestation_data=%#x", ssz))
+	respBodyReader, err := s.get(ctx, fmt.Sprintf("/validator/aggregate_attestation?attestation_data=%#x", ssz))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request aggregate attestation")
 	}
-	defer cancel()
 
 	specReader, err := lhToSpec(ctx, respBodyReader)
 	if err != nil {

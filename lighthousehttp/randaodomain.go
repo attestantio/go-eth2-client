@@ -24,11 +24,10 @@ import (
 // RANDAODomain provides the RANDAO domain of the chain.
 func (s *Service) RANDAODomain(ctx context.Context) ([]byte, error) {
 	if s.randaoDomain == nil {
-		respBodyReader, cancel, err := s.get(ctx, "/spec")
+		respBodyReader, err := s.get(ctx, "/spec")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain configuration")
 		}
-		defer cancel()
 
 		var cfg map[string]interface{}
 		if err := json.NewDecoder(respBodyReader).Decode(&cfg); err != nil {

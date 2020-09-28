@@ -41,11 +41,10 @@ func (s *Service) BeaconCommittees(ctx context.Context, stateID string) ([]*api.
 	}
 	epoch := slot / slotsPerEpoch
 
-	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/beacon/committees?epoch=%d", epoch))
+	respBodyReader, err := s.get(ctx, fmt.Sprintf("/beacon/committees?epoch=%d", epoch))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon committees")
 	}
-	defer cancel()
 
 	beaconCommitteesResponse := make([]*beaconCommitteesResponse, 0)
 	if err := json.NewDecoder(respBodyReader).Decode(&beaconCommitteesResponse); err != nil {

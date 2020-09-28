@@ -30,12 +30,11 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot uint64, randaoRe
 	copy(fixedGraffiti, graffiti)
 
 	url := fmt.Sprintf("/validator/block?slot=%d&randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, fixedGraffiti)
-	respBodyReader, cancel, err := s.get(ctx, url)
+	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
 		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request beacon block proposal")
 	}
-	defer cancel()
 
 	var block *spec.BeaconBlock
 	if err := json.NewDecoder(respBodyReader).Decode(&block); err != nil {

@@ -65,11 +65,10 @@ func (s *Service) ProposerDuties(ctx context.Context, epoch uint64, validators [
 		return nil, errors.Wrap(err, "failed to write footer")
 	}
 
-	respBodyReader, cancel, err := s.post(ctx, "/validator/duties", &reqBodyReader)
+	respBodyReader, err := s.post(ctx, "/validator/duties", &reqBodyReader)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request proposer duties")
 	}
-	defer cancel()
 
 	var resp []*dutyJSON
 	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
@@ -90,11 +89,10 @@ func (s *Service) ProposerDuties(ctx context.Context, epoch uint64, validators [
 }
 
 func (s *Service) proposerDuties(ctx context.Context, epoch uint64) ([]*api.ProposerDuty, error) {
-	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/validator/duties/all?epoch=%d", epoch))
+	respBodyReader, err := s.get(ctx, fmt.Sprintf("/validator/duties/all?epoch=%d", epoch))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request proposer duties")
 	}
-	defer cancel()
 
 	var resp []*dutyJSON
 	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {

@@ -29,11 +29,10 @@ type blockResponseJSON struct {
 
 // SignedBeaconBlockBySlot fetches a signed beacon block given its slot.
 func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*spec.SignedBeaconBlock, error) {
-	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/beacon/block?slot=%d", slot))
+	respBodyReader, err := s.get(ctx, fmt.Sprintf("/beacon/block?slot=%d", slot))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request signed beacon block")
 	}
-	defer cancel()
 
 	specReader, err := lhToSpec(ctx, respBodyReader)
 	if err != nil {

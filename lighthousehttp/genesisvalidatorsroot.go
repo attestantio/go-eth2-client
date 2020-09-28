@@ -25,11 +25,10 @@ import (
 // GenesisValidatorsRoot provides the genesis validators root of the chain.
 func (s *Service) GenesisValidatorsRoot(ctx context.Context) ([]byte, error) {
 	if s.genesisValidatorsRoot == nil {
-		respBodyReader, cancel, err := s.get(ctx, "/beacon/genesis_validators_root")
+		respBodyReader, err := s.get(ctx, "/beacon/genesis_validators_root")
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain genesis validators root")
 		}
-		defer cancel()
 
 		genesisValidatorsRootBytes, err := ioutil.ReadAll(respBodyReader)
 		if err != nil {

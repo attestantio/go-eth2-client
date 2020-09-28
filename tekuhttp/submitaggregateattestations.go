@@ -41,11 +41,10 @@ func (s *Service) SubmitAggregateAttestations(ctx context.Context, aggregateAndP
 		specJSON = aggregateAttestationsRe1.ReplaceAll(specJSON, []byte(`"index"`))
 		specJSON = aggregateAttestationsRe2.ReplaceAll(specJSON, []byte(`"attestation"`))
 
-		respBodyReader, cancel, err := s.post(ctx, "/validator/aggregate_and_proofs", bytes.NewReader(specJSON))
+		respBodyReader, err := s.post(ctx, "/validator/aggregate_and_proofs", bytes.NewReader(specJSON))
 		if err != nil {
 			return errors.Wrap(err, "error submitting aggregate attestation")
 		}
-		defer cancel()
 
 		var resp []byte
 		if respBodyReader != nil {

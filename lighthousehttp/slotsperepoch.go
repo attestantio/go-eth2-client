@@ -24,11 +24,10 @@ import (
 // SlotsPerEpoch provides the slots per epoch of the chain.
 func (s *Service) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 	if s.slotsPerEpoch == nil {
-		respBodyReader, cancel, err := s.get(ctx, "/spec/slots_per_epoch")
+		respBodyReader, err := s.get(ctx, "/spec/slots_per_epoch")
 		if err != nil {
 			return 0, errors.Wrap(err, "failed to obtain slots per epoch")
 		}
-		defer cancel()
 
 		slotsPerEpochBytes, err := ioutil.ReadAll(respBodyReader)
 		if err != nil {

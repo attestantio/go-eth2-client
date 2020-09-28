@@ -40,11 +40,10 @@ func (s *Service) SubmitAggregateAttestations(ctx context.Context, aggregateAndP
 		return errors.Wrap(err, "failed to read lighthouse JSON")
 	}
 
-	respBodyReader, cancel, err := s.post(ctx, "/validator/aggregate_and_proofs", bytes.NewReader(aggregateAttestations))
+	respBodyReader, err := s.post(ctx, "/validator/aggregate_and_proofs", bytes.NewReader(aggregateAttestations))
 	if err != nil {
 		return errors.Wrap(err, "error submitting aggregate attestation")
 	}
-	defer cancel()
 
 	resp, err := ioutil.ReadAll(respBodyReader)
 	if err != nil {

@@ -176,11 +176,10 @@ type beaconHeadJSON struct {
 }
 
 func (s *Service) beaconHead(ctx context.Context) (*beaconHead, error) {
-	respBodyReader, cancel, err := s.get(ctx, "/beacon/head")
+	respBodyReader, err := s.get(ctx, "/beacon/head")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon head")
 	}
-	defer cancel()
 
 	beaconHeadResponse := beaconHeadJSON{}
 	if err := json.NewDecoder(respBodyReader).Decode(&beaconHeadResponse); err != nil {
@@ -229,11 +228,10 @@ type beaconStateJSON struct {
 }
 
 func (s *Service) stateToSlot(ctx context.Context, stateRoot []byte) (uint64, error) {
-	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/beacon/state?root=%#x", stateRoot))
+	respBodyReader, err := s.get(ctx, fmt.Sprintf("/beacon/state?root=%#x", stateRoot))
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to request state")
 	}
-	defer cancel()
 
 	stateResponse := stateJSON{}
 	if err := json.NewDecoder(respBodyReader).Decode(&stateResponse); err != nil {
@@ -244,11 +242,10 @@ func (s *Service) stateToSlot(ctx context.Context, stateRoot []byte) (uint64, er
 }
 
 func (s *Service) slotToState(ctx context.Context, slot uint64) ([]byte, error) {
-	respBodyReader, cancel, err := s.get(ctx, fmt.Sprintf("/beacon/state_root?slot=%d", slot))
+	respBodyReader, err := s.get(ctx, fmt.Sprintf("/beacon/state_root?slot=%d", slot))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request state")
 	}
-	defer cancel()
 
 	stateRootBytes, err := ioutil.ReadAll(respBodyReader)
 	if err != nil {

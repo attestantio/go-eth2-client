@@ -279,3 +279,20 @@ type AggregateAttestationProvider interface {
 	NonSpecAggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey []byte, slotSignature []byte) (*spec.Attestation, error)
 	AggregateAttestation(ctx context.Context, slot uint64, attestationDataRoot []byte) (*spec.Attestation, error)
 }
+
+// type DepositContractProvider interface {
+// 	// DepositContract provides details of the Ethereum 1 deposit contract for the chain.
+// 	DepositContract(ctx context.Context) (*api.DepositContract, error)
+// }
+
+// ForkScheduleProvider is the interface for providing fork schedule data.
+type ForkScheduleProvider interface {
+	// ForkSchedule provides details of past and future changes in the chain's fork version.
+	ForkSchedule(ctx context.Context) ([]*spec.Fork, error)
+}
+
+// SpecProvider is the interface for providing spec data.
+type SpecProvider interface {
+	// Spec provides the spec information of the chain.
+	Spec(ctx context.Context) (map[string]interface{}, error)
+}

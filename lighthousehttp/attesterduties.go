@@ -76,11 +76,10 @@ func (s *Service) AttesterDuties(ctx context.Context, epoch uint64, validators [
 		return nil, errors.Wrap(err, "failed to write footer")
 	}
 
-	respBodyReader, cancel, err := s.post(ctx, "/validator/duties", &reqBodyReader)
+	respBodyReader, err := s.post(ctx, "/validator/duties", &reqBodyReader)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request attester duties")
 	}
-	cancel()
 
 	var resp []*dutyJSON
 	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
@@ -99,11 +98,10 @@ func (s *Service) AttesterDuties(ctx context.Context, epoch uint64, validators [
 
 	// Need to obtain the committee size; comes from a different call.
 	// Fetch the data.
-	respBodyReader, cancel, err = s.get(ctx, fmt.Sprintf("/beacon/committees?epoch=%d", epoch))
+	respBodyReader, err = s.get(ctx, fmt.Sprintf("/beacon/committees?epoch=%d", epoch))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain committees")
 	}
-	defer cancel()
 
 	type committeeData struct {
 		Slot      uint64   `json:"slot"`
