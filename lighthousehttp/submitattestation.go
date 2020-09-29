@@ -64,8 +64,8 @@ func (s *Service) SubmitAttestation(ctx context.Context, specAttestation *spec.A
 	re := regexp.MustCompile(`.*expected: SubnetId\(([0-9]+)\)`)
 	match := re.FindSubmatch(resp)
 	if len(match) != 2 {
-		log.Warn().Str("resp", string(resp)).Msg("No subnet ID supplied in error message")
-		return errors.New("no subnet ID supplied in error message")
+		// Some other error message.
+		return errors.New(string(resp))
 	}
 	//subnetID, err := strconv.ParseInt(string(match[1]),10,64)
 	//if err != nil {
