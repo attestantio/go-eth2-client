@@ -17,12 +17,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
+
+type submitBeaconBlockResponseJSON struct {
+	Empty   bool `json:"empty"`
+	Present bool `json:"present"`
+}
 
 // SubmitBeaconBlock submits a beacon block.
 func (s *Service) SubmitBeaconBlock(ctx context.Context, specBlock *spec.SignedBeaconBlock) error {
@@ -37,18 +40,18 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, specBlock *spec.SignedB
 		return errors.Wrap(err, "failed to send to /validator/block")
 	}
 
-	var resp []byte
-	if respBodyReader != nil {
-		resp, err = ioutil.ReadAll(respBodyReader)
-		if err != nil {
-			resp = nil
-		}
+	var response submitBeaconBlockResponseJSON
+	if err := json.NewDecoder(respBodyReader).Decode(&response); err != nil {
+		return errors.Wrap(err, "failed to parse submit beacon block response")
 	}
-	if err != nil {
-		return errors.Wrap(err, "failed to obtain error message for beacon block proposal")
+
+	if response.Empty {
+		return errors.New("beacon block proposal rejected as empty")
 	}
-	if len(resp) > 0 {
-		return fmt.Errorf("failed to submit beacon block proposal: %s", string(resp))
+
+	if response.Present {
+		// This means that teku already knows about this block; that's fine.
+		log.Debug().Msg("Beacon block already known by this node")
 	}
 
 	return nil
