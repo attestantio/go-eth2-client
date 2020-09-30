@@ -185,6 +185,16 @@ type BeaconCommitteesProvider interface {
 	BeaconCommittees(ctx context.Context, stateID string) ([]*api.BeaconCommittee, error)
 }
 
+// ValidatorsWithoutBalanceProvider is the interface for providing validator information, minus the balance.
+type ValidatorsWithoutBalanceProvider interface {
+	// ValidatorsWithoutBalance provides the validators, with their status, for a given state.
+	// Balances are set to 0.
+	// This is a non-standard all, only to be used if fetching balances results in the call being too slow.
+	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
+	// validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
+	ValidatorsWithoutBalance(ctx context.Context, stateID string, validators []ValidatorIDProvider) (map[uint64]*api.Validator, error)
+}
+
 //
 // Standard API
 //

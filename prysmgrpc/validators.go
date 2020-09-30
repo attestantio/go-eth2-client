@@ -29,13 +29,23 @@ import (
 // validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
 func (s *Service) Validators(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]*api.Validator, error) {
 	if len(validators) == 0 {
-		return s.validators(ctx, stateID)
+		return s.validators(ctx, stateID, true)
 	}
-	return s.validatorsByPubKeys(ctx, stateID, validators)
+	return s.validatorsByPubKeys(ctx, stateID, validators, true)
+}
+
+// ValidatorsWithoutBalance provides the validators, with their status, for a given state.
+// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
+// validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
+func (s *Service) ValidatorsWithoutBalance(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]*api.Validator, error) {
+	if len(validators) == 0 {
+		return s.validators(ctx, stateID, false)
+	}
+	return s.validatorsByPubKeys(ctx, stateID, validators, false)
 }
 
 // validators returns all validators known by the client.
-func (s *Service) validators(ctx context.Context, stateID string) (map[uint64]*api.Validator, error) {
+func (s *Service) validators(ctx context.Context, stateID string, includeBalances bool) (map[uint64]*api.Validator, error) {
 	// The state ID could by dynamic ('head', 'finalized', etc.).  Becase we are making multiple calls and don't want to
 	// fetch data from different states we resolve it to an epoch and use that.
 	epoch, err := s.EpochFromStateID(ctx, stateID)
@@ -101,13 +111,16 @@ func (s *Service) validators(ctx context.Context, stateID string) (map[uint64]*a
 				highest = res[i].Index
 			}
 		}
-		log.Warn().Int("validators", len(validatorsResp.ValidatorList)).Int("parsed_validators", len(res)).Uint64("highest", highest).Msg("Parsed validators")
 
 		if validatorsResp.NextPageToken == "" {
 			// Means we're done.
 			break
 		}
 		pageToken = validatorsResp.NextPageToken
+	}
+
+	if !includeBalances {
+		return res, nil
 	}
 
 	slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
@@ -128,7 +141,7 @@ func (s *Service) validators(ctx context.Context, stateID string) (map[uint64]*a
 }
 
 // validatorsByPubKeys returns a subset of validators.
-func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]*api.Validator, error) {
+func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, validators []client.ValidatorIDProvider, includeBalances bool) (map[uint64]*api.Validator, error) {
 	// The state ID could by dynamic ('head', 'finalized', etc.).  Becase we are making multiple calls and don't want to
 	// fetch data from different states we resolve it to an epoch and use that.
 	epoch, err := s.EpochFromStateID(ctx, stateID)
@@ -216,6 +229,10 @@ func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, valid
 			copy(pubKey[:], entry.Validator.PublicKey)
 			known[pubKey] = true
 		}
+	}
+
+	if !includeBalances {
+		return res, nil
 	}
 
 	// If we ask prysm for the balance of a validator that doesn't exist it errors, so

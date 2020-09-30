@@ -77,10 +77,84 @@ func TestValidators(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			balances, err := service.Validators(context.Background(), test.stateID, test.validators)
+			validators, err := service.Validators(context.Background(), test.stateID, test.validators)
 			require.NoError(t, err)
-			require.NotNil(t, balances)
-			require.NotEqual(t, 0, len(balances))
+			require.NotNil(t, validators)
+			require.NotEqual(t, 0, len(validators))
+			// Not all validators will have a balance, but at least one must.
+			hasBalance := false
+			for i := range validators {
+				if validators[i].Balance != 0 {
+					hasBalance = true
+					break
+				}
+			}
+			require.True(t, hasBalance)
+		})
+	}
+}
+
+func TestValidatorsWithoutBalance(t *testing.T) {
+	tests := []struct {
+		name       string
+		stateID    string
+		validators []client.ValidatorIDProvider
+	}{
+		{
+			name:    "Genesis",
+			stateID: "genesis",
+		},
+		{
+			name:    "Old",
+			stateID: "32",
+		},
+		{
+			name:    "Single",
+			stateID: "head",
+			validators: []client.ValidatorIDProvider{
+				&testValidatorIDProvider{
+					index:  1000,
+					pubKey: "0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26",
+				},
+			},
+		},
+		{
+			name:    "Unknown",
+			stateID: "head",
+			validators: []client.ValidatorIDProvider{
+				&testValidatorIDProvider{
+					// Known.
+					index:  1000,
+					pubKey: "0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26",
+				},
+				&testValidatorIDProvider{
+					// Unknown.
+					index:  9999999,
+					pubKey: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+				},
+			},
+		},
+		{
+			name:    "All",
+			stateID: "head",
+		},
+	}
+
+	service, err := prysmgrpc.New(context.Background(),
+		prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")),
+		prysmgrpc.WithTimeout(timeout),
+	)
+	require.NoError(t, err)
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			validators, err := service.ValidatorsWithoutBalance(context.Background(), test.stateID, test.validators)
+			require.NoError(t, err)
+			require.NotNil(t, validators)
+			require.NotEqual(t, 0, len(validators))
+			for i := range validators {
+				require.Equal(t, uint64(0), validators[i].Balance)
+			}
 		})
 	}
 }
