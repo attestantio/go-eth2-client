@@ -26,48 +26,71 @@ import (
 
 func TestValidatorStateJSON(t *testing.T) {
 	tests := []struct {
-		name        string
-		input       []byte
-		isAttesting bool
-		err         string
+		name         string
+		input        []byte
+		isPending    bool
+		isActive     bool
+		hasActivated bool
+		isAttesting  bool
+		isExited     bool
+		hasExited    bool
+		err          string
 	}{
 		{
-			name:  "PendingQueued",
-			input: []byte(`"Pending_queued"`),
+			name:      "PendingQueued",
+			input:     []byte(`"Pending_queued"`),
+			isPending: true,
 		},
 		{
-			name:  "PendingInitialized",
-			input: []byte(`"Pending_initialized"`),
+			name:      "PendingInitialized",
+			input:     []byte(`"Pending_initialized"`),
+			isPending: true,
 		},
 		{
-			name:        "ActiveOngoing",
-			input:       []byte(`"Active_ongoing"`),
-			isAttesting: true,
+			name:         "ActiveOngoing",
+			input:        []byte(`"Active_ongoing"`),
+			isActive:     true,
+			hasActivated: true,
+			isAttesting:  true,
 		},
 		{
-			name:        "ActiveExiting",
-			input:       []byte(`"Active_exiting"`),
-			isAttesting: true,
+			name:         "ActiveExiting",
+			input:        []byte(`"Active_exiting"`),
+			isActive:     true,
+			hasActivated: true,
+			isAttesting:  true,
 		},
 		{
-			name:  "ActiveSlashed",
-			input: []byte(`"Active_slashed"`),
+			name:         "ActiveSlashed",
+			input:        []byte(`"Active_slashed"`),
+			isActive:     true,
+			hasActivated: true,
 		},
 		{
-			name:  "ExitedUnslashed",
-			input: []byte(`"Exited_unslashed"`),
+			name:         "ExitedUnslashed",
+			input:        []byte(`"Exited_unslashed"`),
+			hasActivated: true,
+			isExited:     true,
+			hasExited:    true,
 		},
 		{
-			name:  "ExitedSlashed",
-			input: []byte(`"Exited_slashed"`),
+			name:         "ExitedSlashed",
+			input:        []byte(`"Exited_slashed"`),
+			hasActivated: true,
+			isExited:     true,
+			hasExited:    true,
 		},
 		{
-			name:  "WithdrawalPossible",
-			input: []byte(`"Withdrawal_possible"`),
+			name:         "WithdrawalPossible",
+			input:        []byte(`"Withdrawal_possible"`),
+			hasActivated: true,
+			hasExited:    true,
 		},
 		{
-			name:  "WithdrawalDone",
-			input: []byte(`"Withdrawal_done"`),
+			name:         "WithdrawalDone",
+			input:        []byte(`"Withdrawal_done"`),
+			hasActivated: true,
+			hasExited:    true,
 		},
 		{
 			name:  "Unknown",
@@ -91,7 +114,12 @@ func TestValidatorStateJSON(t *testing.T) {
 				rt, err := json.Marshal(&res)
 				require.NoError(t, err)
 				assert.Equal(t, string(test.input), string(rt))
+				assert.Equal(t, test.isPending, res.IsPending())
+				assert.Equal(t, test.isActive, res.IsActive())
+				assert.Equal(t, test.hasActivated, res.HasActivated())
 				assert.Equal(t, test.isAttesting, res.IsAttesting())
+				assert.Equal(t, test.isExited, res.IsExited())
+				assert.Equal(t, test.hasExited, res.HasExited())
 				assert.Equal(t, strings.Trim(string(rt), `"`), res.String())
 			}
 		})

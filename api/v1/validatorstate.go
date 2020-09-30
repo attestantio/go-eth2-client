@@ -99,9 +99,47 @@ func (v ValidatorState) String() string {
 	return validatorStateStrings[v]
 }
 
+// IsPending returns true if the validator is pending.
+func (v ValidatorState) IsPending() bool {
+	return v == ValidatorStatePendingInitialized ||
+		v == ValidatorStatePendingQueued
+}
+
+// IsActive returns true if the validator is active.
+func (v ValidatorState) IsActive() bool {
+	return v == ValidatorStateActiveOngoing ||
+		v == ValidatorStateActiveExiting ||
+		v == ValidatorStateActiveSlashed
+}
+
+// HasActivated returns true if the validator has activated.
+func (v ValidatorState) HasActivated() bool {
+	return v == ValidatorStateActiveOngoing ||
+		v == ValidatorStateActiveExiting ||
+		v == ValidatorStateActiveSlashed ||
+		v == ValidatorStateExitedUnslashed ||
+		v == ValidatorStateExitedSlashed ||
+		v == ValidatorStateWithdrawalPossible ||
+		v == ValidatorStateWithdrawalDone
+}
+
 // IsAttesting returns true if the validator should be attesting.
 func (v ValidatorState) IsAttesting() bool {
 	return v == ValidatorStateActiveOngoing || v == ValidatorStateActiveExiting
+}
+
+// IsExited returns true if the validator is exited.
+func (v ValidatorState) IsExited() bool {
+	return v == ValidatorStateExitedUnslashed ||
+		v == ValidatorStateExitedSlashed
+}
+
+// HasExited returns true if the validator has exited.
+func (v ValidatorState) HasExited() bool {
+	return v == ValidatorStateExitedUnslashed ||
+		v == ValidatorStateExitedSlashed ||
+		v == ValidatorStateWithdrawalPossible ||
+		v == ValidatorStateWithdrawalDone
 }
 
 // HasBalance returns true if the validator has a balance.
