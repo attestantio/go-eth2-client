@@ -15,8 +15,10 @@ package tekuhttp
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -32,6 +34,7 @@ type Service struct {
 	ctx context.Context
 
 	base    *url.URL
+	address string
 	client  *http.Client
 	timeout time.Duration
 
@@ -68,7 +71,11 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		},
 	}
 
-	base, err := url.Parse(parameters.address)
+	address := parameters.address
+	if !strings.HasPrefix(address, "http") {
+		address = fmt.Sprintf("http://%s", parameters.address)
+	}
+	base, err := url.Parse(address)
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid URL")
 	}
@@ -76,6 +83,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	s := &Service{
 		ctx:     ctx,
 		base:    base,
+		address: parameters.address,
 		client:  client,
 		timeout: parameters.timeout,
 	}
@@ -144,6 +152,11 @@ func (s *Service) fetchStaticValues(ctx context.Context) error {
 // Name provides the name of the service.
 func (s *Service) Name() string {
 	return "Teku (HTTP)"
+}
+
+// Address provides the address for the connection.
+func (s *Service) Address() string {
+	return s.address
 }
 
 // close frees up any resources held.

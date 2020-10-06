@@ -23,8 +23,11 @@ import (
 
 // Service is the service providing a connection to an Ethereum 2 client.
 type Service interface {
-	// Name returns the name of the client.
+	// Name returns the name of the client implementation.
 	Name() string
+
+	// Address returns the address of the client.
+	Address() string
 
 	// EpochFromStateID converts a state ID to its epoch.
 	EpochFromStateID(ctx context.Context, stateID string) (uint64, error)

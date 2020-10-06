@@ -28,6 +28,7 @@ func TestNew(t *testing.T) {
 	s, err := prysmgrpc.New(context.Background(), prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")))
 	require.NoError(t, err)
 	require.NotNil(t, s)
+	require.Equal(t, os.Getenv("PRYSMGRPC_ADDRESS"), s.Address())
 }
 
 func TestInterfaces(t *testing.T) {

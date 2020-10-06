@@ -28,6 +28,7 @@ func TestNew(t *testing.T) {
 	s, err := lighthousehttp.New(context.Background(), lighthousehttp.WithAddress(os.Getenv("LIGHTHOUSEHTTP_ADDRESS")))
 	require.NoError(t, err)
 	require.NotNil(t, s)
+	require.Equal(t, os.Getenv("LIGHTHOUSEHTTP_ADDRESS"), s.Address())
 }
 
 func TestInterfaces(t *testing.T) {

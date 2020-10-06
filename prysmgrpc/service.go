@@ -36,6 +36,7 @@ type Service struct {
 
 	// Client connection.
 	conn    *grpc.ClientConn
+	address string
 	timeout time.Duration
 
 	maxPageSize int32
@@ -93,6 +94,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	s := &Service{
 		ctx:         ctx,
 		conn:        conn,
+		address:     parameters.address,
 		timeout:     parameters.timeout,
 		maxPageSize: 250, // Prysm default.
 	}
@@ -123,6 +125,11 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 // Name provides the name of the service.
 func (s *Service) Name() string {
 	return "Prysm (gRPC)"
+}
+
+// Address provides the address for the connection.
+func (s *Service) Address() string {
+	return s.address
 }
 
 // Close the service, freeing up resources.
