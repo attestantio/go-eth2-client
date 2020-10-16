@@ -25,9 +25,9 @@ import (
 
 // IndexedAttestation provides a signed attestation with a list of attesting indices.
 type IndexedAttestation struct {
-	AttestingIndices []uint64
+	AttestingIndices []uint64 `ssz-max:"2048"`
 	Data             *AttestationData
-	Signature        []byte
+	Signature        []byte `ssz-size:"96"`
 }
 
 // indexedAttestationJSON is the spec representation of the struct.

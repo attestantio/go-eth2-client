@@ -31,7 +31,10 @@ func TestSpec(t *testing.T) {
 		},
 	}
 
-	service, err := standardhttp.New(context.Background(), standardhttp.WithAddress(os.Getenv("HTTP_ADDRESS")))
+	service, err := standardhttp.New(context.Background(),
+		standardhttp.WithTimeout(timeout),
+		standardhttp.WithAddress(os.Getenv("HTTP_ADDRESS")),
+	)
 	require.NoError(t, err)
 
 	for _, test := range tests {
@@ -40,7 +43,7 @@ func TestSpec(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, spec)
 			// Check an integer type.
-			require.IsType(t, spec["FAR_FUTURE_EPOCH"], uint64(0))
+			require.IsType(t, spec["BASE_REWARD_FACTOR"], uint64(0))
 			// Check a byte array type.
 			require.IsType(t, spec["DOMAIN_DEPOSIT"], []byte{})
 		})

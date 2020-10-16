@@ -65,7 +65,7 @@ func TestAggregateAndProofJSON(t *testing.T) {
 		{
 			name:  "AggregateInvalid",
 			input: []byte(`{"aggregator_index":"402","aggregate":{},"selection_proof":"0x8b5f33a895612754103fbaaed74b408e89b948c69740d722b56207c272e001b2ddd445931e40a2938c84afab86c2606f0c1a93a0aaf4962c91d3ddf309de8ef0dbd68f590573e53e5ff7114e9625fae2cfee9e7eb991ad929d351c7701581d9c"}`),
-			err:   "invalid JSON: data missing",
+			err:   "invalid JSON: aggregation bits missing",
 		},
 		{
 			name:  "SelectionProofMissing",

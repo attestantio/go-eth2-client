@@ -14,8 +14,6 @@
 package v1
 
 import (
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -74,10 +72,6 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 
 	if parameters.address == "" {
 		return nil, errors.New("no address specified")
-	}
-
-	if !strings.HasPrefix(parameters.address, "http") {
-		parameters.address = fmt.Sprintf("http://%s", parameters.address)
 	}
 
 	return &parameters, nil

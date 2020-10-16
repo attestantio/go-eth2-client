@@ -17,7 +17,7 @@ func (a *AttestationData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	// Field (0) 'Slot'
 	dst = ssz.MarshalUint64(dst, a.Slot)
 
-	// Field (1) 'CommitteeIndex'
+	// Field (1) 'Index'
 	dst = ssz.MarshalUint64(dst, a.Index)
 
 	// Field (2) 'BeaconBlockRoot'
@@ -57,7 +57,7 @@ func (a *AttestationData) UnmarshalSSZ(buf []byte) error {
 	// Field (0) 'Slot'
 	a.Slot = ssz.UnmarshallUint64(buf[0:8])
 
-	// Field (1) 'CommitteeIndex'
+	// Field (1) 'Index'
 	a.Index = ssz.UnmarshallUint64(buf[8:16])
 
 	// Field (2) 'BeaconBlockRoot'
@@ -103,7 +103,7 @@ func (a *AttestationData) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	// Field (0) 'Slot'
 	hh.PutUint64(a.Slot)
 
-	// Field (1) 'CommitteeIndex'
+	// Field (1) 'Index'
 	hh.PutUint64(a.Index)
 
 	// Field (2) 'BeaconBlockRoot'

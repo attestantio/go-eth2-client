@@ -37,12 +37,8 @@ func (s *Service) StateFork(ctx context.Context, stateID string) (*spec.Fork, er
 		return nil, errors.Wrap(err, "failed to request state fork")
 	}
 
-	specReader, err := s.lhToSpec(ctx, respBodyReader)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to convert teku response to spec response")
-	}
 	var stateForkJSON stateForkJSON
-	if err := json.NewDecoder(specReader).Decode(&stateForkJSON); err != nil {
+	if err := json.NewDecoder(respBodyReader).Decode(&stateForkJSON); err != nil {
 		return nil, errors.Wrap(err, "failed to parse state fork")
 	}
 	if stateForkJSON.Data == nil {

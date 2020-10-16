@@ -17,7 +17,6 @@ import (
 	"context"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -37,13 +36,8 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 			return nil, errors.Wrap(err, "failed to request spec")
 		}
 
-		specReader, err := s.lhToSpec(ctx, respBodyReader)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to convert teku response to spec response")
-		}
-
 		var specJSON specJSON
-		if err := json.NewDecoder(specReader).Decode(&specJSON); err != nil {
+		if err := json.NewDecoder(respBodyReader).Decode(&specJSON); err != nil {
 			return nil, errors.Wrap(err, "failed to parse spec")
 		}
 
@@ -78,8 +72,8 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 				continue
 			}
 
-			// Unknown format.
-			return nil, fmt.Errorf("invalid format of value %s", k)
+			// Assume string.
+			spec[k] = v
 		}
 		s.spec = spec
 	}

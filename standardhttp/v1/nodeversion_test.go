@@ -31,7 +31,10 @@ func TestNodeVersion(t *testing.T) {
 		},
 	}
 
-	service, err := standardhttp.New(context.Background(), standardhttp.WithAddress(os.Getenv("HTTP_ADDRESS")))
+	service, err := standardhttp.New(context.Background(),
+		standardhttp.WithTimeout(timeout),
+		standardhttp.WithAddress(os.Getenv("HTTP_ADDRESS")),
+	)
 	require.NoError(t, err)
 
 	for _, test := range tests {

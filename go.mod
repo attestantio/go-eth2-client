@@ -11,6 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prysmaticlabs/ethereumapis v0.0.0-20200812153649-a842fc47c2c3
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20200618145306-2ae0807bef65
+	github.com/r3labs/sse/v2 v2.3.0
 	github.com/rs/zerolog v1.19.0
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect

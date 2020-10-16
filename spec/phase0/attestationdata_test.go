@@ -38,6 +38,11 @@ func TestAttestationDataJSON(t *testing.T) {
 			err:   "invalid JSON: json: cannot unmarshal array into Go value of type phase0.attestationDataJSON",
 		},
 		{
+			name:  "SlotMissing",
+			input: []byte(`{"index":"1","beacon_block_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}}`),
+			err:   "slot missing",
+		},
+		{
 			name:  "SlotWrongType",
 			input: []byte(`{"slot":true,"index":"1","beacon_block_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field attestationDataJSON.slot of type string",
@@ -48,6 +53,11 @@ func TestAttestationDataJSON(t *testing.T) {
 			err:   "invalid value for slot: strconv.ParseUint: parsing \"-1\": invalid syntax",
 		},
 		{
+			name:  "IndexMissing",
+			input: []byte(`{"slot":"100","beacon_block_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}}`),
+			err:   "index missing",
+		},
+		{
 			name:  "IndexWrongType",
 			input: []byte(`{"slot":"100","index":true,"beacon_block_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field attestationDataJSON.index of type string",
@@ -56,6 +66,11 @@ func TestAttestationDataJSON(t *testing.T) {
 			name:  "IndexInvalid",
 			input: []byte(`{"slot":"100","index":"-1","beacon_block_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}}`),
 			err:   "invalid value for index: strconv.ParseUint: parsing \"-1\": invalid syntax",
+		},
+		{
+			name:  "BeaconBlockRootMissing",
+			input: []byte(`{"slot":"100","index":"1","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}}`),
+			err:   "beacon block root missing",
 		},
 		{
 			name:  "BeaconBlockRootWrongType",

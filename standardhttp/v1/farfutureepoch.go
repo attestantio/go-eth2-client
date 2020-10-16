@@ -19,5 +19,5 @@ import (
 
 // FarFutureEpoch provides the values for FAR_FUTURE_EOPCH of the chain.
 func (s *Service) FarFutureEpoch(ctx context.Context) (uint64, error) {
-	return s.spec["FAR_FUTURE_EPOCH"].(uint64), nil
+	return uint64(0xffffffffffffffff), nil
 }

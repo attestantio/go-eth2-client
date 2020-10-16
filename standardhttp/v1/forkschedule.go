@@ -33,13 +33,8 @@ func (s *Service) ForkSchedule(ctx context.Context) ([]*spec.Fork, error) {
 			return nil, errors.Wrap(err, "failed to request fork schedule")
 		}
 
-		specReader, err := s.lhToSpec(ctx, respBodyReader)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to convert teku response to spec response")
-		}
-
 		var forkScheduleJSON forkScheduleJSON
-		if err := json.NewDecoder(specReader).Decode(&forkScheduleJSON); err != nil {
+		if err := json.NewDecoder(respBodyReader).Decode(&forkScheduleJSON); err != nil {
 			return nil, errors.Wrap(err, "failed to parse fork schedule")
 		}
 

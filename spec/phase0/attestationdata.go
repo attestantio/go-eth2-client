@@ -61,11 +61,20 @@ func (a *AttestationData) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &attestationDataJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	if attestationDataJSON.Slot == "" {
+		return errors.New("slot missing")
+	}
 	if a.Slot, err = strconv.ParseUint(attestationDataJSON.Slot, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+	if attestationDataJSON.Index == "" {
+		return errors.New("index missing")
+	}
 	if a.Index, err = strconv.ParseUint(attestationDataJSON.Index, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for index")
+	}
+	if attestationDataJSON.BeaconBlockRoot == "" {
+		return errors.New("beacon block root missing")
 	}
 	if a.BeaconBlockRoot, err = hex.DecodeString(strings.TrimPrefix(attestationDataJSON.BeaconBlockRoot, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for beacon block root")
@@ -73,14 +82,14 @@ func (a *AttestationData) UnmarshalJSON(input []byte) error {
 	if len(a.BeaconBlockRoot) != rootLength {
 		return errors.New("incorrect length for beacon block root")
 	}
-	a.Source = attestationDataJSON.Source
-	if a.Source == nil {
+	if attestationDataJSON.Source == nil {
 		return errors.New("source missing")
 	}
-	a.Target = attestationDataJSON.Target
-	if a.Target == nil {
+	a.Source = attestationDataJSON.Source
+	if attestationDataJSON.Target == nil {
 		return errors.New("target missing")
 	}
+	a.Target = attestationDataJSON.Target
 
 	return nil
 }

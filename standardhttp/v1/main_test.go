@@ -16,9 +16,13 @@ package v1_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 )
+
+// timeout for tests.
+var timeout = 60 * time.Second
 
 func TestMain(m *testing.M) {
 	zerolog.SetGlobalLevel(zerolog.Disabled)

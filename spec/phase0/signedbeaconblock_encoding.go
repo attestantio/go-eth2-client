@@ -13,7 +13,7 @@ func (s *SignedBeaconBlock) MarshalSSZ() ([]byte, error) {
 // MarshalSSZTo ssz marshals the SignedBeaconBlock object to a target array
 func (s *SignedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
-	offset := int(36)
+	offset := int(100)
 
 	// Offset (0) 'Message'
 	dst = ssz.WriteOffset(dst, offset)
@@ -23,7 +23,7 @@ func (s *SignedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset += s.Message.SizeSSZ()
 
 	// Field (1) 'Signature'
-	if len(s.Signature) != 32 {
+	if len(s.Signature) != 96 {
 		err = ssz.ErrBytesLength
 		return
 	}
@@ -41,7 +41,7 @@ func (s *SignedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 func (s *SignedBeaconBlock) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
-	if size < 36 {
+	if size < 100 {
 		return ssz.ErrSize
 	}
 
@@ -55,9 +55,9 @@ func (s *SignedBeaconBlock) UnmarshalSSZ(buf []byte) error {
 
 	// Field (1) 'Signature'
 	if cap(s.Signature) == 0 {
-		s.Signature = make([]byte, 0, len(buf[4:36]))
+		s.Signature = make([]byte, 0, len(buf[4:100]))
 	}
-	s.Signature = append(s.Signature, buf[4:36]...)
+	s.Signature = append(s.Signature, buf[4:100]...)
 
 	// Field (0) 'Message'
 	{
@@ -74,7 +74,7 @@ func (s *SignedBeaconBlock) UnmarshalSSZ(buf []byte) error {
 
 // SizeSSZ returns the ssz encoded size in bytes for the SignedBeaconBlock object
 func (s *SignedBeaconBlock) SizeSSZ() (size int) {
-	size = 36
+	size = 100
 
 	// Field (0) 'Message'
 	if s.Message == nil {
@@ -100,7 +100,7 @@ func (s *SignedBeaconBlock) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	}
 
 	// Field (1) 'Signature'
-	if len(s.Signature) != 32 {
+	if len(s.Signature) != 96 {
 		err = ssz.ErrBytesLength
 		return
 	}

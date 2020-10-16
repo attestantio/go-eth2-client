@@ -37,12 +37,8 @@ func (s *Service) StateFinality(ctx context.Context, stateID string) (*api.Final
 		return nil, errors.Wrap(err, "failed to request state finality checkpoints")
 	}
 
-	specReader, err := s.lhToSpec(ctx, respBodyReader)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to convert lighthouse response to spec response")
-	}
 	var stateFinalityJSON stateFinalityJSON
-	if err := json.NewDecoder(specReader).Decode(&stateFinalityJSON); err != nil {
+	if err := json.NewDecoder(respBodyReader).Decode(&stateFinalityJSON); err != nil {
 		return nil, errors.Wrap(err, "failed to parse state finality")
 	}
 	if stateFinalityJSON.Data == nil {

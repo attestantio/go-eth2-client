@@ -269,8 +269,8 @@ type AttesterDutiesProvider interface {
 
 // ProposerDutiesProvider is the interface for providing proposer duties.
 type ProposerDutiesProvider interface {
-	// ProposerDuties obtains proposer duties.
-	// If validators is nil it will return all duties for the given epoch.
+	// ProposerDuties obtains proposer duties for the given epoch.
+	// If validators is empty all duties are returned, otherwise only matching duties are returned.
 	ProposerDuties(ctx context.Context, epoch uint64, validators []ValidatorIDProvider) ([]*api.ProposerDuty, error)
 }
 
@@ -289,7 +289,7 @@ type AttestationDataProvider interface {
 // AggregateAttestationProvider is the interface for providing aggregate attestations.
 type AggregateAttestationProvider interface {
 	// AggregateAttestation fetches the aggregate attestation given an attestation.
-	NonSpecAggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey []byte, slotSignature []byte) (*spec.Attestation, error)
+	// NonSpecAggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey []byte, slotSignature []byte) (*spec.Attestation, error)
 	AggregateAttestation(ctx context.Context, slot uint64, attestationDataRoot []byte) (*spec.Attestation, error)
 }
 
@@ -308,4 +308,10 @@ type ForkScheduleProvider interface {
 type SpecProvider interface {
 	// Spec provides the spec information of the chain.
 	Spec(ctx context.Context) (map[string]interface{}, error)
+}
+
+// NodeSyncingProvider is the interface for providing synchronization state.
+type NodeSyncingProvider interface {
+	// NodeSyncing provides the state of the node's synchronization with the chain.
+	NodeSyncing(ctx context.Context) (*api.SyncState, error)
 }

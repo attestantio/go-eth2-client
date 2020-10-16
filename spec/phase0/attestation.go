@@ -54,12 +54,18 @@ func (a *Attestation) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &attestationJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	if attestationJSON.AggregationBits == "" {
+		return errors.New("aggregation bits missing")
+	}
 	if a.AggregationBits, err = hex.DecodeString(strings.TrimPrefix(attestationJSON.AggregationBits, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for beacon block root")
 	}
 	a.Data = attestationJSON.Data
 	if a.Data == nil {
 		return errors.New("data missing")
+	}
+	if attestationJSON.Signature == "" {
+		return errors.New("signature missing")
 	}
 	if a.Signature, err = hex.DecodeString(strings.TrimPrefix(attestationJSON.Signature, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for signature")
