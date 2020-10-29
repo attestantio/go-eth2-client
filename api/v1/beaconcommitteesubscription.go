@@ -23,6 +23,8 @@ import (
 
 // BeaconCommitteeSubscription is the data required for a beacon committee subscription.
 type BeaconCommitteeSubscription struct {
+	// ValidatorIdex is the index of the validator making the subscription request.
+	ValidatorIndex uint64
 	// Slot is the slot for which the validator is attesting.
 	Slot uint64
 	// CommitteeIndex is the index of the committee of which the validator is a member at the given slot.
@@ -35,6 +37,7 @@ type BeaconCommitteeSubscription struct {
 
 // beaconCommitteeSubscriptionJSON is the spec representation of the struct.
 type beaconCommitteeSubscriptionJSON struct {
+	ValidatorIndex   string `json:"validator_index"`
 	Slot             string `json:"slot"`
 	CommitteeIndex   string `json:"committee_index"`
 	CommitteesAtSlot string `json:"committees_at_slot"`
@@ -44,6 +47,7 @@ type beaconCommitteeSubscriptionJSON struct {
 // MarshalJSON implements json.Marshaler.
 func (b *BeaconCommitteeSubscription) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&beaconCommitteeSubscriptionJSON{
+		ValidatorIndex:   fmt.Sprintf("%d", b.ValidatorIndex),
 		Slot:             fmt.Sprintf("%d", b.Slot),
 		CommitteeIndex:   fmt.Sprintf("%d", b.CommitteeIndex),
 		CommitteesAtSlot: fmt.Sprintf("%d", b.CommitteesAtSlot),
@@ -58,6 +62,12 @@ func (b *BeaconCommitteeSubscription) UnmarshalJSON(input []byte) error {
 	var beaconCommitteeSubscriptionJSON beaconCommitteeSubscriptionJSON
 	if err = json.Unmarshal(input, &beaconCommitteeSubscriptionJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
+	}
+	if beaconCommitteeSubscriptionJSON.ValidatorIndex == "" {
+		return errors.New("validator index missing")
+	}
+	if b.ValidatorIndex, err = strconv.ParseUint(beaconCommitteeSubscriptionJSON.ValidatorIndex, 10, 64); err != nil {
+		return errors.Wrap(err, "invalid value for validator index")
 	}
 	if beaconCommitteeSubscriptionJSON.Slot == "" {
 		return errors.New("slot missing")

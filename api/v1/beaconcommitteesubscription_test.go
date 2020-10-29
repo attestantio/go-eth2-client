@@ -38,58 +38,73 @@ func TestBeaconCommitteeSubscriptionJSON(t *testing.T) {
 			err:   "invalid JSON: json: cannot unmarshal array into Go value of type v1.beaconCommitteeSubscriptionJSON",
 		},
 		{
+			name:  "ValidatorIndexMissing",
+			input: []byte(`{"slot":"1","committee_index":"2","committees_at_slot":"5","is_aggregator":true}`),
+			err:   "validator index missing",
+		},
+		{
+			name:  "ValidatorIndexWrongType",
+			input: []byte(`{"validator_index":true,"slot":"1","committee_index":"2","committees_at_slot":"5","is_aggregator":true}`),
+			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field beaconCommitteeSubscriptionJSON.validator_index of type string",
+		},
+		{
+			name:  "ValidatorIndexInvalid",
+			input: []byte(`{"validator_index":"-1","slot":"1","committee_index":"2","committees_at_slot":"5","is_aggregator":true}`),
+			err:   "invalid value for validator index: strconv.ParseUint: parsing \"-1\": invalid syntax",
+		},
+		{
 			name:  "SlotMissing",
-			input: []byte(`{"committee_index":"2","committees_at_slot":"5","is_aggregator":true}`),
+			input: []byte(`{"validator_index":"10","committee_index":"2","committees_at_slot":"5","is_aggregator":true}`),
 			err:   "slot missing",
 		},
 		{
 			name:  "SlotWrongType",
-			input: []byte(`{"slot":true,"committee_index":"2","committees_at_slot":"5","is_aggregator":true}`),
+			input: []byte(`{"validator_index":"10","slot":true,"committee_index":"2","committees_at_slot":"5","is_aggregator":true}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field beaconCommitteeSubscriptionJSON.slot of type string",
 		},
 		{
 			name:  "SlotInvalid",
-			input: []byte(`{"slot":"-1","committee_index":"2","committees_at_slot":"5","is_aggregator":true}`),
+			input: []byte(`{"validator_index":"10","slot":"-1","committee_index":"2","committees_at_slot":"5","is_aggregator":true}`),
 			err:   "invalid value for slot: strconv.ParseUint: parsing \"-1\": invalid syntax",
 		},
 		{
 			name:  "CommitteeIndexMissing",
-			input: []byte(`{"slot":"1","committees_at_slot":"5","is_aggregator":true}`),
+			input: []byte(`{"validator_index":"10","slot":"1","committees_at_slot":"5","is_aggregator":true}`),
 			err:   "committee index missing",
 		},
 		{
 			name:  "CommitteeIndexWrongType",
-			input: []byte(`{"slot":"1","committee_index":true,"committees_at_slot":"5","is_aggregator":true}`),
+			input: []byte(`{"validator_index":"10","slot":"1","committee_index":true,"committees_at_slot":"5","is_aggregator":true}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field beaconCommitteeSubscriptionJSON.committee_index of type string",
 		},
 		{
 			name:  "CommitteeIndexMissing",
-			input: []byte(`{"slot":"1","committee_index":"-1","committees_at_slot":"5","is_aggregator":true}`),
+			input: []byte(`{"validator_index":"10","slot":"1","committee_index":"-1","committees_at_slot":"5","is_aggregator":true}`),
 			err:   "invalid value for committee index: strconv.ParseUint: parsing \"-1\": invalid syntax",
 		},
 		{
 			name:  "CommitteesAtSlotMissing",
-			input: []byte(`{"slot":"1","committee_index":"2","is_aggregator":true}`),
+			input: []byte(`{"validator_index":"10","slot":"1","committee_index":"2","is_aggregator":true}`),
 			err:   "committees at slot missing",
 		},
 		{
 			name:  "CommitteesAtSlotWrongType",
-			input: []byte(`{"slot":"1","committee_index":"2","committees_at_slot":true,"is_aggregator":true}`),
+			input: []byte(`{"validator_index":"10","slot":"1","committee_index":"2","committees_at_slot":true,"is_aggregator":true}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field beaconCommitteeSubscriptionJSON.committees_at_slot of type string",
 		},
 		{
 			name:  "CommitteesAtSlotInvalid",
-			input: []byte(`{"slot":"1","committee_index":"2","committees_at_slot":"-1","is_aggregator":true}`),
+			input: []byte(`{"validator_index":"10","slot":"1","committee_index":"2","committees_at_slot":"-1","is_aggregator":true}`),
 			err:   "invalid value for committees at slot: strconv.ParseUint: parsing \"-1\": invalid syntax",
 		},
 		{
 			name:  "CommitteesAtSlotInvalid2",
-			input: []byte(`{"slot":"1","committee_index":"2","committees_at_slot":"0","is_aggregator":true}`),
+			input: []byte(`{"validator_index":"10","slot":"1","committee_index":"2","committees_at_slot":"0","is_aggregator":true}`),
 			err:   "committees at slot cannot be 0",
 		},
 		{
 			name:  "Good",
-			input: []byte(`{"slot":"1","committee_index":"2","committees_at_slot":"5","is_aggregator":true}`),
+			input: []byte(`{"validator_index":"10","slot":"1","committee_index":"2","committees_at_slot":"5","is_aggregator":true}`),
 		},
 	}
 
