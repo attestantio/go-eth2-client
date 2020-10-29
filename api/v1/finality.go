@@ -58,12 +58,15 @@ func (f *Finality) UnmarshalJSON(input []byte) error {
 	if finalityJSON.Finalized == nil {
 		return errors.New("finalized checkpoint missing")
 	}
+	f.Finalized = finalityJSON.Finalized
 	if finalityJSON.Justified == nil {
 		return errors.New("justified checkpoint missing")
 	}
+	f.Justified = finalityJSON.Justified
 	if finalityJSON.PreviousJustified == nil {
 		return errors.New("previous justified checkpoint missing")
 	}
+	f.PreviousJustified = finalityJSON.PreviousJustified
 
 	return nil
 }
