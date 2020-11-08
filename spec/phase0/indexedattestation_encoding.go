@@ -28,11 +28,7 @@ func (i *IndexedAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 
 	// Field (2) 'Signature'
-	if len(i.Signature) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, i.Signature...)
+	dst = append(dst, i.Signature[:]...)
 
 	// Field (0) 'AttestingIndices'
 	if len(i.AttestingIndices) > 2048 {
@@ -71,10 +67,7 @@ func (i *IndexedAttestation) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (2) 'Signature'
-	if cap(i.Signature) == 0 {
-		i.Signature = make([]byte, 0, len(buf[132:228]))
-	}
-	i.Signature = append(i.Signature, buf[132:228]...)
+	copy(i.Signature[:], buf[132:228])
 
 	// Field (0) 'AttestingIndices'
 	{
@@ -131,11 +124,7 @@ func (i *IndexedAttestation) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	}
 
 	// Field (2) 'Signature'
-	if len(i.Signature) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(i.Signature)
+	hh.PutBytes(i.Signature[:])
 
 	hh.Merkleize(indx)
 	return

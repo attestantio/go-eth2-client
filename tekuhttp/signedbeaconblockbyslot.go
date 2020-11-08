@@ -34,7 +34,7 @@ type tekuSignedBeaconBlockJSON struct {
 var signedBeaconBlockRe1 = regexp.MustCompile(`"header_([12])"`)
 
 // SignedBeaconBlockBySlot fetches a signed beacon block given its slot.
-func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*spec.SignedBeaconBlock, error) {
+func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot spec.Slot) (*spec.SignedBeaconBlock, error) {
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/beacon/block?slot=%d", slot))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request signed beacon block")
@@ -57,7 +57,7 @@ func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*sp
 	if block.Message.Slot != slot {
 		if block.Message.Slot < slot {
 			// If teku does not have a block in a slot it will return an earlier one; treat this as not found.
-			log.Trace().Uint64("requested_slot", slot).Uint64("returned_slot", block.Message.Slot).Msg("Block returned for earlier slot; ignoring")
+			log.Trace().Uint64("requested_slot", uint64(slot)).Uint64("returned_slot", uint64(block.Message.Slot)).Msg("Block returned for earlier slot; ignoring")
 			return nil, nil
 		}
 

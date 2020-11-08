@@ -23,11 +23,7 @@ func (s *SignedAggregateAndProof) MarshalSSZTo(buf []byte) (dst []byte, err erro
 	offset += s.Message.SizeSSZ()
 
 	// Field (1) 'Signature'
-	if len(s.Signature) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, s.Signature...)
+	dst = append(dst, s.Signature[:]...)
 
 	// Field (0) 'Message'
 	if dst, err = s.Message.MarshalSSZTo(dst); err != nil {
@@ -54,10 +50,7 @@ func (s *SignedAggregateAndProof) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (1) 'Signature'
-	if cap(s.Signature) == 0 {
-		s.Signature = make([]byte, 0, len(buf[4:100]))
-	}
-	s.Signature = append(s.Signature, buf[4:100]...)
+	copy(s.Signature[:], buf[4:100])
 
 	// Field (0) 'Message'
 	{
@@ -100,11 +93,7 @@ func (s *SignedAggregateAndProof) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	}
 
 	// Field (1) 'Signature'
-	if len(s.Signature) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(s.Signature)
+	hh.PutBytes(s.Signature[:])
 
 	hh.Merkleize(indx)
 	return

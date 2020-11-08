@@ -23,11 +23,7 @@ func (s *SignedVoluntaryExit) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 
 	// Field (1) 'Signature'
-	if len(s.Signature) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, s.Signature...)
+	dst = append(dst, s.Signature[:]...)
 
 	return
 }
@@ -49,10 +45,7 @@ func (s *SignedVoluntaryExit) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (1) 'Signature'
-	if cap(s.Signature) == 0 {
-		s.Signature = make([]byte, 0, len(buf[16:112]))
-	}
-	s.Signature = append(s.Signature, buf[16:112]...)
+	copy(s.Signature[:], buf[16:112])
 
 	return err
 }
@@ -78,11 +71,7 @@ func (s *SignedVoluntaryExit) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	}
 
 	// Field (1) 'Signature'
-	if len(s.Signature) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(s.Signature)
+	hh.PutBytes(s.Signature[:])
 
 	hh.Merkleize(indx)
 	return

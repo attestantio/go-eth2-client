@@ -14,11 +14,13 @@
 package phase0
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 	bitfield "github.com/prysmaticlabs/go-bitfield"
 )
@@ -27,14 +29,21 @@ import (
 type Attestation struct {
 	AggregationBits bitfield.Bitlist `ssz-max:"2048"`
 	Data            *AttestationData
-	Signature       []byte `ssz-size:"96"`
+	Signature       BLSSignature `ssz-size:"96"`
 }
 
-// attestationJSON is the spec representation of the struct.
+// attestationJSON is a raw representation of the struct.
 type attestationJSON struct {
 	AggregationBits string           `json:"aggregation_bits"`
 	Data            *AttestationData `json:"data"`
 	Signature       string           `json:"signature"`
+}
+
+// attestationYAML is a raw representation of the struct.
+type attestationYAML struct {
+	AggregationBits string           `yaml:"aggregation_bits"`
+	Data            *AttestationData `yaml:"data"`
+	Signature       string           `yaml:"signature"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -48,12 +57,16 @@ func (a *Attestation) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (a *Attestation) UnmarshalJSON(input []byte) error {
-	var err error
-
 	var attestationJSON attestationJSON
-	if err = json.Unmarshal(input, &attestationJSON); err != nil {
+	err := json.Unmarshal(input, &attestationJSON)
+	if err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	return a.unpack(&attestationJSON)
+}
+
+func (a *Attestation) unpack(attestationJSON *attestationJSON) error {
+	var err error
 	if attestationJSON.AggregationBits == "" {
 		return errors.New("aggregation bits missing")
 	}
@@ -67,19 +80,44 @@ func (a *Attestation) UnmarshalJSON(input []byte) error {
 	if attestationJSON.Signature == "" {
 		return errors.New("signature missing")
 	}
-	if a.Signature, err = hex.DecodeString(strings.TrimPrefix(attestationJSON.Signature, "0x")); err != nil {
+	signature, err := hex.DecodeString(strings.TrimPrefix(attestationJSON.Signature, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
-	if len(a.Signature) != signatureLength {
+	if len(signature) != SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
+	copy(a.Signature[:], signature)
 
 	return nil
 }
 
+// MarshalYAML implements yaml.Marshaler.
+func (a *Attestation) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&attestationYAML{
+		AggregationBits: fmt.Sprintf("%#x", []byte(a.AggregationBits)),
+		Data:            a.Data,
+		Signature:       fmt.Sprintf("%#x", a.Signature),
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (a *Attestation) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var attestationJSON attestationJSON
+	if err := yaml.Unmarshal(input, &attestationJSON); err != nil {
+		return err
+	}
+	return a.unpack(&attestationJSON)
+}
+
 // String returns a string version of the structure.
 func (a *Attestation) String() string {
-	data, err := json.Marshal(a)
+	data, err := yaml.Marshal(a)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

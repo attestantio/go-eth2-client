@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"strconv"
 
-	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -39,8 +38,9 @@ type validatorsValidatorJSON struct {
 
 // Validators provides the validators, with their balance and status, for a given state.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
-func (s *Service) Validators(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]*api.Validator, error) {
+// validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
+// will be applied.
+func (s *Service) Validators(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error) {
 	slot, err := s.SlotFromStateID(ctx, stateID)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain slot")
@@ -65,7 +65,7 @@ func (s *Service) Validators(ctx context.Context, stateID string, validators []c
 		return nil, errors.Wrap(err, "failed to parse validators")
 	}
 
-	res := make(map[uint64]*api.Validator, len(validatorsResponse.Validators))
+	res := make(map[spec.ValidatorIndex]*api.Validator, len(validatorsResponse.Validators))
 	for _, validatorResp := range validatorsResponse.Validators {
 		balance := uint64(0)
 		if validatorResp.Balance != "" {
@@ -74,11 +74,11 @@ func (s *Service) Validators(ctx context.Context, stateID string, validators []c
 				return nil, errors.Wrap(err, "failed to parse validator balance")
 			}
 		}
-		res[validatorResp.Index] = &api.Validator{
-			Index:     validatorResp.Index,
-			State:     api.ValidatorToState(validatorResp.Validator, epoch, farFutureEpoch),
+		res[spec.ValidatorIndex(validatorResp.Index)] = &api.Validator{
+			Index:     spec.ValidatorIndex(validatorResp.Index),
+			Status:    api.ValidatorToState(validatorResp.Validator, spec.Epoch(epoch), spec.Epoch(farFutureEpoch)),
 			Validator: validatorResp.Validator,
-			Balance:   balance,
+			Balance:   spec.Gwei(balance),
 		}
 	}
 	return res, nil

@@ -20,14 +20,15 @@ import (
 	"strconv"
 	"strings"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // ProposerDuty represents a duty of a validator to propose a slot.
 type ProposerDuty struct {
-	PubKey         []byte
-	Slot           uint64
-	ValidatorIndex uint64
+	PubKey         spec.BLSPubKey
+	Slot           spec.Slot
+	ValidatorIndex spec.ValidatorIndex
 }
 
 // proposerDutyJSON is the standard API representation of the struct.
@@ -57,24 +58,30 @@ func (p *ProposerDuty) UnmarshalJSON(input []byte) error {
 	if proposerDutyJSON.PubKey == "" {
 		return errors.New("public key missing")
 	}
-	if p.PubKey, err = hex.DecodeString(strings.TrimPrefix(proposerDutyJSON.PubKey, "0x")); err != nil {
+	pubKey, err := hex.DecodeString(strings.TrimPrefix(proposerDutyJSON.PubKey, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for public key")
 	}
-	if len(p.PubKey) != publicKeyLength {
-		return fmt.Errorf("incorrect length %d for public key", len(p.PubKey))
+	if len(pubKey) != publicKeyLength {
+		return fmt.Errorf("incorrect length %d for public key", len(pubKey))
 	}
+	copy(p.PubKey[:], pubKey)
 	if proposerDutyJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
-	if p.Slot, err = strconv.ParseUint(proposerDutyJSON.Slot, 10, 64); err != nil {
+	slot, err := strconv.ParseUint(proposerDutyJSON.Slot, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+	p.Slot = spec.Slot(slot)
 	if proposerDutyJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
-	if p.ValidatorIndex, err = strconv.ParseUint(proposerDutyJSON.ValidatorIndex, 10, 64); err != nil {
+	validatorIndex, err := strconv.ParseUint(proposerDutyJSON.ValidatorIndex, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+	p.ValidatorIndex = spec.ValidatorIndex(validatorIndex)
 
 	return nil
 }

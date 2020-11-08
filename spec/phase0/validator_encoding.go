@@ -15,11 +15,7 @@ func (v *Validator) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 
 	// Field (0) 'PublicKey'
-	if len(v.PublicKey) != 48 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, v.PublicKey...)
+	dst = append(dst, v.PublicKey[:]...)
 
 	// Field (1) 'WithdrawalCredentials'
 	if len(v.WithdrawalCredentials) != 32 {
@@ -29,22 +25,22 @@ func (v *Validator) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = append(dst, v.WithdrawalCredentials...)
 
 	// Field (2) 'EffectiveBalance'
-	dst = ssz.MarshalUint64(dst, v.EffectiveBalance)
+	dst = ssz.MarshalUint64(dst, uint64(v.EffectiveBalance))
 
 	// Field (3) 'Slashed'
 	dst = ssz.MarshalBool(dst, v.Slashed)
 
 	// Field (4) 'ActivationEligibilityEpoch'
-	dst = ssz.MarshalUint64(dst, v.ActivationEligibilityEpoch)
+	dst = ssz.MarshalUint64(dst, uint64(v.ActivationEligibilityEpoch))
 
 	// Field (5) 'ActivationEpoch'
-	dst = ssz.MarshalUint64(dst, v.ActivationEpoch)
+	dst = ssz.MarshalUint64(dst, uint64(v.ActivationEpoch))
 
 	// Field (6) 'ExitEpoch'
-	dst = ssz.MarshalUint64(dst, v.ExitEpoch)
+	dst = ssz.MarshalUint64(dst, uint64(v.ExitEpoch))
 
 	// Field (7) 'WithdrawableEpoch'
-	dst = ssz.MarshalUint64(dst, v.WithdrawableEpoch)
+	dst = ssz.MarshalUint64(dst, uint64(v.WithdrawableEpoch))
 
 	return
 }
@@ -58,10 +54,7 @@ func (v *Validator) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (0) 'PublicKey'
-	if cap(v.PublicKey) == 0 {
-		v.PublicKey = make([]byte, 0, len(buf[0:48]))
-	}
-	v.PublicKey = append(v.PublicKey, buf[0:48]...)
+	copy(v.PublicKey[:], buf[0:48])
 
 	// Field (1) 'WithdrawalCredentials'
 	if cap(v.WithdrawalCredentials) == 0 {
@@ -70,22 +63,22 @@ func (v *Validator) UnmarshalSSZ(buf []byte) error {
 	v.WithdrawalCredentials = append(v.WithdrawalCredentials, buf[48:80]...)
 
 	// Field (2) 'EffectiveBalance'
-	v.EffectiveBalance = ssz.UnmarshallUint64(buf[80:88])
+	v.EffectiveBalance = Gwei(ssz.UnmarshallUint64(buf[80:88]))
 
 	// Field (3) 'Slashed'
 	v.Slashed = ssz.UnmarshalBool(buf[88:89])
 
 	// Field (4) 'ActivationEligibilityEpoch'
-	v.ActivationEligibilityEpoch = ssz.UnmarshallUint64(buf[89:97])
+	v.ActivationEligibilityEpoch = Epoch(ssz.UnmarshallUint64(buf[89:97]))
 
 	// Field (5) 'ActivationEpoch'
-	v.ActivationEpoch = ssz.UnmarshallUint64(buf[97:105])
+	v.ActivationEpoch = Epoch(ssz.UnmarshallUint64(buf[97:105]))
 
 	// Field (6) 'ExitEpoch'
-	v.ExitEpoch = ssz.UnmarshallUint64(buf[105:113])
+	v.ExitEpoch = Epoch(ssz.UnmarshallUint64(buf[105:113]))
 
 	// Field (7) 'WithdrawableEpoch'
-	v.WithdrawableEpoch = ssz.UnmarshallUint64(buf[113:121])
+	v.WithdrawableEpoch = Epoch(ssz.UnmarshallUint64(buf[113:121]))
 
 	return err
 }
@@ -106,11 +99,7 @@ func (v *Validator) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'PublicKey'
-	if len(v.PublicKey) != 48 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(v.PublicKey)
+	hh.PutBytes(v.PublicKey[:])
 
 	// Field (1) 'WithdrawalCredentials'
 	if len(v.WithdrawalCredentials) != 32 {
@@ -120,22 +109,22 @@ func (v *Validator) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	hh.PutBytes(v.WithdrawalCredentials)
 
 	// Field (2) 'EffectiveBalance'
-	hh.PutUint64(v.EffectiveBalance)
+	hh.PutUint64(uint64(v.EffectiveBalance))
 
 	// Field (3) 'Slashed'
 	hh.PutBool(v.Slashed)
 
 	// Field (4) 'ActivationEligibilityEpoch'
-	hh.PutUint64(v.ActivationEligibilityEpoch)
+	hh.PutUint64(uint64(v.ActivationEligibilityEpoch))
 
 	// Field (5) 'ActivationEpoch'
-	hh.PutUint64(v.ActivationEpoch)
+	hh.PutUint64(uint64(v.ActivationEpoch))
 
 	// Field (6) 'ExitEpoch'
-	hh.PutUint64(v.ExitEpoch)
+	hh.PutUint64(uint64(v.ExitEpoch))
 
 	// Field (7) 'WithdrawableEpoch'
-	hh.PutUint64(v.WithdrawableEpoch)
+	hh.PutUint64(uint64(v.WithdrawableEpoch))
 
 	hh.Merkleize(indx)
 	return

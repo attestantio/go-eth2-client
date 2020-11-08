@@ -14,10 +14,15 @@
 package phase0_test
 
 import (
+	"bytes"
 	"encoding/json"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/goccy/go-yaml"
 	require "github.com/stretchr/testify/require"
 	"gotest.tools/assert"
 )
@@ -159,8 +164,68 @@ func TestBeaconBlockHeaderJSON(t *testing.T) {
 				rt, err := json.Marshal(&res)
 				require.NoError(t, err)
 				assert.Equal(t, string(test.input), string(rt))
-				assert.Equal(t, string(rt), res.String())
 			}
 		})
 	}
+}
+
+func TestBeaconBlockHeaderYAML(t *testing.T) {
+	tests := []struct {
+		name  string
+		input []byte
+		root  []byte
+		err   string
+	}{
+		{
+			name:  "Good",
+			input: []byte(`{slot: 13763605646674810374, proposer_index: 7704591909929553516, parent_root: '0x98f5655842c7d96474354de483dde443a6eb3180f102c425aae3b6a924332de1', state_root: '0x38cee1c1ff58231fe19959d16cb805af25618ca1175c39885a8a9a0f6f6560ea', body_root: '0x36122528bead53899c96cdcc4681c202802edd33a9f7c877c035f566e1fef59e'}`),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var res spec.BeaconBlockHeader
+			err := yaml.Unmarshal(test.input, &res)
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+			} else {
+				require.NoError(t, err)
+				rt, err := yaml.Marshal(&res)
+				require.NoError(t, err)
+				rt = bytes.TrimSuffix(rt, []byte("\n"))
+				assert.Equal(t, string(test.input), string(rt))
+			}
+		})
+	}
+}
+
+func TestBeaconBlockHeaderSpec(t *testing.T) {
+	if os.Getenv("ETH2_SPEC_TESTS_DIR") == "" {
+		t.Skip("ETH2_SPEC_TESTS_DIR not suppplied, not running spec tests")
+	}
+	baseDir := filepath.Join(os.Getenv("ETH2_SPEC_TESTS_DIR"), "tests", "mainnet", "phase0", "ssz_static", "BeaconBlockHeader", "ssz_random")
+	require.NoError(t, filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+		if path == baseDir {
+			// Only interested in subdirectories.
+			return nil
+		}
+		require.NoError(t, err)
+		if info.IsDir() {
+			t.Run(info.Name(), func(t *testing.T) {
+				specYAML, err := ioutil.ReadFile(filepath.Join(path, "value.yaml"))
+				require.NoError(t, err)
+				var res spec.BeaconBlockHeader
+				require.NoError(t, yaml.Unmarshal(specYAML, &res))
+
+				specSSZ, err := ioutil.ReadFile(filepath.Join(path, "serialized.ssz"))
+				require.NoError(t, err)
+
+				// Ensure this matches the expected hash tree root.
+				ssz, err := res.MarshalSSZ()
+				require.NoError(t, err)
+				require.Equal(t, specSSZ, ssz)
+			})
+		}
+		return nil
+	}))
 }

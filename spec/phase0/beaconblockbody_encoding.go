@@ -16,11 +16,7 @@ func (b *BeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset := int(220)
 
 	// Field (0) 'RANDAOReveal'
-	if len(b.RANDAOReveal) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, b.RANDAOReveal...)
+	dst = append(dst, b.RANDAOReveal[:]...)
 
 	// Field (1) 'ETH1Data'
 	if b.ETH1Data == nil {
@@ -147,10 +143,7 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 	var o3, o4, o5, o6, o7 uint64
 
 	// Field (0) 'RANDAOReveal'
-	if cap(b.RANDAOReveal) == 0 {
-		b.RANDAOReveal = make([]byte, 0, len(buf[0:96]))
-	}
-	b.RANDAOReveal = append(b.RANDAOReveal, buf[0:96]...)
+	copy(b.RANDAOReveal[:], buf[0:96])
 
 	// Field (1) 'ETH1Data'
 	if b.ETH1Data == nil {
@@ -329,11 +322,7 @@ func (b *BeaconBlockBody) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'RANDAOReveal'
-	if len(b.RANDAOReveal) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(b.RANDAOReveal)
+	hh.PutBytes(b.RANDAOReveal[:])
 
 	// Field (1) 'ETH1Data'
 	if err = b.ETH1Data.HashTreeRootWith(hh); err != nil {

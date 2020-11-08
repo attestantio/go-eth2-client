@@ -21,14 +21,15 @@ import (
 	"strings"
 	"time"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // Genesis provides information about the genesis of a chain.
 type Genesis struct {
 	GenesisTime           time.Time
-	GenesisValidatorsRoot []byte
-	GenesisForkVersion    []byte
+	GenesisValidatorsRoot spec.Root
+	GenesisForkVersion    spec.Version
 }
 
 // genesisJSON is the spec representation of the struct.
@@ -68,22 +69,26 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 	if genesisJSON.GenesisValidatorsRoot == "" {
 		return errors.New("genesis validators root missing")
 	}
-	if g.GenesisValidatorsRoot, err = hex.DecodeString(strings.TrimPrefix(genesisJSON.GenesisValidatorsRoot, "0x")); err != nil {
+	genesisValidatorsRoot, err := hex.DecodeString(strings.TrimPrefix(genesisJSON.GenesisValidatorsRoot, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for genesis validators root")
 	}
-	if len(g.GenesisValidatorsRoot) != rootLength {
-		return fmt.Errorf("incorrect length %d for genesis validators root", len(g.GenesisValidatorsRoot))
+	if len(genesisValidatorsRoot) != rootLength {
+		return fmt.Errorf("incorrect length %d for genesis validators root", len(genesisValidatorsRoot))
 	}
+	copy(g.GenesisValidatorsRoot[:], genesisValidatorsRoot)
 
 	if genesisJSON.GenesisForkVersion == "" {
 		return errors.New("genesis fork version missing")
 	}
-	if g.GenesisForkVersion, err = hex.DecodeString(strings.TrimPrefix(genesisJSON.GenesisForkVersion, "0x")); err != nil {
+	genesisForkVersion, err := hex.DecodeString(strings.TrimPrefix(genesisJSON.GenesisForkVersion, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for genesis fork version")
 	}
-	if len(g.GenesisForkVersion) != forkLength {
-		return fmt.Errorf("incorrect length %d for genesis fork version", len(g.GenesisForkVersion))
+	if len(genesisForkVersion) != forkLength {
+		return fmt.Errorf("incorrect length %d for genesis fork version", len(genesisForkVersion))
 	}
+	copy(g.GenesisForkVersion[:], genesisForkVersion)
 
 	return nil
 }

@@ -23,13 +23,13 @@ import (
 )
 
 // AttestationData obtains attestation data for a slot.
-func (s *Service) AttestationData(ctx context.Context, slot uint64, committeeIndex uint64) (*spec.AttestationData, error) {
+func (s *Service) AttestationData(ctx context.Context, slot spec.Slot, committeeIndex spec.CommitteeIndex) (*spec.AttestationData, error) {
 	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	log.Trace().Msg("Calling GetAttestationData()")
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	resp, err := conn.GetAttestationData(opCtx, &ethpb.AttestationDataRequest{
-		Slot:           slot,
-		CommitteeIndex: committeeIndex,
+		Slot:           uint64(slot),
+		CommitteeIndex: uint64(committeeIndex),
 	})
 	cancel()
 
@@ -37,26 +37,26 @@ func (s *Service) AttestationData(ctx context.Context, slot uint64, committeeInd
 		return nil, errors.Wrap(err, "failed to obtain attestation data")
 	}
 
-	if resp.Slot != slot {
+	if resp.Slot != uint64(slot) {
 		return nil, errors.New("attestation data returned for incorrect slot")
 	}
-	if resp.CommitteeIndex != committeeIndex {
+	if resp.CommitteeIndex != uint64(committeeIndex) {
 		return nil, errors.New("attestation data returned for incorrect committee index")
 	}
 
 	attestationData := &spec.AttestationData{
-		Slot:            resp.Slot,
-		Index:           resp.CommitteeIndex,
-		BeaconBlockRoot: resp.BeaconBlockRoot,
+		Slot:  spec.Slot(resp.Slot),
+		Index: spec.CommitteeIndex(resp.CommitteeIndex),
 		Source: &spec.Checkpoint{
-			Epoch: resp.Source.Epoch,
-			Root:  resp.Source.Root,
+			Epoch: spec.Epoch(resp.Source.Epoch),
 		},
 		Target: &spec.Checkpoint{
-			Epoch: resp.Target.Epoch,
-			Root:  resp.Target.Root,
+			Epoch: spec.Epoch(resp.Target.Epoch),
 		},
 	}
+	copy(attestationData.BeaconBlockRoot[:], resp.BeaconBlockRoot)
+	copy(attestationData.Source.Root[:], resp.Source.Root)
+	copy(attestationData.Target.Root[:], resp.Target.Root)
 
 	if e := log.Trace(); e.Enabled() {
 		jsonData, err := json.Marshal(attestationData)

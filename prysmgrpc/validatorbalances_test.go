@@ -15,34 +15,19 @@ package prysmgrpc_test
 
 import (
 	"context"
-	"encoding/hex"
 	"os"
-	"strings"
 	"testing"
 
-	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/prysmgrpc"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
-
-type testValidatorIDProvider struct {
-	index  uint64
-	pubKey string
-}
-
-func (t *testValidatorIDProvider) Index(ctx context.Context) (uint64, error) {
-	return t.index, nil
-}
-
-func (t *testValidatorIDProvider) PubKey(ctx context.Context) ([]byte, error) {
-	return hex.DecodeString(strings.TrimPrefix(t.pubKey, "0x"))
-}
 
 func TestValidatorBalances(t *testing.T) {
 	tests := []struct {
 		name       string
 		stateID    string
-		validators []client.ValidatorIDProvider
+		validators []spec.BLSPubKey
 	}{
 		{
 			name:    "Old",
@@ -51,11 +36,8 @@ func TestValidatorBalances(t *testing.T) {
 		{
 			name:    "Single",
 			stateID: "head",
-			validators: []client.ValidatorIDProvider{
-				&testValidatorIDProvider{
-					index:  1000,
-					pubKey: "0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26",
-				},
+			validators: []spec.BLSPubKey{
+				_blsPubKey("0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26"),
 			},
 		},
 		{
@@ -72,7 +54,7 @@ func TestValidatorBalances(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			balances, err := service.ValidatorBalances(context.Background(), test.stateID, test.validators)
+			balances, err := service.PrysmValidatorBalances(context.Background(), test.stateID, test.validators)
 			require.NoError(t, err)
 			require.NotNil(t, balances)
 		})

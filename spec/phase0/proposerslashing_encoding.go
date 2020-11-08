@@ -14,19 +14,19 @@ func (p *ProposerSlashing) MarshalSSZ() ([]byte, error) {
 func (p *ProposerSlashing) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 
-	// Field (0) 'Header1'
-	if p.Header1 == nil {
-		p.Header1 = new(SignedBeaconBlockHeader)
+	// Field (0) 'SignedHeader1'
+	if p.SignedHeader1 == nil {
+		p.SignedHeader1 = new(SignedBeaconBlockHeader)
 	}
-	if dst, err = p.Header1.MarshalSSZTo(dst); err != nil {
+	if dst, err = p.SignedHeader1.MarshalSSZTo(dst); err != nil {
 		return
 	}
 
-	// Field (1) 'Header2'
-	if p.Header2 == nil {
-		p.Header2 = new(SignedBeaconBlockHeader)
+	// Field (1) 'SignedHeader2'
+	if p.SignedHeader2 == nil {
+		p.SignedHeader2 = new(SignedBeaconBlockHeader)
 	}
-	if dst, err = p.Header2.MarshalSSZTo(dst); err != nil {
+	if dst, err = p.SignedHeader2.MarshalSSZTo(dst); err != nil {
 		return
 	}
 
@@ -41,19 +41,19 @@ func (p *ProposerSlashing) UnmarshalSSZ(buf []byte) error {
 		return ssz.ErrSize
 	}
 
-	// Field (0) 'Header1'
-	if p.Header1 == nil {
-		p.Header1 = new(SignedBeaconBlockHeader)
+	// Field (0) 'SignedHeader1'
+	if p.SignedHeader1 == nil {
+		p.SignedHeader1 = new(SignedBeaconBlockHeader)
 	}
-	if err = p.Header1.UnmarshalSSZ(buf[0:208]); err != nil {
+	if err = p.SignedHeader1.UnmarshalSSZ(buf[0:208]); err != nil {
 		return err
 	}
 
-	// Field (1) 'Header2'
-	if p.Header2 == nil {
-		p.Header2 = new(SignedBeaconBlockHeader)
+	// Field (1) 'SignedHeader2'
+	if p.SignedHeader2 == nil {
+		p.SignedHeader2 = new(SignedBeaconBlockHeader)
 	}
-	if err = p.Header2.UnmarshalSSZ(buf[208:416]); err != nil {
+	if err = p.SignedHeader2.UnmarshalSSZ(buf[208:416]); err != nil {
 		return err
 	}
 
@@ -75,13 +75,13 @@ func (p *ProposerSlashing) HashTreeRoot() ([32]byte, error) {
 func (p *ProposerSlashing) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	indx := hh.Index()
 
-	// Field (0) 'Header1'
-	if err = p.Header1.HashTreeRootWith(hh); err != nil {
+	// Field (0) 'SignedHeader1'
+	if err = p.SignedHeader1.HashTreeRootWith(hh); err != nil {
 		return
 	}
 
-	// Field (1) 'Header2'
-	if err = p.Header2.HashTreeRootWith(hh); err != nil {
+	// Field (1) 'SignedHeader2'
+	if err = p.SignedHeader2.HashTreeRootWith(hh); err != nil {
 		return
 	}
 

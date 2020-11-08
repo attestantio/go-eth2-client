@@ -28,11 +28,7 @@ func (a *Attestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 
 	// Field (2) 'Signature'
-	if len(a.Signature) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, a.Signature...)
+	dst = append(dst, a.Signature[:]...)
 
 	// Field (0) 'AggregationBits'
 	if len(a.AggregationBits) > 2048 {
@@ -69,10 +65,7 @@ func (a *Attestation) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (2) 'Signature'
-	if cap(a.Signature) == 0 {
-		a.Signature = make([]byte, 0, len(buf[132:228]))
-	}
-	a.Signature = append(a.Signature, buf[132:228]...)
+	copy(a.Signature[:], buf[132:228])
 
 	// Field (0) 'AggregationBits'
 	{
@@ -108,6 +101,10 @@ func (a *Attestation) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'AggregationBits'
+	if len(a.AggregationBits) == 0 {
+		err = ssz.ErrEmptyBitlist
+		return
+	}
 	hh.PutBitlist(a.AggregationBits, 2048)
 
 	// Field (1) 'Data'
@@ -116,11 +113,7 @@ func (a *Attestation) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	}
 
 	// Field (2) 'Signature'
-	if len(a.Signature) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(a.Signature)
+	hh.PutBytes(a.Signature[:])
 
 	hh.Merkleize(indx)
 	return

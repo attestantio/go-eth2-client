@@ -14,9 +14,11 @@
 package phase0
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
@@ -32,6 +34,12 @@ type attesterSlashingJSON struct {
 	Attestation2 *IndexedAttestation `json:"attestation_2"`
 }
 
+// attesterSlashingYAML is the spec representation of the struct.
+type attesterSlashingYAML struct {
+	Attestation1 *IndexedAttestation `yaml:"attestation_1"`
+	Attestation2 *IndexedAttestation `yaml:"attestation_2"`
+}
+
 // MarshalJSON implements json.Marshaler.
 func (a *AttesterSlashing) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&attesterSlashingJSON{
@@ -42,12 +50,14 @@ func (a *AttesterSlashing) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (a *AttesterSlashing) UnmarshalJSON(input []byte) error {
-	var err error
-
 	var attesterSlashingJSON attesterSlashingJSON
-	if err = json.Unmarshal(input, &attesterSlashingJSON); err != nil {
+	if err := json.Unmarshal(input, &attesterSlashingJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	return a.unpack(&attesterSlashingJSON)
+}
+
+func (a *AttesterSlashing) unpack(attesterSlashingJSON *attesterSlashingJSON) error {
 	if attesterSlashingJSON.Attestation1 == nil {
 		return errors.New("attestation 1 missing")
 	}
@@ -60,8 +70,30 @@ func (a *AttesterSlashing) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
+// MarshalYAML implements yaml.Marshaler.
+func (a *AttesterSlashing) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&attesterSlashingYAML{
+		Attestation1: a.Attestation1,
+		Attestation2: a.Attestation2,
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (a *AttesterSlashing) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var attesterSlashingJSON attesterSlashingJSON
+	if err := yaml.Unmarshal(input, &attesterSlashingJSON); err != nil {
+		return err
+	}
+	return a.unpack(&attesterSlashingJSON)
+}
+
 func (a *AttesterSlashing) String() string {
-	data, err := json.Marshal(a)
+	data, err := yaml.Marshal(a)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

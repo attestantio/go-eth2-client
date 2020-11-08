@@ -15,11 +15,21 @@ package prysmgrpc
 
 import (
 	"context"
+	"strconv"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
+
+// SignedBeaconBlock fetches a signed beacon block given a block ID.
+func (s *Service) SignedBeaconBlock(ctx context.Context, blockID string) (*spec.SignedBeaconBlock, error) {
+	slot, err := strconv.ParseUint(blockID, 10, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, "invalid block ID")
+	}
+	return s.SignedBeaconBlockBySlot(ctx, slot)
+}
 
 // SignedBeaconBlockBySlot fetches a signed beacon block given its slot.
 func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*spec.SignedBeaconBlock, error) {
@@ -44,16 +54,11 @@ func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*sp
 	block := resp.BlockContainers[0].Block
 
 	signedBeaconBlock := &spec.SignedBeaconBlock{
-		Signature: block.Signature,
 		Message: &spec.BeaconBlock{
-			Slot:          block.Block.Slot,
-			ProposerIndex: block.Block.ProposerIndex,
-			ParentRoot:    block.Block.ParentRoot,
-			StateRoot:     block.Block.StateRoot,
+			Slot:          spec.Slot(block.Block.Slot),
+			ProposerIndex: spec.ValidatorIndex(block.Block.ProposerIndex),
 			Body: &spec.BeaconBlockBody{
-				RANDAOReveal: block.Block.Body.RandaoReveal,
 				ETH1Data: &spec.ETH1Data{
-					DepositRoot:  block.Block.Body.Eth1Data.DepositRoot,
 					DepositCount: block.Block.Body.Eth1Data.DepositCount,
 					BlockHash:    block.Block.Body.Eth1Data.BlockHash,
 				},
@@ -61,30 +66,35 @@ func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*sp
 			},
 		},
 	}
+	copy(signedBeaconBlock.Signature[:], block.Signature)
+	copy(signedBeaconBlock.Message.ParentRoot[:], block.Block.ParentRoot)
+	copy(signedBeaconBlock.Message.StateRoot[:], block.Block.StateRoot)
+	copy(signedBeaconBlock.Message.Body.RANDAOReveal[:], block.Block.Body.RandaoReveal)
+	copy(signedBeaconBlock.Message.Body.ETH1Data.DepositRoot[:], block.Block.Body.Eth1Data.DepositRoot)
 	signedBeaconBlock.Message.Body.ProposerSlashings = make([]*spec.ProposerSlashing, len(block.Block.Body.ProposerSlashings))
 	for i := range block.Block.Body.ProposerSlashings {
 		signedBeaconBlock.Message.Body.ProposerSlashings[i] = &spec.ProposerSlashing{
-			Header1: &spec.SignedBeaconBlockHeader{
+			SignedHeader1: &spec.SignedBeaconBlockHeader{
 				Message: &spec.BeaconBlockHeader{
-					Slot:          block.Block.Body.ProposerSlashings[i].Header_1.Header.Slot,
-					ProposerIndex: block.Block.Body.ProposerSlashings[i].Header_1.Header.ProposerIndex,
-					ParentRoot:    block.Block.Body.ProposerSlashings[i].Header_1.Header.ParentRoot,
-					StateRoot:     block.Block.Body.ProposerSlashings[i].Header_1.Header.StateRoot,
-					BodyRoot:      block.Block.Body.ProposerSlashings[i].Header_1.Header.BodyRoot,
+					Slot:          spec.Slot(block.Block.Body.ProposerSlashings[i].Header_1.Header.Slot),
+					ProposerIndex: spec.ValidatorIndex(block.Block.Body.ProposerSlashings[i].Header_1.Header.ProposerIndex),
 				},
-				Signature: block.Block.Body.ProposerSlashings[i].Header_1.Signature,
 			},
-			Header2: &spec.SignedBeaconBlockHeader{
+			SignedHeader2: &spec.SignedBeaconBlockHeader{
 				Message: &spec.BeaconBlockHeader{
-					Slot:          block.Block.Body.ProposerSlashings[i].Header_2.Header.Slot,
-					ProposerIndex: block.Block.Body.ProposerSlashings[i].Header_2.Header.ProposerIndex,
-					ParentRoot:    block.Block.Body.ProposerSlashings[i].Header_2.Header.ParentRoot,
-					StateRoot:     block.Block.Body.ProposerSlashings[i].Header_2.Header.StateRoot,
-					BodyRoot:      block.Block.Body.ProposerSlashings[i].Header_2.Header.BodyRoot,
+					Slot:          spec.Slot(block.Block.Body.ProposerSlashings[i].Header_2.Header.Slot),
+					ProposerIndex: spec.ValidatorIndex(block.Block.Body.ProposerSlashings[i].Header_2.Header.ProposerIndex),
 				},
-				Signature: block.Block.Body.ProposerSlashings[i].Header_2.Signature,
 			},
 		}
+		copy(signedBeaconBlock.Message.Body.ProposerSlashings[i].SignedHeader1.Message.ParentRoot[:], block.Block.Body.ProposerSlashings[i].Header_1.Header.ParentRoot)
+		copy(signedBeaconBlock.Message.Body.ProposerSlashings[i].SignedHeader1.Message.StateRoot[:], block.Block.Body.ProposerSlashings[i].Header_1.Header.StateRoot)
+		copy(signedBeaconBlock.Message.Body.ProposerSlashings[i].SignedHeader1.Message.BodyRoot[:], block.Block.Body.ProposerSlashings[i].Header_1.Header.BodyRoot)
+		copy(signedBeaconBlock.Message.Body.ProposerSlashings[i].SignedHeader1.Signature[:], block.Block.Body.ProposerSlashings[i].Header_1.Signature)
+		copy(signedBeaconBlock.Message.Body.ProposerSlashings[i].SignedHeader2.Message.ParentRoot[:], block.Block.Body.ProposerSlashings[i].Header_2.Header.ParentRoot)
+		copy(signedBeaconBlock.Message.Body.ProposerSlashings[i].SignedHeader2.Message.StateRoot[:], block.Block.Body.ProposerSlashings[i].Header_2.Header.StateRoot)
+		copy(signedBeaconBlock.Message.Body.ProposerSlashings[i].SignedHeader2.Message.BodyRoot[:], block.Block.Body.ProposerSlashings[i].Header_2.Header.BodyRoot)
+		copy(signedBeaconBlock.Message.Body.ProposerSlashings[i].SignedHeader2.Signature[:], block.Block.Body.ProposerSlashings[i].Header_2.Signature)
 	}
 	signedBeaconBlock.Message.Body.AttesterSlashings = make([]*spec.AttesterSlashing, len(block.Block.Body.AttesterSlashings))
 	for i := range block.Block.Body.AttesterSlashings {
@@ -92,80 +102,80 @@ func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*sp
 			Attestation1: &spec.IndexedAttestation{
 				AttestingIndices: block.Block.Body.AttesterSlashings[i].Attestation_1.AttestingIndices,
 				Data: &spec.AttestationData{
-					Slot:            block.Block.Body.AttesterSlashings[i].Attestation_1.Data.Slot,
-					Index:           block.Block.Body.AttesterSlashings[i].Attestation_1.Data.CommitteeIndex,
-					BeaconBlockRoot: block.Block.Body.AttesterSlashings[i].Attestation_1.Data.BeaconBlockRoot,
+					Slot:  spec.Slot(block.Block.Body.AttesterSlashings[i].Attestation_1.Data.Slot),
+					Index: spec.CommitteeIndex(block.Block.Body.AttesterSlashings[i].Attestation_1.Data.CommitteeIndex),
 					Source: &spec.Checkpoint{
-						Epoch: block.Block.Body.AttesterSlashings[i].Attestation_1.Data.Source.Epoch,
-						Root:  block.Block.Body.AttesterSlashings[i].Attestation_1.Data.Source.Root,
+						Epoch: spec.Epoch(block.Block.Body.AttesterSlashings[i].Attestation_1.Data.Source.Epoch),
 					},
 					Target: &spec.Checkpoint{
-						Epoch: block.Block.Body.AttesterSlashings[i].Attestation_1.Data.Target.Epoch,
-						Root:  block.Block.Body.AttesterSlashings[i].Attestation_1.Data.Target.Root,
+						Epoch: spec.Epoch(block.Block.Body.AttesterSlashings[i].Attestation_1.Data.Target.Epoch),
 					},
 				},
-				Signature: block.Block.Body.AttesterSlashings[i].Attestation_1.Signature,
 			},
 			Attestation2: &spec.IndexedAttestation{
 				AttestingIndices: block.Block.Body.AttesterSlashings[i].Attestation_2.AttestingIndices,
 				Data: &spec.AttestationData{
-					Slot:            block.Block.Body.AttesterSlashings[i].Attestation_2.Data.Slot,
-					Index:           block.Block.Body.AttesterSlashings[i].Attestation_2.Data.CommitteeIndex,
-					BeaconBlockRoot: block.Block.Body.AttesterSlashings[i].Attestation_2.Data.BeaconBlockRoot,
+					Slot:  spec.Slot(block.Block.Body.AttesterSlashings[i].Attestation_2.Data.Slot),
+					Index: spec.CommitteeIndex(block.Block.Body.AttesterSlashings[i].Attestation_2.Data.CommitteeIndex),
 					Source: &spec.Checkpoint{
-						Epoch: block.Block.Body.AttesterSlashings[i].Attestation_2.Data.Source.Epoch,
-						Root:  block.Block.Body.AttesterSlashings[i].Attestation_2.Data.Source.Root,
+						Epoch: spec.Epoch(block.Block.Body.AttesterSlashings[i].Attestation_2.Data.Source.Epoch),
 					},
 					Target: &spec.Checkpoint{
-						Epoch: block.Block.Body.AttesterSlashings[i].Attestation_2.Data.Target.Epoch,
-						Root:  block.Block.Body.AttesterSlashings[i].Attestation_2.Data.Target.Root,
+						Epoch: spec.Epoch(block.Block.Body.AttesterSlashings[i].Attestation_2.Data.Target.Epoch),
 					},
 				},
-				Signature: block.Block.Body.AttesterSlashings[i].Attestation_2.Signature,
 			},
 		}
+		copy(signedBeaconBlock.Message.Body.AttesterSlashings[i].Attestation1.Data.BeaconBlockRoot[:], block.Block.Body.AttesterSlashings[i].Attestation_1.Data.BeaconBlockRoot)
+		copy(signedBeaconBlock.Message.Body.AttesterSlashings[i].Attestation1.Data.Source.Root[:], block.Block.Body.AttesterSlashings[i].Attestation_1.Data.Source.Root)
+		copy(signedBeaconBlock.Message.Body.AttesterSlashings[i].Attestation1.Data.Target.Root[:], block.Block.Body.AttesterSlashings[i].Attestation_1.Data.Target.Root)
+		copy(signedBeaconBlock.Message.Body.AttesterSlashings[i].Attestation1.Signature[:], block.Block.Body.AttesterSlashings[i].Attestation_1.Signature)
+		copy(signedBeaconBlock.Message.Body.AttesterSlashings[i].Attestation2.Data.BeaconBlockRoot[:], block.Block.Body.AttesterSlashings[i].Attestation_2.Data.BeaconBlockRoot)
+		copy(signedBeaconBlock.Message.Body.AttesterSlashings[i].Attestation2.Data.Source.Root[:], block.Block.Body.AttesterSlashings[i].Attestation_2.Data.Source.Root)
+		copy(signedBeaconBlock.Message.Body.AttesterSlashings[i].Attestation2.Data.Target.Root[:], block.Block.Body.AttesterSlashings[i].Attestation_2.Data.Target.Root)
+		copy(signedBeaconBlock.Message.Body.AttesterSlashings[i].Attestation2.Signature[:], block.Block.Body.AttesterSlashings[i].Attestation_2.Signature)
 	}
 	signedBeaconBlock.Message.Body.Attestations = make([]*spec.Attestation, len(block.Block.Body.Attestations))
 	for i := range block.Block.Body.Attestations {
 		signedBeaconBlock.Message.Body.Attestations[i] = &spec.Attestation{
 			AggregationBits: block.Block.Body.Attestations[i].AggregationBits,
 			Data: &spec.AttestationData{
-				Slot:            block.Block.Body.Attestations[i].Data.Slot,
-				Index:           block.Block.Body.Attestations[i].Data.CommitteeIndex,
-				BeaconBlockRoot: block.Block.Body.Attestations[i].Data.BeaconBlockRoot,
+				Slot:  spec.Slot(block.Block.Body.Attestations[i].Data.Slot),
+				Index: spec.CommitteeIndex(block.Block.Body.Attestations[i].Data.CommitteeIndex),
 				Source: &spec.Checkpoint{
-					Epoch: block.Block.Body.Attestations[i].Data.Source.Epoch,
-					Root:  block.Block.Body.Attestations[i].Data.Source.Root,
+					Epoch: spec.Epoch(block.Block.Body.Attestations[i].Data.Source.Epoch),
 				},
 				Target: &spec.Checkpoint{
-					Epoch: block.Block.Body.Attestations[i].Data.Target.Epoch,
-					Root:  block.Block.Body.Attestations[i].Data.Target.Root,
+					Epoch: spec.Epoch(block.Block.Body.Attestations[i].Data.Target.Epoch),
 				},
 			},
-			Signature: block.Block.Body.Attestations[i].Signature,
 		}
+		copy(signedBeaconBlock.Message.Body.Attestations[i].Data.BeaconBlockRoot[:], block.Block.Body.Attestations[i].Data.BeaconBlockRoot)
+		copy(signedBeaconBlock.Message.Body.Attestations[i].Data.Source.Root[:], block.Block.Body.Attestations[i].Data.Source.Root)
+		copy(signedBeaconBlock.Message.Body.Attestations[i].Data.Target.Root[:], block.Block.Body.Attestations[i].Data.Target.Root)
+		copy(signedBeaconBlock.Message.Body.Attestations[i].Signature[:], block.Block.Body.Attestations[i].Signature)
 	}
 	signedBeaconBlock.Message.Body.Deposits = make([]*spec.Deposit, len(block.Block.Body.Deposits))
 	for i := range block.Block.Body.Deposits {
 		signedBeaconBlock.Message.Body.Deposits[i] = &spec.Deposit{
 			Proof: block.Block.Body.Deposits[i].Proof,
 			Data: &spec.DepositData{
-				PublicKey:             block.Block.Body.Deposits[i].Data.PublicKey,
 				WithdrawalCredentials: block.Block.Body.Deposits[i].Data.WithdrawalCredentials,
-				Amount:                block.Block.Body.Deposits[i].Data.Amount,
-				Signature:             block.Block.Body.Deposits[i].Data.Signature,
+				Amount:                spec.Gwei(block.Block.Body.Deposits[i].Data.Amount),
 			},
 		}
+		copy(signedBeaconBlock.Message.Body.Deposits[i].Data.PublicKey[:], block.Block.Body.Deposits[i].Data.PublicKey)
+		copy(signedBeaconBlock.Message.Body.Deposits[i].Data.Signature[:], block.Block.Body.Deposits[i].Data.Signature)
 	}
 	signedBeaconBlock.Message.Body.VoluntaryExits = make([]*spec.SignedVoluntaryExit, len(block.Block.Body.VoluntaryExits))
 	for i := range block.Block.Body.VoluntaryExits {
 		signedBeaconBlock.Message.Body.VoluntaryExits[i] = &spec.SignedVoluntaryExit{
 			Message: &spec.VoluntaryExit{
-				Epoch:          block.Block.Body.VoluntaryExits[i].Exit.Epoch,
-				ValidatorIndex: block.Block.Body.VoluntaryExits[i].Exit.ValidatorIndex,
+				Epoch:          spec.Epoch(block.Block.Body.VoluntaryExits[i].Exit.Epoch),
+				ValidatorIndex: spec.ValidatorIndex(block.Block.Body.VoluntaryExits[i].Exit.ValidatorIndex),
 			},
-			Signature: block.Block.Body.VoluntaryExits[i].Signature,
 		}
+		copy(signedBeaconBlock.Message.Body.VoluntaryExits[i].Signature[:], block.Block.Body.VoluntaryExits[i].Signature)
 	}
 
 	return signedBeaconBlock, nil

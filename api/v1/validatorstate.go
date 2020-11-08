@@ -88,8 +88,26 @@ func (v *ValidatorState) UnmarshalJSON(input []byte) error {
 		*v = ValidatorStateWithdrawalPossible
 	case `"withdrawal_done"`:
 		*v = ValidatorStateWithdrawalDone
+		// Lighthouse uses different states from currently-defined standard.
+	case `"waiting_for_eligibility"`:
+		*v = ValidatorStatePendingInitialized
+	case `"waiting_for_finality"`:
+		*v = ValidatorStatePendingQueued
+	case `"standby_for_active"`:
+		*v = ValidatorStatePendingQueued
+	case `"active"`:
+		*v = ValidatorStateActiveOngoing
+	case `"active_awaiting_voluntary_exit"`:
+		*v = ValidatorStateActiveExiting
+	case `"exited_voluntarily"`:
+		*v = ValidatorStateExitedUnslashed
+	case `"withdrawable"`:
+		*v = ValidatorStateWithdrawalPossible
+	case `"waiting_in_queue"`:
+		*v = ValidatorStatePendingQueued
+	case `"active_awaiting_slashed_exit"`:
+		*v = ValidatorStateActiveSlashed
 	default:
-		*v = ValidatorStateUnknown
 		err = fmt.Errorf("unrecognised validator state %s", string(input))
 	}
 	return err
@@ -147,8 +165,8 @@ func (v ValidatorState) HasBalance() bool {
 	return v != ValidatorStateUnknown
 }
 
-// ValidatorToState is a helper that calculates the validator state given a validator struct.
-func ValidatorToState(validator *spec.Validator, currentEpoch uint64, farFutureEpoch uint64) ValidatorState {
+// ValidatorToState is a helper that calculates the validator status given a validator struct.
+func ValidatorToState(validator *spec.Validator, currentEpoch spec.Epoch, farFutureEpoch spec.Epoch) ValidatorState {
 	if validator == nil {
 		return ValidatorStateUnknown
 	}

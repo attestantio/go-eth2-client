@@ -14,19 +14,21 @@
 package phase0
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // ETH1Data provides information about the state of Ethereum 1 as viewed by the
 // Ethereum 2 chain.
 type ETH1Data struct {
-	DepositRoot  []byte `ssz-size:"32"`
+	DepositRoot  Root `ssz-size:"32"`
 	DepositCount uint64
 	BlockHash    []byte `ssz-size:"32"`
 }
@@ -36,6 +38,13 @@ type eth1DataJSON struct {
 	DepositRoot  string `json:"deposit_root"`
 	DepositCount string `json:"deposit_count"`
 	BlockHash    string `json:"block_hash"`
+}
+
+// eth1DataYAML is the spec representation of the struct.
+type eth1DataYAML struct {
+	DepositRoot  string `yaml:"deposit_root"`
+	DepositCount uint64 `yaml:"deposit_count"`
+	BlockHash    string `yaml:"block_hash"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -49,21 +58,25 @@ func (e *ETH1Data) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (e *ETH1Data) UnmarshalJSON(input []byte) error {
-	var err error
-
 	var eth1DataJSON eth1DataJSON
-	if err = json.Unmarshal(input, &eth1DataJSON); err != nil {
+	if err := json.Unmarshal(input, &eth1DataJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	return e.unpack(&eth1DataJSON)
+}
+
+func (e *ETH1Data) unpack(eth1DataJSON *eth1DataJSON) error {
 	if eth1DataJSON.DepositRoot == "" {
 		return errors.New("deposit root missing")
 	}
-	if e.DepositRoot, err = hex.DecodeString(strings.TrimPrefix(eth1DataJSON.DepositRoot, "0x")); err != nil {
+	depositRoot, err := hex.DecodeString(strings.TrimPrefix(eth1DataJSON.DepositRoot, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for deposit root")
 	}
-	if len(e.DepositRoot) != rootLength {
+	if len(depositRoot) != RootLength {
 		return errors.New("incorrect length for deposit root")
 	}
+	copy(e.DepositRoot[:], depositRoot)
 	if eth1DataJSON.DepositCount == "" {
 		return errors.New("deposit count missing")
 	}
@@ -76,11 +89,34 @@ func (e *ETH1Data) UnmarshalJSON(input []byte) error {
 	if e.BlockHash, err = hex.DecodeString(strings.TrimPrefix(eth1DataJSON.BlockHash, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for block hash")
 	}
-	if len(e.BlockHash) != hashLength {
+	if len(e.BlockHash) != HashLength {
 		return errors.New("incorrect length for block hash")
 	}
 
 	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (e *ETH1Data) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&eth1DataYAML{
+		DepositRoot:  fmt.Sprintf("%#x", e.DepositRoot),
+		DepositCount: e.DepositCount,
+		BlockHash:    fmt.Sprintf("%#x", e.BlockHash),
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (e *ETH1Data) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var eth1DataJSON eth1DataJSON
+	if err := yaml.Unmarshal(input, &eth1DataJSON); err != nil {
+		return err
+	}
+	return e.unpack(&eth1DataJSON)
 }
 
 // String returns a string version of the structure.

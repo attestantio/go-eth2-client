@@ -18,17 +18,18 @@ import (
 	"fmt"
 	"strconv"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // BeaconCommitteeSubscription is the data required for a beacon committee subscription.
 type BeaconCommitteeSubscription struct {
 	// ValidatorIdex is the index of the validator making the subscription request.
-	ValidatorIndex uint64
+	ValidatorIndex spec.ValidatorIndex
 	// Slot is the slot for which the validator is attesting.
-	Slot uint64
+	Slot spec.Slot
 	// CommitteeIndex is the index of the committee of which the validator is a member at the given slot.
-	CommitteeIndex uint64
+	CommitteeIndex spec.CommitteeIndex
 	// CommitteesAtSlot is the number of committees at the given slot.
 	CommitteesAtSlot uint64
 	// IsAggregator is true if the validator that wishes to subscribe is required to aggregate attestations.
@@ -66,21 +67,27 @@ func (b *BeaconCommitteeSubscription) UnmarshalJSON(input []byte) error {
 	if beaconCommitteeSubscriptionJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
-	if b.ValidatorIndex, err = strconv.ParseUint(beaconCommitteeSubscriptionJSON.ValidatorIndex, 10, 64); err != nil {
+	validatorIndex, err := strconv.ParseUint(beaconCommitteeSubscriptionJSON.ValidatorIndex, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+	b.ValidatorIndex = spec.ValidatorIndex(validatorIndex)
 	if beaconCommitteeSubscriptionJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
-	if b.Slot, err = strconv.ParseUint(beaconCommitteeSubscriptionJSON.Slot, 10, 64); err != nil {
+	slot, err := strconv.ParseUint(beaconCommitteeSubscriptionJSON.Slot, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+	b.Slot = spec.Slot(slot)
 	if beaconCommitteeSubscriptionJSON.CommitteeIndex == "" {
 		return errors.New("committee index missing")
 	}
-	if b.CommitteeIndex, err = strconv.ParseUint(beaconCommitteeSubscriptionJSON.CommitteeIndex, 10, 64); err != nil {
+	committeeIndex, err := strconv.ParseUint(beaconCommitteeSubscriptionJSON.CommitteeIndex, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for committee index")
 	}
+	b.CommitteeIndex = spec.CommitteeIndex(committeeIndex)
 	if beaconCommitteeSubscriptionJSON.CommitteesAtSlot == "" {
 		return errors.New("committees at slot missing")
 	}

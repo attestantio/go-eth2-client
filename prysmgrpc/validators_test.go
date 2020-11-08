@@ -18,8 +18,8 @@ import (
 	"os"
 	"testing"
 
-	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/prysmgrpc"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
 
@@ -27,7 +27,7 @@ func TestValidators(t *testing.T) {
 	tests := []struct {
 		name       string
 		stateID    string
-		validators []client.ValidatorIDProvider
+		validators []spec.BLSPubKey
 	}{
 		{
 			name:    "Genesis",
@@ -40,27 +40,16 @@ func TestValidators(t *testing.T) {
 		{
 			name:    "Single",
 			stateID: "head",
-			validators: []client.ValidatorIDProvider{
-				&testValidatorIDProvider{
-					index:  1000,
-					pubKey: "0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26",
-				},
+			validators: []spec.BLSPubKey{
+				_blsPubKey("0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26"),
 			},
 		},
 		{
 			name:    "Unknown",
 			stateID: "head",
-			validators: []client.ValidatorIDProvider{
-				&testValidatorIDProvider{
-					// Known.
-					index:  1000,
-					pubKey: "0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26",
-				},
-				&testValidatorIDProvider{
-					// Unknown.
-					index:  9999999,
-					pubKey: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-				},
+			validators: []spec.BLSPubKey{
+				_blsPubKey("0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26"),
+				_blsPubKey("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
 			},
 		},
 		{
@@ -77,7 +66,7 @@ func TestValidators(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			validators, err := service.Validators(context.Background(), test.stateID, test.validators)
+			validators, err := service.PrysmValidators(context.Background(), test.stateID, test.validators)
 			require.NoError(t, err)
 			require.NotNil(t, validators)
 			require.NotEqual(t, 0, len(validators))
@@ -98,7 +87,7 @@ func TestValidatorsWithoutBalance(t *testing.T) {
 	tests := []struct {
 		name       string
 		stateID    string
-		validators []client.ValidatorIDProvider
+		validators []spec.BLSPubKey
 	}{
 		{
 			name:    "Genesis",
@@ -111,27 +100,16 @@ func TestValidatorsWithoutBalance(t *testing.T) {
 		{
 			name:    "Single",
 			stateID: "head",
-			validators: []client.ValidatorIDProvider{
-				&testValidatorIDProvider{
-					index:  1000,
-					pubKey: "0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26",
-				},
+			validators: []spec.BLSPubKey{
+				_blsPubKey("0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26"),
 			},
 		},
 		{
 			name:    "Unknown",
 			stateID: "head",
-			validators: []client.ValidatorIDProvider{
-				&testValidatorIDProvider{
-					// Known.
-					index:  1000,
-					pubKey: "0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26",
-				},
-				&testValidatorIDProvider{
-					// Unknown.
-					index:  9999999,
-					pubKey: "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-				},
+			validators: []spec.BLSPubKey{
+				_blsPubKey("0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26"),
+				_blsPubKey("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"),
 			},
 		},
 		{
@@ -148,12 +126,12 @@ func TestValidatorsWithoutBalance(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			validators, err := service.ValidatorsWithoutBalance(context.Background(), test.stateID, test.validators)
+			validators, err := service.PrysmValidatorsWithoutBalance(context.Background(), test.stateID, test.validators)
 			require.NoError(t, err)
 			require.NotNil(t, validators)
 			require.NotEqual(t, 0, len(validators))
 			for i := range validators {
-				require.Equal(t, uint64(0), validators[i].Balance)
+				require.Equal(t, spec.Gwei(0), validators[i].Balance)
 			}
 		})
 	}

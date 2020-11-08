@@ -14,11 +14,13 @@
 package phase0
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
@@ -32,6 +34,12 @@ type Deposit struct {
 type depositJSON struct {
 	Proof []string     `json:"proof"`
 	Data  *DepositData `json:"data"`
+}
+
+// depositYAML is the spec representation of the struct.
+type depositYAML struct {
+	Proof []string     `yaml:"proof"`
+	Data  *DepositData `yaml:"data"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -48,13 +56,15 @@ func (d *Deposit) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (d *Deposit) UnmarshalJSON(input []byte) error {
-	var err error
-
 	var depositJSON depositJSON
-	if err = json.Unmarshal(input, &depositJSON); err != nil {
+	if err := json.Unmarshal(input, &depositJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	return d.unpack(&depositJSON)
+}
 
+func (d *Deposit) unpack(depositJSON *depositJSON) error {
+	var err error
 	if depositJSON.Proof == nil {
 		return errors.New("proof missing")
 	}
@@ -78,9 +88,35 @@ func (d *Deposit) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
+// MarshalYAML implements yaml.Marshaler.
+func (d *Deposit) MarshalYAML() ([]byte, error) {
+	proof := make([]string, len(d.Proof))
+	for i := range d.Proof {
+		proof[i] = fmt.Sprintf("%#x", d.Proof[i])
+	}
+	yamlBytes, err := yaml.MarshalWithOptions(&depositYAML{
+		Proof: proof,
+		Data:  d.Data,
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (d *Deposit) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var depositJSON depositJSON
+	if err := yaml.Unmarshal(input, &depositJSON); err != nil {
+		return err
+	}
+	return d.unpack(&depositJSON)
+}
+
 // String returns a string version of the structure.
 func (d *Deposit) String() string {
-	data, err := json.Marshal(d)
+	data, err := yaml.Marshal(d)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

@@ -15,21 +15,13 @@ func (f *Fork) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 
 	// Field (0) 'PreviousVersion'
-	if len(f.PreviousVersion) != 4 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, f.PreviousVersion...)
+	dst = append(dst, f.PreviousVersion[:]...)
 
 	// Field (1) 'CurrentVersion'
-	if len(f.CurrentVersion) != 4 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, f.CurrentVersion...)
+	dst = append(dst, f.CurrentVersion[:]...)
 
 	// Field (2) 'Epoch'
-	dst = ssz.MarshalUint64(dst, f.Epoch)
+	dst = ssz.MarshalUint64(dst, uint64(f.Epoch))
 
 	return
 }
@@ -43,19 +35,13 @@ func (f *Fork) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (0) 'PreviousVersion'
-	if cap(f.PreviousVersion) == 0 {
-		f.PreviousVersion = make([]byte, 0, len(buf[0:4]))
-	}
-	f.PreviousVersion = append(f.PreviousVersion, buf[0:4]...)
+	copy(f.PreviousVersion[:], buf[0:4])
 
 	// Field (1) 'CurrentVersion'
-	if cap(f.CurrentVersion) == 0 {
-		f.CurrentVersion = make([]byte, 0, len(buf[4:8]))
-	}
-	f.CurrentVersion = append(f.CurrentVersion, buf[4:8]...)
+	copy(f.CurrentVersion[:], buf[4:8])
 
 	// Field (2) 'Epoch'
-	f.Epoch = ssz.UnmarshallUint64(buf[8:16])
+	f.Epoch = Epoch(ssz.UnmarshallUint64(buf[8:16]))
 
 	return err
 }
@@ -76,21 +62,13 @@ func (f *Fork) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'PreviousVersion'
-	if len(f.PreviousVersion) != 4 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(f.PreviousVersion)
+	hh.PutBytes(f.PreviousVersion[:])
 
 	// Field (1) 'CurrentVersion'
-	if len(f.CurrentVersion) != 4 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(f.CurrentVersion)
+	hh.PutBytes(f.CurrentVersion[:])
 
 	// Field (2) 'Epoch'
-	hh.PutUint64(f.Epoch)
+	hh.PutUint64(uint64(f.Epoch))
 
 	hh.Merkleize(indx)
 	return

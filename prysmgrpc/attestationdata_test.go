@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/prysmgrpc"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
 
@@ -50,7 +51,7 @@ func TestAttestationData(t *testing.T) {
 			} else {
 				slot = uint64(test.slot)
 			}
-			attestationData, err := service.AttestationData(context.Background(), slot, test.committeeIndex)
+			attestationData, err := service.AttestationData(context.Background(), spec.Slot(slot), spec.CommitteeIndex(test.committeeIndex))
 			require.NoError(t, err)
 			require.NotNil(t, attestationData)
 		})

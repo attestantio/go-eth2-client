@@ -14,12 +14,14 @@
 package phase0
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 	bitfield "github.com/prysmaticlabs/go-bitfield"
 )
@@ -28,8 +30,8 @@ import (
 type PendingAttestation struct {
 	AggregationBits bitfield.Bitlist `ssz-max:"2048"`
 	Data            *AttestationData
-	InclusionDelay  uint64
-	ProposerIndex   uint64
+	InclusionDelay  Slot
+	ProposerIndex   ValidatorIndex
 }
 
 // pendingAttestationJSON is the spec representation of the struct.
@@ -38,6 +40,14 @@ type pendingAttestationJSON struct {
 	Data            *AttestationData `json:"data"`
 	InclusionDelay  string           `json:"inclusion_delay"`
 	ProposerIndex   string           `json:"proposer_index"`
+}
+
+// pendingAttestationYAML is the spec representation of the struct.
+type pendingAttestationYAML struct {
+	AggregationBits string           `yaml:"aggregation_bits"`
+	Data            *AttestationData `yaml:"data"`
+	InclusionDelay  uint64           `yaml:"inclusion_delay"`
+	ProposerIndex   uint64           `yaml:"proposer_index"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -52,12 +62,15 @@ func (p *PendingAttestation) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (p *PendingAttestation) UnmarshalJSON(input []byte) error {
-	var err error
-
 	var pendingAttestationJSON pendingAttestationJSON
-	if err = json.Unmarshal(input, &pendingAttestationJSON); err != nil {
+	if err := json.Unmarshal(input, &pendingAttestationJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	return p.unpack(&pendingAttestationJSON)
+}
+
+func (p *PendingAttestation) unpack(pendingAttestationJSON *pendingAttestationJSON) error {
+	var err error
 	if pendingAttestationJSON.AggregationBits == "" {
 		return errors.New("aggregation bits missing")
 	}
@@ -71,22 +84,50 @@ func (p *PendingAttestation) UnmarshalJSON(input []byte) error {
 	if pendingAttestationJSON.InclusionDelay == "" {
 		return errors.New("inclusion delay missing")
 	}
-	if p.InclusionDelay, err = strconv.ParseUint(pendingAttestationJSON.InclusionDelay, 10, 64); err != nil {
+	inclusionDelay, err := strconv.ParseUint(pendingAttestationJSON.InclusionDelay, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for inclusion delay")
 	}
+	p.InclusionDelay = Slot(inclusionDelay)
 	if pendingAttestationJSON.ProposerIndex == "" {
 		return errors.New("proposer index missing")
 	}
-	if p.ProposerIndex, err = strconv.ParseUint(pendingAttestationJSON.ProposerIndex, 10, 64); err != nil {
+	proposerIndex, err := strconv.ParseUint(pendingAttestationJSON.ProposerIndex, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for proposer index")
 	}
+	p.ProposerIndex = ValidatorIndex(proposerIndex)
 
 	return nil
 }
 
+// MarshalYAML implements yaml.Marshaler.
+func (p *PendingAttestation) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&pendingAttestationYAML{
+		AggregationBits: fmt.Sprintf("%#x", []byte(p.AggregationBits)),
+		Data:            p.Data,
+		InclusionDelay:  uint64(p.InclusionDelay),
+		ProposerIndex:   uint64(p.ProposerIndex),
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (p *PendingAttestation) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var pendingAttestationJSON pendingAttestationJSON
+	if err := yaml.Unmarshal(input, &pendingAttestationJSON); err != nil {
+		return err
+	}
+	return p.unpack(&pendingAttestationJSON)
+}
+
 // String returns a string version of the structure.
 func (p *PendingAttestation) String() string {
-	data, err := json.Marshal(p)
+	data, err := yaml.Marshal(p)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

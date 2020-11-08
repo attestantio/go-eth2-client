@@ -8,7 +8,7 @@
 
 Go library providing an abstraction to multiple Ethereum 2 beacon nodes.  Its external API follows the official [Ethereum 2 APIs](https://github.com/ethereum/eth2.0-APIs) specification.
 
-This library is under development; expect APIs and data structures to change until it reaches version 1.0.
+This library is under development; expect APIs and data structures to change until it reaches version 1.0.  In addition, clients' implementations of both their own and the standard API are themselves under development so implementation of the the full API can be incomplete.
 
 ## Table of Contents
 
@@ -30,9 +30,9 @@ go get github.com/attestantio/go-eth2-client
 
 `go-eth2-client` supports multiple beacon nodes.  At current it provides support for the following:
 
-  - [Prysm](https://github.com/prysmaticlabs/prysm) using its GRPC interface
-  - [Lighthouse](https://github.com/sigp/lighthouse/) using its HTTP interface
-  - [Teku](https://github.com/pegasyseng/teku) using its HTTP interface
+  - [Prysm](https://github.com/prysmaticlabs/prysm) using its GRPC APIs
+  - [Lighthouse](https://github.com/sigp/lighthouse/) using the standard HTTP APIs
+  - [Teku](https://github.com/pegasyseng/teku) using its HTTP APIs
 
 
 ## Usage

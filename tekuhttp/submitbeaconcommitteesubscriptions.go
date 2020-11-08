@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	client "github.com/attestantio/go-eth2-client"
+	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/pkg/errors"
 )
 
@@ -30,7 +30,7 @@ type subscriptionReq struct {
 }
 
 // SubmitBeaconCommitteeSubscriptions subscribes to beacon committees.
-func (s *Service) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*client.BeaconCommitteeSubscription) error {
+func (s *Service) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*api.BeaconCommitteeSubscription) error {
 	hasErrors := false
 	for _, subscription := range subscriptions {
 		reqBody := &subscriptionReq{

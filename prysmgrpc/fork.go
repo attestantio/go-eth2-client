@@ -45,10 +45,10 @@ func (s *Service) Fork(ctx context.Context, stateID string) (*spec.Fork, error) 
 	}
 
 	fork := &spec.Fork{
-		CurrentVersion:  s.genesisForkVersion,
-		PreviousVersion: s.genesisForkVersion,
-		Epoch:           0,
+		Epoch: 0,
 	}
+	copy(fork.CurrentVersion[:], s.genesisForkVersion)
+	copy(fork.PreviousVersion[:], s.genesisForkVersion)
 
 	return fork, nil
 }

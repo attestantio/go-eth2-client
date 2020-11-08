@@ -17,8 +17,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -31,16 +29,10 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaco
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	respBodyReader, err := s.post(ctx, "/eth/v1/beacon/blocks", bytes.NewBuffer(specJSON))
+	_, err = s.post(ctx, "/eth/v1/beacon/blocks", bytes.NewBuffer(specJSON))
 	if err != nil {
 		return errors.Wrap(err, "failed to submit beacon block")
 	}
-
-	res, err := ioutil.ReadAll(respBodyReader)
-	if err != nil {
-		return errors.Wrap(err, "failed to read response")
-	}
-	fmt.Printf("Res is %s (%d)\n", string(res), len(res))
 
 	return nil
 }

@@ -21,7 +21,6 @@ import (
 
 type parameters struct {
 	logLevel zerolog.Level
-	address  string
 	timeout  time.Duration
 }
 

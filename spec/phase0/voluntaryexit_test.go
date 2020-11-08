@@ -14,10 +14,15 @@
 package phase0_test
 
 import (
+	"bytes"
 	"encoding/json"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/goccy/go-yaml"
 	require "github.com/stretchr/testify/require"
 	"gotest.tools/assert"
 )
@@ -84,8 +89,68 @@ func TestVoluntaryExitJSON(t *testing.T) {
 				rt, err := json.Marshal(&res)
 				require.NoError(t, err)
 				assert.Equal(t, string(test.input), string(rt))
-				assert.Equal(t, string(rt), res.String())
 			}
 		})
 	}
+}
+
+func TestVoluntaryExitYAML(t *testing.T) {
+	tests := []struct {
+		name  string
+		input []byte
+		root  []byte
+		err   string
+	}{
+		{
+			name:  "Good",
+			input: []byte(`{epoch: 1, validator_index: 2}`),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var res spec.VoluntaryExit
+			err := yaml.Unmarshal(test.input, &res)
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+			} else {
+				require.NoError(t, err)
+				rt, err := yaml.Marshal(&res)
+				require.NoError(t, err)
+				rt = bytes.TrimSuffix(rt, []byte("\n"))
+				assert.Equal(t, string(test.input), string(rt))
+			}
+		})
+	}
+}
+
+func TestVoluntaryExitSpec(t *testing.T) {
+	if os.Getenv("ETH2_SPEC_TESTS_DIR") == "" {
+		t.Skip("ETH2_SPEC_TESTS_DIR not suppplied, not running spec tests")
+	}
+	baseDir := filepath.Join(os.Getenv("ETH2_SPEC_TESTS_DIR"), "tests", "mainnet", "phase0", "ssz_static", "VoluntaryExit", "ssz_random")
+	require.NoError(t, filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+		if path == baseDir {
+			// Only interested in subdirectories.
+			return nil
+		}
+		require.NoError(t, err)
+		if info.IsDir() {
+			t.Run(info.Name(), func(t *testing.T) {
+				specYAML, err := ioutil.ReadFile(filepath.Join(path, "value.yaml"))
+				require.NoError(t, err)
+				var res spec.VoluntaryExit
+				require.NoError(t, yaml.Unmarshal(specYAML, &res))
+
+				specSSZ, err := ioutil.ReadFile(filepath.Join(path, "serialized.ssz"))
+				require.NoError(t, err)
+
+				// Ensure this matches the expected hash tree root.
+				ssz, err := res.MarshalSSZ()
+				require.NoError(t, err)
+				require.Equal(t, specSSZ, ssz)
+			})
+		}
+		return nil
+	}))
 }

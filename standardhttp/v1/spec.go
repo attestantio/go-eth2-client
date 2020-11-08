@@ -35,6 +35,9 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to request spec")
 		}
+		if respBodyReader == nil {
+			return nil, errors.New("failed to obtain spec")
+		}
 
 		var specJSON specJSON
 		if err := json.NewDecoder(respBodyReader).Decode(&specJSON); err != nil {

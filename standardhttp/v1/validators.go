@@ -17,9 +17,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 
-	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -29,15 +30,27 @@ type validatorsJSON struct {
 
 // Validators provides the validators, with their balance and status, for a given state.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
-func (s *Service) Validators(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]*api.Validator, error) {
+// validatorIDs is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
+func (s *Service) Validators(ctx context.Context, stateID string, validatorIDs []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error) {
 	if stateID == "" {
 		return nil, errors.New("no state ID specified")
 	}
 
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/validators", stateID))
+	url := fmt.Sprintf("/eth/v1/beacon/states/%s/validators", stateID)
+	if len(validatorIDs) != 0 {
+		ids := make([]string, len(validatorIDs))
+		for i := range validatorIDs {
+			ids[i] = fmt.Sprintf("%d", validatorIDs[i])
+		}
+		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, "&id="))
+	}
+
+	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request state validators")
+		return nil, errors.Wrap(err, "failed to request validators")
+	}
+	if respBodyReader == nil {
+		return nil, errors.New("failed to obtain validators")
 	}
 
 	var validatorsJSON validatorsJSON
@@ -45,10 +58,10 @@ func (s *Service) Validators(ctx context.Context, stateID string, validators []c
 		return nil, errors.Wrap(err, "failed to parse validators")
 	}
 	if validatorsJSON.Data == nil {
-		return nil, errors.New("no state validators returned")
+		return nil, errors.New("no validators returned")
 	}
 
-	res := make(map[uint64]*api.Validator)
+	res := make(map[spec.ValidatorIndex]*api.Validator)
 	for _, validator := range validatorsJSON.Data {
 		res[validator.Index] = validator
 	}

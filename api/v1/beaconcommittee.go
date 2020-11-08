@@ -18,17 +18,18 @@ import (
 	"fmt"
 	"strconv"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // BeaconCommittee is the data providing information validator membership of committees.
 type BeaconCommittee struct {
 	// Slot is the slot in which the committee attests.
-	Slot uint64
+	Slot spec.Slot
 	// Index is the index of the committee.
-	Index uint64
+	Index spec.CommitteeIndex
 	// Validators is the list of validator indices in the committee.
-	Validators []uint64
+	Validators []spec.ValidatorIndex
 }
 
 // beaconCommitteeJSON is the spec representation of the struct.
@@ -62,26 +63,32 @@ func (b *BeaconCommittee) UnmarshalJSON(input []byte) error {
 	if beaconCommitteeJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
-	if b.Slot, err = strconv.ParseUint(beaconCommitteeJSON.Slot, 10, 64); err != nil {
+	slot, err := strconv.ParseUint(beaconCommitteeJSON.Slot, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+	b.Slot = spec.Slot(slot)
 	if beaconCommitteeJSON.Index == "" {
 		return errors.New("index missing")
 	}
-	if b.Index, err = strconv.ParseUint(beaconCommitteeJSON.Index, 10, 64); err != nil {
+	index, err := strconv.ParseUint(beaconCommitteeJSON.Index, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for index")
 	}
+	b.Index = spec.CommitteeIndex(index)
 	if beaconCommitteeJSON.Validators == nil {
 		return errors.New("validators missing")
 	}
 	if len(beaconCommitteeJSON.Validators) == 0 {
 		return errors.New("validators length cannot be 0")
 	}
-	b.Validators = make([]uint64, len(beaconCommitteeJSON.Validators))
+	b.Validators = make([]spec.ValidatorIndex, len(beaconCommitteeJSON.Validators))
 	for i := range beaconCommitteeJSON.Validators {
-		if b.Validators[i], err = strconv.ParseUint(beaconCommitteeJSON.Validators[i], 10, 64); err != nil {
+		validator, err := strconv.ParseUint(beaconCommitteeJSON.Validators[i], 10, 64)
+		if err != nil {
 			return errors.Wrap(err, "invalid value for validator")
 		}
+		b.Validators[i] = spec.ValidatorIndex(validator)
 	}
 
 	return nil

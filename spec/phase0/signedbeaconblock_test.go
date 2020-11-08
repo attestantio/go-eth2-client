@@ -94,7 +94,6 @@ func TestSignedBeaconBlockJSON(t *testing.T) {
 				rt, err := json.Marshal(&res)
 				require.NoError(t, err)
 				assert.Equal(t, string(test.input), string(rt))
-				assert.Equal(t, string(rt), res.String())
 			}
 		})
 	}

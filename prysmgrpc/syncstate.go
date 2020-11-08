@@ -17,6 +17,7 @@ import (
 	"context"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
@@ -45,7 +46,7 @@ func (s *Service) SyncState(ctx context.Context) (*api.SyncState, error) {
 	}
 
 	return &api.SyncState{
-		HeadSlot:     slot,
-		SyncDistance: syncDistance,
+		HeadSlot:     spec.Slot(slot),
+		SyncDistance: spec.Slot(syncDistance),
 	}, nil
 }

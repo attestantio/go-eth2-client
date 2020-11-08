@@ -83,76 +83,76 @@ func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (uint64,
 	return slot / slotsPerEpoch, nil
 }
 
-//// stateRootFromStateID parses the state ID and returns the relevant state root.
-//func (s *Service) stateRootFromStateID(ctx context.Context, stateID string) ([]byte, error) {
-//	var stateRoot []byte
-//	var err error
-//	switch {
-//	case stateID == "genesis":
-//		signedBeaconBlock, err := s.SignedBeaconBlockBySlot(ctx, 0)
-//		if err != nil {
-//			return nil, errors.Wrap(err, "failed to obtain genesis beacon block")
-//		}
-//		if signedBeaconBlock == nil {
-//			return nil, errors.New("failed to fetch genesis beacon block")
-//		}
-//		stateRoot = signedBeaconBlock.Message.StateRoot
-//	case stateID == "justified":
-//		head, err := s.chainHead(ctx)
-//		if err != nil {
-//			return nil, errors.Wrap(err, "failed to obtain beacon head for justified state")
-//		}
-//		signedBeaconBlock, err := s.SignedBeaconBlockBySlot(ctx, head.JustifiedSlot)
-//		if err != nil {
-//			return nil, errors.Wrap(err, "failed to obtain justified beacon block")
-//		}
-//		if signedBeaconBlock == nil {
-//			return nil, errors.New("failed to fetch justified beacon block")
-//		}
-//		stateRoot = signedBeaconBlock.Message.StateRoot
-//	case stateID == "finalized":
-//		head, err := s.chainHead(ctx)
-//		if err != nil {
-//			return nil, errors.Wrap(err, "failed to obtain beacon head for finalized state")
-//		}
-//		signedBeaconBlock, err := s.SignedBeaconBlockBySlot(ctx, head.FinalizedSlot)
-//		if err != nil {
-//			return nil, errors.Wrap(err, "failed to obtain finalized beacon block")
-//		}
-//		if signedBeaconBlock == nil {
-//			return nil, errors.New("failed to fetch finalized beacon block")
-//		}
-//		stateRoot = signedBeaconBlock.Message.StateRoot
-//	case stateID == "head":
-//		head, err := s.beaconHead(ctx)
-//		if err != nil {
-//			return nil, errors.Wrap(err, "failed to obtain state from beacon head")
-//		}
-//		stateRoot = head.StateRoot
-//	case strings.HasPrefix(stateID, "0x"):
-//		stateRoot, err = hex.DecodeString(strings.TrimPrefix(stateID, "0x"))
-//		if err != nil {
-//			return nil, errors.Wrap(err, fmt.Sprintf("failed to parse state ID %s as a state root", stateID))
-//		}
-//	default:
-//		// State ID should be a slot.
-//		slot, err := strconv.ParseUint(stateID, 10, 64)
-//		if err != nil {
-//			return nil, errors.Wrap(err, fmt.Sprintf("failed to parse state ID %s as a slot", stateID))
-//		}
-//		signedBeaconBlock, err := s.SignedBeaconBlockBySlot(ctx, slot)
-//		if err != nil {
-//			return nil, errors.Wrap(err, "failed to obtain genesis beacon block")
-//		}
-//		if signedBeaconBlock == nil {
-//			return nil, errors.New("failed to fetch genesis beacon block")
-//		}
-//		stateRoot = signedBeaconBlock.Message.StateRoot
-//	}
+// stateRootFromStateID parses the state ID and returns the relevant state root.
+// func (s *Service) stateRootFromStateID(ctx context.Context, stateID string) ([]byte, error) {
+//  	var stateRoot []byte
+//  	var err error
+//  	switch {
+//  	case stateID == "genesis":
+//  		signedBeaconBlock, err := s.SignedBeaconBlockBySlot(ctx, 0)
+//  		if err != nil {
+//  			return nil, errors.Wrap(err, "failed to obtain genesis beacon block")
+//  		}
+//  		if signedBeaconBlock == nil {
+//  			return nil, errors.New("failed to fetch genesis beacon block")
+//  		}
+//  		stateRoot = signedBeaconBlock.Message.StateRoot
+//  	case stateID == "justified":
+//  		head, err := s.chainHead(ctx)
+//  		if err != nil {
+//  			return nil, errors.Wrap(err, "failed to obtain beacon head for justified state")
+//  		}
+//  		signedBeaconBlock, err := s.SignedBeaconBlockBySlot(ctx, head.JustifiedSlot)
+//  		if err != nil {
+//  			return nil, errors.Wrap(err, "failed to obtain justified beacon block")
+//  		}
+//  		if signedBeaconBlock == nil {
+//  			return nil, errors.New("failed to fetch justified beacon block")
+//  		}
+//  		stateRoot = signedBeaconBlock.Message.StateRoot
+//  	case stateID == "finalized":
+//  		head, err := s.chainHead(ctx)
+//  		if err != nil {
+//  			return nil, errors.Wrap(err, "failed to obtain beacon head for finalized state")
+//  		}
+//  		signedBeaconBlock, err := s.SignedBeaconBlockBySlot(ctx, head.FinalizedSlot)
+//  		if err != nil {
+//  			return nil, errors.Wrap(err, "failed to obtain finalized beacon block")
+//  		}
+//  		if signedBeaconBlock == nil {
+//  			return nil, errors.New("failed to fetch finalized beacon block")
+//  		}
+//  		stateRoot = signedBeaconBlock.Message.StateRoot
+//  	case stateID == "head":
+//  		head, err := s.beaconHead(ctx)
+//  		if err != nil {
+//  			return nil, errors.Wrap(err, "failed to obtain state from beacon head")
+//  		}
+//  		stateRoot = head.StateRoot
+//  	case strings.HasPrefix(stateID, "0x"):
+//  		stateRoot, err = hex.DecodeString(strings.TrimPrefix(stateID, "0x"))
+//  		if err != nil {
+//  			return nil, errors.Wrap(err, fmt.Sprintf("failed to parse state ID %s as a state root", stateID))
+//  		}
+//  	default:
+//  		// State ID should be a slot.
+//  		slot, err := strconv.ParseUint(stateID, 10, 64)
+//  		if err != nil {
+//  			return nil, errors.Wrap(err, fmt.Sprintf("failed to parse state ID %s as a slot", stateID))
+//  		}
+//  		signedBeaconBlock, err := s.SignedBeaconBlockBySlot(ctx, slot)
+//  		if err != nil {
+//  			return nil, errors.Wrap(err, "failed to obtain genesis beacon block")
+//  		}
+//  		if signedBeaconBlock == nil {
+//  			return nil, errors.New("failed to fetch genesis beacon block")
+//  		}
+//  		stateRoot = signedBeaconBlock.Message.StateRoot
+//  	}
 //
-//	log.Trace().Str("state", stateID).Str("state_root", fmt.Sprintf("%#x", stateRoot)).Msg("Calculated from state ID")
-//	return stateRoot, nil
-//}
+//  	log.Trace().Str("state", stateID).Str("state_root", fmt.Sprintf("%#x", stateRoot)).Msg("Calculated from state ID")
+//  	return stateRoot, nil
+//  }
 
 type chainHead struct {
 	Slot                       uint64

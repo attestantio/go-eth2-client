@@ -73,6 +73,9 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	if parameters.address == "" {
 		return nil, errors.New("no address specified")
 	}
+	if parameters.timeout == 0 {
+		return nil, errors.New("no timeout specified")
+	}
 
 	return &parameters, nil
 }

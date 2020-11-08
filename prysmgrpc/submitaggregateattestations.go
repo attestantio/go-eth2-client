@@ -27,27 +27,27 @@ func (s *Service) SubmitAggregateAttestations(ctx context.Context, aggregateAndP
 	for _, aggregateAndProof := range aggregateAndProofs {
 		prysmAggregateAndProof := &ethpb.SignedAggregateAttestationAndProof{
 			Message: &ethpb.AggregateAttestationAndProof{
-				AggregatorIndex: aggregateAndProof.Message.AggregatorIndex,
+				AggregatorIndex: uint64(aggregateAndProof.Message.AggregatorIndex),
 				Aggregate: &ethpb.Attestation{
 					AggregationBits: aggregateAndProof.Message.Aggregate.AggregationBits,
 					Data: &ethpb.AttestationData{
-						Slot:            aggregateAndProof.Message.Aggregate.Data.Slot,
-						CommitteeIndex:  aggregateAndProof.Message.Aggregate.Data.Index,
-						BeaconBlockRoot: aggregateAndProof.Message.Aggregate.Data.BeaconBlockRoot,
+						Slot:            uint64(aggregateAndProof.Message.Aggregate.Data.Slot),
+						CommitteeIndex:  uint64(aggregateAndProof.Message.Aggregate.Data.Index),
+						BeaconBlockRoot: aggregateAndProof.Message.Aggregate.Data.BeaconBlockRoot[:],
 						Source: &ethpb.Checkpoint{
-							Epoch: aggregateAndProof.Message.Aggregate.Data.Source.Epoch,
-							Root:  aggregateAndProof.Message.Aggregate.Data.Source.Root,
+							Epoch: uint64(aggregateAndProof.Message.Aggregate.Data.Source.Epoch),
+							Root:  aggregateAndProof.Message.Aggregate.Data.Source.Root[:],
 						},
 						Target: &ethpb.Checkpoint{
-							Epoch: aggregateAndProof.Message.Aggregate.Data.Target.Epoch,
-							Root:  aggregateAndProof.Message.Aggregate.Data.Target.Root,
+							Epoch: uint64(aggregateAndProof.Message.Aggregate.Data.Target.Epoch),
+							Root:  aggregateAndProof.Message.Aggregate.Data.Target.Root[:],
 						},
 					},
-					Signature: aggregateAndProof.Message.Aggregate.Signature,
+					Signature: aggregateAndProof.Message.Aggregate.Signature[:],
 				},
-				SelectionProof: aggregateAndProof.Message.SelectionProof,
+				SelectionProof: aggregateAndProof.Message.SelectionProof[:],
 			},
-			Signature: aggregateAndProof.Signature,
+			Signature: aggregateAndProof.Signature[:],
 		}
 
 		log.Trace().Msg("Calling ProposeSignedAggregateSelectionProof()")

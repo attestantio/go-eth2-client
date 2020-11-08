@@ -22,16 +22,16 @@ import (
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
-// NonSpecAggregateAttestation fetches the aggregate attestation given an attestation.
-func (s *Service) NonSpecAggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey []byte, slotSignature []byte) (*spec.Attestation, error) {
+// PrysmAggregateAttestation fetches the aggregate attestation given an attestation.
+func (s *Service) PrysmAggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey spec.BLSPubKey, slotSignature spec.BLSSignature) (*spec.Attestation, error) {
 	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	log.Trace().Msg("Calling SubmitAggregateSelectionProof()")
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	resp, err := conn.SubmitAggregateSelectionProof(opCtx, &ethpb.AggregateSelectionRequest{
-		Slot:           attestation.Data.Slot,
-		CommitteeIndex: attestation.Data.Index,
-		PublicKey:      validatorPubKey,
-		SlotSignature:  slotSignature,
+		Slot:           uint64(attestation.Data.Slot),
+		CommitteeIndex: uint64(attestation.Data.Index),
+		PublicKey:      validatorPubKey[:],
+		SlotSignature:  slotSignature[:],
 	})
 	cancel()
 	if err != nil {
@@ -41,25 +41,25 @@ func (s *Service) NonSpecAggregateAttestation(ctx context.Context, attestation *
 	aggregateAttestation := &spec.Attestation{
 		AggregationBits: resp.AggregateAndProof.Aggregate.AggregationBits,
 		Data: &spec.AttestationData{
-			Slot:            resp.AggregateAndProof.Aggregate.Data.Slot,
-			Index:           resp.AggregateAndProof.Aggregate.Data.CommitteeIndex,
-			BeaconBlockRoot: resp.AggregateAndProof.Aggregate.Data.BeaconBlockRoot,
+			Slot:  spec.Slot(resp.AggregateAndProof.Aggregate.Data.Slot),
+			Index: spec.CommitteeIndex(resp.AggregateAndProof.Aggregate.Data.CommitteeIndex),
 			Source: &spec.Checkpoint{
-				Epoch: resp.AggregateAndProof.Aggregate.Data.Source.Epoch,
-				Root:  resp.AggregateAndProof.Aggregate.Data.Source.Root,
+				Epoch: spec.Epoch(resp.AggregateAndProof.Aggregate.Data.Source.Epoch),
 			},
 			Target: &spec.Checkpoint{
-				Epoch: resp.AggregateAndProof.Aggregate.Data.Target.Epoch,
-				Root:  resp.AggregateAndProof.Aggregate.Data.Target.Root,
+				Epoch: spec.Epoch(resp.AggregateAndProof.Aggregate.Data.Target.Epoch),
 			},
 		},
-		Signature: resp.AggregateAndProof.Aggregate.Signature,
 	}
+	copy(aggregateAttestation.Data.BeaconBlockRoot[:], resp.AggregateAndProof.Aggregate.Data.BeaconBlockRoot)
+	copy(aggregateAttestation.Data.Source.Root[:], resp.AggregateAndProof.Aggregate.Data.Source.Root)
+	copy(aggregateAttestation.Data.Target.Root[:], resp.AggregateAndProof.Aggregate.Data.Target.Root)
+	copy(aggregateAttestation.Signature[:], resp.AggregateAndProof.Aggregate.Signature)
 
-	if resp.AggregateAndProof.Aggregate.Data.Slot != attestation.Data.Slot {
+	if spec.Slot(resp.AggregateAndProof.Aggregate.Data.Slot) != attestation.Data.Slot {
 		return nil, errors.New("aggregate attestation data returned for incorrect slot")
 	}
-	if resp.AggregateAndProof.Aggregate.Data.CommitteeIndex != attestation.Data.Index {
+	if spec.CommitteeIndex(resp.AggregateAndProof.Aggregate.Data.CommitteeIndex) != attestation.Data.Index {
 		return nil, errors.New("aggregate attestation data returned for incorrect committee index")
 	}
 

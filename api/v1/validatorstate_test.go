@@ -34,17 +34,20 @@ func TestValidatorStateJSON(t *testing.T) {
 		isAttesting  bool
 		isExited     bool
 		hasExited    bool
+		hasBalance   bool
 		err          string
 	}{
 		{
-			name:      "PendingQueued",
-			input:     []byte(`"Pending_queued"`),
-			isPending: true,
+			name:       "PendingQueued",
+			input:      []byte(`"Pending_queued"`),
+			isPending:  true,
+			hasBalance: true,
 		},
 		{
-			name:      "PendingInitialized",
-			input:     []byte(`"Pending_initialized"`),
-			isPending: true,
+			name:       "PendingInitialized",
+			input:      []byte(`"Pending_initialized"`),
+			isPending:  true,
+			hasBalance: true,
 		},
 		{
 			name:         "ActiveOngoing",
@@ -52,6 +55,7 @@ func TestValidatorStateJSON(t *testing.T) {
 			isActive:     true,
 			hasActivated: true,
 			isAttesting:  true,
+			hasBalance:   true,
 		},
 		{
 			name:         "ActiveExiting",
@@ -59,12 +63,14 @@ func TestValidatorStateJSON(t *testing.T) {
 			isActive:     true,
 			hasActivated: true,
 			isAttesting:  true,
+			hasBalance:   true,
 		},
 		{
 			name:         "ActiveSlashed",
 			input:        []byte(`"Active_slashed"`),
 			isActive:     true,
 			hasActivated: true,
+			hasBalance:   true,
 		},
 		{
 			name:         "ExitedUnslashed",
@@ -72,6 +78,7 @@ func TestValidatorStateJSON(t *testing.T) {
 			hasActivated: true,
 			isExited:     true,
 			hasExited:    true,
+			hasBalance:   true,
 		},
 		{
 			name:         "ExitedSlashed",
@@ -79,18 +86,21 @@ func TestValidatorStateJSON(t *testing.T) {
 			hasActivated: true,
 			isExited:     true,
 			hasExited:    true,
+			hasBalance:   true,
 		},
 		{
 			name:         "WithdrawalPossible",
 			input:        []byte(`"Withdrawal_possible"`),
 			hasActivated: true,
 			hasExited:    true,
+			hasBalance:   true,
 		},
 		{
 			name:         "WithdrawalDone",
 			input:        []byte(`"Withdrawal_done"`),
 			hasActivated: true,
 			hasExited:    true,
+			hasBalance:   true,
 		},
 		{
 			name:  "Unknown",
@@ -120,6 +130,7 @@ func TestValidatorStateJSON(t *testing.T) {
 				assert.Equal(t, test.isAttesting, res.IsAttesting())
 				assert.Equal(t, test.isExited, res.IsExited())
 				assert.Equal(t, test.hasExited, res.HasExited())
+				assert.Equal(t, test.hasBalance, res.HasBalance())
 				assert.Equal(t, strings.Trim(string(rt), `"`), res.String())
 			}
 		})
@@ -127,8 +138,8 @@ func TestValidatorStateJSON(t *testing.T) {
 }
 
 func TestValidatorToState(t *testing.T) {
-	farFutureEpoch := uint64(99999)
-	currentEpoch := uint64(100)
+	farFutureEpoch := spec.Epoch(99999)
+	currentEpoch := spec.Epoch(100)
 	tests := []struct {
 		name      string
 		validator *spec.Validator

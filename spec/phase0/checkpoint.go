@@ -14,25 +14,33 @@
 package phase0
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // Checkpoint provides information about a checkpoint.
 type Checkpoint struct {
-	Epoch uint64
-	Root  []byte `ssz-size:"32"`
+	Epoch Epoch
+	Root  Root `ssz-size:"32"`
 }
 
-// checkpointJSON is the spec representation of the struct.
+// checkpointJSON is an internal representation of the struct.
 type checkpointJSON struct {
 	Epoch string `json:"epoch"`
 	Root  string `json:"root"`
+}
+
+// checkpointYAML is an internal representation of the struct.
+type checkpointYAML struct {
+	Epoch uint64 `yaml:"epoch"`
+	Root  string `yaml:"root"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -45,29 +53,58 @@ func (c *Checkpoint) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (c *Checkpoint) UnmarshalJSON(input []byte) error {
-	var err error
-
 	var checkpointJSON checkpointJSON
-	if err = json.Unmarshal(input, &checkpointJSON); err != nil {
+	err := json.Unmarshal(input, &checkpointJSON)
+	if err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	return c.unpack(&checkpointJSON)
+}
+
+func (c *Checkpoint) unpack(checkpointJSON *checkpointJSON) error {
 	if checkpointJSON.Epoch == "" {
 		return errors.New("epoch missing")
 	}
-	if c.Epoch, err = strconv.ParseUint(checkpointJSON.Epoch, 10, 64); err != nil {
+	epoch, err := strconv.ParseUint(checkpointJSON.Epoch, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for epoch")
 	}
+	c.Epoch = Epoch(epoch)
 	if checkpointJSON.Root == "" {
 		return errors.New("root missing")
 	}
-	if c.Root, err = hex.DecodeString(strings.TrimPrefix(checkpointJSON.Root, "0x")); err != nil {
+	root, err := hex.DecodeString(strings.TrimPrefix(checkpointJSON.Root, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for root")
 	}
-	if len(c.Root) != rootLength {
+	if len(root) != RootLength {
 		return errors.New("incorrect length for root")
 	}
+	copy(c.Root[:], root)
 
 	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (c *Checkpoint) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&checkpointYAML{
+		Epoch: uint64(c.Epoch),
+		Root:  fmt.Sprintf("%#x", c.Root),
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (c *Checkpoint) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var checkpointJSON checkpointJSON
+	if err := yaml.Unmarshal(input, &checkpointJSON); err != nil {
+		return err
+	}
+	return c.unpack(&checkpointJSON)
 }
 
 // String returns a string version of the structure.

@@ -37,9 +37,10 @@ func (s *Service) Genesis(ctx context.Context) (*api.Genesis, error) {
 		return nil, errors.Wrap(err, "failed to obtain genesis fork version")
 	}
 
-	return &api.Genesis{
-		GenesisTime:           genesisTime,
-		GenesisValidatorsRoot: genesisValidatorsRoot,
-		GenesisForkVersion:    genesisForkVersion.CurrentVersion,
-	}, nil
+	genesis := &api.Genesis{
+		GenesisTime:        genesisTime,
+		GenesisForkVersion: genesisForkVersion.CurrentVersion,
+	}
+	copy(genesis.GenesisValidatorsRoot[:], genesisValidatorsRoot)
+	return genesis, nil
 }

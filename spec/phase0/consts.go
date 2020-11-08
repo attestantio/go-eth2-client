@@ -13,9 +13,26 @@
 
 package phase0
 
-const forkVersionLength = 4
-const hashLength = 32
-const rootLength = 32
-const publicKeyLength = 48
-const signatureLength = 96
-const graffitiLength = 32
+// ForkVersionLength is the number of bytes in a fork version.
+const ForkVersionLength = 4
+
+// HashLength is the number of bytes in a hash.
+const HashLength = 32
+
+// RootLength is the number of bytes in a root.
+const RootLength = 32
+
+// PublicKeyLength is the number of bytes in a public key.
+const PublicKeyLength = 48
+
+// SignatureLength is the number of bytes in a signature.
+const SignatureLength = 96
+
+// GraffitiLength is the number of bytes in a block graffiti.
+const GraffitiLength = 32
+
+// DomainTypeLength is the number of bytes in a domain type.
+const DomainTypeLength = 4
+
+// DomainLength is the number of bytes in a domain.
+const DomainLength = 32

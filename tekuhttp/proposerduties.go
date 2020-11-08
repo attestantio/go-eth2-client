@@ -18,8 +18,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -27,8 +27,9 @@ type proposerDutiesJSON struct {
 	Data []*api.ProposerDuty `json:"data"`
 }
 
-// ProposerDuties obtains proposer duties.
-func (s *Service) ProposerDuties(ctx context.Context, epoch uint64, validators []client.ValidatorIDProvider) ([]*api.ProposerDuty, error) {
+// ProposerDuties obtains proposer duties for the given epoch.
+// If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
+func (s *Service) ProposerDuties(ctx context.Context, epoch spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.ProposerDuty, error) {
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", epoch))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request proposer duties")
@@ -44,26 +45,22 @@ func (s *Service) ProposerDuties(ctx context.Context, epoch uint64, validators [
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain slots per epoch")
 	}
-	startSlot := epoch * slotsPerEpoch
-	endSlot := epoch*slotsPerEpoch + slotsPerEpoch - 1
+	startSlot := spec.Slot(uint64(epoch) * slotsPerEpoch)
+	endSlot := spec.Slot(uint64(epoch)*slotsPerEpoch + slotsPerEpoch - 1)
 	for _, duty := range resp.Data {
 		if duty.Slot < startSlot || duty.Slot > endSlot {
 			return nil, fmt.Errorf("received proposal for slot %d outside of range [%d,%d]", duty.Slot, startSlot, endSlot)
 		}
 	}
 
-	if len(validators) == 0 {
+	if len(validatorIndices) == 0 {
 		// Return all duties.
 		return resp.Data, nil
 	}
 
 	// Filter duties based on supplied validators.
-	validatorIndexMap := make(map[uint64]bool, len(validators))
-	for _, validator := range validators {
-		index, err := validator.Index(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain validator index")
-		}
+	validatorIndexMap := make(map[spec.ValidatorIndex]bool, len(validatorIndices))
+	for _, index := range validatorIndices {
 		validatorIndexMap[index] = true
 	}
 	duties := make([]*api.ProposerDuty, 0, len(resp.Data))

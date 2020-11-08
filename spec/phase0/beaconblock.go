@@ -14,21 +14,23 @@
 package phase0
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // BeaconBlock represents a beacon block.
 type BeaconBlock struct {
-	Slot          uint64
-	ProposerIndex uint64
-	ParentRoot    []byte `ssz-size:"32"`
-	StateRoot     []byte `ssz-size:"32"`
+	Slot          Slot
+	ProposerIndex ValidatorIndex
+	ParentRoot    Root `ssz-size:"32"`
+	StateRoot     Root `ssz-size:"32"`
 	Body          *BeaconBlockBody
 }
 
@@ -39,6 +41,15 @@ type beaconBlockJSON struct {
 	ParentRoot    string           `json:"parent_root"`
 	StateRoot     string           `json:"state_root"`
 	Body          *BeaconBlockBody `json:"body"`
+}
+
+// beaconBlockYAML is the spec representation of the struct.
+type beaconBlockYAML struct {
+	Slot          uint64           `yaml:"slot"`
+	ProposerIndex uint64           `yaml:"proposer_index"`
+	ParentRoot    string           `yaml:"parent_root"`
+	StateRoot     string           `yaml:"state_root"`
+	Body          *BeaconBlockBody `yaml:"body"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -54,42 +65,52 @@ func (b *BeaconBlock) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *BeaconBlock) UnmarshalJSON(input []byte) error {
-	var err error
-
 	var beaconBlockJSON beaconBlockJSON
-	if err = json.Unmarshal(input, &beaconBlockJSON); err != nil {
+	if err := json.Unmarshal(input, &beaconBlockJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	return b.unpack(&beaconBlockJSON)
+}
+
+func (b *BeaconBlock) unpack(beaconBlockJSON *beaconBlockJSON) error {
 	if beaconBlockJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
-	if b.Slot, err = strconv.ParseUint(beaconBlockJSON.Slot, 10, 64); err != nil {
+	slot, err := strconv.ParseUint(beaconBlockJSON.Slot, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+	b.Slot = Slot(slot)
 	if beaconBlockJSON.ProposerIndex == "" {
 		return errors.New("proposer index missing")
 	}
-	if b.ProposerIndex, err = strconv.ParseUint(beaconBlockJSON.ProposerIndex, 10, 64); err != nil {
+	proposerIndex, err := strconv.ParseUint(beaconBlockJSON.ProposerIndex, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for proposer index")
 	}
+	b.ProposerIndex = ValidatorIndex(proposerIndex)
 	if beaconBlockJSON.ParentRoot == "" {
 		return errors.New("parent root missing")
 	}
-	if b.ParentRoot, err = hex.DecodeString(strings.TrimPrefix(beaconBlockJSON.ParentRoot, "0x")); err != nil {
+	parentRoot, err := hex.DecodeString(strings.TrimPrefix(beaconBlockJSON.ParentRoot, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for parent root")
 	}
-	if len(b.ParentRoot) != rootLength {
+	if len(parentRoot) != RootLength {
 		return errors.New("incorrect length for parent root")
 	}
+	copy(b.ParentRoot[:], parentRoot)
 	if beaconBlockJSON.StateRoot == "" {
 		return errors.New("state root missing")
 	}
-	if b.StateRoot, err = hex.DecodeString(strings.TrimPrefix(beaconBlockJSON.StateRoot, "0x")); err != nil {
+	stateRoot, err := hex.DecodeString(strings.TrimPrefix(beaconBlockJSON.StateRoot, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for state root")
 	}
-	if len(b.StateRoot) != rootLength {
+	if len(stateRoot) != RootLength {
 		return errors.New("incorrect length for state root")
 	}
+	copy(b.StateRoot[:], stateRoot)
 	if beaconBlockJSON.Body == nil {
 		return errors.New("body missing")
 	}
@@ -98,9 +119,34 @@ func (b *BeaconBlock) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
+// MarshalYAML implements yaml.Marshaler.
+func (b *BeaconBlock) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&beaconBlockYAML{
+		Slot:          uint64(b.Slot),
+		ProposerIndex: uint64(b.ProposerIndex),
+		ParentRoot:    fmt.Sprintf("%#x", b.ParentRoot),
+		StateRoot:     fmt.Sprintf("%#x", b.StateRoot),
+		Body:          b.Body,
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (b *BeaconBlock) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var beaconBlockJSON beaconBlockJSON
+	if err := yaml.Unmarshal(input, &beaconBlockJSON); err != nil {
+		return err
+	}
+	return b.unpack(&beaconBlockJSON)
+}
+
 // String returns a string version of the structure.
 func (b *BeaconBlock) String() string {
-	data, err := json.Marshal(b)
+	data, err := yaml.Marshal(b)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

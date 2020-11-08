@@ -20,10 +20,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"sync"
 	"time"
 
-	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -43,16 +41,11 @@ type Service struct {
 
 	// Various information from the node that does not change during the
 	// lifetime of a beacon node.
-	// TODO needs to be refreshed on a reconnect.
 	genesis         *api.Genesis
 	spec            map[string]interface{}
 	depositContract *api.DepositContract
 	forkSchedule    []*spec.Fork
 	nodeVersion     string
-
-	// Event handlers.
-	beaconChainHeadUpdatedMutex    sync.RWMutex
-	beaconChainHeadUpdatedHandlers []client.BeaconChainHeadUpdatedHandler
 }
 
 // log is a service-wide logger.
@@ -101,10 +94,10 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		timeout: parameters.timeout,
 	}
 
-	//	// Fetch static values to confirm the connection is good.
-	//	if err := s.fetchStaticValues(ctx); err != nil {
-	//		return nil, errors.Wrap(err, "failed to confirm node connection")
-	//	}
+	// Fetch static values to confirm the connection is good.
+	if err := s.fetchStaticValues(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to confirm node connection")
+	}
 
 	// Close the service on context done.
 	go func(s *Service) {
@@ -128,8 +121,15 @@ func (s *Service) fetchStaticValues(ctx context.Context) error {
 	if _, err := s.DepositContract(ctx); err != nil {
 		return errors.Wrap(err, "failed to fetch deposit contract")
 	}
-	if _, err := s.ForkSchedule(ctx); err != nil {
-		return errors.Wrap(err, "failed to fetch fork schedule")
+	// if _, err := s.ForkSchedule(ctx); err != nil {
+	// 	return errors.Wrap(err, "failed to fetch fork schedule")
+	// }
+	s.forkSchedule = []*spec.Fork{
+		{
+			PreviousVersion: spec.Version([4]byte{0x00, 0x00, 0x00, 0x01}),
+			CurrentVersion:  spec.Version([4]byte{0x00, 0x00, 0x00, 0x01}),
+			Epoch:           0,
+		},
 	}
 
 	return nil

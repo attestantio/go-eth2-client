@@ -26,7 +26,7 @@ import (
 // BeaconBlockHeader is the data providing information about beacon blocks.
 type BeaconBlockHeader struct {
 	// Root is the root of the beacon block.
-	Root []byte
+	Root spec.Root
 	// Canonical is true if the block is considered canonical.
 	Canonical bool
 	// Header is the beacon block header.
@@ -60,12 +60,14 @@ func (b *BeaconBlockHeader) UnmarshalJSON(input []byte) error {
 	if beaconBlockHeaderJSON.Root == "" {
 		return errors.New("root missing")
 	}
-	if b.Root, err = hex.DecodeString(strings.TrimPrefix(beaconBlockHeaderJSON.Root, "0x")); err != nil {
+	root, err := hex.DecodeString(strings.TrimPrefix(beaconBlockHeaderJSON.Root, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for root")
 	}
-	if len(b.Root) != rootLength {
-		return fmt.Errorf("incorrect length %d for root", len(b.Root))
+	if len(root) != rootLength {
+		return fmt.Errorf("incorrect length %d for root", len(root))
 	}
+	copy(b.Root[:], root)
 
 	b.Canonical = beaconBlockHeaderJSON.Canonical
 	if beaconBlockHeaderJSON.Header == nil {

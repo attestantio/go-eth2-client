@@ -14,23 +14,31 @@
 package phase0
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strconv"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // VoluntaryExit provides information about a voluntary exit.
 type VoluntaryExit struct {
-	Epoch          uint64
-	ValidatorIndex uint64
+	Epoch          Epoch
+	ValidatorIndex ValidatorIndex
 }
 
-// voluntaryExitJSON is the spec representation of the struct.
+// voluntaryExitJSON is an internal representation of the struct.
 type voluntaryExitJSON struct {
 	Epoch          string `json:"epoch"`
 	ValidatorIndex string `json:"validator_index"`
+}
+
+// voluntaryExitYAML is an internal representation of the struct.
+type voluntaryExitYAML struct {
+	Epoch          uint64 `json:"epoch"`
+	ValidatorIndex uint64 `json:"validator_index"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -43,31 +51,60 @@ func (v *VoluntaryExit) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (v *VoluntaryExit) UnmarshalJSON(input []byte) error {
-	var err error
-
 	var voluntaryExitJSON voluntaryExitJSON
-	if err = json.Unmarshal(input, &voluntaryExitJSON); err != nil {
+	err := json.Unmarshal(input, &voluntaryExitJSON)
+	if err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	return v.unpack(&voluntaryExitJSON)
+}
+
+func (v *VoluntaryExit) unpack(voluntaryExitJSON *voluntaryExitJSON) error {
 	if voluntaryExitJSON.Epoch == "" {
 		return errors.New("epoch missing")
 	}
-	if v.Epoch, err = strconv.ParseUint(voluntaryExitJSON.Epoch, 10, 64); err != nil {
+	epoch, err := strconv.ParseUint(voluntaryExitJSON.Epoch, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for epoch")
 	}
+	v.Epoch = Epoch(epoch)
 	if voluntaryExitJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
-	if v.ValidatorIndex, err = strconv.ParseUint(voluntaryExitJSON.ValidatorIndex, 10, 64); err != nil {
+	validatorIndex, err := strconv.ParseUint(voluntaryExitJSON.ValidatorIndex, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+	v.ValidatorIndex = ValidatorIndex(validatorIndex)
 
 	return nil
 }
 
+// MarshalYAML implements yaml.Marshaler.
+func (v *VoluntaryExit) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&voluntaryExitYAML{
+		Epoch:          uint64(v.Epoch),
+		ValidatorIndex: uint64(v.ValidatorIndex),
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (v *VoluntaryExit) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var voluntaryExitJSON voluntaryExitJSON
+	if err := yaml.Unmarshal(input, &voluntaryExitJSON); err != nil {
+		return err
+	}
+	return v.unpack(&voluntaryExitJSON)
+}
+
 // String returns a string version of the structure.
 func (v *VoluntaryExit) String() string {
-	data, err := json.Marshal(v)
+	data, err := yaml.Marshal(v)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

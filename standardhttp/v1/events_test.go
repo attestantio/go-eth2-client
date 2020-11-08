@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	api "github.com/attestantio/go-eth2-client/api/v1"
 	standardhttp "github.com/attestantio/go-eth2-client/standardhttp/v1"
 	"github.com/stretchr/testify/require"
 )
@@ -43,9 +44,13 @@ func TestEvents(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
-			err := service.Events(ctx, test.topics)
+			events := 0
+			err := service.Events(ctx, test.topics, func(event *api.Event) {
+				events++
+			})
 			require.NoError(t, err)
 			time.Sleep(30 * time.Second)
+			require.NotEqual(t, 0, events)
 			cancel()
 		})
 	}

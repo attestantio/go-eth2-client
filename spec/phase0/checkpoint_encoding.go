@@ -15,14 +15,10 @@ func (c *Checkpoint) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 
 	// Field (0) 'Epoch'
-	dst = ssz.MarshalUint64(dst, c.Epoch)
+	dst = ssz.MarshalUint64(dst, uint64(c.Epoch))
 
 	// Field (1) 'Root'
-	if len(c.Root) != 32 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, c.Root...)
+	dst = append(dst, c.Root[:]...)
 
 	return
 }
@@ -36,13 +32,10 @@ func (c *Checkpoint) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (0) 'Epoch'
-	c.Epoch = ssz.UnmarshallUint64(buf[0:8])
+	c.Epoch = Epoch(ssz.UnmarshallUint64(buf[0:8]))
 
 	// Field (1) 'Root'
-	if cap(c.Root) == 0 {
-		c.Root = make([]byte, 0, len(buf[8:40]))
-	}
-	c.Root = append(c.Root, buf[8:40]...)
+	copy(c.Root[:], buf[8:40])
 
 	return err
 }
@@ -63,14 +56,10 @@ func (c *Checkpoint) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'Epoch'
-	hh.PutUint64(c.Epoch)
+	hh.PutUint64(uint64(c.Epoch))
 
 	// Field (1) 'Root'
-	if len(c.Root) != 32 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(c.Root)
+	hh.PutBytes(c.Root[:])
 
 	hh.Merkleize(indx)
 	return

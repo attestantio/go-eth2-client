@@ -14,10 +14,16 @@
 package phase0_test
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"testing"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/goccy/go-yaml"
 	require "github.com/stretchr/testify/require"
 	"gotest.tools/assert"
 )
@@ -188,4 +194,70 @@ func TestValidatorJSON(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestValidatorYAML(t *testing.T) {
+	tests := []struct {
+		name  string
+		input []byte
+		root  []byte
+		err   string
+	}{
+		{
+			name:  "Good",
+			input: []byte(`{pubkey: '0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b', withdrawal_credentials: '0x00ec7ef7780c9d151597924036262dd28dc60e1228f4da6fecf9d402cb3f3594', effective_balance: 32000000000, slashed: false, activation_eligibility_epoch: 0, activation_epoch: 0, exit_epoch: 18446744073709551615, withdrawable_epoch: 18446744073709551615}`),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var res spec.Validator
+			err := yaml.Unmarshal(test.input, &res)
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+			} else {
+				require.NoError(t, err)
+				rt, err := yaml.Marshal(&res)
+				require.NoError(t, err)
+				rt = bytes.TrimSuffix(rt, []byte("\n"))
+				assert.Equal(t, string(test.input), string(rt))
+			}
+		})
+	}
+}
+
+func TestValidatorSpec(t *testing.T) {
+	if os.Getenv("ETH2_SPEC_TESTS_DIR") == "" {
+		t.Skip("ETH2_SPEC_TESTS_DIR not suppplied, not running spec tests")
+	}
+	baseDir := filepath.Join(os.Getenv("ETH2_SPEC_TESTS_DIR"), "tests", "mainnet", "phase0", "ssz_static", "Validator", "ssz_random")
+	require.NoError(t, filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+		if path == baseDir {
+			// Only interested in subdirectories.
+			return nil
+		}
+		require.NoError(t, err)
+		if info.IsDir() {
+			t.Run(info.Name(), func(t *testing.T) {
+				specYAML, err := ioutil.ReadFile(filepath.Join(path, "value.yaml"))
+				require.NoError(t, err)
+				var res spec.Validator
+				require.NoError(t, yaml.Unmarshal(specYAML, &res))
+
+				specSSZ, err := ioutil.ReadFile(filepath.Join(path, "serialized.ssz"))
+				require.NoError(t, err)
+
+				ssz, err := res.MarshalSSZ()
+				require.NoError(t, err)
+				require.Equal(t, specSSZ, ssz)
+
+				root, err := res.HashTreeRoot()
+				require.NoError(t, err)
+				rootsYAML, err := ioutil.ReadFile(filepath.Join(path, "roots.yaml"))
+				require.NoError(t, err)
+				require.Equal(t, string(rootsYAML), fmt.Sprintf("{root: '%#x'}\n", root))
+			})
+		}
+		return nil
+	}))
 }

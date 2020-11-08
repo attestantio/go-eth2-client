@@ -16,21 +16,22 @@ package tekuhttp
 import (
 	"context"
 
-	client "github.com/attestantio/go-eth2-client"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // ValidatorBalances provides the validator balances for a given state.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
-func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validatorIDs []client.ValidatorIDProvider) (map[uint64]uint64, error) {
+// validatorIndices is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
+// will be applied.
+func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]spec.Gwei, error) {
 	// Teku does not have a separate balances endpoint, so fetch validators and pull out the balance info.
-	validators, err := s.Validators(ctx, stateID, validatorIDs)
+	validators, err := s.Validators(ctx, stateID, validatorIndices)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain validators for balances")
 	}
 
-	res := make(map[uint64]uint64)
+	res := make(map[spec.ValidatorIndex]spec.Gwei)
 	for index, validator := range validators {
 		res[index] = validator.Balance
 	}

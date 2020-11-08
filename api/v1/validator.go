@@ -25,9 +25,9 @@ import (
 
 // Validator contains the spec validator plus additional fields.
 type Validator struct {
-	Index     uint64
-	Balance   uint64
-	State     ValidatorState
+	Index     spec.ValidatorIndex
+	Balance   spec.Gwei
+	Status    ValidatorState
 	Validator *spec.Validator
 }
 
@@ -35,7 +35,7 @@ type Validator struct {
 type validatorJSON struct {
 	Index     string          `json:"index"`
 	Balance   string          `json:"balance"`
-	State     ValidatorState  `json:"state"`
+	Status    ValidatorState  `json:"status"`
 	Validator *spec.Validator `json:"validator"`
 }
 
@@ -44,7 +44,7 @@ func (v *Validator) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&validatorJSON{
 		Index:     fmt.Sprintf("%d", v.Index),
 		Balance:   fmt.Sprintf("%d", v.Balance),
-		State:     v.State,
+		Status:    v.Status,
 		Validator: v.Validator,
 	})
 }
@@ -60,16 +60,20 @@ func (v *Validator) UnmarshalJSON(input []byte) error {
 	if validatorJSON.Index == "" {
 		return errors.New("index missing")
 	}
-	if v.Index, err = strconv.ParseUint(validatorJSON.Index, 10, 64); err != nil {
+	index, err := strconv.ParseUint(validatorJSON.Index, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for index")
 	}
+	v.Index = spec.ValidatorIndex(index)
 	if validatorJSON.Balance == "" {
 		return errors.New("balance missing")
 	}
-	if v.Balance, err = strconv.ParseUint(validatorJSON.Balance, 10, 64); err != nil {
+	balance, err := strconv.ParseUint(validatorJSON.Balance, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for balance")
 	}
-	v.State = validatorJSON.State
+	v.Balance = spec.Gwei(balance)
+	v.Status = validatorJSON.Status
 	if validatorJSON.Validator == nil {
 		return errors.New("validator missing")
 	}
@@ -88,6 +92,6 @@ func (v *Validator) String() string {
 }
 
 // PubKey implements ValidatorPubKeyProvider
-func (v *Validator) PubKey(ctx context.Context) ([]byte, error) {
+func (v *Validator) PubKey(ctx context.Context) (spec.BLSPubKey, error) {
 	return v.Validator.PublicKey, nil
 }

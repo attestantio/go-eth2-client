@@ -18,16 +18,16 @@ import (
 	"os"
 	"testing"
 
-	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/prysmgrpc"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAttesterDuties(t *testing.T) {
 	tests := []struct {
-		name       string
-		epoch      uint64
-		validators []client.ValidatorIDProvider
+		name    string
+		epoch   spec.Epoch
+		indices []spec.ValidatorIndex
 	}{
 		{
 			name: "Good",
@@ -42,7 +42,7 @@ func TestAttesterDuties(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			duties, err := service.AttesterDuties(context.Background(), test.epoch, test.validators)
+			duties, err := service.AttesterDuties(context.Background(), test.epoch, test.indices)
 			require.NoError(t, err)
 			require.NotNil(t, duties)
 		})

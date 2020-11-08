@@ -32,6 +32,9 @@ func (s *Service) DepositContract(ctx context.Context) (*api.DepositContract, er
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to request deposit contract")
 		}
+		if respBodyReader == nil {
+			return nil, errors.New("failed to obtain deposit contract")
+		}
 
 		var resp depositContractJSON
 		if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {

@@ -28,7 +28,7 @@ type beaconBlockProposalJSON struct {
 }
 
 // BeaconBlockProposal fetches a proposed beacon block for signing.
-func (s *Service) BeaconBlockProposal(ctx context.Context, slot uint64, randaoReveal []byte, graffiti []byte) (*spec.BeaconBlock, error) {
+func (s *Service) BeaconBlockProposal(ctx context.Context, slot spec.Slot, randaoReveal spec.BLSSignature, graffiti []byte) (*spec.BeaconBlock, error) {
 	// Graffiti should be 32 bytes.
 	fixedGraffiti := make([]byte, 32)
 	copy(fixedGraffiti, graffiti)
@@ -38,6 +38,9 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot uint64, randaoRe
 	if err != nil {
 		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request beacon block proposal")
+	}
+	if respBodyReader == nil {
+		return nil, errors.New("failed to obtain beacon block proposal")
 	}
 
 	var resp beaconBlockProposalJSON
@@ -49,7 +52,7 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot uint64, randaoRe
 	if resp.Data.Slot != slot {
 		return nil, errors.New("beacon block proposal not for requested slot")
 	}
-	if !bytes.Equal(resp.Data.Body.RANDAOReveal, randaoReveal) {
+	if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
 		return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
 	}
 	if !bytes.Equal(resp.Data.Body.Graffiti, fixedGraffiti) {

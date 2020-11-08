@@ -15,11 +15,7 @@ func (e *ETH1Data) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 
 	// Field (0) 'DepositRoot'
-	if len(e.DepositRoot) != 32 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, e.DepositRoot...)
+	dst = append(dst, e.DepositRoot[:]...)
 
 	// Field (1) 'DepositCount'
 	dst = ssz.MarshalUint64(dst, e.DepositCount)
@@ -43,10 +39,7 @@ func (e *ETH1Data) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (0) 'DepositRoot'
-	if cap(e.DepositRoot) == 0 {
-		e.DepositRoot = make([]byte, 0, len(buf[0:32]))
-	}
-	e.DepositRoot = append(e.DepositRoot, buf[0:32]...)
+	copy(e.DepositRoot[:], buf[0:32])
 
 	// Field (1) 'DepositCount'
 	e.DepositCount = ssz.UnmarshallUint64(buf[32:40])
@@ -76,11 +69,7 @@ func (e *ETH1Data) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'DepositRoot'
-	if len(e.DepositRoot) != 32 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(e.DepositRoot)
+	hh.PutBytes(e.DepositRoot[:])
 
 	// Field (1) 'DepositCount'
 	hh.PutUint64(e.DepositCount)

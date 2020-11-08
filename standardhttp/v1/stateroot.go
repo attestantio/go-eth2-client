@@ -41,6 +41,9 @@ func (s *Service) StateRoot(ctx context.Context, stateID string) ([]byte, error)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request state root")
 	}
+	if respBodyReader == nil {
+		return nil, errors.New("failed to obtain state root")
+	}
 
 	var stateRootJSON stateRootJSON
 	if err := json.NewDecoder(respBodyReader).Decode(&stateRootJSON); err != nil {

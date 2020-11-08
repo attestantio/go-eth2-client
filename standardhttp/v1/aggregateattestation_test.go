@@ -15,11 +15,11 @@ package v1_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 	"time"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	standardhttp "github.com/attestantio/go-eth2-client/standardhttp/v1"
 	"github.com/stretchr/testify/require"
 )
@@ -27,7 +27,7 @@ import (
 func TestAggregateAttestation(t *testing.T) {
 	tests := []struct {
 		name           string
-		committeeIndex uint64
+		committeeIndex spec.CommitteeIndex
 	}{
 		{
 			name:           "Good",
@@ -48,7 +48,7 @@ func TestAggregateAttestation(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, test := range tests {
-		slot := uint64(time.Since(genesis.GenesisTime).Seconds() / slotDuration.Seconds())
+		slot := spec.Slot(time.Since(genesis.GenesisTime).Seconds()) / spec.Slot(slotDuration.Seconds())
 		t.Run(test.name, func(t *testing.T) {
 			// Fetch attestation data to generate a root.
 			attestationData, err := service.AttestationData(context.Background(), slot, test.committeeIndex)
@@ -58,9 +58,10 @@ func TestAggregateAttestation(t *testing.T) {
 			require.NoError(t, err)
 
 			// Fetch aggregate attestation.
-			aggregateAttestation, err := service.AggregateAttestation(context.Background(), slot, dataRoot[:])
+			// Note that this will not be present, so expect nil as a response but no error.
+			aggregateAttestation, err := service.AggregateAttestation(context.Background(), slot, dataRoot)
 			require.NoError(t, err)
-			fmt.Printf("%v\n", aggregateAttestation)
+			require.Nil(t, aggregateAttestation)
 		})
 	}
 }

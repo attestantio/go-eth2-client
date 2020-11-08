@@ -15,20 +15,32 @@ package prysmgrpc_test
 
 import (
 	"context"
+	"encoding/hex"
 	"os"
+	"strings"
 	"testing"
 
-	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/prysmgrpc"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
 
+func _blsPubKey(input string) spec.BLSPubKey {
+	tmp, err := hex.DecodeString(strings.TrimPrefix(input, "0x"))
+	if err != nil {
+		panic(err)
+	}
+	var res spec.BLSPubKey
+	copy(res[:], tmp)
+	return res
+}
+
 func TestProposerDuties(t *testing.T) {
 	tests := []struct {
-		name       string
-		epoch      uint64
-		validators []client.ValidatorIDProvider
-		expected   int
+		name     string
+		epoch    spec.Epoch
+		indices  []spec.ValidatorIndex
+		expected int
 	}{
 		{
 			name:     "Old",
@@ -41,18 +53,9 @@ func TestProposerDuties(t *testing.T) {
 			expected: 32,
 		},
 		{
-			name:  "GoodWithValidators",
-			epoch: 4092,
-			validators: []client.ValidatorIDProvider{
-				&testValidatorIDProvider{
-					index:  16056,
-					pubKey: "0x9553a63a58d3a776a2483184e5af37aedf131b82ef1e0bcba7b3c01818f490371aac0c6f9a327fb7eb89190af7b085a5",
-				},
-				&testValidatorIDProvider{
-					index:  35476,
-					pubKey: "0x9216091f3e4fe0b0562a6c5bf6e8c35cf0c3b321b6f415de6631d7d12e58603e1e23c8d78f449b601f8d244d26f70aa7",
-				},
-			},
+			name:     "GoodWithValidators",
+			epoch:    4092,
+			indices:  []spec.ValidatorIndex{33566, 25444},
 			expected: 2,
 		},
 	}
@@ -65,7 +68,7 @@ func TestProposerDuties(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			duties, err := service.ProposerDuties(context.Background(), test.epoch, test.validators)
+			duties, err := service.ProposerDuties(context.Background(), test.epoch, test.indices)
 			require.NoError(t, err)
 			require.NotNil(t, duties)
 			require.Equal(t, test.expected, len(duties))

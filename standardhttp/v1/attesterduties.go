@@ -14,13 +14,14 @@
 package v1
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
-	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -29,22 +30,41 @@ type attesterDutiesJSON struct {
 }
 
 // AttesterDuties obtains attester duties.
-func (s *Service) AttesterDuties(ctx context.Context, epoch uint64, validators []client.ValidatorIDProvider) ([]*api.AttesterDuty, error) {
-	validatorIndices := make([]string, 0, len(validators))
-	for i := range validators {
-		index, err := validators[i].Index(ctx)
-		if err != nil {
-			// Warn but continue.
-			log.Warn().Err(err).Msg("Failed to obtain index for validator; skipping")
-			continue
-		}
-		validatorIndices = append(validatorIndices, fmt.Sprintf("%d", index))
+func (s *Service) AttesterDuties(ctx context.Context, epoch spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.AttesterDuty, error) {
+	// Try a POST request.
+	var reqBodyReader bytes.Buffer
+	if _, err := reqBodyReader.WriteString(`[`); err != nil {
+		return nil, errors.Wrap(err, "failed to write validator index array start")
 	}
-
-	url := fmt.Sprintf("/eth/v1/validator/duties/attester/%d?index=%s", epoch, strings.Join(validatorIndices, ","))
-	respBodyReader, err := s.get(ctx, url)
+	for i := range validatorIndices {
+		if _, err := reqBodyReader.WriteString(fmt.Sprintf(`"%d"`, validatorIndices[i])); err != nil {
+			return nil, errors.Wrap(err, "failed to write index")
+		}
+		if i != len(validatorIndices)-1 {
+			if _, err := reqBodyReader.WriteString(`,`); err != nil {
+				return nil, errors.Wrap(err, "failed to write separator")
+			}
+		}
+	}
+	if _, err := reqBodyReader.WriteString(`]`); err != nil {
+		return nil, errors.Wrap(err, "failed to write end of validator index array")
+	}
+	url := fmt.Sprintf("/eth/v1/validator/duties/attester/%d", epoch)
+	respBodyReader, err := s.post(ctx, url, &reqBodyReader)
+	if err != nil {
+		// Didn't work.  Try a GET request.
+		indices := make([]string, len(validatorIndices))
+		for i := range validatorIndices {
+			indices[i] = fmt.Sprintf("%d", validatorIndices[i])
+		}
+		url := fmt.Sprintf("/eth/v1/validator/duties/attester/%d?index=%s", epoch, strings.Join(indices, ","))
+		respBodyReader, err = s.get(ctx, url)
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request attester duties")
+	}
+	if respBodyReader == nil {
+		return nil, errors.New("failed to obtain attester duties")
 	}
 
 	var resp attesterDutiesJSON

@@ -16,24 +16,16 @@ func (b *BeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset := int(84)
 
 	// Field (0) 'Slot'
-	dst = ssz.MarshalUint64(dst, b.Slot)
+	dst = ssz.MarshalUint64(dst, uint64(b.Slot))
 
 	// Field (1) 'ProposerIndex'
-	dst = ssz.MarshalUint64(dst, b.ProposerIndex)
+	dst = ssz.MarshalUint64(dst, uint64(b.ProposerIndex))
 
 	// Field (2) 'ParentRoot'
-	if len(b.ParentRoot) != 32 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, b.ParentRoot...)
+	dst = append(dst, b.ParentRoot[:]...)
 
 	// Field (3) 'StateRoot'
-	if len(b.StateRoot) != 32 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, b.StateRoot...)
+	dst = append(dst, b.StateRoot[:]...)
 
 	// Offset (4) 'Body'
 	dst = ssz.WriteOffset(dst, offset)
@@ -62,22 +54,16 @@ func (b *BeaconBlock) UnmarshalSSZ(buf []byte) error {
 	var o4 uint64
 
 	// Field (0) 'Slot'
-	b.Slot = ssz.UnmarshallUint64(buf[0:8])
+	b.Slot = Slot(ssz.UnmarshallUint64(buf[0:8]))
 
 	// Field (1) 'ProposerIndex'
-	b.ProposerIndex = ssz.UnmarshallUint64(buf[8:16])
+	b.ProposerIndex = ValidatorIndex(ssz.UnmarshallUint64(buf[8:16]))
 
 	// Field (2) 'ParentRoot'
-	if cap(b.ParentRoot) == 0 {
-		b.ParentRoot = make([]byte, 0, len(buf[16:48]))
-	}
-	b.ParentRoot = append(b.ParentRoot, buf[16:48]...)
+	copy(b.ParentRoot[:], buf[16:48])
 
 	// Field (3) 'StateRoot'
-	if cap(b.StateRoot) == 0 {
-		b.StateRoot = make([]byte, 0, len(buf[48:80]))
-	}
-	b.StateRoot = append(b.StateRoot, buf[48:80]...)
+	copy(b.StateRoot[:], buf[48:80])
 
 	// Offset (4) 'Body'
 	if o4 = ssz.ReadOffset(buf[80:84]); o4 > size {
@@ -120,24 +106,16 @@ func (b *BeaconBlock) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'Slot'
-	hh.PutUint64(b.Slot)
+	hh.PutUint64(uint64(b.Slot))
 
 	// Field (1) 'ProposerIndex'
-	hh.PutUint64(b.ProposerIndex)
+	hh.PutUint64(uint64(b.ProposerIndex))
 
 	// Field (2) 'ParentRoot'
-	if len(b.ParentRoot) != 32 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(b.ParentRoot)
+	hh.PutBytes(b.ParentRoot[:])
 
 	// Field (3) 'StateRoot'
-	if len(b.StateRoot) != 32 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(b.StateRoot)
+	hh.PutBytes(b.StateRoot[:])
 
 	// Field (4) 'Body'
 	if err = b.Body.HashTreeRootWith(hh); err != nil {

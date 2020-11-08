@@ -14,25 +14,27 @@
 package phase0
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // Validator is the Ethereum 2 validator structure.
 type Validator struct {
-	PublicKey                  []byte `ssz-size:"48"`
-	WithdrawalCredentials      []byte `ssz-size:"32"`
-	EffectiveBalance           uint64
+	PublicKey                  BLSPubKey `ssz-size:"48"`
+	WithdrawalCredentials      []byte    `ssz-size:"32"`
+	EffectiveBalance           Gwei
 	Slashed                    bool
-	ActivationEligibilityEpoch uint64
-	ActivationEpoch            uint64
-	ExitEpoch                  uint64
-	WithdrawableEpoch          uint64
+	ActivationEligibilityEpoch Epoch
+	ActivationEpoch            Epoch
+	ExitEpoch                  Epoch
+	WithdrawableEpoch          Epoch
 }
 
 // validatorJSON is the spec representation of the struct.
@@ -45,6 +47,18 @@ type validatorJSON struct {
 	ActivationEpoch            string `json:"activation_epoch"`
 	ExitEpoch                  string `json:"exit_epoch"`
 	WithdrawableEpoch          string `json:"withdrawable_epoch"`
+}
+
+// validatorYAML is the spec representation of the struct.
+type validatorYAML struct {
+	PublicKey                  string `yaml:"pubkey"`
+	WithdrawalCredentials      string `yaml:"withdrawal_credentials"`
+	EffectiveBalance           uint64 `yaml:"effective_balance"`
+	Slashed                    bool   `yaml:"slashed"`
+	ActivationEligibilityEpoch uint64 `yaml:"activation_eligibility_epoch"`
+	ActivationEpoch            uint64 `yaml:"activation_epoch"`
+	ExitEpoch                  uint64 `yaml:"exit_epoch"`
+	WithdrawableEpoch          uint64 `yaml:"withdrawable_epoch"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -63,64 +77,106 @@ func (v *Validator) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (v *Validator) UnmarshalJSON(input []byte) error {
-	var err error
-
 	var validatorJSON validatorJSON
-	if err = json.Unmarshal(input, &validatorJSON); err != nil {
+	if err := json.Unmarshal(input, &validatorJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	return v.unpack(&validatorJSON)
+}
+
+func (v *Validator) unpack(validatorJSON *validatorJSON) error {
 	if validatorJSON.PublicKey == "" {
 		return errors.New("public key missing")
 	}
-	if v.PublicKey, err = hex.DecodeString(strings.TrimPrefix(validatorJSON.PublicKey, "0x")); err != nil {
+	publicKey, err := hex.DecodeString(strings.TrimPrefix(validatorJSON.PublicKey, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for public key")
 	}
-	if len(v.PublicKey) != publicKeyLength {
-		return fmt.Errorf("incorrect length %d for public key", len(v.PublicKey))
+	if len(publicKey) != PublicKeyLength {
+		return fmt.Errorf("incorrect length %d for public key", len(publicKey))
 	}
-
+	copy(v.PublicKey[:], publicKey)
 	if validatorJSON.WithdrawalCredentials == "" {
 		return errors.New("withdrawal credentials missing")
 	}
-	if v.WithdrawalCredentials, err = hex.DecodeString(strings.TrimPrefix(validatorJSON.WithdrawalCredentials, "0x")); err != nil {
+	v.WithdrawalCredentials, err = hex.DecodeString(strings.TrimPrefix(validatorJSON.WithdrawalCredentials, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for withdrawal credentials")
 	}
-	if len(v.WithdrawalCredentials) != hashLength {
+	if len(v.WithdrawalCredentials) != HashLength {
 		return fmt.Errorf("incorrect length %d for withdrawal credentials", len(v.WithdrawalCredentials))
 	}
 	if validatorJSON.EffectiveBalance == "" {
 		return errors.New("effective balance missing")
 	}
-	if v.EffectiveBalance, err = strconv.ParseUint(validatorJSON.EffectiveBalance, 10, 64); err != nil {
+	effectiveBalance, err := strconv.ParseUint(validatorJSON.EffectiveBalance, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for effective balance")
 	}
+	v.EffectiveBalance = Gwei(effectiveBalance)
 	v.Slashed = validatorJSON.Slashed
 	if validatorJSON.ActivationEligibilityEpoch == "" {
 		return errors.New("activation eligibility epoch missing")
 	}
-	if v.ActivationEligibilityEpoch, err = strconv.ParseUint(validatorJSON.ActivationEligibilityEpoch, 10, 64); err != nil {
+	activationEligibilityEpoch, err := strconv.ParseUint(validatorJSON.ActivationEligibilityEpoch, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for activation eligibility epoch")
 	}
+	v.ActivationEligibilityEpoch = Epoch(activationEligibilityEpoch)
 	if validatorJSON.ActivationEpoch == "" {
 		return errors.New("activation epoch missing")
 	}
-	if v.ActivationEpoch, err = strconv.ParseUint(validatorJSON.ActivationEpoch, 10, 64); err != nil {
+	activationEpoch, err := strconv.ParseUint(validatorJSON.ActivationEpoch, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for activation epoch")
 	}
+	v.ActivationEpoch = Epoch(activationEpoch)
 	if validatorJSON.ExitEpoch == "" {
 		return errors.New("exit epoch missing")
 	}
-	if v.ExitEpoch, err = strconv.ParseUint(validatorJSON.ExitEpoch, 10, 64); err != nil {
+	exitEpoch, err := strconv.ParseUint(validatorJSON.ExitEpoch, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for exit epoch")
 	}
+	v.ExitEpoch = Epoch(exitEpoch)
 	if validatorJSON.WithdrawableEpoch == "" {
 		return errors.New("withdrawable epoch missing")
 	}
-	if v.WithdrawableEpoch, err = strconv.ParseUint(validatorJSON.WithdrawableEpoch, 10, 64); err != nil {
+	withdrawableEpoch, err := strconv.ParseUint(validatorJSON.WithdrawableEpoch, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for withdrawable epoch")
 	}
+	v.WithdrawableEpoch = Epoch(withdrawableEpoch)
 
 	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (v *Validator) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&validatorYAML{
+		PublicKey:                  fmt.Sprintf("%#x", v.PublicKey),
+		WithdrawalCredentials:      fmt.Sprintf("%#x", v.WithdrawalCredentials),
+		EffectiveBalance:           uint64(v.EffectiveBalance),
+		Slashed:                    v.Slashed,
+		ActivationEligibilityEpoch: uint64(v.ActivationEligibilityEpoch),
+		ActivationEpoch:            uint64(v.ActivationEpoch),
+		ExitEpoch:                  uint64(v.ExitEpoch),
+		WithdrawableEpoch:          uint64(v.WithdrawableEpoch),
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (v *Validator) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var validatorJSON validatorJSON
+	if err := yaml.Unmarshal(input, &validatorJSON); err != nil {
+		return err
+	}
+	return v.unpack(&validatorJSON)
 }
 
 // String returns a string version of the structure.

@@ -17,8 +17,8 @@ import (
 	"context"
 
 	client "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/lighthousehttp"
 	"github.com/attestantio/go-eth2-client/prysmgrpc"
+	standardhttp "github.com/attestantio/go-eth2-client/standardhttp/v1"
 	"github.com/attestantio/go-eth2-client/tekuhttp"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -41,16 +41,16 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		log = log.Level(parameters.logLevel)
 	}
 
+	// Try standard.
+	standardClient, err := tryStandard(ctx, parameters)
+	if err == nil {
+		return standardClient, nil
+	}
+
 	// Try prysm.
 	prysmClient, err := tryPrysm(ctx, parameters)
 	if err == nil {
 		return prysmClient, nil
-	}
-
-	// Try lighthouse.
-	lighthouseClient, err := tryLighthouse(ctx, parameters)
-	if err == nil {
-		return lighthouseClient, nil
 	}
 
 	// Try teku.
@@ -63,6 +63,18 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 	return nil, errors.New("failed to connect to Ethereum 2 client with any known method")
 }
 
+func tryStandard(ctx context.Context, parameters *parameters) (*standardhttp.Service, error) {
+	standardhttpParameters := make([]standardhttp.Parameter, 0)
+	standardhttpParameters = append(standardhttpParameters, standardhttp.WithLogLevel(parameters.logLevel))
+	standardhttpParameters = append(standardhttpParameters, standardhttp.WithAddress(parameters.address))
+	standardhttpParameters = append(standardhttpParameters, standardhttp.WithTimeout(parameters.timeout))
+	client, err := standardhttp.New(ctx, standardhttpParameters...)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed when trying to open connection with standard API")
+	}
+	return client, nil
+}
+
 func tryPrysm(ctx context.Context, parameters *parameters) (*prysmgrpc.Service, error) {
 	prysmParameters := make([]prysmgrpc.Parameter, 0)
 	prysmParameters = append(prysmParameters, prysmgrpc.WithLogLevel(parameters.logLevel))
@@ -71,18 +83,6 @@ func tryPrysm(ctx context.Context, parameters *parameters) (*prysmgrpc.Service, 
 	client, err := prysmgrpc.New(ctx, prysmParameters...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed when trying to open connection to prysm")
-	}
-	return client, nil
-}
-
-func tryLighthouse(ctx context.Context, parameters *parameters) (*lighthousehttp.Service, error) {
-	lighthouseParameters := make([]lighthousehttp.Parameter, 0)
-	lighthouseParameters = append(lighthouseParameters, lighthousehttp.WithLogLevel(parameters.logLevel))
-	lighthouseParameters = append(lighthouseParameters, lighthousehttp.WithAddress(parameters.address))
-	lighthouseParameters = append(lighthouseParameters, lighthousehttp.WithTimeout(parameters.timeout))
-	client, err := lighthousehttp.New(ctx, lighthouseParameters...)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed when trying to open connection to lighthouse")
 	}
 	return client, nil
 }

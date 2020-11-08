@@ -22,11 +22,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-type submitBeaconBlockResponseJSON struct {
-	Empty   bool `json:"empty"`
-	Present bool `json:"present"`
-}
-
 // SubmitBeaconBlock submits a beacon block.
 func (s *Service) SubmitBeaconBlock(ctx context.Context, specBlock *spec.SignedBeaconBlock) error {
 	specJSON, err := json.Marshal(specBlock)
@@ -35,24 +30,12 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, specBlock *spec.SignedB
 	}
 
 	log.Trace().Msg("Sending to /validator/block")
-	respBodyReader, err := s.post(ctx, "/validator/block", bytes.NewBuffer(specJSON))
+	_, err = s.post(ctx, "/validator/block", bytes.NewBuffer(specJSON))
 	if err != nil {
 		return errors.Wrap(err, "failed to send to /validator/block")
 	}
 
-	var response submitBeaconBlockResponseJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&response); err != nil {
-		return errors.Wrap(err, "failed to parse submit beacon block response")
-	}
-
-	if response.Empty {
-		return errors.New("beacon block proposal rejected as empty")
-	}
-
-	if response.Present {
-		// This means that teku already knows about this block; that's fine.
-		log.Debug().Msg("Beacon block already known by this node")
-	}
+	// Response is the block root; ignore it.
 
 	return nil
 }

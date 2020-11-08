@@ -15,12 +15,8 @@ package mock
 
 import (
 	"context"
-	"sync"
 	"time"
 
-	client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	zerologger "github.com/rs/zerolog/log"
@@ -34,15 +30,15 @@ type Service struct {
 
 	// Various information from the node that does not change during the
 	// lifetime of a beacon node.
-	genesis         *api.Genesis
-	spec            map[string]interface{}
-	depositContract *api.DepositContract
-	forkSchedule    []*spec.Fork
-	nodeVersion     string
+	// genesis         *api.Genesis
+	// spec            map[string]interface{}
+	// depositContract *api.DepositContract
+	// forkSchedule    []*spec.Fork
+	nodeVersion string
 
 	// Event handlers.
-	beaconChainHeadUpdatedMutex    sync.RWMutex
-	beaconChainHeadUpdatedHandlers []client.BeaconChainHeadUpdatedHandler
+	// beaconChainHeadUpdatedMutex    sync.RWMutex
+	// beaconChainHeadUpdatedHandlers []client.BeaconChainHeadUpdatedHandler
 }
 
 // log is a service-wide logger.
@@ -64,6 +60,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	s := &Service{
 		genesisTime: time.Now(),
 		timeout:     parameters.timeout,
+		nodeVersion: "mock",
 	}
 
 	// Fetch static values to confirm the connection is good.

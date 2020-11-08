@@ -17,7 +17,6 @@ import (
 	"context"
 	"fmt"
 
-	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -26,26 +25,64 @@ import (
 
 // Validators provides the validators, with their balance and status, for a given state.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
-func (s *Service) Validators(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]*api.Validator, error) {
-	if len(validators) == 0 {
-		return s.validators(ctx, stateID, true)
+// validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
+// will be applied.
+func (s *Service) Validators(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error) {
+	pubKeys, err := s.indicesToPubKeys(ctx, validatorIndices)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to convert indices to public keys")
 	}
-	return s.validatorsByPubKeys(ctx, stateID, validators, true)
+
+	return s.ValidatorsByPubKey(ctx, stateID, pubKeys)
 }
 
-// ValidatorsWithoutBalance provides the validators, with their status, for a given state.
+// ValidatorsByPubKey provides the validators, with their balance and status, for a given state.
+// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
+// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
+// supplied no filter will be applied.
+func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
+	res, err := s.PrysmValidatorsByPubKey(ctx, stateID, validatorPubKeys)
+	if err != nil {
+		return nil, err
+	}
+	specRes := make(map[spec.ValidatorIndex]*api.Validator)
+	for k, v := range res {
+		specRes[k] = v
+	}
+
+	return specRes, nil
+}
+
+// PrysmValidators provides the validators, with their balance and status, for a given state.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
-func (s *Service) ValidatorsWithoutBalance(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]*api.Validator, error) {
-	if len(validators) == 0 {
+func (s *Service) PrysmValidators(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
+	if len(validatorPubKeys) == 0 {
+		return s.validators(ctx, stateID, true)
+	}
+	return s.validatorsByPubKeys(ctx, stateID, validatorPubKeys, true)
+}
+
+// PrysmValidatorsByPubKey provides the validators, with their balance and status, for a given state.
+// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
+// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
+// supplied no filter will be applied.
+func (s *Service) PrysmValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
+	return s.PrysmValidators(ctx, stateID, validatorPubKeys)
+}
+
+// PrysmValidatorsWithoutBalance provides the validators, with their status, for a given state.
+// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
+// validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
+func (s *Service) PrysmValidatorsWithoutBalance(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
+	if len(validatorPubKeys) == 0 {
 		return s.validators(ctx, stateID, false)
 	}
-	return s.validatorsByPubKeys(ctx, stateID, validators, false)
+	return s.validatorsByPubKeys(ctx, stateID, validatorPubKeys, false)
 }
 
 // validators returns all validators known by the client.
-func (s *Service) validators(ctx context.Context, stateID string, includeBalances bool) (map[uint64]*api.Validator, error) {
+func (s *Service) validators(ctx context.Context, stateID string, includeBalances bool) (map[spec.ValidatorIndex]*api.Validator, error) {
 	// The state ID could by dynamic ('head', 'finalized', etc.).  Becase we are making multiple calls and don't want to
 	// fetch data from different states we resolve it to an epoch and use that.
 	epoch, err := s.EpochFromStateID(ctx, stateID)
@@ -63,15 +100,15 @@ func (s *Service) validators(ctx context.Context, stateID string, includeBalance
 		log.Trace().Msg("Fetching genesis validators")
 		validatorsReq.QueryFilter = &ethpb.ListValidatorsRequest_Genesis{Genesis: true}
 	} else {
-		log.Trace().Uint64("epoch", epoch).Msg("Fetching epoch validators")
-		validatorsReq.QueryFilter = &ethpb.ListValidatorsRequest_Epoch{Epoch: epoch}
+		log.Trace().Uint64("epoch", uint64(epoch)).Msg("Fetching epoch validators")
+		validatorsReq.QueryFilter = &ethpb.ListValidatorsRequest_Epoch{Epoch: uint64(epoch)}
 	}
 	farFutureEpoch, err := s.FarFutureEpoch(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain far future epoch")
 	}
 
-	res := make(map[uint64]*api.Validator)
+	res := make(map[spec.ValidatorIndex]*api.Validator)
 	pageToken := ""
 	for i := int32(0); ; i += s.maxPageSize {
 		log.Trace().Msg("Calling ListValidators()")
@@ -89,23 +126,23 @@ func (s *Service) validators(ctx context.Context, stateID string, includeBalance
 
 		for _, entry := range validatorsResp.ValidatorList {
 			validator := &spec.Validator{
-				PublicKey:                  entry.Validator.PublicKey,
 				WithdrawalCredentials:      entry.Validator.WithdrawalCredentials,
-				EffectiveBalance:           entry.Validator.EffectiveBalance,
+				EffectiveBalance:           spec.Gwei(entry.Validator.EffectiveBalance),
 				Slashed:                    entry.Validator.Slashed,
-				ActivationEligibilityEpoch: entry.Validator.ActivationEligibilityEpoch,
-				ActivationEpoch:            entry.Validator.ActivationEpoch,
-				ExitEpoch:                  entry.Validator.ExitEpoch,
-				WithdrawableEpoch:          entry.Validator.WithdrawableEpoch,
+				ActivationEligibilityEpoch: spec.Epoch(entry.Validator.ActivationEligibilityEpoch),
+				ActivationEpoch:            spec.Epoch(entry.Validator.ActivationEpoch),
+				ExitEpoch:                  spec.Epoch(entry.Validator.ExitEpoch),
+				WithdrawableEpoch:          spec.Epoch(entry.Validator.WithdrawableEpoch),
 			}
-			res[entry.Index] = &api.Validator{
-				Index:     entry.Index,
-				State:     api.ValidatorToState(validator, epoch, farFutureEpoch),
+			copy(validator.PublicKey[:], entry.Validator.PublicKey)
+			res[spec.ValidatorIndex(entry.Index)] = &api.Validator{
+				Index:     spec.ValidatorIndex(entry.Index),
+				Status:    api.ValidatorToState(validator, epoch, spec.Epoch(farFutureEpoch)),
 				Validator: validator,
 			}
 		}
 
-		highest := uint64(0)
+		highest := spec.ValidatorIndex(0)
 		for i := range res {
 			if res[i].Index > highest {
 				highest = res[i].Index
@@ -127,7 +164,7 @@ func (s *Service) validators(ctx context.Context, stateID string, includeBalance
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain slots per epoch")
 	}
-	balances, err := s.validatorBalances(ctx, fmt.Sprintf("%d", epoch*slotsPerEpoch))
+	balances, err := s.validatorBalances(ctx, fmt.Sprintf("%d", uint64(epoch)*slotsPerEpoch))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain validator balances")
 	}
@@ -141,7 +178,7 @@ func (s *Service) validators(ctx context.Context, stateID string, includeBalance
 }
 
 // validatorsByPubKeys returns a subset of validators.
-func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, validators []client.ValidatorIDProvider, includeBalances bool) (map[uint64]*api.Validator, error) {
+func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey, includeBalances bool) (map[spec.ValidatorIndex]*api.Validator, error) {
 	// The state ID could by dynamic ('head', 'finalized', etc.).  Becase we are making multiple calls and don't want to
 	// fetch data from different states we resolve it to an epoch and use that.
 	epoch, err := s.EpochFromStateID(ctx, stateID)
@@ -165,9 +202,9 @@ func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, valid
 		validatorsReq.QueryFilter = &ethpb.ListValidatorsRequest_Genesis{Genesis: true}
 		validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Genesis{Genesis: true}
 	} else {
-		log.Trace().Uint64("epoch", epoch).Msg("Fetching epoch validators")
-		validatorsReq.QueryFilter = &ethpb.ListValidatorsRequest_Epoch{Epoch: epoch}
-		validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Epoch{Epoch: epoch}
+		log.Trace().Uint64("epoch", uint64(epoch)).Msg("Fetching epoch validators")
+		validatorsReq.QueryFilter = &ethpb.ListValidatorsRequest_Epoch{Epoch: uint64(epoch)}
+		validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Epoch{Epoch: uint64(epoch)}
 	}
 
 	farFutureEpoch, err := s.FarFutureEpoch(ctx)
@@ -175,24 +212,20 @@ func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, valid
 		return nil, errors.Wrap(err, "failed to obtain far future epoch")
 	}
 
-	pubKeys := make([][]byte, 0, len(validators))
-	for i := range validators {
-		pubKey, err := validators[i].PubKey(ctx)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to obtain public key for validator")
-		}
-		pubKeys = append(pubKeys, pubKey)
+	pubKeys := make([][]byte, len(validatorPubKeys))
+	for i := range validatorPubKeys {
+		pubKeys[i] = validatorPubKeys[i][:]
 	}
 
 	// If we ask prysm for the balance of a validator that doesn't exist it errors, so
 	// keep track of the validators that are known to prysm.
 	known := make(map[[48]byte]bool)
 
-	res := make(map[uint64]*api.Validator)
-	for i := 0; i < len(pubKeys); i += int(s.maxPageSize) {
+	res := make(map[spec.ValidatorIndex]*api.Validator)
+	for i := 0; i < len(validatorPubKeys); i += int(s.maxPageSize) {
 		lastIndex := i + int(s.maxPageSize)
-		if lastIndex > len(pubKeys) {
-			lastIndex = len(pubKeys)
+		if lastIndex > len(validatorPubKeys) {
+			lastIndex = len(validatorPubKeys)
 		}
 
 		validatorsReq.PublicKeys = pubKeys[i:lastIndex]
@@ -209,18 +242,18 @@ func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, valid
 		}
 		for _, entry := range validatorsResp.ValidatorList {
 			validator := &spec.Validator{
-				PublicKey:                  entry.Validator.PublicKey,
 				WithdrawalCredentials:      entry.Validator.WithdrawalCredentials,
-				EffectiveBalance:           entry.Validator.EffectiveBalance,
+				EffectiveBalance:           spec.Gwei(entry.Validator.EffectiveBalance),
 				Slashed:                    entry.Validator.Slashed,
-				ActivationEligibilityEpoch: entry.Validator.ActivationEligibilityEpoch,
-				ActivationEpoch:            entry.Validator.ActivationEpoch,
-				ExitEpoch:                  entry.Validator.ExitEpoch,
-				WithdrawableEpoch:          entry.Validator.WithdrawableEpoch,
+				ActivationEligibilityEpoch: spec.Epoch(entry.Validator.ActivationEligibilityEpoch),
+				ActivationEpoch:            spec.Epoch(entry.Validator.ActivationEpoch),
+				ExitEpoch:                  spec.Epoch(entry.Validator.ExitEpoch),
+				WithdrawableEpoch:          spec.Epoch(entry.Validator.WithdrawableEpoch),
 			}
-			res[entry.Index] = &api.Validator{
-				Index:     entry.Index,
-				State:     api.ValidatorToState(validator, epoch, farFutureEpoch),
+			copy(validator.PublicKey[:], entry.Validator.PublicKey)
+			res[spec.ValidatorIndex(entry.Index)] = &api.Validator{
+				Index:     spec.ValidatorIndex(entry.Index),
+				Status:    api.ValidatorToState(validator, epoch, spec.Epoch(farFutureEpoch)),
 				Validator: validator,
 			}
 
@@ -262,7 +295,7 @@ func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, valid
 			break
 		}
 		for _, entry := range validatorBalancesResp.Balances {
-			res[entry.Index].Balance = entry.Balance
+			res[spec.ValidatorIndex(entry.Index)].Balance = spec.Gwei(entry.Balance)
 		}
 	}
 

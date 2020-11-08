@@ -14,16 +14,18 @@
 package phase0
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // ProposerSlashing provides information about a proposer slashing
 type ProposerSlashing struct {
-	Header1 *SignedBeaconBlockHeader
-	Header2 *SignedBeaconBlockHeader
+	SignedHeader1 *SignedBeaconBlockHeader
+	SignedHeader2 *SignedBeaconBlockHeader
 }
 
 // proposerSlashingJSON is the spec representation of the struct.
@@ -32,37 +34,67 @@ type proposerSlashingJSON struct {
 	SignedHeader2 *SignedBeaconBlockHeader `json:"signed_header_2"`
 }
 
+// proposerSlashingYAML is the spec representation of the struct.
+type proposerSlashingYAML struct {
+	SignedHeader1 *SignedBeaconBlockHeader `yaml:"signed_header_1"`
+	SignedHeader2 *SignedBeaconBlockHeader `yaml:"signed_header_2"`
+}
+
 // MarshalJSON implements json.Marshaler.
 func (p *ProposerSlashing) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&proposerSlashingJSON{
-		SignedHeader1: p.Header1,
-		SignedHeader2: p.Header2,
+		SignedHeader1: p.SignedHeader1,
+		SignedHeader2: p.SignedHeader2,
 	})
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (p *ProposerSlashing) UnmarshalJSON(input []byte) error {
-	var err error
-
 	var proposerSlashingJSON proposerSlashingJSON
-	if err = json.Unmarshal(input, &proposerSlashingJSON); err != nil {
+	if err := json.Unmarshal(input, &proposerSlashingJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	return p.unpack(&proposerSlashingJSON)
+}
+
+func (p *ProposerSlashing) unpack(proposerSlashingJSON *proposerSlashingJSON) error {
 	if proposerSlashingJSON.SignedHeader1 == nil {
 		return errors.New("signed header 1 missing")
 	}
-	p.Header1 = proposerSlashingJSON.SignedHeader1
+	p.SignedHeader1 = proposerSlashingJSON.SignedHeader1
 	if proposerSlashingJSON.SignedHeader2 == nil {
 		return errors.New("signed header 2 missing")
 	}
-	p.Header2 = proposerSlashingJSON.SignedHeader2
+	p.SignedHeader2 = proposerSlashingJSON.SignedHeader2
 
 	return nil
 }
 
+// MarshalYAML implements yaml.Marshaler.
+func (p *ProposerSlashing) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&proposerSlashingYAML{
+		SignedHeader1: p.SignedHeader1,
+		SignedHeader2: p.SignedHeader2,
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (p *ProposerSlashing) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var proposerSlashingJSON proposerSlashingJSON
+	if err := yaml.Unmarshal(input, &proposerSlashingJSON); err != nil {
+		return err
+	}
+	return p.unpack(&proposerSlashingJSON)
+}
+
 // String returns a string version of the structure.
 func (p *ProposerSlashing) String() string {
-	data, err := json.Marshal(p)
+	data, err := yaml.Marshal(p)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

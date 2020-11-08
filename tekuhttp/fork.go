@@ -40,7 +40,7 @@ func (s *Service) Fork(ctx context.Context, stateID string) (*spec.Fork, error) 
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain epoch from state ID")
 	}
-	if epoch < fork.Epoch {
+	if spec.Epoch(epoch) < fork.Epoch {
 		return nil, errors.New("incorrect fork obtained")
 	}
 

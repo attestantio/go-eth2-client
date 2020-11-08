@@ -35,6 +35,9 @@ func (s *Service) NodeVersion(ctx context.Context) (string, error) {
 		if err != nil {
 			return "", errors.Wrap(err, "failed to request node version")
 		}
+		if respBodyReader == nil {
+			return "", errors.New("failed to obtain node version")
+		}
 
 		var resp nodeVersionJSON
 		if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {

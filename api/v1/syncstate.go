@@ -18,15 +18,16 @@ import (
 	"fmt"
 	"strconv"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // SyncState is the data regarding the node's synchronization state to the chain.
 type SyncState struct {
 	// HeadSlot is the head slot of the chain as understood by the node.
-	HeadSlot uint64
+	HeadSlot spec.Slot
 	// SyncDistance is the distance between the node's highest synced slot and the head slot.
-	SyncDistance uint64
+	SyncDistance spec.Slot
 }
 
 // syncStateJSON is the spec representation of the struct.
@@ -54,15 +55,19 @@ func (s *SyncState) UnmarshalJSON(input []byte) error {
 	if syncStateJSON.HeadSlot == "" {
 		return errors.New("head slot missing")
 	}
-	if s.HeadSlot, err = strconv.ParseUint(syncStateJSON.HeadSlot, 10, 64); err != nil {
+	headSlot, err := strconv.ParseUint(syncStateJSON.HeadSlot, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for head slot")
 	}
+	s.HeadSlot = spec.Slot(headSlot)
 	if syncStateJSON.SyncDistance == "" {
 		return errors.New("sync distance missing")
 	}
-	if s.SyncDistance, err = strconv.ParseUint(syncStateJSON.SyncDistance, 10, 64); err != nil {
+	syncDistance, err := strconv.ParseUint(syncStateJSON.SyncDistance, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for sync distance")
 	}
+	s.SyncDistance = spec.Slot(syncDistance)
 
 	return nil
 }

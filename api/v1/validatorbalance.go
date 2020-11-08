@@ -18,13 +18,14 @@ import (
 	"fmt"
 	"strconv"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // ValidatorBalance contains the balance of a validator.
 type ValidatorBalance struct {
-	Index   uint64
-	Balance uint64
+	Index   spec.ValidatorIndex
+	Balance spec.Gwei
 }
 
 // validatorBalanceJSON is the spec representation of the struct.
@@ -52,15 +53,19 @@ func (v *ValidatorBalance) UnmarshalJSON(input []byte) error {
 	if validatorBalanceJSON.Index == "" {
 		return errors.New("index missing")
 	}
-	if v.Index, err = strconv.ParseUint(validatorBalanceJSON.Index, 10, 64); err != nil {
+	index, err := strconv.ParseUint(validatorBalanceJSON.Index, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for index")
 	}
+	v.Index = spec.ValidatorIndex(index)
 	if validatorBalanceJSON.Balance == "" {
 		return errors.New("balance missing")
 	}
-	if v.Balance, err = strconv.ParseUint(validatorBalanceJSON.Balance, 10, 64); err != nil {
+	balance, err := strconv.ParseUint(validatorBalanceJSON.Balance, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for balance")
 	}
+	v.Balance = spec.Gwei(balance)
 
 	return nil
 }

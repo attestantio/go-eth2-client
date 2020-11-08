@@ -32,6 +32,9 @@ func (s *Service) ForkSchedule(ctx context.Context) ([]*spec.Fork, error) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to request fork schedule")
 		}
+		if respBodyReader == nil {
+			return nil, errors.New("failed to obtain fork schedule")
+		}
 
 		var forkScheduleJSON forkScheduleJSON
 		if err := json.NewDecoder(respBodyReader).Decode(&forkScheduleJSON); err != nil {

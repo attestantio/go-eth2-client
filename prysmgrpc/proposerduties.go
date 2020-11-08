@@ -15,51 +15,42 @@ package prysmgrpc
 
 import (
 	"context"
-	"fmt"
 
-	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
 // ProposerDuties obtains proposer duties.
-func (s *Service) ProposerDuties(ctx context.Context, epoch uint64, validators []client.ValidatorIDProvider) ([]*api.ProposerDuty, error) {
+func (s *Service) ProposerDuties(ctx context.Context, epoch spec.Epoch, indices []spec.ValidatorIndex) ([]*api.ProposerDuty, error) {
 	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 
-	if len(validators) == 0 {
+	pubKeys := make([][]byte, 0, len(indices))
+	if len(indices) == 0 {
 		// Prysm requires we send it a list of validators, so fetch them.
-		slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain slots per epoch")
-		}
-		prysmValidators, err := s.Validators(ctx, fmt.Sprintf("%d", epoch*slotsPerEpoch), nil)
+		prysmValidators, err := s.Validators(ctx, "head", nil)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain validators")
 		}
 		log.Trace().Int("validators", len(prysmValidators)).Msg("Obtained validators")
 
-		validators = make([]client.ValidatorIDProvider, 0, len(prysmValidators))
 		for _, prysmValidator := range prysmValidators {
-			validators = append(validators, &proposerDutiesValidatorIDProvider{
-				index:  prysmValidator.Index,
-				pubKey: prysmValidator.Validator.PublicKey,
-			})
+			pubKeys = append(pubKeys, prysmValidator.Validator.PublicKey[:])
+		}
+	} else {
+		// Convert provided indices to pubkeys.
+		validatorPubKeys, err := s.indicesToPubKeys(ctx, indices)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to convert indices to public keys")
+		}
+		for i := range validatorPubKeys {
+			pubKeys = append(pubKeys, validatorPubKeys[i][:])
 		}
 	}
 
-	pubKeys := make([][]byte, 0, len(validators))
-	for i := range validators {
-		pubKey, err := validators[i].PubKey(ctx)
-		if err != nil {
-			// Warn but do not exit as we want to obtain as many proposers as possible.
-			log.Warn().Err(err).Msg("Failed to obtain public key for validator")
-			continue
-		}
-		pubKeys = append(pubKeys, pubKey)
-	}
 	req := &ethpb.DutiesRequest{
-		Epoch:      epoch,
+		Epoch:      uint64(epoch),
 		PublicKeys: pubKeys,
 	}
 	log.Trace().Msg("Calling GetDuties()")
@@ -72,31 +63,18 @@ func (s *Service) ProposerDuties(ctx context.Context, epoch uint64, validators [
 	}
 
 	proposerDuties := make([]*api.ProposerDuty, 0)
+	index := 0
 	for _, duty := range resp.CurrentEpochDuties {
 		for _, slot := range duty.ProposerSlots {
 			log.Trace().Uint64("slot", slot).Uint64("validator_index", duty.ValidatorIndex).Msg("Received proposer duty")
 			proposerDuties = append(proposerDuties, &api.ProposerDuty{
-				Slot:           slot,
-				ValidatorIndex: duty.ValidatorIndex,
+				Slot:           spec.Slot(slot),
+				ValidatorIndex: spec.ValidatorIndex(duty.ValidatorIndex),
 			})
+			copy(proposerDuties[index].PubKey[:], duty.PublicKey)
+			index++
 		}
 	}
 
 	return proposerDuties, nil
-}
-
-// proposerDutiesValidatorIDProvider is used to pass validator IDs around for the proposer duties call.
-type proposerDutiesValidatorIDProvider struct {
-	index  uint64
-	pubKey []byte
-}
-
-// Index returns the index of the validator.
-func (p *proposerDutiesValidatorIDProvider) Index(ctx context.Context) (uint64, error) {
-	return p.index, nil
-}
-
-// PubKey returns the public key of the validator.
-func (p *proposerDutiesValidatorIDProvider) PubKey(ctx context.Context) ([]byte, error) {
-	return p.pubKey, nil
 }

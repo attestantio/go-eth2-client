@@ -15,11 +15,7 @@ func (d *DepositData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 
 	// Field (0) 'PublicKey'
-	if len(d.PublicKey) != 48 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, d.PublicKey...)
+	dst = append(dst, d.PublicKey[:]...)
 
 	// Field (1) 'WithdrawalCredentials'
 	if len(d.WithdrawalCredentials) != 32 {
@@ -29,14 +25,10 @@ func (d *DepositData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = append(dst, d.WithdrawalCredentials...)
 
 	// Field (2) 'Amount'
-	dst = ssz.MarshalUint64(dst, d.Amount)
+	dst = ssz.MarshalUint64(dst, uint64(d.Amount))
 
 	// Field (3) 'Signature'
-	if len(d.Signature) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, d.Signature...)
+	dst = append(dst, d.Signature[:]...)
 
 	return
 }
@@ -50,10 +42,7 @@ func (d *DepositData) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (0) 'PublicKey'
-	if cap(d.PublicKey) == 0 {
-		d.PublicKey = make([]byte, 0, len(buf[0:48]))
-	}
-	d.PublicKey = append(d.PublicKey, buf[0:48]...)
+	copy(d.PublicKey[:], buf[0:48])
 
 	// Field (1) 'WithdrawalCredentials'
 	if cap(d.WithdrawalCredentials) == 0 {
@@ -62,13 +51,10 @@ func (d *DepositData) UnmarshalSSZ(buf []byte) error {
 	d.WithdrawalCredentials = append(d.WithdrawalCredentials, buf[48:80]...)
 
 	// Field (2) 'Amount'
-	d.Amount = ssz.UnmarshallUint64(buf[80:88])
+	d.Amount = Gwei(ssz.UnmarshallUint64(buf[80:88]))
 
 	// Field (3) 'Signature'
-	if cap(d.Signature) == 0 {
-		d.Signature = make([]byte, 0, len(buf[88:184]))
-	}
-	d.Signature = append(d.Signature, buf[88:184]...)
+	copy(d.Signature[:], buf[88:184])
 
 	return err
 }
@@ -89,11 +75,7 @@ func (d *DepositData) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'PublicKey'
-	if len(d.PublicKey) != 48 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(d.PublicKey)
+	hh.PutBytes(d.PublicKey[:])
 
 	// Field (1) 'WithdrawalCredentials'
 	if len(d.WithdrawalCredentials) != 32 {
@@ -103,14 +85,10 @@ func (d *DepositData) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	hh.PutBytes(d.WithdrawalCredentials)
 
 	// Field (2) 'Amount'
-	hh.PutUint64(d.Amount)
+	hh.PutUint64(uint64(d.Amount))
 
 	// Field (3) 'Signature'
-	if len(d.Signature) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(d.Signature)
+	hh.PutBytes(d.Signature[:])
 
 	hh.Merkleize(indx)
 	return

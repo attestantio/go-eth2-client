@@ -16,21 +16,21 @@ package prysmgrpc
 import (
 	"context"
 
-	client "github.com/attestantio/go-eth2-client"
+	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
 // SubmitBeaconCommitteeSubscriptions subscribes to beacon committees.
-func (s *Service) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*client.BeaconCommitteeSubscription) error {
+func (s *Service) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*api.BeaconCommitteeSubscription) error {
 	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	slots := make([]uint64, len(subscriptions))
 	committeeIds := make([]uint64, len(subscriptions))
 	isAggregator := make([]bool, len(subscriptions))
 	for i, subscription := range subscriptions {
-		slots[i] = subscription.Slot
-		committeeIds[i] = subscription.CommitteeIndex
-		isAggregator[i] = subscription.Aggregate
+		slots[i] = uint64(subscription.Slot)
+		committeeIds[i] = uint64(subscription.CommitteeIndex)
+		isAggregator[i] = subscription.IsAggregator
 	}
 
 	log.Trace().Msg("Calling SubscribeCommitteeSubnets()")

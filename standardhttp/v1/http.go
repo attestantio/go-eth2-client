@@ -26,6 +26,7 @@ import (
 )
 
 // get sends an HTTP get request and returns the body.
+// If the response from the server is a 404 this will return nil for both the reader and the error.
 func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	log.Trace().Str("endpoint", endpoint).Msg("GET request")
 
@@ -34,7 +35,6 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 		return nil, errors.Wrap(err, "invalid endpoint")
 	}
 	url := s.base.ResolveReference(reference).String()
-	log.Trace().Str("url", url).Msg("GET request")
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, url, nil)
 	if err != nil {
@@ -45,6 +45,12 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	if err != nil {
 		cancel()
 		return nil, errors.Wrap(err, "failed to call GET endpoint")
+	}
+
+	if resp.StatusCode == 404 {
+		// Nothing found.  This is not an error, so we return nil on both counts.
+		cancel()
+		return nil, nil
 	}
 
 	data, err := ioutil.ReadAll(resp.Body)

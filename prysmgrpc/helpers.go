@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -78,4 +79,17 @@ func parseConfigByteArray(val string) ([]byte, error) {
 		res[i] = byte(intVal)
 	}
 	return res, nil
+}
+
+func (s *Service) indicesToPubKeys(ctx context.Context, indices []spec.ValidatorIndex) ([]spec.BLSPubKey, error) {
+	prysmValidators, err := s.PrysmValidators(ctx, "head", nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain validators")
+	}
+
+	pubKeys := make([]spec.BLSPubKey, 0, len(prysmValidators))
+	for _, validator := range prysmValidators {
+		pubKeys = append(pubKeys, validator.Validator.PublicKey)
+	}
+	return pubKeys, nil
 }

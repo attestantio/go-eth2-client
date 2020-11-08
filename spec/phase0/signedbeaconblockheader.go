@@ -14,24 +14,32 @@
 package phase0
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // SignedBeaconBlockHeader provides information about a signed beacon block header.
 type SignedBeaconBlockHeader struct {
 	Message   *BeaconBlockHeader
-	Signature []byte `ssz-size:"96"`
+	Signature BLSSignature `ssz-size:"96"`
 }
 
-// signedBeaconBlockHeaderJSON is the spec representation of the struct.
+// signedBeaconBlockHeaderJSON is an internal representation of the struct.
 type signedBeaconBlockHeaderJSON struct {
 	Message   *BeaconBlockHeader `json:"message"`
 	Signature string             `json:"signature"`
+}
+
+// beaconBlockHeaderYAML is an internal representation of the struct.
+type signedBeaconBlockHeaderYAML struct {
+	Message   *BeaconBlockHeader `yaml:"message"`
+	Signature string             `yaml:"signature"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -44,29 +52,55 @@ func (s *SignedBeaconBlockHeader) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (s *SignedBeaconBlockHeader) UnmarshalJSON(input []byte) error {
-	var err error
-
 	var signedBeaconBlockHeaderJSON signedBeaconBlockHeaderJSON
-	if err = json.Unmarshal(input, &signedBeaconBlockHeaderJSON); err != nil {
+	if err := json.Unmarshal(input, &signedBeaconBlockHeaderJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	return s.unpack(&signedBeaconBlockHeaderJSON)
+}
+
+func (s *SignedBeaconBlockHeader) unpack(signedBeaconBlockHeaderJSON *signedBeaconBlockHeaderJSON) error {
 	s.Message = signedBeaconBlockHeaderJSON.Message
 	if s.Message == nil {
 		return errors.New("message missing")
 	}
-	if s.Signature, err = hex.DecodeString(strings.TrimPrefix(signedBeaconBlockHeaderJSON.Signature, "0x")); err != nil {
+	signature, err := hex.DecodeString(strings.TrimPrefix(signedBeaconBlockHeaderJSON.Signature, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
-	if len(s.Signature) != signatureLength {
+	if len(signature) != SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
+	copy(s.Signature[:], signature)
 
 	return nil
 }
 
+// MarshalYAML implements yaml.Marshaler.
+func (s *SignedBeaconBlockHeader) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&signedBeaconBlockHeaderYAML{
+		Message:   s.Message,
+		Signature: fmt.Sprintf("%#x", s.Signature),
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (s *SignedBeaconBlockHeader) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var signedBeaconBlockHeaderJSON signedBeaconBlockHeaderJSON
+	if err := yaml.Unmarshal(input, &signedBeaconBlockHeaderJSON); err != nil {
+		return err
+	}
+	return s.unpack(&signedBeaconBlockHeaderJSON)
+}
+
 // String returns a string version of the structure.
 func (s *SignedBeaconBlockHeader) String() string {
-	data, err := json.Marshal(s)
+	data, err := yaml.Marshal(s)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

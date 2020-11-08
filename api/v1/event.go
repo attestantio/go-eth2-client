@@ -21,6 +21,12 @@ type Event struct {
 	Data interface{}
 }
 
-// HeadEventData is the data for the head event.
-type HeadEventData struct {
+// SupportedEventTopics is a map of supported event topics.
+var SupportedEventTopics = map[string]bool{
+	"head":                 true,
+	"block":                true,
+	"attestation":          true,
+	"voluntary_exit":       true,
+	"finalized_checkpoint": true,
+	"chain_reorg":          true,
 }

@@ -15,17 +15,13 @@ func (a *AttestationData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 
 	// Field (0) 'Slot'
-	dst = ssz.MarshalUint64(dst, a.Slot)
+	dst = ssz.MarshalUint64(dst, uint64(a.Slot))
 
 	// Field (1) 'Index'
-	dst = ssz.MarshalUint64(dst, a.Index)
+	dst = ssz.MarshalUint64(dst, uint64(a.Index))
 
 	// Field (2) 'BeaconBlockRoot'
-	if len(a.BeaconBlockRoot) != 32 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, a.BeaconBlockRoot...)
+	dst = append(dst, a.BeaconBlockRoot[:]...)
 
 	// Field (3) 'Source'
 	if a.Source == nil {
@@ -55,16 +51,13 @@ func (a *AttestationData) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (0) 'Slot'
-	a.Slot = ssz.UnmarshallUint64(buf[0:8])
+	a.Slot = Slot(ssz.UnmarshallUint64(buf[0:8]))
 
 	// Field (1) 'Index'
-	a.Index = ssz.UnmarshallUint64(buf[8:16])
+	a.Index = CommitteeIndex(ssz.UnmarshallUint64(buf[8:16]))
 
 	// Field (2) 'BeaconBlockRoot'
-	if cap(a.BeaconBlockRoot) == 0 {
-		a.BeaconBlockRoot = make([]byte, 0, len(buf[16:48]))
-	}
-	a.BeaconBlockRoot = append(a.BeaconBlockRoot, buf[16:48]...)
+	copy(a.BeaconBlockRoot[:], buf[16:48])
 
 	// Field (3) 'Source'
 	if a.Source == nil {
@@ -101,17 +94,13 @@ func (a *AttestationData) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'Slot'
-	hh.PutUint64(a.Slot)
+	hh.PutUint64(uint64(a.Slot))
 
 	// Field (1) 'Index'
-	hh.PutUint64(a.Index)
+	hh.PutUint64(uint64(a.Index))
 
 	// Field (2) 'BeaconBlockRoot'
-	if len(a.BeaconBlockRoot) != 32 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(a.BeaconBlockRoot)
+	hh.PutBytes(a.BeaconBlockRoot[:])
 
 	// Field (3) 'Source'
 	if err = a.Source.HashTreeRootWith(hh); err != nil {

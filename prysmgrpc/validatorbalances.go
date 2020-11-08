@@ -16,22 +16,22 @@ package prysmgrpc
 import (
 	"context"
 
-	client "github.com/attestantio/go-eth2-client"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
-// ValidatorBalances provides the validator balances for a given state.
+// PrysmValidatorBalances provides the validator balances for a given state.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
-func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]uint64, error) {
-	if len(validators) == 0 {
+func (s *Service) PrysmValidatorBalances(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]spec.Gwei, error) {
+	if len(validatorPubKeys) == 0 {
 		return s.validatorBalances(ctx, stateID)
 	}
-	return s.validatorBalancesByPubKeys(ctx, stateID, validators)
+	return s.validatorBalancesByPubKeys(ctx, stateID, validatorPubKeys)
 }
 
-func (s *Service) validatorBalances(ctx context.Context, stateID string) (map[uint64]uint64, error) {
+func (s *Service) validatorBalances(ctx context.Context, stateID string) (map[spec.ValidatorIndex]spec.Gwei, error) {
 	conn := ethpb.NewBeaconChainClient(s.conn)
 	if conn == nil {
 		return nil, errors.New("failed to obtain beacon chain client")
@@ -49,11 +49,11 @@ func (s *Service) validatorBalances(ctx context.Context, stateID string) (map[ui
 		log.Trace().Msg("Fetching genesis validator balances")
 		validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Genesis{Genesis: true}
 	} else {
-		log.Trace().Uint64("epoch", epoch).Msg("Fetching epoch validator balances")
-		validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Epoch{Epoch: epoch}
+		log.Trace().Uint64("epoch", uint64(epoch)).Msg("Fetching epoch validator balances")
+		validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Epoch{Epoch: uint64(epoch)}
 	}
 
-	res := make(map[uint64]uint64)
+	res := make(map[spec.ValidatorIndex]spec.Gwei)
 
 	pageToken := ""
 	for i := int32(0); ; i += s.maxPageSize {
@@ -70,7 +70,7 @@ func (s *Service) validatorBalances(ctx context.Context, stateID string) (map[ui
 		}
 
 		for _, entry := range validatorBalancesResp.Balances {
-			res[entry.Index] = entry.Balance
+			res[spec.ValidatorIndex(entry.Index)] = spec.Gwei(entry.Balance)
 		}
 
 		if validatorBalancesResp.NextPageToken == "" {
@@ -83,7 +83,7 @@ func (s *Service) validatorBalances(ctx context.Context, stateID string) (map[ui
 }
 
 // validatorsByPubKeys returns a subset of validator balances.
-func (s *Service) validatorBalancesByPubKeys(ctx context.Context, stateID string, validators []client.ValidatorIDProvider) (map[uint64]uint64, error) {
+func (s *Service) validatorBalancesByPubKeys(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]spec.Gwei, error) {
 	conn := ethpb.NewBeaconChainClient(s.conn)
 	if conn == nil {
 		return nil, errors.New("failed to obtain beacon chain client")
@@ -101,24 +101,20 @@ func (s *Service) validatorBalancesByPubKeys(ctx context.Context, stateID string
 		log.Trace().Msg("Fetching genesis validator balances")
 		validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Genesis{Genesis: true}
 	} else {
-		log.Trace().Uint64("epoch", epoch).Msg("Fetching epoch validator balances")
-		validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Epoch{Epoch: epoch}
+		log.Trace().Uint64("epoch", uint64(epoch)).Msg("Fetching epoch validator balances")
+		validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Epoch{Epoch: uint64(epoch)}
 	}
 
-	pubKeys := make([][]byte, 0, len(validators))
-	for i := range validators {
-		pubKey, err := validators[i].PubKey(ctx)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to obtain public key for validator")
-		}
-		pubKeys = append(pubKeys, pubKey)
+	pubKeys := make([][]byte, len(validatorPubKeys))
+	for i := range validatorPubKeys {
+		pubKeys[i] = validatorPubKeys[i][:]
 	}
 
-	res := make(map[uint64]uint64)
-	for i := 0; i < len(pubKeys); i += int(s.maxPageSize) {
+	res := make(map[spec.ValidatorIndex]spec.Gwei)
+	for i := 0; i < len(validatorPubKeys); i += int(s.maxPageSize) {
 		lastIndex := i + int(s.maxPageSize)
-		if lastIndex > len(pubKeys) {
-			lastIndex = len(pubKeys)
+		if lastIndex > len(validatorPubKeys) {
+			lastIndex = len(validatorPubKeys)
 		}
 		validatorBalancesReq.PublicKeys = pubKeys[i:lastIndex]
 
@@ -134,7 +130,7 @@ func (s *Service) validatorBalancesByPubKeys(ctx context.Context, stateID string
 		}
 
 		for _, entry := range validatorBalancesResp.Balances {
-			res[entry.Index] = entry.Balance
+			res[spec.ValidatorIndex(entry.Index)] = spec.Gwei(entry.Balance)
 		}
 	}
 

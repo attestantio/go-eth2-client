@@ -28,10 +28,14 @@ type aggregateAttestationDataJSON struct {
 }
 
 // AggregateAttestation fetches the aggregate attestation given an attestation.
-func (s *Service) AggregateAttestation(ctx context.Context, slot uint64, attestationDataRoot []byte) (*spec.Attestation, error) {
+// N.B if an aggregate attestation for the attestation is not available this will return nil without an error.
+func (s *Service) AggregateAttestation(ctx context.Context, slot spec.Slot, attestationDataRoot spec.Root) (*spec.Attestation, error) {
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/validator/aggregate_attestation?slot=%d&attestation_data_root=%#x", slot, attestationDataRoot))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request aggregate attestation")
+	}
+	if respBodyReader == nil {
+		return nil, nil
 	}
 
 	var aggregateAttestationDataJSON aggregateAttestationDataJSON
@@ -47,7 +51,7 @@ func (s *Service) AggregateAttestation(ctx context.Context, slot uint64, attesta
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain hash tree root of aggregate attestation data")
 	}
-	if !bytes.Equal(dataRoot[:], attestationDataRoot) {
+	if !bytes.Equal(dataRoot[:], attestationDataRoot[:]) {
 		return nil, errors.New("aggregate attestation not for requested data root")
 	}
 

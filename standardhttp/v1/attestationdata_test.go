@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	standardhttp "github.com/attestantio/go-eth2-client/standardhttp/v1"
 	"github.com/stretchr/testify/require"
 )
@@ -26,11 +27,18 @@ import (
 func TestAttestationData(t *testing.T) {
 	tests := []struct {
 		name           string
-		committeeIndex uint64
+		committeeIndex spec.CommitteeIndex
+		slot           int64 // -1 for current
 	}{
+		// {
+		// 	name:           "Future",
+		// 	committeeIndex: 1,
+		// 	slot:           0x00ffffff,
+		// },
 		{
 			name:           "Good",
 			committeeIndex: 1,
+			slot:           -1,
 		},
 	}
 
@@ -47,7 +55,12 @@ func TestAttestationData(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, test := range tests {
-		slot := uint64(time.Since(genesis.GenesisTime).Seconds() / slotDuration.Seconds())
+		var slot spec.Slot
+		if test.slot == -1 {
+			slot = spec.Slot(uint64(time.Since(genesis.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
+		} else {
+			slot = spec.Slot(uint64(test.slot))
+		}
 		t.Run(test.name, func(t *testing.T) {
 			attestationData, err := service.AttestationData(context.Background(), slot, test.committeeIndex)
 			require.NoError(t, err)

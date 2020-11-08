@@ -25,21 +25,21 @@ import (
 func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaconBlock) error {
 	proposal := &ethpb.SignedBeaconBlock{
 		Block: &ethpb.BeaconBlock{
-			Slot:          block.Message.Slot,
-			ProposerIndex: block.Message.ProposerIndex,
-			ParentRoot:    block.Message.ParentRoot,
-			StateRoot:     block.Message.StateRoot,
+			Slot:          uint64(block.Message.Slot),
+			ProposerIndex: uint64(block.Message.ProposerIndex),
+			ParentRoot:    block.Message.ParentRoot[:],
+			StateRoot:     block.Message.StateRoot[:],
 			Body: &ethpb.BeaconBlockBody{
-				RandaoReveal: block.Message.Body.RANDAOReveal,
+				RandaoReveal: block.Message.Body.RANDAOReveal[:],
 				Eth1Data: &ethpb.Eth1Data{
-					DepositRoot:  block.Message.Body.ETH1Data.DepositRoot,
+					DepositRoot:  block.Message.Body.ETH1Data.DepositRoot[:],
 					DepositCount: block.Message.Body.ETH1Data.DepositCount,
 					BlockHash:    block.Message.Body.ETH1Data.BlockHash,
 				},
 				Graffiti: block.Message.Body.Graffiti,
 			},
 		},
-		Signature: block.Signature,
+		Signature: block.Signature[:],
 	}
 	// Shorthand for references below.
 	body := block.Message.Body
@@ -48,23 +48,23 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaco
 		proposal.Block.Body.ProposerSlashings[i] = &ethpb.ProposerSlashing{
 			Header_1: &ethpb.SignedBeaconBlockHeader{
 				Header: &ethpb.BeaconBlockHeader{
-					Slot:          body.ProposerSlashings[i].Header1.Message.Slot,
-					ProposerIndex: body.ProposerSlashings[i].Header1.Message.ProposerIndex,
-					ParentRoot:    body.ProposerSlashings[i].Header1.Message.ParentRoot,
-					StateRoot:     body.ProposerSlashings[i].Header1.Message.StateRoot,
-					BodyRoot:      body.ProposerSlashings[i].Header1.Message.BodyRoot,
+					Slot:          uint64(body.ProposerSlashings[i].SignedHeader1.Message.Slot),
+					ProposerIndex: uint64(body.ProposerSlashings[i].SignedHeader1.Message.ProposerIndex),
+					ParentRoot:    body.ProposerSlashings[i].SignedHeader1.Message.ParentRoot[:],
+					StateRoot:     body.ProposerSlashings[i].SignedHeader1.Message.StateRoot[:],
+					BodyRoot:      body.ProposerSlashings[i].SignedHeader1.Message.BodyRoot[:],
 				},
-				Signature: body.ProposerSlashings[i].Header1.Signature,
+				Signature: body.ProposerSlashings[i].SignedHeader1.Signature[:],
 			},
 			Header_2: &ethpb.SignedBeaconBlockHeader{
 				Header: &ethpb.BeaconBlockHeader{
-					Slot:          body.ProposerSlashings[i].Header2.Message.Slot,
-					ProposerIndex: body.ProposerSlashings[i].Header2.Message.ProposerIndex,
-					ParentRoot:    body.ProposerSlashings[i].Header2.Message.ParentRoot,
-					StateRoot:     body.ProposerSlashings[i].Header2.Message.StateRoot,
-					BodyRoot:      body.ProposerSlashings[i].Header2.Message.BodyRoot,
+					Slot:          uint64(body.ProposerSlashings[i].SignedHeader2.Message.Slot),
+					ProposerIndex: uint64(body.ProposerSlashings[i].SignedHeader2.Message.ProposerIndex),
+					ParentRoot:    body.ProposerSlashings[i].SignedHeader2.Message.ParentRoot[:],
+					StateRoot:     body.ProposerSlashings[i].SignedHeader2.Message.StateRoot[:],
+					BodyRoot:      body.ProposerSlashings[i].SignedHeader2.Message.BodyRoot[:],
 				},
-				Signature: body.ProposerSlashings[i].Header2.Signature,
+				Signature: body.ProposerSlashings[i].SignedHeader2.Signature[:],
 			},
 		}
 	}
@@ -75,36 +75,36 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaco
 			Attestation_1: &ethpb.IndexedAttestation{
 				AttestingIndices: body.AttesterSlashings[i].Attestation1.AttestingIndices,
 				Data: &ethpb.AttestationData{
-					Slot:            body.AttesterSlashings[i].Attestation1.Data.Slot,
-					CommitteeIndex:  body.AttesterSlashings[i].Attestation1.Data.Index,
-					BeaconBlockRoot: body.AttesterSlashings[i].Attestation1.Data.BeaconBlockRoot,
+					Slot:            uint64(body.AttesterSlashings[i].Attestation1.Data.Slot),
+					CommitteeIndex:  uint64(body.AttesterSlashings[i].Attestation1.Data.Index),
+					BeaconBlockRoot: body.AttesterSlashings[i].Attestation1.Data.BeaconBlockRoot[:],
 					Source: &ethpb.Checkpoint{
-						Epoch: body.AttesterSlashings[i].Attestation1.Data.Source.Epoch,
-						Root:  body.AttesterSlashings[i].Attestation1.Data.Source.Root,
+						Epoch: uint64(body.AttesterSlashings[i].Attestation1.Data.Source.Epoch),
+						Root:  body.AttesterSlashings[i].Attestation1.Data.Source.Root[:],
 					},
 					Target: &ethpb.Checkpoint{
-						Epoch: body.AttesterSlashings[i].Attestation1.Data.Target.Epoch,
-						Root:  body.AttesterSlashings[i].Attestation1.Data.Target.Root,
+						Epoch: uint64(body.AttesterSlashings[i].Attestation1.Data.Target.Epoch),
+						Root:  body.AttesterSlashings[i].Attestation1.Data.Target.Root[:],
 					},
 				},
-				Signature: body.AttesterSlashings[i].Attestation1.Signature,
+				Signature: body.AttesterSlashings[i].Attestation1.Signature[:],
 			},
 			Attestation_2: &ethpb.IndexedAttestation{
 				AttestingIndices: body.AttesterSlashings[i].Attestation2.AttestingIndices,
 				Data: &ethpb.AttestationData{
-					Slot:            body.AttesterSlashings[i].Attestation2.Data.Slot,
-					CommitteeIndex:  body.AttesterSlashings[i].Attestation2.Data.Index,
-					BeaconBlockRoot: body.AttesterSlashings[i].Attestation2.Data.BeaconBlockRoot,
+					Slot:            uint64(body.AttesterSlashings[i].Attestation2.Data.Slot),
+					CommitteeIndex:  uint64(body.AttesterSlashings[i].Attestation2.Data.Index),
+					BeaconBlockRoot: body.AttesterSlashings[i].Attestation2.Data.BeaconBlockRoot[:],
 					Source: &ethpb.Checkpoint{
-						Epoch: body.AttesterSlashings[i].Attestation2.Data.Source.Epoch,
-						Root:  body.AttesterSlashings[i].Attestation2.Data.Source.Root,
+						Epoch: uint64(body.AttesterSlashings[i].Attestation2.Data.Source.Epoch),
+						Root:  body.AttesterSlashings[i].Attestation2.Data.Source.Root[:],
 					},
 					Target: &ethpb.Checkpoint{
-						Epoch: body.AttesterSlashings[i].Attestation2.Data.Target.Epoch,
-						Root:  body.AttesterSlashings[i].Attestation2.Data.Target.Root,
+						Epoch: uint64(body.AttesterSlashings[i].Attestation2.Data.Target.Epoch),
+						Root:  body.AttesterSlashings[i].Attestation2.Data.Target.Root[:],
 					},
 				},
-				Signature: body.AttesterSlashings[i].Attestation2.Signature,
+				Signature: body.AttesterSlashings[i].Attestation2.Signature[:],
 			},
 		}
 	}
@@ -114,19 +114,19 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaco
 		proposal.Block.Body.Attestations[i] = &ethpb.Attestation{
 			AggregationBits: body.Attestations[i].AggregationBits,
 			Data: &ethpb.AttestationData{
-				Slot:            body.Attestations[i].Data.Slot,
-				CommitteeIndex:  body.Attestations[i].Data.Index,
-				BeaconBlockRoot: body.Attestations[i].Data.BeaconBlockRoot,
+				Slot:            uint64(body.Attestations[i].Data.Slot),
+				CommitteeIndex:  uint64(body.Attestations[i].Data.Index),
+				BeaconBlockRoot: body.Attestations[i].Data.BeaconBlockRoot[:],
 				Source: &ethpb.Checkpoint{
-					Epoch: body.Attestations[i].Data.Source.Epoch,
-					Root:  body.Attestations[i].Data.Source.Root,
+					Epoch: uint64(body.Attestations[i].Data.Source.Epoch),
+					Root:  body.Attestations[i].Data.Source.Root[:],
 				},
 				Target: &ethpb.Checkpoint{
-					Epoch: body.Attestations[i].Data.Target.Epoch,
-					Root:  body.Attestations[i].Data.Target.Root,
+					Epoch: uint64(body.Attestations[i].Data.Target.Epoch),
+					Root:  body.Attestations[i].Data.Target.Root[:],
 				},
 			},
-			Signature: body.Attestations[i].Signature,
+			Signature: body.Attestations[i].Signature[:],
 		}
 	}
 
@@ -135,10 +135,10 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaco
 		proposal.Block.Body.Deposits[i] = &ethpb.Deposit{
 			Proof: body.Deposits[i].Proof,
 			Data: &ethpb.Deposit_Data{
-				PublicKey:             body.Deposits[i].Data.PublicKey,
+				PublicKey:             body.Deposits[i].Data.PublicKey[:],
 				WithdrawalCredentials: body.Deposits[i].Data.WithdrawalCredentials,
-				Amount:                body.Deposits[i].Data.Amount,
-				Signature:             body.Deposits[i].Data.Signature,
+				Amount:                uint64(body.Deposits[i].Data.Amount),
+				Signature:             body.Deposits[i].Data.Signature[:],
 			},
 		}
 	}
@@ -147,10 +147,10 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaco
 	for i := range body.VoluntaryExits {
 		proposal.Block.Body.VoluntaryExits[i] = &ethpb.SignedVoluntaryExit{
 			Exit: &ethpb.VoluntaryExit{
-				Epoch:          body.VoluntaryExits[i].Message.Epoch,
-				ValidatorIndex: body.VoluntaryExits[i].Message.ValidatorIndex,
+				Epoch:          uint64(body.VoluntaryExits[i].Message.Epoch),
+				ValidatorIndex: uint64(body.VoluntaryExits[i].Message.ValidatorIndex),
 			},
-			Signature: body.VoluntaryExits[i].Signature,
+			Signature: body.VoluntaryExits[i].Signature[:],
 		}
 	}
 

@@ -20,6 +20,7 @@ import (
 	"strconv"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -61,10 +62,14 @@ func (s *Service) BeaconCommittees(ctx context.Context, stateID string) ([]*api.
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to parse beacon committee index")
 		}
+		committee := make([]spec.ValidatorIndex, len(beaconCommitteesResponse[i].Committee))
+		for j := range beaconCommitteesResponse[i].Committee {
+			committee[j] = spec.ValidatorIndex(beaconCommitteesResponse[i].Committee[j])
+		}
 		resp[i] = &api.BeaconCommittee{
-			Slot:       slot,
-			Index:      index,
-			Validators: beaconCommitteesResponse[i].Committee,
+			Slot:       spec.Slot(slot),
+			Index:      spec.CommitteeIndex(index),
+			Validators: committee,
 		}
 	}
 

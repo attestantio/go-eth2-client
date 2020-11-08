@@ -31,6 +31,9 @@ func (s *Service) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request syncing")
 	}
+	if respBodyReader == nil {
+		return nil, errors.New("failed to obtain syncing")
+	}
 
 	var resp syncingJSON
 	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {

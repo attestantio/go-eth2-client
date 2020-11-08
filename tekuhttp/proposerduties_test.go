@@ -18,55 +18,33 @@ import (
 	"os"
 	"testing"
 
-	client "github.com/attestantio/go-eth2-client"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/attestantio/go-eth2-client/tekuhttp"
 	"github.com/stretchr/testify/require"
 )
 
-// mockValidatorIDProvider implements ValidatorIDProvider.
-type mockValidatorIDProvider struct {
-	index  uint64
-	pubKey []byte
-}
-
-func (m *mockValidatorIDProvider) Index(ctx context.Context) (uint64, error) {
-	return m.index, nil
-}
-func (m *mockValidatorIDProvider) PubKey(ctx context.Context) ([]byte, error) {
-	return m.pubKey, nil
-}
-
 func TestProposerDuties(t *testing.T) {
 	tests := []struct {
 		name       string
-		epoch      uint64
-		validators []client.ValidatorIDProvider
+		epoch      spec.Epoch
+		validators []spec.ValidatorIndex
 		expected   int
 	}{
 		{
 			name:     "Old",
-			epoch:    1,
+			epoch:    spec.Epoch(1),
 			expected: 32,
 		},
 		{
 			name:     "Current",
-			epoch:    10989,
+			epoch:    spec.Epoch(10989),
 			expected: 32,
 		},
 		{
-			name:  "GoodWithValidators",
-			epoch: 4092,
-			validators: []client.ValidatorIDProvider{
-				&testValidatorIDProvider{
-					index:  16056,
-					pubKey: "0x9553a63a58d3a776a2483184e5af37aedf131b82ef1e0bcba7b3c01818f490371aac0c6f9a327fb7eb89190af7b085a5",
-				},
-				&testValidatorIDProvider{
-					index:  35476,
-					pubKey: "0x9216091f3e4fe0b0562a6c5bf6e8c35cf0c3b321b6f415de6631d7d12e58603e1e23c8d78f449b601f8d244d26f70aa7",
-				},
-			},
-			expected: 2,
+			name:       "GoodWithValidators",
+			epoch:      spec.Epoch(4092),
+			validators: []spec.ValidatorIndex{16056, 35476},
+			expected:   2,
 		},
 	}
 

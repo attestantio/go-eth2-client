@@ -15,44 +15,24 @@ package tekuhttp_test
 
 import (
 	"context"
-	"encoding/hex"
 	"os"
-	"strings"
 	"testing"
 
-	client "github.com/attestantio/go-eth2-client"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/attestantio/go-eth2-client/tekuhttp"
 	"github.com/stretchr/testify/require"
 )
 
-type testValidatorIDProvider struct {
-	index  uint64
-	pubKey string
-}
-
-func (t *testValidatorIDProvider) Index(ctx context.Context) (uint64, error) {
-	return t.index, nil
-}
-
-func (t *testValidatorIDProvider) PubKey(ctx context.Context) ([]byte, error) {
-	return hex.DecodeString(strings.TrimPrefix(t.pubKey, "0x"))
-}
-
 func TestValidatorBalances(t *testing.T) {
 	tests := []struct {
-		name       string
-		stateID    string
-		validators []client.ValidatorIDProvider
+		name    string
+		stateID string
+		indices []spec.ValidatorIndex
 	}{
 		{
 			name:    "Single",
 			stateID: "head",
-			validators: []client.ValidatorIDProvider{
-				&testValidatorIDProvider{
-					index:  1000,
-					pubKey: "0xb2007d1354db791b924fd35a6b0a8525266a021765b54641f4d415daa50c511204d6acc213a23468f2173e60cc950e26",
-				},
-			},
+			indices: []spec.ValidatorIndex{1000},
 		},
 		{
 			name:    "All",
@@ -68,7 +48,7 @@ func TestValidatorBalances(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			balances, err := service.ValidatorBalances(context.Background(), test.stateID, nil)
+			balances, err := service.ValidatorBalances(context.Background(), test.stateID, test.indices)
 			require.NoError(t, err)
 			require.NotNil(t, balances)
 		})

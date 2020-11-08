@@ -17,28 +17,27 @@ import (
 	"context"
 	"encoding/json"
 
-	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
 // AttesterDuties obtains attester duties.
-func (s *Service) AttesterDuties(ctx context.Context, epoch uint64, validators []client.ValidatorIDProvider) ([]*api.AttesterDuty, error) {
+func (s *Service) AttesterDuties(ctx context.Context, epoch spec.Epoch, indices []spec.ValidatorIndex) ([]*api.AttesterDuty, error) {
 	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 
-	pubKeys := make([][]byte, 0, len(validators))
-	for i := range validators {
-		pubKey, err := validators[i].PubKey(ctx)
-		if err != nil {
-			// Warn but do not exit as we want to obtain as many proposers as possible.
-			log.Warn().Err(err).Msg("Failed to obtain public key for validator")
-			continue
-		}
-		pubKeys = append(pubKeys, pubKey)
+	validatorPubKeys, err := s.indicesToPubKeys(ctx, indices)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to convert indices to public keys")
 	}
+	pubKeys := make([][]byte, len(validatorPubKeys))
+	for i := range validatorPubKeys {
+		pubKeys[i] = validatorPubKeys[i][:]
+	}
+
 	req := &ethpb.DutiesRequest{
-		Epoch:      epoch,
+		Epoch:      uint64(epoch),
 		PublicKeys: pubKeys,
 	}
 	if e := log.Trace(); e.Enabled() {
@@ -64,9 +63,9 @@ func (s *Service) AttesterDuties(ctx context.Context, epoch uint64, validators [
 			}
 		}
 		duties = append(duties, &api.AttesterDuty{
-			Slot:                    duty.AttesterSlot,
-			ValidatorIndex:          duty.ValidatorIndex,
-			CommitteeIndex:          duty.CommitteeIndex,
+			Slot:                    spec.Slot(duty.AttesterSlot),
+			ValidatorIndex:          spec.ValidatorIndex(duty.ValidatorIndex),
+			CommitteeIndex:          spec.CommitteeIndex(duty.CommitteeIndex),
 			ValidatorCommitteeIndex: uint64(validatorCommitteeIndex),
 			CommitteeLength:         uint64(len(duty.Committee)),
 		})

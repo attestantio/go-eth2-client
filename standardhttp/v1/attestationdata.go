@@ -27,10 +27,13 @@ type attestationDataJSON struct {
 }
 
 // AttestationData obtains attestation data for a slot.
-func (s *Service) AttestationData(ctx context.Context, slot uint64, committeeIndex uint64) (*spec.AttestationData, error) {
+func (s *Service) AttestationData(ctx context.Context, slot spec.Slot, committeeIndex spec.CommitteeIndex) (*spec.AttestationData, error) {
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/validator/attestation_data?slot=%d&committee_index=%d", slot, committeeIndex))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request attestation data")
+	}
+	if respBodyReader == nil {
+		return nil, errors.New("failed to obtain attestation data")
 	}
 
 	var attestationDataJSON attestationDataJSON
@@ -39,6 +42,9 @@ func (s *Service) AttestationData(ctx context.Context, slot uint64, committeeInd
 	}
 
 	// Ensure the data returned to us is as expected given our input.
+	if attestationDataJSON.Data == nil {
+		return nil, errors.New("attestation not returned")
+	}
 	if attestationDataJSON.Data.Slot != slot {
 		return nil, errors.New("attestation data not for requested slot")
 	}

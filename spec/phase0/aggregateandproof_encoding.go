@@ -16,7 +16,7 @@ func (a *AggregateAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset := int(108)
 
 	// Field (0) 'AggregatorIndex'
-	dst = ssz.MarshalUint64(dst, a.AggregatorIndex)
+	dst = ssz.MarshalUint64(dst, uint64(a.AggregatorIndex))
 
 	// Offset (1) 'Aggregate'
 	dst = ssz.WriteOffset(dst, offset)
@@ -26,11 +26,7 @@ func (a *AggregateAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset += a.Aggregate.SizeSSZ()
 
 	// Field (2) 'SelectionProof'
-	if len(a.SelectionProof) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, a.SelectionProof...)
+	dst = append(dst, a.SelectionProof[:]...)
 
 	// Field (1) 'Aggregate'
 	if dst, err = a.Aggregate.MarshalSSZTo(dst); err != nil {
@@ -52,7 +48,7 @@ func (a *AggregateAndProof) UnmarshalSSZ(buf []byte) error {
 	var o1 uint64
 
 	// Field (0) 'AggregatorIndex'
-	a.AggregatorIndex = ssz.UnmarshallUint64(buf[0:8])
+	a.AggregatorIndex = ValidatorIndex(ssz.UnmarshallUint64(buf[0:8]))
 
 	// Offset (1) 'Aggregate'
 	if o1 = ssz.ReadOffset(buf[8:12]); o1 > size {
@@ -60,10 +56,7 @@ func (a *AggregateAndProof) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (2) 'SelectionProof'
-	if cap(a.SelectionProof) == 0 {
-		a.SelectionProof = make([]byte, 0, len(buf[12:108]))
-	}
-	a.SelectionProof = append(a.SelectionProof, buf[12:108]...)
+	copy(a.SelectionProof[:], buf[12:108])
 
 	// Field (1) 'Aggregate'
 	{
@@ -101,7 +94,7 @@ func (a *AggregateAndProof) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'AggregatorIndex'
-	hh.PutUint64(a.AggregatorIndex)
+	hh.PutUint64(uint64(a.AggregatorIndex))
 
 	// Field (1) 'Aggregate'
 	if err = a.Aggregate.HashTreeRootWith(hh); err != nil {
@@ -109,11 +102,7 @@ func (a *AggregateAndProof) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	}
 
 	// Field (2) 'SelectionProof'
-	if len(a.SelectionProof) != 96 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(a.SelectionProof)
+	hh.PutBytes(a.SelectionProof[:])
 
 	hh.Merkleize(indx)
 	return

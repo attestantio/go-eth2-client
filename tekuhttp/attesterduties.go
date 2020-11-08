@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"strings"
 
-	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -29,16 +29,10 @@ type attesterDutiesJSON struct {
 }
 
 // AttesterDuties obtains attester duties.
-func (s *Service) AttesterDuties(ctx context.Context, epoch uint64, validators []client.ValidatorIDProvider) ([]*api.AttesterDuty, error) {
-	validatorIndices := make([]string, 0, len(validators))
-	for i := range validators {
-		index, err := validators[i].Index(ctx)
-		if err != nil {
-			// Warn but continue.
-			log.Warn().Err(err).Msg("Failed to obtain index for validator; skipping")
-			continue
-		}
-		validatorIndices = append(validatorIndices, fmt.Sprintf("%d", index))
+func (s *Service) AttesterDuties(ctx context.Context, epoch spec.Epoch, indices []spec.ValidatorIndex) ([]*api.AttesterDuty, error) {
+	validatorIndices := make([]string, 0, len(indices))
+	for i := range indices {
+		validatorIndices = append(validatorIndices, fmt.Sprintf("%d", indices[i]))
 	}
 
 	url := fmt.Sprintf("/eth/v1/validator/duties/attester/%d?index=%s", epoch, strings.Join(validatorIndices, ","))

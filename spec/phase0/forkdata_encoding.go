@@ -15,18 +15,10 @@ func (f *ForkData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 
 	// Field (0) 'CurrentVersion'
-	if len(f.CurrentVersion) != 4 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, f.CurrentVersion...)
+	dst = append(dst, f.CurrentVersion[:]...)
 
 	// Field (1) 'GenesisValidatorsRoot'
-	if len(f.GenesisValidatorsRoot) != 32 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	dst = append(dst, f.GenesisValidatorsRoot...)
+	dst = append(dst, f.GenesisValidatorsRoot[:]...)
 
 	return
 }
@@ -40,16 +32,10 @@ func (f *ForkData) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (0) 'CurrentVersion'
-	if cap(f.CurrentVersion) == 0 {
-		f.CurrentVersion = make([]byte, 0, len(buf[0:4]))
-	}
-	f.CurrentVersion = append(f.CurrentVersion, buf[0:4]...)
+	copy(f.CurrentVersion[:], buf[0:4])
 
 	// Field (1) 'GenesisValidatorsRoot'
-	if cap(f.GenesisValidatorsRoot) == 0 {
-		f.GenesisValidatorsRoot = make([]byte, 0, len(buf[4:36]))
-	}
-	f.GenesisValidatorsRoot = append(f.GenesisValidatorsRoot, buf[4:36]...)
+	copy(f.GenesisValidatorsRoot[:], buf[4:36])
 
 	return err
 }
@@ -70,18 +56,10 @@ func (f *ForkData) HashTreeRootWith(hh *ssz.Hasher) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'CurrentVersion'
-	if len(f.CurrentVersion) != 4 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(f.CurrentVersion)
+	hh.PutBytes(f.CurrentVersion[:])
 
 	// Field (1) 'GenesisValidatorsRoot'
-	if len(f.GenesisValidatorsRoot) != 32 {
-		err = ssz.ErrBytesLength
-		return
-	}
-	hh.PutBytes(f.GenesisValidatorsRoot)
+	hh.PutBytes(f.GenesisValidatorsRoot[:])
 
 	hh.Merkleize(indx)
 	return

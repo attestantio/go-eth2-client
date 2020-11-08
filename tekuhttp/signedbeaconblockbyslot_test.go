@@ -18,6 +18,7 @@ import (
 	"os"
 	"testing"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/attestantio/go-eth2-client/tekuhttp"
 	"github.com/stretchr/testify/require"
 )
@@ -25,27 +26,27 @@ import (
 func TestSignedBeaconBlockBySlot(t *testing.T) {
 	tests := []struct {
 		name string
-		slot uint64
+		slot spec.Slot
 	}{
 		{
 			name: "Missing",
-			slot: 1,
+			slot: spec.Slot(1),
 		},
 		{
 			name: "Good",
-			slot: 12345,
+			slot: spec.Slot(12345),
 		},
 		{
 			name: "AttesterSlashing",
-			slot: 62390,
+			slot: spec.Slot(62390),
 		},
 		{
 			name: "ProposerSlashing",
-			slot: 33890,
+			slot: spec.Slot(33890),
 		},
 		{
 			name: "Deposits",
-			slot: 1005,
+			slot: spec.Slot(1005),
 		},
 	}
 

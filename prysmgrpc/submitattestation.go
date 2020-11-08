@@ -26,19 +26,19 @@ func (s *Service) SubmitAttestation(ctx context.Context, attestation *spec.Attes
 	prysmAttestation := &ethpb.Attestation{
 		AggregationBits: attestation.AggregationBits,
 		Data: &ethpb.AttestationData{
-			Slot:            attestation.Data.Slot,
-			CommitteeIndex:  attestation.Data.Index,
-			BeaconBlockRoot: attestation.Data.BeaconBlockRoot,
+			Slot:            uint64(attestation.Data.Slot),
+			CommitteeIndex:  uint64(attestation.Data.Index),
+			BeaconBlockRoot: attestation.Data.BeaconBlockRoot[:],
 			Source: &ethpb.Checkpoint{
-				Epoch: attestation.Data.Source.Epoch,
-				Root:  attestation.Data.Source.Root,
+				Epoch: uint64(attestation.Data.Source.Epoch),
+				Root:  attestation.Data.Source.Root[:],
 			},
 			Target: &ethpb.Checkpoint{
-				Epoch: attestation.Data.Target.Epoch,
-				Root:  attestation.Data.Target.Root,
+				Epoch: uint64(attestation.Data.Target.Epoch),
+				Root:  attestation.Data.Target.Root[:],
 			},
 		},
-		Signature: attestation.Signature,
+		Signature: attestation.Signature[:],
 	}
 
 	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
