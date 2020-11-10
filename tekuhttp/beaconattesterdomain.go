@@ -15,10 +15,12 @@ package tekuhttp
 
 import (
 	"context"
+
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // BeaconAttesterDomain provides the beacon attester domain of the chain.
-func (s *Service) BeaconAttesterDomain(ctx context.Context) ([]byte, error) {
+func (s *Service) BeaconAttesterDomain(ctx context.Context) (spec.DomainType, error) {
 	// Teku does not provide this information so we hard-code it.
-	return []byte{1, 0, 0, 0}, nil
+	return spec.DomainType{1, 0, 0, 0}, nil
 }

@@ -82,6 +82,11 @@ func parseConfigByteArray(val string) ([]byte, error) {
 }
 
 func (s *Service) indicesToPubKeys(ctx context.Context, indices []spec.ValidatorIndex) ([]spec.BLSPubKey, error) {
+	indexMap := make(map[spec.ValidatorIndex]bool, len(indices))
+	for _, index := range indices {
+		indexMap[index] = true
+	}
+
 	prysmValidators, err := s.PrysmValidators(ctx, "head", nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain validators")
@@ -89,7 +94,9 @@ func (s *Service) indicesToPubKeys(ctx context.Context, indices []spec.Validator
 
 	pubKeys := make([]spec.BLSPubKey, 0, len(prysmValidators))
 	for _, validator := range prysmValidators {
-		pubKeys = append(pubKeys, validator.Validator.PublicKey)
+		if _, exists := indexMap[validator.Index]; exists {
+			pubKeys = append(pubKeys, validator.Validator.PublicKey)
+		}
 	}
 	return pubKeys, nil
 }

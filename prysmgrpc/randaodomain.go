@@ -16,30 +16,34 @@ package prysmgrpc
 import (
 	"context"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
 // RANDAODomain provides the randao domain of the chain.
-func (s *Service) RANDAODomain(ctx context.Context) ([]byte, error) {
+func (s *Service) RANDAODomain(ctx context.Context) (spec.DomainType, error) {
 	if s.randaoDomain == nil {
 		conn := ethpb.NewBeaconChainClient(s.conn)
 		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 		config, err := conn.GetBeaconConfig(opCtx, &types.Empty{})
 		cancel()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain configuration")
+			return spec.DomainType{}, errors.Wrap(err, "failed to obtain configuration")
 		}
 
 		val, exists := config.Config["DomainRandao"]
 		if !exists {
-			return nil, errors.New("config did not provide DomainRandao value")
+			return spec.DomainType{}, errors.New("config did not provide DomainRandao value")
 		}
-		s.randaoDomain, err = parseConfigByteArray(val)
+		tmp, err := parseConfigByteArray(val)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to convert value %q for DomainRandao", val)
+			return spec.DomainType{}, errors.Wrapf(err, "failed to convert value %q for DomainRandao", val)
 		}
+		var domainType spec.DomainType
+		copy(domainType[:], tmp)
+		s.randaoDomain = &domainType
 	}
-	return s.randaoDomain, nil
+	return *s.randaoDomain, nil
 }

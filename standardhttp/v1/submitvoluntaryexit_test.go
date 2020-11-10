@@ -15,45 +15,28 @@ package v1_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	standardhttp "github.com/attestantio/go-eth2-client/standardhttp/v1"
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidators(t *testing.T) {
+func TestSubmitVoluntaryExit(t *testing.T) {
 	tests := []struct {
-		name              string
-		stateID           string
-		expectedErrorCode int
+		name string
+		exit *spec.SignedVoluntaryExit
 	}{
 		{
-			name:              "Invalid",
-			stateID:           "current",
-			expectedErrorCode: 400,
-		},
-		{
-			name:              "StateUnknown",
-			stateID:           "0x000102030405060708090a0b0c0d0e0f10111213145161718191a1b1c1d1e1f",
-			expectedErrorCode: 404,
-		},
-		{
-			name:    "Zero",
-			stateID: "0",
-		},
-		{
-			name:    "Head",
-			stateID: "head",
-		},
-		{
-			name:    "Finalized",
-			stateID: "finalized",
-		},
-		{
-			name:    "Justified",
-			stateID: "justified",
+			name: "InvalidSignature",
+			exit: &spec.SignedVoluntaryExit{
+				Message: &spec.VoluntaryExit{
+					ValidatorIndex: 12345,
+					Epoch:          2,
+				},
+				Signature: spec.BLSSignature{},
+			},
 		},
 	}
 
@@ -65,13 +48,8 @@ func TestValidators(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			validators, err := service.Validators(context.Background(), test.stateID, nil)
-			if test.expectedErrorCode != 0 {
-				require.Contains(t, err.Error(), fmt.Sprintf("%d", test.expectedErrorCode))
-			} else {
-				require.NoError(t, err)
-				require.NotNil(t, validators)
-			}
+			err := service.SubmitVoluntaryExit(context.Background(), test.exit)
+			require.Contains(t, err.Error(), "400")
 		})
 	}
 }

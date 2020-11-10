@@ -15,10 +15,12 @@ package tekuhttp
 
 import (
 	"context"
+
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // DepositDomain provides the deposit domain of the chain.
-func (s *Service) DepositDomain(ctx context.Context) ([]byte, error) {
+func (s *Service) DepositDomain(ctx context.Context) (spec.DomainType, error) {
 	// Teku does not provide this information so we hard-code it.
-	return []byte{3, 0, 0, 0}, nil
+	return spec.DomainType{3, 0, 0, 0}, nil
 }

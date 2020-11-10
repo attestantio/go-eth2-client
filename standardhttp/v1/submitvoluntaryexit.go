@@ -11,16 +11,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package tekuhttp
+package v1
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 )
 
-// SelectionProofDomain provides the selection proof domain of the chain.
-func (s *Service) SelectionProofDomain(ctx context.Context) (spec.DomainType, error) {
-	// Teku does not provide this information so we hard-code it.
-	return spec.DomainType{5, 0, 0, 0}, nil
+// SubmitVoluntaryExit submits a voluntary exit.
+func (s *Service) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *spec.SignedVoluntaryExit) error {
+	specJSON, err := json.Marshal(voluntaryExit)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal JSON")
+	}
+
+	_, err = s.post(ctx, "/eth/v1/beacon/pool/voluntary_exits", bytes.NewBuffer(specJSON))
+	if err != nil {
+		return errors.Wrap(err, "failed to submit voluntary exit")
+	}
+
+	return nil
 }

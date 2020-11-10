@@ -16,6 +16,7 @@ package prysmgrpc
 import (
 	"context"
 	"strconv"
+	"time"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -24,9 +25,24 @@ import (
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
 func (s *Service) SignedBeaconBlock(ctx context.Context, blockID string) (*spec.SignedBeaconBlock, error) {
-	slot, err := strconv.ParseUint(blockID, 10, 64)
-	if err != nil {
-		return nil, errors.Wrap(err, "invalid block ID")
+	var slot uint64
+	var err error
+	switch {
+	case blockID == "head":
+		genesisTime, err := s.GenesisTime(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain genesis time")
+		}
+		slotDuration, err := s.SlotDuration(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain slot duration")
+		}
+		slot = uint64(time.Since(genesisTime).Seconds()) / uint64(slotDuration.Seconds())
+	default:
+		slot, err = strconv.ParseUint(blockID, 10, 64)
+		if err != nil {
+			return nil, errors.Wrap(err, "invalid block ID")
+		}
 	}
 	return s.SignedBeaconBlockBySlot(ctx, slot)
 }

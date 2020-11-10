@@ -16,30 +16,34 @@ package prysmgrpc
 import (
 	"context"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
 // VoluntaryExitDomain provides the voluntary exit domain of the chain.
-func (s *Service) VoluntaryExitDomain(ctx context.Context) ([]byte, error) {
+func (s *Service) VoluntaryExitDomain(ctx context.Context) (spec.DomainType, error) {
 	if s.voluntaryExitDomain == nil {
 		conn := ethpb.NewBeaconChainClient(s.conn)
 		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 		config, err := conn.GetBeaconConfig(opCtx, &types.Empty{})
 		cancel()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain configuration")
+			return spec.DomainType{}, errors.Wrap(err, "failed to obtain configuration")
 		}
 
 		val, exists := config.Config["DomainVoluntaryExit"]
 		if !exists {
-			return nil, errors.New("config did not provide DomainVoluntaryExit value")
+			return spec.DomainType{}, errors.New("config did not provide DomainVoluntaryExit value")
 		}
-		s.voluntaryExitDomain, err = parseConfigByteArray(val)
+		tmp, err := parseConfigByteArray(val)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to convert value %q for DomainVoluntaryExit", val)
+			return spec.DomainType{}, errors.Wrapf(err, "failed to convert value %q for DomainVoluntaryExit", val)
 		}
+		var domainType spec.DomainType
+		copy(domainType[:], tmp)
+		s.voluntaryExitDomain = &domainType
 	}
-	return s.voluntaryExitDomain, nil
+	return *s.voluntaryExitDomain, nil
 }

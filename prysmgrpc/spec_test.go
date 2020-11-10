@@ -11,15 +11,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1_test
+package prysmgrpc_test
 
 import (
 	"context"
 	"os"
 	"testing"
 
+	prysmgrpc "github.com/attestantio/go-eth2-client/prysmgrpc"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
-	standardhttp "github.com/attestantio/go-eth2-client/standardhttp/v1"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,21 +32,21 @@ func TestSpec(t *testing.T) {
 		},
 	}
 
-	service, err := standardhttp.New(context.Background(),
-		standardhttp.WithTimeout(timeout),
-		standardhttp.WithAddress(os.Getenv("HTTP_ADDRESS")),
+	service, err := prysmgrpc.New(context.Background(),
+		prysmgrpc.WithTimeout(timeout),
+		prysmgrpc.WithAddress(os.Getenv("PRYSMGRPC_ADDRESS")),
 	)
 	require.NoError(t, err)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			config, err := service.Spec(context.Background())
+			res, err := service.Spec(context.Background())
 			require.NoError(t, err)
-			require.NotNil(t, config)
+			require.NotNil(t, res)
 			// Check an integer type.
-			require.IsType(t, config["BASE_REWARD_FACTOR"], uint64(0))
-			// Check a byte array type.
-			require.IsType(t, config["DOMAIN_DEPOSIT"], spec.DomainType{})
+			require.IsType(t, uint64(0), res["BASE_REWARD_FACTOR"])
+			// Check a domain type.
+			require.IsType(t, spec.DomainType{}, res["DOMAIN_DEPOSIT"], spec.DomainType{})
 		})
 	}
 }

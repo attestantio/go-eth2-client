@@ -15,9 +15,11 @@ package v1
 
 import (
 	"context"
+
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // RANDAODomain provides the RANDAO domain of the chain.
-func (s *Service) RANDAODomain(ctx context.Context) ([]byte, error) {
-	return s.spec["DOMAIN_RANDAO"].([]byte), nil
+func (s *Service) RANDAODomain(ctx context.Context) (spec.DomainType, error) {
+	return s.spec["DOMAIN_RANDAO"].(spec.DomainType), nil
 }

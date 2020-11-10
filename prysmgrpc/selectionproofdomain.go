@@ -17,13 +17,14 @@ import (
 	"context"
 	"fmt"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
 // SelectionProofDomain provides the selection proof domain of the chain.
-func (s *Service) SelectionProofDomain(ctx context.Context) ([]byte, error) {
+func (s *Service) SelectionProofDomain(ctx context.Context) (spec.DomainType, error) {
 	if s.selectionProofDomain == nil {
 		conn := ethpb.NewBeaconChainClient(s.conn)
 		log.Trace().Msg("Fetching selection proof domain")
@@ -31,19 +32,22 @@ func (s *Service) SelectionProofDomain(ctx context.Context) ([]byte, error) {
 		config, err := conn.GetBeaconConfig(opCtx, &types.Empty{})
 		cancel()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain configuration")
+			return spec.DomainType{}, errors.Wrap(err, "failed to obtain configuration")
 		}
 
 		val, exists := config.Config["DomainSelectionProof"]
 		if !exists {
-			return nil, errors.New("config did not provide DomainSelectionProof value")
+			return spec.DomainType{}, errors.New("config did not provide DomainSelectionProof value")
 		}
-		s.selectionProofDomain, err = parseConfigByteArray(val)
+		tmp, err := parseConfigByteArray(val)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to convert value %q for DomainSelectionProof", val)
+			return spec.DomainType{}, errors.Wrapf(err, "failed to convert value %q for DomainSelectionProof", val)
 		}
+		var domainType spec.DomainType
+		copy(domainType[:], tmp)
+		s.selectionProofDomain = &domainType
 	}
 
 	log.Trace().Str("domain", fmt.Sprintf("%#x", s.beaconAttesterDomain)).Msg("Returning selection proof domain")
-	return s.selectionProofDomain, nil
+	return *s.selectionProofDomain, nil
 }

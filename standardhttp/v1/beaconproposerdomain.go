@@ -15,9 +15,11 @@ package v1
 
 import (
 	"context"
+
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // BeaconProposerDomain provides the beacon proposer domain of the chain.
-func (s *Service) BeaconProposerDomain(ctx context.Context) ([]byte, error) {
-	return s.spec["DOMAIN_BEACON_PROPOSER"].([]byte), nil
+func (s *Service) BeaconProposerDomain(ctx context.Context) (spec.DomainType, error) {
+	return s.spec["DOMAIN_BEACON_PROPOSER"].(spec.DomainType), nil
 }

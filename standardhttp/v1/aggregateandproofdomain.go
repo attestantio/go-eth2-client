@@ -15,9 +15,11 @@ package v1
 
 import (
 	"context"
+
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AggregateAndProofDomain provides the aggregate and proof domain of the chain.
-func (s *Service) AggregateAndProofDomain(ctx context.Context) ([]byte, error) {
-	return s.spec["DOMAIN_AGGREGATE_AND_PROOF"].([]byte), nil
+func (s *Service) AggregateAndProofDomain(ctx context.Context) (spec.DomainType, error) {
+	return s.spec["DOMAIN_AGGREGATE_AND_PROOF"].(spec.DomainType), nil
 }

@@ -17,13 +17,14 @@ import (
 	"context"
 	"fmt"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
 // BeaconAttesterDomain provides the beacon attester domain of the chain.
-func (s *Service) BeaconAttesterDomain(ctx context.Context) ([]byte, error) {
+func (s *Service) BeaconAttesterDomain(ctx context.Context) (spec.DomainType, error) {
 	if s.beaconAttesterDomain == nil {
 		conn := ethpb.NewBeaconChainClient(s.conn)
 		log.Trace().Msg("Fetching beacon attester domain")
@@ -31,18 +32,21 @@ func (s *Service) BeaconAttesterDomain(ctx context.Context) ([]byte, error) {
 		config, err := conn.GetBeaconConfig(opCtx, &types.Empty{})
 		cancel()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain configuration")
+			return spec.DomainType{}, errors.Wrap(err, "failed to obtain configuration")
 		}
 
 		val, exists := config.Config["DomainBeaconAttester"]
 		if !exists {
-			return nil, errors.New("config did not provide DomainBeaconAttester value")
+			return spec.DomainType{}, errors.New("config did not provide DomainBeaconAttester value")
 		}
-		s.beaconAttesterDomain, err = parseConfigByteArray(val)
+		tmp, err := parseConfigByteArray(val)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to convert value %q for DomainBeaconAttester", val)
+			return spec.DomainType{}, errors.Wrapf(err, "failed to convert value %q for DomainBeaconAttester", val)
 		}
+		var domainType spec.DomainType
+		copy(domainType[:], tmp)
+		s.beaconAttesterDomain = &domainType
 	}
 	log.Trace().Str("domain", fmt.Sprintf("%#x", s.beaconAttesterDomain)).Msg("Returning beacon attester domain")
-	return s.beaconAttesterDomain, nil
+	return *s.beaconAttesterDomain, nil
 }

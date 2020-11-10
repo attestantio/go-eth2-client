@@ -112,43 +112,43 @@ type TargetAggregatorsPerCommitteeProvider interface {
 // BeaconAttesterDomainProvider is the interface for providing the beacon attester domain.
 type BeaconAttesterDomainProvider interface {
 	// BeaconAttesterDomain provides the beacon attester domain.
-	BeaconAttesterDomain(ctx context.Context) ([]byte, error)
+	BeaconAttesterDomain(ctx context.Context) (spec.DomainType, error)
 }
 
 // BeaconProposerDomainProvider is the interface for providing the beacon proposer domain.
 type BeaconProposerDomainProvider interface {
 	// BeaconProposerDomain provides the beacon proposer domain.
-	BeaconProposerDomain(ctx context.Context) ([]byte, error)
+	BeaconProposerDomain(ctx context.Context) (spec.DomainType, error)
 }
 
 // RANDAODomainProvider is the interface for providing the RANDAO domain.
 type RANDAODomainProvider interface {
 	// RANDAODomain provides the RANDAO domain.
-	RANDAODomain(ctx context.Context) ([]byte, error)
+	RANDAODomain(ctx context.Context) (spec.DomainType, error)
 }
 
 // DepositDomainProvider is the interface for providing the deposit domain.
 type DepositDomainProvider interface {
 	// DepositDomain provides the deposit domain.
-	DepositDomain(ctx context.Context) ([]byte, error)
+	DepositDomain(ctx context.Context) (spec.DomainType, error)
 }
 
 // VoluntaryExitDomainProvider is the interface for providing the voluntary exit domain.
 type VoluntaryExitDomainProvider interface {
 	// VoluntaryExitDomain provides the voluntary exit domain.
-	VoluntaryExitDomain(ctx context.Context) ([]byte, error)
+	VoluntaryExitDomain(ctx context.Context) (spec.DomainType, error)
 }
 
 // SelectionProofDomainProvider is the interface for providing the selection proof domain.
 type SelectionProofDomainProvider interface {
 	// SelectionProofDomain provides the selection proof domain.
-	SelectionProofDomain(ctx context.Context) ([]byte, error)
+	SelectionProofDomain(ctx context.Context) (spec.DomainType, error)
 }
 
 // AggregateAndProofDomainProvider is the interface for providing the aggregate and proof domain.
 type AggregateAndProofDomainProvider interface {
 	// AggregateAndProofDomain provides the aggregate and proof domain.
-	AggregateAndProofDomain(ctx context.Context) ([]byte, error)
+	AggregateAndProofDomain(ctx context.Context) (spec.DomainType, error)
 }
 
 // BeaconChainHeadUpdatedSource is the interface for a service that provides beacon chain head updates.
@@ -310,6 +310,12 @@ type EventsProvider interface {
 	Events(ctx context.Context, topics []string, handler EventHandlerFunc) error
 }
 
+// FinalityProvider is the interface for providing finality information.
+type FinalityProvider interface {
+	// Finality provides the finality given a state ID.
+	Finality(ctx context.Context, stateID string) (*api.Finality, error)
+}
+
 // ForkProvider is the interface for providing fork information.
 type ForkProvider interface {
 	// Fork fetches fork information for the given state.
@@ -375,6 +381,12 @@ type ValidatorsProvider interface {
 	// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
 	// supplied no filter will be applied.
 	ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error)
+}
+
+// VoluntaryExitSubmitter is the interface for submitting voluntary exits.
+type VoluntaryExitSubmitter interface {
+	// SubmitVoluntaryExit submits a voluntary exit.
+	SubmitVoluntaryExit(ctx context.Context, voluntaryExit *spec.SignedVoluntaryExit) error
 }
 
 // type DepositContractProvider interface {

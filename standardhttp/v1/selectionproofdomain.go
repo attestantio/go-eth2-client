@@ -15,9 +15,11 @@ package v1
 
 import (
 	"context"
+
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // SelectionProofDomain provides the selection proof domain of the chain.
-func (s *Service) SelectionProofDomain(ctx context.Context) ([]byte, error) {
-	return s.spec["DOMAIN_SELECTION_PROOF"].([]byte), nil
+func (s *Service) SelectionProofDomain(ctx context.Context) (spec.DomainType, error) {
+	return s.spec["DOMAIN_SELECTION_PROOF"].(spec.DomainType), nil
 }

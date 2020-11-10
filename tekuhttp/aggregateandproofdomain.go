@@ -15,10 +15,12 @@ package tekuhttp
 
 import (
 	"context"
+
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AggregateAndProofDomain provides the aggregate and proof domain of the chain.
-func (s *Service) AggregateAndProofDomain(ctx context.Context) ([]byte, error) {
+func (s *Service) AggregateAndProofDomain(ctx context.Context) (spec.DomainType, error) {
 	// Teku does not provide this information so we hard-code it.
-	return []byte{6, 0, 0, 0}, nil
+	return spec.DomainType{6, 0, 0, 0}, nil
 }

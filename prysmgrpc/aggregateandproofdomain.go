@@ -17,13 +17,14 @@ import (
 	"context"
 	"fmt"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
 // AggregateAndProofDomain provides the aggregate and proof domain of the chain.
-func (s *Service) AggregateAndProofDomain(ctx context.Context) ([]byte, error) {
+func (s *Service) AggregateAndProofDomain(ctx context.Context) (spec.DomainType, error) {
 	if s.aggregateAndProofDomain == nil {
 		conn := ethpb.NewBeaconChainClient(s.conn)
 		log.Trace().Msg("Fetching aggregate and proof domain")
@@ -31,19 +32,22 @@ func (s *Service) AggregateAndProofDomain(ctx context.Context) ([]byte, error) {
 		config, err := conn.GetBeaconConfig(opCtx, &types.Empty{})
 		cancel()
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain configuration")
+			return spec.DomainType{}, errors.Wrap(err, "failed to obtain configuration")
 		}
 
 		val, exists := config.Config["DomainAggregateAndProof"]
 		if !exists {
-			return nil, errors.New("config did not provide DomainAggregateAndProof value")
+			return spec.DomainType{}, errors.New("config did not provide DomainAggregateAndProof value")
 		}
-		s.aggregateAndProofDomain, err = parseConfigByteArray(val)
+		tmp, err := parseConfigByteArray(val)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to convert value %q for DomainAggregateAndProof", val)
+			return spec.DomainType{}, errors.Wrapf(err, "failed to convert value %q for DomainAggregateAndProof", val)
 		}
+		var domainType spec.DomainType
+		copy(domainType[:], tmp)
+		s.aggregateAndProofDomain = &domainType
 	}
 
 	log.Trace().Str("domain", fmt.Sprintf("%#x", s.aggregateAndProofDomain)).Msg("Returning aggregate and proof domain")
-	return s.aggregateAndProofDomain, nil
+	return *s.aggregateAndProofDomain, nil
 }

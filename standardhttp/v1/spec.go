@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -44,13 +45,24 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 			return nil, errors.Wrap(err, "failed to parse spec")
 		}
 
-		spec := make(map[string]interface{})
+		config := make(map[string]interface{})
 		for k, v := range specJSON.Data {
+			// Handle domains.
+			if strings.HasPrefix(k, "DOMAIN_") {
+				byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
+				if err == nil {
+					var domainType spec.DomainType
+					copy(domainType[:], byteVal)
+					config[k] = domainType
+					continue
+				}
+			}
+
 			// Handle hex strings.
 			if strings.HasPrefix(v, "0x") {
 				byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
 				if err == nil {
-					spec[k] = byteVal
+					config[k] = byteVal
 					continue
 				}
 			}
@@ -59,26 +71,26 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 			if strings.HasPrefix(k, "SECONDS_PER_") {
 				intVal, err := strconv.ParseUint(v, 10, 64)
 				if err == nil && intVal != 0 {
-					spec[k] = time.Duration(intVal) * time.Second
+					config[k] = time.Duration(intVal) * time.Second
 					continue
 				}
 			}
 
 			// Handle integers.
 			if v == "0" {
-				spec[k] = uint64(0)
+				config[k] = uint64(0)
 				continue
 			}
 			intVal, err := strconv.ParseUint(v, 10, 64)
 			if err == nil && intVal != 0 {
-				spec[k] = intVal
+				config[k] = intVal
 				continue
 			}
 
 			// Assume string.
-			spec[k] = v
+			config[k] = v
 		}
-		s.spec = spec
+		s.spec = config
 	}
 	return s.spec, nil
 }

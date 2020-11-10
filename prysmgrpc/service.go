@@ -22,6 +22,7 @@ import (
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 	"github.com/rs/zerolog"
@@ -42,19 +43,20 @@ type Service struct {
 	maxPageSize int32
 
 	// Various information from the node that never changes once we have it.
+	spec                          map[string]interface{}
 	genesisTime                   *time.Time
 	genesisValidatorsRoot         []byte
 	slotDuration                  *time.Duration
 	slotsPerEpoch                 *uint64
 	farFutureEpoch                *uint64
 	targetAggregatorsPerCommittee *uint64
-	beaconAttesterDomain          []byte
-	beaconProposerDomain          []byte
-	randaoDomain                  []byte
-	depositDomain                 []byte
-	voluntaryExitDomain           []byte
-	selectionProofDomain          []byte
-	aggregateAndProofDomain       []byte
+	beaconAttesterDomain          *spec.DomainType
+	beaconProposerDomain          *spec.DomainType
+	randaoDomain                  *spec.DomainType
+	depositDomain                 *spec.DomainType
+	voluntaryExitDomain           *spec.DomainType
+	selectionProofDomain          *spec.DomainType
+	aggregateAndProofDomain       *spec.DomainType
 	genesisForkVersion            []byte
 
 	// Event handlers.

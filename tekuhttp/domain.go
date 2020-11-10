@@ -22,22 +22,22 @@ import (
 )
 
 // Domain provides a domain for a given domain typ eat a given epoch.
-func (s *Service) Domain(ctx context.Context, domainType spec.DomainType, epoch spec.Epoch) ([]byte, error) {
+func (s *Service) Domain(ctx context.Context, domainType spec.DomainType, epoch spec.Epoch) (spec.Domain, error) {
 	slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain slots per epoch")
+		return spec.Domain{}, errors.Wrap(err, "failed to obtain slots per epoch")
 	}
 
 	// Obtain the fork.
 	fork, err := s.Fork(ctx, fmt.Sprintf("%d", uint64(epoch)*slotsPerEpoch))
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain fork")
+		return spec.Domain{}, errors.Wrap(err, "failed to obtain fork")
 	}
 
 	// Obtain the genesis validators root.
 	genesisValidatorsRoot, err := s.GenesisValidatorsRoot(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain genesis validators root")
+		return spec.Domain{}, errors.Wrap(err, "failed to obtain genesis validators root")
 	}
 
 	// Calculate the domain.
@@ -48,7 +48,7 @@ func (s *Service) Domain(ctx context.Context, domainType spec.DomainType, epoch 
 		forkVersion = fork.CurrentVersion
 	}
 	if len(forkVersion) != 4 {
-		return nil, errors.New("fork version is invalid")
+		return spec.Domain{}, errors.New("fork version is invalid")
 	}
 
 	forkData := &spec.ForkData{
@@ -57,11 +57,11 @@ func (s *Service) Domain(ctx context.Context, domainType spec.DomainType, epoch 
 	copy(forkData.GenesisValidatorsRoot[:], genesisValidatorsRoot)
 	root, err := forkData.HashTreeRoot()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to calculate signature domain")
+		return spec.Domain{}, errors.Wrap(err, "failed to calculate signature domain")
 	}
 
-	domain := make([]byte, 32)
-	copy(domain, domainType[:])
+	domain := spec.Domain{}
+	copy(domain[:], domainType[:])
 	copy(domain[4:], root[:])
 	return domain, nil
 }

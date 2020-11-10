@@ -18,6 +18,7 @@ import (
 	"os"
 	"testing"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	standardhttp "github.com/attestantio/go-eth2-client/standardhttp/v1"
 	"github.com/stretchr/testify/require"
 )
@@ -42,7 +43,7 @@ func TestAggregateAndProofDomain(t *testing.T) {
 			aggregateAndProofDomain, err := service.AggregateAndProofDomain(context.Background())
 			require.NoError(t, err)
 			require.NotNil(t, aggregateAndProofDomain)
-			require.IsType(t, ([]byte)(nil), aggregateAndProofDomain)
+			require.IsType(t, spec.DomainType{}, aggregateAndProofDomain)
 		})
 	}
 }
