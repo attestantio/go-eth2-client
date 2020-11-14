@@ -28,21 +28,32 @@ type validatorsJSON struct {
 	Data []*api.Validator `json:"data"`
 }
 
+// indexChunkSize is the maximum number of validator indices to send in each request.
+// A request should be no more than 8,000 bytes to work with all currently-supported clients.
+// An index has variable size, but assuming 7 characters, including the comma separator, is safe.
+// We also need to reserve space for the state ID and the endpoint itself, to be safe we go
+// with 500 bytes for this which results in us having comfortable space for 1,000 public keys.
+var indexChunkSize = 1000
+
 // Validators provides the validators, with their balance and status, for a given state.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validatorIDs is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
-func (s *Service) Validators(ctx context.Context, stateID string, validatorIDs []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error) {
+// validatorIndices is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
+func (s *Service) Validators(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error) {
 	if stateID == "" {
 		return nil, errors.New("no state ID specified")
 	}
 
+	if len(validatorIndices) > indexChunkSize {
+		return s.chunkedValidators(ctx, stateID, validatorIndices)
+	}
+
 	url := fmt.Sprintf("/eth/v1/beacon/states/%s/validators", stateID)
-	if len(validatorIDs) != 0 {
-		ids := make([]string, len(validatorIDs))
-		for i := range validatorIDs {
-			ids[i] = fmt.Sprintf("%d", validatorIDs[i])
+	if len(validatorIndices) != 0 {
+		ids := make([]string, len(validatorIndices))
+		for i := range validatorIndices {
+			ids[i] = fmt.Sprintf("%d", validatorIndices[i])
 		}
-		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, "&id="))
+		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
 	}
 
 	respBodyReader, err := s.get(ctx, url)
@@ -64,6 +75,27 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIDs [
 	res := make(map[spec.ValidatorIndex]*api.Validator)
 	for _, validator := range validatorsJSON.Data {
 		res[validator.Index] = validator
+	}
+	return res, nil
+}
+
+// chunkedValidators obtains the validators a chunk at a time.
+func (s *Service) chunkedValidators(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error) {
+	res := make(map[spec.ValidatorIndex]*api.Validator)
+	for i := 0; i < len(validatorIndices); i = i + indexChunkSize {
+		chunkStart := i
+		chunkEnd := i + indexChunkSize
+		if len(validatorIndices) < chunkEnd {
+			chunkEnd = len(validatorIndices)
+		}
+		chunk := validatorIndices[chunkStart:chunkEnd]
+		chunkRes, err := s.Validators(ctx, stateID, chunk)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain chunk")
+		}
+		for k, v := range chunkRes {
+			res[k] = v
+		}
 	}
 	return res, nil
 }

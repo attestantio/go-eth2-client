@@ -27,25 +27,30 @@ type genesisJSON struct {
 
 // Genesis provides the genesis information of the chain.
 func (s *Service) Genesis(ctx context.Context) (*api.Genesis, error) {
-	if s.genesis == nil {
-		respBodyReader, err := s.get(ctx, "/eth/v1/beacon/genesis")
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to request genesis")
-		}
-		if respBodyReader == nil {
-			return nil, errors.New("failed to obtain genesis")
-		}
-
-		var resp genesisJSON
-		if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse genesis")
-		}
-		s.genesis = resp.Data
+	if s.genesis != nil {
+		return s.genesis, nil
 	}
 
-	return &api.Genesis{
-		GenesisTime:           s.genesis.GenesisTime,
-		GenesisValidatorsRoot: s.genesis.GenesisValidatorsRoot,
-		GenesisForkVersion:    s.genesis.GenesisForkVersion,
-	}, nil
+	s.genesisMutex.Lock()
+	defer s.genesisMutex.Unlock()
+	if s.genesis != nil {
+		// Someone else fetched this whilst we were waiting for the lock.
+		return s.genesis, nil
+	}
+
+	// Up to us to fetch the information.
+	respBodyReader, err := s.get(ctx, "/eth/v1/beacon/genesis")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to request genesis")
+	}
+	if respBodyReader == nil {
+		return nil, errors.New("failed to obtain genesis")
+	}
+
+	var resp genesisJSON
+	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
+		return nil, errors.Wrap(err, "failed to parse genesis")
+	}
+	s.genesis = resp.Data
+	return s.genesis, nil
 }

@@ -27,24 +27,30 @@ type depositContractJSON struct {
 
 // DepositContract provides details of the Ethereum 1 deposit contract for the chain.
 func (s *Service) DepositContract(ctx context.Context) (*api.DepositContract, error) {
-	if s.depositContract == nil {
-		respBodyReader, err := s.get(ctx, "/eth/v1/config/deposit_contract")
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to request deposit contract")
-		}
-		if respBodyReader == nil {
-			return nil, errors.New("failed to obtain deposit contract")
-		}
-
-		var resp depositContractJSON
-		if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse deposit contract")
-		}
-		s.depositContract = resp.Data
+	if s.depositContract != nil {
+		return s.depositContract, nil
 	}
 
-	return &api.DepositContract{
-		ChainID: s.depositContract.ChainID,
-		Address: s.depositContract.Address,
-	}, nil
+	s.depositContractMutex.Lock()
+	defer s.depositContractMutex.Unlock()
+	if s.depositContract != nil {
+		// Someone else fetched this whilst we were waiting for the lock.
+		return s.depositContract, nil
+	}
+
+	// Up to us to fetch the information.
+	respBodyReader, err := s.get(ctx, "/eth/v1/config/deposit_contract")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to request deposit contract")
+	}
+	if respBodyReader == nil {
+		return nil, errors.New("failed to obtain deposit contract")
+	}
+
+	var resp depositContractJSON
+	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
+		return nil, errors.Wrap(err, "failed to parse deposit contract")
+	}
+	s.depositContract = resp.Data
+	return s.depositContract, nil
 }

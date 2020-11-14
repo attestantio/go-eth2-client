@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
@@ -41,11 +42,16 @@ type Service struct {
 
 	// Various information from the node that does not change during the
 	// lifetime of a beacon node.
-	genesis         *api.Genesis
-	spec            map[string]interface{}
-	depositContract *api.DepositContract
-	forkSchedule    []*spec.Fork
-	nodeVersion     string
+	genesis              *api.Genesis
+	genesisMutex         sync.Mutex
+	spec                 map[string]interface{}
+	specMutex            sync.Mutex
+	depositContract      *api.DepositContract
+	depositContractMutex sync.Mutex
+	forkSchedule         []*spec.Fork
+	forkScheduleMutex    sync.Mutex
+	nodeVersion          string
+	nodeVersionMutex     sync.Mutex
 }
 
 // log is a service-wide logger.

@@ -31,66 +31,76 @@ type specJSON struct {
 
 // Spec provides the spec information of the chain.
 func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
-	if s.spec == nil {
-		respBodyReader, err := s.get(ctx, "/eth/v1/config/spec")
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to request spec")
-		}
-		if respBodyReader == nil {
-			return nil, errors.New("failed to obtain spec")
-		}
+	if s.spec != nil {
+		return s.spec, nil
+	}
 
-		var specJSON specJSON
-		if err := json.NewDecoder(respBodyReader).Decode(&specJSON); err != nil {
-			return nil, errors.Wrap(err, "failed to parse spec")
-		}
+	s.specMutex.Lock()
+	defer s.specMutex.Unlock()
+	if s.spec != nil {
+		// Someone else fetched this whilst we were waiting for the lock.
+		return s.spec, nil
+	}
 
-		config := make(map[string]interface{})
-		for k, v := range specJSON.Data {
-			// Handle domains.
-			if strings.HasPrefix(k, "DOMAIN_") {
-				byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
-				if err == nil {
-					var domainType spec.DomainType
-					copy(domainType[:], byteVal)
-					config[k] = domainType
-					continue
-				}
-			}
+	// Up to us to fetch the information.
+	respBodyReader, err := s.get(ctx, "/eth/v1/config/spec")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to request spec")
+	}
+	if respBodyReader == nil {
+		return nil, errors.New("failed to obtain spec")
+	}
 
-			// Handle hex strings.
-			if strings.HasPrefix(v, "0x") {
-				byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
-				if err == nil {
-					config[k] = byteVal
-					continue
-				}
-			}
+	var specJSON specJSON
+	if err := json.NewDecoder(respBodyReader).Decode(&specJSON); err != nil {
+		return nil, errors.Wrap(err, "failed to parse spec")
+	}
 
-			// Handle durations.
-			if strings.HasPrefix(k, "SECONDS_PER_") {
-				intVal, err := strconv.ParseUint(v, 10, 64)
-				if err == nil && intVal != 0 {
-					config[k] = time.Duration(intVal) * time.Second
-					continue
-				}
-			}
-
-			// Handle integers.
-			if v == "0" {
-				config[k] = uint64(0)
+	config := make(map[string]interface{})
+	for k, v := range specJSON.Data {
+		// Handle domains.
+		if strings.HasPrefix(k, "DOMAIN_") {
+			byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
+			if err == nil {
+				var domainType spec.DomainType
+				copy(domainType[:], byteVal)
+				config[k] = domainType
 				continue
 			}
+		}
+
+		// Handle hex strings.
+		if strings.HasPrefix(v, "0x") {
+			byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
+			if err == nil {
+				config[k] = byteVal
+				continue
+			}
+		}
+
+		// Handle durations.
+		if strings.HasPrefix(k, "SECONDS_PER_") {
 			intVal, err := strconv.ParseUint(v, 10, 64)
 			if err == nil && intVal != 0 {
-				config[k] = intVal
+				config[k] = time.Duration(intVal) * time.Second
 				continue
 			}
-
-			// Assume string.
-			config[k] = v
 		}
-		s.spec = config
+
+		// Handle integers.
+		if v == "0" {
+			config[k] = uint64(0)
+			continue
+		}
+		intVal, err := strconv.ParseUint(v, 10, 64)
+		if err == nil && intVal != 0 {
+			config[k] = intVal
+			continue
+		}
+
+		// Assume string.
+		config[k] = v
 	}
+	s.spec = config
 	return s.spec, nil
 }

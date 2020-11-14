@@ -30,21 +30,30 @@ type nodeVersionDataJSON struct {
 
 // NodeVersion provides the version information of the node.
 func (s *Service) NodeVersion(ctx context.Context) (string, error) {
-	if s.nodeVersion == "" {
-		respBodyReader, err := s.get(ctx, "/eth/v1/node/version")
-		if err != nil {
-			return "", errors.Wrap(err, "failed to request node version")
-		}
-		if respBodyReader == nil {
-			return "", errors.New("failed to obtain node version")
-		}
-
-		var resp nodeVersionJSON
-		if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-			return "", errors.Wrap(err, "failed to parse node version")
-		}
-		s.nodeVersion = resp.Data.Version
+	if s.nodeVersion != "" {
+		return s.nodeVersion, nil
 	}
 
+	s.nodeVersionMutex.Lock()
+	defer s.nodeVersionMutex.Unlock()
+	if s.nodeVersion != "" {
+		// Someone else fetched this whilst we were waiting for the lock.
+		return s.nodeVersion, nil
+	}
+
+	// Up to us to fetch the information.
+	respBodyReader, err := s.get(ctx, "/eth/v1/node/version")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to request node version")
+	}
+	if respBodyReader == nil {
+		return "", errors.New("failed to obtain node version")
+	}
+
+	var resp nodeVersionJSON
+	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
+		return "", errors.Wrap(err, "failed to parse node version")
+	}
+	s.nodeVersion = resp.Data.Version
 	return s.nodeVersion, nil
 }

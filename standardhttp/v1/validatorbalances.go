@@ -37,13 +37,17 @@ func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validat
 		return nil, errors.New("no state ID specified")
 	}
 
+	if len(validatorIndices) > indexChunkSize {
+		return s.chunkedValidatorBalances(ctx, stateID, validatorIndices)
+	}
+
 	url := fmt.Sprintf("/eth/v1/beacon/states/%s/validator_balances", stateID)
 	if len(validatorIndices) != 0 {
 		ids := make([]string, len(validatorIndices))
 		for i := range validatorIndices {
 			ids[i] = fmt.Sprintf("%d", validatorIndices[i])
 		}
-		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, "&id="))
+		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
 	}
 
 	respBodyReader, err := s.get(ctx, url)
@@ -65,6 +69,27 @@ func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validat
 	res := make(map[spec.ValidatorIndex]spec.Gwei)
 	for _, validatorBalance := range validatorBalancesJSON.Data {
 		res[validatorBalance.Index] = validatorBalance.Balance
+	}
+	return res, nil
+}
+
+// chunkedValidatorBalances obtains the validator balances a chunk at a time.
+func (s *Service) chunkedValidatorBalances(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]spec.Gwei, error) {
+	res := make(map[spec.ValidatorIndex]spec.Gwei)
+	for i := 0; i < len(validatorIndices); i = i + indexChunkSize {
+		chunkStart := i
+		chunkEnd := i + indexChunkSize
+		if len(validatorIndices) < chunkEnd {
+			chunkEnd = len(validatorIndices)
+		}
+		chunk := validatorIndices[chunkStart:chunkEnd]
+		chunkRes, err := s.ValidatorBalances(ctx, stateID, chunk)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain chunk")
+		}
+		for k, v := range chunkRes {
+			res[k] = v
+		}
 	}
 	return res, nil
 }

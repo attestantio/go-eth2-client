@@ -27,31 +27,30 @@ type forkScheduleJSON struct {
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
 func (s *Service) ForkSchedule(ctx context.Context) ([]*spec.Fork, error) {
-	if s.forkSchedule == nil {
-		respBodyReader, err := s.get(ctx, "/eth/v1/config/fork_schedule")
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to request fork schedule")
-		}
-		if respBodyReader == nil {
-			return nil, errors.New("failed to obtain fork schedule")
-		}
-
-		var forkScheduleJSON forkScheduleJSON
-		if err := json.NewDecoder(respBodyReader).Decode(&forkScheduleJSON); err != nil {
-			return nil, errors.Wrap(err, "failed to parse fork schedule")
-		}
-
-		s.forkSchedule = forkScheduleJSON.Data
+	if s.forkSchedule != nil {
+		return s.forkSchedule, nil
 	}
 
-	forkSchedule := make([]*spec.Fork, len(s.forkSchedule))
-	for i := range s.forkSchedule {
-		forkSchedule[i] = &spec.Fork{
-			PreviousVersion: s.forkSchedule[i].PreviousVersion,
-			CurrentVersion:  s.forkSchedule[i].CurrentVersion,
-			Epoch:           s.forkSchedule[i].Epoch,
-		}
+	s.forkScheduleMutex.Lock()
+	defer s.forkScheduleMutex.Unlock()
+	if s.forkSchedule != nil {
+		// Someone else fetched this whilst we were waiting for the lock.
+		return s.forkSchedule, nil
 	}
 
-	return forkSchedule, nil
+	// Up to us to fetch the information.
+	respBodyReader, err := s.get(ctx, "/eth/v1/config/fork_schedule")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to request fork schedule")
+	}
+	if respBodyReader == nil {
+		return nil, errors.New("failed to obtain fork schedule")
+	}
+
+	var resp forkScheduleJSON
+	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
+		return nil, errors.Wrap(err, "failed to parse fork schedule")
+	}
+	s.forkSchedule = resp.Data
+	return s.forkSchedule, nil
 }
