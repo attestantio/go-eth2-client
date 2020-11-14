@@ -47,11 +47,6 @@ func TestService(t *testing.T) {
 			version: "Lighthouse",
 		},
 		{
-			name:    "Teku",
-			address: os.Getenv("TEKUHTTP_ADDRESS"),
-			version: "teku",
-		},
-		{
 			name:    "BadPort",
 			address: "localhost:22",
 			err:     "failed to connect to Ethereum 2 client with any known method",

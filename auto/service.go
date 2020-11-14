@@ -19,7 +19,6 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/prysmgrpc"
 	standardhttp "github.com/attestantio/go-eth2-client/standardhttp/v1"
-	"github.com/attestantio/go-eth2-client/tekuhttp"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	zerologger "github.com/rs/zerolog/log"
@@ -46,18 +45,14 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 	if err == nil {
 		return standardClient, nil
 	}
+	log.Trace().Err(err).Msg("Attempt to connect via standard API failed")
 
 	// Try prysm.
 	prysmClient, err := tryPrysm(ctx, parameters)
 	if err == nil {
 		return prysmClient, nil
 	}
-
-	// Try teku.
-	tekuClient, err := tryTeku(ctx, parameters)
-	if err == nil {
-		return tekuClient, nil
-	}
+	log.Trace().Err(err).Msg("Attempt to connect via Prysm API failed")
 
 	// No luck
 	return nil, errors.New("failed to connect to Ethereum 2 client with any known method")
@@ -83,18 +78,6 @@ func tryPrysm(ctx context.Context, parameters *parameters) (*prysmgrpc.Service, 
 	client, err := prysmgrpc.New(ctx, prysmParameters...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed when trying to open connection to prysm")
-	}
-	return client, nil
-}
-
-func tryTeku(ctx context.Context, parameters *parameters) (*tekuhttp.Service, error) {
-	tekuParameters := make([]tekuhttp.Parameter, 0)
-	tekuParameters = append(tekuParameters, tekuhttp.WithLogLevel(parameters.logLevel))
-	tekuParameters = append(tekuParameters, tekuhttp.WithAddress(parameters.address))
-	tekuParameters = append(tekuParameters, tekuhttp.WithTimeout(parameters.timeout))
-	client, err := tekuhttp.New(ctx, tekuParameters...)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed when trying to open connection to teku")
 	}
 	return client, nil
 }
