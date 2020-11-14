@@ -22,30 +22,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSignedBeaconBlockBySlot(t *testing.T) {
+func TestSignedBeaconBlock(t *testing.T) {
 	tests := []struct {
-		name string
-		slot uint64
+		name    string
+		stateID string
 	}{
 		{
-			name: "Missing",
-			slot: 1,
+			name:    "Missing",
+			stateID: "1",
 		},
 		{
-			name: "Good",
-			slot: 12345,
+			name:    "Good",
+			stateID: "12345",
 		},
 		{
-			name: "AttesterSlashing",
-			slot: 62390,
+			name:    "AttesterSlashing",
+			stateID: "62390",
 		},
 		{
-			name: "ProposerSlashing",
-			slot: 33890,
+			name:    "ProposerSlashing",
+			stateID: "33890",
 		},
 		{
-			name: "Deposits",
-			slot: 1005,
+			name:    "Deposits",
+			stateID: "1005",
 		},
 	}
 
@@ -57,7 +57,7 @@ func TestSignedBeaconBlockBySlot(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			block, err := service.SignedBeaconBlockBySlot(context.Background(), test.slot)
+			block, err := service.SignedBeaconBlock(context.Background(), test.stateID)
 			require.NoError(t, err)
 			require.NotNil(t, block)
 		})

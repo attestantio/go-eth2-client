@@ -15,6 +15,7 @@ package prysmgrpc
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -71,7 +72,7 @@ func (s *Service) streamBeaconChainHead(ctx context.Context) {
 			log.Trace().Uint64("slot", beaconChainHead.HeadSlot).Msg("Received beacon chain head")
 
 			// Need the state root for this slot.
-			signedBeaconBlock, err := s.SignedBeaconBlockBySlot(ctx, beaconChainHead.HeadSlot)
+			signedBeaconBlock, err := s.SignedBeaconBlock(ctx, fmt.Sprintf("%d", beaconChainHead.HeadSlot))
 			if err != nil {
 				log.Warn().Err(err).Msg("failed to obtain block for slot")
 				return

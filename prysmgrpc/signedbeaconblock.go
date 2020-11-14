@@ -15,8 +15,9 @@ package prysmgrpc
 
 import (
 	"context"
+	"encoding/hex"
 	"strconv"
-	"time"
+	"strings"
 
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -25,38 +26,38 @@ import (
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
 func (s *Service) SignedBeaconBlock(ctx context.Context, blockID string) (*spec.SignedBeaconBlock, error) {
-	var slot uint64
-	var err error
+	conn := ethpb.NewBeaconChainClient(s.conn)
+	req := &ethpb.ListBlocksRequest{}
+
 	switch {
 	case blockID == "head":
-		genesisTime, err := s.GenesisTime(ctx)
+		slot, err := s.CurrentSlot(ctx)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain genesis time")
+			return nil, errors.Wrap(err, "failed to calculate current slot")
 		}
-		slotDuration, err := s.SlotDuration(ctx)
+		if slot == 0 {
+			req.QueryFilter = &ethpb.ListBlocksRequest_Genesis{Genesis: true}
+		} else {
+			req.QueryFilter = &ethpb.ListBlocksRequest_Slot{Slot: slot}
+		}
+	case strings.HasPrefix(blockID, "0x"):
+		root, err := hex.DecodeString(strings.TrimPrefix(blockID, "0x"))
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain slot duration")
+			return nil, errors.Wrap(err, "invalid block root")
 		}
-		slot = uint64(time.Since(genesisTime).Seconds()) / uint64(slotDuration.Seconds())
+		req.QueryFilter = &ethpb.ListBlocksRequest_Root{Root: root}
 	default:
-		slot, err = strconv.ParseUint(blockID, 10, 64)
+		slot, err := strconv.ParseUint(blockID, 10, 64)
 		if err != nil {
 			return nil, errors.Wrap(err, "invalid block ID")
 		}
+		if slot == 0 {
+			req.QueryFilter = &ethpb.ListBlocksRequest_Genesis{Genesis: true}
+		} else {
+			req.QueryFilter = &ethpb.ListBlocksRequest_Slot{Slot: slot}
+		}
 	}
-	return s.SignedBeaconBlockBySlot(ctx, slot)
-}
 
-// SignedBeaconBlockBySlot fetches a signed beacon block given its slot.
-func (s *Service) SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*spec.SignedBeaconBlock, error) {
-	conn := ethpb.NewBeaconChainClient(s.conn)
-
-	req := &ethpb.ListBlocksRequest{}
-	if slot == 0 {
-		req.QueryFilter = &ethpb.ListBlocksRequest_Genesis{Genesis: true}
-	} else {
-		req.QueryFilter = &ethpb.ListBlocksRequest_Slot{Slot: slot}
-	}
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	resp, err := conn.ListBlocks(opCtx, req)
 	cancel()
