@@ -42,21 +42,6 @@ type PrysmProposerDutiesProvider interface {
 	PrysmProposerDuties(ctx context.Context, epoch spec.Epoch, validatorPubKeys []spec.BLSPubKey) ([]*api.ProposerDuty, error)
 }
 
-// PrysmValidatorsProvider is the interface for providing validator information.
-type PrysmValidatorsProvider interface {
-	// PrysmValidators provides the validators, with their balance and status, for a given state.
-	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-	// validatorIDs is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
-	// will be applied.
-	PrysmValidators(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error)
-
-	// PrysmValidatorsByPubKey provides the validators, with their balance and status, for a given state.
-	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-	// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
-	// supplied no filter will be applied.
-	PrysmValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error)
-}
-
 // PrysmValidatorBalancesProvider is the interface for providing validator balances.
 type PrysmValidatorBalancesProvider interface {
 	// PrysmValidatorBalances provides the validator balances for a given state.
@@ -94,6 +79,12 @@ type SlotDurationProvider interface {
 type SlotsPerEpochProvider interface {
 	// SlotsPerEpoch provides the slots per epoch of the chain.
 	SlotsPerEpoch(ctx context.Context) (uint64, error)
+}
+
+// FarFutureEpochProvider is the interface for providing the far future epoch of a chain.
+type FarFutureEpochProvider interface {
+	// FarFutureEpoch provides the far future epoch of the chain.
+	FarFutureEpoch(ctx context.Context) (spec.Epoch, error)
 }
 
 // GenesisValidatorsRootProvider is the interface for providing the genesis validators root of a chain.
@@ -224,10 +215,18 @@ type BeaconCommitteesProvider interface {
 type ValidatorsWithoutBalanceProvider interface {
 	// ValidatorsWithoutBalance provides the validators, with their status, for a given state.
 	// Balances are set to 0.
-	// This is a non-standard all, only to be used if fetching balances results in the call being too slow.
+	// This is a non-standard call, only to be used if fetching balances results in the call being too slow.
 	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-	// validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
-	ValidatorsWithoutBalance(ctx context.Context, stateID string, validators []ValidatorIDProvider) (map[spec.ValidatorIndex]*api.Validator, error)
+	// validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
+	// will be applied.
+	ValidatorsWithoutBalance(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error)
+
+	// ValidatorsWithoutBalanceByPubKey provides the validators, with their status, for a given state.
+	// This is a non-standard call, only to be used if fetching balances results in the call being too slow.
+	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
+	// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
+	// supplied no filter will be applied.
+	ValidatorsWithoutBalanceByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error)
 }
 
 // EventHandlerFunc is the handler for events.

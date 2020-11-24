@@ -17,13 +17,14 @@ import (
 	"context"
 	"strconv"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
 // FarFutureEpoch provides the value of the far future epoch of the chain.
-func (s *Service) FarFutureEpoch(ctx context.Context) (uint64, error) {
+func (s *Service) FarFutureEpoch(ctx context.Context) (spec.Epoch, error) {
 	if s.farFutureEpoch == nil {
 		conn := ethpb.NewBeaconChainClient(s.conn)
 		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
@@ -41,7 +42,8 @@ func (s *Service) FarFutureEpoch(ctx context.Context) (uint64, error) {
 		if err != nil {
 			return 0, errors.Wrap(err, "failed to parse FarFutureEpoch value")
 		}
-		s.farFutureEpoch = &uintVal
+		epoch := spec.Epoch(uintVal)
+		s.farFutureEpoch = &epoch
 	}
 	return *s.farFutureEpoch, nil
 }

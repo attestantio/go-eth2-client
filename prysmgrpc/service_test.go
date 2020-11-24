@@ -68,9 +68,9 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.SlotsPerEpochProvider)(nil), s)
 	assert.Implements(t, (*client.TargetAggregatorsPerCommitteeProvider)(nil), s)
 	assert.Implements(t, (*client.VoluntaryExitDomainProvider)(nil), s)
+	assert.Implements(t, (*client.ValidatorsWithoutBalanceProvider)(nil), s)
 
 	// Prysm-specific APIs.
 	assert.Implements(t, (*client.PrysmAggregateAttestationProvider)(nil), s)
-	assert.Implements(t, (*client.PrysmValidatorsProvider)(nil), s)
 	assert.Implements(t, (*client.PrysmValidatorBalancesProvider)(nil), s)
 }

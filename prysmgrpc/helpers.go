@@ -15,6 +15,7 @@ package prysmgrpc
 
 import (
 	"context"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -82,21 +83,60 @@ func parseConfigByteArray(val string) ([]byte, error) {
 }
 
 func (s *Service) indicesToPubKeys(ctx context.Context, indices []spec.ValidatorIndex) ([]spec.BLSPubKey, error) {
-	indexMap := make(map[spec.ValidatorIndex]bool, len(indices))
-	for _, index := range indices {
-		indexMap[index] = true
+	if len(indices) == 0 {
+		// Need to fetch all indices; bypass cache.
+		return s.allIndicesToPubKeys(ctx)
 	}
 
-	prysmValidators, err := s.PrysmValidators(ctx, "head", nil)
+	pubKeys := make([]spec.BLSPubKey, len(indices))
+	s.indexMapMu.Lock()
+	defer s.indexMapMu.Unlock()
+
+	// Need a mapping from validator index to position in res.
+	unknownIndexMap := make(map[spec.ValidatorIndex]int)
+
+	// Start by filling in all the keys we already know, and making a note of those we don't.
+	unknownIndices := make([]spec.ValidatorIndex, 0, len(indices))
+	for i, index := range indices {
+		if pubKey, exists := s.indexMap[index]; exists {
+			pubKeys[i] = pubKey
+		} else {
+			unknownIndexMap[index] = len(unknownIndices)
+			unknownIndices = append(unknownIndices, index)
+		}
+	}
+
+	if len(unknownIndices) == 0 {
+		// We know all of them.
+		return pubKeys, nil
+	}
+
+	// Fetch the ones we don't know.
+	prysmValidators, err := s.ValidatorsByPubKey(ctx, "head", nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain validators")
+	}
+
+	// Cherry-pick the ones we need from the complete set.
+	for k, v := range unknownIndexMap {
+		pubKeys[v] = prysmValidators[k].Validator.PublicKey
+	}
+
+	return pubKeys, nil
+}
+
+// allIndicesToPubKeys fetches a list of the public keys of all known validators, ordered by index.
+func (s *Service) allIndicesToPubKeys(ctx context.Context) ([]spec.BLSPubKey, error) {
+	debug.PrintStack()
+	prysmValidators, err := s.ValidatorsByPubKey(ctx, "head", nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain validators")
 	}
 
 	pubKeys := make([]spec.BLSPubKey, 0, len(prysmValidators))
 	for _, validator := range prysmValidators {
-		if _, exists := indexMap[validator.Index]; exists {
-			pubKeys = append(pubKeys, validator.Validator.PublicKey)
-		}
+		pubKeys = append(pubKeys, validator.Validator.PublicKey)
 	}
+
 	return pubKeys, nil
 }

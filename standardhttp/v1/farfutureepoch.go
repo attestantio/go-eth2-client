@@ -15,9 +15,11 @@ package v1
 
 import (
 	"context"
+
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // FarFutureEpoch provides the values for FAR_FUTURE_EOPCH of the chain.
-func (s *Service) FarFutureEpoch(ctx context.Context) (uint64, error) {
-	return uint64(0xffffffffffffffff), nil
+func (s *Service) FarFutureEpoch(ctx context.Context) (spec.Epoch, error) {
+	return spec.Epoch(0xffffffffffffffff), nil
 }

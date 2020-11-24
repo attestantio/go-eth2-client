@@ -41,40 +41,31 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIndic
 // validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
 // supplied no filter will be applied.
 func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
-	res, err := s.PrysmValidatorsByPubKey(ctx, stateID, validatorPubKeys)
-	if err != nil {
-		return nil, err
-	}
-	specRes := make(map[spec.ValidatorIndex]*api.Validator)
-	for k, v := range res {
-		specRes[k] = v
-	}
-
-	return specRes, nil
-}
-
-// PrysmValidators provides the validators, with their balance and status, for a given state.
-// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
-func (s *Service) PrysmValidators(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
 	if len(validatorPubKeys) == 0 {
 		return s.validators(ctx, stateID, true)
 	}
 	return s.validatorsByPubKeys(ctx, stateID, validatorPubKeys, true)
 }
 
-// PrysmValidatorsByPubKey provides the validators, with their balance and status, for a given state.
-// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
-// supplied no filter will be applied.
-func (s *Service) PrysmValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
-	return s.PrysmValidators(ctx, stateID, validatorPubKeys)
-}
-
-// PrysmValidatorsWithoutBalance provides the validators, with their status, for a given state.
+// ValidatorsWithoutBalance provides the validators, with their status, for a given state.
+// Balances are set to 0.
+// This is a non-standard call, only to be used if fetching balances results in the call being too slow.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
-func (s *Service) PrysmValidatorsWithoutBalance(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
+func (s *Service) ValidatorsWithoutBalance(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error) {
+	pubKeys, err := s.indicesToPubKeys(ctx, validatorIndices)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to convert indices to public keys")
+	}
+
+	return s.validatorsByPubKeys(ctx, stateID, pubKeys, false)
+}
+
+// ValidatorsWithoutBalanceByPubKey provides the validators, with their status, for a given state.
+// This is a non-standard call, only to be used if fetching balances results in the call being too slow.
+// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
+// validators is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
+func (s *Service) ValidatorsWithoutBalanceByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
 	if len(validatorPubKeys) == 0 {
 		return s.validators(ctx, stateID, false)
 	}
@@ -181,9 +172,16 @@ func (s *Service) validators(ctx context.Context, stateID string, includeBalance
 func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey, includeBalances bool) (map[spec.ValidatorIndex]*api.Validator, error) {
 	// The state ID could by dynamic ('head', 'finalized', etc.).  Becase we are making multiple calls and don't want to
 	// fetch data from different states we resolve it to an epoch and use that.
-	epoch, err := s.EpochFromStateID(ctx, stateID)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to lock state ID")
+	var head bool
+	var epoch spec.Epoch
+	var err error
+	if stateID == "head" {
+		head = true
+	} else {
+		epoch, err = s.EpochFromStateID(ctx, stateID)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to lock state ID")
+		}
 	}
 
 	conn := ethpb.NewBeaconChainClient(s.conn)
@@ -197,14 +195,18 @@ func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, valid
 	validatorBalancesReq := &ethpb.ListValidatorBalancesRequest{
 		PageSize: s.maxPageSize,
 	}
-	if epoch == 0 {
-		log.Trace().Msg("Fetching genesis validators")
-		validatorsReq.QueryFilter = &ethpb.ListValidatorsRequest_Genesis{Genesis: true}
-		validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Genesis{Genesis: true}
+	if head {
+		log.Trace().Msg("Fetching head validators")
 	} else {
-		log.Trace().Uint64("epoch", uint64(epoch)).Msg("Fetching epoch validators")
-		validatorsReq.QueryFilter = &ethpb.ListValidatorsRequest_Epoch{Epoch: uint64(epoch)}
-		validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Epoch{Epoch: uint64(epoch)}
+		if epoch == 0 {
+			log.Trace().Msg("Fetching genesis validators")
+			validatorsReq.QueryFilter = &ethpb.ListValidatorsRequest_Genesis{Genesis: true}
+			validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Genesis{Genesis: true}
+		} else {
+			log.Trace().Uint64("epoch", uint64(epoch)).Msg("Fetching epoch validators")
+			validatorsReq.QueryFilter = &ethpb.ListValidatorsRequest_Epoch{Epoch: uint64(epoch)}
+			validatorBalancesReq.QueryFilter = &ethpb.ListValidatorBalancesRequest_Epoch{Epoch: uint64(epoch)}
+		}
 	}
 
 	farFutureEpoch, err := s.FarFutureEpoch(ctx)
@@ -229,8 +231,7 @@ func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, valid
 		}
 
 		validatorsReq.PublicKeys = pubKeys[i:lastIndex]
-
-		log.Trace().Msg("Calling ListValidators()")
+		log.Trace().Int("pubkeys", len(validatorsReq.PublicKeys)).Msg("Calling ListValidators()")
 		opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 		validatorsResp, err := conn.ListValidators(opCtx, validatorsReq)
 		cancel()

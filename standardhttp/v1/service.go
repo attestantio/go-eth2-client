@@ -127,9 +127,9 @@ func (s *Service) fetchStaticValues(ctx context.Context) error {
 	if _, err := s.DepositContract(ctx); err != nil {
 		return errors.Wrap(err, "failed to fetch deposit contract")
 	}
-	// if _, err := s.ForkSchedule(ctx); err != nil {
-	// 	return errors.Wrap(err, "failed to fetch fork schedule")
-	// }
+	if _, err := s.ForkSchedule(ctx); err != nil {
+		return errors.Wrap(err, "failed to fetch fork schedule")
+	}
 	s.forkSchedule = []*spec.Fork{
 		{
 			PreviousVersion: spec.Version([4]byte{0x00, 0x00, 0x00, 0x01}),

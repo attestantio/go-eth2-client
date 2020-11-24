@@ -48,7 +48,7 @@ type Service struct {
 	genesisValidatorsRoot         []byte
 	slotDuration                  *time.Duration
 	slotsPerEpoch                 *uint64
-	farFutureEpoch                *uint64
+	farFutureEpoch                *spec.Epoch
 	targetAggregatorsPerCommittee *uint64
 	beaconAttesterDomain          *spec.DomainType
 	beaconProposerDomain          *spec.DomainType
@@ -62,6 +62,11 @@ type Service struct {
 	// Event handlers.
 	beaconChainHeadUpdatedMutex    sync.RWMutex
 	beaconChainHeadUpdatedHandlers []client.BeaconChainHeadUpdatedHandler
+
+	// The standard API commonly uses validator indices, and the prysm API commonly uses public keys.
+	// We keep a mapping of index to public keys to avoid repeated lookups.
+	indexMap   map[spec.ValidatorIndex]spec.BLSPubKey
+	indexMapMu sync.RWMutex
 }
 
 // log is a service-wide logger.
@@ -99,6 +104,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		address:     parameters.address,
 		timeout:     parameters.timeout,
 		maxPageSize: 250, // Prysm default.
+		indexMap:    make(map[spec.ValidatorIndex]spec.BLSPubKey),
 	}
 
 	// Obtain the node version to confirm the connection is good.

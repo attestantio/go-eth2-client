@@ -66,7 +66,7 @@ func TestValidators(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			validators, err := service.PrysmValidators(context.Background(), test.stateID, test.validators)
+			validators, err := service.ValidatorsByPubKey(context.Background(), test.stateID, test.validators)
 			require.NoError(t, err)
 			require.NotNil(t, validators)
 			require.NotEqual(t, 0, len(validators))
@@ -126,7 +126,7 @@ func TestValidatorsWithoutBalance(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			validators, err := service.PrysmValidatorsWithoutBalance(context.Background(), test.stateID, test.validators)
+			validators, err := service.ValidatorsWithoutBalanceByPubKey(context.Background(), test.stateID, test.validators)
 			require.NoError(t, err)
 			require.NotNil(t, validators)
 			require.NotEqual(t, 0, len(validators))
