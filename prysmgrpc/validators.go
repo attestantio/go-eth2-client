@@ -128,7 +128,7 @@ func (s *Service) validators(ctx context.Context, stateID string, includeBalance
 			copy(validator.PublicKey[:], entry.Validator.PublicKey)
 			res[spec.ValidatorIndex(entry.Index)] = &api.Validator{
 				Index:     spec.ValidatorIndex(entry.Index),
-				Status:    api.ValidatorToState(validator, epoch, spec.Epoch(farFutureEpoch)),
+				Status:    api.ValidatorToState(validator, epoch, farFutureEpoch),
 				Validator: validator,
 			}
 		}
@@ -254,7 +254,7 @@ func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, valid
 			copy(validator.PublicKey[:], entry.Validator.PublicKey)
 			res[spec.ValidatorIndex(entry.Index)] = &api.Validator{
 				Index:     spec.ValidatorIndex(entry.Index),
-				Status:    api.ValidatorToState(validator, epoch, spec.Epoch(farFutureEpoch)),
+				Status:    api.ValidatorToState(validator, epoch, farFutureEpoch),
 				Validator: validator,
 			}
 

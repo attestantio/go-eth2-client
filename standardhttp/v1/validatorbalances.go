@@ -76,7 +76,7 @@ func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validat
 // chunkedValidatorBalances obtains the validator balances a chunk at a time.
 func (s *Service) chunkedValidatorBalances(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]spec.Gwei, error) {
 	res := make(map[spec.ValidatorIndex]spec.Gwei)
-	for i := 0; i < len(validatorIndices); i = i + indexChunkSize {
+	for i := 0; i < len(validatorIndices); i += indexChunkSize {
 		chunkStart := i
 		chunkEnd := i + indexChunkSize
 		if len(validatorIndices) < chunkEnd {

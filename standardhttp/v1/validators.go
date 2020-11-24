@@ -82,7 +82,7 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIndic
 // chunkedValidators obtains the validators a chunk at a time.
 func (s *Service) chunkedValidators(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error) {
 	res := make(map[spec.ValidatorIndex]*api.Validator)
-	for i := 0; i < len(validatorIndices); i = i + indexChunkSize {
+	for i := 0; i < len(validatorIndices); i += indexChunkSize {
 		chunkStart := i
 		chunkEnd := i + indexChunkSize
 		if len(validatorIndices) < chunkEnd {

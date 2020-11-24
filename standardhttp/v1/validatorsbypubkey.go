@@ -83,7 +83,7 @@ func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, valida
 // chunkedValidatorsByPubKey obtains the validators a chunk at a time.
 func (s *Service) chunkedValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
 	res := make(map[spec.ValidatorIndex]*api.Validator)
-	for i := 0; i < len(validatorPubKeys); i = i + pubKeyChunkSize {
+	for i := 0; i < len(validatorPubKeys); i += pubKeyChunkSize {
 		chunkStart := i
 		chunkEnd := i + pubKeyChunkSize
 		if len(validatorPubKeys) < chunkEnd {

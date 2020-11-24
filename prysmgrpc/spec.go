@@ -25,10 +25,6 @@ import (
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
-type specJSON struct {
-	Data map[string]string `json:"data"`
-}
-
 var specNameMapping = map[string]string{
 	"BaseRewardFactor":                 "BASE_REWARD_FACTOR",
 	"ChurnLimitQuotient":               "CHURN_LIMIT_QUOTIENT",
