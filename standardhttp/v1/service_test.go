@@ -91,7 +91,6 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.AggregateAttestationProvider)(nil), s)
 	assert.Implements(t, (*client.AggregateAttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttestationDataProvider)(nil), s)
-	assert.Implements(t, (*client.AttestationSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttesterDutiesProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockHeadersProvider)(nil), s)

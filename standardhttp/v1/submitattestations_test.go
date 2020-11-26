@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSubmitAttestation(t *testing.T) {
+func TestSubmitAttestations(t *testing.T) {
 	tests := []struct {
 		name string
 	}{
@@ -69,7 +69,7 @@ func TestSubmitAttestation(t *testing.T) {
 				}),
 			}
 
-			err = service.SubmitAttestation(context.Background(), attestation)
+			err = service.SubmitAttestations(context.Background(), []*spec.Attestation{attestation})
 			require.NoError(t, err)
 		})
 	}

@@ -254,16 +254,10 @@ type AttestationDataProvider interface {
 	AttestationData(ctx context.Context, slot spec.Slot, committeeIndex spec.CommitteeIndex) (*spec.AttestationData, error)
 }
 
-// AttestationSubmitter is the interface for submitting attestations.
-type AttestationSubmitter interface {
-	// SubmitAttestation submits an attestation.
-	SubmitAttestation(ctx context.Context, attestation *spec.Attestation) error
-}
-
 // AttestationsSubmitter is the interface for submitting attestations.
 type AttestationsSubmitter interface {
 	// SubmitAttestations submits attestations.
-	SubmitAttestations(ctx context.Context, attestations *[]spec.Attestation) error
+	SubmitAttestations(ctx context.Context, attestations []*spec.Attestation) error
 }
 
 // AttesterDutiesProvider is the interface for providing attester duties

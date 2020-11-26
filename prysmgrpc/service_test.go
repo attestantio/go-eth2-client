@@ -40,7 +40,7 @@ func TestInterfaces(t *testing.T) {
 	// Standard API.
 	assert.Implements(t, (*client.AggregateAttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttestationDataProvider)(nil), s)
-	assert.Implements(t, (*client.AttestationSubmitter)(nil), s)
+	assert.Implements(t, (*client.AttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockProposalProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockSubmitter)(nil), s)
 	assert.Implements(t, (*client.BeaconCommitteeSubscriptionsSubmitter)(nil), s)

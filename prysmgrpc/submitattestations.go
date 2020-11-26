@@ -21,8 +21,21 @@ import (
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
-// SubmitAttestation submits an attestation.
-func (s *Service) SubmitAttestation(ctx context.Context, attestation *spec.Attestation) error {
+// SubmitAttestations submits attestations.
+// Prysm does not provide the ability to submit attestations natively, so send individually.
+func (s *Service) SubmitAttestations(ctx context.Context, attestations []*spec.Attestation) error {
+	var anyErr error
+	for i := range attestations {
+		if err := s.submitAttestation(ctx, attestations[i]); err != nil {
+			anyErr = err
+		}
+	}
+
+	return anyErr
+}
+
+// submitAttestation submits an attestation.
+func (s *Service) submitAttestation(ctx context.Context, attestation *spec.Attestation) error {
 	prysmAttestation := &ethpb.Attestation{
 		AggregationBits: attestation.AggregationBits,
 		Data: &ethpb.AttestationData{

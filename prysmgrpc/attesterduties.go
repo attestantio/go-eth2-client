@@ -62,8 +62,11 @@ func (s *Service) AttesterDuties(ctx context.Context, epoch spec.Epoch, indices 
 				break
 			}
 		}
+		var pubKey spec.BLSPubKey
+		copy(pubKey[:], duty.PublicKey)
 		duties = append(duties, &api.AttesterDuty{
 			Slot:                    spec.Slot(duty.AttesterSlot),
+			PubKey:                  pubKey,
 			ValidatorIndex:          spec.ValidatorIndex(duty.ValidatorIndex),
 			CommitteeIndex:          spec.CommitteeIndex(duty.CommitteeIndex),
 			ValidatorCommitteeIndex: uint64(validatorCommitteeIndex),

@@ -23,13 +23,13 @@ import (
 )
 
 // Domain provides a domain for a given domain type at a given epoch.
-func (s *Service) Domain(ctx context.Context, domain spec.DomainType, epoch spec.Epoch) (spec.Domain, error) {
+func (s *Service) Domain(ctx context.Context, domainType spec.DomainType, epoch spec.Epoch) (spec.Domain, error) {
 	conn := ethpb.NewBeaconNodeValidatorClient(s.conn)
 	log.Trace().Msg("Calling DomainData()")
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	resp, err := conn.DomainData(opCtx, &ethpb.DomainRequest{
 		Epoch:  uint64(epoch),
-		Domain: domain[:],
+		Domain: domainType[:],
 	})
 	cancel()
 	if err != nil {
@@ -40,7 +40,7 @@ func (s *Service) Domain(ctx context.Context, domain spec.DomainType, epoch spec
 	copy(res[:], resp.SignatureDomain)
 	log.Trace().
 		Uint64("epoch", uint64(epoch)).
-		Str("domain", fmt.Sprintf("%#x", domain)).
+		Str("domain", fmt.Sprintf("%#x", domainType)).
 		Str("signature_domain", fmt.Sprintf("%#x", res)).
 		Msg("Signature domain obtained")
 	return res, nil

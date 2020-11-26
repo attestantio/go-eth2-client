@@ -23,7 +23,7 @@ import (
 )
 
 // SubmitAttestations submits attestations.
-func (s *Service) SubmitAttestations(ctx context.Context, attestations *[]spec.Attestation) error {
+func (s *Service) SubmitAttestations(ctx context.Context, attestations []*spec.Attestation) error {
 	specJSON, err := json.Marshal(attestations)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
