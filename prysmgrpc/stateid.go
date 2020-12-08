@@ -27,6 +27,11 @@ import (
 
 // EpochFromStateID obtains the epoch given the state ID.
 func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (spec.Epoch, error) {
+	if stateID == "head" {
+		epoch, err := s.CurrentEpoch(ctx)
+		return spec.Epoch(epoch), err
+	}
+
 	slot, err := s.SlotFromStateID(ctx, stateID)
 	if err != nil {
 		return 0, err

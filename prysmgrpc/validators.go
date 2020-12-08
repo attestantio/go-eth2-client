@@ -172,16 +172,11 @@ func (s *Service) validators(ctx context.Context, stateID string, includeBalance
 func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey, includeBalances bool) (map[spec.ValidatorIndex]*api.Validator, error) {
 	// The state ID could by dynamic ('head', 'finalized', etc.).  Becase we are making multiple calls and don't want to
 	// fetch data from different states we resolve it to an epoch and use that.
-	var head bool
-	var epoch spec.Epoch
-	var err error
-	if stateID == "head" {
-		head = true
-	} else {
-		epoch, err = s.EpochFromStateID(ctx, stateID)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to lock state ID")
-		}
+	head := stateID == "head"
+
+	epoch, err := s.EpochFromStateID(ctx, stateID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to lock state ID")
 	}
 
 	conn := ethpb.NewBeaconChainClient(s.conn)
