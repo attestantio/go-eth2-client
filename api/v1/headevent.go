@@ -14,6 +14,7 @@
 package v1
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -26,28 +27,42 @@ import (
 
 // HeadEvent is the data for the head event.
 type HeadEvent struct {
-	Slot            spec.Slot
-	Block           spec.Root
-	State           spec.Root
-	EpochTransition bool
+	Slot                      spec.Slot
+	Block                     spec.Root
+	State                     spec.Root
+	EpochTransition           bool
+	CurrentDutyDependentRoot  spec.Root
+	PreviousDutyDependentRoot spec.Root
 }
 
 // headEventJSON is the spec representation of the struct.
 type headEventJSON struct {
-	Slot            string `json:"slot"`
-	Block           string `json:"block"`
-	State           string `json:"state"`
-	EpochTransition bool   `json:"epoch_transition"`
+	Slot                      string `json:"slot"`
+	Block                     string `json:"block"`
+	State                     string `json:"state"`
+	EpochTransition           bool   `json:"epoch_transition"`
+	CurrentDutyDependentRoot  string `json:"current_duty_dependent_root,omitempty"`
+	PreviousDutyDependentRoot string `json:"previous_duty_dependent_root,omitempty"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (e *HeadEvent) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&headEventJSON{
+	data := &headEventJSON{
 		Slot:            fmt.Sprintf("%d", e.Slot),
 		Block:           fmt.Sprintf("%#x", e.Block),
 		State:           fmt.Sprintf("%#x", e.State),
 		EpochTransition: e.EpochTransition,
-	})
+	}
+	// Optional fields (for now).
+	var zeroRoot spec.Root
+	if !bytes.Equal(zeroRoot[:], e.CurrentDutyDependentRoot[:]) {
+		data.CurrentDutyDependentRoot = fmt.Sprintf("%#x", e.CurrentDutyDependentRoot)
+	}
+	if !bytes.Equal(zeroRoot[:], e.PreviousDutyDependentRoot[:]) {
+		data.PreviousDutyDependentRoot = fmt.Sprintf("%#x", e.PreviousDutyDependentRoot)
+	}
+
+	return json.Marshal(data)
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -89,6 +104,28 @@ func (e *HeadEvent) UnmarshalJSON(input []byte) error {
 	}
 	copy(e.State[:], state)
 	e.EpochTransition = headEventJSON.EpochTransition
+	// CurrentDutyDependentRoot only has partial coverage so do not complain if not present.
+	if headEventJSON.CurrentDutyDependentRoot != "" {
+		currentDutyDependentRoot, err := hex.DecodeString(strings.TrimPrefix(headEventJSON.CurrentDutyDependentRoot, "0x"))
+		if err != nil {
+			return errors.Wrap(err, "invalid value for current duty dependent root")
+		}
+		if len(currentDutyDependentRoot) != rootLength {
+			return fmt.Errorf("incorrect length %d for current duty dependent root", len(currentDutyDependentRoot))
+		}
+		copy(e.CurrentDutyDependentRoot[:], currentDutyDependentRoot)
+	}
+	// PreviousDutyDependentRoot only has partial coverage so do not complain if not present.
+	if headEventJSON.PreviousDutyDependentRoot != "" {
+		previousDutyDependentRoot, err := hex.DecodeString(strings.TrimPrefix(headEventJSON.PreviousDutyDependentRoot, "0x"))
+		if err != nil {
+			return errors.Wrap(err, "invalid value for previous duty dependent root")
+		}
+		if len(previousDutyDependentRoot) != rootLength {
+			return fmt.Errorf("incorrect length %d for previous duty dependent root", len(previousDutyDependentRoot))
+		}
+		copy(e.PreviousDutyDependentRoot[:], previousDutyDependentRoot)
+	}
 
 	return nil
 }
