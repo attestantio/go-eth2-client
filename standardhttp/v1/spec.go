@@ -69,6 +69,17 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 			}
 		}
 
+		// Handle fork versions.
+		if strings.HasSuffix(k, "_FORK_VERSION") {
+			byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
+			if err == nil {
+				var version spec.Version
+				copy(version[:], byteVal)
+				config[k] = version
+				continue
+			}
+		}
+
 		// Handle hex strings.
 		if strings.HasPrefix(v, "0x") {
 			byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))

@@ -100,6 +100,7 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 				continue
 			}
 			k = specNameMapping[k]
+
 			// Handle domain types.
 			if strings.HasPrefix(k, "DOMAIN_") {
 				byteArrayVal, err := parseConfigByteArray(v)
@@ -109,6 +110,18 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 				var domain spec.DomainType
 				copy(domain[:], byteArrayVal)
 				res[k] = domain
+				continue
+			}
+
+			// Handle fork versions.
+			if strings.HasSuffix(k, "_FORK_VERSION") {
+				byteArrayVal, err := parseConfigByteArray(v)
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to parse fork version")
+				}
+				var version spec.Version
+				copy(version[:], byteArrayVal)
+				res[k] = version
 				continue
 			}
 
