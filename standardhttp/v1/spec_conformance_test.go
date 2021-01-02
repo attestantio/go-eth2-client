@@ -23,7 +23,9 @@ import (
 	"testing"
 	"time"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	standardhttp "github.com/attestantio/go-eth2-client/standardhttp/v1"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,13 +38,13 @@ func TestSpecConformance(t *testing.T) {
 		"DEPOSIT_CHAIN_ID":                      uint64(0),
 		"DEPOSIT_CONTRACT_ADDRESS":              []byte{},
 		"DEPOSIT_NETWORK_ID":                    uint64(0),
-		"DOMAIN_AGGREGATE_AND_PROOF":            []byte{},
-		"DOMAIN_BEACON_ATTESTER":                []byte{},
-		"DOMAIN_BEACON_PROPOSER":                []byte{},
-		"DOMAIN_DEPOSIT":                        []byte{},
-		"DOMAIN_RANDAO":                         []byte{},
-		"DOMAIN_SELECTION_PROOF":                []byte{},
-		"DOMAIN_VOLUNTARY_EXIT":                 []byte{},
+		"DOMAIN_AGGREGATE_AND_PROOF":            spec.DomainType{},
+		"DOMAIN_BEACON_ATTESTER":                spec.DomainType{},
+		"DOMAIN_BEACON_PROPOSER":                spec.DomainType{},
+		"DOMAIN_DEPOSIT":                        spec.DomainType{},
+		"DOMAIN_RANDAO":                         spec.DomainType{},
+		"DOMAIN_SELECTION_PROOF":                spec.DomainType{},
+		"DOMAIN_VOLUNTARY_EXIT":                 spec.DomainType{},
 		"EFFECTIVE_BALANCE_INCREMENT":           uint64(0),
 		"EJECTION_BALANCE":                      uint64(0),
 		"EPOCHS_PER_ETH1_VOTING_PERIOD":         uint64(0),
@@ -51,7 +53,7 @@ func TestSpecConformance(t *testing.T) {
 		"EPOCHS_PER_SLASHINGS_VECTOR":           uint64(0),
 		"ETH1_FOLLOW_DISTANCE":                  uint64(0),
 		"GENESIS_DELAY":                         uint64(0),
-		"GENESIS_FORK_VERSION":                  []byte{},
+		"GENESIS_FORK_VERSION":                  spec.Version{},
 		"HISTORICAL_ROOTS_LIMIT":                uint64(0),
 		"HYSTERESIS_DOWNWARD_MULTIPLIER":        uint64(0),
 		"HYSTERESIS_QUOTIENT":                   uint64(0),
@@ -97,7 +99,6 @@ func TestSpecConformance(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	fmt.Printf("Testing spec endpoint\n")
 	spec, err := service.Spec(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, spec)
@@ -105,21 +106,13 @@ func TestSpecConformance(t *testing.T) {
 	// Ensure everything we expect is present.
 	for k, v := range expected {
 		val, exists := spec[k]
-		if !exists {
-			fmt.Printf("  Expected value %s not present\n", k)
-			continue
-		}
-
-		if reflect.TypeOf(v) != reflect.TypeOf(val) {
-			fmt.Printf("  Value %s has incorrect type\n", k)
-		}
+		assert.True(t, exists, fmt.Sprintf("Value %s not present", k))
+		assert.Equal(t, reflect.TypeOf(v), reflect.TypeOf(val), fmt.Sprintf("Value %s has incorrect type", k))
 	}
 
 	// Ensure nothing we don't expect is present.
 	for k := range spec {
 		_, exists := expected[k]
-		if !exists {
-			fmt.Printf("  Unexpected value %s is present\n", k)
-		}
+		assert.True(t, exists, fmt.Sprintf("Value %s unexpected", k))
 	}
 }
