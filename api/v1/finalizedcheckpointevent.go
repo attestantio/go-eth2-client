@@ -20,14 +20,15 @@ import (
 	"strconv"
 	"strings"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // FinalizedCheckpointEvent is the data for the finalized checkpoint event.
 type FinalizedCheckpointEvent struct {
-	Block []byte
-	State []byte
-	Epoch uint64
+	Block spec.Root
+	State spec.Root
+	Epoch spec.Epoch
 }
 
 // finalizedCheckpointEventJSON is the spec representation of the struct.
@@ -57,27 +58,33 @@ func (e *FinalizedCheckpointEvent) UnmarshalJSON(input []byte) error {
 	if finalizedCheckpointEventJSON.Block == "" {
 		return errors.New("block missing")
 	}
-	if e.Block, err = hex.DecodeString(strings.TrimPrefix(finalizedCheckpointEventJSON.Block, "0x")); err != nil {
+	block, err := hex.DecodeString(strings.TrimPrefix(finalizedCheckpointEventJSON.Block, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for block")
 	}
-	if len(e.Block) != rootLength {
+	if len(block) != rootLength {
 		return fmt.Errorf("incorrect length %d for block", len(e.Block))
 	}
+	copy(e.Block[:], block)
 	if finalizedCheckpointEventJSON.State == "" {
 		return errors.New("state missing")
 	}
-	if e.State, err = hex.DecodeString(strings.TrimPrefix(finalizedCheckpointEventJSON.State, "0x")); err != nil {
+	state, err := hex.DecodeString(strings.TrimPrefix(finalizedCheckpointEventJSON.State, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for state")
 	}
-	if len(e.State) != rootLength {
+	if len(state) != rootLength {
 		return fmt.Errorf("incorrect length %d for state", len(e.State))
 	}
+	copy(e.State[:], state)
 	if finalizedCheckpointEventJSON.Epoch == "" {
 		return errors.New("epoch missing")
 	}
-	if e.Epoch, err = strconv.ParseUint(finalizedCheckpointEventJSON.Epoch, 10, 64); err != nil {
+	epoch, err := strconv.ParseUint(finalizedCheckpointEventJSON.Epoch, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for epoch")
 	}
+	e.Epoch = spec.Epoch(epoch)
 
 	return nil
 }

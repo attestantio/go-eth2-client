@@ -89,6 +89,15 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 			}
 		}
 
+		// Handle times.
+		if strings.HasSuffix(k, "_TIME") {
+			intVal, err := strconv.ParseInt(v, 10, 64)
+			if err == nil && intVal != 0 {
+				config[k] = time.Unix(intVal, 0)
+				continue
+			}
+		}
+
 		// Handle durations.
 		if strings.HasPrefix(k, "SECONDS_PER_") {
 			intVal, err := strconv.ParseUint(v, 10, 64)
