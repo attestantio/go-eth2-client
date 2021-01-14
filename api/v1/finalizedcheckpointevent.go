@@ -63,7 +63,7 @@ func (e *FinalizedCheckpointEvent) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "invalid value for block")
 	}
 	if len(block) != rootLength {
-		return fmt.Errorf("incorrect length %d for block", len(e.Block))
+		return fmt.Errorf("incorrect length %d for block", len(block))
 	}
 	copy(e.Block[:], block)
 	if finalizedCheckpointEventJSON.State == "" {
@@ -74,7 +74,7 @@ func (e *FinalizedCheckpointEvent) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "invalid value for state")
 	}
 	if len(state) != rootLength {
-		return fmt.Errorf("incorrect length %d for state", len(e.State))
+		return fmt.Errorf("incorrect length %d for state", len(state))
 	}
 	copy(e.State[:], state)
 	if finalizedCheckpointEventJSON.Epoch == "" {
