@@ -72,7 +72,7 @@ func TestSpecConformance(t *testing.T) {
 		"MIN_DEPOSIT_AMOUNT":                    uint64(0),
 		"MIN_EPOCHS_TO_INACTIVITY_PENALTY":      uint64(0),
 		"MIN_GENESIS_ACTIVE_VALIDATOR_COUNT":    uint64(0),
-		"MIN_GENESIS_TIME":                      uint64(0),
+		"MIN_GENESIS_TIME":                      time.Time{},
 		"MIN_PER_EPOCH_CHURN_LIMIT":             uint64(0),
 		"MIN_SEED_LOOKAHEAD":                    uint64(0),
 		"MIN_SLASHING_PENALTY_QUOTIENT":         uint64(0),
