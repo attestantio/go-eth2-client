@@ -254,6 +254,12 @@ type AttestationDataProvider interface {
 	AttestationData(ctx context.Context, slot spec.Slot, committeeIndex spec.CommitteeIndex) (*spec.AttestationData, error)
 }
 
+// AttestationPoolProvider is the interface for providing attestation pools.
+type AttestationPoolProvider interface {
+	// AttestationPool fetches the attestation pool for the given slot.
+	AttestationPool(ctx context.Context, slot spec.Slot) ([]*spec.Attestation, error)
+}
+
 // AttestationsSubmitter is the interface for submitting attestations.
 type AttestationsSubmitter interface {
 	// SubmitAttestations submits attestations.
