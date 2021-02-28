@@ -102,6 +102,11 @@ func (s *Service) Name() string {
 	return "Mock"
 }
 
+// Address provides the address of the service.
+func (s *Service) Address() string {
+	return "mock:mock"
+}
+
 // close closes the service, freeing up resources.
 func (s *Service) close() {
 }
