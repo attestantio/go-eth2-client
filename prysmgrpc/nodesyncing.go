@@ -23,8 +23,8 @@ import (
 	ethpb "github.com/prysmaticlabs/ethereumapis/eth/v1alpha1"
 )
 
-// SyncState provides the state of the node's synchronization with the chain.
-func (s *Service) SyncState(ctx context.Context) (*api.SyncState, error) {
+// NodeSyncing provides the state of the node's synchronization with the chain.
+func (s *Service) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
 	conn := ethpb.NewBeaconChainClient(s.conn)
 
 	// Work out expected head slot.
@@ -45,8 +45,18 @@ func (s *Service) SyncState(ctx context.Context) (*api.SyncState, error) {
 		syncDistance = slot - head.HeadSlot
 	}
 
+	// Fetch the sync state as well.
+	conn2 := ethpb.NewNodeClient(s.conn)
+	opCtx, cancel = context.WithTimeout(ctx, s.timeout)
+	syncState, err := conn2.GetSyncStatus(opCtx, &types.Empty{})
+	cancel()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain sync state")
+	}
+
 	return &api.SyncState{
 		HeadSlot:     spec.Slot(slot),
 		SyncDistance: spec.Slot(syncDistance),
+		IsSyncing:    syncState.Syncing,
 	}, nil
 }

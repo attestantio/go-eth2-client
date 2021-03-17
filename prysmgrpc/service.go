@@ -87,8 +87,8 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 
 	grpcOpts := []grpc.DialOption{
 		grpc.WithInsecure(),
-		// Maximum receive value 128 MB
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(128 * 1024 * 1024)),
+		// Maximum receive value 256 MB
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(256 * 1024 * 1024)),
 	}
 
 	dialCtx, cancel := context.WithTimeout(ctx, parameters.timeout)

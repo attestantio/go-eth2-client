@@ -28,12 +28,15 @@ type SyncState struct {
 	HeadSlot spec.Slot
 	// SyncDistance is the distance between the node's highest synced slot and the head slot.
 	SyncDistance spec.Slot
+	// IsSyncing is true if the node is syncing.
+	IsSyncing bool
 }
 
 // syncStateJSON is the spec representation of the struct.
 type syncStateJSON struct {
 	HeadSlot     string `json:"head_slot"`
 	SyncDistance string `json:"sync_distance"`
+	IsSyncing    bool   `json:"is_syncing"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -41,6 +44,7 @@ func (s *SyncState) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&syncStateJSON{
 		HeadSlot:     fmt.Sprintf("%d", s.HeadSlot),
 		SyncDistance: fmt.Sprintf("%d", s.SyncDistance),
+		IsSyncing:    s.IsSyncing,
 	})
 }
 
@@ -68,6 +72,7 @@ func (s *SyncState) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "invalid value for sync distance")
 	}
 	s.SyncDistance = spec.Slot(syncDistance)
+	s.IsSyncing = syncStateJSON.IsSyncing
 
 	return nil
 }

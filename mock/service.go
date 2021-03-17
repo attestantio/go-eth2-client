@@ -17,6 +17,7 @@ import (
 	"context"
 	"time"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	zerologger "github.com/rs/zerolog/log"
@@ -39,6 +40,10 @@ type Service struct {
 	// Event handlers.
 	// beaconChainHeadUpdatedMutex    sync.RWMutex
 	// beaconChainHeadUpdatedHandlers []client.BeaconChainHeadUpdatedHandler
+
+	// Values that can be altered if required.
+	HeadSlot     spec.Slot
+	SyncDistance spec.Slot
 }
 
 // log is a service-wide logger.
@@ -61,6 +66,9 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		genesisTime: time.Now(),
 		timeout:     parameters.timeout,
 		nodeVersion: "mock",
+
+		HeadSlot:     12345,
+		SyncDistance: 0,
 	}
 
 	// Fetch static values to confirm the connection is good.

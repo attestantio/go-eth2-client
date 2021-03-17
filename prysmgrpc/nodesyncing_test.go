@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSyncState(t *testing.T) {
+func TestNodeSyncing(t *testing.T) {
 	tests := []struct {
 		name           string
 		slot           int64
@@ -42,7 +42,7 @@ func TestSyncState(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			syncState, err := service.SyncState(context.Background())
+			syncState, err := service.NodeSyncing(context.Background())
 			require.NoError(t, err)
 			require.NotNil(t, syncState)
 		})

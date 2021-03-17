@@ -39,37 +39,37 @@ func TestSyncStateJSON(t *testing.T) {
 		},
 		{
 			name:  "HeadSlotMissing",
-			input: []byte(`{"sync_distance":"2"}`),
+			input: []byte(`{"sync_distance":"2","is_syncing":true}`),
 			err:   "head slot missing",
 		},
 		{
 			name:  "HeadSlotWrongType",
-			input: []byte(`{"head_slot":true,"sync_distance":"2"}`),
+			input: []byte(`{"head_slot":true,"sync_distance":"2","is_syncing":true}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field syncStateJSON.head_slot of type string",
 		},
 		{
 			name:  "HeadSlotInvalid",
-			input: []byte(`{"head_slot":"-1","sync_distance":"2"}`),
+			input: []byte(`{"head_slot":"-1","sync_distance":"2","is_syncing":true}`),
 			err:   "invalid value for head slot: strconv.ParseUint: parsing \"-1\": invalid syntax",
 		},
 		{
 			name:  "SyncDistanceMissing",
-			input: []byte(`{"head_slot":"1"}`),
+			input: []byte(`{"head_slot":"1","is_syncing":true}`),
 			err:   "sync distance missing",
 		},
 		{
 			name:  "SyncDistanceWrongType",
-			input: []byte(`{"head_slot":"1","sync_distance":true}`),
+			input: []byte(`{"head_slot":"1","sync_distance":true,"is_syncing":true}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field syncStateJSON.sync_distance of type string",
 		},
 		{
 			name:  "SyncDistanceInvalid",
-			input: []byte(`{"head_slot":"1","sync_distance":"-1"}`),
+			input: []byte(`{"head_slot":"1","sync_distance":"-1","is_syncing":true}`),
 			err:   "invalid value for sync distance: strconv.ParseUint: parsing \"-1\": invalid syntax",
 		},
 		{
 			name:  "Good",
-			input: []byte(`{"head_slot":"1","sync_distance":"2"}`),
+			input: []byte(`{"head_slot":"1","sync_distance":"2","is_syncing":true}`),
 		},
 	}
 
