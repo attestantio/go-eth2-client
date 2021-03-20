@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,14 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package client
+package v2
 
 import (
 	"context"
 	"time"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	api "github.com/attestantio/go-eth2-client/api/v2"
+	spec "github.com/attestantio/go-eth2-client/spec/altair"
 )
 
 // Service is the service providing a connection to an Ethereum 2 client.
@@ -191,16 +191,10 @@ type ValidatorIDProvider interface {
 	ValidatorPubKeyProvider
 }
 
-// DepositContractProvider is the interface for providng details about the deposit contract.
+// DepositContractProvider is the interface for providing details about the deposit contract.
 type DepositContractProvider interface {
-	// DepositContractAddress provides the Ethereum 1 address of the deposit contract.
-	DepositContractAddress(ctx context.Context) ([]byte, error)
-
-	// DepositContractChainID provides the Ethereum 1 chain ID of the deposit contract.
-	DepositContractChainID(ctx context.Context) (uint64, error)
-
-	// DepositContractNetworkID provides the Ethereum 1 network ID of the deposit contract.
-	DepositContractNetworkID(ctx context.Context) (uint64, error)
+	// DepositContract provides details of the Ethereum 1 deposit contract for the chain.
+	DepositContract(ctx context.Context) (*api.DepositContract, error)
 }
 
 // PrysmAggregateAttestationProvider is the interface for providing aggregate attestations.
@@ -405,11 +399,6 @@ type VoluntaryExitSubmitter interface {
 	// SubmitVoluntaryExit submits a voluntary exit.
 	SubmitVoluntaryExit(ctx context.Context, voluntaryExit *spec.SignedVoluntaryExit) error
 }
-
-// type DepositContractProvider interface {
-// 	// DepositContract provides details of the Ethereum 1 deposit contract for the chain.
-// 	DepositContract(ctx context.Context) (*api.DepositContract, error)
-// }
 
 //
 // Local extensions
