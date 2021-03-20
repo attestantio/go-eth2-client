@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,8 +17,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
+	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
@@ -48,11 +51,28 @@ func (s *Service) Events(ctx context.Context, topics []string, handler client.Ev
 	log.Trace().Str("url", url).Msg("GET request to events stream")
 
 	client := sse.NewClient(url)
+	client.Connection.Transport = &http.Transport{
+		Dial: (&net.Dialer{
+			Timeout:   2 * time.Second,
+			KeepAlive: 2 * time.Second,
+		}).Dial,
+	}
+
 	go func() {
-		if err := client.SubscribeRawWithContext(ctx, func(msg *sse.Event) {
-			s.handleEvent(msg, handler)
-		}); err != nil {
-			log.Error().Err(err).Msg("Failed to subscribe to event stream")
+		for {
+			select {
+			case <-time.After(time.Second):
+				log.Trace().Msg("Connecting to events stream")
+				if err := client.SubscribeRawWithContext(ctx, func(msg *sse.Event) {
+					s.handleEvent(msg, handler)
+				}); err != nil {
+					log.Error().Err(err).Msg("Failed to subscribe to event stream")
+				}
+				log.Trace().Msg("Events stream disconnected")
+			case <-ctx.Done():
+				log.Debug().Msg("Context done")
+				return
+			}
 		}
 	}()
 

@@ -37,7 +37,7 @@ func TestValidators(t *testing.T) {
 		{
 			name:              "StateUnknown",
 			stateID:           "0x000102030405060708090a0b0c0d0e0f10111213145161718191a1b1c1d1e1f",
-			expectedErrorCode: 404,
+			expectedErrorCode: 400,
 		},
 		{
 			name:    "Zero",
