@@ -22,6 +22,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -41,14 +42,13 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	log := log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Logger()
 	log.Trace().Str("endpoint", endpoint).Msg("GET request")
 
-	reference, err := url.Parse(endpoint)
+	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid endpoint")
 	}
-	url := s.base.ResolveReference(reference).String()
 
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
-	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, url, nil)
+	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, url.String(), nil)
 	if err != nil {
 		cancel()
 		return nil, errors.Wrap(err, "failed to create GET request")
@@ -97,14 +97,13 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 		e.Str("endpoint", endpoint).Str("body", string(bodyBytes)).Msg("POST request")
 	}
 
-	reference, err := url.Parse(endpoint)
+	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
 	if err != nil {
 		return nil, errors.Wrap(err, "invalid endpoint")
 	}
-	url := s.base.ResolveReference(reference).String()
 
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
-	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, url, body)
+	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, url.String(), body)
 	if err != nil {
 		cancel()
 		return nil, errors.Wrap(err, "failed to create POST request")
