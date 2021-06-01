@@ -268,7 +268,9 @@ func (s *Service) validatorsByPubKeys(ctx context.Context, stateID string, valid
 	// reduce our validators to those that Prysm recognises.
 	balancePubKeys := make([][]byte, 0, len(known))
 	for k := range known {
-		balancePubKeys = append(balancePubKeys, k[:])
+		pubKey := make([]byte, 48)
+		copy(pubKey, k[:])
+		balancePubKeys = append(balancePubKeys, pubKey)
 	}
 
 	// Fetch the balances
