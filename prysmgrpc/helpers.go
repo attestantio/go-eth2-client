@@ -15,7 +15,6 @@ package prysmgrpc
 
 import (
 	"context"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -127,7 +126,6 @@ func (s *Service) indicesToPubKeys(ctx context.Context, indices []spec.Validator
 
 // allIndicesToPubKeys fetches a list of the public keys of all known validators, ordered by index.
 func (s *Service) allIndicesToPubKeys(ctx context.Context) ([]spec.BLSPubKey, error) {
-	debug.PrintStack()
 	prysmValidators, err := s.ValidatorsByPubKey(ctx, "head", nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain validators")
