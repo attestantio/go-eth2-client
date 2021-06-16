@@ -67,6 +67,10 @@ func (s *Service) forkAtEpoch(ctx context.Context, epoch spec.Epoch) (*spec.Fork
 		return nil, errors.Wrap(err, "failed to obtain fork schedule")
 	}
 
+	if len(forkSchedule) == 0 {
+		return nil, errors.New("no fork schedule returned")
+	}
+
 	currentFork := forkSchedule[0]
 	for i := range forkSchedule {
 		if forkSchedule[i].Epoch > epoch {
