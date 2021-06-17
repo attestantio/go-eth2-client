@@ -25,25 +25,24 @@ import (
 )
 
 // Altair constants.
-var syncCommitteeSize = 1024
-var syncSubcommitteeSize = 64
+var syncCommitteeSize = 512
 
 // SyncCommittee is the Ethereum 2 sync committee structure.
 type SyncCommittee struct {
-	PubKeys          []BLSPubKey `ssz-size:"1024"`
-	PubKeyAggregates []BLSPubKey `ssz-size:"16"`
+	PubKeys         []BLSPubKey `ssz-size:"512,48"`
+	AggregatePubKey BLSPubKey
 }
 
 // syncCommitteeJSON is the spec representation of the struct.
 type syncCommitteeJSON struct {
-	PubKeys          []string `json:"pubkeys"`
-	PubKeyAggregates []string `json:"pubkey_aggregates"`
+	PubKeys         []string `json:"pubkeys"`
+	AggregatePubKey string   `json:"aggregate_pubkey"`
 }
 
 // syncCommitteeYAML is the spec representation of the struct.
 type syncCommitteeYAML struct {
-	PubKeys          []string `yaml:"pubkeys"`
-	PubKeyAggregates []string `yaml:"pubkey_aggregates"`
+	PubKeys         []string `yaml:"pubkeys"`
+	AggregatePubKey string   `yaml:"aggregate_pubkey"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -52,14 +51,10 @@ func (s *SyncCommittee) MarshalJSON() ([]byte, error) {
 	for i := range s.PubKeys {
 		pubKeys[i] = fmt.Sprintf("%#x", s.PubKeys[i])
 	}
-	pubKeyAggregates := make([]string, len(s.PubKeyAggregates))
-	for i := range s.PubKeyAggregates {
-		pubKeyAggregates[i] = fmt.Sprintf("%#x", s.PubKeyAggregates[i])
-	}
 
 	return json.Marshal(&syncCommitteeJSON{
-		PubKeys:          pubKeys,
-		PubKeyAggregates: pubKeyAggregates,
+		PubKeys:         pubKeys,
+		AggregatePubKey: fmt.Sprintf("%#x", s.AggregatePubKey),
 	})
 }
 
@@ -88,20 +83,20 @@ func (s *SyncCommittee) unpack(syncCommitteeJSON *syncCommitteeJSON) error {
 		copy(s.PubKeys[i][:], pubKey)
 	}
 
-	if len(syncCommitteeJSON.PubKeyAggregates) != syncCommitteeSize/syncSubcommitteeSize {
-		return errors.New("incorrect length for public key aggregates")
+	if syncCommitteeJSON.AggregatePubKey == "" {
+		return errors.New("aggregate public key missing")
 	}
-	s.PubKeyAggregates = make([]BLSPubKey, len(syncCommitteeJSON.PubKeyAggregates))
-	for i := range syncCommitteeJSON.PubKeyAggregates {
-		pubKeyAggregate, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeJSON.PubKeyAggregates[i], "0x"))
-		if err != nil {
-			return errors.Wrap(err, "invalid value for public key aggregate")
-		}
-		if len(pubKeyAggregate) != PublicKeyLength {
-			return errors.New("incorrect length for public key aggregate")
-		}
-		copy(s.PubKeyAggregates[i][:], pubKeyAggregate)
+	aggregatePubKey, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeJSON.AggregatePubKey, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for aggregate public key")
 	}
+	if len(aggregatePubKey) < 48 {
+		return errors.New("aggregate public key short")
+	}
+	if len(aggregatePubKey) > 48 {
+		return errors.New("aggregate public key long")
+	}
+	copy(s.AggregatePubKey[:], aggregatePubKey)
 
 	return nil
 }
@@ -112,14 +107,10 @@ func (s *SyncCommittee) MarshalYAML() ([]byte, error) {
 	for i := range s.PubKeys {
 		pubKeys[i] = fmt.Sprintf("%#x", s.PubKeys[i])
 	}
-	pubKeyAggregates := make([]string, len(s.PubKeyAggregates))
-	for i := range s.PubKeyAggregates {
-		pubKeyAggregates[i] = fmt.Sprintf("%#x", s.PubKeyAggregates[i])
-	}
 
 	yamlBytes, err := yaml.MarshalWithOptions(&syncCommitteeYAML{
-		PubKeys:          pubKeys,
-		PubKeyAggregates: pubKeyAggregates,
+		PubKeys:         pubKeys,
+		AggregatePubKey: fmt.Sprintf("%#x", s.AggregatePubKey),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

@@ -35,41 +35,49 @@ type BeaconState struct {
 	StateRoots                  [][]byte `ssz-size:"8192,32"`
 	HistoricalRoots             [][]byte `ssz-size:"?,32" ssz-max:"16777216"`
 	ETH1Data                    *ETH1Data
-	ETH1DataVotes               []*ETH1Data           `ssz-max:"1024"` // Should be 2048 for mainnet?
-	Validators                  []*Validator          `ssz-max:"1099511627776"`
-	Balances                    []uint64              `ssz-max:"1099511627776"`
-	RANDAOMixes                 [][]byte              `ssz-size:"65536,32"`
-	Slashings                   []uint64              `ssz-size:"8192"`
-	PreviousEpochAttestations   []*PendingAttestation `ssz-max:"4096"`
-	CurrentEpochAttestations    []*PendingAttestation `ssz-max:"4096"`
-	JustificationBits           bitfield.Bitvector4   `ssz-size:"1"`
+	ETH1DataVotes               []*ETH1Data `ssz-max:"2048"`
+	ETH1DepositIndex            uint64
+	Validators                  []*Validator         `ssz-max:"1099511627776"`
+	Balances                    []uint64             `ssz-max:"1099511627776"`
+	RANDAOMixes                 [][]byte             `ssz-size:"65536,32"`
+	Slashings                   []uint64             `ssz-size:"8192"`
+	PreviousEpochAttestations   []ParticipationFlags `ssz-size:"1099511627776"`
+	CurrentEpochAttestations    []ParticipationFlags `ssz-size:"1099511627776"`
+	JustificationBits           bitfield.Bitvector4  `ssz-size:"1"`
 	PreviousJustifiedCheckpoint *Checkpoint
 	CurrentJustifiedCheckpoint  *Checkpoint
 	FinalizedCheckpoint         *Checkpoint
+	InactivityScores            []uint64 `ssz-size:"1099511627776"`
+	CurrentSyncCommittee        *SyncCommittee
+	NextSyncCommittee           *SyncCommittee
 }
 
 // beaconStateJSON is the spec representation of the struct.
 type beaconStateJSON struct {
-	GenesisTime                 string                `json:"genesis_time"`
-	GenesisValidatorsRoot       string                `json:"genesis_validators_root"`
-	Slot                        string                `json:"slot"`
-	Fork                        *Fork                 `json:"fork"`
-	LatestBlockHeader           *BeaconBlockHeader    `json:"latest_block_header"`
-	BlockRoots                  []string              `json:"block_roots"`
-	StateRoots                  []string              `json:"state_roots"`
-	HistoricalRoots             []string              `json:"historical_roots"`
-	ETH1Data                    *ETH1Data             `json:"eth1_data"`
-	ETH1DataVotes               []*ETH1Data           `json:"eth1_data_votes"`
-	Validators                  []*Validator          `json:"validators"`
-	Balances                    []string              `json:"balances"`
-	RANDAOMixes                 []string              `json:"randao_mixes"`
-	Slashings                   []string              `json:"slashings"`
-	PreviousEpochAttestations   []*PendingAttestation `json:"previous_epoch_attestations"`
-	CurrentEpochAttestations    []*PendingAttestation `json:"current_epoch_attestations"`
-	JustificationBits           string                `json:"justification_bits"`
-	PreviousJustifiedCheckpoint *Checkpoint           `json:"previous_justified_checkpoint"`
-	CurrentJustifiedCheckpoint  *Checkpoint           `json:"current_justified_checkpoint"`
-	FinalizedCheckpoint         *Checkpoint           `json:"finalized_checkpoint"`
+	GenesisTime                 string             `json:"genesis_time"`
+	GenesisValidatorsRoot       string             `json:"genesis_validators_root"`
+	Slot                        string             `json:"slot"`
+	Fork                        *Fork              `json:"fork"`
+	LatestBlockHeader           *BeaconBlockHeader `json:"latest_block_header"`
+	BlockRoots                  []string           `json:"block_roots"`
+	StateRoots                  []string           `json:"state_roots"`
+	HistoricalRoots             []string           `json:"historical_roots"`
+	ETH1Data                    *ETH1Data          `json:"eth1_data"`
+	ETH1DataVotes               []*ETH1Data        `json:"eth1_data_votes"`
+	ETH1DepositIndex            string             `json:"eth1_deposit_index"`
+	Validators                  []*Validator       `json:"validators"`
+	Balances                    []string           `json:"balances"`
+	RANDAOMixes                 []string           `json:"randao_mixes"`
+	Slashings                   []string           `json:"slashings"`
+	PreviousEpochAttestations   []string           `json:"previous_epoch_attestations"`
+	CurrentEpochAttestations    []string           `json:"current_epoch_attestations"`
+	JustificationBits           string             `json:"justification_bits"`
+	PreviousJustifiedCheckpoint *Checkpoint        `json:"previous_justified_checkpoint"`
+	CurrentJustifiedCheckpoint  *Checkpoint        `json:"current_justified_checkpoint"`
+	FinalizedCheckpoint         *Checkpoint        `json:"finalized_checkpoint"`
+	InactivityScores            []string           `json:"inactivity_scores"`
+	CurrentSyncCommittee        *SyncCommittee     `json:"current_sync_committee"`
+	NextSyncCommittee           *SyncCommittee     `json:"next_sync_committee"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -98,6 +106,18 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range s.Slashings {
 		slashings[i] = fmt.Sprintf("%d", s.Slashings[i])
 	}
+	previousEpochAttestations := make([]string, len(s.PreviousEpochAttestations))
+	for i := range s.PreviousEpochAttestations {
+		previousEpochAttestations[i] = fmt.Sprintf("%d", s.PreviousEpochAttestations[i])
+	}
+	currentEpochAttestations := make([]string, len(s.CurrentEpochAttestations))
+	for i := range s.CurrentEpochAttestations {
+		currentEpochAttestations[i] = fmt.Sprintf("%d", s.CurrentEpochAttestations[i])
+	}
+	inactivityScores := make([]string, len(s.InactivityScores))
+	for i := range s.InactivityScores {
+		inactivityScores[i] = fmt.Sprintf("%d", s.InactivityScores[i])
+	}
 	return json.Marshal(&beaconStateJSON{
 		GenesisTime:                 fmt.Sprintf("%d", s.GenesisTime),
 		GenesisValidatorsRoot:       fmt.Sprintf("%#x", s.GenesisValidatorsRoot),
@@ -109,16 +129,20 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 		HistoricalRoots:             historicalRoots,
 		ETH1Data:                    s.ETH1Data,
 		ETH1DataVotes:               s.ETH1DataVotes,
+		ETH1DepositIndex:            fmt.Sprintf("%d", s.ETH1DepositIndex),
 		Validators:                  s.Validators,
 		Balances:                    balances,
 		RANDAOMixes:                 randaoMixes,
 		Slashings:                   slashings,
-		PreviousEpochAttestations:   s.PreviousEpochAttestations,
-		CurrentEpochAttestations:    s.CurrentEpochAttestations,
+		PreviousEpochAttestations:   previousEpochAttestations,
+		CurrentEpochAttestations:    currentEpochAttestations,
 		JustificationBits:           fmt.Sprintf("%#x", s.JustificationBits.Bytes()),
 		PreviousJustifiedCheckpoint: s.PreviousJustifiedCheckpoint,
 		CurrentJustifiedCheckpoint:  s.CurrentJustifiedCheckpoint,
 		FinalizedCheckpoint:         s.FinalizedCheckpoint,
+		InactivityScores:            inactivityScores,
+		CurrentSyncCommittee:        s.CurrentSyncCommittee,
+		NextSyncCommittee:           s.NextSyncCommittee,
 	})
 }
 
@@ -208,6 +232,12 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	if beaconStateJSON.Validators == nil {
 		return errors.New("validators missing")
 	}
+	if beaconStateJSON.ETH1DepositIndex == "" {
+		return errors.New("eth1 deposit index missing")
+	}
+	if s.ETH1DepositIndex, err = strconv.ParseUint(beaconStateJSON.ETH1DepositIndex, 10, 64); err != nil {
+		return errors.Wrap(err, "invalid value for eth1 deposit index")
+	}
 	s.Validators = beaconStateJSON.Validators
 	s.Balances = make([]uint64, len(beaconStateJSON.Balances))
 	for i := range beaconStateJSON.Balances {
@@ -239,8 +269,28 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for slashing %d", i))
 		}
 	}
-	s.PreviousEpochAttestations = beaconStateJSON.PreviousEpochAttestations
-	s.CurrentEpochAttestations = beaconStateJSON.CurrentEpochAttestations
+	s.PreviousEpochAttestations = make([]ParticipationFlags, len(beaconStateJSON.PreviousEpochAttestations))
+	for i := range beaconStateJSON.PreviousEpochAttestations {
+		if beaconStateJSON.PreviousEpochAttestations[i] == "" {
+			return fmt.Errorf("previous epoch attestation %d missing", i)
+		}
+		previousEpochAttestation, err := strconv.ParseUint(beaconStateJSON.PreviousEpochAttestations[i], 10, 8)
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("invalid value for previous epoch attestation %d", i))
+		}
+		s.PreviousEpochAttestations[i] = ParticipationFlags(previousEpochAttestation)
+	}
+	s.CurrentEpochAttestations = make([]ParticipationFlags, len(beaconStateJSON.CurrentEpochAttestations))
+	for i := range beaconStateJSON.CurrentEpochAttestations {
+		if beaconStateJSON.CurrentEpochAttestations[i] == "" {
+			return fmt.Errorf("current epoch attestation %d missing", i)
+		}
+		currentEpochAttestation, err := strconv.ParseUint(beaconStateJSON.CurrentEpochAttestations[i], 10, 8)
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("invalid value for current epoch attestation %d", i))
+		}
+		s.CurrentEpochAttestations[i] = ParticipationFlags(currentEpochAttestation)
+	}
 	if beaconStateJSON.JustificationBits == "" {
 		return errors.New("justification bits missing")
 	}
@@ -259,6 +309,23 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 		return errors.New("finalized checkpoint missing")
 	}
 	s.FinalizedCheckpoint = beaconStateJSON.FinalizedCheckpoint
+	s.InactivityScores = make([]uint64, len(beaconStateJSON.InactivityScores))
+	for i := range beaconStateJSON.InactivityScores {
+		if beaconStateJSON.InactivityScores[i] == "" {
+			return fmt.Errorf("inactivity score %d missing", i)
+		}
+		if s.InactivityScores[i], err = strconv.ParseUint(beaconStateJSON.InactivityScores[i], 10, 8); err != nil {
+			return errors.Wrap(err, fmt.Sprintf("invalid value for inactivity score %d", i))
+		}
+	}
+	if beaconStateJSON.CurrentSyncCommittee == nil {
+		return errors.New("current sync committee missing")
+	}
+	s.CurrentSyncCommittee = beaconStateJSON.CurrentSyncCommittee
+	if beaconStateJSON.NextSyncCommittee == nil {
+		return errors.New("next sync committee missing")
+	}
+	s.NextSyncCommittee = beaconStateJSON.NextSyncCommittee
 
 	return nil
 }

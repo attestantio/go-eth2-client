@@ -48,3 +48,18 @@ type BLSPubKey [48]byte
 
 // BLSSignature is a BLS12-381 signature.
 type BLSSignature [96]byte
+
+// ParticipationFlags are validator participation flags in an epoch.
+type ParticipationFlags uint8
+
+// ParticipationFlag is an individual particiation flag for a validator.
+type ParticipationFlag int
+
+const (
+	// TimelySourceFlagIndex is set when an attestation has a timely source value.
+	TimelySourceFlagIndex ParticipationFlag = iota
+	// TimelyTargetFlagIndex is set when an attestation has a timely target value.
+	TimelyTargetFlagIndex
+	// TimelyHeadFlagIndex is set when an attestation has a timely head value.
+	TimelyHeadFlagIndex
+)

@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/ferranbt/fastssz v0.0.0-20210316165225-412ceaa5950e
+	github.com/ferranbt/fastssz v0.0.0-20210526181520-7df50c8568f8
 	github.com/goccy/go-yaml v1.8.9
 	github.com/gogo/protobuf v1.3.2
 	github.com/klauspost/cpuid/v2 v2.0.6 // indirect
@@ -13,7 +13,7 @@ require (
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/prysmaticlabs/ethereumapis v0.0.0-20200812153649-a842fc47c2c3
-	github.com/prysmaticlabs/go-bitfield v0.0.0-20210202205921-7fcea7c45dc8
+	github.com/prysmaticlabs/go-bitfield v0.0.0-20210607200045-4da71aaf6c2d
 	github.com/r3labs/sse/v2 v2.3.0
 	github.com/rs/zerolog v1.21.0
 	github.com/stretchr/testify v1.7.0

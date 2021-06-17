@@ -14,4 +14,4 @@
 package altair
 
 // Need to `go get github.com/ferranbt/fastssz/sszgen` for this to work.
-//go:generate sszgen --path . --objs ContributionAndProof,SignedContributionAndProof,SyncCommittee,SyncCommitteeContribution,SyncCommitteeSignature
+// nogenerate //go:generate sszgen --path . --objs ContributionAndProof,SignedContributionAndProof,SyncCommittee,SyncAggregate

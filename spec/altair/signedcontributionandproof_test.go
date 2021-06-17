@@ -16,10 +16,6 @@ package altair_test
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -136,38 +132,38 @@ func TestSignedContributionAndProofYAML(t *testing.T) {
 	}
 }
 
-func TestSignedContributionAndProofSpec(t *testing.T) {
-	if os.Getenv("ETH2_SPEC_TESTS_DIR") == "" {
-		t.Skip("ETH2_SPEC_TESTS_DIR not suppplied, not running spec tests")
-	}
-	baseDir := filepath.Join(os.Getenv("ETH2_SPEC_TESTS_DIR"), "tests", "mainnet", "altair", "ssz_static", "SignedContributionAndProof", "ssz_random")
-	require.NoError(t, filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
-		if path == baseDir {
-			// Only interested in subdirectories.
-			return nil
-		}
-		require.NoError(t, err)
-		if info.IsDir() {
-			t.Run(info.Name(), func(t *testing.T) {
-				specYAML, err := ioutil.ReadFile(filepath.Join(path, "value.yaml"))
-				require.NoError(t, err)
-				var res altair.SignedContributionAndProof
-				require.NoError(t, yaml.Unmarshal(specYAML, &res))
-
-				specSSZ, err := ioutil.ReadFile(filepath.Join(path, "serialized.ssz"))
-				require.NoError(t, err)
-
-				ssz, err := res.MarshalSSZ()
-				require.NoError(t, err)
-				require.Equal(t, specSSZ, ssz)
-
-				root, err := res.HashTreeRoot()
-				require.NoError(t, err)
-				rootsYAML, err := ioutil.ReadFile(filepath.Join(path, "roots.yaml"))
-				require.NoError(t, err)
-				require.Equal(t, string(rootsYAML), fmt.Sprintf("{root: '%#x'}\n", root))
-			})
-		}
-		return nil
-	}))
-}
+// func TestSignedContributionAndProofSpec(t *testing.T) {
+// 	if os.Getenv("ETH2_SPEC_TESTS_DIR") == "" {
+// 		t.Skip("ETH2_SPEC_TESTS_DIR not suppplied, not running spec tests")
+// 	}
+// 	baseDir := filepath.Join(os.Getenv("ETH2_SPEC_TESTS_DIR"), "tests", "mainnet", "altair", "ssz_static", "SignedContributionAndProof", "ssz_random")
+// 	require.NoError(t, filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+// 		if path == baseDir {
+// 			// Only interested in subdirectories.
+// 			return nil
+// 		}
+// 		require.NoError(t, err)
+// 		if info.IsDir() {
+// 			t.Run(info.Name(), func(t *testing.T) {
+// 				specYAML, err := ioutil.ReadFile(filepath.Join(path, "value.yaml"))
+// 				require.NoError(t, err)
+// 				var res altair.SignedContributionAndProof
+// 				require.NoError(t, yaml.Unmarshal(specYAML, &res))
+//
+// 				specSSZ, err := ioutil.ReadFile(filepath.Join(path, "serialized.ssz"))
+// 				require.NoError(t, err)
+//
+// 				ssz, err := res.MarshalSSZ()
+// 				require.NoError(t, err)
+// 				require.Equal(t, specSSZ, ssz)
+//
+// 				root, err := res.HashTreeRoot()
+// 				require.NoError(t, err)
+// 				rootsYAML, err := ioutil.ReadFile(filepath.Join(path, "roots.yaml"))
+// 				require.NoError(t, err)
+// 				require.Equal(t, string(rootsYAML), fmt.Sprintf("{root: '%#x'}\n", root))
+// 			})
+// 		}
+// 		return nil
+// 	}))
+// }

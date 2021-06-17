@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -34,6 +34,7 @@ type BeaconBlockBody struct {
 	Attestations      []*Attestation         `ssz-max:"128"`
 	Deposits          []*Deposit             `ssz-max:"16"`
 	VoluntaryExits    []*SignedVoluntaryExit `ssz-max:"16"`
+	SyncAggregate     *SyncAggregate
 }
 
 // beaconBlockBodyJSON is the spec representation of the struct.
@@ -46,6 +47,7 @@ type beaconBlockBodyJSON struct {
 	Attestations      []*Attestation         `json:"attestations"`
 	Deposits          []*Deposit             `json:"deposits"`
 	VoluntaryExits    []*SignedVoluntaryExit `json:"voluntary_exits"`
+	SyncAggregate     *SyncAggregate         `json:"sync_aggregate"`
 }
 
 // beaconBlockBodyYAML is the spec representation of the struct.
@@ -58,6 +60,7 @@ type beaconBlockBodyYAML struct {
 	Attestations      []*Attestation         `yaml:"attestations"`
 	Deposits          []*Deposit             `yaml:"deposits"`
 	VoluntaryExits    []*SignedVoluntaryExit `yaml:"voluntary_exits"`
+	SyncAggregate     *SyncAggregate         `yaml:"sync_aggregate"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -71,6 +74,7 @@ func (b *BeaconBlockBody) MarshalJSON() ([]byte, error) {
 		Attestations:      b.Attestations,
 		Deposits:          b.Deposits,
 		VoluntaryExits:    b.VoluntaryExits,
+		SyncAggregate:     b.SyncAggregate,
 	})
 }
 
@@ -128,6 +132,10 @@ func (b *BeaconBlockBody) unpack(beaconBlockBodyJSON *beaconBlockBodyJSON) error
 		return errors.New("voluntary exits missing")
 	}
 	b.VoluntaryExits = beaconBlockBodyJSON.VoluntaryExits
+	if beaconBlockBodyJSON.SyncAggregate == nil {
+		return errors.New("sync aggregate missing")
+	}
+	b.SyncAggregate = beaconBlockBodyJSON.SyncAggregate
 
 	return nil
 }
@@ -143,6 +151,7 @@ func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
 		Attestations:      b.Attestations,
 		Deposits:          b.Deposits,
 		VoluntaryExits:    b.VoluntaryExits,
+		SyncAggregate:     b.SyncAggregate,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
