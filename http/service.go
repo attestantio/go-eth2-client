@@ -81,15 +81,17 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	}
 
 	client := &http.Client{
+		Timeout: parameters.timeout,
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
+				Timeout:   parameters.timeout,
 				KeepAlive: 30 * time.Second,
 				DualStack: true,
 			}).DialContext,
 			MaxIdleConns:        64,
+			MaxConnsPerHost:     64,
 			MaxIdleConnsPerHost: 64,
-			IdleConnTimeout:     384 * time.Second,
+			IdleConnTimeout:     600 * time.Second,
 		},
 	}
 

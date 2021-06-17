@@ -13,6 +13,7 @@ require (
 	github.com/minio/sha256-simd v1.0.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/client_golang v1.10.0 // indirect
 	github.com/prysmaticlabs/ethereumapis v0.0.0-20200812153649-a842fc47c2c3
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20210607200045-4da71aaf6c2d
 	github.com/r3labs/sse/v2 v2.7.2
