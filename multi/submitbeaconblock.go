@@ -21,9 +21,7 @@ import (
 )
 
 // SubmitBeaconBlock submits a beacon block.
-func (s *Service) SubmitBeaconBlock(ctx context.Context,
-	block *spec.SignedBeaconBlock,
-) error {
+func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaconBlock) error {
 	_, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
 		err := client.(eth2client.BeaconBlockSubmitter).SubmitBeaconBlock(ctx, block)
 		if err != nil {

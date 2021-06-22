@@ -18,17 +18,22 @@ import (
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // FarFutureEpoch provides the far future epoch of the chain.
 func (s *Service) FarFutureEpoch(ctx context.Context) (spec.Epoch, error) {
-	s.clientMu.RLock()
-	defer s.clientMu.RUnlock()
-	if len(s.activeClients) == 0 {
-		return 0, errors.New("no active Ethereum 2 clients")
+	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
+		aggregate, err := client.(eth2client.FarFutureEpochProvider).FarFutureEpoch(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return aggregate, nil
+	})
+	if err != nil {
+		return 0, err
 	}
-
-	// Slots per epoch is static so no need to worry about failover.
-	return s.activeClients[0].(eth2client.FarFutureEpochProvider).FarFutureEpoch(ctx)
+	if res == nil {
+		return 0, nil
+	}
+	return res.(spec.Epoch), nil
 }

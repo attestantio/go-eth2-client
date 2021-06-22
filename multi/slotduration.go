@@ -18,17 +18,22 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	"github.com/pkg/errors"
 )
 
 // SlotDuration provides the duration of a slot of the chain.
 func (s *Service) SlotDuration(ctx context.Context) (time.Duration, error) {
-	s.clientMu.RLock()
-	defer s.clientMu.RUnlock()
-	if len(s.activeClients) == 0 {
-		return 0, errors.New("no active Ethereum 2 clients")
+	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
+		aggregate, err := client.(eth2client.SlotDurationProvider).SlotDuration(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return aggregate, nil
+	})
+	if err != nil {
+		return 0, err
 	}
-
-	// Slot duration is static so no need to worry about failover.
-	return s.activeClients[0].(eth2client.SlotDurationProvider).SlotDuration(ctx)
+	if res == nil {
+		return 0, nil
+	}
+	return res.(time.Duration), nil
 }

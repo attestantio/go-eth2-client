@@ -24,5 +24,6 @@ func (s *Service) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
 	return &api.SyncState{
 		HeadSlot:     s.HeadSlot,
 		SyncDistance: s.SyncDistance,
+		IsSyncing:    s.IsSyncing,
 	}, nil
 }

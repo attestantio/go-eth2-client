@@ -135,7 +135,7 @@ type ValidatorIDProvider interface {
 
 // DepositContractProvider is the interface for providng details about the deposit contract.
 type DepositContractProvider interface {
-	// DepositContract provides the details of the deposit contract.
+	// DepositContract provides details of the Ethereum 1 deposit contract for the chain.
 	DepositContract(ctx context.Context) (*api.DepositContract, error)
 }
 
@@ -294,8 +294,14 @@ type BeaconCommitteeSubscriptionsSubmitter interface {
 
 // BeaconStateProvider is the interface for providing beacon state.
 type BeaconStateProvider interface {
-	// BeaconState fetches a beacon state.
+	// BeaconState fetches a beacon state given a state ID.
 	BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error)
+}
+
+// BeaconStateRootProvider is the interface for providing beacon state roots.
+type BeaconStateRootProvider interface {
+	// BeaconStateRoot fetches a beacon state root given a state ID.
+	BeaconStateRoot(ctx context.Context, stateID string) (*phase0.Root, error)
 }
 
 // EventsProvider is the interface for providing events.

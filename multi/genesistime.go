@@ -18,17 +18,22 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	"github.com/pkg/errors"
 )
 
 // GenesisTime provides the genesis time of the chain.
 func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
-	s.clientMu.RLock()
-	defer s.clientMu.RUnlock()
-	if len(s.activeClients) == 0 {
-		return time.Time{}, errors.New("no active Ethereum 2 clients")
+	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
+		aggregate, err := client.(eth2client.GenesisTimeProvider).GenesisTime(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return aggregate, nil
+	})
+	if err != nil {
+		return time.Time{}, err
 	}
-
-	// Genesis time is static so no need to worry about failover.
-	return s.activeClients[0].(eth2client.GenesisTimeProvider).GenesisTime(ctx)
+	if res == nil {
+		return time.Time{}, nil
+	}
+	return res.(time.Time), nil
 }

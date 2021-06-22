@@ -18,17 +18,22 @@ import (
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // AggregateAndProofDomain provides the aggregate and proof domain.
 func (s *Service) AggregateAndProofDomain(ctx context.Context) (spec.DomainType, error) {
-	s.clientMu.RLock()
-	defer s.clientMu.RUnlock()
-	if len(s.activeClients) == 0 {
-		return spec.DomainType{}, errors.New("no active Ethereum 2 clients")
+	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
+		aggregate, err := client.(eth2client.AggregateAndProofDomainProvider).AggregateAndProofDomain(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return aggregate, nil
+	})
+	if err != nil {
+		return spec.DomainType{}, err
 	}
-
-	// Aggregate and proof domain is static so no need to worry about failover.
-	return s.activeClients[0].(eth2client.AggregateAndProofDomainProvider).AggregateAndProofDomain(ctx)
+	if res == nil {
+		return spec.DomainType{}, nil
+	}
+	return res.(spec.DomainType), nil
 }

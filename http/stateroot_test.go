@@ -24,7 +24,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestStateRoot(t *testing.T) {
+func TestBeaconStateRoot(t *testing.T) {
 	tests := []struct {
 		name              string
 		stateID           string

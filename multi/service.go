@@ -18,6 +18,7 @@ import (
 	"sync"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/auto"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	zerologger "github.com/rs/zerolog/log"
@@ -25,7 +26,7 @@ import (
 
 // Service handles multiple Ethereum 2 clients.
 type Service struct {
-	clientMu        sync.RWMutex
+	clientsMu       sync.RWMutex
 	activeClients   []eth2client.Service
 	inactiveClients []eth2client.Service
 }
@@ -59,15 +60,22 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	activeClients := make([]eth2client.Service, 0, len(parameters.clients))
 	inactiveClients := make([]eth2client.Service, 0, len(parameters.clients))
 	for _, client := range parameters.clients {
-		//		eth2Client, err := autoclient.New(ctx,
-		//			autoclient.WithLogLevel(parameters.logLevel),
-		//			autoclient.WithTimeout(parameters.timeout),
-		//			autoclient.WithAddress(client),
-		//		)
-		//		if err != nil {
-		//			log.Error().Str("provider", client).Msg("Provider not present; dropping from rotation")
-		//			continue
-		//		}
+		if ping(ctx, client) {
+			activeClients = append(activeClients, client)
+		} else {
+			inactiveClients = append(inactiveClients, client)
+		}
+	}
+	for _, address := range parameters.addresses {
+		client, err := auto.New(ctx,
+			auto.WithLogLevel(parameters.logLevel),
+			auto.WithTimeout(parameters.timeout),
+			auto.WithAddress(address),
+		)
+		if err != nil {
+			log.Error().Str("provider", address).Msg("Provider not present; dropping from rotation")
+			continue
+		}
 		if ping(ctx, client) {
 			activeClients = append(activeClients, client)
 		} else {
@@ -97,8 +105,8 @@ func (s *Service) Name() string {
 
 // Address returns the address of the client.
 func (s *Service) Address() string {
-	s.clientMu.RLock()
-	defer s.clientMu.RUnlock()
+	s.clientsMu.RLock()
+	defer s.clientsMu.RUnlock()
 	if len(s.activeClients) > 0 {
 		return s.activeClients[0].Address()
 	}

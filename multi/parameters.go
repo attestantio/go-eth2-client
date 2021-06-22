@@ -23,10 +23,11 @@ import (
 )
 
 type parameters struct {
-	logLevel zerolog.Level
-	monitor  metrics.Service
-	clients  []eth2client.Service
-	timeout  time.Duration
+	logLevel  zerolog.Level
+	monitor   metrics.Service
+	clients   []eth2client.Service
+	addresses []string
+	timeout   time.Duration
 }
 
 // Parameter is the interface for service parameters.
@@ -61,10 +62,17 @@ func WithMonitor(monitor metrics.Service) Parameter {
 	})
 }
 
-// WithClients sets the clients.
+// WithClients sets the pre-existing clients to add to the multi list.
 func WithClients(clients []eth2client.Service) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.clients = clients
+	})
+}
+
+// WithAddresses sets the addresses of clients to add to the multi list.
+func WithAddresses(addresses []string) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.addresses = addresses
 	})
 }
 
@@ -83,7 +91,7 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	if parameters.timeout == 0 {
 		return nil, errors.New("no timeout specified")
 	}
-	if len(parameters.clients) == 0 {
+	if len(parameters.clients)+len(parameters.addresses) == 0 {
 		return nil, errors.New("no Ethereum 2 clients specified")
 	}
 
