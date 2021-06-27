@@ -83,7 +83,7 @@ func (s *Erroring) PrysmAttesterDuties(ctx context.Context, epoch spec.Epoch, va
 	}
 	next, isNext := s.next.(eth2client.PrysmAttesterDutiesProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.PrysmAttesterDuties(ctx, epoch, validatorPubKeys)
 }
@@ -95,7 +95,7 @@ func (s *Erroring) PrysmProposerDuties(ctx context.Context, epoch spec.Epoch, va
 	}
 	next, isNext := s.next.(eth2client.PrysmProposerDutiesProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.PrysmProposerDuties(ctx, epoch, validatorPubKeys)
 }
@@ -110,7 +110,7 @@ func (s *Erroring) PrysmValidatorBalances(ctx context.Context, stateID string, v
 	}
 	next, isNext := s.next.(eth2client.PrysmValidatorBalancesProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.PrysmValidatorBalances(ctx, stateID, validatorPubKeys)
 }
@@ -122,7 +122,7 @@ func (s *Erroring) EpochFromStateID(ctx context.Context, stateID string) (spec.E
 	}
 	next, isNext := s.next.(eth2client.EpochFromStateIDProvider)
 	if !isNext {
-		return 0, errors.New("next does not support this call")
+		return 0, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.EpochFromStateID(ctx, stateID)
 }
@@ -134,7 +134,7 @@ func (s *Erroring) SlotFromStateID(ctx context.Context, stateID string) (spec.Sl
 	}
 	next, isNext := s.next.(eth2client.SlotFromStateIDProvider)
 	if !isNext {
-		return 0, errors.New("next does not support this call")
+		return 0, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.SlotFromStateID(ctx, stateID)
 }
@@ -146,7 +146,7 @@ func (s *Erroring) NodeVersion(ctx context.Context) (string, error) {
 	}
 	next, isNext := s.next.(eth2client.NodeVersionProvider)
 	if !isNext {
-		return "", errors.New("next does not support this call")
+		return "", fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.NodeVersion(ctx)
 }
@@ -158,7 +158,7 @@ func (s *Erroring) SlotDuration(ctx context.Context) (time.Duration, error) {
 	}
 	next, isNext := s.next.(eth2client.SlotDurationProvider)
 	if !isNext {
-		return 0, errors.New("next does not support this call")
+		return 0, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.SlotDuration(ctx)
 }
@@ -170,7 +170,7 @@ func (s *Erroring) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 	}
 	next, isNext := s.next.(eth2client.SlotsPerEpochProvider)
 	if !isNext {
-		return 0, errors.New("next does not support this call")
+		return 0, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.SlotsPerEpoch(ctx)
 }
@@ -182,7 +182,7 @@ func (s *Erroring) FarFutureEpoch(ctx context.Context) (spec.Epoch, error) {
 	}
 	next, isNext := s.next.(eth2client.FarFutureEpochProvider)
 	if !isNext {
-		return 0, errors.New("next does not support this call")
+		return 0, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.FarFutureEpoch(ctx)
 }
@@ -194,7 +194,7 @@ func (s *Erroring) GenesisValidatorsRoot(ctx context.Context) ([]byte, error) {
 	}
 	next, isNext := s.next.(eth2client.GenesisValidatorsRootProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.GenesisValidatorsRoot(ctx)
 }
@@ -206,7 +206,7 @@ func (s *Erroring) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, e
 	}
 	next, isNext := s.next.(eth2client.TargetAggregatorsPerCommitteeProvider)
 	if !isNext {
-		return 0, errors.New("next does not support this call")
+		return 0, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.TargetAggregatorsPerCommittee(ctx)
 }
@@ -218,7 +218,7 @@ func (s *Erroring) BeaconAttesterDomain(ctx context.Context) (spec.DomainType, e
 	}
 	next, isNext := s.next.(eth2client.BeaconAttesterDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return spec.DomainType{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.BeaconAttesterDomain(ctx)
 }
@@ -230,7 +230,7 @@ func (s *Erroring) BeaconProposerDomain(ctx context.Context) (spec.DomainType, e
 	}
 	next, isNext := s.next.(eth2client.BeaconProposerDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return spec.DomainType{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.BeaconProposerDomain(ctx)
 }
@@ -242,7 +242,7 @@ func (s *Erroring) RANDAODomain(ctx context.Context) (spec.DomainType, error) {
 	}
 	next, isNext := s.next.(eth2client.RANDAODomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return spec.DomainType{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.RANDAODomain(ctx)
 }
@@ -254,7 +254,7 @@ func (s *Erroring) DepositDomain(ctx context.Context) (spec.DomainType, error) {
 	}
 	next, isNext := s.next.(eth2client.DepositDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return spec.DomainType{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.DepositDomain(ctx)
 }
@@ -266,7 +266,7 @@ func (s *Erroring) VoluntaryExitDomain(ctx context.Context) (spec.DomainType, er
 	}
 	next, isNext := s.next.(eth2client.VoluntaryExitDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return spec.DomainType{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.VoluntaryExitDomain(ctx)
 }
@@ -278,7 +278,7 @@ func (s *Erroring) SelectionProofDomain(ctx context.Context) (spec.DomainType, e
 	}
 	next, isNext := s.next.(eth2client.SelectionProofDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return spec.DomainType{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.SelectionProofDomain(ctx)
 }
@@ -290,7 +290,7 @@ func (s *Erroring) AggregateAndProofDomain(ctx context.Context) (spec.DomainType
 	}
 	next, isNext := s.next.(eth2client.AggregateAndProofDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return spec.DomainType{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.AggregateAndProofDomain(ctx)
 }
@@ -302,7 +302,7 @@ func (s *Erroring) AggregateAttestation(ctx context.Context, slot spec.Slot, att
 	}
 	next, isNext := s.next.(eth2client.AggregateAttestationProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.AggregateAttestation(ctx, slot, attestationDataRoot)
 }
@@ -314,7 +314,7 @@ func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, aggregateAnd
 	}
 	next, isNext := s.next.(eth2client.AggregateAttestationsSubmitter)
 	if !isNext {
-		return errors.New("next does not support this call")
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.SubmitAggregateAttestations(ctx, aggregateAndProofs)
 }
@@ -326,7 +326,7 @@ func (s *Erroring) AttestationData(ctx context.Context, slot spec.Slot, committe
 	}
 	next, isNext := s.next.(eth2client.AttestationDataProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.AttestationData(ctx, slot, committeeIndex)
 }
@@ -338,7 +338,7 @@ func (s *Erroring) AttestationPool(ctx context.Context, slot spec.Slot) ([]*spec
 	}
 	next, isNext := s.next.(eth2client.AttestationPoolProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.AttestationPool(ctx, slot)
 }
@@ -350,7 +350,7 @@ func (s *Erroring) SubmitAttestations(ctx context.Context, attestations []*spec.
 	}
 	next, isNext := s.next.(eth2client.AttestationsSubmitter)
 	if !isNext {
-		return errors.New("next does not support this call")
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.SubmitAttestations(ctx, attestations)
 }
@@ -363,7 +363,7 @@ func (s *Erroring) AttesterDuties(ctx context.Context, epoch spec.Epoch, validat
 	}
 	next, isNext := s.next.(eth2client.AttesterDutiesProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.AttesterDuties(ctx, epoch, validatorIndices)
 }
@@ -375,9 +375,21 @@ func (s *Erroring) BeaconBlockHeader(ctx context.Context, blockID string) (*api.
 	}
 	next, isNext := s.next.(eth2client.BeaconBlockHeadersProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.BeaconBlockHeader(ctx, blockID)
+}
+
+// BeaconCommittees fetches all beacon committees for the epoch at the given state.
+func (s *Erroring) BeaconCommittees(ctx context.Context, stateID string) ([]*api.BeaconCommittee, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(eth2client.BeaconCommitteesProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.BeaconCommittees(ctx, stateID)
 }
 
 // BeaconBlockProposal fetches a proposed beacon block for signing.
@@ -387,7 +399,7 @@ func (s *Erroring) BeaconBlockProposal(ctx context.Context, slot spec.Slot, rand
 	}
 	next, isNext := s.next.(eth2client.BeaconBlockProposalProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.BeaconBlockProposal(ctx, slot, randaoReveal, graffiti)
 }
@@ -399,7 +411,7 @@ func (s *Erroring) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeac
 	}
 	next, isNext := s.next.(eth2client.BeaconBlockSubmitter)
 	if !isNext {
-		return errors.New("next does not support this call")
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.SubmitBeaconBlock(ctx, block)
 }
@@ -411,7 +423,7 @@ func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subsc
 	}
 	next, isNext := s.next.(eth2client.BeaconCommitteeSubscriptionsSubmitter)
 	if !isNext {
-		return errors.New("next does not support this call")
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.SubmitBeaconCommitteeSubscriptions(ctx, subscriptions)
 }
@@ -423,7 +435,7 @@ func (s *Erroring) BeaconState(ctx context.Context, stateID string) (*spec.Beaco
 	}
 	next, isNext := s.next.(eth2client.BeaconStateProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.BeaconState(ctx, stateID)
 }
@@ -435,7 +447,7 @@ func (s *Erroring) Events(ctx context.Context, topics []string, handler eth2clie
 	}
 	next, isNext := s.next.(eth2client.EventsProvider)
 	if !isNext {
-		return errors.New("next does not support this call")
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.Events(ctx, topics, handler)
 }
@@ -447,7 +459,7 @@ func (s *Erroring) Finality(ctx context.Context, stateID string) (*api.Finality,
 	}
 	next, isNext := s.next.(eth2client.FinalityProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.Finality(ctx, stateID)
 }
@@ -459,7 +471,7 @@ func (s *Erroring) Fork(ctx context.Context, stateID string) (*spec.Fork, error)
 	}
 	next, isNext := s.next.(eth2client.ForkProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.Fork(ctx, stateID)
 }
@@ -471,7 +483,7 @@ func (s *Erroring) ForkSchedule(ctx context.Context) ([]*spec.Fork, error) {
 	}
 	next, isNext := s.next.(eth2client.ForkScheduleProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.ForkSchedule(ctx)
 }
@@ -483,7 +495,7 @@ func (s *Erroring) Genesis(ctx context.Context) (*api.Genesis, error) {
 	}
 	next, isNext := s.next.(eth2client.GenesisProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.Genesis(ctx)
 }
@@ -495,7 +507,7 @@ func (s *Erroring) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
 	}
 	next, isNext := s.next.(eth2client.NodeSyncingProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.NodeSyncing(ctx)
 }
@@ -508,7 +520,7 @@ func (s *Erroring) ProposerDuties(ctx context.Context, epoch spec.Epoch, validat
 	}
 	next, isNext := s.next.(eth2client.ProposerDutiesProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.ProposerDuties(ctx, epoch, validatorIndices)
 }
@@ -520,7 +532,7 @@ func (s *Erroring) Spec(ctx context.Context) (map[string]interface{}, error) {
 	}
 	next, isNext := s.next.(eth2client.SpecProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.Spec(ctx)
 }
@@ -535,7 +547,7 @@ func (s *Erroring) ValidatorBalances(ctx context.Context, stateID string, valida
 	}
 	next, isNext := s.next.(eth2client.ValidatorBalancesProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.ValidatorBalances(ctx, stateID, validatorIndices)
 }
@@ -550,7 +562,7 @@ func (s *Erroring) Validators(ctx context.Context, stateID string, validatorIndi
 	}
 	next, isNext := s.next.(eth2client.ValidatorsProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.Validators(ctx, stateID, validatorIndices)
 }
@@ -565,7 +577,7 @@ func (s *Erroring) ValidatorsByPubKey(ctx context.Context, stateID string, valid
 	}
 	next, isNext := s.next.(eth2client.ValidatorsProvider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.ValidatorsByPubKey(ctx, stateID, validatorPubKeys)
 }
@@ -577,7 +589,7 @@ func (s *Erroring) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *spec.
 	}
 	next, isNext := s.next.(eth2client.VoluntaryExitSubmitter)
 	if !isNext {
-		return errors.New("next does not support this call")
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.SubmitVoluntaryExit(ctx, voluntaryExit)
 }
@@ -589,7 +601,7 @@ func (s *Erroring) Domain(ctx context.Context, domainType spec.DomainType, epoch
 	}
 	next, isNext := s.next.(eth2client.DomainProvider)
 	if !isNext {
-		return spec.Domain{}, errors.New("next does not support this call")
+		return spec.Domain{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.Domain(ctx, domainType, epoch)
 }
@@ -601,7 +613,43 @@ func (s *Erroring) GenesisTime(ctx context.Context) (time.Time, error) {
 	}
 	next, isNext := s.next.(eth2client.GenesisTimeProvider)
 	if !isNext {
-		return time.Time{}, errors.New("next does not support this call")
+		return time.Time{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.GenesisTime(ctx)
+}
+
+// DepositContract provides details of the Ethereum 1 deposit contract for the chain.
+func (s *Erroring) DepositContract(ctx context.Context) (*api.DepositContract, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(eth2client.DepositContractProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.DepositContract(ctx)
+}
+
+// SignedBeaconBlock fetches a signed beacon block given a block ID.
+func (s *Erroring) SignedBeaconBlock(ctx context.Context, blockID string) (*spec.SignedBeaconBlock, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(eth2client.SignedBeaconBlockProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.SignedBeaconBlock(ctx, blockID)
+}
+
+// BeaconStateRoot fetches a beacon state root given a state ID.
+func (s *Erroring) BeaconStateRoot(ctx context.Context, stateID string) (*spec.Root, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(eth2client.BeaconStateRootProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.BeaconStateRoot(ctx, stateID)
 }

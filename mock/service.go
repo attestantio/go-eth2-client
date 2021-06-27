@@ -25,6 +25,7 @@ import (
 
 // Service is a mock Ethereum 2 client service, providing data locally.
 type Service struct {
+	name    string
 	timeout time.Duration
 
 	genesisTime time.Time
@@ -43,6 +44,7 @@ type Service struct {
 
 	// Values that can be altered if required.
 	HeadSlot     spec.Slot
+	IsSyncing    bool
 	SyncDistance spec.Slot
 }
 
@@ -63,6 +65,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	}
 
 	s := &Service{
+		name:        parameters.name,
 		genesisTime: time.Now(),
 		timeout:     parameters.timeout,
 		nodeVersion: "mock",
@@ -112,7 +115,7 @@ func (s *Service) Name() string {
 
 // Address provides the address of the service.
 func (s *Service) Address() string {
-	return "mock:mock"
+	return s.name
 }
 
 // close closes the service, freeing up resources.

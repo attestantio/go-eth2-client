@@ -23,7 +23,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestStateRoot(t *testing.T) {
+func TestBeaconStateRoot(t *testing.T) {
 	tests := []struct {
 		name              string
 		stateID           string
@@ -60,7 +60,7 @@ func TestStateRoot(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			stateRoot, err := service.StateRoot(context.Background(), test.stateID)
+			stateRoot, err := service.BeaconStateRoot(context.Background(), test.stateID)
 			if test.expectedErrorCode != 0 {
 				require.Contains(t, err.Error(), fmt.Sprintf("%d", test.expectedErrorCode))
 			} else {
