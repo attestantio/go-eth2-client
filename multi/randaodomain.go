@@ -28,7 +28,7 @@ func (s *Service) RANDAODomain(ctx context.Context) (spec.DomainType, error) {
 			return nil, err
 		}
 		return aggregate, nil
-	})
+	}, nil)
 	if err != nil {
 		return spec.DomainType{}, err
 	}

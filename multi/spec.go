@@ -27,7 +27,7 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 			return nil, err
 		}
 		return aggregate, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

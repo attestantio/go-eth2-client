@@ -86,6 +86,8 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		return nil, errors.New("No providers active, cannot proceed")
 	}
 	log.Trace().Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Initial providers")
+	setProvidersMetric(ctx, "active", len(activeClients))
+	setProvidersMetric(ctx, "inactive", len(inactiveClients))
 
 	s := &Service{
 		activeClients:   activeClients,

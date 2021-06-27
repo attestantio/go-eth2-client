@@ -15,6 +15,7 @@ package multi
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
@@ -60,13 +61,13 @@ func (s *Service) deactivateClient(ctx context.Context, client eth2client.Servic
 	for _, activeClient := range s.activeClients {
 		if activeClient == client {
 			inactiveClients = append(inactiveClients, activeClient)
+			log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client deactivated")
+			setProviderStateMetric(ctx, client.Address(), "inactive")
 		} else {
 			activeClients = append(activeClients, activeClient)
 		}
 	}
 
-	log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client deactivated")
-	setProviderStateMetric(ctx, client.Address(), "inactive")
 	s.activeClients = activeClients
 	setProvidersMetric(ctx, "active", len(s.activeClients))
 	s.inactiveClients = inactiveClients
@@ -78,18 +79,18 @@ func (s *Service) activateClient(ctx context.Context, client eth2client.Service)
 	s.clientsMu.Lock()
 	defer s.clientsMu.Unlock()
 
-	activeClients := s.inactiveClients
+	activeClients := s.activeClients
 	inactiveClients := make([]eth2client.Service, 0, len(s.activeClients)+len(s.inactiveClients))
 	for _, inactiveClient := range s.inactiveClients {
 		if inactiveClient == client {
 			activeClients = append(activeClients, inactiveClient)
+			log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client activated")
+			setProviderStateMetric(ctx, client.Address(), "active")
 		} else {
 			inactiveClients = append(inactiveClients, inactiveClient)
 		}
 	}
 
-	setProviderStateMetric(ctx, client.Address(), "active")
-	log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client activated")
 	s.activeClients = activeClients
 	setProvidersMetric(ctx, "active", len(s.activeClients))
 	s.inactiveClients = inactiveClients
@@ -114,12 +115,17 @@ func ping(ctx context.Context, eth2Client eth2client.Service) bool {
 	return !syncState.IsSyncing
 }
 
-// callFunc is the definition ofor a call function.  It provides a generic return interface
+// callFunc is the definition for a call function.  It provides a generic return interface
 // to allow the caller to unpick the results as it sees fit.
 type callFunc func(ctx context.Context, client eth2client.Service) (interface{}, error)
 
+// errHandlerFunc is the definition for an error handler function.  It looks at the error
+// returned from the client, potentially rewrites it, and also states if the error should
+// result in a provider failover.
+type errHandlerFunc func(ctx context.Context, client eth2client.Service, err error) (bool, error)
+
 // doCall carries out a call on the active clients in turn until one succeeds.
-func (s *Service) doCall(ctx context.Context, call callFunc) (interface{}, error) {
+func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandlerFunc) (interface{}, error) {
 	// Grab local copy of active clients in case it is updated whilst we are using it.
 	s.clientsMu.RLock()
 	activeClients := s.activeClients
@@ -130,9 +136,19 @@ func (s *Service) doCall(ctx context.Context, call callFunc) (interface{}, error
 	for _, client := range activeClients {
 		res, err = call(ctx, client)
 		if err != nil {
-			// Failed with this client; try the next.
-			s.deactivateClient(ctx, client)
-			continue
+			failover := true
+			if errHandler != nil {
+				failover, err = errHandler(ctx, client, err)
+			}
+
+			if failover {
+				// Failed with this client; try the next.
+				s.deactivateClient(ctx, client)
+				continue
+			}
+
+			// No failover required, return.
+			return res, err
 		}
 		if res == nil {
 			// No response from this client; try the next.
@@ -142,4 +158,26 @@ func (s *Service) doCall(ctx context.Context, call callFunc) (interface{}, error
 		return res, nil
 	}
 	return nil, err
+}
+
+// providerInfo returns information on the provider.
+// Currently this just returns the name of the service (lighthouse/teku/etc.).
+func (s *Service) providerInfo(ctx context.Context, provider eth2client.Service) string {
+	providerName := "<unknown>"
+	nodeVersionProvider, isNodeVersionProvider := provider.(eth2client.NodeVersionProvider)
+	if isNodeVersionProvider {
+		nodeVersion, err := nodeVersionProvider.NodeVersion(ctx)
+		if err == nil {
+			switch {
+			case strings.Contains(strings.ToLower(nodeVersion), "lighthouse"):
+				providerName = "lighthouse"
+			case strings.Contains(strings.ToLower(nodeVersion), "prysm"):
+				providerName = "prysm"
+			case strings.Contains(strings.ToLower(nodeVersion), "teku"):
+				providerName = "teku"
+			}
+		}
+	}
+
+	return providerName
 }

@@ -15,6 +15,7 @@ package multi
 
 import (
 	"context"
+	"strings"
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
@@ -30,6 +31,25 @@ func (s *Service) SubmitAttestations(ctx context.Context,
 			return nil, err
 		}
 		return true, nil
+	}, func(ctx context.Context, client eth2client.Service, err error) (bool, error) {
+		// We have received an error, decide if it requires us to fail over or not.
+		provider := s.providerInfo(ctx, client)
+		switch {
+		case provider == "lighthouse" && strings.Contains(err.Error(), "PriorAttestationKnown"):
+			// Lighthouse rejects duplicate attestations.  It is possible that an attestation sent
+			// to another node already propagated to this node, or the caller is attempting to resend
+			// an existing attestation, but either way it is not a failover-worthy error.
+			log.Trace().Msg("Lighthouse rejected submission as it already knew about it")
+			return false /* failover */, err
+		case provider == "lighthouse" && strings.Contains(err.Error(), "UnknownHeadBlock"):
+			// Lighthouse rejects an attestation for a block  that is not its current head.  We assume that
+			// the request is valid and it is the node that it is somehow out of sync, so failover.
+			log.Trace().Err(err).Msg("Lighthouse rejected submission as it did not know about the relevant head block")
+			return true /* failover */, err
+		default:
+			// Any other error should result in a failover.
+			return true /* failover */, err
+		}
 	})
 	return err
 }

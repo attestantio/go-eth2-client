@@ -28,7 +28,7 @@ func (s *Service) VoluntaryExitDomain(ctx context.Context) (spec.DomainType, err
 			return nil, err
 		}
 		return aggregate, nil
-	})
+	}, nil)
 	if err != nil {
 		return spec.DomainType{}, err
 	}

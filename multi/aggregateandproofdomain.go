@@ -28,7 +28,7 @@ func (s *Service) AggregateAndProofDomain(ctx context.Context) (spec.DomainType,
 			return nil, err
 		}
 		return aggregate, nil
-	})
+	}, nil)
 	if err != nil {
 		return spec.DomainType{}, err
 	}

@@ -28,6 +28,6 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaco
 			return nil, err
 		}
 		return true, nil
-	})
+	}, nil)
 	return err
 }

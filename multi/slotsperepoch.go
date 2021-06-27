@@ -27,7 +27,7 @@ func (s *Service) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 			return nil, err
 		}
 		return aggregate, nil
-	})
+	}, nil)
 	if err != nil {
 		return 0, err
 	}

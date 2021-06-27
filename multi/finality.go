@@ -28,7 +28,7 @@ func (s *Service) Finality(ctx context.Context, stateID string) (*api.Finality, 
 			return nil, err
 		}
 		return finality, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

@@ -30,6 +30,6 @@ func (s *Service) SubmitBeaconCommitteeSubscriptions(ctx context.Context,
 			return nil, err
 		}
 		return true, nil
-	})
+	}, nil)
 	return err
 }

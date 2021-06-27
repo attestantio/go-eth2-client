@@ -28,7 +28,7 @@ func (s *Service) AttestationPool(ctx context.Context, slot spec.Slot) ([]*spec.
 			return nil, err
 		}
 		return attestationPool, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

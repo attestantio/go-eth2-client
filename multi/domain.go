@@ -34,8 +34,11 @@ func (s *Service) Domain(ctx context.Context,
 			return nil, err
 		}
 		return domain, nil
-	})
+	}, nil)
 	if err != nil {
+		return spec.Domain{}, err
+	}
+	if res == nil {
 		return spec.Domain{}, err
 	}
 	return res.(spec.Domain), nil

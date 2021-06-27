@@ -28,7 +28,7 @@ func (s *Service) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
 			return nil, err
 		}
 		return nodeSyncing, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

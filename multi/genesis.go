@@ -28,7 +28,7 @@ func (s *Service) Genesis(ctx context.Context) (*api.Genesis, error) {
 			return nil, err
 		}
 		return genesis, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

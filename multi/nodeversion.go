@@ -27,7 +27,7 @@ func (s *Service) NodeVersion(ctx context.Context) (string, error) {
 			return nil, err
 		}
 		return aggregate, nil
-	})
+	}, nil)
 	if err != nil {
 		return "", err
 	}

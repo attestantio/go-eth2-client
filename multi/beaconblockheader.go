@@ -28,7 +28,7 @@ func (s *Service) BeaconBlockHeader(ctx context.Context, blockID string) (*api.B
 			return nil, err
 		}
 		return beaconBlockHeader, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

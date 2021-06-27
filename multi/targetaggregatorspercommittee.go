@@ -27,7 +27,7 @@ func (s *Service) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, er
 			return nil, err
 		}
 		return aggregate, nil
-	})
+	}, nil)
 	if err != nil {
 		return 0, err
 	}

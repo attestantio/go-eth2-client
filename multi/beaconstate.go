@@ -29,7 +29,7 @@ func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.Beacon
 			return nil, err
 		}
 		return beaconState, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

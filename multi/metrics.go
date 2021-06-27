@@ -41,7 +41,7 @@ func registerMetrics(ctx context.Context, monitor metrics.Service) error {
 
 func registerPrometheusMetrics(ctx context.Context) error {
 	providersMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "eth2client",
+		Namespace: "ethclient",
 		Subsystem: "multi",
 		Name:      "providers_total",
 		Help:      "Number of providers",
@@ -50,7 +50,7 @@ func registerPrometheusMetrics(ctx context.Context) error {
 		return errors.Wrap(err, "failed to register providers_total")
 	}
 	providerStateMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "eth2client",
+		Namespace: "ethclient",
 		Subsystem: "multi",
 		Name:      "provider_state",
 		Help:      "State of provider",

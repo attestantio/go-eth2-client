@@ -28,7 +28,7 @@ func (s *Service) BeaconCommittees(ctx context.Context, stateID string) ([]*api.
 			return nil, err
 		}
 		return beaconCommittees, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

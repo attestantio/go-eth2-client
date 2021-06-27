@@ -34,7 +34,7 @@ func (s *Service) AttestationData(ctx context.Context,
 			return nil, err
 		}
 		return attestationData, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

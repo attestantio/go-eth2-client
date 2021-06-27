@@ -28,7 +28,7 @@ func (s *Service) DepositContract(ctx context.Context) (*api.DepositContract, er
 			return nil, err
 		}
 		return aggregate, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

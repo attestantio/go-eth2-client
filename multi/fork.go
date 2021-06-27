@@ -28,7 +28,7 @@ func (s *Service) Fork(ctx context.Context, stateID string) (*spec.Fork, error) 
 			return nil, err
 		}
 		return fork, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

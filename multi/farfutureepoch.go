@@ -28,7 +28,7 @@ func (s *Service) FarFutureEpoch(ctx context.Context) (spec.Epoch, error) {
 			return nil, err
 		}
 		return aggregate, nil
-	})
+	}, nil)
 	if err != nil {
 		return 0, err
 	}

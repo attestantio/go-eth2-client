@@ -37,7 +37,7 @@ func (s *Service) Validators(ctx context.Context,
 			return nil, err
 		}
 		return block, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

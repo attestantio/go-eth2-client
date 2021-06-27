@@ -28,6 +28,6 @@ func (s *Service) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *spec.S
 			return nil, err
 		}
 		return true, nil
-	})
+	}, nil)
 	return err
 }

@@ -28,7 +28,7 @@ func (s *Service) ForkSchedule(ctx context.Context) ([]*spec.Fork, error) {
 			return nil, err
 		}
 		return forkSchedule, nil
-	})
+	}, nil)
 	if err != nil {
 		return nil, err
 	}

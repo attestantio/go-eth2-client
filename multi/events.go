@@ -30,6 +30,6 @@ func (s *Service) Events(ctx context.Context,
 			return nil, err
 		}
 		return true, nil
-	})
+	}, nil)
 	return err
 }

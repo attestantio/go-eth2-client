@@ -28,7 +28,7 @@ func (s *Service) BeaconProposerDomain(ctx context.Context) (spec.DomainType, er
 			return nil, err
 		}
 		return aggregate, nil
-	})
+	}, nil)
 	if err != nil {
 		return spec.DomainType{}, err
 	}
