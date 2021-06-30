@@ -7,6 +7,7 @@ require (
 	github.com/ferranbt/fastssz v0.0.0-20210526181520-7df50c8568f8
 	github.com/goccy/go-yaml v1.8.9
 	github.com/gogo/protobuf v1.3.2
+	github.com/golang/snappy v0.0.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.0.6 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect

@@ -15,9 +15,14 @@ package altair_test
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
-	spec "github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/goccy/go-yaml"
+	"github.com/golang/snappy"
 	require "github.com/stretchr/testify/require"
 	"gotest.tools/assert"
 )
@@ -85,7 +90,7 @@ func TestSignedBeaconBlockJSON(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res spec.SignedBeaconBlock
+			var res altair.SignedBeaconBlock
 			err := json.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
@@ -97,4 +102,46 @@ func TestSignedBeaconBlockJSON(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSignedBeaconBlockSpec(t *testing.T) {
+	if os.Getenv("ETH2_SPEC_TESTS_DIR") == "" {
+		t.Skip("ETH2_SPEC_TESTS_DIR not suppplied, not running spec tests")
+	}
+	baseDir := filepath.Join(os.Getenv("ETH2_SPEC_TESTS_DIR"), "tests", "mainnet", "altair", "ssz_static", "SignedBeaconBlock", "ssz_random")
+	require.NoError(t, filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+		if path == baseDir {
+			// Only interested in subdirectories.
+			return nil
+		}
+		require.NoError(t, err)
+		if info.IsDir() {
+			t.Run(info.Name(), func(t *testing.T) {
+				specYAML, err := os.ReadFile(filepath.Join(path, "value.yaml"))
+				require.NoError(t, err)
+				var res altair.SignedBeaconBlock
+				require.NoError(t, yaml.Unmarshal(specYAML, &res))
+
+				compressedSpecSSZ, err := os.ReadFile(filepath.Join(path, "serialized.ssz_snappy"))
+				require.NoError(t, err)
+				var specSSZ []byte
+				specSSZ, err = snappy.Decode(specSSZ, compressedSpecSSZ)
+				require.NoError(t, err)
+
+				unmarshalled := &altair.SignedBeaconBlock{}
+				require.NoError(t, unmarshalled.UnmarshalSSZ(specSSZ))
+
+				ssz, err := res.MarshalSSZ()
+				require.NoError(t, err)
+				require.Equal(t, specSSZ, ssz)
+
+				root, err := res.HashTreeRoot()
+				require.NoError(t, err)
+				rootsYAML, err := os.ReadFile(filepath.Join(path, "roots.yaml"))
+				require.NoError(t, err)
+				require.Equal(t, string(rootsYAML), fmt.Sprintf("{root: '%#x'}\n", root))
+			})
+		}
+		return nil
+	}))
 }

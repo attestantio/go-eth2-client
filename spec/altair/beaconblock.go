@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,16 +21,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // BeaconBlock represents a beacon block.
 type BeaconBlock struct {
-	Slot          Slot
-	ProposerIndex ValidatorIndex
-	ParentRoot    Root `ssz-size:"32"`
-	StateRoot     Root `ssz-size:"32"`
+	Slot          phase0.Slot
+	ProposerIndex phase0.ValidatorIndex
+	ParentRoot    phase0.Root `ssz-size:"32"`
+	StateRoot     phase0.Root `ssz-size:"32"`
 	Body          *BeaconBlockBody
 }
 
@@ -80,7 +81,7 @@ func (b *BeaconBlock) unpack(beaconBlockJSON *beaconBlockJSON) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
-	b.Slot = Slot(slot)
+	b.Slot = phase0.Slot(slot)
 	if beaconBlockJSON.ProposerIndex == "" {
 		return errors.New("proposer index missing")
 	}
@@ -88,7 +89,7 @@ func (b *BeaconBlock) unpack(beaconBlockJSON *beaconBlockJSON) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for proposer index")
 	}
-	b.ProposerIndex = ValidatorIndex(proposerIndex)
+	b.ProposerIndex = phase0.ValidatorIndex(proposerIndex)
 	if beaconBlockJSON.ParentRoot == "" {
 		return errors.New("parent root missing")
 	}
@@ -96,7 +97,7 @@ func (b *BeaconBlock) unpack(beaconBlockJSON *beaconBlockJSON) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for parent root")
 	}
-	if len(parentRoot) != RootLength {
+	if len(parentRoot) != phase0.RootLength {
 		return errors.New("incorrect length for parent root")
 	}
 	copy(b.ParentRoot[:], parentRoot)
@@ -107,7 +108,7 @@ func (b *BeaconBlock) unpack(beaconBlockJSON *beaconBlockJSON) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for state root")
 	}
-	if len(stateRoot) != RootLength {
+	if len(stateRoot) != phase0.RootLength {
 		return errors.New("incorrect length for state root")
 	}
 	copy(b.StateRoot[:], stateRoot)

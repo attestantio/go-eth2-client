@@ -19,13 +19,14 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // SyncAggregatorSelectionDataSignature is the Ethereum 2 sync aggregator selection data structure.
 type SyncAggregatorSelectionDataSignature struct {
-	Slot              Slot
+	Slot              phase0.Slot
 	SubcommitteeIndex uint64
 }
 
@@ -66,7 +67,7 @@ func (s *SyncAggregatorSelectionDataSignature) unpack(syncAggregatorSelectionDat
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
-	s.Slot = Slot(slot)
+	s.Slot = phase0.Slot(slot)
 	if syncAggregatorSelectionDataJSON.SubcommitteeIndex == "" {
 		return errors.New("subcommittee index missing")
 	}

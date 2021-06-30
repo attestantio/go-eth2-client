@@ -14,4 +14,4 @@
 package altair
 
 // Need to `go get github.com/ferranbt/fastssz/sszgen` for this to work.
-//go:generate sszgen --path . --objs AggregateAndProof,AttestationData,Attestation,AttesterSlashing,BeaconBlockBody,BeaconBlock,BeaconBlockHeader,BeaconState,Checkpoint,Deposit,DepositData,DepositMessage,ETH1Data,Fork,ForkData,IndexedAttestation,PendingAttestation,ProposerSlashing,SignedAggregateAndProof,SignedBeaconBlock,SignedBeaconBlockHeader,SignedVoluntaryExit,SigningData,Validator,VoluntaryExit
+//go:generate sszgen --path . --objs BeaconBlock,BeaconBlockBody,ContributionAndProof,SignedBeaconBlock,SignedContributionAndProof,SyncCommittee,SyncAggregate

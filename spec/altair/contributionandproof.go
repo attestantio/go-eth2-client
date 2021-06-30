@@ -21,15 +21,16 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // ContributionAndProof is the Ethereum 2 contribution and proof structure.
 type ContributionAndProof struct {
-	AggregatorIndex ValidatorIndex
+	AggregatorIndex phase0.ValidatorIndex
 	Contribution    *SyncCommitteeContribution
-	SelectionProof  BLSSignature
+	SelectionProof  phase0.BLSSignature
 }
 
 // contributionAndProofJSON is the spec representation of the struct.
@@ -72,7 +73,7 @@ func (a *ContributionAndProof) unpack(contributionAndProofJSON *contributionAndP
 	if err != nil {
 		return errors.Wrap(err, "invalid value for aggregator index")
 	}
-	a.AggregatorIndex = ValidatorIndex(aggregatorIndex)
+	a.AggregatorIndex = phase0.ValidatorIndex(aggregatorIndex)
 	if contributionAndProofJSON.Contribution == nil {
 		return errors.New("contribution missing")
 	}
@@ -84,7 +85,7 @@ func (a *ContributionAndProof) unpack(contributionAndProofJSON *contributionAndP
 	if err != nil {
 		return errors.Wrap(err, "invalid value for selection proof")
 	}
-	if len(selectionProof) != SignatureLength {
+	if len(selectionProof) != phase0.SignatureLength {
 		return errors.New("incorrect length for selection proof")
 	}
 	copy(a.SelectionProof[:], selectionProof)

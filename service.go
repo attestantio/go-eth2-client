@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,7 +18,8 @@ import (
 	"time"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // Service is the service providing a connection to an Ethereum 2 client.
@@ -33,13 +34,13 @@ type Service interface {
 // PrysmAttesterDutiesProvider is the interface for providing attester duties with prysm-specific parameters.
 type PrysmAttesterDutiesProvider interface {
 	// PrysmAttesterDuties obtains attester duties with prysm-specific parameters.
-	PrysmAttesterDuties(ctx context.Context, epoch spec.Epoch, validatorPubKeys []spec.BLSPubKey) ([]*api.AttesterDuty, error)
+	PrysmAttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorPubKeys []phase0.BLSPubKey) ([]*api.AttesterDuty, error)
 }
 
 // PrysmProposerDutiesProvider is the interface for providing proposer duties with prysm-specific parameters.
 type PrysmProposerDutiesProvider interface {
 	// PrysmProposerDuties obtains proposer duties with prysm-specific parameters.
-	PrysmProposerDuties(ctx context.Context, epoch spec.Epoch, validatorPubKeys []spec.BLSPubKey) ([]*api.ProposerDuty, error)
+	PrysmProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorPubKeys []phase0.BLSPubKey) ([]*api.ProposerDuty, error)
 }
 
 // PrysmValidatorBalancesProvider is the interface for providing validator balances.
@@ -48,19 +49,19 @@ type PrysmValidatorBalancesProvider interface {
 	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 	// validatorIDs is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
 	// will be applied.
-	PrysmValidatorBalances(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]spec.Gwei, error)
+	PrysmValidatorBalances(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]phase0.Gwei, error)
 }
 
 // EpochFromStateIDProvider is the interface for providing epochs from state IDs.
 type EpochFromStateIDProvider interface {
 	// EpochFromStateID converts a state ID to its epoch.
-	EpochFromStateID(ctx context.Context, stateID string) (spec.Epoch, error)
+	EpochFromStateID(ctx context.Context, stateID string) (phase0.Epoch, error)
 }
 
 // SlotFromStateIDProvider is the interface for providing slots from state IDs.
 type SlotFromStateIDProvider interface {
 	// SlotFromStateID converts a state ID to its slot.
-	SlotFromStateID(ctx context.Context, stateID string) (spec.Slot, error)
+	SlotFromStateID(ctx context.Context, stateID string) (phase0.Slot, error)
 }
 
 // NodeVersionProvider is the interface for providing the node version.
@@ -84,7 +85,7 @@ type SlotsPerEpochProvider interface {
 // FarFutureEpochProvider is the interface for providing the far future epoch of a chain.
 type FarFutureEpochProvider interface {
 	// FarFutureEpoch provides the far future epoch of the chain.
-	FarFutureEpoch(ctx context.Context) (spec.Epoch, error)
+	FarFutureEpoch(ctx context.Context) (phase0.Epoch, error)
 }
 
 // GenesisValidatorsRootProvider is the interface for providing the genesis validators root of a chain.
@@ -103,61 +104,61 @@ type TargetAggregatorsPerCommitteeProvider interface {
 // BeaconAttesterDomainProvider is the interface for providing the beacon attester domain.
 type BeaconAttesterDomainProvider interface {
 	// BeaconAttesterDomain provides the beacon attester domain.
-	BeaconAttesterDomain(ctx context.Context) (spec.DomainType, error)
+	BeaconAttesterDomain(ctx context.Context) (phase0.DomainType, error)
 }
 
 // BeaconProposerDomainProvider is the interface for providing the beacon proposer domain.
 type BeaconProposerDomainProvider interface {
 	// BeaconProposerDomain provides the beacon proposer domain.
-	BeaconProposerDomain(ctx context.Context) (spec.DomainType, error)
+	BeaconProposerDomain(ctx context.Context) (phase0.DomainType, error)
 }
 
 // RANDAODomainProvider is the interface for providing the RANDAO domain.
 type RANDAODomainProvider interface {
 	// RANDAODomain provides the RANDAO domain.
-	RANDAODomain(ctx context.Context) (spec.DomainType, error)
+	RANDAODomain(ctx context.Context) (phase0.DomainType, error)
 }
 
 // DepositDomainProvider is the interface for providing the deposit domain.
 type DepositDomainProvider interface {
 	// DepositDomain provides the deposit domain.
-	DepositDomain(ctx context.Context) (spec.DomainType, error)
+	DepositDomain(ctx context.Context) (phase0.DomainType, error)
 }
 
 // VoluntaryExitDomainProvider is the interface for providing the voluntary exit domain.
 type VoluntaryExitDomainProvider interface {
 	// VoluntaryExitDomain provides the voluntary exit domain.
-	VoluntaryExitDomain(ctx context.Context) (spec.DomainType, error)
+	VoluntaryExitDomain(ctx context.Context) (phase0.DomainType, error)
 }
 
 // SelectionProofDomainProvider is the interface for providing the selection proof domain.
 type SelectionProofDomainProvider interface {
 	// SelectionProofDomain provides the selection proof domain.
-	SelectionProofDomain(ctx context.Context) (spec.DomainType, error)
+	SelectionProofDomain(ctx context.Context) (phase0.DomainType, error)
 }
 
 // AggregateAndProofDomainProvider is the interface for providing the aggregate and proof domain.
 type AggregateAndProofDomainProvider interface {
 	// AggregateAndProofDomain provides the aggregate and proof domain.
-	AggregateAndProofDomain(ctx context.Context) (spec.DomainType, error)
+	AggregateAndProofDomain(ctx context.Context) (phase0.DomainType, error)
 }
 
 // SyncCommitteeSelectionProofDomainProvider is the interface for providing the sync committee selection proof domain.
 type SyncCommitteeSelectionProofDomainProvider interface {
 	// SyncCommitteeSelectionProofDomain provides the sync committee selection proof domain.
-	SyncCommitteeSelectionProofDomain(ctx context.Context) (spec.DomainType, error)
+	SyncCommitteeSelectionProofDomain(ctx context.Context) (phase0.DomainType, error)
 }
 
 // ContributionAndProofDomainProvider is the interface for providing the contribution and proof domain.
 type ContributionAndProofDomainProvider interface {
 	// ContributionAndProofDomain provides the contribution and proof domain.
-	ContributionAndProofDomain(ctx context.Context) (spec.DomainType, error)
+	ContributionAndProofDomain(ctx context.Context) (phase0.DomainType, error)
 }
 
 // SyncCommitteeDomainProvider is the interface for providing the sync committee domain.
 type SyncCommitteeDomainProvider interface {
 	// SyncCommitteeDomain provides the sync committee domain.
-	SyncCommitteeDomain(ctx context.Context) (spec.DomainType, error)
+	SyncCommitteeDomain(ctx context.Context) (phase0.DomainType, error)
 }
 
 // BeaconChainHeadUpdatedSource is the interface for a service that provides beacon chain head updates.
@@ -176,13 +177,13 @@ type BeaconChainHeadUpdatedHandler interface {
 // ValidatorIndexProvider is the interface for entities that can provide the index of a validator.
 type ValidatorIndexProvider interface {
 	// Index provides the index of the validator.
-	Index(ctx context.Context) (spec.ValidatorIndex, error)
+	Index(ctx context.Context) (phase0.ValidatorIndex, error)
 }
 
 // ValidatorPubKeyProvider is the interface for entities that can provide the public key of a validator.
 type ValidatorPubKeyProvider interface {
 	// PubKey provides the public key of the validator.
-	PubKey(ctx context.Context) (spec.BLSPubKey, error)
+	PubKey(ctx context.Context) (phase0.BLSPubKey, error)
 }
 
 // ValidatorIDProvider is the interface that provides the identifiers (pubkey, index) of a validator.
@@ -206,15 +207,13 @@ type DepositContractProvider interface {
 // PrysmAggregateAttestationProvider is the interface for providing aggregate attestations.
 type PrysmAggregateAttestationProvider interface {
 	// PrysmAggregateAttestation fetches the aggregate attestation given an attestation.
-	PrysmAggregateAttestation(ctx context.Context, attestation *spec.Attestation, validatorPubKey spec.BLSPubKey, slotSignature spec.BLSSignature) (*spec.Attestation, error)
+	PrysmAggregateAttestation(ctx context.Context, attestation *phase0.Attestation, validatorPubKey phase0.BLSPubKey, slotSignature phase0.BLSSignature) (*phase0.Attestation, error)
 }
 
 // SignedBeaconBlockProvider is the interface for providing beacon blocks.
 type SignedBeaconBlockProvider interface {
 	// SignedBeaconBlock fetches a signed beacon block given a block ID.
-	SignedBeaconBlock(ctx context.Context, blockID string) (*spec.SignedBeaconBlock, error)
-	// SignedBeaconBlockBySlot fetches a signed beacon block given its slot.
-	// SignedBeaconBlockBySlot(ctx context.Context, slot uint64) (*spec.SignedBeaconBlock, error)
+	SignedBeaconBlock(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error)
 }
 
 // BeaconBlockRootProvider is the interface for providing beacon block roots.
@@ -237,14 +236,14 @@ type ValidatorsWithoutBalanceProvider interface {
 	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 	// validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
 	// will be applied.
-	ValidatorsWithoutBalance(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error)
+	ValidatorsWithoutBalance(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error)
 
 	// ValidatorsWithoutBalanceByPubKey provides the validators, with their status, for a given state.
 	// This is a non-standard call, only to be used if fetching balances results in the call being too slow.
 	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 	// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
 	// supplied no filter will be applied.
-	ValidatorsWithoutBalanceByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error)
+	ValidatorsWithoutBalanceByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error)
 }
 
 // EventHandlerFunc is the handler for events.
@@ -257,38 +256,38 @@ type EventHandlerFunc func(*api.Event)
 // AggregateAttestationProvider is the interface for providing aggregate attestations.
 type AggregateAttestationProvider interface {
 	// AggregateAttestation fetches the aggregate attestation given an attestation.
-	AggregateAttestation(ctx context.Context, slot spec.Slot, attestationDataRoot spec.Root) (*spec.Attestation, error)
+	AggregateAttestation(ctx context.Context, slot phase0.Slot, attestationDataRoot phase0.Root) (*phase0.Attestation, error)
 }
 
 // AggregateAttestationsSubmitter is the interface for submitting aggregate attestations.
 type AggregateAttestationsSubmitter interface {
 	// SubmitAggregateAttestations submits aggregate attestations.
-	SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*spec.SignedAggregateAndProof) error
+	SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error
 }
 
 // AttestationDataProvider is the interface for providing attestation data.
 type AttestationDataProvider interface {
 	// AttestationData fetches the attestation data for the given slot and committee index.
-	AttestationData(ctx context.Context, slot spec.Slot, committeeIndex spec.CommitteeIndex) (*spec.AttestationData, error)
+	AttestationData(ctx context.Context, slot phase0.Slot, committeeIndex phase0.CommitteeIndex) (*phase0.AttestationData, error)
 }
 
 // AttestationPoolProvider is the interface for providing attestation pools.
 type AttestationPoolProvider interface {
 	// AttestationPool fetches the attestation pool for the given slot.
-	AttestationPool(ctx context.Context, slot spec.Slot) ([]*spec.Attestation, error)
+	AttestationPool(ctx context.Context, slot phase0.Slot) ([]*phase0.Attestation, error)
 }
 
 // AttestationsSubmitter is the interface for submitting attestations.
 type AttestationsSubmitter interface {
 	// SubmitAttestations submits attestations.
-	SubmitAttestations(ctx context.Context, attestations []*spec.Attestation) error
+	SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error
 }
 
 // AttesterDutiesProvider is the interface for providing attester duties
 type AttesterDutiesProvider interface {
 	// AttesterDuties obtains attester duties.
 	// If validatorIndicess is nil it will return all duties for the given epoch.
-	AttesterDuties(ctx context.Context, epoch spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.AttesterDuty, error)
+	AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.AttesterDuty, error)
 }
 
 // BeaconBlockHeadersProvider is the interface for providing beacon block headers.
@@ -300,13 +299,13 @@ type BeaconBlockHeadersProvider interface {
 // BeaconBlockProposalProvider is the interface for providing beacon block proposals.
 type BeaconBlockProposalProvider interface {
 	// BeaconBlockProposal fetches a proposed beacon block for signing.
-	BeaconBlockProposal(ctx context.Context, slot spec.Slot, randaoReveal spec.BLSSignature, graffiti []byte) (*spec.BeaconBlock, error)
+	BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error)
 }
 
 // BeaconBlockSubmitter is the interface for submitting beacon blocks.
 type BeaconBlockSubmitter interface {
 	// SubmitBeaconBlock submits a beacon block.
-	SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaconBlock) error
+	SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error
 }
 
 // BeaconCommitteeSubscriptionsSubmitter is the interface for submitting beacon committee subnet subscription requests.
@@ -318,7 +317,7 @@ type BeaconCommitteeSubscriptionsSubmitter interface {
 // BeaconStateProvider is the interface for providing beacon state.
 type BeaconStateProvider interface {
 	// BeaconState fetches a beacon state.
-	BeaconState(ctx context.Context, stateID string) (*spec.BeaconState, error)
+	BeaconState(ctx context.Context, stateID string) (*phase0.BeaconState, error)
 }
 
 // EventsProvider is the interface for providing events.
@@ -336,13 +335,13 @@ type FinalityProvider interface {
 // ForkProvider is the interface for providing fork information.
 type ForkProvider interface {
 	// Fork fetches fork information for the given state.
-	Fork(ctx context.Context, stateID string) (*spec.Fork, error)
+	Fork(ctx context.Context, stateID string) (*phase0.Fork, error)
 }
 
 // ForkScheduleProvider is the interface for providing fork schedule data.
 type ForkScheduleProvider interface {
 	// ForkSchedule provides details of past and future changes in the chain's fork version.
-	ForkSchedule(ctx context.Context) ([]*spec.Fork, error)
+	ForkSchedule(ctx context.Context) ([]*phase0.Fork, error)
 }
 
 // GenesisProvider is the interface for providing genesis information.
@@ -361,7 +360,7 @@ type NodeSyncingProvider interface {
 type ProposerDutiesProvider interface {
 	// ProposerDuties obtains proposer duties for the given epoch.
 	// If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
-	ProposerDuties(ctx context.Context, epoch spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.ProposerDuty, error)
+	ProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.ProposerDuty, error)
 }
 
 // SpecProvider is the interface for providing spec data.
@@ -382,7 +381,7 @@ type ValidatorBalancesProvider interface {
 	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 	// validatorIndices is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
 	// will be applied.
-	ValidatorBalances(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]spec.Gwei, error)
+	ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error)
 }
 
 // ValidatorsProvider is the interface for providing validator information.
@@ -391,19 +390,19 @@ type ValidatorsProvider interface {
 	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 	// validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
 	// will be applied.
-	Validators(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error)
+	Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error)
 
 	// ValidatorsByPubKey provides the validators, with their balance and status, for a given state.
 	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 	// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
 	// supplied no filter will be applied.
-	ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error)
+	ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error)
 }
 
 // VoluntaryExitSubmitter is the interface for submitting voluntary exits.
 type VoluntaryExitSubmitter interface {
 	// SubmitVoluntaryExit submits a voluntary exit.
-	SubmitVoluntaryExit(ctx context.Context, voluntaryExit *spec.SignedVoluntaryExit) error
+	SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error
 }
 
 // type DepositContractProvider interface {
@@ -418,7 +417,7 @@ type VoluntaryExitSubmitter interface {
 // DomainProvider provides a domain for a given domain type at an epoch.
 type DomainProvider interface {
 	// Domain provides a domain for a given domain type at a given epoch.
-	Domain(ctx context.Context, domainType spec.DomainType, epoch spec.Epoch) (spec.Domain, error)
+	Domain(ctx context.Context, domainType phase0.DomainType, epoch phase0.Epoch) (phase0.Domain, error)
 }
 
 // GenesisTimeProvider is the interface for providing the genesis time of a chain.

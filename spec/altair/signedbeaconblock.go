@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
@@ -27,7 +28,7 @@ import (
 // SignedBeaconBlock is a signed beacon block.
 type SignedBeaconBlock struct {
 	Message   *BeaconBlock
-	Signature BLSSignature `ssz-size:"96"`
+	Signature phase0.BLSSignature `ssz-size:"96"`
 }
 
 // signedBeaconBlockJSON is the spec representation of the struct.
@@ -71,7 +72,7 @@ func (s *SignedBeaconBlock) unpack(signedBeaconBlockJSON *signedBeaconBlockJSON)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
-	if len(signature) != SignatureLength {
+	if len(signature) != phase0.SignatureLength {
 		return fmt.Errorf("incorrect length %d for signature", len(signature))
 	}
 	copy(s.Signature[:], signature)

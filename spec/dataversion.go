@@ -13,12 +13,46 @@
 
 package spec
 
-// DataVersion defines the spec version of a piece of data.
+import (
+	"fmt"
+	"strings"
+)
+
+// DataVersion defines the spec version of the data in a response.
 type DataVersion int
 
 const (
-	// Phase0 is data applicable for the initial release of the beacon chain.
-	Phase0 DataVersion = iota
-	// Altair is data applicable for the Altair release of the beacon chain.
-	Altair
+	// DataVersionPhase0 is data applicable for the initial release of the beacon chain.
+	DataVersionPhase0 DataVersion = iota
+	// DataVersionAltair is data applicable for the Altair release of the beacon chain.
+	DataVersionAltair
 )
+
+var responseVersionStrings = [...]string{
+	"PHASE0",
+	"ALTAIR",
+}
+
+// MarshalJSON implements json.Marshaler.
+func (d *DataVersion) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("%q", responseVersionStrings[*d])), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (d *DataVersion) UnmarshalJSON(input []byte) error {
+	var err error
+	switch strings.ToUpper(string(input)) {
+	case `"PHASE0"`:
+		*d = DataVersionPhase0
+	case `"ALTAIR"`:
+		*d = DataVersionAltair
+	default:
+		err = fmt.Errorf("unrecognised response version %s", string(input))
+	}
+	return err
+}
+
+// String returns a string representation of the
+func (d DataVersion) String() string {
+	return responseVersionStrings[d]
+}

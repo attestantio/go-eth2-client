@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
@@ -29,32 +30,32 @@ var syncCommitteeSize = 512
 
 // SyncCommittee is the Ethereum 2 sync committee structure.
 type SyncCommittee struct {
-	PubKeys         []BLSPubKey `ssz-size:"512,48"`
-	AggregatePubKey BLSPubKey
+	Pubkeys         []phase0.BLSPubKey `ssz-size:"512"`
+	AggregatePubkey phase0.BLSPubKey
 }
 
 // syncCommitteeJSON is the spec representation of the struct.
 type syncCommitteeJSON struct {
-	PubKeys         []string `json:"pubkeys"`
-	AggregatePubKey string   `json:"aggregate_pubkey"`
+	Pubkeys         []string `json:"pubkeys"`
+	AggregatePubkey string   `json:"aggregate_pubkey"`
 }
 
 // syncCommitteeYAML is the spec representation of the struct.
 type syncCommitteeYAML struct {
-	PubKeys         []string `yaml:"pubkeys"`
-	AggregatePubKey string   `yaml:"aggregate_pubkey"`
+	Pubkeys         []string `yaml:"pubkeys"`
+	AggregatePubkey string   `yaml:"aggregate_pubkey"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (s *SyncCommittee) MarshalJSON() ([]byte, error) {
-	pubKeys := make([]string, len(s.PubKeys))
-	for i := range s.PubKeys {
-		pubKeys[i] = fmt.Sprintf("%#x", s.PubKeys[i])
+	pubKeys := make([]string, len(s.Pubkeys))
+	for i := range s.Pubkeys {
+		pubKeys[i] = fmt.Sprintf("%#x", s.Pubkeys[i])
 	}
 
 	return json.Marshal(&syncCommitteeJSON{
-		PubKeys:         pubKeys,
-		AggregatePubKey: fmt.Sprintf("%#x", s.AggregatePubKey),
+		Pubkeys:         pubKeys,
+		AggregatePubkey: fmt.Sprintf("%#x", s.AggregatePubkey),
 	})
 }
 
@@ -68,49 +69,46 @@ func (s *SyncCommittee) UnmarshalJSON(input []byte) error {
 }
 
 func (s *SyncCommittee) unpack(syncCommitteeJSON *syncCommitteeJSON) error {
-	if len(syncCommitteeJSON.PubKeys) != syncCommitteeSize {
+	if len(syncCommitteeJSON.Pubkeys) != syncCommitteeSize {
 		return errors.New("incorrect length for public keys")
 	}
-	s.PubKeys = make([]BLSPubKey, len(syncCommitteeJSON.PubKeys))
-	for i := range syncCommitteeJSON.PubKeys {
-		pubKey, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeJSON.PubKeys[i], "0x"))
+	s.Pubkeys = make([]phase0.BLSPubKey, syncCommitteeSize)
+	for i := range syncCommitteeJSON.Pubkeys {
+		pubKey, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeJSON.Pubkeys[i], "0x"))
 		if err != nil {
 			return errors.Wrap(err, "invalid value for public key")
 		}
-		if len(pubKey) != PublicKeyLength {
+		if len(pubKey) != phase0.PublicKeyLength {
 			return errors.New("incorrect length for public key")
 		}
-		copy(s.PubKeys[i][:], pubKey)
+		copy(s.Pubkeys[i][:], pubKey)
 	}
 
-	if syncCommitteeJSON.AggregatePubKey == "" {
+	if syncCommitteeJSON.AggregatePubkey == "" {
 		return errors.New("aggregate public key missing")
 	}
-	aggregatePubKey, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeJSON.AggregatePubKey, "0x"))
+	aggregatePubKey, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeJSON.AggregatePubkey, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for aggregate public key")
 	}
-	if len(aggregatePubKey) < 48 {
-		return errors.New("aggregate public key short")
+	if len(aggregatePubKey) != phase0.PublicKeyLength {
+		return errors.New("incorrect length for aggregate public key")
 	}
-	if len(aggregatePubKey) > 48 {
-		return errors.New("aggregate public key long")
-	}
-	copy(s.AggregatePubKey[:], aggregatePubKey)
+	copy(s.AggregatePubkey[:], aggregatePubKey)
 
 	return nil
 }
 
 // MarshalYAML implements yaml.Marshaler.
 func (s *SyncCommittee) MarshalYAML() ([]byte, error) {
-	pubKeys := make([]string, len(s.PubKeys))
-	for i := range s.PubKeys {
-		pubKeys[i] = fmt.Sprintf("%#x", s.PubKeys[i])
+	pubKeys := make([]string, len(s.Pubkeys))
+	for i := range s.Pubkeys {
+		pubKeys[i] = fmt.Sprintf("%#x", s.Pubkeys[i])
 	}
 
 	yamlBytes, err := yaml.MarshalWithOptions(&syncCommitteeYAML{
-		PubKeys:         pubKeys,
-		AggregatePubKey: fmt.Sprintf("%#x", s.AggregatePubKey),
+		Pubkeys:         pubKeys,
+		AggregatePubkey: fmt.Sprintf("%#x", s.AggregatePubkey),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

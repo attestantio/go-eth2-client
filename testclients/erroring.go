@@ -22,7 +22,8 @@ import (
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // Erroring is an Ethereum 2 client that errors at a given rate.
@@ -77,7 +78,7 @@ func (s *Erroring) maybeError(ctx context.Context) error {
 }
 
 // PrysmAttesterDuties obtains attester duties with prysm-specific parameters.
-func (s *Erroring) PrysmAttesterDuties(ctx context.Context, epoch spec.Epoch, validatorPubKeys []spec.BLSPubKey) ([]*api.AttesterDuty, error) {
+func (s *Erroring) PrysmAttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorPubKeys []phase0.BLSPubKey) ([]*api.AttesterDuty, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -89,7 +90,7 @@ func (s *Erroring) PrysmAttesterDuties(ctx context.Context, epoch spec.Epoch, va
 }
 
 // PrysmProposerDuties obtains proposer duties with prysm-specific parameters.
-func (s *Erroring) PrysmProposerDuties(ctx context.Context, epoch spec.Epoch, validatorPubKeys []spec.BLSPubKey) ([]*api.ProposerDuty, error) {
+func (s *Erroring) PrysmProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorPubKeys []phase0.BLSPubKey) ([]*api.ProposerDuty, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -104,7 +105,7 @@ func (s *Erroring) PrysmProposerDuties(ctx context.Context, epoch spec.Epoch, va
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIDs is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
 // will be applied.
-func (s *Erroring) PrysmValidatorBalances(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]spec.Gwei, error) {
+func (s *Erroring) PrysmValidatorBalances(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -116,7 +117,7 @@ func (s *Erroring) PrysmValidatorBalances(ctx context.Context, stateID string, v
 }
 
 // EpochFromStateID converts a state ID to its epoch.
-func (s *Erroring) EpochFromStateID(ctx context.Context, stateID string) (spec.Epoch, error) {
+func (s *Erroring) EpochFromStateID(ctx context.Context, stateID string) (phase0.Epoch, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
 	}
@@ -128,7 +129,7 @@ func (s *Erroring) EpochFromStateID(ctx context.Context, stateID string) (spec.E
 }
 
 // SlotFromStateID converts a state ID to its slot.
-func (s *Erroring) SlotFromStateID(ctx context.Context, stateID string) (spec.Slot, error) {
+func (s *Erroring) SlotFromStateID(ctx context.Context, stateID string) (phase0.Slot, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
 	}
@@ -176,7 +177,7 @@ func (s *Erroring) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 }
 
 // FarFutureEpoch provides the far future epoch of the chain.
-func (s *Erroring) FarFutureEpoch(ctx context.Context) (spec.Epoch, error) {
+func (s *Erroring) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
 	}
@@ -212,91 +213,91 @@ func (s *Erroring) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, e
 }
 
 // BeaconAttesterDomain provides the beacon attester domain.
-func (s *Erroring) BeaconAttesterDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Erroring) BeaconAttesterDomain(ctx context.Context) (phase0.DomainType, error) {
 	if err := s.maybeError(ctx); err != nil {
-		return spec.DomainType{}, err
+		return phase0.DomainType{}, err
 	}
 	next, isNext := s.next.(eth2client.BeaconAttesterDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.BeaconAttesterDomain(ctx)
 }
 
 // BeaconProposerDomain provides the beacon proposer domain.
-func (s *Erroring) BeaconProposerDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Erroring) BeaconProposerDomain(ctx context.Context) (phase0.DomainType, error) {
 	if err := s.maybeError(ctx); err != nil {
-		return spec.DomainType{}, err
+		return phase0.DomainType{}, err
 	}
 	next, isNext := s.next.(eth2client.BeaconProposerDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.BeaconProposerDomain(ctx)
 }
 
 // RANDAODomain provides the RANDAO domain.
-func (s *Erroring) RANDAODomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Erroring) RANDAODomain(ctx context.Context) (phase0.DomainType, error) {
 	if err := s.maybeError(ctx); err != nil {
-		return spec.DomainType{}, err
+		return phase0.DomainType{}, err
 	}
 	next, isNext := s.next.(eth2client.RANDAODomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.RANDAODomain(ctx)
 }
 
 // DepositDomain provides the deposit domain.
-func (s *Erroring) DepositDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Erroring) DepositDomain(ctx context.Context) (phase0.DomainType, error) {
 	if err := s.maybeError(ctx); err != nil {
-		return spec.DomainType{}, err
+		return phase0.DomainType{}, err
 	}
 	next, isNext := s.next.(eth2client.DepositDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.DepositDomain(ctx)
 }
 
 // VoluntaryExitDomain provides the voluntary exit domain.
-func (s *Erroring) VoluntaryExitDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Erroring) VoluntaryExitDomain(ctx context.Context) (phase0.DomainType, error) {
 	if err := s.maybeError(ctx); err != nil {
-		return spec.DomainType{}, err
+		return phase0.DomainType{}, err
 	}
 	next, isNext := s.next.(eth2client.VoluntaryExitDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.VoluntaryExitDomain(ctx)
 }
 
 // SelectionProofDomain provides the selection proof domain.
-func (s *Erroring) SelectionProofDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Erroring) SelectionProofDomain(ctx context.Context) (phase0.DomainType, error) {
 	if err := s.maybeError(ctx); err != nil {
-		return spec.DomainType{}, err
+		return phase0.DomainType{}, err
 	}
 	next, isNext := s.next.(eth2client.SelectionProofDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.SelectionProofDomain(ctx)
 }
 
 // AggregateAndProofDomain provides the aggregate and proof domain.
-func (s *Erroring) AggregateAndProofDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Erroring) AggregateAndProofDomain(ctx context.Context) (phase0.DomainType, error) {
 	if err := s.maybeError(ctx); err != nil {
-		return spec.DomainType{}, err
+		return phase0.DomainType{}, err
 	}
 	next, isNext := s.next.(eth2client.AggregateAndProofDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.AggregateAndProofDomain(ctx)
 }
 
 // AggregateAttestation fetches the aggregate attestation given an attestation.
-func (s *Erroring) AggregateAttestation(ctx context.Context, slot spec.Slot, attestationDataRoot spec.Root) (*spec.Attestation, error) {
+func (s *Erroring) AggregateAttestation(ctx context.Context, slot phase0.Slot, attestationDataRoot phase0.Root) (*phase0.Attestation, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -308,7 +309,7 @@ func (s *Erroring) AggregateAttestation(ctx context.Context, slot spec.Slot, att
 }
 
 // SubmitAggregateAttestations submits aggregate attestations.
-func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*spec.SignedAggregateAndProof) error {
+func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -320,7 +321,7 @@ func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, aggregateAnd
 }
 
 // AttestationData fetches the attestation data for the given slot and committee index.
-func (s *Erroring) AttestationData(ctx context.Context, slot spec.Slot, committeeIndex spec.CommitteeIndex) (*spec.AttestationData, error) {
+func (s *Erroring) AttestationData(ctx context.Context, slot phase0.Slot, committeeIndex phase0.CommitteeIndex) (*phase0.AttestationData, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -332,7 +333,7 @@ func (s *Erroring) AttestationData(ctx context.Context, slot spec.Slot, committe
 }
 
 // AttestationPool fetches the attestation pool for the given slot.
-func (s *Erroring) AttestationPool(ctx context.Context, slot spec.Slot) ([]*spec.Attestation, error) {
+func (s *Erroring) AttestationPool(ctx context.Context, slot phase0.Slot) ([]*phase0.Attestation, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -344,7 +345,7 @@ func (s *Erroring) AttestationPool(ctx context.Context, slot spec.Slot) ([]*spec
 }
 
 // SubmitAttestations submits attestations.
-func (s *Erroring) SubmitAttestations(ctx context.Context, attestations []*spec.Attestation) error {
+func (s *Erroring) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -357,7 +358,7 @@ func (s *Erroring) SubmitAttestations(ctx context.Context, attestations []*spec.
 
 // AttesterDuties obtains attester duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Erroring) AttesterDuties(ctx context.Context, epoch spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.AttesterDuty, error) {
+func (s *Erroring) AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.AttesterDuty, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -381,7 +382,7 @@ func (s *Erroring) BeaconBlockHeader(ctx context.Context, blockID string) (*api.
 }
 
 // BeaconBlockProposal fetches a proposed beacon block for signing.
-func (s *Erroring) BeaconBlockProposal(ctx context.Context, slot spec.Slot, randaoReveal spec.BLSSignature, graffiti []byte) (*spec.BeaconBlock, error) {
+func (s *Erroring) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -393,7 +394,7 @@ func (s *Erroring) BeaconBlockProposal(ctx context.Context, slot spec.Slot, rand
 }
 
 // SubmitBeaconBlock submits a beacon block.
-func (s *Erroring) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaconBlock) error {
+func (s *Erroring) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -417,7 +418,7 @@ func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subsc
 }
 
 // BeaconState fetches a beacon state.
-func (s *Erroring) BeaconState(ctx context.Context, stateID string) (*spec.BeaconState, error) {
+func (s *Erroring) BeaconState(ctx context.Context, stateID string) (*phase0.BeaconState, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -453,7 +454,7 @@ func (s *Erroring) Finality(ctx context.Context, stateID string) (*api.Finality,
 }
 
 // Fork fetches fork information for the given state.
-func (s *Erroring) Fork(ctx context.Context, stateID string) (*spec.Fork, error) {
+func (s *Erroring) Fork(ctx context.Context, stateID string) (*phase0.Fork, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -465,7 +466,7 @@ func (s *Erroring) Fork(ctx context.Context, stateID string) (*spec.Fork, error)
 }
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Erroring) ForkSchedule(ctx context.Context) ([]*spec.Fork, error) {
+func (s *Erroring) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -502,7 +503,7 @@ func (s *Erroring) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
 
 // ProposerDuties obtains proposer duties for the given epoch.
 // If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
-func (s *Erroring) ProposerDuties(ctx context.Context, epoch spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.ProposerDuty, error) {
+func (s *Erroring) ProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.ProposerDuty, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -529,7 +530,7 @@ func (s *Erroring) Spec(ctx context.Context) (map[string]interface{}, error) {
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
 // will be applied.
-func (s *Erroring) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]spec.Gwei, error) {
+func (s *Erroring) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -544,7 +545,7 @@ func (s *Erroring) ValidatorBalances(ctx context.Context, stateID string, valida
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
 // will be applied.
-func (s *Erroring) Validators(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error) {
+func (s *Erroring) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -559,7 +560,7 @@ func (s *Erroring) Validators(ctx context.Context, stateID string, validatorIndi
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
 // supplied no filter will be applied.
-func (s *Erroring) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
+func (s *Erroring) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -571,7 +572,7 @@ func (s *Erroring) ValidatorsByPubKey(ctx context.Context, stateID string, valid
 }
 
 // SubmitVoluntaryExit submits a voluntary exit.
-func (s *Erroring) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *spec.SignedVoluntaryExit) error {
+func (s *Erroring) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -583,13 +584,13 @@ func (s *Erroring) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *spec.
 }
 
 // Domain provides a domain for a given domain type at a given epoch.
-func (s *Erroring) Domain(ctx context.Context, domainType spec.DomainType, epoch spec.Epoch) (spec.Domain, error) {
+func (s *Erroring) Domain(ctx context.Context, domainType phase0.DomainType, epoch phase0.Epoch) (phase0.Domain, error) {
 	if err := s.maybeError(ctx); err != nil {
-		return spec.Domain{}, err
+		return phase0.Domain{}, err
 	}
 	next, isNext := s.next.(eth2client.DomainProvider)
 	if !isNext {
-		return spec.Domain{}, errors.New("next does not support this call")
+		return phase0.Domain{}, errors.New("next does not support this call")
 	}
 	return next.Domain(ctx, domainType, epoch)
 }

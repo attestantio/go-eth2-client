@@ -21,16 +21,17 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // SyncCommitteeMessage is the Ethereum 2 sync committee message structure.
 type SyncCommitteeMessage struct {
-	Slot            Slot
-	BeaconBlockRoot Root `ssz-size:"32"`
-	ValidatorIndex  ValidatorIndex
-	Signature       BLSSignature `ssz-size:"96"`
+	Slot            phase0.Slot
+	BeaconBlockRoot phase0.Root
+	ValidatorIndex  phase0.ValidatorIndex
+	Signature       phase0.BLSSignature
 }
 
 // syncCommitteeMessageJSON is the spec representation of the struct.
@@ -76,7 +77,7 @@ func (s *SyncCommitteeMessage) unpack(syncCommitteeMessageJSON *syncCommitteeMes
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
-	s.Slot = Slot(slot)
+	s.Slot = phase0.Slot(slot)
 	if syncCommitteeMessageJSON.BeaconBlockRoot == "" {
 		return errors.New("beacon block root missing")
 	}
@@ -84,7 +85,7 @@ func (s *SyncCommitteeMessage) unpack(syncCommitteeMessageJSON *syncCommitteeMes
 	if err != nil {
 		return errors.Wrap(err, "invalid value for beacon block root")
 	}
-	if len(beaconBlockRoot) != RootLength {
+	if len(beaconBlockRoot) != phase0.RootLength {
 		return errors.New("incorrect length for beacon block root")
 	}
 	copy(s.BeaconBlockRoot[:], beaconBlockRoot)
@@ -95,7 +96,7 @@ func (s *SyncCommitteeMessage) unpack(syncCommitteeMessageJSON *syncCommitteeMes
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
-	s.ValidatorIndex = ValidatorIndex(validatorIndex)
+	s.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
 	if syncCommitteeMessageJSON.Signature == "" {
 		return errors.New("signature missing")
 	}
@@ -103,7 +104,7 @@ func (s *SyncCommitteeMessage) unpack(syncCommitteeMessageJSON *syncCommitteeMes
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
-	if len(signature) != SignatureLength {
+	if len(signature) != phase0.SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
 	copy(s.Signature[:], signature)

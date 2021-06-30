@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	bitfield "github.com/prysmaticlabs/go-bitfield"
 )
@@ -29,24 +30,24 @@ type BeaconState struct {
 	GenesisTime                 uint64
 	GenesisValidatorsRoot       []byte `ssz-size:"32"`
 	Slot                        uint64
-	Fork                        *Fork
-	LatestBlockHeader           *BeaconBlockHeader
+	Fork                        *phase0.Fork
+	LatestBlockHeader           *phase0.BeaconBlockHeader
 	BlockRoots                  [][]byte `ssz-size:"8192,32"`
 	StateRoots                  [][]byte `ssz-size:"8192,32"`
 	HistoricalRoots             [][]byte `ssz-size:"?,32" ssz-max:"16777216"`
-	ETH1Data                    *ETH1Data
-	ETH1DataVotes               []*ETH1Data `ssz-max:"2048"`
+	ETH1Data                    *phase0.ETH1Data
+	ETH1DataVotes               []*phase0.ETH1Data `ssz-max:"2048"`
 	ETH1DepositIndex            uint64
-	Validators                  []*Validator         `ssz-max:"1099511627776"`
+	Validators                  []*phase0.Validator  `ssz-max:"1099511627776"`
 	Balances                    []uint64             `ssz-max:"1099511627776"`
 	RANDAOMixes                 [][]byte             `ssz-size:"65536,32"`
 	Slashings                   []uint64             `ssz-size:"8192"`
 	PreviousEpochAttestations   []ParticipationFlags `ssz-size:"1099511627776"`
 	CurrentEpochAttestations    []ParticipationFlags `ssz-size:"1099511627776"`
 	JustificationBits           bitfield.Bitvector4  `ssz-size:"1"`
-	PreviousJustifiedCheckpoint *Checkpoint
-	CurrentJustifiedCheckpoint  *Checkpoint
-	FinalizedCheckpoint         *Checkpoint
+	PreviousJustifiedCheckpoint *phase0.Checkpoint
+	CurrentJustifiedCheckpoint  *phase0.Checkpoint
+	FinalizedCheckpoint         *phase0.Checkpoint
 	InactivityScores            []uint64 `ssz-size:"1099511627776"`
 	CurrentSyncCommittee        *SyncCommittee
 	NextSyncCommittee           *SyncCommittee
@@ -54,30 +55,30 @@ type BeaconState struct {
 
 // beaconStateJSON is the spec representation of the struct.
 type beaconStateJSON struct {
-	GenesisTime                 string             `json:"genesis_time"`
-	GenesisValidatorsRoot       string             `json:"genesis_validators_root"`
-	Slot                        string             `json:"slot"`
-	Fork                        *Fork              `json:"fork"`
-	LatestBlockHeader           *BeaconBlockHeader `json:"latest_block_header"`
-	BlockRoots                  []string           `json:"block_roots"`
-	StateRoots                  []string           `json:"state_roots"`
-	HistoricalRoots             []string           `json:"historical_roots"`
-	ETH1Data                    *ETH1Data          `json:"eth1_data"`
-	ETH1DataVotes               []*ETH1Data        `json:"eth1_data_votes"`
-	ETH1DepositIndex            string             `json:"eth1_deposit_index"`
-	Validators                  []*Validator       `json:"validators"`
-	Balances                    []string           `json:"balances"`
-	RANDAOMixes                 []string           `json:"randao_mixes"`
-	Slashings                   []string           `json:"slashings"`
-	PreviousEpochAttestations   []string           `json:"previous_epoch_attestations"`
-	CurrentEpochAttestations    []string           `json:"current_epoch_attestations"`
-	JustificationBits           string             `json:"justification_bits"`
-	PreviousJustifiedCheckpoint *Checkpoint        `json:"previous_justified_checkpoint"`
-	CurrentJustifiedCheckpoint  *Checkpoint        `json:"current_justified_checkpoint"`
-	FinalizedCheckpoint         *Checkpoint        `json:"finalized_checkpoint"`
-	InactivityScores            []string           `json:"inactivity_scores"`
-	CurrentSyncCommittee        *SyncCommittee     `json:"current_sync_committee"`
-	NextSyncCommittee           *SyncCommittee     `json:"next_sync_committee"`
+	GenesisTime                 string                    `json:"genesis_time"`
+	GenesisValidatorsRoot       string                    `json:"genesis_validators_root"`
+	Slot                        string                    `json:"slot"`
+	Fork                        *phase0.Fork              `json:"fork"`
+	LatestBlockHeader           *phase0.BeaconBlockHeader `json:"latest_block_header"`
+	BlockRoots                  []string                  `json:"block_roots"`
+	StateRoots                  []string                  `json:"state_roots"`
+	HistoricalRoots             []string                  `json:"historical_roots"`
+	ETH1Data                    *phase0.ETH1Data          `json:"eth1_data"`
+	ETH1DataVotes               []*phase0.ETH1Data        `json:"eth1_data_votes"`
+	ETH1DepositIndex            string                    `json:"eth1_deposit_index"`
+	Validators                  []*phase0.Validator       `json:"validators"`
+	Balances                    []string                  `json:"balances"`
+	RANDAOMixes                 []string                  `json:"randao_mixes"`
+	Slashings                   []string                  `json:"slashings"`
+	PreviousEpochAttestations   []string                  `json:"previous_epoch_attestations"`
+	CurrentEpochAttestations    []string                  `json:"current_epoch_attestations"`
+	JustificationBits           string                    `json:"justification_bits"`
+	PreviousJustifiedCheckpoint *phase0.Checkpoint        `json:"previous_justified_checkpoint"`
+	CurrentJustifiedCheckpoint  *phase0.Checkpoint        `json:"current_justified_checkpoint"`
+	FinalizedCheckpoint         *phase0.Checkpoint        `json:"finalized_checkpoint"`
+	InactivityScores            []string                  `json:"inactivity_scores"`
+	CurrentSyncCommittee        *SyncCommittee            `json:"current_sync_committee"`
+	NextSyncCommittee           *SyncCommittee            `json:"next_sync_committee"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -167,7 +168,7 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	if s.GenesisValidatorsRoot, err = hex.DecodeString(strings.TrimPrefix(beaconStateJSON.GenesisValidatorsRoot, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for genesis validators root")
 	}
-	if len(s.GenesisValidatorsRoot) != RootLength {
+	if len(s.GenesisValidatorsRoot) != phase0.RootLength {
 		return fmt.Errorf("incorrect length %d for genesis validators root", len(s.GenesisValidatorsRoot))
 	}
 	if beaconStateJSON.Slot == "" {
@@ -195,7 +196,7 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 		if s.BlockRoots[i], err = hex.DecodeString(strings.TrimPrefix(beaconStateJSON.BlockRoots[i], "0x")); err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for block root %d", i))
 		}
-		if len(s.BlockRoots[i]) != RootLength {
+		if len(s.BlockRoots[i]) != phase0.RootLength {
 			return fmt.Errorf("incorrect length %d for block root %d", len(s.BlockRoots[i]), i)
 		}
 	}
@@ -207,7 +208,7 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 		if s.StateRoots[i], err = hex.DecodeString(strings.TrimPrefix(beaconStateJSON.StateRoots[i], "0x")); err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for state root %d", i))
 		}
-		if len(s.StateRoots[i]) != RootLength {
+		if len(s.StateRoots[i]) != phase0.RootLength {
 			return fmt.Errorf("incorrect length %d for state root %d", len(s.StateRoots[i]), i)
 		}
 	}
@@ -219,7 +220,7 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 		if s.HistoricalRoots[i], err = hex.DecodeString(strings.TrimPrefix(beaconStateJSON.HistoricalRoots[i], "0x")); err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for historical root %d", i))
 		}
-		if len(s.HistoricalRoots[i]) != RootLength {
+		if len(s.HistoricalRoots[i]) != phase0.RootLength {
 			return fmt.Errorf("incorrect length %d for historical root %d", len(s.HistoricalRoots[i]), i)
 		}
 	}
@@ -256,7 +257,7 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 		if s.RANDAOMixes[i], err = hex.DecodeString(strings.TrimPrefix(beaconStateJSON.RANDAOMixes[i], "0x")); err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for RANDAO mix %d", i))
 		}
-		if len(s.RANDAOMixes[i]) != RootLength {
+		if len(s.RANDAOMixes[i]) != phase0.RootLength {
 			return fmt.Errorf("incorrect length %d for RANDAO mix %d", len(s.RANDAOMixes[i]), i)
 		}
 	}

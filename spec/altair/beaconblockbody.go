@@ -20,47 +20,48 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // BeaconBlockBody represents the body of a beacon block.
 type BeaconBlockBody struct {
-	RANDAOReveal      BLSSignature `ssz-size:"96"`
-	ETH1Data          *ETH1Data
-	Graffiti          []byte                 `ssz-size:"32"`
-	ProposerSlashings []*ProposerSlashing    `ssz-max:"16"`
-	AttesterSlashings []*AttesterSlashing    `ssz-max:"2"`
-	Attestations      []*Attestation         `ssz-max:"128"`
-	Deposits          []*Deposit             `ssz-max:"16"`
-	VoluntaryExits    []*SignedVoluntaryExit `ssz-max:"16"`
+	RANDAOReveal      phase0.BLSSignature `ssz-size:"96"`
+	ETH1Data          *phase0.ETH1Data
+	Graffiti          []byte                        `ssz-size:"32"`
+	ProposerSlashings []*phase0.ProposerSlashing    `ssz-max:"16"`
+	AttesterSlashings []*phase0.AttesterSlashing    `ssz-max:"2"`
+	Attestations      []*phase0.Attestation         `ssz-max:"128"`
+	Deposits          []*phase0.Deposit             `ssz-max:"16"`
+	VoluntaryExits    []*phase0.SignedVoluntaryExit `ssz-max:"16"`
 	SyncAggregate     *SyncAggregate
 }
 
 // beaconBlockBodyJSON is the spec representation of the struct.
 type beaconBlockBodyJSON struct {
-	RANDAOReveal      string                 `json:"randao_reveal"`
-	ETH1Data          *ETH1Data              `json:"eth1_data"`
-	Graffiti          string                 `json:"graffiti"`
-	ProposerSlashings []*ProposerSlashing    `json:"proposer_slashings"`
-	AttesterSlashings []*AttesterSlashing    `json:"attester_slashings"`
-	Attestations      []*Attestation         `json:"attestations"`
-	Deposits          []*Deposit             `json:"deposits"`
-	VoluntaryExits    []*SignedVoluntaryExit `json:"voluntary_exits"`
-	SyncAggregate     *SyncAggregate         `json:"sync_aggregate"`
+	RANDAOReveal      string                        `json:"randao_reveal"`
+	ETH1Data          *phase0.ETH1Data              `json:"eth1_data"`
+	Graffiti          string                        `json:"graffiti"`
+	ProposerSlashings []*phase0.ProposerSlashing    `json:"proposer_slashings"`
+	AttesterSlashings []*phase0.AttesterSlashing    `json:"attester_slashings"`
+	Attestations      []*phase0.Attestation         `json:"attestations"`
+	Deposits          []*phase0.Deposit             `json:"deposits"`
+	VoluntaryExits    []*phase0.SignedVoluntaryExit `json:"voluntary_exits"`
+	SyncAggregate     *SyncAggregate                `json:"sync_aggregate"`
 }
 
 // beaconBlockBodyYAML is the spec representation of the struct.
 type beaconBlockBodyYAML struct {
-	RANDAOReveal      string                 `yaml:"randao_reveal"`
-	ETH1Data          *ETH1Data              `yaml:"eth1_data"`
-	Graffiti          string                 `yaml:"graffiti"`
-	ProposerSlashings []*ProposerSlashing    `yaml:"proposer_slashings"`
-	AttesterSlashings []*AttesterSlashing    `yaml:"attester_slashings"`
-	Attestations      []*Attestation         `yaml:"attestations"`
-	Deposits          []*Deposit             `yaml:"deposits"`
-	VoluntaryExits    []*SignedVoluntaryExit `yaml:"voluntary_exits"`
-	SyncAggregate     *SyncAggregate         `yaml:"sync_aggregate"`
+	RANDAOReveal      string                        `yaml:"randao_reveal"`
+	ETH1Data          *phase0.ETH1Data              `yaml:"eth1_data"`
+	Graffiti          string                        `yaml:"graffiti"`
+	ProposerSlashings []*phase0.ProposerSlashing    `yaml:"proposer_slashings"`
+	AttesterSlashings []*phase0.AttesterSlashing    `yaml:"attester_slashings"`
+	Attestations      []*phase0.Attestation         `yaml:"attestations"`
+	Deposits          []*phase0.Deposit             `yaml:"deposits"`
+	VoluntaryExits    []*phase0.SignedVoluntaryExit `yaml:"voluntary_exits"`
+	SyncAggregate     *SyncAggregate                `yaml:"sync_aggregate"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -95,7 +96,7 @@ func (b *BeaconBlockBody) unpack(beaconBlockBodyJSON *beaconBlockBodyJSON) error
 	if err != nil {
 		return errors.Wrap(err, "invalid value for RANDAO reveal")
 	}
-	if len(randaoReveal) != SignatureLength {
+	if len(randaoReveal) != phase0.SignatureLength {
 		return errors.New("incorrect length for RANDAO reveal")
 	}
 	copy(b.RANDAOReveal[:], randaoReveal)
@@ -109,7 +110,7 @@ func (b *BeaconBlockBody) unpack(beaconBlockBodyJSON *beaconBlockBodyJSON) error
 	if b.Graffiti, err = hex.DecodeString(strings.TrimPrefix(beaconBlockBodyJSON.Graffiti, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for graffiti")
 	}
-	if len(b.Graffiti) != GraffitiLength {
+	if len(b.Graffiti) != phase0.GraffitiLength {
 		return errors.New("incorrect length for graffiti")
 	}
 	if beaconBlockBodyJSON.ProposerSlashings == nil {

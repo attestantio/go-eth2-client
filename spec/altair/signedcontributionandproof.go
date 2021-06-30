@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
@@ -27,7 +28,7 @@ import (
 // SignedContributionAndProof provides information about a signed contribution and proof.
 type SignedContributionAndProof struct {
 	Message   *ContributionAndProof
-	Signature BLSSignature `ssz-size:"96"`
+	Signature phase0.BLSSignature `ssz-size:"96"`
 }
 
 // signedContributionAndProofJSON is a raw representation of the struct.
@@ -71,7 +72,7 @@ func (s *SignedContributionAndProof) unpack(signedContributionAndProofJSON *sign
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
-	if len(signature) != SignatureLength {
+	if len(signature) != phase0.SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
 	copy(s.Signature[:], signature)

@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 	bitfield "github.com/prysmaticlabs/go-bitfield"
@@ -28,12 +29,12 @@ import (
 
 // SyncCommitteeContribution is the Ethereum 2 sync committee contribution structure.
 type SyncCommitteeContribution struct {
-	Slot              Slot
-	BeaconBlockRoot   Root `ssz-size:"32"`
+	Slot              phase0.Slot
+	BeaconBlockRoot   phase0.Root
 	SubcommitteeIndex uint64
 	// AggregationBits size is SYNC_COMMITTEE_SIZE // SYNC_COMMITTEE_SUBNET_COUNT
-	AggregationBits bitfield.Bitlist `ssz-max:"128"`
-	Signature       BLSSignature     `ssz-size:"96"`
+	AggregationBits bitfield.Bitvector128 `ssz-size:"16"`
+	Signature       phase0.BLSSignature
 }
 
 // syncCommitteeContributionJSON is the spec representation of the struct.
@@ -82,7 +83,7 @@ func (s *SyncCommitteeContribution) unpack(syncCommitteeContributionJSON *syncCo
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
-	s.Slot = Slot(slot)
+	s.Slot = phase0.Slot(slot)
 	if syncCommitteeContributionJSON.BeaconBlockRoot == "" {
 		return errors.New("beacon block root missing")
 	}
@@ -90,7 +91,7 @@ func (s *SyncCommitteeContribution) unpack(syncCommitteeContributionJSON *syncCo
 	if err != nil {
 		return errors.Wrap(err, "invalid value for beacon block root")
 	}
-	if len(beaconBlockRoot) != RootLength {
+	if len(beaconBlockRoot) != phase0.RootLength {
 		return errors.New("incorrect length for beacon block root")
 	}
 	copy(s.BeaconBlockRoot[:], beaconBlockRoot)
@@ -115,7 +116,7 @@ func (s *SyncCommitteeContribution) unpack(syncCommitteeContributionJSON *syncCo
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
-	if len(signature) != SignatureLength {
+	if len(signature) != phase0.SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
 	copy(s.Signature[:], signature)

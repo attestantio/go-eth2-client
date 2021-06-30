@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 	bitfield "github.com/prysmaticlabs/go-bitfield"
@@ -27,8 +28,8 @@ import (
 
 // SyncAggregate is the Ethereum 2 sync aggregate structure.
 type SyncAggregate struct {
-	SyncCommitteeBits      bitfield.Bitvector512 `ssz-size:"512"`
-	SyncCommitteeSignature BLSSignature
+	SyncCommitteeBits      bitfield.Bitvector512 `ssz-size:"64"`
+	SyncCommitteeSignature phase0.BLSSignature
 }
 
 // syncAggregateJSON is the spec representation of the struct.
@@ -68,10 +69,10 @@ func (s *SyncAggregate) unpack(syncAggregateJSON *syncAggregateJSON) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for sync committee bits")
 	}
-	if len(syncCommitteeBits) < 64 {
+	if len(syncCommitteeBits) < syncCommitteeSize/8 {
 		return errors.New("sync committee bits too short")
 	}
-	if len(syncCommitteeBits) > 64 {
+	if len(syncCommitteeBits) > syncCommitteeSize/8 {
 		return errors.New("sync committee bits too long")
 	}
 	s.SyncCommitteeBits = syncCommitteeBits

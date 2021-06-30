@@ -22,7 +22,8 @@ import (
 
 	eth2client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // Sleepy is an Ethereum 2 client that sleeps for a random amount of time within a
@@ -76,7 +77,7 @@ func (s *Sleepy) sleep(ctx context.Context) {
 }
 
 // PrysmAttesterDuties obtains attester duties with prysm-specific parameters.
-func (s *Sleepy) PrysmAttesterDuties(ctx context.Context, epoch spec.Epoch, validatorPubKeys []spec.BLSPubKey) ([]*api.AttesterDuty, error) {
+func (s *Sleepy) PrysmAttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorPubKeys []phase0.BLSPubKey) ([]*api.AttesterDuty, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.PrysmAttesterDutiesProvider)
 	if !isNext {
@@ -86,7 +87,7 @@ func (s *Sleepy) PrysmAttesterDuties(ctx context.Context, epoch spec.Epoch, vali
 }
 
 // PrysmProposerDuties obtains proposer duties with prysm-specific parameters.
-func (s *Sleepy) PrysmProposerDuties(ctx context.Context, epoch spec.Epoch, validatorPubKeys []spec.BLSPubKey) ([]*api.ProposerDuty, error) {
+func (s *Sleepy) PrysmProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorPubKeys []phase0.BLSPubKey) ([]*api.ProposerDuty, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.PrysmProposerDutiesProvider)
 	if !isNext {
@@ -99,7 +100,7 @@ func (s *Sleepy) PrysmProposerDuties(ctx context.Context, epoch spec.Epoch, vali
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIDs is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
 // will be applied.
-func (s *Sleepy) PrysmValidatorBalances(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]spec.Gwei, error) {
+func (s *Sleepy) PrysmValidatorBalances(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.PrysmValidatorBalancesProvider)
 	if !isNext {
@@ -109,7 +110,7 @@ func (s *Sleepy) PrysmValidatorBalances(ctx context.Context, stateID string, val
 }
 
 // EpochFromStateID converts a state ID to its epoch.
-func (s *Sleepy) EpochFromStateID(ctx context.Context, stateID string) (spec.Epoch, error) {
+func (s *Sleepy) EpochFromStateID(ctx context.Context, stateID string) (phase0.Epoch, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.EpochFromStateIDProvider)
 	if !isNext {
@@ -119,7 +120,7 @@ func (s *Sleepy) EpochFromStateID(ctx context.Context, stateID string) (spec.Epo
 }
 
 // SlotFromStateID converts a state ID to its slot.
-func (s *Sleepy) SlotFromStateID(ctx context.Context, stateID string) (spec.Slot, error) {
+func (s *Sleepy) SlotFromStateID(ctx context.Context, stateID string) (phase0.Slot, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.SlotFromStateIDProvider)
 	if !isNext {
@@ -159,7 +160,7 @@ func (s *Sleepy) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 }
 
 // FarFutureEpoch provides the far future epoch of the chain.
-func (s *Sleepy) FarFutureEpoch(ctx context.Context) (spec.Epoch, error) {
+func (s *Sleepy) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.FarFutureEpochProvider)
 	if !isNext {
@@ -189,77 +190,77 @@ func (s *Sleepy) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, err
 }
 
 // BeaconAttesterDomain provides the beacon attester domain.
-func (s *Sleepy) BeaconAttesterDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Sleepy) BeaconAttesterDomain(ctx context.Context) (phase0.DomainType, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.BeaconAttesterDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.BeaconAttesterDomain(ctx)
 }
 
 // BeaconProposerDomain provides the beacon proposer domain.
-func (s *Sleepy) BeaconProposerDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Sleepy) BeaconProposerDomain(ctx context.Context) (phase0.DomainType, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.BeaconProposerDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.BeaconProposerDomain(ctx)
 }
 
 // RANDAODomain provides the RANDAO domain.
-func (s *Sleepy) RANDAODomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Sleepy) RANDAODomain(ctx context.Context) (phase0.DomainType, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.RANDAODomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.RANDAODomain(ctx)
 }
 
 // DepositDomain provides the deposit domain.
-func (s *Sleepy) DepositDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Sleepy) DepositDomain(ctx context.Context) (phase0.DomainType, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.DepositDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.DepositDomain(ctx)
 }
 
 // VoluntaryExitDomain provides the voluntary exit domain.
-func (s *Sleepy) VoluntaryExitDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Sleepy) VoluntaryExitDomain(ctx context.Context) (phase0.DomainType, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.VoluntaryExitDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.VoluntaryExitDomain(ctx)
 }
 
 // SelectionProofDomain provides the selection proof domain.
-func (s *Sleepy) SelectionProofDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Sleepy) SelectionProofDomain(ctx context.Context) (phase0.DomainType, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.SelectionProofDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.SelectionProofDomain(ctx)
 }
 
 // AggregateAndProofDomain provides the aggregate and proof domain.
-func (s *Sleepy) AggregateAndProofDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Sleepy) AggregateAndProofDomain(ctx context.Context) (phase0.DomainType, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.AggregateAndProofDomainProvider)
 	if !isNext {
-		return spec.DomainType{}, errors.New("next does not support this call")
+		return phase0.DomainType{}, errors.New("next does not support this call")
 	}
 	return next.AggregateAndProofDomain(ctx)
 }
 
 // AggregateAttestation fetches the aggregate attestation given an attestation.
-func (s *Sleepy) AggregateAttestation(ctx context.Context, slot spec.Slot, attestationDataRoot spec.Root) (*spec.Attestation, error) {
+func (s *Sleepy) AggregateAttestation(ctx context.Context, slot phase0.Slot, attestationDataRoot phase0.Root) (*phase0.Attestation, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.AggregateAttestationProvider)
 	if !isNext {
@@ -269,7 +270,7 @@ func (s *Sleepy) AggregateAttestation(ctx context.Context, slot spec.Slot, attes
 }
 
 // SubmitAggregateAttestations submits aggregate attestations.
-func (s *Sleepy) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*spec.SignedAggregateAndProof) error {
+func (s *Sleepy) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.AggregateAttestationsSubmitter)
 	if !isNext {
@@ -279,7 +280,7 @@ func (s *Sleepy) SubmitAggregateAttestations(ctx context.Context, aggregateAndPr
 }
 
 // AttestationData fetches the attestation data for the given slot and committee index.
-func (s *Sleepy) AttestationData(ctx context.Context, slot spec.Slot, committeeIndex spec.CommitteeIndex) (*spec.AttestationData, error) {
+func (s *Sleepy) AttestationData(ctx context.Context, slot phase0.Slot, committeeIndex phase0.CommitteeIndex) (*phase0.AttestationData, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.AttestationDataProvider)
 	if !isNext {
@@ -289,7 +290,7 @@ func (s *Sleepy) AttestationData(ctx context.Context, slot spec.Slot, committeeI
 }
 
 // AttestationPool fetches the attestation pool for the given slot.
-func (s *Sleepy) AttestationPool(ctx context.Context, slot spec.Slot) ([]*spec.Attestation, error) {
+func (s *Sleepy) AttestationPool(ctx context.Context, slot phase0.Slot) ([]*phase0.Attestation, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.AttestationPoolProvider)
 	if !isNext {
@@ -299,7 +300,7 @@ func (s *Sleepy) AttestationPool(ctx context.Context, slot spec.Slot) ([]*spec.A
 }
 
 // SubmitAttestations submits attestations.
-func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*spec.Attestation) error {
+func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.AttestationsSubmitter)
 	if !isNext {
@@ -310,7 +311,7 @@ func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*spec.At
 
 // AttesterDuties obtains attester duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Sleepy) AttesterDuties(ctx context.Context, epoch spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.AttesterDuty, error) {
+func (s *Sleepy) AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.AttesterDuty, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.AttesterDutiesProvider)
 	if !isNext {
@@ -330,7 +331,7 @@ func (s *Sleepy) BeaconBlockHeader(ctx context.Context, blockID string) (*api.Be
 }
 
 // BeaconBlockProposal fetches a proposed beacon block for signing.
-func (s *Sleepy) BeaconBlockProposal(ctx context.Context, slot spec.Slot, randaoReveal spec.BLSSignature, graffiti []byte) (*spec.BeaconBlock, error) {
+func (s *Sleepy) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.BeaconBlockProposalProvider)
 	if !isNext {
@@ -340,7 +341,7 @@ func (s *Sleepy) BeaconBlockProposal(ctx context.Context, slot spec.Slot, randao
 }
 
 // SubmitBeaconBlock submits a beacon block.
-func (s *Sleepy) SubmitBeaconBlock(ctx context.Context, block *spec.SignedBeaconBlock) error {
+func (s *Sleepy) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.BeaconBlockSubmitter)
 	if !isNext {
@@ -360,7 +361,7 @@ func (s *Sleepy) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscri
 }
 
 // BeaconState fetches a beacon state.
-func (s *Sleepy) BeaconState(ctx context.Context, stateID string) (*spec.BeaconState, error) {
+func (s *Sleepy) BeaconState(ctx context.Context, stateID string) (*phase0.BeaconState, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.BeaconStateProvider)
 	if !isNext {
@@ -390,7 +391,7 @@ func (s *Sleepy) Finality(ctx context.Context, stateID string) (*api.Finality, e
 }
 
 // Fork fetches fork information for the given state.
-func (s *Sleepy) Fork(ctx context.Context, stateID string) (*spec.Fork, error) {
+func (s *Sleepy) Fork(ctx context.Context, stateID string) (*phase0.Fork, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.ForkProvider)
 	if !isNext {
@@ -400,7 +401,7 @@ func (s *Sleepy) Fork(ctx context.Context, stateID string) (*spec.Fork, error) {
 }
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Sleepy) ForkSchedule(ctx context.Context) ([]*spec.Fork, error) {
+func (s *Sleepy) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.ForkScheduleProvider)
 	if !isNext {
@@ -431,7 +432,7 @@ func (s *Sleepy) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
 
 // ProposerDuties obtains proposer duties for the given epoch.
 // If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
-func (s *Sleepy) ProposerDuties(ctx context.Context, epoch spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.ProposerDuty, error) {
+func (s *Sleepy) ProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.ProposerDuty, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.ProposerDutiesProvider)
 	if !isNext {
@@ -454,7 +455,7 @@ func (s *Sleepy) Spec(ctx context.Context) (map[string]interface{}, error) {
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
 // will be applied.
-func (s *Sleepy) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]spec.Gwei, error) {
+func (s *Sleepy) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.ValidatorBalancesProvider)
 	if !isNext {
@@ -467,7 +468,7 @@ func (s *Sleepy) ValidatorBalances(ctx context.Context, stateID string, validato
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
 // will be applied.
-func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]*api.Validator, error) {
+func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.ValidatorsProvider)
 	if !isNext {
@@ -480,7 +481,7 @@ func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndice
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
 // supplied no filter will be applied.
-func (s *Sleepy) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
+func (s *Sleepy) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.ValidatorsProvider)
 	if !isNext {
@@ -490,7 +491,7 @@ func (s *Sleepy) ValidatorsByPubKey(ctx context.Context, stateID string, validat
 }
 
 // SubmitVoluntaryExit submits a voluntary exit.
-func (s *Sleepy) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *spec.SignedVoluntaryExit) error {
+func (s *Sleepy) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.VoluntaryExitSubmitter)
 	if !isNext {
@@ -500,11 +501,11 @@ func (s *Sleepy) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *spec.Si
 }
 
 // Domain provides a domain for a given domain type at a given epoch.
-func (s *Sleepy) Domain(ctx context.Context, domainType spec.DomainType, epoch spec.Epoch) (spec.Domain, error) {
+func (s *Sleepy) Domain(ctx context.Context, domainType phase0.DomainType, epoch phase0.Epoch) (phase0.Domain, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.DomainProvider)
 	if !isNext {
-		return spec.Domain{}, errors.New("next does not support this call")
+		return phase0.Domain{}, errors.New("next does not support this call")
 	}
 	return next.Domain(ctx, domainType, epoch)
 }

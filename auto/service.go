@@ -17,8 +17,8 @@ import (
 	"context"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/prysmgrpc"
-	standardhttp "github.com/attestantio/go-eth2-client/standardhttp/v1"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	zerologger "github.com/rs/zerolog/log"
@@ -40,12 +40,12 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		log = log.Level(parameters.logLevel)
 	}
 
-	// Try standard.
-	standardClient, err := tryStandard(ctx, parameters)
+	// Try HTTP.
+	httpClient, err := tryHTTP(ctx, parameters)
 	if err == nil {
-		return standardClient, nil
+		return httpClient, nil
 	}
-	log.Trace().Err(err).Msg("Attempt to connect via standard API failed")
+	log.Trace().Err(err).Msg("Attempt to connect via HTTP API failed")
 
 	// Try prysm.
 	prysmClient, err := tryPrysm(ctx, parameters)
@@ -58,12 +58,12 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 	return nil, errors.New("failed to connect to Ethereum 2 client with any known method")
 }
 
-func tryStandard(ctx context.Context, parameters *parameters) (*standardhttp.Service, error) {
-	standardhttpParameters := make([]standardhttp.Parameter, 0)
-	standardhttpParameters = append(standardhttpParameters, standardhttp.WithLogLevel(parameters.logLevel))
-	standardhttpParameters = append(standardhttpParameters, standardhttp.WithAddress(parameters.address))
-	standardhttpParameters = append(standardhttpParameters, standardhttp.WithTimeout(parameters.timeout))
-	client, err := standardhttp.New(ctx, standardhttpParameters...)
+func tryHTTP(ctx context.Context, parameters *parameters) (*http.Service, error) {
+	httpParameters := make([]http.Parameter, 0)
+	httpParameters = append(httpParameters, http.WithLogLevel(parameters.logLevel))
+	httpParameters = append(httpParameters, http.WithAddress(parameters.address))
+	httpParameters = append(httpParameters, http.WithTimeout(parameters.timeout))
+	client, err := http.New(ctx, httpParameters...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed when trying to open connection with standard API")
 	}
