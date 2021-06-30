@@ -14,6 +14,8 @@
 package spec
 
 import (
+	"errors"
+
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
@@ -23,4 +25,22 @@ type VersionedSignedBeaconBlock struct {
 	Version DataVersion
 	Phase0  *phase0.SignedBeaconBlock
 	Altair  *altair.SignedBeaconBlock
+}
+
+// Slot returns the slot of the signed beacon block.
+func (v *VersionedSignedBeaconBlock) Slot() (phase0.Slot, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil || v.Phase0.Message == nil {
+			return 0, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.Slot, nil
+	case DataVersionAltair:
+		if v.Altair == nil || v.Altair.Message == nil {
+			return 0, errors.New("no altair block")
+		}
+		return v.Altair.Message.Slot, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
 }
