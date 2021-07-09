@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,14 +20,14 @@ import (
 	"time"
 
 	"github.com/attestantio/go-eth2-client/http"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAttestationData(t *testing.T) {
 	tests := []struct {
 		name           string
-		committeeIndex spec.CommitteeIndex
+		committeeIndex phase0.CommitteeIndex
 		slot           int64 // -1 for current
 	}{
 		// {
@@ -37,7 +37,7 @@ func TestAttestationData(t *testing.T) {
 		// },
 		{
 			name:           "Good",
-			committeeIndex: 1,
+			committeeIndex: 0,
 			slot:           -1,
 		},
 	}
@@ -55,11 +55,11 @@ func TestAttestationData(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, test := range tests {
-		var slot spec.Slot
+		var slot phase0.Slot
 		if test.slot == -1 {
-			slot = spec.Slot(uint64(time.Since(genesis.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
+			slot = phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
 		} else {
-			slot = spec.Slot(uint64(test.slot))
+			slot = phase0.Slot(uint64(test.slot))
 		}
 		t.Run(test.name, func(t *testing.T) {
 			attestationData, err := service.AttestationData(context.Background(), slot, test.committeeIndex)

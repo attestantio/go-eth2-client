@@ -44,3 +44,21 @@ func (v *VersionedSignedBeaconBlock) Slot() (phase0.Slot, error) {
 		return 0, errors.New("unknown version")
 	}
 }
+
+// Attestations returns the attestations of the beacon block.
+func (v *VersionedSignedBeaconBlock) Attestations() ([]*phase0.Attestation, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil || v.Phase0.Message == nil || v.Phase0.Message.Body == nil {
+			return nil, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.Body.Attestations, nil
+	case DataVersionAltair:
+		if v.Altair == nil || v.Altair.Message == nil || v.Altair.Message.Body == nil {
+			return nil, errors.New("no altair block")
+		}
+		return v.Altair.Message.Body.Attestations, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}

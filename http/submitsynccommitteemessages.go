@@ -11,37 +11,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package http_test
+package http
 
 import (
+	"bytes"
 	"context"
-	"os"
-	"testing"
+	"encoding/json"
 
-	"github.com/attestantio/go-eth2-client/http"
-	"github.com/stretchr/testify/require"
+	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/pkg/errors"
 )
 
-func TestRANDAODomain(t *testing.T) {
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "Good",
-		},
+// SubmitSyncCommitteeMessages submits sync committee messages.
+func (s *Service) SubmitSyncCommitteeMessages(ctx context.Context, messages []*altair.SyncCommitteeMessage) error {
+	specJSON, err := json.Marshal(messages)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	service, err := http.New(context.Background(),
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			beaconProposerDomain, err := service.RANDAODomain(context.Background())
-			require.NoError(t, err)
-			require.NotNil(t, beaconProposerDomain)
-		})
+	_, err = s.post(ctx, "/eth/v1/beacon/pool/sync_committees", bytes.NewBuffer(specJSON))
+	if err != nil {
+		return errors.Wrap(err, "failed to submit sync committee messages")
 	}
+
+	return nil
 }

@@ -19,6 +19,7 @@ import (
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -101,66 +102,6 @@ type TargetAggregatorsPerCommitteeProvider interface {
 	TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error)
 }
 
-// BeaconAttesterDomainProvider is the interface for providing the beacon attester domain.
-type BeaconAttesterDomainProvider interface {
-	// BeaconAttesterDomain provides the beacon attester domain.
-	BeaconAttesterDomain(ctx context.Context) (phase0.DomainType, error)
-}
-
-// BeaconProposerDomainProvider is the interface for providing the beacon proposer domain.
-type BeaconProposerDomainProvider interface {
-	// BeaconProposerDomain provides the beacon proposer domain.
-	BeaconProposerDomain(ctx context.Context) (phase0.DomainType, error)
-}
-
-// RANDAODomainProvider is the interface for providing the RANDAO domain.
-type RANDAODomainProvider interface {
-	// RANDAODomain provides the RANDAO domain.
-	RANDAODomain(ctx context.Context) (phase0.DomainType, error)
-}
-
-// DepositDomainProvider is the interface for providing the deposit domain.
-type DepositDomainProvider interface {
-	// DepositDomain provides the deposit domain.
-	DepositDomain(ctx context.Context) (phase0.DomainType, error)
-}
-
-// VoluntaryExitDomainProvider is the interface for providing the voluntary exit domain.
-type VoluntaryExitDomainProvider interface {
-	// VoluntaryExitDomain provides the voluntary exit domain.
-	VoluntaryExitDomain(ctx context.Context) (phase0.DomainType, error)
-}
-
-// SelectionProofDomainProvider is the interface for providing the selection proof domain.
-type SelectionProofDomainProvider interface {
-	// SelectionProofDomain provides the selection proof domain.
-	SelectionProofDomain(ctx context.Context) (phase0.DomainType, error)
-}
-
-// AggregateAndProofDomainProvider is the interface for providing the aggregate and proof domain.
-type AggregateAndProofDomainProvider interface {
-	// AggregateAndProofDomain provides the aggregate and proof domain.
-	AggregateAndProofDomain(ctx context.Context) (phase0.DomainType, error)
-}
-
-// SyncCommitteeSelectionProofDomainProvider is the interface for providing the sync committee selection proof domain.
-type SyncCommitteeSelectionProofDomainProvider interface {
-	// SyncCommitteeSelectionProofDomain provides the sync committee selection proof domain.
-	SyncCommitteeSelectionProofDomain(ctx context.Context) (phase0.DomainType, error)
-}
-
-// ContributionAndProofDomainProvider is the interface for providing the contribution and proof domain.
-type ContributionAndProofDomainProvider interface {
-	// ContributionAndProofDomain provides the contribution and proof domain.
-	ContributionAndProofDomain(ctx context.Context) (phase0.DomainType, error)
-}
-
-// SyncCommitteeDomainProvider is the interface for providing the sync committee domain.
-type SyncCommitteeDomainProvider interface {
-	// SyncCommitteeDomain provides the sync committee domain.
-	SyncCommitteeDomain(ctx context.Context) (phase0.DomainType, error)
-}
-
 // BeaconChainHeadUpdatedSource is the interface for a service that provides beacon chain head updates.
 type BeaconChainHeadUpdatedSource interface {
 	// AddOnBeaconChainHeadUpdatedHandler adds a handler provided with beacon chain head updates.
@@ -216,16 +157,16 @@ type SignedBeaconBlockProvider interface {
 	SignedBeaconBlock(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error)
 }
 
-// BeaconBlockRootProvider is the interface for providing beacon block roots.
-type BeaconBlockRootProvider interface {
-	// BeaconBlockRootBySlot fetches a block's root given its slot.
-	BeaconBlockRootBySlot(ctx context.Context, slot uint64) ([]byte, error)
-}
-
 // BeaconCommitteesProvider is the interface for providing beacon committees.
 type BeaconCommitteesProvider interface {
 	// BeaconCommittees fetches all beacon committees for the epoch at the given state.
 	BeaconCommittees(ctx context.Context, stateID string) ([]*api.BeaconCommittee, error)
+}
+
+// SyncCommitteesProvider is the interface for providing sync committees.
+type SyncCommitteesProvider interface {
+	// SyncCommittee fetches the sync committee for the given state.
+	SyncCommittee(ctx context.Context, stateID string) (*api.SyncCommittee, error)
 }
 
 // ValidatorsWithoutBalanceProvider is the interface for providing validator information, minus the balance.
@@ -290,6 +231,37 @@ type AttesterDutiesProvider interface {
 	AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.AttesterDuty, error)
 }
 
+// SyncCommitteeDutiesProvider is the interface for providing sync committee duties.
+type SyncCommitteeDutiesProvider interface {
+	// SyncCommitteesDuties obtains attester duties.
+	// If validatorIndicess is nil it will return all duties for the given epoch.
+	SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.SyncCommitteeDuty, error)
+}
+
+// SyncCommitteeMessagesSubmitter is the interface for submitting sync committee messages.
+type SyncCommitteeMessagesSubmitter interface {
+	// SubmitSyncCommitteeMessages submits sync committee messages.
+	SubmitSyncCommitteeMessages(ctx context.Context, messages []*altair.SyncCommitteeMessage) error
+}
+
+// SyncCommitteeSubscriptionsSubmitter is the interface for submitting sync committee subnet subscription requests.
+type SyncCommitteeSubscriptionsSubmitter interface {
+	// SubmitSyncCommitteeSubscriptions subscribes to sync committees.
+	SubmitSyncCommitteeSubscriptions(ctx context.Context, subscriptions []*api.SyncCommitteeSubscription) error
+}
+
+// SyncCommitteeContributionProvider is the interface for providing sync committee contributions.
+type SyncCommitteeContributionProvider interface {
+	// SyncCommitteeContribution provides a sync committee contribution.
+	SyncCommitteeContribution(ctx context.Context, slot phase0.Slot, subcommitteeIndex uint64, beaconBlockRoot phase0.Root) (*altair.SyncCommitteeContribution, error)
+}
+
+// SyncCommitteeContributionsSubmitter is the interface for submitting sync committee contributions.
+type SyncCommitteeContributionsSubmitter interface {
+	// SubmitSyncCommitteeContributions submits sync committee contributions.
+	SubmitSyncCommitteeContributions(ctx context.Context, contributionAndProofs []*altair.SignedContributionAndProof) error
+}
+
 // BeaconBlockHeadersProvider is the interface for providing beacon block headers.
 type BeaconBlockHeadersProvider interface {
 	// BeaconBlockHeader provides the block header of a given block ID.
@@ -300,6 +272,12 @@ type BeaconBlockHeadersProvider interface {
 type BeaconBlockProposalProvider interface {
 	// BeaconBlockProposal fetches a proposed beacon block for signing.
 	BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error)
+}
+
+// BeaconBlockRootProvider is the interface for providing beacon block roots.
+type BeaconBlockRootProvider interface {
+	// BeaconBlockRoot fetches a block's root given a block ID.
+	BeaconBlockRoot(ctx context.Context, blockID string) (*phase0.Root, error)
 }
 
 // BeaconBlockSubmitter is the interface for submitting beacon blocks.

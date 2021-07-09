@@ -25,7 +25,7 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/r3labs/sse/v2"
 )
@@ -109,14 +109,14 @@ func (s *Service) handleEvent(msg *sse.Event, handler client.EventHandlerFunc) {
 		}
 		event.Data = blockEvent
 	case "attestation":
-		attestation := &spec.Attestation{}
+		attestation := &phase0.Attestation{}
 		err := json.Unmarshal(msg.Data, attestation)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to parse attestation")
 		}
 		event.Data = attestation
 	case "voluntary_exit":
-		voluntaryExit := &spec.SignedVoluntaryExit{}
+		voluntaryExit := &phase0.SignedVoluntaryExit{}
 		err := json.Unmarshal(msg.Data, voluntaryExit)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to parse voluntary exit")

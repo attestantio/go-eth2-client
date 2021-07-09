@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,16 +18,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 type forkJSON struct {
-	Data *spec.Fork `json:"data"`
+	Data *phase0.Fork `json:"data"`
 }
 
 // Fork fetches fork information for the given state.
-func (s *Service) Fork(ctx context.Context, stateID string) (*spec.Fork, error) {
+func (s *Service) Fork(ctx context.Context, stateID string) (*phase0.Fork, error) {
 	if stateID == "" {
 		return nil, errors.New("no state ID specified")
 	}

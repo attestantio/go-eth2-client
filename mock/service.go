@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,7 +17,7 @@ import (
 	"context"
 	"time"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	zerologger "github.com/rs/zerolog/log"
@@ -34,7 +34,7 @@ type Service struct {
 	// genesis         *api.Genesis
 	// spec            map[string]interface{}
 	// depositContract *api.DepositContract
-	// forkSchedule    []*spec.Fork
+	// forkSchedule    []*phase0.Fork
 	nodeVersion string
 
 	// Event handlers.
@@ -42,8 +42,8 @@ type Service struct {
 	// beaconChainHeadUpdatedHandlers []client.BeaconChainHeadUpdatedHandler
 
 	// Values that can be altered if required.
-	HeadSlot     spec.Slot
-	SyncDistance spec.Slot
+	HeadSlot     phase0.Slot
+	SyncDistance phase0.Slot
 }
 
 // log is a service-wide logger.

@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,16 +17,16 @@ import (
 	"context"
 	"encoding/json"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 type forkScheduleJSON struct {
-	Data []*spec.Fork `json:"data"`
+	Data []*phase0.Fork `json:"data"`
 }
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Service) ForkSchedule(ctx context.Context) ([]*spec.Fork, error) {
+func (s *Service) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
 	if s.forkSchedule != nil {
 		return s.forkSchedule, nil
 	}

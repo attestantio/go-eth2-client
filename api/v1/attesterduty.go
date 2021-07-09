@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,20 +20,20 @@ import (
 	"strconv"
 	"strings"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // AttesterDuty is the data regarding which validators have the duty to attest in a slot.
 type AttesterDuty struct {
 	// PubKey is the public key of the validator that should attest.
-	PubKey spec.BLSPubKey
+	PubKey phase0.BLSPubKey
 	// Slot is the slot in which the validator should attest.
-	Slot spec.Slot
+	Slot phase0.Slot
 	// ValidatorIndex is the index of the validator that should attest.
-	ValidatorIndex spec.ValidatorIndex
+	ValidatorIndex phase0.ValidatorIndex
 	// CommitteeIndex is the index of the committee in which the attesting validator has been placed.
-	CommitteeIndex spec.CommitteeIndex
+	CommitteeIndex phase0.CommitteeIndex
 	// CommitteeLength is the length of the committee in which the attesting validator has been placed.
 	CommitteeLength uint64
 	// CommitteesAtSlot is the number of committees in the slot.
@@ -92,7 +92,7 @@ func (a *AttesterDuty) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
-	a.Slot = spec.Slot(slot)
+	a.Slot = phase0.Slot(slot)
 	if attesterDutyJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
@@ -100,7 +100,7 @@ func (a *AttesterDuty) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
-	a.ValidatorIndex = spec.ValidatorIndex(validatorIndex)
+	a.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
 	if attesterDutyJSON.CommitteeIndex == "" {
 		return errors.New("committee index missing")
 	}
@@ -108,9 +108,9 @@ func (a *AttesterDuty) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for committee index")
 	}
-	a.CommitteeIndex = spec.CommitteeIndex(committeeIndex)
+	a.CommitteeIndex = phase0.CommitteeIndex(committeeIndex)
 	if attesterDutyJSON.CommitteeLength == "" {
-		return errors.New("committee index missing")
+		return errors.New("committee length missing")
 	}
 	if a.CommitteeLength, err = strconv.ParseUint(attesterDutyJSON.CommitteeLength, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for committee length")

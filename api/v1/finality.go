@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,25 +17,25 @@ import (
 	"encoding/json"
 	"fmt"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // Finality is the data regarding finality checkpoints at a given state.
 type Finality struct {
 	// Finalized is the finalized checkpoint.
-	Finalized *spec.Checkpoint
+	Finalized *phase0.Checkpoint
 	// Justified is the justified checkpoint.
-	Justified *spec.Checkpoint
+	Justified *phase0.Checkpoint
 	// PreviousJustified is the previous justified checkpoint.
-	PreviousJustified *spec.Checkpoint
+	PreviousJustified *phase0.Checkpoint
 }
 
 // finalityJSON is the spec representation of the struct.
 type finalityJSON struct {
-	Finalized         *spec.Checkpoint `json:"finalized"`
-	Justified         *spec.Checkpoint `json:"current_justified"`
-	PreviousJustified *spec.Checkpoint `json:"previous_justified"`
+	Finalized         *phase0.Checkpoint `json:"finalized"`
+	Justified         *phase0.Checkpoint `json:"current_justified"`
+	PreviousJustified *phase0.Checkpoint `json:"previous_justified"`
 }
 
 // MarshalJSON implements json.Marshaler.

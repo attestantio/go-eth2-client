@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,9 +21,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
-	require "github.com/stretchr/testify/require"
+	"github.com/golang/snappy"
+	"github.com/stretchr/testify/require"
 	"gotest.tools/assert"
 )
 
@@ -80,7 +81,7 @@ func TestVoluntaryExitJSON(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res spec.VoluntaryExit
+			var res phase0.VoluntaryExit
 			err := json.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
@@ -109,7 +110,7 @@ func TestVoluntaryExitYAML(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res spec.VoluntaryExit
+			var res phase0.VoluntaryExit
 			err := yaml.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
@@ -117,6 +118,7 @@ func TestVoluntaryExitYAML(t *testing.T) {
 				require.NoError(t, err)
 				rt, err := yaml.Marshal(&res)
 				require.NoError(t, err)
+				assert.Equal(t, string(rt), res.String())
 				rt = bytes.TrimSuffix(rt, []byte("\n"))
 				assert.Equal(t, string(test.input), string(rt))
 			}
@@ -139,10 +141,13 @@ func TestVoluntaryExitSpec(t *testing.T) {
 			t.Run(info.Name(), func(t *testing.T) {
 				specYAML, err := ioutil.ReadFile(filepath.Join(path, "value.yaml"))
 				require.NoError(t, err)
-				var res spec.VoluntaryExit
+				var res phase0.VoluntaryExit
 				require.NoError(t, yaml.Unmarshal(specYAML, &res))
 
-				specSSZ, err := ioutil.ReadFile(filepath.Join(path, "serialized.ssz"))
+				compressedSpecSSZ, err := os.ReadFile(filepath.Join(path, "serialized.ssz_snappy"))
+				require.NoError(t, err)
+				var specSSZ []byte
+				specSSZ, err = snappy.Decode(specSSZ, compressedSpecSSZ)
 				require.NoError(t, err)
 
 				// Ensure this matches the expected hash tree root.

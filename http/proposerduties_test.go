@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/attestantio/go-eth2-client/http"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
@@ -46,7 +46,7 @@ func TestProposerDuties(t *testing.T) {
 	tests := []struct {
 		name             string
 		epoch            int64 // -1 for current
-		validatorIndices []spec.ValidatorIndex
+		validatorIndices []phase0.ValidatorIndex
 		expected         int
 	}{
 		{
@@ -68,11 +68,11 @@ func TestProposerDuties(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var epoch spec.Epoch
+			var epoch phase0.Epoch
 			if test.epoch == -1 {
-				epoch = spec.Epoch(uint64(time.Since(genesis.GenesisTime).Seconds()) / (uint64(slotDuration.Seconds()) * slotsPerEpoch))
+				epoch = phase0.Epoch(uint64(time.Since(genesis.GenesisTime).Seconds()) / (uint64(slotDuration.Seconds()) * slotsPerEpoch))
 			} else {
-				epoch = spec.Epoch(test.epoch)
+				epoch = phase0.Epoch(test.epoch)
 			}
 			duties, err := service.ProposerDuties(context.Background(), epoch, test.validatorIndices)
 			require.NoError(t, err)

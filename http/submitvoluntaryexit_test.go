@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,23 +19,23 @@ import (
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/http"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSubmitVoluntaryExit(t *testing.T) {
 	tests := []struct {
 		name string
-		exit *spec.SignedVoluntaryExit
+		exit *phase0.SignedVoluntaryExit
 	}{
 		{
 			name: "InvalidSignature",
-			exit: &spec.SignedVoluntaryExit{
-				Message: &spec.VoluntaryExit{
+			exit: &phase0.SignedVoluntaryExit{
+				Message: &phase0.VoluntaryExit{
 					ValidatorIndex: 12345,
 					Epoch:          2,
 				},
-				Signature: spec.BLSSignature{},
+				Signature: phase0.BLSSignature{},
 			},
 		},
 	}

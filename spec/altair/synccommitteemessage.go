@@ -46,7 +46,7 @@ type syncCommitteeMessageJSON struct {
 type syncCommitteeMessageYAML struct {
 	Slot            uint64 `yaml:"slot"`
 	BeaconBlockRoot string `yaml:"beacon_block_root"`
-	ValidatorIndex  string `yaml:"validator_index"`
+	ValidatorIndex  uint64 `yaml:"validator_index"`
 	Signature       string `yaml:"signature"`
 }
 
@@ -117,7 +117,7 @@ func (s *SyncCommitteeMessage) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&syncCommitteeMessageYAML{
 		Slot:            uint64(s.Slot),
 		BeaconBlockRoot: fmt.Sprintf("%#x", s.BeaconBlockRoot),
-		ValidatorIndex:  fmt.Sprintf("%d", s.ValidatorIndex),
+		ValidatorIndex:  uint64(s.ValidatorIndex),
 		Signature:       fmt.Sprintf("%#x", s.Signature),
 	}, yaml.Flow(true))
 	if err != nil {

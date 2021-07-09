@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -39,7 +39,7 @@ var pubKeyChunkSize = 75
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
 // supplied no filter will be applied.
-func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
+func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	if stateID == "" {
 		return nil, errors.New("no state ID specified")
 	}
@@ -73,7 +73,7 @@ func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, valida
 		return nil, errors.New("no validators returned")
 	}
 
-	res := make(map[spec.ValidatorIndex]*api.Validator)
+	res := make(map[phase0.ValidatorIndex]*api.Validator)
 	for _, validator := range validatorsByPubKeyJSON.Data {
 		res[validator.Index] = validator
 	}
@@ -81,8 +81,8 @@ func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, valida
 }
 
 // chunkedValidatorsByPubKey obtains the validators a chunk at a time.
-func (s *Service) chunkedValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []spec.BLSPubKey) (map[spec.ValidatorIndex]*api.Validator, error) {
-	res := make(map[spec.ValidatorIndex]*api.Validator)
+func (s *Service) chunkedValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error) {
+	res := make(map[phase0.ValidatorIndex]*api.Validator)
 	for i := 0; i < len(validatorPubKeys); i += pubKeyChunkSize {
 		chunkStart := i
 		chunkEnd := i + pubKeyChunkSize

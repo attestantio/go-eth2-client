@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,13 +19,13 @@ import (
 	"strconv"
 	"strings"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // SlotFromStateID parses the state ID and returns the relevant slot.
-func (s *Service) SlotFromStateID(ctx context.Context, stateID string) (spec.Slot, error) {
-	var slot spec.Slot
+func (s *Service) SlotFromStateID(ctx context.Context, stateID string) (phase0.Slot, error) {
+	var slot phase0.Slot
 	switch {
 	case stateID == "genesis":
 		slot = 0
@@ -43,7 +43,7 @@ func (s *Service) SlotFromStateID(ctx context.Context, stateID string) (spec.Slo
 		if err != nil {
 			return 0, errors.Wrap(err, fmt.Sprintf("failed to parse state ID %s as a slot", stateID))
 		}
-		slot = spec.Slot(tmp)
+		slot = phase0.Slot(tmp)
 	}
 
 	log.Trace().Str("state", stateID).Uint64("slot", uint64(slot)).Msg("Calculated from state ID")
@@ -51,8 +51,8 @@ func (s *Service) SlotFromStateID(ctx context.Context, stateID string) (spec.Slo
 }
 
 // EpochFromStateID parses the state ID and returns the relevant epoch.
-func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (spec.Epoch, error) {
-	var epoch spec.Epoch
+func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (phase0.Epoch, error) {
+	var epoch phase0.Epoch
 	switch {
 	case stateID == "genesis":
 		epoch = 0
@@ -82,7 +82,7 @@ func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (spec.Ep
 		if err != nil {
 			return 0, errors.Wrap(err, "failed to obtain slots per epoch")
 		}
-		epoch = spec.Epoch(tmp / slotsPerEpoch)
+		epoch = phase0.Epoch(tmp / slotsPerEpoch)
 	}
 
 	log.Trace().Str("state", stateID).Uint64("epoch", uint64(epoch)).Msg("Calculated from state ID")

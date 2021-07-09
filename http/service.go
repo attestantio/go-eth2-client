@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,7 +24,7 @@ import (
 	"time"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	zerologger "github.com/rs/zerolog/log"
@@ -48,10 +48,15 @@ type Service struct {
 	specMutex            sync.Mutex
 	depositContract      *api.DepositContract
 	depositContractMutex sync.Mutex
-	forkSchedule         []*spec.Fork
+	forkSchedule         []*phase0.Fork
 	forkScheduleMutex    sync.Mutex
 	nodeVersion          string
 	nodeVersionMutex     sync.Mutex
+
+	// API support.
+	supportsV2BeaconBlocks    bool
+	supportsV2BeaconState     bool
+	supportsV2ValidatorBlocks bool
 }
 
 // log is a service-wide logger.
@@ -105,6 +110,11 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		return nil, errors.Wrap(err, "failed to confirm node connection")
 	}
 
+	// Handle flags for API versioning.
+	if err := s.checkAPIVersioning(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to check API versioning")
+	}
+
 	// Close the service on context done.
 	go func(s *Service) {
 		<-ctx.Done()
@@ -131,6 +141,25 @@ func (s *Service) fetchStaticValues(ctx context.Context) error {
 		return errors.Wrap(err, "failed to fetch fork schedule")
 	}
 
+	return nil
+}
+
+// checkAPIVersioning checks the versions of some APIs and sets
+// internal flags appropriately.
+func (s *Service) checkAPIVersioning(ctx context.Context) error {
+	// Start by setting the API v2 flag for blocks and fetching block 0.
+	s.supportsV2BeaconBlocks = true
+	_, err := s.SignedBeaconBlock(ctx, "0")
+	if err == nil {
+		// It's good.  Assume that other V2 APIs introduced with Altair
+		// are present.
+		s.supportsV2BeaconState = true
+		s.supportsV2ValidatorBlocks = true
+	} else {
+		// Assume this is down to the V2 endpoint missing rather than
+		// some other failure.
+		s.supportsV2BeaconBlocks = false
+	}
 	return nil
 }
 

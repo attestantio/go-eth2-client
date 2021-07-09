@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,12 +18,12 @@ import (
 	"context"
 	"encoding/json"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // SubmitAttestations submits attestations.
-func (s *Service) SubmitAttestations(ctx context.Context, attestations []*spec.Attestation) error {
+func (s *Service) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
 	specJSON, err := json.Marshal(attestations)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")

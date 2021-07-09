@@ -18,16 +18,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 type attestationPoolJSON struct {
-	Data []*spec.Attestation `json:"data"`
+	Data []*phase0.Attestation `json:"data"`
 }
 
 // AttestationPool obtains the attestation pool for a given slot.
-func (s *Service) AttestationPool(ctx context.Context, slot spec.Slot) ([]*spec.Attestation, error) {
+func (s *Service) AttestationPool(ctx context.Context, slot phase0.Slot) ([]*phase0.Attestation, error) {
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/pool/attestations?slot=%d", slot))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request attestation pool")

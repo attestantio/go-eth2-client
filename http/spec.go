@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -62,7 +62,7 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 		if strings.HasPrefix(k, "DOMAIN_") {
 			byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
 			if err == nil {
-				var domainType spec.DomainType
+				var domainType phase0.DomainType
 				copy(domainType[:], byteVal)
 				config[k] = domainType
 				continue
@@ -73,7 +73,7 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 		if strings.HasSuffix(k, "_FORK_VERSION") {
 			byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
 			if err == nil {
-				var version spec.Version
+				var version phase0.Version
 				copy(version[:], byteVal)
 				config[k] = version
 				continue
@@ -121,6 +121,14 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 		// Assume string.
 		config[k] = v
 	}
+
+	if _, exists := config["SYNC_COMMITTEE_SUBNET_COUNT"]; !exists {
+		config["SYNC_COMMITTEE_SUBNET_COUNT"] = uint64(4)
+	}
+	if _, exists := config["TARGET_AGGREGATORS_PER_SYNC_COMMITTEE"]; !exists {
+		config["TARGET_AGGREGATORS_PER_SYNC_COMMITTEE"] = uint64(4)
+	}
+
 	s.spec = config
 	return s.spec, nil
 }

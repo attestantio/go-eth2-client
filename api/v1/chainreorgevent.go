@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,19 +20,19 @@ import (
 	"strconv"
 	"strings"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // ChainReorgEvent is the data for the head event.
 type ChainReorgEvent struct {
-	Slot         spec.Slot
+	Slot         phase0.Slot
 	Depth        uint64
-	OldHeadBlock spec.Root
-	NewHeadBlock spec.Root
-	OldHeadState spec.Root
-	NewHeadState spec.Root
-	Epoch        spec.Epoch
+	OldHeadBlock phase0.Root
+	NewHeadBlock phase0.Root
+	OldHeadState phase0.Root
+	NewHeadState phase0.Root
+	Epoch        phase0.Epoch
 }
 
 // chainReorgEventJSON is the spec representation of the struct.
@@ -74,7 +74,7 @@ func (e *ChainReorgEvent) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
-	e.Slot = spec.Slot(slot)
+	e.Slot = phase0.Slot(slot)
 	if chainReorgEventJSON.Depth == "" {
 		return errors.New("depth missing")
 	}
@@ -132,7 +132,7 @@ func (e *ChainReorgEvent) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for epoch")
 	}
-	e.Epoch = spec.Epoch(epoch)
+	e.Epoch = phase0.Epoch(epoch)
 
 	return nil
 }

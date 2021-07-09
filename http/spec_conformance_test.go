@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,7 +24,7 @@ import (
 	"time"
 
 	"github.com/attestantio/go-eth2-client/http"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -38,13 +38,13 @@ func TestSpecConformance(t *testing.T) {
 		"DEPOSIT_CHAIN_ID":                      uint64(0),
 		"DEPOSIT_CONTRACT_ADDRESS":              []byte{},
 		"DEPOSIT_NETWORK_ID":                    uint64(0),
-		"DOMAIN_AGGREGATE_AND_PROOF":            spec.DomainType{},
-		"DOMAIN_BEACON_ATTESTER":                spec.DomainType{},
-		"DOMAIN_BEACON_PROPOSER":                spec.DomainType{},
-		"DOMAIN_DEPOSIT":                        spec.DomainType{},
-		"DOMAIN_RANDAO":                         spec.DomainType{},
-		"DOMAIN_SELECTION_PROOF":                spec.DomainType{},
-		"DOMAIN_VOLUNTARY_EXIT":                 spec.DomainType{},
+		"DOMAIN_AGGREGATE_AND_PROOF":            phase0.DomainType{},
+		"DOMAIN_BEACON_ATTESTER":                phase0.DomainType{},
+		"DOMAIN_BEACON_PROPOSER":                phase0.DomainType{},
+		"DOMAIN_DEPOSIT":                        phase0.DomainType{},
+		"DOMAIN_RANDAO":                         phase0.DomainType{},
+		"DOMAIN_SELECTION_PROOF":                phase0.DomainType{},
+		"DOMAIN_VOLUNTARY_EXIT":                 phase0.DomainType{},
 		"EFFECTIVE_BALANCE_INCREMENT":           uint64(0),
 		"EJECTION_BALANCE":                      uint64(0),
 		"EPOCHS_PER_ETH1_VOTING_PERIOD":         uint64(0),
@@ -53,7 +53,7 @@ func TestSpecConformance(t *testing.T) {
 		"EPOCHS_PER_SLASHINGS_VECTOR":           uint64(0),
 		"ETH1_FOLLOW_DISTANCE":                  uint64(0),
 		"GENESIS_DELAY":                         time.Duration(0),
-		"GENESIS_FORK_VERSION":                  spec.Version{},
+		"GENESIS_FORK_VERSION":                  phase0.Version{},
 		"HISTORICAL_ROOTS_LIMIT":                uint64(0),
 		"HYSTERESIS_DOWNWARD_MULTIPLIER":        uint64(0),
 		"HYSTERESIS_QUOTIENT":                   uint64(0),

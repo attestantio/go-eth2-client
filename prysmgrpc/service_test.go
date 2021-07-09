@@ -51,23 +51,16 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.ValidatorsProvider)(nil), s)
 
 	// Non-standard APIs.
-	assert.Implements(t, (*client.AggregateAndProofDomainProvider)(nil), s)
 	assert.Implements(t, (*client.AttesterDutiesProvider)(nil), s)
-	assert.Implements(t, (*client.BeaconAttesterDomainProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockRootProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconChainHeadUpdatedSource)(nil), s)
-	assert.Implements(t, (*client.BeaconProposerDomainProvider)(nil), s)
-	assert.Implements(t, (*client.DepositDomainProvider)(nil), s)
 	assert.Implements(t, (*client.GenesisTimeProvider)(nil), s)
 	assert.Implements(t, (*client.GenesisValidatorsRootProvider)(nil), s)
 	assert.Implements(t, (*client.NodeVersionProvider)(nil), s)
 	assert.Implements(t, (*client.ProposerDutiesProvider)(nil), s)
-	assert.Implements(t, (*client.RANDAODomainProvider)(nil), s)
-	assert.Implements(t, (*client.SelectionProofDomainProvider)(nil), s)
 	assert.Implements(t, (*client.SlotDurationProvider)(nil), s)
 	assert.Implements(t, (*client.SlotsPerEpochProvider)(nil), s)
 	assert.Implements(t, (*client.TargetAggregatorsPerCommitteeProvider)(nil), s)
-	assert.Implements(t, (*client.VoluntaryExitDomainProvider)(nil), s)
 	assert.Implements(t, (*client.ValidatorsWithoutBalanceProvider)(nil), s)
 
 	// Prysm-specific APIs.

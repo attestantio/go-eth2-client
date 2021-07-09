@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,52 +16,52 @@ package http
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // Domain provides a domain for a given domain type at a given epoch.
-func (s *Service) Domain(ctx context.Context, domainType spec.DomainType, epoch spec.Epoch) (spec.Domain, error) {
+func (s *Service) Domain(ctx context.Context, domainType phase0.DomainType, epoch phase0.Epoch) (phase0.Domain, error) {
 	// Obtain the fork for the epoch.
 	fork, err := s.forkAtEpoch(ctx, epoch)
 	if err != nil {
-		return spec.Domain{}, errors.Wrap(err, "failed to obtain fork")
+		return phase0.Domain{}, errors.Wrap(err, "failed to obtain fork")
 	}
 
 	// Obtain the genesis validators root.
 	genesis, err := s.Genesis(ctx)
 	if err != nil {
-		return spec.Domain{}, errors.Wrap(err, "failed to obtain genesis")
+		return phase0.Domain{}, errors.Wrap(err, "failed to obtain genesis")
 	}
 
 	// Calculate the domain.
-	var forkVersion spec.Version
+	var forkVersion phase0.Version
 	if epoch < fork.Epoch {
 		forkVersion = fork.PreviousVersion
 	} else {
 		forkVersion = fork.CurrentVersion
 	}
 	if len(forkVersion) != 4 {
-		return spec.Domain{}, errors.New("fork version is invalid")
+		return phase0.Domain{}, errors.New("fork version is invalid")
 	}
 
-	forkData := &spec.ForkData{
+	forkData := &phase0.ForkData{
 		CurrentVersion:        forkVersion,
 		GenesisValidatorsRoot: genesis.GenesisValidatorsRoot,
 	}
 	root, err := forkData.HashTreeRoot()
 	if err != nil {
-		return spec.Domain{}, errors.Wrap(err, "failed to calculate signature domain")
+		return phase0.Domain{}, errors.Wrap(err, "failed to calculate signature domain")
 	}
 
-	var domain spec.Domain
+	var domain phase0.Domain
 	copy(domain[:], domainType[:])
 	copy(domain[4:], root[:])
 	return domain, nil
 }
 
 // forkAtEpoch works through the fork schedule to obtain the current fork.
-func (s *Service) forkAtEpoch(ctx context.Context, epoch spec.Epoch) (*spec.Fork, error) {
+func (s *Service) forkAtEpoch(ctx context.Context, epoch phase0.Epoch) (*phase0.Fork, error) {
 	forkSchedule, err := s.ForkSchedule(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain fork schedule")

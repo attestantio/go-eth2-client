@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,7 +19,7 @@ import (
 	"fmt"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -29,7 +29,7 @@ type proposerDutiesJSON struct {
 
 // ProposerDuties obtains proposer duties for the given epoch.
 // If validators is empty all duties are returned, otherwise only matching duties are returned.
-func (s *Service) ProposerDuties(ctx context.Context, epoch spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.ProposerDuty, error) {
+func (s *Service) ProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.ProposerDuty, error) {
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", epoch))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request proposer duties")
@@ -48,8 +48,8 @@ func (s *Service) ProposerDuties(ctx context.Context, epoch spec.Epoch, validato
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain slots per epoch")
 	}
-	startSlot := spec.Slot(uint64(epoch) * slotsPerEpoch)
-	endSlot := spec.Slot(uint64(epoch)*slotsPerEpoch + slotsPerEpoch - 1)
+	startSlot := phase0.Slot(uint64(epoch) * slotsPerEpoch)
+	endSlot := phase0.Slot(uint64(epoch)*slotsPerEpoch + slotsPerEpoch - 1)
 	for _, duty := range resp.Data {
 		if duty.Slot < startSlot || duty.Slot > endSlot {
 			return nil, fmt.Errorf("received proposal for slot %d outside of range [%d,%d]", duty.Slot, startSlot, endSlot)
@@ -62,7 +62,7 @@ func (s *Service) ProposerDuties(ctx context.Context, epoch spec.Epoch, validato
 	}
 
 	// Filter duties based on supplied validators.
-	validatorIndexMap := make(map[spec.ValidatorIndex]bool, len(validatorIndices))
+	validatorIndexMap := make(map[phase0.ValidatorIndex]bool, len(validatorIndices))
 	for _, index := range validatorIndices {
 		validatorIndexMap[index] = true
 	}

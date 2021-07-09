@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,17 +19,17 @@ import (
 	"encoding/json"
 	"fmt"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 type aggregateAttestationDataJSON struct {
-	Data *spec.Attestation `json:"data"`
+	Data *phase0.Attestation `json:"data"`
 }
 
 // AggregateAttestation fetches the aggregate attestation given an attestation.
 // N.B if an aggregate attestation for the attestation is not available this will return nil without an error.
-func (s *Service) AggregateAttestation(ctx context.Context, slot spec.Slot, attestationDataRoot spec.Root) (*spec.Attestation, error) {
+func (s *Service) AggregateAttestation(ctx context.Context, slot phase0.Slot, attestationDataRoot phase0.Root) (*phase0.Attestation, error) {
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/validator/aggregate_attestation?slot=%d&attestation_data_root=%#x", slot, attestationDataRoot))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request aggregate attestation")

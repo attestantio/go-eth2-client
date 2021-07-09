@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,7 +20,7 @@ import (
 	"strings"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -32,7 +32,7 @@ type validatorBalancesJSON struct {
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
 // will be applied.
-func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]spec.Gwei, error) {
+func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
 	if stateID == "" {
 		return nil, errors.New("no state ID specified")
 	}
@@ -66,7 +66,7 @@ func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validat
 		return nil, errors.New("no validator balances returned")
 	}
 
-	res := make(map[spec.ValidatorIndex]spec.Gwei)
+	res := make(map[phase0.ValidatorIndex]phase0.Gwei)
 	for _, validatorBalance := range validatorBalancesJSON.Data {
 		res[validatorBalance.Index] = validatorBalance.Balance
 	}
@@ -74,8 +74,8 @@ func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validat
 }
 
 // chunkedValidatorBalances obtains the validator balances a chunk at a time.
-func (s *Service) chunkedValidatorBalances(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]spec.Gwei, error) {
-	res := make(map[spec.ValidatorIndex]spec.Gwei)
+func (s *Service) chunkedValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
+	res := make(map[phase0.ValidatorIndex]phase0.Gwei)
 	for i := 0; i < len(validatorIndices); i += indexChunkSize {
 		chunkStart := i
 		chunkEnd := i + indexChunkSize

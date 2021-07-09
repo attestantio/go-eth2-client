@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,25 +19,25 @@ import (
 	"fmt"
 	"strings"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // BeaconBlockHeader is the data providing information about beacon blocks.
 type BeaconBlockHeader struct {
 	// Root is the root of the beacon block.
-	Root spec.Root
+	Root phase0.Root
 	// Canonical is true if the block is considered canonical.
 	Canonical bool
 	// Header is the beacon block header.
-	Header *spec.SignedBeaconBlockHeader
+	Header *phase0.SignedBeaconBlockHeader
 }
 
 // beaconBlockHeaderJSON is the spec representation of the struct.
 type beaconBlockHeaderJSON struct {
-	Root      string                        `json:"root"`
-	Canonical bool                          `json:"canonical"`
-	Header    *spec.SignedBeaconBlockHeader `json:"header"`
+	Root      string                          `json:"root"`
+	Canonical bool                            `json:"canonical"`
+	Header    *phase0.SignedBeaconBlockHeader `json:"header"`
 }
 
 // MarshalJSON implements json.Marshaler.

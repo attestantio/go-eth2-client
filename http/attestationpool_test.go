@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/attestantio/go-eth2-client/http"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
 
@@ -48,11 +48,11 @@ func TestAttestationPool(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, test := range tests {
-		var slot spec.Slot
+		var slot phase0.Slot
 		if test.slot == -1 {
-			slot = spec.Slot(uint64(time.Since(genesis.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
+			slot = phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
 		} else {
-			slot = spec.Slot(uint64(test.slot))
+			slot = phase0.Slot(uint64(test.slot))
 		}
 		t.Run(test.name, func(t *testing.T) {
 			attestationPool, err := service.AttestationPool(context.Background(), slot)

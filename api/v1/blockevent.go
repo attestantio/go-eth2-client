@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,14 +20,14 @@ import (
 	"strconv"
 	"strings"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // BlockEvent is the data for the block event.
 type BlockEvent struct {
-	Slot  spec.Slot
-	Block spec.Root
+	Slot  phase0.Slot
+	Block phase0.Root
 }
 
 // blockEventJSON is the spec representation of the struct.
@@ -59,7 +59,7 @@ func (e *BlockEvent) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
-	e.Slot = spec.Slot(slot)
+	e.Slot = phase0.Slot(slot)
 	if blockEventJSON.Block == "" {
 		return errors.New("block missing")
 	}

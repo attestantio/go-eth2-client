@@ -37,6 +37,35 @@ type altairSignedBeaconBlockJSON struct {
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
 // N.B if a signed beacon block for the block ID is not available this will return nil without an error.
 func (s *Service) SignedBeaconBlock(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error) {
+	if s.supportsV2BeaconBlocks {
+		return s.signedBeaconBlockV2(ctx, blockID)
+	}
+	return s.signedBeaconBlockV1(ctx, blockID)
+}
+
+// signedBeaconBlockV1 fetches a signed beacon block from the V1 endpoint.
+func (s *Service) signedBeaconBlockV1(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error) {
+	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/blocks/%s", blockID))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to request signed beacon block")
+	}
+	if respBodyReader == nil {
+		return nil, nil
+	}
+
+	var resp phase0SignedBeaconBlockJSON
+	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
+		return nil, errors.Wrap(err, "failed to parse signed beacon block")
+	}
+
+	return &spec.VersionedSignedBeaconBlock{
+		Version: spec.DataVersionPhase0,
+		Phase0:  resp.Data,
+	}, nil
+}
+
+// signedBeaconBlockV1 fetches a signed beacon block from the V2 endpoint.
+func (s *Service) signedBeaconBlockV2(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error) {
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v2/beacon/blocks/%s", blockID))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request signed beacon block")

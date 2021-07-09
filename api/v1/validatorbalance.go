@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,14 +18,14 @@ import (
 	"fmt"
 	"strconv"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // ValidatorBalance contains the balance of a validator.
 type ValidatorBalance struct {
-	Index   spec.ValidatorIndex
-	Balance spec.Gwei
+	Index   phase0.ValidatorIndex
+	Balance phase0.Gwei
 }
 
 // validatorBalanceJSON is the spec representation of the struct.
@@ -57,7 +57,7 @@ func (v *ValidatorBalance) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for index")
 	}
-	v.Index = spec.ValidatorIndex(index)
+	v.Index = phase0.ValidatorIndex(index)
 	if validatorBalanceJSON.Balance == "" {
 		return errors.New("balance missing")
 	}
@@ -65,7 +65,7 @@ func (v *ValidatorBalance) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for balance")
 	}
-	v.Balance = spec.Gwei(balance)
+	v.Balance = phase0.Gwei(balance)
 
 	return nil
 }

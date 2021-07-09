@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/attestantio/go-eth2-client/http"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,12 +28,12 @@ import (
 func TestBeaconBlockProposal(t *testing.T) {
 	tests := []struct {
 		name         string
-		randaoReveal spec.BLSSignature
+		randaoReveal phase0.BLSSignature
 		graffiti     []byte
 	}{
 		{
 			name: "Good",
-			randaoReveal: spec.BLSSignature([96]byte{
+			randaoReveal: phase0.BLSSignature([96]byte{
 				0x8d, 0x7b, 0x2a, 0x32, 0xb0, 0x26, 0xe9, 0xc7, 0x9a, 0xae, 0x6e, 0xc6, 0xb8, 0x3e, 0xab, 0xae,
 				0x89, 0xd6, 0x0c, 0xac, 0xd6, 0x5a, 0xc4, 0x1e, 0xd7, 0xd2, 0xf4, 0xbe, 0x9d, 0xd8, 0xc8, 0x9c,
 				0x1b, 0xf7, 0xcd, 0x3d, 0x70, 0x03, 0x74, 0xe1, 0x8d, 0x03, 0xd1, 0x2f, 0x6a, 0x05, 0x4c, 0x23,
@@ -61,7 +61,7 @@ func TestBeaconBlockProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, test := range tests {
-		nextSlot := spec.Slot(uint64(time.Since(genesis.GenesisTime).Seconds())/uint64(slotDuration.Seconds())) + 1
+		nextSlot := phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds())/uint64(slotDuration.Seconds())) + 1
 		t.Run(test.name, func(t *testing.T) {
 			resp, err := service.BeaconBlockProposal(context.Background(), nextSlot, test.randaoReveal, test.graffiti)
 			require.NoError(t, err)
