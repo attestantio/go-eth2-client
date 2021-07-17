@@ -122,11 +122,12 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 		config[k] = v
 	}
 
+	// TODO: remove once clients return these.
 	if _, exists := config["SYNC_COMMITTEE_SUBNET_COUNT"]; !exists {
 		config["SYNC_COMMITTEE_SUBNET_COUNT"] = uint64(4)
 	}
-	if _, exists := config["TARGET_AGGREGATORS_PER_SYNC_COMMITTEE"]; !exists {
-		config["TARGET_AGGREGATORS_PER_SYNC_COMMITTEE"] = uint64(4)
+	if _, exists := config["TARGET_AGGREGATORS_PER_SYNC_SUBCOMMITTEE"]; !exists {
+		config["TARGET_AGGREGATORS_PER_SYNC_SUBCOMMITTEE"] = uint64(4)
 	}
 
 	s.spec = config
