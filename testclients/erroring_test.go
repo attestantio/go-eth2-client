@@ -87,13 +87,13 @@ func TestMaybeError(t *testing.T) {
 	require.NoError(t, err)
 
 	errors := 0
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 100000; i++ {
 		_, err := s.(eth2client.GenesisProvider).Genesis(ctx)
 		if err != nil {
 			errors++
 		}
 	}
 	// Expect approximately 90% of the requests to have errored.
-	require.LessOrEqual(t, errors, 9050)
-	require.GreaterOrEqual(t, errors, 8950)
+	require.LessOrEqual(t, errors, 90500)
+	require.GreaterOrEqual(t, errors, 89500)
 }
