@@ -109,7 +109,7 @@ func (c *Checkpoint) UnmarshalYAML(input []byte) error {
 
 // String returns a string version of the structure.
 func (c *Checkpoint) String() string {
-	data, err := json.Marshal(c)
+	data, err := yaml.Marshal(c)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

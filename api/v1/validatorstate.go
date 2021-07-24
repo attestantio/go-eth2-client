@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,7 +17,7 @@ import (
 	"fmt"
 	"strings"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // ValidatorState defines the state of the validator.
@@ -88,25 +88,6 @@ func (v *ValidatorState) UnmarshalJSON(input []byte) error {
 		*v = ValidatorStateWithdrawalPossible
 	case `"withdrawal_done"`:
 		*v = ValidatorStateWithdrawalDone
-		// Lighthouse uses different states from currently-defined standard.
-	case `"waiting_for_eligibility"`:
-		*v = ValidatorStatePendingInitialized
-	case `"waiting_for_finality"`:
-		*v = ValidatorStatePendingQueued
-	case `"standby_for_active"`:
-		*v = ValidatorStatePendingQueued
-	case `"active"`:
-		*v = ValidatorStateActiveOngoing
-	case `"active_awaiting_voluntary_exit"`:
-		*v = ValidatorStateActiveExiting
-	case `"exited_voluntarily"`:
-		*v = ValidatorStateExitedUnslashed
-	case `"withdrawable"`:
-		*v = ValidatorStateWithdrawalPossible
-	case `"waiting_in_queue"`:
-		*v = ValidatorStatePendingQueued
-	case `"active_awaiting_slashed_exit"`:
-		*v = ValidatorStateActiveSlashed
 	default:
 		err = fmt.Errorf("unrecognised validator state %s", string(input))
 	}
@@ -166,7 +147,7 @@ func (v ValidatorState) HasBalance() bool {
 }
 
 // ValidatorToState is a helper that calculates the validator status given a validator struct.
-func ValidatorToState(validator *spec.Validator, currentEpoch spec.Epoch, farFutureEpoch spec.Epoch) ValidatorState {
+func ValidatorToState(validator *phase0.Validator, currentEpoch phase0.Epoch, farFutureEpoch phase0.Epoch) ValidatorState {
 	if validator == nil {
 		return ValidatorStateUnknown
 	}

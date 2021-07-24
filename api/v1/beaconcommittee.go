@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,18 +18,18 @@ import (
 	"fmt"
 	"strconv"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // BeaconCommittee is the data providing information validator membership of committees.
 type BeaconCommittee struct {
 	// Slot is the slot in which the committee attests.
-	Slot spec.Slot
+	Slot phase0.Slot
 	// Index is the index of the committee.
-	Index spec.CommitteeIndex
+	Index phase0.CommitteeIndex
 	// Validators is the list of validator indices in the committee.
-	Validators []spec.ValidatorIndex
+	Validators []phase0.ValidatorIndex
 }
 
 // beaconCommitteeJSON is the spec representation of the struct.
@@ -67,7 +67,7 @@ func (b *BeaconCommittee) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
-	b.Slot = spec.Slot(slot)
+	b.Slot = phase0.Slot(slot)
 	if beaconCommitteeJSON.Index == "" {
 		return errors.New("index missing")
 	}
@@ -75,20 +75,20 @@ func (b *BeaconCommittee) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for index")
 	}
-	b.Index = spec.CommitteeIndex(index)
+	b.Index = phase0.CommitteeIndex(index)
 	if beaconCommitteeJSON.Validators == nil {
 		return errors.New("validators missing")
 	}
 	if len(beaconCommitteeJSON.Validators) == 0 {
 		return errors.New("validators length cannot be 0")
 	}
-	b.Validators = make([]spec.ValidatorIndex, len(beaconCommitteeJSON.Validators))
+	b.Validators = make([]phase0.ValidatorIndex, len(beaconCommitteeJSON.Validators))
 	for i := range beaconCommitteeJSON.Validators {
 		validator, err := strconv.ParseUint(beaconCommitteeJSON.Validators[i], 10, 64)
 		if err != nil {
 			return errors.Wrap(err, "invalid value for validator")
 		}
-		b.Validators[i] = spec.ValidatorIndex(validator)
+		b.Validators[i] = phase0.ValidatorIndex(validator)
 	}
 
 	return nil

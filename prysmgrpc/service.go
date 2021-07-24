@@ -50,13 +50,6 @@ type Service struct {
 	slotsPerEpoch                 *uint64
 	farFutureEpoch                *spec.Epoch
 	targetAggregatorsPerCommittee *uint64
-	beaconAttesterDomain          *spec.DomainType
-	beaconProposerDomain          *spec.DomainType
-	randaoDomain                  *spec.DomainType
-	depositDomain                 *spec.DomainType
-	voluntaryExitDomain           *spec.DomainType
-	selectionProofDomain          *spec.DomainType
-	aggregateAndProofDomain       *spec.DomainType
 	genesisForkVersion            []byte
 
 	// Event handlers.

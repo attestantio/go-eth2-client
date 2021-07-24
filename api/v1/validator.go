@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,24 +19,24 @@ import (
 	"fmt"
 	"strconv"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // Validator contains the spec validator plus additional fields.
 type Validator struct {
-	Index     spec.ValidatorIndex
-	Balance   spec.Gwei
+	Index     phase0.ValidatorIndex
+	Balance   phase0.Gwei
 	Status    ValidatorState
-	Validator *spec.Validator
+	Validator *phase0.Validator
 }
 
 // validatorJSON is the spec representation of the struct.
 type validatorJSON struct {
-	Index     string          `json:"index"`
-	Balance   string          `json:"balance"`
-	Status    ValidatorState  `json:"status"`
-	Validator *spec.Validator `json:"validator"`
+	Index     string            `json:"index"`
+	Balance   string            `json:"balance"`
+	Status    ValidatorState    `json:"status"`
+	Validator *phase0.Validator `json:"validator"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -64,7 +64,7 @@ func (v *Validator) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for index")
 	}
-	v.Index = spec.ValidatorIndex(index)
+	v.Index = phase0.ValidatorIndex(index)
 	if validatorJSON.Balance == "" {
 		return errors.New("balance missing")
 	}
@@ -72,7 +72,7 @@ func (v *Validator) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for balance")
 	}
-	v.Balance = spec.Gwei(balance)
+	v.Balance = phase0.Gwei(balance)
 	v.Status = validatorJSON.Status
 	if validatorJSON.Validator == nil {
 		return errors.New("validator missing")
@@ -92,6 +92,6 @@ func (v *Validator) String() string {
 }
 
 // PubKey implements ValidatorPubKeyProvider
-func (v *Validator) PubKey(ctx context.Context) (spec.BLSPubKey, error) {
+func (v *Validator) PubKey(ctx context.Context) (phase0.BLSPubKey, error) {
 	return v.Validator.PublicKey, nil
 }

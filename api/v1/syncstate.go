@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,16 +18,16 @@ import (
 	"fmt"
 	"strconv"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // SyncState is the data regarding the node's synchronization state to the chain.
 type SyncState struct {
 	// HeadSlot is the head slot of the chain as understood by the node.
-	HeadSlot spec.Slot
+	HeadSlot phase0.Slot
 	// SyncDistance is the distance between the node's highest synced slot and the head slot.
-	SyncDistance spec.Slot
+	SyncDistance phase0.Slot
 	// IsSyncing is true if the node is syncing.
 	IsSyncing bool
 }
@@ -63,7 +63,7 @@ func (s *SyncState) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for head slot")
 	}
-	s.HeadSlot = spec.Slot(headSlot)
+	s.HeadSlot = phase0.Slot(headSlot)
 	if syncStateJSON.SyncDistance == "" {
 		return errors.New("sync distance missing")
 	}
@@ -71,7 +71,7 @@ func (s *SyncState) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for sync distance")
 	}
-	s.SyncDistance = spec.Slot(syncDistance)
+	s.SyncDistance = phase0.Slot(syncDistance)
 	s.IsSyncing = syncStateJSON.IsSyncing
 
 	return nil

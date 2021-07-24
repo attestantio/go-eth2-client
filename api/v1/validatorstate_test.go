@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,9 +19,9 @@ import (
 	"testing"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/assert"
-	require "github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require"
 )
 
 func TestValidatorStateJSON(t *testing.T) {
@@ -138,11 +138,11 @@ func TestValidatorStateJSON(t *testing.T) {
 }
 
 func TestValidatorToState(t *testing.T) {
-	farFutureEpoch := spec.Epoch(99999)
-	currentEpoch := spec.Epoch(100)
+	farFutureEpoch := phase0.Epoch(99999)
+	currentEpoch := phase0.Epoch(100)
 	tests := []struct {
 		name      string
-		validator *spec.Validator
+		validator *phase0.Validator
 		state     api.ValidatorState
 	}{
 		{
@@ -151,7 +151,7 @@ func TestValidatorToState(t *testing.T) {
 		},
 		{
 			name: "PendingInitialized",
-			validator: &spec.Validator{
+			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: farFutureEpoch,
 				ActivationEpoch:            farFutureEpoch,
 				ExitEpoch:                  farFutureEpoch,
@@ -161,7 +161,7 @@ func TestValidatorToState(t *testing.T) {
 		},
 		{
 			name: "PendingQueued",
-			validator: &spec.Validator{
+			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch + 10,
 				ActivationEpoch:            farFutureEpoch,
 				ExitEpoch:                  farFutureEpoch,
@@ -171,7 +171,7 @@ func TestValidatorToState(t *testing.T) {
 		},
 		{
 			name: "PendingQueued",
-			validator: &spec.Validator{
+			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
 				ActivationEpoch:            currentEpoch + 10,
 				ExitEpoch:                  farFutureEpoch,
@@ -181,7 +181,7 @@ func TestValidatorToState(t *testing.T) {
 		},
 		{
 			name: "ActiveOngoing",
-			validator: &spec.Validator{
+			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
 				ActivationEpoch:            currentEpoch - 40,
 				ExitEpoch:                  farFutureEpoch,
@@ -191,7 +191,7 @@ func TestValidatorToState(t *testing.T) {
 		},
 		{
 			name: "ActiveExiting",
-			validator: &spec.Validator{
+			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
 				ActivationEpoch:            currentEpoch - 40,
 				ExitEpoch:                  currentEpoch + 10,
@@ -201,7 +201,7 @@ func TestValidatorToState(t *testing.T) {
 		},
 		{
 			name: "ActiveSlashed",
-			validator: &spec.Validator{
+			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
 				ActivationEpoch:            currentEpoch - 40,
 				ExitEpoch:                  currentEpoch + 10,
@@ -212,7 +212,7 @@ func TestValidatorToState(t *testing.T) {
 		},
 		{
 			name: "ExitedUnslashed",
-			validator: &spec.Validator{
+			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
 				ActivationEpoch:            currentEpoch - 40,
 				ExitEpoch:                  currentEpoch - 30,
@@ -222,7 +222,7 @@ func TestValidatorToState(t *testing.T) {
 		},
 		{
 			name: "ExitedUnslashed",
-			validator: &spec.Validator{
+			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
 				ActivationEpoch:            currentEpoch - 40,
 				ExitEpoch:                  currentEpoch - 30,
@@ -233,7 +233,7 @@ func TestValidatorToState(t *testing.T) {
 		},
 		{
 			name: "WithdrawalPossible",
-			validator: &spec.Validator{
+			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
 				ActivationEpoch:            currentEpoch - 40,
 				ExitEpoch:                  currentEpoch - 30,
@@ -243,7 +243,7 @@ func TestValidatorToState(t *testing.T) {
 		},
 		{
 			name: "WithdrawalPossibleSlashed",
-			validator: &spec.Validator{
+			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
 				ActivationEpoch:            currentEpoch - 40,
 				ExitEpoch:                  currentEpoch - 30,

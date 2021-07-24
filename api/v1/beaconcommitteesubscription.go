@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,18 +18,18 @@ import (
 	"fmt"
 	"strconv"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // BeaconCommitteeSubscription is the data required for a beacon committee subscription.
 type BeaconCommitteeSubscription struct {
 	// ValidatorIdex is the index of the validator making the subscription request.
-	ValidatorIndex spec.ValidatorIndex
+	ValidatorIndex phase0.ValidatorIndex
 	// Slot is the slot for which the validator is attesting.
-	Slot spec.Slot
+	Slot phase0.Slot
 	// CommitteeIndex is the index of the committee of which the validator is a member at the given slot.
-	CommitteeIndex spec.CommitteeIndex
+	CommitteeIndex phase0.CommitteeIndex
 	// CommitteesAtSlot is the number of committees at the given slot.
 	CommitteesAtSlot uint64
 	// IsAggregator is true if the validator that wishes to subscribe is required to aggregate attestations.
@@ -71,7 +71,7 @@ func (b *BeaconCommitteeSubscription) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
-	b.ValidatorIndex = spec.ValidatorIndex(validatorIndex)
+	b.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
 	if beaconCommitteeSubscriptionJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
@@ -79,7 +79,7 @@ func (b *BeaconCommitteeSubscription) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
-	b.Slot = spec.Slot(slot)
+	b.Slot = phase0.Slot(slot)
 	if beaconCommitteeSubscriptionJSON.CommitteeIndex == "" {
 		return errors.New("committee index missing")
 	}
@@ -87,7 +87,7 @@ func (b *BeaconCommitteeSubscription) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for committee index")
 	}
-	b.CommitteeIndex = spec.CommitteeIndex(committeeIndex)
+	b.CommitteeIndex = phase0.CommitteeIndex(committeeIndex)
 	if beaconCommitteeSubscriptionJSON.CommitteesAtSlot == "" {
 		return errors.New("committees at slot missing")
 	}

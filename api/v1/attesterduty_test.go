@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -108,6 +108,11 @@ func TestAttesterDutyJSON(t *testing.T) {
 			err:   "invalid value for committee index: strconv.ParseUint: parsing \"-1\": invalid syntax",
 		},
 		{
+			name:  "CommitteeLengthMissing",
+			input: []byte(`{"pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f","slot":"1","validator_index":"2","committee_index":"3","committees_at_slot":"4","validator_committee_index":"61"}`),
+			err:   "committee length missing",
+		},
+		{
 			name:  "CommitteeLengthWrongType",
 			input: []byte(`{"pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f","slot":"1","validator_index":"2","committee_index":"3","committee_length":true,"committees_at_slot":"4","validator_committee_index":"61"}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field attesterDutyJSON.committee_length of type string",
@@ -122,15 +127,25 @@ func TestAttesterDutyJSON(t *testing.T) {
 			input: []byte(`{"pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f","slot":"1","validator_index":"2","committee_index":"3","committee_length":"0","committees_at_slot":"4","validator_committee_index":"61"}`),
 			err:   "committee length cannot be 0",
 		},
-		//		{
-		//			name:  "CommitteesAtSlotMissing",
-		//			input: []byte(`{"pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f","slot":"1","validator_index":"2","committee_index":"3","committee_length":"128","validator_committee_index":"61"}`),
-		//			err:   "committees at slot missing",
-		//		},
+		{
+			name:  "CommitteesAtSlotMissing",
+			input: []byte(`{"pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f","slot":"1","validator_index":"2","committee_index":"3","committee_length":"128","validator_committee_index":"61"}`),
+			err:   "committees at slot missing",
+		},
 		{
 			name:  "CommitteesAtSlotWrongType",
 			input: []byte(`{"pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f","slot":"1","validator_index":"2","committee_index":"3","committee_length":"128","committees_at_slot":true,"validator_committee_index":"61"}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field attesterDutyJSON.committees_at_slot of type string",
+		},
+		{
+			name:  "CommitteesAtSlotInvalid",
+			input: []byte(`{"pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f","slot":"1","validator_index":"2","committee_index":"3","committee_length":"128","committees_at_slot":"invalid","validator_committee_index":"61"}`),
+			err:   "invalid value for committees at slot: strconv.ParseUint: parsing \"invalid\": invalid syntax",
+		},
+		{
+			name:  "CommitteesAtSlotZero",
+			input: []byte(`{"pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f","slot":"1","validator_index":"2","committee_index":"3","committee_length":"128","committees_at_slot":"0","validator_committee_index":"61"}`),
+			err:   "committees at slot cannot be 0",
 		},
 		{
 			name:  "ValidatorCommitteeIndexMissing",

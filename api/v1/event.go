@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,7 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -81,7 +81,7 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 	}
 	switch eventJSON.Topic {
 	case "attestation":
-		e.Data = &spec.Attestation{}
+		e.Data = &phase0.Attestation{}
 	case "block":
 		e.Data = &BlockEvent{}
 	case "chain_reorg":
@@ -91,7 +91,7 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 	case "head":
 		e.Data = &HeadEvent{}
 	case "voluntary_exit":
-		e.Data = &spec.SignedVoluntaryExit{}
+		e.Data = &phase0.SignedVoluntaryExit{}
 	default:
 		return fmt.Errorf("unsupported event topic %s", eventJSON.Topic)
 	}

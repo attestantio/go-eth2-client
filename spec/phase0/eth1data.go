@@ -121,7 +121,7 @@ func (e *ETH1Data) UnmarshalYAML(input []byte) error {
 
 // String returns a string version of the structure.
 func (e *ETH1Data) String() string {
-	data, err := json.Marshal(e)
+	data, err := yaml.Marshal(e)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

@@ -128,7 +128,7 @@ func (i *IndexedAttestation) UnmarshalYAML(input []byte) error {
 
 // String returns a string version of the structure.
 func (i *IndexedAttestation) String() string {
-	data, err := json.Marshal(i)
+	data, err := yaml.Marshal(i)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

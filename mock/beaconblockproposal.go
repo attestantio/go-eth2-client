@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,12 +16,12 @@ package mock
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/prysmaticlabs/go-bitfield"
 )
 
 // BeaconBlockProposal fetches a proposed beacon block for signing.
-func (s *Service) BeaconBlockProposal(ctx context.Context, slot spec.Slot, randaoReveal spec.BLSSignature, graffiti []byte) (*spec.BeaconBlock, error) {
+func (s *Service) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*phase0.BeaconBlock, error) {
 	// Graffiti should be 32 bytes.
 	fixedGraffiti := make([]byte, 32)
 	copy(fixedGraffiti, graffiti)
@@ -29,35 +29,35 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot spec.Slot, randa
 	// Build a beacon block.
 
 	// Create a few attestations.
-	attestations := make([]*spec.Attestation, 4)
+	attestations := make([]*phase0.Attestation, 4)
 	for i := uint64(0); i < 4; i++ {
 		aggregationBits := bitfield.NewBitlist(128)
 		aggregationBits.SetBitAt(i, true)
-		attestations[i] = &spec.Attestation{
+		attestations[i] = &phase0.Attestation{
 			AggregationBits: aggregationBits,
-			Data: &spec.AttestationData{
+			Data: &phase0.AttestationData{
 				Slot:  slot - 1,
-				Index: spec.CommitteeIndex(i),
-				BeaconBlockRoot: spec.Root([32]byte{
+				Index: phase0.CommitteeIndex(i),
+				BeaconBlockRoot: phase0.Root([32]byte{
 					0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 					0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
 				}),
-				Source: &spec.Checkpoint{
+				Source: &phase0.Checkpoint{
 					Epoch: 0,
-					Root: spec.Root([32]byte{
+					Root: phase0.Root([32]byte{
 						0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
 						0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
 					}),
 				},
-				Target: &spec.Checkpoint{
+				Target: &phase0.Checkpoint{
 					Epoch: 1,
-					Root: spec.Root([32]byte{
+					Root: phase0.Root([32]byte{
 						0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
 						0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
 					}),
 				},
 			},
-			Signature: spec.BLSSignature([96]byte{
+			Signature: phase0.BLSSignature([96]byte{
 				0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 				0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
 				0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
@@ -68,21 +68,21 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot spec.Slot, randa
 		}
 	}
 
-	block := &spec.BeaconBlock{
+	block := &phase0.BeaconBlock{
 		Slot:          slot,
 		ProposerIndex: 1,
-		ParentRoot: spec.Root([32]byte{
+		ParentRoot: phase0.Root([32]byte{
 			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 			0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
 		}),
-		StateRoot: spec.Root([32]byte{
+		StateRoot: phase0.Root([32]byte{
 			0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
 			0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
 		}),
-		Body: &spec.BeaconBlockBody{
+		Body: &phase0.BeaconBlockBody{
 			RANDAOReveal: randaoReveal,
-			ETH1Data: &spec.ETH1Data{
-				DepositRoot: spec.Root([32]byte{
+			ETH1Data: &phase0.ETH1Data{
+				DepositRoot: phase0.Root([32]byte{
 					0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
 					0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59, 0x5a, 0x5b, 0x5c, 0x5d, 0x5e, 0x5f,
 				}),
@@ -93,11 +93,11 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot spec.Slot, randa
 				},
 			},
 			Graffiti:          fixedGraffiti,
-			ProposerSlashings: []*spec.ProposerSlashing{},
-			AttesterSlashings: []*spec.AttesterSlashing{},
+			ProposerSlashings: []*phase0.ProposerSlashing{},
+			AttesterSlashings: []*phase0.AttesterSlashing{},
 			Attestations:      attestations,
-			Deposits:          []*spec.Deposit{},
-			VoluntaryExits:    []*spec.SignedVoluntaryExit{},
+			Deposits:          []*phase0.Deposit{},
+			VoluntaryExits:    []*phase0.SignedVoluntaryExit{},
 		},
 	}
 

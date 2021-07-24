@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,15 +20,15 @@ import (
 	"strconv"
 	"strings"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // ProposerDuty represents a duty of a validator to propose a slot.
 type ProposerDuty struct {
-	PubKey         spec.BLSPubKey
-	Slot           spec.Slot
-	ValidatorIndex spec.ValidatorIndex
+	PubKey         phase0.BLSPubKey
+	Slot           phase0.Slot
+	ValidatorIndex phase0.ValidatorIndex
 }
 
 // proposerDutyJSON is the standard API representation of the struct.
@@ -73,7 +73,7 @@ func (p *ProposerDuty) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
-	p.Slot = spec.Slot(slot)
+	p.Slot = phase0.Slot(slot)
 	if proposerDutyJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
@@ -81,7 +81,7 @@ func (p *ProposerDuty) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
-	p.ValidatorIndex = spec.ValidatorIndex(validatorIndex)
+	p.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
 
 	return nil
 }
