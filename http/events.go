@@ -25,6 +25,7 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/r3labs/sse/v2"
@@ -136,6 +137,13 @@ func (s *Service) handleEvent(msg *sse.Event, handler client.EventHandlerFunc) {
 			log.Error().Err(err).Msg("Failed to parse chain reorg event")
 		}
 		event.Data = chainReorgEvent
+	case "contribution_and_proof":
+		contributionAndProofEvent := &altair.SignedContributionAndProof{}
+		err := json.Unmarshal(msg.Data, contributionAndProofEvent)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to parse contribution and proof event")
+		}
+		event.Data = contributionAndProofEvent
 	case "":
 		// A message with a blank event comes when the event stream shuts down.  Ignore it.
 		log.Debug().Msg("Received message with blank topic; ignoring")

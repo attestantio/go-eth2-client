@@ -70,7 +70,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	}
 
 	// Set logging.
-	log = zerologger.With().Str("service", "client").Str("impl", "standardv1").Logger()
+	log = zerologger.With().Str("service", "client").Str("impl", "http").Logger()
 	if parameters.logLevel != log.GetLevel() {
 		log = log.Level(parameters.logLevel)
 	}

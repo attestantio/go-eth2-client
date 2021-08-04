@@ -81,6 +81,10 @@ func TestEvent(t *testing.T) {
 			name:  "GoodVoluntaryExit",
 			input: []byte(`{"topic":"voluntary_exit","data":{"message":{"epoch":"1","validator_index":"2"},"signature":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}}`),
 		},
+		{
+			name:  "GoodContributionAndProof",
+			input: []byte(`{"topic":"contribution_and_proof","data":{"message":{"aggregator_index":"6568","contribution":{"aggregation_bits":"0x3f7f7f9fbffd9fddaf77fff7fffffdff","beacon_block_root":"0x3471a569ed74fb13f6638d7b759cd17c8ed08045d4668ae635349cc5f4dd2a75","signature":"0xa7260b90db427b85806cdaaecef08146a02c8c450aae96245be862f67fe6f54fefc7fdf1d4adfafad0164f5bbc0ceb65197b29e25b1dd9efd44ba8c390e95bd966b5dd97bf877a0ce277c757b68643054238659932348185775dc36d036b38da","slot":"45566","subcommittee_index":"2"},"selection_proof":"0x8c28b4b2f304f957735986e89ed3e429e007592e854d2c9a794333d5dfa05505412d70d0ba91e9fe3453816b01cd846415f82c864e7337e4796101ac9d2e351f2f8172d1d9061fd212f353ecf0ffd9dd17da42598adeae2046e5a74cbcb43474"},"signature":"0xb992ac86e1bbd6e2d1b7d18e8467aa435fecf583f5d13739db99b8d343093177caf167010b480c4e10f858f84cd05a1704c7ae3a253b1c454e5ebeefb7c35f7b8b51ba7aba0019cbc92d5bd8e9bcb61608a2ef47ce0a024b7b497ac9e813620f"}}`),
+		},
 	}
 
 	for _, test := range tests {
