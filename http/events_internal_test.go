@@ -114,6 +114,14 @@ func TestEventHandler(t *testing.T) {
 			handler: handler,
 			handled: true,
 		},
+		{
+			name: "ContributionAndProofGood",
+			message: &sse.Event{
+				Event: []byte("contribution_and_proof"),
+			},
+			handler: handler,
+			handled: true,
+		},
 	}
 
 	s, err := New(context.Background(),
