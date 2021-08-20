@@ -99,7 +99,7 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 		}
 
 		// Handle durations.
-		if strings.HasPrefix(k, "SECONDS_PER_") || strings.HasSuffix(k, "_DELAY") {
+		if strings.HasPrefix(k, "SECONDS_PER_") || k == "GENESIS_DELAY" {
 			intVal, err := strconv.ParseUint(v, 10, 64)
 			if err == nil && intVal != 0 {
 				config[k] = time.Duration(intVal) * time.Second
