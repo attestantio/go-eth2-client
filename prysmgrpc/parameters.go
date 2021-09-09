@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,9 +21,13 @@ import (
 )
 
 type parameters struct {
-	logLevel zerolog.Level
-	address  string
-	timeout  time.Duration
+	logLevel   zerolog.Level
+	address    string
+	timeout    time.Duration
+	tls        bool
+	clientCert []byte
+	clientKey  []byte
+	caCert     []byte
 }
 
 // Parameter is the interface for service parameters.
@@ -55,6 +59,34 @@ func WithAddress(address string) Parameter {
 func WithTimeout(timeout time.Duration) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.timeout = timeout
+	})
+}
+
+// WithTLS toggles the transport requirement for TLS.
+func WithTLS(tls bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.tls = tls
+	})
+}
+
+// WithClientCert sets the bytes of the client TLS certificate.
+func WithClientCert(cert []byte) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.clientCert = cert
+	})
+}
+
+// WithClientKey sets the bytes of the client TLS key.
+func WithClientKey(key []byte) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.clientKey = key
+	})
+}
+
+// WithCACert sets the bytes of the certificate authority TLS certificate.
+func WithCACert(cert []byte) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.caCert = cert
 	})
 }
 
