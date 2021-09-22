@@ -102,6 +102,8 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 			return nil, errors.New("beacon block proposal has incorrect graffiti")
 		}
 		res.Altair = resp.Data
+	default:
+		return nil, fmt.Errorf("unsupported block version %s", metadata.Version)
 	}
 
 	return res, nil
