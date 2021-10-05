@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -31,7 +30,6 @@ type attesterDutiesJSON struct {
 
 // AttesterDuties obtains attester duties.
 func (s *Service) AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.AttesterDuty, error) {
-	// Try a POST request.
 	var reqBodyReader bytes.Buffer
 	if _, err := reqBodyReader.WriteString(`[`); err != nil {
 		return nil, errors.Wrap(err, "failed to write validator index array start")
@@ -51,15 +49,6 @@ func (s *Service) AttesterDuties(ctx context.Context, epoch phase0.Epoch, valida
 	}
 	url := fmt.Sprintf("/eth/v1/validator/duties/attester/%d", epoch)
 	respBodyReader, err := s.post(ctx, url, &reqBodyReader)
-	if err != nil {
-		// Didn't work.  Try a GET request.
-		indices := make([]string, len(validatorIndices))
-		for i := range validatorIndices {
-			indices[i] = fmt.Sprintf("%d", validatorIndices[i])
-		}
-		url := fmt.Sprintf("/eth/v1/validator/duties/attester/%d?index=%s", epoch, strings.Join(indices, ","))
-		respBodyReader, err = s.get(ctx, url)
-	}
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request attester duties")
 	}
