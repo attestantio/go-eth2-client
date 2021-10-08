@@ -6,7 +6,7 @@
 ![Lint](https://github.com/attestantio/go-eth2-client/workflows/golangci-lint/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/attestantio/go-eth2-client)](https://goreportcard.com/report/github.com/attestantio/go-eth2-client)
 
-Go library providing an abstraction to multiple Ethereum 2 beacon nodes.  Its external API follows the official [Ethereum 2 APIs](https://github.com/ethereum/eth2.0-APIs) specification.
+Go library providing an abstraction to multiple Ethereum 2 beacon nodes.  Its external API follows the official [Ethereum beacon APIs](https://github.com/ethereum/beacon-APIs) specification.
 
 This library is under development; expect APIs and data structures to change until it reaches version 1.0.  In addition, clients' implementations of both their own and the standard API are themselves under development so implementation of the the full API can be incomplete.
 
@@ -28,16 +28,16 @@ go get github.com/attestantio/go-eth2-client
 
 ## Support
 
-`go-eth2-client` supports multiple beacon nodes.  At current it provides support for the following:
+`go-eth2-client` supports beacon nodes that comply with the standard beacon node API.  To date it has been tested against the following beacon nodes:
 
-  - [Prysm](https://github.com/prysmaticlabs/prysm) using its GRPC APIs
-  - [Lighthouse](https://github.com/sigp/lighthouse/) using the standard HTTP APIs
-  - [Teku](https://github.com/pegasyseng/teku) using its HTTP APIs
+  - [Lighthouse](https://github.com/sigp/lighthouse/) minimum version 2.0.0
+  - [Nimbus](https://github.com/status-im/nimbus-eth2) minimum version ?
+  - [Prysm](https://github.com/prysmaticlabs/prysm) minimum version ?
+  - [Teku](https://github.com/consensys/teku) minimum version 21.9.2
 
+Note that the gRPC interface for Prysm is still available in the `grpc` module, however it does not support Altair and is considered deprecated.  The `http` module should be used instead.  gRPC is no longer selected as part of the `auto` module, which is also deprecated in favour of instantiating the `http` module directly.
 
 ## Usage
-
-`go-eth2-client` provides independent implementations for each beacon node interface, however it is generally easier to use the `auto` interface, as that will automatically select the correct client given the supplied address.
 
 Please read the [Go documentation for this library](https://godoc.org/github.com/attestantio/go-eth2-client) for interface information.
 
@@ -53,18 +53,18 @@ import (
     "fmt"
     
     eth2client "github.com/attestantio/go-eth2-client"
-    "github.com/attestantio/go-eth2-client/auto"
+    "github.com/attestantio/go-eth2-client/http"
     "github.com/rs/zerolog"
 )
 
 func main() {
     // Provide a cancellable context to the creation function.
     ctx, cancel := context.WithCancel(context.Background())
-    client, err := auto.New(ctx,
-        // WithAddress supplies the address of the beacon node, in host:port format.
-        auto.WithAddress("localhost:4000"),
+    client, err := http.New(ctx,
+        // WithAddress supplies the address of the beacon node, as a URL.
+        http.WithAddress("http://localhost:5052/"),
         // LogLevel supplies the level of logging to carry out.
-        auto.WithLogLevel(zerolog.WarnLevel),
+        http.WithLogLevel(zerolog.WarnLevel),
     )
     if err != nil {
         panic(err)
@@ -75,12 +75,12 @@ func main() {
     // Client functions have their own interfaces.  Not all functions are
     // supported by all clients, so checks should be made for each function when
     // casting the service to the relevant interface.
-    if provider, isProvider := client.(eth2client.SlotsPerEpochProvider); isProvider {
-        slotsPerEpoch, err := provider.SlotsPerEpoch(ctx)
+    if provider, isProvider := client.(eth2client.GenesisProvider); isProvider {
+        genesis, err := provider.Genesis(ctx)
         if err != nil {
             panic(err)
         }
-        fmt.Printf("Slots per epochs is %d\n", slotsPerEpoch)
+        fmt.Printf("Genesis time is %v\n", genesis.GenesisTime)
     }
 
     // Cancelling the context passed to New() frees up resources held by the
@@ -99,4 +99,4 @@ Contributions welcome. Please check out [the issues](https://github.com/attestan
 
 ## License
 
-[Apache-2.0](LICENSE) © 2020 Attestant Limited
+[Apache-2.0](LICENSE) © 2020, 2021 Attestant Limited

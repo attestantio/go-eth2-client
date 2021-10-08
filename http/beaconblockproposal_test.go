@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/assert"
@@ -55,15 +56,15 @@ func TestBeaconBlockProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	// Need to fetch current slot for proposal.
-	genesis, err := service.Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
 	require.NoError(t, err)
-	slotDuration, err := service.SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
 	require.NoError(t, err)
 
 	for _, test := range tests {
 		nextSlot := phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds())/uint64(slotDuration.Seconds())) + 1
 		t.Run(test.name, func(t *testing.T) {
-			resp, err := service.BeaconBlockProposal(context.Background(), nextSlot, test.randaoReveal, test.graffiti)
+			resp, err := service.(client.BeaconBlockProposalProvider).BeaconBlockProposal(context.Background(), nextSlot, test.randaoReveal, test.graffiti)
 			require.NoError(t, err)
 			require.NotNil(t, resp)
 			if resp.Phase0 != nil {

@@ -334,7 +334,7 @@ func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subsc
 }
 
 // BeaconState fetches a beacon state.
-func (s *Erroring) BeaconState(ctx context.Context, stateID string) (*phase0.BeaconState, error) {
+func (s *Erroring) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}

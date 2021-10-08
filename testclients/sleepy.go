@@ -291,7 +291,7 @@ func (s *Sleepy) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscri
 }
 
 // BeaconState fetches a beacon state.
-func (s *Sleepy) BeaconState(ctx context.Context, stateID string) (*phase0.BeaconState, error) {
+func (s *Sleepy) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(eth2client.BeaconStateProvider)
 	if !isNext {

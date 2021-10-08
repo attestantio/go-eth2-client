@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -130,10 +130,13 @@ func TestEventHandler(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	h, isHTTPService := s.(*Service)
+	require.True(t, isHTTPService)
+
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			handled = false
-			s.handleEvent(test.message, test.handler)
+			h.handleEvent(test.message, test.handler)
 			require.Equal(t, test.handled, handled)
 		})
 	}

@@ -64,7 +64,7 @@ func (s *Service) signedBeaconBlockV1(ctx context.Context, blockID string) (*spe
 	}, nil
 }
 
-// signedBeaconBlockV1 fetches a signed beacon block from the V2 endpoint.
+// signedBeaconBlockV2 fetches a signed beacon block from the V2 endpoint.
 func (s *Service) signedBeaconBlockV2(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error) {
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v2/beacon/blocks/%s", blockID))
 	if err != nil {

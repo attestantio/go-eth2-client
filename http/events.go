@@ -145,8 +145,7 @@ func (s *Service) handleEvent(msg *sse.Event, handler client.EventHandlerFunc) {
 		}
 		event.Data = contributionAndProofEvent
 	case "":
-		// A message with a blank event comes when the event stream shuts down.  Ignore it.
-		log.Debug().Msg("Received message with blank topic; ignoring")
+		// Used as keepalive.  Ignore.
 		return
 	default:
 		log.Warn().Str("topic", string(msg.Event)).Msg("Received message with unhandled topic; ignoring")

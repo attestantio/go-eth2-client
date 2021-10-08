@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/prysmaticlabs/go-bitfield"
@@ -41,16 +42,16 @@ func TestSubmitAttestations(t *testing.T) {
 	require.NoError(t, err)
 
 	// Need to fetch current slot for attestation.
-	genesis, err := service.Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
 	require.NoError(t, err)
-	slotDuration, err := service.SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
 	require.NoError(t, err)
 
 	for _, test := range tests {
 		thisSlot := phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
 		t.Run(test.name, func(t *testing.T) {
 			// Fetch attestation data.
-			attestationData, err := service.AttestationData(context.Background(), thisSlot, 0)
+			attestationData, err := service.(client.AttestationDataProvider).AttestationData(context.Background(), thisSlot, 0)
 			require.NoError(t, err)
 			require.NotNil(t, attestationData)
 
@@ -69,7 +70,7 @@ func TestSubmitAttestations(t *testing.T) {
 				}),
 			}
 
-			err = service.SubmitAttestations(context.Background(), []*phase0.Attestation{attestation})
+			err = service.(client.AttestationsSubmitter).SubmitAttestations(context.Background(), []*phase0.Attestation{attestation})
 			require.NoError(t, err)
 		})
 	}

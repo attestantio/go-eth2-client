@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import (
 	"os"
 	"testing"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
 )
@@ -65,7 +66,7 @@ func TestValidators(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			validators, err := service.Validators(context.Background(), test.stateID, nil)
+			validators, err := service.(client.ValidatorsProvider).Validators(context.Background(), test.stateID, nil)
 			if test.expectedErrorCode != 0 {
 				require.Contains(t, err.Error(), fmt.Sprintf("%d", test.expectedErrorCode))
 			} else {

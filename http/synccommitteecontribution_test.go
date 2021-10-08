@@ -20,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -35,9 +36,9 @@ func TestSyncCommitteeContribution(t *testing.T) {
 	require.NoError(t, err)
 
 	// Needed to fetch current epoch.
-	genesis, err := service.Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
 	require.NoError(t, err)
-	slotDuration, err := service.SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -60,10 +61,10 @@ func TestSyncCommitteeContribution(t *testing.T) {
 			} else {
 				slot = phase0.Slot(test.slot)
 			}
-			root, err := service.BeaconBlockRoot(ctx, "head")
+			root, err := service.(client.BeaconBlockRootProvider).BeaconBlockRoot(ctx, "head")
 			require.NoError(t, err)
 			require.NotNil(t, root)
-			contribution, err := service.SyncCommitteeContribution(context.Background(), slot, test.subcommitteeIndex, *root)
+			contribution, err := service.(client.SyncCommitteeContributionProvider).SyncCommitteeContribution(context.Background(), slot, test.subcommitteeIndex, *root)
 			require.NoError(t, err)
 			require.NotNil(t, contribution)
 			fmt.Printf("%v\n", contribution)

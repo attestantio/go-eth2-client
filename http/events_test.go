@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
@@ -45,7 +46,7 @@ func TestEvents(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			events := 0
-			err := service.Events(ctx, test.topics, func(event *api.Event) {
+			err := service.(client.EventsProvider).Events(ctx, test.topics, func(event *api.Event) {
 				events++
 			})
 			require.NoError(t, err)

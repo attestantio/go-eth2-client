@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -56,16 +57,16 @@ func TestSubmitBeaconBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	// Need to fetch current slot for proposal.
-	genesis, err := service.Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
 	require.NoError(t, err)
-	slotDuration, err := service.SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
 	require.NoError(t, err)
 
 	for _, test := range tests {
 		nextSlot := phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds())/uint64(slotDuration.Seconds())) + 1
 		t.Run(test.name, func(t *testing.T) {
 			// Fetch a block to propose.
-			res, err := service.BeaconBlockProposal(context.Background(), nextSlot, test.randaoReveal, test.graffiti)
+			res, err := service.(client.BeaconBlockProposalProvider).BeaconBlockProposal(context.Background(), nextSlot, test.randaoReveal, test.graffiti)
 			require.NoError(t, err)
 			require.NotNil(t, res)
 
@@ -87,7 +88,7 @@ func TestSubmitBeaconBlock(t *testing.T) {
 				t.Fatalf("unknown block version %s", res.Version.String())
 			}
 			// Some implementations return an error and some don't, so do not check.
-			service.SubmitBeaconBlock(context.Background(), signedBeaconBlock) // nolint:errcheck
+			service.(client.BeaconBlockSubmitter).SubmitBeaconBlock(context.Background(), signedBeaconBlock) // nolint:errcheck
 			// err = service.SubmitBeaconBlock(context.Background(), signedBeaconBlock)
 			// require.NotNil(t, err)
 		})

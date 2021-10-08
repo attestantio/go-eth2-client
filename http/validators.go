@@ -28,12 +28,36 @@ type validatorsJSON struct {
 	Data []*api.Validator `json:"data"`
 }
 
-// indexChunkSize is the maximum number of validator indices to send in each request.
+// indexChunkSizes defines the per-beacon-node size of an index chunk.
 // A request should be no more than 8,000 bytes to work with all currently-supported clients.
 // An index has variable size, but assuming 7 characters, including the comma separator, is safe.
 // We also need to reserve space for the state ID and the endpoint itself, to be safe we go
 // with 500 bytes for this which results in us having comfortable space for 1,000 public keys.
-var indexChunkSize = 1000
+// That said, some nodes have their own built-in limits so use them where appropriate.
+var indexChunkSizes = map[string]int{
+	"default":    30,
+	"lighthouse": 1000,
+	"nimbus":     30,
+	"prysm":      1000,
+	"teku":       1000,
+}
+
+// indexChunkSize is the maximum number of validator indices to send in each request.
+func (s *Service) indexChunkSize() int {
+	nodeVersion := strings.ToLower(s.nodeVersion)
+	switch {
+	case strings.Contains(nodeVersion, "lighthouse"):
+		return indexChunkSizes["lighthouse"]
+	case strings.Contains(nodeVersion, "ninbus"):
+		return indexChunkSizes["nimbus"]
+	case strings.Contains(nodeVersion, "prysm"):
+		return indexChunkSizes["prysm"]
+	case strings.Contains(nodeVersion, "teku"):
+		return indexChunkSizes["teku"]
+	default:
+		return indexChunkSizes["default"]
+	}
+}
 
 // Validators provides the validators, with their balance and status, for a given state.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
@@ -43,7 +67,7 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIndic
 		return nil, errors.New("no state ID specified")
 	}
 
-	if len(validatorIndices) > indexChunkSize {
+	if len(validatorIndices) > s.indexChunkSize() {
 		return s.chunkedValidators(ctx, stateID, validatorIndices)
 	}
 
@@ -82,6 +106,7 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIndic
 // chunkedValidators obtains the validators a chunk at a time.
 func (s *Service) chunkedValidators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	res := make(map[phase0.ValidatorIndex]*api.Validator)
+	indexChunkSize := s.indexChunkSize()
 	for i := 0; i < len(validatorIndices); i += indexChunkSize {
 		chunkStart := i
 		chunkEnd := i + indexChunkSize

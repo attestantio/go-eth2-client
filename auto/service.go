@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,7 +18,6 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
-	"github.com/attestantio/go-eth2-client/prysmgrpc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	zerologger "github.com/rs/zerolog/log"
@@ -28,6 +27,7 @@ import (
 var log zerolog.Logger
 
 // New creates a new Ethereum 2 client service, trying different implementations at the given address.
+// Deprecated.  Use the `http` module instead.
 func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 	parameters, err := parseAndCheckParameters(params...)
 	if err != nil {
@@ -47,18 +47,11 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 	}
 	log.Trace().Err(err).Msg("Attempt to connect via HTTP API failed")
 
-	// Try prysm.
-	prysmClient, err := tryPrysm(ctx, parameters)
-	if err == nil {
-		return prysmClient, nil
-	}
-	log.Trace().Err(err).Msg("Attempt to connect via Prysm API failed")
-
 	// No luck
 	return nil, errors.New("failed to connect to Ethereum 2 client with any known method")
 }
 
-func tryHTTP(ctx context.Context, parameters *parameters) (*http.Service, error) {
+func tryHTTP(ctx context.Context, parameters *parameters) (client.Service, error) {
 	httpParameters := make([]http.Parameter, 0)
 	httpParameters = append(httpParameters, http.WithLogLevel(parameters.logLevel))
 	httpParameters = append(httpParameters, http.WithAddress(parameters.address))
@@ -66,18 +59,6 @@ func tryHTTP(ctx context.Context, parameters *parameters) (*http.Service, error)
 	client, err := http.New(ctx, httpParameters...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed when trying to open connection with standard API")
-	}
-	return client, nil
-}
-
-func tryPrysm(ctx context.Context, parameters *parameters) (*prysmgrpc.Service, error) {
-	prysmParameters := make([]prysmgrpc.Parameter, 0)
-	prysmParameters = append(prysmParameters, prysmgrpc.WithLogLevel(parameters.logLevel))
-	prysmParameters = append(prysmParameters, prysmgrpc.WithAddress(parameters.address))
-	prysmParameters = append(prysmParameters, prysmgrpc.WithTimeout(parameters.timeout))
-	client, err := prysmgrpc.New(ctx, prysmParameters...)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed when trying to open connection to prysm")
 	}
 	return client, nil
 }

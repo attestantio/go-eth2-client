@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,6 +18,7 @@ import (
 	"os"
 	"testing"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
 )
@@ -39,7 +40,7 @@ func TestFarFutureEpoch(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			farFutureEpoch, err := service.FarFutureEpoch(context.Background())
+			farFutureEpoch, err := service.(client.FarFutureEpochProvider).FarFutureEpoch(context.Background())
 			require.NoError(t, err)
 			require.NotNil(t, farFutureEpoch)
 		})

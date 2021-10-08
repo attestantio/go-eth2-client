@@ -18,6 +18,7 @@ import (
 	"os"
 	"testing"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/assert"
@@ -45,7 +46,7 @@ func TestDomain(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			signatureDomain, err := service.Domain(context.Background(), test.domain, test.epoch)
+			signatureDomain, err := service.(client.DomainProvider).Domain(context.Background(), test.domain, test.epoch)
 			require.NoError(t, err)
 			require.NotNil(t, signatureDomain)
 			assert.Len(t, signatureDomain, 32)

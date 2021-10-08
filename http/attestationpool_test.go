@@ -19,6 +19,7 @@ import (
 	"testing"
 	"time"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -42,9 +43,9 @@ func TestAttestationPool(t *testing.T) {
 	require.NoError(t, err)
 
 	// Need to fetch current slot for attestation pools.
-	genesis, err := service.Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
 	require.NoError(t, err)
-	slotDuration, err := service.SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
 	require.NoError(t, err)
 
 	for _, test := range tests {
@@ -55,7 +56,7 @@ func TestAttestationPool(t *testing.T) {
 			slot = phase0.Slot(uint64(test.slot))
 		}
 		t.Run(test.name, func(t *testing.T) {
-			attestationPool, err := service.AttestationPool(context.Background(), slot)
+			attestationPool, err := service.(client.AttestationPoolProvider).AttestationPool(context.Background(), slot)
 			require.NoError(t, err)
 			require.NotNil(t, attestationPool)
 		})

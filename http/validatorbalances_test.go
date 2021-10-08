@@ -18,6 +18,7 @@ import (
 	"os"
 	"testing"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -48,7 +49,7 @@ func TestValidatorBalances(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			balances, err := service.ValidatorBalances(context.Background(), test.stateID, test.validators)
+			balances, err := service.(client.ValidatorBalancesProvider).ValidatorBalances(context.Background(), test.stateID, test.validators)
 			require.NoError(t, err)
 			require.NotNil(t, balances)
 		})

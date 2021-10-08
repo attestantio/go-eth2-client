@@ -135,14 +135,8 @@ type ValidatorIDProvider interface {
 
 // DepositContractProvider is the interface for providng details about the deposit contract.
 type DepositContractProvider interface {
-	// DepositContractAddress provides the Ethereum 1 address of the deposit contract.
-	DepositContractAddress(ctx context.Context) ([]byte, error)
-
-	// DepositContractChainID provides the Ethereum 1 chain ID of the deposit contract.
-	DepositContractChainID(ctx context.Context) (uint64, error)
-
-	// DepositContractNetworkID provides the Ethereum 1 network ID of the deposit contract.
-	DepositContractNetworkID(ctx context.Context) (uint64, error)
+	// DepositContract provides the details of the deposit contract.
+	DepositContract(ctx context.Context) (*api.DepositContract, error)
 }
 
 // PrysmAggregateAttestationProvider is the interface for providing aggregate attestations.
@@ -295,7 +289,7 @@ type BeaconCommitteeSubscriptionsSubmitter interface {
 // BeaconStateProvider is the interface for providing beacon state.
 type BeaconStateProvider interface {
 	// BeaconState fetches a beacon state.
-	BeaconState(ctx context.Context, stateID string) (*phase0.BeaconState, error)
+	BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error)
 }
 
 // EventsProvider is the interface for providing events.
@@ -347,6 +341,12 @@ type SpecProvider interface {
 	Spec(ctx context.Context) (map[string]interface{}, error)
 }
 
+// StateRootProvider is the interface for providing state roots.
+type StateRootProvider interface {
+	// StateRoot provides the state root given a state ID.
+	StateRoot(ctx context.Context, stateID string) ([]byte, error)
+}
+
 // SyncStateProvider is the interface for providing synchronization state.
 type SyncStateProvider interface {
 	// SyncState provides the state of the node's synchronization with the chain.
@@ -382,11 +382,6 @@ type VoluntaryExitSubmitter interface {
 	// SubmitVoluntaryExit submits a voluntary exit.
 	SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error
 }
-
-// type DepositContractProvider interface {
-// 	// DepositContract provides details of the Ethereum 1 deposit contract for the chain.
-// 	DepositContract(ctx context.Context) (*api.DepositContract, error)
-// }
 
 //
 // Local extensions

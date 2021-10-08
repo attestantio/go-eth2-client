@@ -18,6 +18,7 @@ import (
 	"os"
 	"testing"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -40,7 +41,7 @@ func TestSpec(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			config, err := service.Spec(context.Background())
+			config, err := service.(client.SpecProvider).Spec(context.Background())
 			require.NoError(t, err)
 			require.NotNil(t, config)
 			// Check an integer type.

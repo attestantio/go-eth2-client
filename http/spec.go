@@ -122,6 +122,24 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 		config[k] = v
 	}
 
+	// Lighthouse does not provide some constants (see https://github.com/sigp/lighthouse/issues/2638 for details)
+	// so add them here if they are missing.
+	if _, exists := config["DOMAIN_CONTRIBUTION_AND_PROOF"]; !exists {
+		config["DOMAIN_CONTRIBUTION_AND_PROOF"] = phase0.DomainType{0x09, 0x00, 0x00, 0x00}
+	}
+	if _, exists := config["DOMAIN_SYNC_COMMITTEE"]; !exists {
+		config["DOMAIN_SYNC_COMMITTEE"] = phase0.DomainType{0x07, 0x00, 0x00, 0x00}
+	}
+	if _, exists := config["DOMAIN_SYNC_COMMITTEE_SELECTION_PROOF"]; !exists {
+		config["DOMAIN_SYNC_COMMITTEE_SELECTION_PROOF"] = phase0.DomainType{0x08, 0x00, 0x00, 0x00}
+	}
+	if _, exists := config["SYNC_COMMITTEE_SUBNET_COUNT"]; !exists {
+		config["SYNC_COMMITTEE_SUBNET_COUNT"] = uint64(4)
+	}
+	if _, exists := config["TARGET_AGGREGATORS_PER_SYNC_SUBCOMMITTEE"]; !exists {
+		config["TARGET_AGGREGATORS_PER_SYNC_SUBCOMMITTEE"] = uint64(16)
+	}
+
 	s.spec = config
 	return s.spec, nil
 }

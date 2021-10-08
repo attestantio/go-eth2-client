@@ -28,12 +28,36 @@ type validatorsByPubKeyJSON struct {
 	Data []*api.Validator `json:"data"`
 }
 
-// pubKeyChunkSize is the maximum number of public keys to send in each request.
+// pubKeyChunkSizes defines the per-beacon-node size of a public key chunk.
 // A request should be no more than 8,000 bytes to work with all currently-supported clients.
 // A public key, including 0x header and comma separator, takes up 99 bytes.
 // We also need to reserve space for the state ID and the endpoint itself, to be safe we go
 // with 500 bytes for this which results in us having space for 75 public keys.
-var pubKeyChunkSize = 75
+// That said, some nodes have their own built-in limits so use them where appropriate.
+var pubKeyChunkSizes = map[string]int{
+	"default":    30,
+	"lighthouse": 75,
+	"nimbus":     30,
+	"prysm":      75,
+	"teku":       75,
+}
+
+// pubKeyChunkSize is the maximum number of validator public keys to send in each request.
+func (s *Service) pubKeyChunkSize() int {
+	nodeVersion := strings.ToLower(s.nodeVersion)
+	switch {
+	case strings.Contains(nodeVersion, "lighthouse"):
+		return pubKeyChunkSizes["lighthouse"]
+	case strings.Contains(nodeVersion, "ninbus"):
+		return pubKeyChunkSizes["nimbus"]
+	case strings.Contains(nodeVersion, "prysm"):
+		return pubKeyChunkSizes["prysm"]
+	case strings.Contains(nodeVersion, "teku"):
+		return pubKeyChunkSizes["teku"]
+	default:
+		return pubKeyChunkSizes["default"]
+	}
+}
 
 // ValidatorsByPubKey provides the validators, with their balance and status, for a given state.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
@@ -44,7 +68,7 @@ func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, valida
 		return nil, errors.New("no state ID specified")
 	}
 
-	if len(validatorPubKeys) > pubKeyChunkSize {
+	if len(validatorPubKeys) > s.pubKeyChunkSize() {
 		return s.chunkedValidatorsByPubKey(ctx, stateID, validatorPubKeys)
 	}
 
@@ -83,6 +107,7 @@ func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, valida
 // chunkedValidatorsByPubKey obtains the validators a chunk at a time.
 func (s *Service) chunkedValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	res := make(map[phase0.ValidatorIndex]*api.Validator)
+	pubKeyChunkSize := s.pubKeyChunkSize()
 	for i := 0; i < len(validatorPubKeys); i += pubKeyChunkSize {
 		chunkStart := i
 		chunkEnd := i + pubKeyChunkSize
