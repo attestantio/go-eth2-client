@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2021 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,9 +21,11 @@ import (
 )
 
 type parameters struct {
-	logLevel zerolog.Level
-	address  string
-	timeout  time.Duration
+	logLevel        zerolog.Level
+	address         string
+	timeout         time.Duration
+	indexChunkSize  int
+	pubKeyChunkSize int
 }
 
 // Parameter is the interface for service parameters.
@@ -58,11 +60,27 @@ func WithTimeout(timeout time.Duration) Parameter {
 	})
 }
 
+// WithIndexChunkSize sets the maximum number of indices to send for individual validator requests.
+func WithIndexChunkSize(indexChunkSize int) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.indexChunkSize = indexChunkSize
+	})
+}
+
+// WithPubKeyChunkSize sets the maximum number of public kyes to send for individual validator requests.
+func WithPubKeyChunkSize(pubKeyChunkSize int) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.pubKeyChunkSize = pubKeyChunkSize
+	})
+}
+
 // parseAndCheckParameters parses and checks parameters to ensure that mandatory parameters are present and correct.
 func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	parameters := parameters{
-		logLevel: zerolog.GlobalLevel(),
-		timeout:  2 * time.Second,
+		logLevel:        zerolog.GlobalLevel(),
+		timeout:         2 * time.Second,
+		indexChunkSize:  -1,
+		pubKeyChunkSize: -1,
 	}
 	for _, p := range params {
 		if params != nil {
@@ -75,6 +93,12 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	}
 	if parameters.timeout == 0 {
 		return nil, errors.New("no timeout specified")
+	}
+	if parameters.indexChunkSize == 0 {
+		return nil, errors.New("no index chunk size specified")
+	}
+	if parameters.pubKeyChunkSize == 0 {
+		return nil, errors.New("no public key chunk size specified")
 	}
 
 	return &parameters, nil

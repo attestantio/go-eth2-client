@@ -62,6 +62,24 @@ func TestService(t *testing.T) {
 			err: "invalid URL: parse \"http://\\x01\": net/url: invalid control character in URL",
 		},
 		{
+			name: "IndexChunkSizeZero",
+			parameters: []v1.Parameter{
+				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),
+				v1.WithTimeout(5 * time.Second),
+				v1.WithIndexChunkSize(0),
+			},
+			err: "problem with parameters: no index chunk size specified",
+		},
+		{
+			name: "PubKeyChunkSizeZero",
+			parameters: []v1.Parameter{
+				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),
+				v1.WithTimeout(5 * time.Second),
+				v1.WithPubKeyChunkSize(0),
+			},
+			err: "problem with parameters: no public key chunk size specified",
+		},
+		{
 			name: "Good",
 			parameters: []v1.Parameter{
 				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),

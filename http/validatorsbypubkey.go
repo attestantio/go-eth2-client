@@ -44,6 +44,10 @@ var pubKeyChunkSizes = map[string]int{
 
 // pubKeyChunkSize is the maximum number of validator public keys to send in each request.
 func (s *Service) pubKeyChunkSize() int {
+	if s.userPubKeyChunkSize > 0 {
+		return s.userPubKeyChunkSize
+	}
+
 	nodeVersion := strings.ToLower(s.nodeVersion)
 	switch {
 	case strings.Contains(nodeVersion, "lighthouse"):

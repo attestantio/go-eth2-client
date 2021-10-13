@@ -44,6 +44,10 @@ var indexChunkSizes = map[string]int{
 
 // indexChunkSize is the maximum number of validator indices to send in each request.
 func (s *Service) indexChunkSize() int {
+	if s.userIndexChunkSize > 0 {
+		return s.userIndexChunkSize
+	}
+
 	nodeVersion := strings.ToLower(s.nodeVersion)
 	switch {
 	case strings.Contains(nodeVersion, "lighthouse"):
