@@ -76,6 +76,7 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	statusFamily := resp.StatusCode / 100
 	if statusFamily != 2 {
 		cancel()
+		log.Trace().Str("endpoint", endpoint).Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("GET failed")
 		return nil, fmt.Errorf("GET failed with status %d: %s", resp.StatusCode, string(data))
 	}
 	cancel()
@@ -126,6 +127,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 
 	statusFamily := resp.StatusCode / 100
 	if statusFamily != 2 {
+		log.Trace().Str("endpoint", endpoint).Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("POST failed")
 		cancel()
 		return nil, fmt.Errorf("POST failed with status %d: %s", resp.StatusCode, string(data))
 	}
