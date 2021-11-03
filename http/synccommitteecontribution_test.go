@@ -15,7 +15,6 @@ package http_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -67,7 +66,6 @@ func TestSyncCommitteeContribution(t *testing.T) {
 			contribution, err := service.(client.SyncCommitteeContributionProvider).SyncCommitteeContribution(context.Background(), slot, test.subcommitteeIndex, *root)
 			require.NoError(t, err)
 			require.NotNil(t, contribution)
-			fmt.Printf("%v\n", contribution)
 		})
 	}
 }

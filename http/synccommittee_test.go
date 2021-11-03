@@ -15,7 +15,6 @@ package http_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -35,6 +34,35 @@ func TestSyncCommittee(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	tests := []struct {
+		name  string
+		state string
+	}{
+		{
+			name:  "Current",
+			state: "head",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			committee, err := service.(client.SyncCommitteesProvider).SyncCommittee(context.Background(), test.state)
+			require.NoError(t, err)
+			require.NotNil(t, committee)
+			require.True(t, len(committee.Validators) > 0)
+		})
+	}
+}
+
+func TestSyncCommitteeAtEpoch(t *testing.T) {
+	ctx := context.Background()
+
+	service, err := http.New(ctx,
+		http.WithTimeout(timeout),
+		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+	)
+	require.NoError(t, err)
+
 	// Needed to fetch current epoch.
 	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
 	require.NoError(t, err)
@@ -45,10 +73,12 @@ func TestSyncCommittee(t *testing.T) {
 
 	tests := []struct {
 		name  string
+		state string
 		epoch int64 // -1 for current
 	}{
 		{
 			name:  "Current",
+			state: "head",
 			epoch: -1,
 		},
 	}
@@ -61,7 +91,7 @@ func TestSyncCommittee(t *testing.T) {
 			} else {
 				epoch = phase0.Epoch(test.epoch)
 			}
-			committee, err := service.(client.SyncCommitteesProvider).SyncCommittee(context.Background(), fmt.Sprintf("%d", epoch))
+			committee, err := service.(client.SyncCommitteesProvider).SyncCommitteeAtEpoch(context.Background(), test.state, epoch)
 			require.NoError(t, err)
 			require.NotNil(t, committee)
 			require.True(t, len(committee.Validators) > 0)

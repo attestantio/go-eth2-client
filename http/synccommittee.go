@@ -19,6 +19,7 @@ import (
 	"fmt"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -26,9 +27,29 @@ type syncCommitteeJSON struct {
 	Data *api.SyncCommittee `json:"data"`
 }
 
-// SyncCommittee fetches the sync committee for the epoch at the given state.
+// SyncCommittee fetches the sync committee for epoch at the given state.
 func (s *Service) SyncCommittee(ctx context.Context, stateID string) (*api.SyncCommittee, error) {
 	url := fmt.Sprintf("/eth/v1/beacon/states/%s/sync_committees", stateID)
+	respBodyReader, err := s.get(ctx, url)
+	if err != nil {
+		log.Trace().Str("url", url).Err(err).Msg("Request failed")
+		return nil, errors.Wrap(err, "failed to request sync committee")
+	}
+	if respBodyReader == nil {
+		return nil, errors.New("failed to obtain sync committee")
+	}
+
+	var resp syncCommitteeJSON
+	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
+		return nil, errors.Wrap(err, "failed to parse sync committee")
+	}
+
+	return resp.Data, nil
+}
+
+// SyncCommitteeAtEpoch fetches the sync committee for the given epoch at the given state.
+func (s *Service) SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) (*api.SyncCommittee, error) {
+	url := fmt.Sprintf("/eth/v1/beacon/states/%s/sync_committees?epoch=%d", stateID, epoch)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
 		log.Trace().Str("url", url).Err(err).Msg("Request failed")
