@@ -16,6 +16,7 @@ package http_test
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -71,7 +72,10 @@ func TestSubmitAttestations(t *testing.T) {
 			}
 
 			err = service.(client.AttestationsSubmitter).SubmitAttestations(context.Background(), []*phase0.Attestation{attestation})
-			require.NoError(t, err)
+			// We will get an error as the bitlist is the incorrect size (on purpose, to stop our test being broadcast).
+			if err != nil {
+				require.True(t, strings.Contains(err.Error(), "Aggregation bitlist size (128) does not match committee size"))
+			}
 		})
 	}
 }

@@ -16,6 +16,7 @@ package http_test
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -64,8 +65,12 @@ func TestSyncCommitteeContribution(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, root)
 			contribution, err := service.(client.SyncCommitteeContributionProvider).SyncCommitteeContribution(context.Background(), slot, test.subcommitteeIndex, *root)
-			require.NoError(t, err)
-			require.NotNil(t, contribution)
+			// Possible that the node is not aggregating sync committee messages...
+			if err != nil {
+				require.True(t, strings.Contains(err.Error(), "Not found"))
+			} else {
+				require.NotNil(t, contribution)
+			}
 		})
 	}
 }
