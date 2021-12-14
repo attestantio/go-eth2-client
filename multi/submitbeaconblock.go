@@ -16,14 +16,14 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec"
 )
 
 // SubmitBeaconBlock submits a beacon block.
 func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		err := client.(eth2client.BeaconBlockSubmitter).SubmitBeaconBlock(ctx, block)
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		err := client.(consensusclient.BeaconBlockSubmitter).SubmitBeaconBlock(ctx, block)
 		if err != nil {
 			return nil, err
 		}

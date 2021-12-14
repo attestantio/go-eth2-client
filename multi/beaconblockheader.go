@@ -16,14 +16,14 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // BeaconBlockHeader provides the block header of a given block ID.
 func (s *Service) BeaconBlockHeader(ctx context.Context, blockID string) (*api.BeaconBlockHeader, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		beaconBlockHeader, err := client.(eth2client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, blockID)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		beaconBlockHeader, err := client.(consensusclient.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, blockID)
 		if err != nil {
 			return nil, err
 		}

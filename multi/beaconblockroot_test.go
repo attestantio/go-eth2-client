@@ -20,13 +20,12 @@ import (
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
-func TestBeaconBlockProposal(t *testing.T) {
+func TestBeaconBlockRoot(t *testing.T) {
 	ctx := context.Background()
 
 	client1, err := mock.New(ctx, mock.WithName("mock 1"))
@@ -51,13 +50,7 @@ func TestBeaconBlockProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.BeaconBlockProposal(ctx, 1, phase0.BLSSignature{}, []byte{
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		},
-		)
+		res, err := multiClient.BeaconBlockRoot(ctx, "1")
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

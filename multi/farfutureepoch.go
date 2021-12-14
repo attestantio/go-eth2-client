@@ -16,14 +16,14 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // FarFutureEpoch provides the far future epoch of the chain.
-func (s *Service) FarFutureEpoch(ctx context.Context) (spec.Epoch, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		aggregate, err := client.(eth2client.FarFutureEpochProvider).FarFutureEpoch(ctx)
+func (s *Service) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		aggregate, err := client.(consensusclient.FarFutureEpochProvider).FarFutureEpoch(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -35,5 +35,5 @@ func (s *Service) FarFutureEpoch(ctx context.Context) (spec.Epoch, error) {
 	if res == nil {
 		return 0, nil
 	}
-	return res.(spec.Epoch), nil
+	return res.(phase0.Epoch), nil
 }

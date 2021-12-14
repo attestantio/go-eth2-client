@@ -16,14 +16,14 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AttestationPool obtains the attestation pool for a given slot.
-func (s *Service) AttestationPool(ctx context.Context, slot spec.Slot) ([]*spec.Attestation, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		attestationPool, err := client.(eth2client.AttestationPoolProvider).AttestationPool(ctx, slot)
+func (s *Service) AttestationPool(ctx context.Context, slot phase0.Slot) ([]*phase0.Attestation, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		attestationPool, err := client.(consensusclient.AttestationPoolProvider).AttestationPool(ctx, slot)
 		if err != nil {
 			return nil, err
 		}
@@ -35,5 +35,5 @@ func (s *Service) AttestationPool(ctx context.Context, slot spec.Slot) ([]*spec.
 	if res == nil {
 		return nil, nil
 	}
-	return res.([]*spec.Attestation), nil
+	return res.([]*phase0.Attestation), nil
 }

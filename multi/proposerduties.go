@@ -16,22 +16,22 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // ProposerDuties obtains proposer duties for the given epoch.
 // If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
 func (s *Service) ProposerDuties(ctx context.Context,
-	epoch spec.Epoch,
-	validatorIndices []spec.ValidatorIndex,
+	epoch phase0.Epoch,
+	validatorIndices []phase0.ValidatorIndex,
 ) (
 	[]*api.ProposerDuty,
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		block, err := client.(eth2client.ProposerDutiesProvider).ProposerDuties(ctx, epoch, validatorIndices)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		block, err := client.(consensusclient.ProposerDutiesProvider).ProposerDuties(ctx, epoch, validatorIndices)
 		if err != nil {
 			return nil, err
 		}

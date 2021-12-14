@@ -16,7 +16,7 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
@@ -30,8 +30,8 @@ func (s *Service) BeaconBlockProposal(ctx context.Context,
 	*spec.VersionedBeaconBlock,
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		block, err := client.(eth2client.BeaconBlockProposalProvider).BeaconBlockProposal(ctx, slot, randaoReveal, graffiti)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		block, err := client.(consensusclient.BeaconBlockProposalProvider).BeaconBlockProposal(ctx, slot, randaoReveal, graffiti)
 		if err != nil {
 			return nil, err
 		}

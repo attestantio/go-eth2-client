@@ -16,13 +16,13 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 )
 
 // TargetAggregatorsPerCommittee provides the target number of aggregators for each attestation committee.
 func (s *Service) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		aggregate, err := client.(eth2client.TargetAggregatorsPerCommitteeProvider).TargetAggregatorsPerCommittee(ctx)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		aggregate, err := client.(consensusclient.TargetAggregatorsPerCommitteeProvider).TargetAggregatorsPerCommittee(ctx)
 		if err != nil {
 			return nil, err
 		}

@@ -17,10 +17,10 @@ import (
 	"context"
 	"testing"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
@@ -42,7 +42,7 @@ func TestSubmitAttestations(t *testing.T) {
 
 	multiClient, err := multi.New(ctx,
 		multi.WithLogLevel(zerolog.Disabled),
-		multi.WithClients([]eth2client.Service{
+		multi.WithClients([]consensusclient.Service{
 			erroringClient1,
 			erroringClient2,
 			client3,
@@ -51,7 +51,7 @@ func TestSubmitAttestations(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		err := multiClient.SubmitAttestations(ctx, []*spec.Attestation{})
+		err := multiClient.SubmitAttestations(ctx, []*phase0.Attestation{})
 		require.NoError(t, err)
 	}
 	// At this point we expect mock 3 to be in active (unless probability hates us).

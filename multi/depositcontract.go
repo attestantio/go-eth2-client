@@ -16,14 +16,14 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // DepositContract provides details of the Ethereum 1 deposit contract for the chain.
 func (s *Service) DepositContract(ctx context.Context) (*api.DepositContract, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		aggregate, err := client.(eth2client.DepositContractProvider).DepositContract(ctx)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		aggregate, err := client.(consensusclient.DepositContractProvider).DepositContract(ctx)
 		if err != nil {
 			return nil, err
 		}

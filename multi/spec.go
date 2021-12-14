@@ -16,13 +16,13 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 )
 
 // Spec provides the spec information of the chain.
 func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		aggregate, err := client.(eth2client.SpecProvider).Spec(ctx)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		aggregate, err := client.(consensusclient.SpecProvider).Spec(ctx)
 		if err != nil {
 			return nil, err
 		}

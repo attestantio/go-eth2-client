@@ -16,14 +16,14 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Service) ForkSchedule(ctx context.Context) ([]*spec.Fork, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		forkSchedule, err := client.(eth2client.ForkScheduleProvider).ForkSchedule(ctx)
+func (s *Service) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		forkSchedule, err := client.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -35,5 +35,5 @@ func (s *Service) ForkSchedule(ctx context.Context) ([]*spec.Fork, error) {
 	if res == nil {
 		return nil, nil
 	}
-	return res.([]*spec.Fork), nil
+	return res.([]*phase0.Fork), nil
 }

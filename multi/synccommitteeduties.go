@@ -17,17 +17,31 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// SubmitVoluntaryExit submits a voluntary exit.
-func (s *Service) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		err := client.(consensusclient.VoluntaryExitSubmitter).SubmitVoluntaryExit(ctx, voluntaryExit)
+// SyncCommitteeDuties obtains attester duties.
+// If validatorIndicess is nil it will return all duties for the given epoch.
+func (s *Service) SyncCommitteeDuties(ctx context.Context,
+	epoch phase0.Epoch,
+	validatorIndices []phase0.ValidatorIndex,
+) (
+	[]*api.SyncCommitteeDuty,
+	error,
+) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		block, err := client.(consensusclient.SyncCommitteeDutiesProvider).SyncCommitteeDuties(ctx, epoch, validatorIndices)
 		if err != nil {
 			return nil, err
 		}
-		return true, nil
+		return block, nil
 	}, nil)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, nil
+	}
+	return res.([]*api.SyncCommitteeDuty), nil
 }

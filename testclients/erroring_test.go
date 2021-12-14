@@ -17,7 +17,7 @@ import (
 	"context"
 	"testing"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
@@ -35,7 +35,7 @@ func TestErroringNew(t *testing.T) {
 	tests := []struct {
 		name      string
 		errorRate float64
-		next      eth2client.Service
+		next      consensusclient.Service
 		err       string
 	}{
 		{
@@ -88,7 +88,7 @@ func TestMaybeError(t *testing.T) {
 
 	errors := 0
 	for i := 0; i < 100000; i++ {
-		_, err := s.(eth2client.GenesisProvider).Genesis(ctx)
+		_, err := s.(consensusclient.GenesisProvider).Genesis(ctx)
 		if err != nil {
 			errors++
 		}

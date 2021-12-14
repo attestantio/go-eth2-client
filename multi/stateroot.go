@@ -16,14 +16,14 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // BeaconStateRoot fetches a beacon state root given a state ID.
-func (s *Service) BeaconStateRoot(ctx context.Context, stateID string) (*spec.Root, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		stateRoot, err := client.(eth2client.BeaconStateRootProvider).BeaconStateRoot(ctx, stateID)
+func (s *Service) BeaconStateRoot(ctx context.Context, stateID string) (*phase0.Root, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		stateRoot, err := client.(consensusclient.BeaconStateRootProvider).BeaconStateRoot(ctx, stateID)
 		if err != nil {
 			return nil, err
 		}
@@ -35,5 +35,5 @@ func (s *Service) BeaconStateRoot(ctx context.Context, stateID string) (*spec.Ro
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*spec.Root), nil
+	return res.(*phase0.Root), nil
 }

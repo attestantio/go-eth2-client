@@ -17,21 +17,21 @@ import (
 	"context"
 	"strings"
 
-	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // SubmitAttestations submits attestations.
 func (s *Service) SubmitAttestations(ctx context.Context,
-	attestations []*spec.Attestation,
+	attestations []*phase0.Attestation,
 ) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		err := client.(eth2client.AttestationsSubmitter).SubmitAttestations(ctx, attestations)
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		err := client.(consensusclient.AttestationsSubmitter).SubmitAttestations(ctx, attestations)
 		if err != nil {
 			return nil, err
 		}
 		return true, nil
-	}, func(ctx context.Context, client eth2client.Service, err error) (bool, error) {
+	}, func(ctx context.Context, client consensusclient.Service, err error) (bool, error) {
 		// We have received an error, decide if it requires us to fail over or not.
 		provider := s.providerInfo(ctx, client)
 		switch {

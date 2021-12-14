@@ -17,7 +17,7 @@ import (
 	"context"
 	"testing"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
@@ -42,7 +42,7 @@ func TestSubmitBeaconCommitteeSubscriptions(t *testing.T) {
 
 	multiClient, err := multi.New(ctx,
 		multi.WithLogLevel(zerolog.Disabled),
-		multi.WithClients([]eth2client.Service{
+		multi.WithClients([]consensusclient.Service{
 			erroringClient1,
 			erroringClient2,
 			client3,

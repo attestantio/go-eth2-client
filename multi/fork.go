@@ -16,14 +16,14 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // Fork fetches fork information for the given state.
-func (s *Service) Fork(ctx context.Context, stateID string) (*spec.Fork, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		fork, err := client.(eth2client.ForkProvider).Fork(ctx, stateID)
+func (s *Service) Fork(ctx context.Context, stateID string) (*phase0.Fork, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		fork, err := client.(consensusclient.ForkProvider).Fork(ctx, stateID)
 		if err != nil {
 			return nil, err
 		}
@@ -35,5 +35,5 @@ func (s *Service) Fork(ctx context.Context, stateID string) (*spec.Fork, error) 
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*spec.Fork), nil
+	return res.(*phase0.Fork), nil
 }

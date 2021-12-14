@@ -16,7 +16,7 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 )
 
@@ -24,8 +24,8 @@ import (
 func (s *Service) SubmitBeaconCommitteeSubscriptions(ctx context.Context,
 	subscriptions []*api.BeaconCommitteeSubscription,
 ) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		err := client.(eth2client.BeaconCommitteeSubscriptionsSubmitter).SubmitBeaconCommitteeSubscriptions(ctx, subscriptions)
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		err := client.(consensusclient.BeaconCommitteeSubscriptionsSubmitter).SubmitBeaconCommitteeSubscriptions(ctx, subscriptions)
 		if err != nil {
 			return nil, err
 		}

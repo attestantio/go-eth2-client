@@ -16,7 +16,7 @@ package multi
 import (
 	"time"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/metrics"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -25,7 +25,7 @@ import (
 type parameters struct {
 	logLevel  zerolog.Level
 	monitor   metrics.Service
-	clients   []eth2client.Service
+	clients   []consensusclient.Service
 	addresses []string
 	timeout   time.Duration
 }
@@ -63,7 +63,7 @@ func WithMonitor(monitor metrics.Service) Parameter {
 }
 
 // WithClients sets the pre-existing clients to add to the multi list.
-func WithClients(clients []eth2client.Service) Parameter {
+func WithClients(clients []consensusclient.Service) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.clients = clients
 	})

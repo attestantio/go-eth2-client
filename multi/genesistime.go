@@ -17,13 +17,13 @@ import (
 	"context"
 	"time"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 )
 
 // GenesisTime provides the genesis time of the chain.
 func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		aggregate, err := client.(eth2client.GenesisTimeProvider).GenesisTime(ctx)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		aggregate, err := client.(consensusclient.GenesisTimeProvider).GenesisTime(ctx)
 		if err != nil {
 			return nil, err
 		}

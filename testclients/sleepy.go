@@ -20,7 +20,7 @@ import (
 	"math/rand"
 	"time"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -31,7 +31,7 @@ import (
 type Sleepy struct {
 	minSleep time.Duration
 	maxSleep time.Duration
-	next     eth2client.Service
+	next     consensusclient.Service
 }
 
 // NewSleepy creates a new Ethereum 2 client that sleeps for random amount of time
@@ -39,8 +39,8 @@ type Sleepy struct {
 func NewSleepy(ctx context.Context,
 	minSleep time.Duration,
 	maxSleep time.Duration,
-	next eth2client.Service,
-) (eth2client.Service, error) {
+	next consensusclient.Service,
+) (consensusclient.Service, error) {
 	if next == nil {
 		return nil, errors.New("no next service supplied")
 	}
@@ -76,43 +76,10 @@ func (s *Sleepy) sleep(ctx context.Context) {
 	time.Sleep(duration)
 }
 
-// PrysmAttesterDuties obtains attester duties with prysm-specific parameters.
-func (s *Sleepy) PrysmAttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorPubKeys []phase0.BLSPubKey) ([]*api.AttesterDuty, error) {
-	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.PrysmAttesterDutiesProvider)
-	if !isNext {
-		return nil, errors.New("next does not support this call")
-	}
-	return next.PrysmAttesterDuties(ctx, epoch, validatorPubKeys)
-}
-
-// PrysmProposerDuties obtains proposer duties with prysm-specific parameters.
-func (s *Sleepy) PrysmProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorPubKeys []phase0.BLSPubKey) ([]*api.ProposerDuty, error) {
-	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.PrysmProposerDutiesProvider)
-	if !isNext {
-		return nil, errors.New("next does not support this call")
-	}
-	return next.PrysmProposerDuties(ctx, epoch, validatorPubKeys)
-}
-
-// PrysmValidatorBalances provides the validator balances for a given state.
-// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validatorIDs is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
-// will be applied.
-func (s *Sleepy) PrysmValidatorBalances(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
-	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.PrysmValidatorBalancesProvider)
-	if !isNext {
-		return nil, errors.New("next does not support this call")
-	}
-	return next.PrysmValidatorBalances(ctx, stateID, validatorPubKeys)
-}
-
 // EpochFromStateID converts a state ID to its epoch.
 func (s *Sleepy) EpochFromStateID(ctx context.Context, stateID string) (phase0.Epoch, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.EpochFromStateIDProvider)
+	next, isNext := s.next.(consensusclient.EpochFromStateIDProvider)
 	if !isNext {
 		return 0, errors.New("next does not support this call")
 	}
@@ -122,7 +89,7 @@ func (s *Sleepy) EpochFromStateID(ctx context.Context, stateID string) (phase0.E
 // SlotFromStateID converts a state ID to its slot.
 func (s *Sleepy) SlotFromStateID(ctx context.Context, stateID string) (phase0.Slot, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.SlotFromStateIDProvider)
+	next, isNext := s.next.(consensusclient.SlotFromStateIDProvider)
 	if !isNext {
 		return 0, errors.New("next does not support this call")
 	}
@@ -132,7 +99,7 @@ func (s *Sleepy) SlotFromStateID(ctx context.Context, stateID string) (phase0.Sl
 // NodeVersion returns a free-text string with the node version.
 func (s *Sleepy) NodeVersion(ctx context.Context) (string, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.NodeVersionProvider)
+	next, isNext := s.next.(consensusclient.NodeVersionProvider)
 	if !isNext {
 		return "", errors.New("next does not support this call")
 	}
@@ -142,7 +109,7 @@ func (s *Sleepy) NodeVersion(ctx context.Context) (string, error) {
 // SlotDuration provides the duration of a slot of the chain.
 func (s *Sleepy) SlotDuration(ctx context.Context) (time.Duration, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.SlotDurationProvider)
+	next, isNext := s.next.(consensusclient.SlotDurationProvider)
 	if !isNext {
 		return 0, errors.New("next does not support this call")
 	}
@@ -152,7 +119,7 @@ func (s *Sleepy) SlotDuration(ctx context.Context) (time.Duration, error) {
 // SlotsPerEpoch provides the slots per epoch of the chain.
 func (s *Sleepy) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.SlotsPerEpochProvider)
+	next, isNext := s.next.(consensusclient.SlotsPerEpochProvider)
 	if !isNext {
 		return 0, errors.New("next does not support this call")
 	}
@@ -162,7 +129,7 @@ func (s *Sleepy) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 // FarFutureEpoch provides the far future epoch of the chain.
 func (s *Sleepy) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.FarFutureEpochProvider)
+	next, isNext := s.next.(consensusclient.FarFutureEpochProvider)
 	if !isNext {
 		return 0, errors.New("next does not support this call")
 	}
@@ -172,7 +139,7 @@ func (s *Sleepy) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 // GenesisValidatorsRoot provides the genesis validators root of the chain.
 func (s *Sleepy) GenesisValidatorsRoot(ctx context.Context) ([]byte, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.GenesisValidatorsRootProvider)
+	next, isNext := s.next.(consensusclient.GenesisValidatorsRootProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -182,7 +149,7 @@ func (s *Sleepy) GenesisValidatorsRoot(ctx context.Context) ([]byte, error) {
 // TargetAggregatorsPerCommittee provides the target number of aggregators for each attestation committee.
 func (s *Sleepy) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.TargetAggregatorsPerCommitteeProvider)
+	next, isNext := s.next.(consensusclient.TargetAggregatorsPerCommitteeProvider)
 	if !isNext {
 		return 0, errors.New("next does not support this call")
 	}
@@ -192,7 +159,7 @@ func (s *Sleepy) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, err
 // AggregateAttestation fetches the aggregate attestation given an attestation.
 func (s *Sleepy) AggregateAttestation(ctx context.Context, slot phase0.Slot, attestationDataRoot phase0.Root) (*phase0.Attestation, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.AggregateAttestationProvider)
+	next, isNext := s.next.(consensusclient.AggregateAttestationProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -202,7 +169,7 @@ func (s *Sleepy) AggregateAttestation(ctx context.Context, slot phase0.Slot, att
 // SubmitAggregateAttestations submits aggregate attestations.
 func (s *Sleepy) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.AggregateAttestationsSubmitter)
+	next, isNext := s.next.(consensusclient.AggregateAttestationsSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
@@ -212,7 +179,7 @@ func (s *Sleepy) SubmitAggregateAttestations(ctx context.Context, aggregateAndPr
 // AttestationData fetches the attestation data for the given slot and committee index.
 func (s *Sleepy) AttestationData(ctx context.Context, slot phase0.Slot, committeeIndex phase0.CommitteeIndex) (*phase0.AttestationData, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.AttestationDataProvider)
+	next, isNext := s.next.(consensusclient.AttestationDataProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -222,7 +189,7 @@ func (s *Sleepy) AttestationData(ctx context.Context, slot phase0.Slot, committe
 // AttestationPool fetches the attestation pool for the given slot.
 func (s *Sleepy) AttestationPool(ctx context.Context, slot phase0.Slot) ([]*phase0.Attestation, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.AttestationPoolProvider)
+	next, isNext := s.next.(consensusclient.AttestationPoolProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -232,7 +199,7 @@ func (s *Sleepy) AttestationPool(ctx context.Context, slot phase0.Slot) ([]*phas
 // SubmitAttestations submits attestations.
 func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.AttestationsSubmitter)
+	next, isNext := s.next.(consensusclient.AttestationsSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
@@ -243,7 +210,7 @@ func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*phase0.
 // If validatorIndicess is nil it will return all duties for the given epoch.
 func (s *Sleepy) AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.AttesterDuty, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.AttesterDutiesProvider)
+	next, isNext := s.next.(consensusclient.AttesterDutiesProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -253,7 +220,7 @@ func (s *Sleepy) AttesterDuties(ctx context.Context, epoch phase0.Epoch, validat
 // BeaconBlockHeader provides the block header of a given block ID.
 func (s *Sleepy) BeaconBlockHeader(ctx context.Context, blockID string) (*api.BeaconBlockHeader, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.BeaconBlockHeadersProvider)
+	next, isNext := s.next.(consensusclient.BeaconBlockHeadersProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -263,7 +230,7 @@ func (s *Sleepy) BeaconBlockHeader(ctx context.Context, blockID string) (*api.Be
 // BeaconBlockProposal fetches a proposed beacon block for signing.
 func (s *Sleepy) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.BeaconBlockProposalProvider)
+	next, isNext := s.next.(consensusclient.BeaconBlockProposalProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -273,7 +240,7 @@ func (s *Sleepy) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, rand
 // SubmitBeaconBlock submits a beacon block.
 func (s *Sleepy) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.BeaconBlockSubmitter)
+	next, isNext := s.next.(consensusclient.BeaconBlockSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
@@ -283,7 +250,7 @@ func (s *Sleepy) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSig
 // SubmitBeaconCommitteeSubscriptions subscribes to beacon committees.
 func (s *Sleepy) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*api.BeaconCommitteeSubscription) error {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.BeaconCommitteeSubscriptionsSubmitter)
+	next, isNext := s.next.(consensusclient.BeaconCommitteeSubscriptionsSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
@@ -293,7 +260,7 @@ func (s *Sleepy) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscri
 // BeaconState fetches a beacon state.
 func (s *Sleepy) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.BeaconStateProvider)
+	next, isNext := s.next.(consensusclient.BeaconStateProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -301,9 +268,9 @@ func (s *Sleepy) BeaconState(ctx context.Context, stateID string) (*spec.Version
 }
 
 // Events feeds requested events with the given topics to the supplied handler.
-func (s *Sleepy) Events(ctx context.Context, topics []string, handler eth2client.EventHandlerFunc) error {
+func (s *Sleepy) Events(ctx context.Context, topics []string, handler consensusclient.EventHandlerFunc) error {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.EventsProvider)
+	next, isNext := s.next.(consensusclient.EventsProvider)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
@@ -313,7 +280,7 @@ func (s *Sleepy) Events(ctx context.Context, topics []string, handler eth2client
 // Finality provides the finality given a state ID.
 func (s *Sleepy) Finality(ctx context.Context, stateID string) (*api.Finality, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.FinalityProvider)
+	next, isNext := s.next.(consensusclient.FinalityProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -323,7 +290,7 @@ func (s *Sleepy) Finality(ctx context.Context, stateID string) (*api.Finality, e
 // Fork fetches fork information for the given state.
 func (s *Sleepy) Fork(ctx context.Context, stateID string) (*phase0.Fork, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.ForkProvider)
+	next, isNext := s.next.(consensusclient.ForkProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -333,7 +300,7 @@ func (s *Sleepy) Fork(ctx context.Context, stateID string) (*phase0.Fork, error)
 // ForkSchedule provides details of past and future changes in the chain's fork version.
 func (s *Sleepy) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.ForkScheduleProvider)
+	next, isNext := s.next.(consensusclient.ForkScheduleProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -343,7 +310,7 @@ func (s *Sleepy) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
 // Genesis fetches genesis information for the chain.
 func (s *Sleepy) Genesis(ctx context.Context) (*api.Genesis, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.GenesisProvider)
+	next, isNext := s.next.(consensusclient.GenesisProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -353,7 +320,7 @@ func (s *Sleepy) Genesis(ctx context.Context) (*api.Genesis, error) {
 // NodeSyncing provides the state of the node's synchronization with the chain.
 func (s *Sleepy) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.NodeSyncingProvider)
+	next, isNext := s.next.(consensusclient.NodeSyncingProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -364,7 +331,7 @@ func (s *Sleepy) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
 // If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
 func (s *Sleepy) ProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.ProposerDuty, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.ProposerDutiesProvider)
+	next, isNext := s.next.(consensusclient.ProposerDutiesProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -374,7 +341,7 @@ func (s *Sleepy) ProposerDuties(ctx context.Context, epoch phase0.Epoch, validat
 // Spec provides the spec information of the chain.
 func (s *Sleepy) Spec(ctx context.Context) (map[string]interface{}, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.SpecProvider)
+	next, isNext := s.next.(consensusclient.SpecProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -387,7 +354,7 @@ func (s *Sleepy) Spec(ctx context.Context) (map[string]interface{}, error) {
 // will be applied.
 func (s *Sleepy) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.ValidatorBalancesProvider)
+	next, isNext := s.next.(consensusclient.ValidatorBalancesProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -400,7 +367,7 @@ func (s *Sleepy) ValidatorBalances(ctx context.Context, stateID string, validato
 // will be applied.
 func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.ValidatorsProvider)
+	next, isNext := s.next.(consensusclient.ValidatorsProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -413,7 +380,7 @@ func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndice
 // supplied no filter will be applied.
 func (s *Sleepy) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.ValidatorsProvider)
+	next, isNext := s.next.(consensusclient.ValidatorsProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
@@ -423,7 +390,7 @@ func (s *Sleepy) ValidatorsByPubKey(ctx context.Context, stateID string, validat
 // SubmitVoluntaryExit submits a voluntary exit.
 func (s *Sleepy) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.VoluntaryExitSubmitter)
+	next, isNext := s.next.(consensusclient.VoluntaryExitSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
@@ -433,7 +400,7 @@ func (s *Sleepy) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.
 // Domain provides a domain for a given domain type at a given epoch.
 func (s *Sleepy) Domain(ctx context.Context, domainType phase0.DomainType, epoch phase0.Epoch) (phase0.Domain, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.DomainProvider)
+	next, isNext := s.next.(consensusclient.DomainProvider)
 	if !isNext {
 		return phase0.Domain{}, errors.New("next does not support this call")
 	}
@@ -443,7 +410,7 @@ func (s *Sleepy) Domain(ctx context.Context, domainType phase0.DomainType, epoch
 // GenesisTime provides the genesis time of the chain.
 func (s *Sleepy) GenesisTime(ctx context.Context) (time.Time, error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(eth2client.GenesisTimeProvider)
+	next, isNext := s.next.(consensusclient.GenesisTimeProvider)
 	if !isNext {
 		return time.Time{}, errors.New("next does not support this call")
 	}

@@ -16,16 +16,16 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 )
 
 // Events feeds requested events with the given topics to the supplied handler.
 func (s *Service) Events(ctx context.Context,
 	topics []string,
-	handler eth2client.EventHandlerFunc,
+	handler consensusclient.EventHandlerFunc,
 ) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		err := client.(eth2client.EventsProvider).Events(ctx, topics, handler)
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		err := client.(consensusclient.EventsProvider).Events(ctx, topics, handler)
 		if err != nil {
 			return nil, err
 		}

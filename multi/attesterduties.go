@@ -16,22 +16,22 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AttesterDuties obtains attester duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
 func (s *Service) AttesterDuties(ctx context.Context,
-	epoch spec.Epoch,
-	validatorIndices []spec.ValidatorIndex,
+	epoch phase0.Epoch,
+	validatorIndices []phase0.ValidatorIndex,
 ) (
 	[]*api.AttesterDuty,
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		block, err := client.(eth2client.AttesterDutiesProvider).AttesterDuties(ctx, epoch, validatorIndices)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		block, err := client.(consensusclient.AttesterDutiesProvider).AttesterDuties(ctx, epoch, validatorIndices)
 		if err != nil {
 			return nil, err
 		}

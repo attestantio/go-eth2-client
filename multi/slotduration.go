@@ -17,13 +17,13 @@ import (
 	"context"
 	"time"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 )
 
 // SlotDuration provides the duration of a slot of the chain.
 func (s *Service) SlotDuration(ctx context.Context) (time.Duration, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		aggregate, err := client.(eth2client.SlotDurationProvider).SlotDuration(ctx)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		aggregate, err := client.(consensusclient.SlotDurationProvider).SlotDuration(ctx)
 		if err != nil {
 			return nil, err
 		}

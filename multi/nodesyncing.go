@@ -16,14 +16,14 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // NodeSyncing provides the syncing information for the node.
 func (s *Service) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		nodeSyncing, err := client.(eth2client.NodeSyncingProvider).NodeSyncing(ctx)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		nodeSyncing, err := client.(consensusclient.NodeSyncingProvider).NodeSyncing(ctx)
 		if err != nil {
 			return nil, err
 		}

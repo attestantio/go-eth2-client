@@ -20,13 +20,13 @@ import (
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
-func TestBeaconBlockProposal(t *testing.T) {
+func TestSubmitSyncCommitteeMessages(t *testing.T) {
 	ctx := context.Background()
 
 	client1, err := mock.New(ctx, mock.WithName("mock 1"))
@@ -51,15 +51,8 @@ func TestBeaconBlockProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.BeaconBlockProposal(ctx, 1, phase0.BLSSignature{}, []byte{
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		},
-		)
+		err := multiClient.SubmitSyncCommitteeMessages(ctx, []*altair.SyncCommitteeMessage{})
 		require.NoError(t, err)
-		require.NotNil(t, res)
 	}
 	// At this point we expect mock 3 to be in active (unless probability hates us).
 	require.Equal(t, "mock 3", multiClient.Address())

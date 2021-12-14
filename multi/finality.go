@@ -16,14 +16,14 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // Finality provides the finality given a state ID.
 func (s *Service) Finality(ctx context.Context, stateID string) (*api.Finality, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		finality, err := client.(eth2client.FinalityProvider).Finality(ctx, stateID)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		finality, err := client.(consensusclient.FinalityProvider).Finality(ctx, stateID)
 		if err != nil {
 			return nil, err
 		}

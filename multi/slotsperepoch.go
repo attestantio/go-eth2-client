@@ -16,13 +16,13 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 )
 
 // SlotsPerEpoch provides the slots per epoch of the chain.
 func (s *Service) SlotsPerEpoch(ctx context.Context) (uint64, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		aggregate, err := client.(eth2client.SlotsPerEpochProvider).SlotsPerEpoch(ctx)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		aggregate, err := client.(consensusclient.SlotsPerEpochProvider).SlotsPerEpoch(ctx)
 		if err != nil {
 			return nil, err
 		}

@@ -20,14 +20,20 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// SubmitVoluntaryExit submits a voluntary exit.
-func (s *Service) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		err := client.(consensusclient.VoluntaryExitSubmitter).SubmitVoluntaryExit(ctx, voluntaryExit)
+// BeaconBlockRoot fetches a block's root given a block ID.
+func (s *Service) BeaconBlockRoot(ctx context.Context, blockID string) (*phase0.Root, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		root, err := client.(consensusclient.BeaconBlockRootProvider).BeaconBlockRoot(ctx, blockID)
 		if err != nil {
 			return nil, err
 		}
-		return true, nil
+		return root, nil
 	}, nil)
-	return err
+	if err != nil {
+		return nil, err
+	}
+	if res == nil {
+		return nil, nil
+	}
+	return res.(*phase0.Root), nil
 }

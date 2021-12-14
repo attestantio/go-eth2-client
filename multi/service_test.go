@@ -17,25 +17,26 @@ import (
 	"context"
 	"testing"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestService(t *testing.T) {
 	ctx := context.Background()
 
-	eth2Client1, err := mock.New(ctx)
+	consensusclient1, err := mock.New(ctx)
 	require.NoError(t, err)
-	eth2Client2, err := mock.New(ctx)
+	consensusclient2, err := mock.New(ctx)
 	require.NoError(t, err)
-	eth2Client3, err := mock.New(ctx)
+	consensusclient3, err := mock.New(ctx)
 	require.NoError(t, err)
-	inactiveEth2Client1, err := mock.New(ctx)
+	inactiveconsensusclient1, err := mock.New(ctx)
 	require.NoError(t, err)
-	inactiveEth2Client1.SyncDistance = 10
+	inactiveconsensusclient1.SyncDistance = 10
 	tests := []struct {
 		name   string
 		params []multi.Parameter
@@ -52,8 +53,8 @@ func TestService(t *testing.T) {
 			name: "AllClientsInactive",
 			params: []multi.Parameter{
 				multi.WithLogLevel(zerolog.Disabled),
-				multi.WithClients([]eth2client.Service{
-					inactiveEth2Client1,
+				multi.WithClients([]client.Service{
+					inactiveconsensusclient1,
 				}),
 			},
 			err: "No providers active, cannot proceed",
@@ -62,10 +63,10 @@ func TestService(t *testing.T) {
 			name: "Good",
 			params: []multi.Parameter{
 				multi.WithLogLevel(zerolog.Disabled),
-				multi.WithClients([]eth2client.Service{
-					eth2Client1,
-					eth2Client2,
-					eth2Client3,
+				multi.WithClients([]client.Service{
+					consensusclient1,
+					consensusclient2,
+					consensusclient3,
 				}),
 			},
 		},
@@ -81,4 +82,52 @@ func TestService(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestInterfaces(t *testing.T) {
+	ctx := context.Background()
+
+	consensusclient1, err := mock.New(ctx)
+	require.NoError(t, err)
+	consensusclient2, err := mock.New(ctx)
+	require.NoError(t, err)
+	s, err := multi.New(ctx,
+		multi.WithClients([]client.Service{
+			consensusclient1,
+			consensusclient2,
+		}),
+	)
+	require.NoError(t, err)
+
+	// Standard interfacs.
+	assert.Implements(t, (*client.AggregateAttestationProvider)(nil), s)
+	assert.Implements(t, (*client.AggregateAttestationsSubmitter)(nil), s)
+	assert.Implements(t, (*client.AttestationDataProvider)(nil), s)
+	assert.Implements(t, (*client.AttestationsSubmitter)(nil), s)
+	assert.Implements(t, (*client.AttesterDutiesProvider)(nil), s)
+	assert.Implements(t, (*client.BeaconBlockHeadersProvider)(nil), s)
+	assert.Implements(t, (*client.BeaconBlockProposalProvider)(nil), s)
+	assert.Implements(t, (*client.BeaconBlockRootProvider)(nil), s)
+	assert.Implements(t, (*client.BeaconBlockSubmitter)(nil), s)
+	assert.Implements(t, (*client.BeaconCommitteeSubscriptionsSubmitter)(nil), s)
+	assert.Implements(t, (*client.BeaconStateProvider)(nil), s)
+	assert.Implements(t, (*client.DepositContractProvider)(nil), s)
+	assert.Implements(t, (*client.EventsProvider)(nil), s)
+	assert.Implements(t, (*client.ForkProvider)(nil), s)
+	assert.Implements(t, (*client.ForkScheduleProvider)(nil), s)
+	assert.Implements(t, (*client.GenesisProvider)(nil), s)
+	assert.Implements(t, (*client.NodeSyncingProvider)(nil), s)
+	assert.Implements(t, (*client.ProposerDutiesProvider)(nil), s)
+	assert.Implements(t, (*client.SpecProvider)(nil), s)
+	assert.Implements(t, (*client.SyncCommitteeDutiesProvider)(nil), s)
+	assert.Implements(t, (*client.SyncCommitteeMessagesSubmitter)(nil), s)
+	assert.Implements(t, (*client.SyncCommitteeSubscriptionsSubmitter)(nil), s)
+	assert.Implements(t, (*client.ValidatorBalancesProvider)(nil), s)
+	assert.Implements(t, (*client.ValidatorsProvider)(nil), s)
+	assert.Implements(t, (*client.VoluntaryExitSubmitter)(nil), s)
+
+	// Non-standard extensions.
+	assert.Implements(t, (*client.DomainProvider)(nil), s)
+	assert.Implements(t, (*client.GenesisTimeProvider)(nil), s)
+
 }

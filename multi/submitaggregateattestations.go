@@ -16,16 +16,16 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // SubmitAggregateAttestations submits aggregate attestations.
 func (s *Service) SubmitAggregateAttestations(ctx context.Context,
-	aggregateAndProofs []*spec.SignedAggregateAndProof,
+	aggregateAndProofs []*phase0.SignedAggregateAndProof,
 ) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		err := client.(eth2client.AggregateAttestationsSubmitter).SubmitAggregateAttestations(ctx, aggregateAndProofs)
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		err := client.(consensusclient.AggregateAttestationsSubmitter).SubmitAggregateAttestations(ctx, aggregateAndProofs)
 		if err != nil {
 			return nil, err
 		}

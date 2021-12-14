@@ -17,16 +17,16 @@ import (
 	"context"
 	"testing"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
-func TestProposerDuties(t *testing.T) {
+func TestSyncCommitteeDuties(t *testing.T) {
 	ctx := context.Background()
 
 	client1, err := mock.New(ctx, mock.WithName("mock 1"))
@@ -42,7 +42,7 @@ func TestProposerDuties(t *testing.T) {
 
 	multiClient, err := multi.New(ctx,
 		multi.WithLogLevel(zerolog.Disabled),
-		multi.WithClients([]eth2client.Service{
+		multi.WithClients([]consensusclient.Service{
 			erroringClient1,
 			erroringClient2,
 			client3,
@@ -51,7 +51,7 @@ func TestProposerDuties(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.ProposerDuties(ctx, 1, []spec.ValidatorIndex{1, 2, 3})
+		res, err := multiClient.SyncCommitteeDuties(ctx, 1, []phase0.ValidatorIndex{1, 2, 3})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

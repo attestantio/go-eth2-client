@@ -11,23 +11,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package multi
+package mock
 
 import (
 	"context"
 
-	consensusclient "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/altair"
 )
 
-// SubmitVoluntaryExit submits a voluntary exit.
-func (s *Service) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		err := client.(consensusclient.VoluntaryExitSubmitter).SubmitVoluntaryExit(ctx, voluntaryExit)
-		if err != nil {
-			return nil, err
-		}
-		return true, nil
-	}, nil)
-	return err
+// SubmitSyncCommitteeMessages submits sync committee messages.
+func (s *Service) SubmitSyncCommitteeMessages(ctx context.Context, messages []*altair.SyncCommitteeMessage) error {
+	return nil
 }

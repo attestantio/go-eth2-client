@@ -16,20 +16,20 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AggregateAttestation fetches the aggregate attestation given an attestation.
 func (s *Service) AggregateAttestation(ctx context.Context,
-	slot spec.Slot,
-	attestationDataRoot spec.Root,
+	slot phase0.Slot,
+	attestationDataRoot phase0.Root,
 ) (
-	*spec.Attestation,
+	*phase0.Attestation,
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		aggregate, err := client.(eth2client.AggregateAttestationProvider).AggregateAttestation(ctx, slot, attestationDataRoot)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		aggregate, err := client.(consensusclient.AggregateAttestationProvider).AggregateAttestation(ctx, slot, attestationDataRoot)
 		if err != nil {
 			return nil, err
 		}
@@ -41,5 +41,5 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*spec.Attestation), nil
+	return res.(*phase0.Attestation), nil
 }

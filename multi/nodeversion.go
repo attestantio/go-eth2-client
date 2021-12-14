@@ -16,13 +16,13 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 )
 
 // NodeVersion provides the version information of the node.
 func (s *Service) NodeVersion(ctx context.Context) (string, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		aggregate, err := client.(eth2client.NodeVersionProvider).NodeVersion(ctx)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		aggregate, err := client.(consensusclient.NodeVersionProvider).NodeVersion(ctx)
 		if err != nil {
 			return nil, err
 		}

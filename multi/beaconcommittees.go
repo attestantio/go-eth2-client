@@ -16,14 +16,14 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // BeaconCommittees fetches all beacon committees for the epoch at the given state.
 func (s *Service) BeaconCommittees(ctx context.Context, stateID string) ([]*api.BeaconCommittee, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		beaconCommittees, err := client.(eth2client.BeaconCommitteesProvider).BeaconCommittees(ctx, stateID)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		beaconCommittees, err := client.(consensusclient.BeaconCommitteesProvider).BeaconCommittees(ctx, stateID)
 		if err != nil {
 			return nil, err
 		}

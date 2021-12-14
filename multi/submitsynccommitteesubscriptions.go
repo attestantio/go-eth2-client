@@ -17,13 +17,15 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	api "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-// SubmitVoluntaryExit submits a voluntary exit.
-func (s *Service) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error {
+// SubmitSyncCommitteeSubscriptions subscribes to sync committees.
+func (s *Service) SubmitSyncCommitteeSubscriptions(ctx context.Context,
+	subscriptions []*api.SyncCommitteeSubscription,
+) error {
 	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		err := client.(consensusclient.VoluntaryExitSubmitter).SubmitVoluntaryExit(ctx, voluntaryExit)
+		err := client.(consensusclient.SyncCommitteeSubscriptionsSubmitter).SubmitSyncCommitteeSubscriptions(ctx, subscriptions)
 		if err != nil {
 			return nil, err
 		}

@@ -16,30 +16,30 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // Domain provides a domain for a given domain type at a given epoch.
 func (s *Service) Domain(ctx context.Context,
-	domainType spec.DomainType,
-	epoch spec.Epoch,
+	domainType phase0.DomainType,
+	epoch phase0.Epoch,
 ) (
-	spec.Domain,
+	phase0.Domain,
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		domain, err := client.(eth2client.DomainProvider).Domain(ctx, domainType, epoch)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		domain, err := client.(consensusclient.DomainProvider).Domain(ctx, domainType, epoch)
 		if err != nil {
 			return nil, err
 		}
 		return domain, nil
 	}, nil)
 	if err != nil {
-		return spec.Domain{}, err
+		return phase0.Domain{}, err
 	}
 	if res == nil {
-		return spec.Domain{}, err
+		return phase0.Domain{}, err
 	}
-	return res.(spec.Domain), nil
+	return res.(phase0.Domain), nil
 }

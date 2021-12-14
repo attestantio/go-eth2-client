@@ -17,7 +17,7 @@ import (
 	"context"
 	"sync"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/auto"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -27,8 +27,8 @@ import (
 // Service handles multiple Ethereum 2 clients.
 type Service struct {
 	clientsMu       sync.RWMutex
-	activeClients   []eth2client.Service
-	inactiveClients []eth2client.Service
+	activeClients   []consensusclient.Service
+	inactiveClients []consensusclient.Service
 }
 
 // module-wide log.
@@ -57,8 +57,8 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	}
 
 	// Check the state of each client and put it in an active or inactive list, accordingly.
-	activeClients := make([]eth2client.Service, 0, len(parameters.clients))
-	inactiveClients := make([]eth2client.Service, 0, len(parameters.clients))
+	activeClients := make([]consensusclient.Service, 0, len(parameters.clients))
+	inactiveClients := make([]consensusclient.Service, 0, len(parameters.clients))
 	for _, client := range parameters.clients {
 		if ping(ctx, client) {
 			activeClients = append(activeClients, client)

@@ -233,7 +233,7 @@ type AttesterDutiesProvider interface {
 
 // SyncCommitteeDutiesProvider is the interface for providing sync committee duties.
 type SyncCommitteeDutiesProvider interface {
-	// SyncCommitteesDuties obtains attester duties.
+	// SyncCommitteeDuties obtains attester duties.
 	// If validatorIndicess is nil it will return all duties for the given epoch.
 	SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.SyncCommitteeDuty, error)
 }
@@ -351,12 +351,6 @@ type ProposerDutiesProvider interface {
 type SpecProvider interface {
 	// Spec provides the spec information of the chain.
 	Spec(ctx context.Context) (map[string]interface{}, error)
-}
-
-// StateRootProvider is the interface for providing state roots.
-type StateRootProvider interface {
-	// StateRoot provides the state root given a state ID.
-	StateRoot(ctx context.Context, stateID string) ([]byte, error)
 }
 
 // SyncStateProvider is the interface for providing synchronization state.

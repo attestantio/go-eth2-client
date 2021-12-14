@@ -16,20 +16,20 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AttestationData fetches the attestation data for the given slot and committee index.
 func (s *Service) AttestationData(ctx context.Context,
-	slot spec.Slot,
-	committeeIndex spec.CommitteeIndex,
+	slot phase0.Slot,
+	committeeIndex phase0.CommitteeIndex,
 ) (
-	*spec.AttestationData,
+	*phase0.AttestationData,
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		attestationData, err := client.(eth2client.AttestationDataProvider).AttestationData(ctx, slot, committeeIndex)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		attestationData, err := client.(consensusclient.AttestationDataProvider).AttestationData(ctx, slot, committeeIndex)
 		if err != nil {
 			return nil, err
 		}
@@ -41,5 +41,5 @@ func (s *Service) AttestationData(ctx context.Context,
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*spec.AttestationData), nil
+	return res.(*phase0.AttestationData), nil
 }

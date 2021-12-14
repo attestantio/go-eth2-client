@@ -18,7 +18,7 @@ import (
 	"strings"
 	"time"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/pkg/errors"
 )
 
@@ -33,7 +33,7 @@ func (s *Service) monitor(ctx context.Context) {
 			return
 		case <-time.After(30 * time.Second):
 			// Fetch all clients.
-			clients := make([]eth2client.Service, 0, len(s.activeClients)+len(s.inactiveClients))
+			clients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
 			s.clientsMu.RLock()
 			clients = append(clients, s.activeClients...)
 			clients = append(clients, s.inactiveClients...)
@@ -52,11 +52,11 @@ func (s *Service) monitor(ctx context.Context) {
 }
 
 // deactivateClient deactivates a client, moving it to the inactive list if not currently on it.
-func (s *Service) deactivateClient(ctx context.Context, client eth2client.Service) {
+func (s *Service) deactivateClient(ctx context.Context, client consensusclient.Service) {
 	s.clientsMu.Lock()
 	defer s.clientsMu.Unlock()
 
-	activeClients := make([]eth2client.Service, 0, len(s.activeClients)+len(s.inactiveClients))
+	activeClients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
 	inactiveClients := s.inactiveClients
 	for _, activeClient := range s.activeClients {
 		if activeClient == client {
@@ -75,12 +75,12 @@ func (s *Service) deactivateClient(ctx context.Context, client eth2client.Servic
 }
 
 // activateClient activates a client, moving it to the active list if not currently on it.
-func (s *Service) activateClient(ctx context.Context, client eth2client.Service) {
+func (s *Service) activateClient(ctx context.Context, client consensusclient.Service) {
 	s.clientsMu.Lock()
 	defer s.clientsMu.Unlock()
 
 	activeClients := s.activeClients
-	inactiveClients := make([]eth2client.Service, 0, len(s.activeClients)+len(s.inactiveClients))
+	inactiveClients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
 	for _, inactiveClient := range s.inactiveClients {
 		if inactiveClient == client {
 			activeClients = append(activeClients, inactiveClient)
@@ -99,10 +99,10 @@ func (s *Service) activateClient(ctx context.Context, client eth2client.Service)
 
 // ping pings a client, returning true if it is ready to serve requests and
 // false otherwise.
-func ping(ctx context.Context, eth2Client eth2client.Service) bool {
-	provider, isProvider := eth2Client.(eth2client.NodeSyncingProvider)
+func ping(ctx context.Context, client consensusclient.Service) bool {
+	provider, isProvider := client.(consensusclient.NodeSyncingProvider)
 	if !isProvider {
-		log.Debug().Str("provider", eth2Client.Address()).Msg("Client does not provide sync state")
+		log.Debug().Str("provider", client.Address()).Msg("Client does not provide sync state")
 		return false
 	}
 
@@ -117,12 +117,12 @@ func ping(ctx context.Context, eth2Client eth2client.Service) bool {
 
 // callFunc is the definition for a call function.  It provides a generic return interface
 // to allow the caller to unpick the results as it sees fit.
-type callFunc func(ctx context.Context, client eth2client.Service) (interface{}, error)
+type callFunc func(ctx context.Context, client consensusclient.Service) (interface{}, error)
 
 // errHandlerFunc is the definition for an error handler function.  It looks at the error
 // returned from the client, potentially rewrites it, and also states if the error should
 // result in a provider failover.
-type errHandlerFunc func(ctx context.Context, client eth2client.Service, err error) (bool, error)
+type errHandlerFunc func(ctx context.Context, client consensusclient.Service, err error) (bool, error)
 
 // doCall carries out a call on the active clients in turn until one succeeds.
 func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandlerFunc) (interface{}, error) {
@@ -162,9 +162,9 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 
 // providerInfo returns information on the provider.
 // Currently this just returns the name of the service (lighthouse/teku/etc.).
-func (s *Service) providerInfo(ctx context.Context, provider eth2client.Service) string {
+func (s *Service) providerInfo(ctx context.Context, provider consensusclient.Service) string {
 	providerName := "<unknown>"
-	nodeVersionProvider, isNodeVersionProvider := provider.(eth2client.NodeVersionProvider)
+	nodeVersionProvider, isNodeVersionProvider := provider.(consensusclient.NodeVersionProvider)
 	if isNodeVersionProvider {
 		nodeVersion, err := nodeVersionProvider.NodeVersion(ctx)
 		if err == nil {

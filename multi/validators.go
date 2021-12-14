@@ -16,9 +16,9 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // Validators provides the validators, with their balance and status, for a given state.
@@ -26,13 +26,13 @@ import (
 // validatorIndices is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
 func (s *Service) Validators(ctx context.Context,
 	stateID string,
-	validatorIndices []spec.ValidatorIndex,
+	validatorIndices []phase0.ValidatorIndex,
 ) (
-	map[spec.ValidatorIndex]*api.Validator,
+	map[phase0.ValidatorIndex]*api.Validator,
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		block, err := client.(eth2client.ValidatorsProvider).Validators(ctx, stateID, validatorIndices)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		block, err := client.(consensusclient.ValidatorsProvider).Validators(ctx, stateID, validatorIndices)
 		if err != nil {
 			return nil, err
 		}
@@ -44,5 +44,5 @@ func (s *Service) Validators(ctx context.Context,
 	if res == nil {
 		return nil, nil
 	}
-	return res.(map[spec.ValidatorIndex]*api.Validator), nil
+	return res.(map[phase0.ValidatorIndex]*api.Validator), nil
 }

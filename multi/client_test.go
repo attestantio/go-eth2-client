@@ -17,7 +17,7 @@ import (
 	"context"
 	"testing"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
 	"github.com/attestantio/go-eth2-client/testclients"
@@ -28,22 +28,22 @@ import (
 func TestClient(t *testing.T) {
 	ctx := context.Background()
 
-	eth2Client, err := mock.New(ctx)
+	consensusClient, err := mock.New(ctx)
 	require.NoError(t, err)
-	eth1ClientErroring1, err := testclients.NewErroring(ctx, 0.1, eth2Client)
+	eth1ClientErroring1, err := testclients.NewErroring(ctx, 0.1, consensusClient)
 	require.NoError(t, err)
-	eth1ClientErroring2, err := testclients.NewErroring(ctx, 0.1, eth2Client)
+	eth1ClientErroring2, err := testclients.NewErroring(ctx, 0.1, consensusClient)
 	require.NoError(t, err)
-	eth1ClientErroring3, err := testclients.NewErroring(ctx, 0.1, eth2Client)
+	eth1ClientErroring3, err := testclients.NewErroring(ctx, 0.1, consensusClient)
 	require.NoError(t, err)
 
 	s, err := multi.New(ctx,
 		multi.WithLogLevel(zerolog.Disabled),
-		multi.WithClients([]eth2client.Service{
+		multi.WithClients([]consensusclient.Service{
 			eth1ClientErroring1,
 			eth1ClientErroring2,
 			eth1ClientErroring3,
-			eth2Client,
+			consensusClient,
 		}),
 	)
 	require.NoError(t, err)
