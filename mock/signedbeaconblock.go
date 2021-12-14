@@ -16,15 +16,19 @@ package mock
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
-func (s *Service) SignedBeaconBlock(ctx context.Context, blockID string) (*spec.SignedBeaconBlock, error) {
-	return &spec.SignedBeaconBlock{
-		Message: &spec.BeaconBlock{
-			Body: &spec.BeaconBlockBody{
-				ETH1Data: &spec.ETH1Data{},
+func (s *Service) SignedBeaconBlock(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error) {
+	return &spec.VersionedSignedBeaconBlock{
+		Version: spec.DataVersionPhase0,
+		Phase0: &phase0.SignedBeaconBlock{
+			Message: &phase0.BeaconBlock{
+				Body: &phase0.BeaconBlockBody{
+					ETH1Data: &phase0.ETH1Data{},
+				},
 			},
 		},
 	}, nil

@@ -309,6 +309,18 @@ func (s *Erroring) BeaconCommittees(ctx context.Context, stateID string) ([]*api
 	return next.BeaconCommittees(ctx, stateID)
 }
 
+// BeaconCommitteesAtEpoch fetches all beacon committees for the given epoch at the given state.
+func (s *Erroring) BeaconCommitteesAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) ([]*api.BeaconCommittee, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(eth2client.BeaconCommitteesProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.BeaconCommitteesAtEpoch(ctx, stateID, epoch)
+}
+
 // BeaconBlockProposal fetches a proposed beacon block for signing.
 func (s *Erroring) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
 	if err := s.maybeError(ctx); err != nil {

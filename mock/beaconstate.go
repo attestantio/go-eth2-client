@@ -16,16 +16,20 @@ package mock
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // BeaconState fetches a beacon state given a state ID.
-func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.BeaconState, error) {
-	return &spec.BeaconState{
-		LatestBlockHeader:           &spec.BeaconBlockHeader{},
-		ETH1Data:                    &spec.ETH1Data{},
-		PreviousJustifiedCheckpoint: &spec.Checkpoint{},
-		CurrentJustifiedCheckpoint:  &spec.Checkpoint{},
-		FinalizedCheckpoint:         &spec.Checkpoint{},
+func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
+	return &spec.VersionedBeaconState{
+		Version: spec.DataVersionPhase0,
+		Phase0: &phase0.BeaconState{
+			LatestBlockHeader:           &phase0.BeaconBlockHeader{},
+			ETH1Data:                    &phase0.ETH1Data{},
+			PreviousJustifiedCheckpoint: &phase0.Checkpoint{},
+			CurrentJustifiedCheckpoint:  &phase0.Checkpoint{},
+			FinalizedCheckpoint:         &phase0.Checkpoint{},
+		},
 	}, nil
 }

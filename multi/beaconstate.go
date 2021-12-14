@@ -17,12 +17,12 @@ import (
 	"context"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec"
 )
 
 // BeaconState fetches a beacon state.
 // N.B if the requested beacon state is not available this will return nil without an error.
-func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.BeaconState, error) {
+func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
 		beaconState, err := client.(eth2client.BeaconStateProvider).BeaconState(ctx, stateID)
 		if err != nil {
@@ -36,5 +36,5 @@ func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.Beacon
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*spec.BeaconState), nil
+	return res.(*spec.VersionedBeaconState), nil
 }

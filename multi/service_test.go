@@ -35,7 +35,6 @@ func TestService(t *testing.T) {
 	require.NoError(t, err)
 	inactiveEth2Client1, err := mock.New(ctx)
 	require.NoError(t, err)
-	inactiveEth2Client1.IsSyncing = true
 	inactiveEth2Client1.SyncDistance = 10
 	tests := []struct {
 		name   string

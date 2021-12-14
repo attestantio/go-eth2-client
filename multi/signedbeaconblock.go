@@ -17,7 +17,7 @@ import (
 	"context"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec"
 )
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
@@ -25,7 +25,7 @@ import (
 func (s *Service) SignedBeaconBlock(ctx context.Context,
 	blockID string,
 ) (
-	*spec.SignedBeaconBlock,
+	*spec.VersionedSignedBeaconBlock,
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
@@ -41,5 +41,5 @@ func (s *Service) SignedBeaconBlock(ctx context.Context,
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*spec.SignedBeaconBlock), nil
+	return res.(*spec.VersionedSignedBeaconBlock), nil
 }

@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2020 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,10 +16,16 @@ package mock
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec"
+	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// SubmitBeaconBlock submits a beacon block.
-func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
-	return nil
+// BeaconCommitteesAtEpoch fetches all beacon committees for the given epoch at the given state.
+func (s *Service) BeaconCommitteesAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) ([]*api.BeaconCommittee, error) {
+	res := make([]*api.BeaconCommittee, 5)
+	for i := 0; i < 5; i++ {
+		res[i] = &api.BeaconCommittee{}
+	}
+
+	return res, nil
 }

@@ -17,16 +17,17 @@ import (
 	"context"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // BeaconBlockProposal fetches a proposed beacon block for signing.
 func (s *Service) BeaconBlockProposal(ctx context.Context,
-	slot spec.Slot,
-	randaoReveal spec.BLSSignature,
+	slot phase0.Slot,
+	randaoReveal phase0.BLSSignature,
 	graffiti []byte,
 ) (
-	*spec.BeaconBlock,
+	*spec.VersionedBeaconBlock,
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
@@ -42,5 +43,5 @@ func (s *Service) BeaconBlockProposal(ctx context.Context,
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*spec.BeaconBlock), nil
+	return res.(*spec.VersionedBeaconBlock), nil
 }
