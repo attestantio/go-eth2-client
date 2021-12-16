@@ -16,14 +16,14 @@ package multi
 import (
 	"context"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // Genesis provides the genesis for the chain.
 func (s *Service) Genesis(ctx context.Context) (*api.Genesis, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client eth2client.Service) (interface{}, error) {
-		genesis, err := client.(eth2client.GenesisProvider).Genesis(ctx)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		genesis, err := client.(consensusclient.GenesisProvider).Genesis(ctx)
 		if err != nil {
 			return nil, err
 		}
