@@ -78,8 +78,10 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		}
 		if ping(ctx, client) {
 			activeClients = append(activeClients, client)
+			setProviderActiveMetric(ctx, client.Address(), "active")
 		} else {
 			inactiveClients = append(inactiveClients, client)
+			setProviderActiveMetric(ctx, client.Address(), "inactive")
 		}
 	}
 	if len(activeClients) == 0 {

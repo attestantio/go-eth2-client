@@ -22,7 +22,7 @@ import (
 )
 
 var providersMetric *prometheus.GaugeVec
-var providerStateMetric *prometheus.GaugeVec
+var providerActiveMetric *prometheus.GaugeVec
 
 func registerMetrics(ctx context.Context, monitor metrics.Service) error {
 	if providersMetric != nil {
@@ -41,7 +41,7 @@ func registerMetrics(ctx context.Context, monitor metrics.Service) error {
 
 func registerPrometheusMetrics(ctx context.Context) error {
 	providersMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "ethclient",
+		Namespace: "consensusclient",
 		Subsystem: "multi",
 		Name:      "providers_total",
 		Help:      "Number of providers",
@@ -49,25 +49,25 @@ func registerPrometheusMetrics(ctx context.Context) error {
 	if err := prometheus.Register(providersMetric); err != nil {
 		return errors.Wrap(err, "failed to register providers_total")
 	}
-	providerStateMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "ethclient",
+	providerActiveMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "consensusclient",
 		Subsystem: "multi",
 		Name:      "provider_state",
 		Help:      "State of provider",
 	}, []string{"provider"})
-	if err := prometheus.Register(providerStateMetric); err != nil {
+	if err := prometheus.Register(providerActiveMetric); err != nil {
 		return errors.Wrap(err, "failed to register provider_state")
 	}
 
 	return nil
 }
 
-func setProviderStateMetric(ctx context.Context, provider string, state string) {
-	if providerStateMetric != nil {
+func setProviderActiveMetric(ctx context.Context, provider string, state string) {
+	if providerActiveMetric != nil {
 		if state == "active" {
-			providerStateMetric.WithLabelValues(provider).Set(1)
+			providerActiveMetric.WithLabelValues(provider).Set(1)
 		} else {
-			providerStateMetric.WithLabelValues(provider).Set(0)
+			providerActiveMetric.WithLabelValues(provider).Set(0)
 		}
 	}
 }

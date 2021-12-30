@@ -62,7 +62,7 @@ func (s *Service) deactivateClient(ctx context.Context, client consensusclient.S
 		if activeClient == client {
 			inactiveClients = append(inactiveClients, activeClient)
 			log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client deactivated")
-			setProviderStateMetric(ctx, client.Address(), "inactive")
+			setProviderActiveMetric(ctx, client.Address(), "inactive")
 		} else {
 			activeClients = append(activeClients, activeClient)
 		}
@@ -85,7 +85,7 @@ func (s *Service) activateClient(ctx context.Context, client consensusclient.Ser
 		if inactiveClient == client {
 			activeClients = append(activeClients, inactiveClient)
 			log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client activated")
-			setProviderStateMetric(ctx, client.Address(), "active")
+			setProviderActiveMetric(ctx, client.Address(), "active")
 		} else {
 			inactiveClients = append(inactiveClients, inactiveClient)
 		}
