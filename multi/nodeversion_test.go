@@ -50,7 +50,7 @@ func TestNodeVersion(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.NodeVersion(ctx)
+		res, err := multiClient.(consensusclient.NodeVersionProvider).NodeVersion(ctx)
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

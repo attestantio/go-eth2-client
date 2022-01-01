@@ -49,7 +49,7 @@ func TestClient(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 1024; i++ {
-		_, err := s.Genesis(ctx)
+		_, err := s.(consensusclient.GenesisProvider).Genesis(ctx)
 		require.NoError(t, err)
 	}
 }

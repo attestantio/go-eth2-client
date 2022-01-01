@@ -92,6 +92,7 @@ func TestInterfaces(t *testing.T) {
 	consensusclient2, err := mock.New(ctx)
 	require.NoError(t, err)
 	s, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
 		multi.WithClients([]client.Service{
 			consensusclient1,
 			consensusclient2,

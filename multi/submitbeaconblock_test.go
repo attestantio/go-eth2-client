@@ -51,7 +51,7 @@ func TestSubmitBeaconBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		err := multiClient.SubmitBeaconBlock(ctx, &spec.VersionedSignedBeaconBlock{})
+		err := multiClient.(consensusclient.BeaconBlockSubmitter).SubmitBeaconBlock(ctx, &spec.VersionedSignedBeaconBlock{})
 		require.NoError(t, err)
 	}
 	// At this point we expect mock 3 to be in active (unless probability hates us).

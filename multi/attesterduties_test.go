@@ -51,7 +51,7 @@ func TestAttesterDuties(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.AttesterDuties(ctx, 1, []phase0.ValidatorIndex{1, 2, 3})
+		res, err := multiClient.(consensusclient.AttesterDutiesProvider).AttesterDuties(ctx, 1, []phase0.ValidatorIndex{1, 2, 3})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

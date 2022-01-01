@@ -50,7 +50,7 @@ func TestSlotDuration(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.SlotDuration(ctx)
+		res, err := multiClient.(consensusclient.SlotDurationProvider).SlotDuration(ctx)
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

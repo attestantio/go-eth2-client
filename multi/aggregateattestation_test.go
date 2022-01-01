@@ -51,7 +51,7 @@ func TestAggregateAttestation(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.AggregateAttestation(ctx, 1, phase0.Root{})
+		res, err := multiClient.(consensusclient.AggregateAttestationProvider).AggregateAttestation(ctx, 1, phase0.Root{})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

@@ -51,7 +51,7 @@ func TestSubmitSyncCommitteeMessages(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		err := multiClient.SubmitSyncCommitteeMessages(ctx, []*altair.SyncCommitteeMessage{})
+		err := multiClient.(consensusclient.SyncCommitteeMessagesSubmitter).SubmitSyncCommitteeMessages(ctx, []*altair.SyncCommitteeMessage{})
 		require.NoError(t, err)
 	}
 	// At this point we expect mock 3 to be in active (unless probability hates us).

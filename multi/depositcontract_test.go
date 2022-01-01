@@ -50,7 +50,7 @@ func TestDepositContract(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.DepositContract(ctx)
+		res, err := multiClient.(consensusclient.DepositContractProvider).DepositContract(ctx)
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

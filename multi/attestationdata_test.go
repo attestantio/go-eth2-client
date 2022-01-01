@@ -50,7 +50,7 @@ func TestAttestationData(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.AttestationData(ctx, 1, 2)
+		res, err := multiClient.(consensusclient.AttestationDataProvider).AttestationData(ctx, 1, 2)
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

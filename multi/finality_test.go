@@ -50,7 +50,7 @@ func TestFinality(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.Finality(ctx, "10")
+		res, err := multiClient.(consensusclient.FinalityProvider).Finality(ctx, "10")
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

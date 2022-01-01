@@ -50,7 +50,7 @@ func TestSignedBeaconBlock(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.SignedBeaconBlock(ctx, "1")
+		res, err := multiClient.(consensusclient.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, "1")
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

@@ -51,7 +51,7 @@ func TestSubmitVoluntaryExit(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		err := multiClient.SubmitVoluntaryExit(ctx, &phase0.SignedVoluntaryExit{})
+		err := multiClient.(consensusclient.VoluntaryExitSubmitter).SubmitVoluntaryExit(ctx, &phase0.SignedVoluntaryExit{})
 		require.NoError(t, err)
 	}
 	// At this point we expect mock 3 to be in active (unless probability hates us).

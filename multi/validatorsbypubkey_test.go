@@ -51,7 +51,7 @@ func TestValidatorsByPubKey(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.ValidatorsByPubKey(ctx, "1", []phase0.BLSPubKey{})
+		res, err := multiClient.(consensusclient.ValidatorsProvider).ValidatorsByPubKey(ctx, "1", []phase0.BLSPubKey{})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

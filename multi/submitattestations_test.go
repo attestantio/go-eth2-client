@@ -51,7 +51,7 @@ func TestSubmitAttestations(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		err := multiClient.SubmitAttestations(ctx, []*phase0.Attestation{})
+		err := multiClient.(consensusclient.AttestationsSubmitter).SubmitAttestations(ctx, []*phase0.Attestation{})
 		require.NoError(t, err)
 	}
 	// At this point we expect mock 3 to be in active (unless probability hates us).

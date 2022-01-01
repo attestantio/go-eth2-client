@@ -50,7 +50,7 @@ func TestForkSchedule(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.ForkSchedule(ctx)
+		res, err := multiClient.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx)
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

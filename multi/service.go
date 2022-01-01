@@ -18,7 +18,7 @@ import (
 	"sync"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/auto"
+	"github.com/attestantio/go-eth2-client/http"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	zerologger "github.com/rs/zerolog/log"
@@ -38,7 +38,7 @@ var log zerolog.Logger
 // The endpoints are periodiclaly checked to see if they are active,
 // and requests will retry a different client if the currently active
 // client fails to respond.
-func New(ctx context.Context, params ...Parameter) (*Service, error) {
+func New(ctx context.Context, params ...Parameter) (consensusclient.Service, error) {
 	parameters, err := parseAndCheckParameters(params...)
 	if err != nil {
 		return nil, errors.Wrap(err, "problem with parameters")
@@ -67,10 +67,10 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 		}
 	}
 	for _, address := range parameters.addresses {
-		client, err := auto.New(ctx,
-			auto.WithLogLevel(parameters.logLevel),
-			auto.WithTimeout(parameters.timeout),
-			auto.WithAddress(address),
+		client, err := http.New(ctx,
+			http.WithLogLevel(parameters.logLevel),
+			http.WithTimeout(parameters.timeout),
+			http.WithAddress(address),
 		)
 		if err != nil {
 			log.Error().Str("provider", address).Msg("Provider not present; dropping from rotation")

@@ -50,7 +50,7 @@ func TestSlotsPerEpoch(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.SlotsPerEpoch(ctx)
+		res, err := multiClient.(consensusclient.SlotsPerEpochProvider).SlotsPerEpoch(ctx)
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

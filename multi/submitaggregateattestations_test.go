@@ -51,7 +51,7 @@ func TestSubmitAggregateAttestations(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		err := multiClient.SubmitAggregateAttestations(ctx, []*phase0.SignedAggregateAndProof{})
+		err := multiClient.(consensusclient.AggregateAttestationsSubmitter).SubmitAggregateAttestations(ctx, []*phase0.SignedAggregateAndProof{})
 		require.NoError(t, err)
 	}
 	// At this point we expect mock 3 to be in active (unless probability hates us).

@@ -53,7 +53,7 @@ func TestDomain(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.Domain(ctx, voluntaryExitDomain, 0)
+		res, err := multiClient.(consensusclient.DomainProvider).Domain(ctx, voluntaryExitDomain, 0)
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

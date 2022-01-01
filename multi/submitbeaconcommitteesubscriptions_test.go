@@ -51,7 +51,7 @@ func TestSubmitBeaconCommitteeSubscriptions(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		err := multiClient.SubmitBeaconCommitteeSubscriptions(ctx, []*api.BeaconCommitteeSubscription{})
+		err := multiClient.(consensusclient.BeaconCommitteeSubscriptionsSubmitter).SubmitBeaconCommitteeSubscriptions(ctx, []*api.BeaconCommitteeSubscription{})
 		require.NoError(t, err)
 	}
 	// At this point we expect mock 3 to be in active (unless probability hates us).

@@ -50,7 +50,7 @@ func TestBeaconBlockRoot(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.BeaconBlockRoot(ctx, "1")
+		res, err := multiClient.(consensusclient.BeaconBlockRootProvider).BeaconBlockRoot(ctx, "1")
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

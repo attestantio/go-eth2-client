@@ -49,10 +49,5 @@ func TestEvents(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	for i := 0; i < 128; i++ {
-		err := multiClient.Events(ctx, []string{}, nil)
-		require.NoError(t, err)
-	}
-	// At this point we expect mock 3 to be in active (unless probability hates us).
-	require.Equal(t, "mock 3", multiClient.Address())
+	require.NoError(t, multiClient.(consensusclient.EventsProvider).Events(ctx, []string{}, nil))
 }
