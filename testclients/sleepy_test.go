@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
@@ -37,7 +37,7 @@ func TestSleepyNew(t *testing.T) {
 		name     string
 		minSleep time.Duration
 		maxSleep time.Duration
-		next     eth2client.Service
+		next     consensusclient.Service
 		err      string
 	}{
 		{
@@ -94,7 +94,7 @@ func TestSleep(t *testing.T) {
 
 	for i := 0; i < 16; i++ {
 		started := time.Now()
-		_, err := s.(eth2client.GenesisProvider).Genesis(ctx)
+		_, err := s.(consensusclient.GenesisProvider).Genesis(ctx)
 		require.NoError(t, err)
 		duration := time.Since(started)
 		require.GreaterOrEqual(t, duration.Milliseconds(), minSleep.Milliseconds())

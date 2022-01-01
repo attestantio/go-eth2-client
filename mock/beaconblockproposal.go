@@ -16,12 +16,13 @@ package mock
 import (
 	"context"
 
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/prysmaticlabs/go-bitfield"
 )
 
 // BeaconBlockProposal fetches a proposed beacon block for signing.
-func (s *Service) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*phase0.BeaconBlock, error) {
+func (s *Service) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
 	// Graffiti should be 32 bytes.
 	fixedGraffiti := make([]byte, 32)
 	copy(fixedGraffiti, graffiti)
@@ -101,5 +102,10 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, ran
 		},
 	}
 
-	return block, nil
+	versionedBlock := &spec.VersionedBeaconBlock{
+		Version: spec.DataVersionPhase0,
+		Phase0:  block,
+	}
+
+	return versionedBlock, nil
 }

@@ -14,6 +14,7 @@
 package mock
 
 import (
+	"errors"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -21,6 +22,7 @@ import (
 
 type parameters struct {
 	logLevel zerolog.Level
+	name     string
 	timeout  time.Duration
 }
 
@@ -42,6 +44,13 @@ func WithLogLevel(logLevel zerolog.Level) Parameter {
 	})
 }
 
+// WithName sets the name for the module.
+func WithName(name string) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.name = name
+	})
+}
+
 // WithTimeout sets the maximum duration for all requests to the endpoint.
 func WithTimeout(timeout time.Duration) Parameter {
 	return parameterFunc(func(p *parameters) {
@@ -53,12 +62,17 @@ func WithTimeout(timeout time.Duration) Parameter {
 func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	parameters := parameters{
 		logLevel: zerolog.GlobalLevel(),
+		name:     "mock",
 		timeout:  2 * time.Second,
 	}
 	for _, p := range params {
 		if params != nil {
 			p.apply(&parameters)
 		}
+	}
+
+	if parameters.name == "" {
+		return nil, errors.New("name not specified")
 	}
 
 	return &parameters, nil

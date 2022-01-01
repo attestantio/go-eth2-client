@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -31,8 +32,8 @@ type stateRootDataJSON struct {
 	Root string `json:"root"`
 }
 
-// StateRoot provides the state root given a state ID.
-func (s *Service) StateRoot(ctx context.Context, stateID string) ([]byte, error) {
+// BeaconStateRoot fetches a beacon state root given a state ID.
+func (s *Service) BeaconStateRoot(ctx context.Context, stateID string) (*spec.Root, error) {
 	if stateID == "" {
 		return nil, errors.New("no state ID specified")
 	}
@@ -50,10 +51,12 @@ func (s *Service) StateRoot(ctx context.Context, stateID string) ([]byte, error)
 		return nil, errors.Wrap(err, "failed to parse state root")
 	}
 
-	stateRoot, err := hex.DecodeString(strings.TrimPrefix(stateRootJSON.Data.Root, "0x"))
+	bytes, err := hex.DecodeString(strings.TrimPrefix(stateRootJSON.Data.Root, "0x"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse state root value")
 	}
+	var stateRoot spec.Root
+	copy(stateRoot[:], bytes)
 
-	return stateRoot, nil
+	return &stateRoot, nil
 }
