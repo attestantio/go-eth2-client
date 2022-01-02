@@ -46,7 +46,7 @@ func (s *Service) Events(ctx context.Context,
 			inactiveClients = append(inactiveClients, client)
 			continue
 		}
-		log.Info().Str("address", ah.address).Strs("topics", topics).Msg("Events handler active")
+		log.Trace().Str("address", ah.address).Strs("topics", topics).Msg("Events handler active")
 	}
 
 	// Periodically try all inactive clients, quitting as they become active.
@@ -91,12 +91,12 @@ type activeHandler struct {
 }
 
 func (h *activeHandler) handleEvent(event *api.Event) {
-	log.Info().Str("address", h.address).Str("topic", event.Topic).Msg("Event received")
+	log.Trace().Str("address", h.address).Str("topic", event.Topic).Msg("Event received")
 	// We only forward events from the currently active provider.  If we did not do this then we could end up with
 	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
 	// block end up with an earlier block.
 	if h.s.Address() == h.address {
-		log.Info().Str("address", h.address).Str("topic", event.Topic).Msg("Forwarding due to primary active address")
+		log.Trace().Str("address", h.address).Str("topic", event.Topic).Msg("Forwarding due to primary active address")
 		h.handler(event)
 	}
 }
