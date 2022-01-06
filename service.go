@@ -233,7 +233,7 @@ type AttesterDutiesProvider interface {
 
 // SyncCommitteeDutiesProvider is the interface for providing sync committee duties.
 type SyncCommitteeDutiesProvider interface {
-	// SyncCommitteeDuties obtains attester duties.
+	// SyncCommitteeDuties obtains sync committee duties.
 	// If validatorIndicess is nil it will return all duties for the given epoch.
 	SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.SyncCommitteeDuty, error)
 }

@@ -20,15 +20,12 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// SyncCommitteeDuties obtains sync committee duties.
-// If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Service) SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.SyncCommitteeDuty, error) {
-	res := make([]*api.SyncCommitteeDuty, len(validatorIndices))
-	for i := range validatorIndices {
-		res[i] = &api.SyncCommitteeDuty{
-			ValidatorIndex: validatorIndices[i],
-		}
-	}
+// SyncCommittee fetches the sync committee for the given state.
+func (s *Service) SyncCommittee(ctx context.Context, stateID string) (*api.SyncCommittee, error) {
+	return &api.SyncCommittee{}, nil
+}
 
-	return res, nil
+// SyncCommitteeAtEpoch fetches the sync committee for the given epoch at the given state.
+func (s *Service) SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) (*api.SyncCommittee, error) {
+	return &api.SyncCommittee{}, nil
 }

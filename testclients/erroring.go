@@ -234,6 +234,18 @@ func (s *Erroring) SubmitAttestations(ctx context.Context, attestations []*phase
 	return next.SubmitAttestations(ctx, attestations)
 }
 
+// SubmitSyncCommitteeContributions submits sync committee contributions.
+func (s *Erroring) SubmitSyncCommitteeContributions(ctx context.Context, contributionAndProofs []*altair.SignedContributionAndProof) error {
+	if err := s.maybeError(ctx); err != nil {
+		return err
+	}
+	next, isNext := s.next.(consensusclient.SyncCommitteeContributionsSubmitter)
+	if !isNext {
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.SubmitSyncCommitteeContributions(ctx, contributionAndProofs)
+}
+
 // SubmitSyncCommitteeMessages submits sync committee messages.
 func (s *Erroring) SubmitSyncCommitteeMessages(ctx context.Context, messages []*altair.SyncCommitteeMessage) error {
 	if err := s.maybeError(ctx); err != nil {
@@ -452,7 +464,43 @@ func (s *Erroring) ProposerDuties(ctx context.Context, epoch phase0.Epoch, valid
 	return next.ProposerDuties(ctx, epoch, validatorIndices)
 }
 
-// SyncCommitteeDuties obtains attester duties.
+// SyncCommittee fetches the sync committee for the given state.
+func (s *Erroring) SyncCommittee(ctx context.Context, stateID string) (*api.SyncCommittee, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.SyncCommitteesProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.SyncCommittee(ctx, stateID)
+}
+
+// SyncCommitteeAtEpoch fetches the sync committee for the given epoch at the given state.
+func (s *Erroring) SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) (*api.SyncCommittee, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.SyncCommitteesProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.SyncCommitteeAtEpoch(ctx, stateID, epoch)
+}
+
+// SyncCommitteeContribution provides a sync committee contribution.
+func (s *Erroring) SyncCommitteeContribution(ctx context.Context, slot phase0.Slot, subcommitteeIndex uint64, beaconBlockRoot phase0.Root) (*altair.SyncCommitteeContribution, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.SyncCommitteeContributionProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.SyncCommitteeContribution(ctx, slot, subcommitteeIndex, beaconBlockRoot)
+}
+
+// SyncCommitteeDuties obtains sync committee duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
 func (s *Erroring) SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.SyncCommitteeDuty, error) {
 	if err := s.maybeError(ctx); err != nil {

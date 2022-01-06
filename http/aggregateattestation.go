@@ -42,6 +42,10 @@ func (s *Service) AggregateAttestation(ctx context.Context, slot phase0.Slot, at
 	if err := json.NewDecoder(respBodyReader).Decode(&aggregateAttestationDataJSON); err != nil {
 		return nil, errors.Wrap(err, "failed to parse aggregate attestation")
 	}
+	if aggregateAttestationDataJSON.Data == nil {
+		// Empty response is returned by some nodes if there is no matching aggregate.
+		return nil, nil
+	}
 
 	// Ensure the data returned to us is as expected given our input.
 	if aggregateAttestationDataJSON.Data.Data.Slot != slot {
