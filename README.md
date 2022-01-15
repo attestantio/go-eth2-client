@@ -83,6 +83,14 @@ func main() {
         fmt.Printf("Genesis time is %v\n", genesis.GenesisTime)
     }
 
+    // You can also access the struct directly if required.
+    httpClient := client.(*http.Service)
+    genesis, err := httpClient.Genesis(ctx)
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf("Genesis validators root is %#x\n", genesis.GenesisValidatorsRoot)
+
     // Cancelling the context passed to New() frees up resources held by the
     // client, closes connections, clears handlers, etc.
     cancel()
