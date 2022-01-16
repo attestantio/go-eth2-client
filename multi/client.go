@@ -61,12 +61,12 @@ func (s *Service) deactivateClient(ctx context.Context, client consensusclient.S
 	for _, activeClient := range s.activeClients {
 		if activeClient == client {
 			inactiveClients = append(inactiveClients, activeClient)
-			log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client deactivated")
 			setProviderActiveMetric(ctx, client.Address(), "inactive")
 		} else {
 			activeClients = append(activeClients, activeClient)
 		}
 	}
+	log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client deactivated")
 
 	s.activeClients = activeClients
 	setProvidersMetric(ctx, "active", len(s.activeClients))
@@ -84,12 +84,12 @@ func (s *Service) activateClient(ctx context.Context, client consensusclient.Ser
 	for _, inactiveClient := range s.inactiveClients {
 		if inactiveClient == client {
 			activeClients = append(activeClients, inactiveClient)
-			log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client activated")
 			setProviderActiveMetric(ctx, client.Address(), "active")
 		} else {
 			inactiveClients = append(inactiveClients, inactiveClient)
 		}
 	}
+	log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client activated")
 
 	s.activeClients = activeClients
 	setProvidersMetric(ctx, "active", len(s.activeClients))
