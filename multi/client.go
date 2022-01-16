@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -66,7 +66,9 @@ func (s *Service) deactivateClient(ctx context.Context, client consensusclient.S
 			activeClients = append(activeClients, activeClient)
 		}
 	}
-	log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client deactivated")
+	if len(inactiveClients) != len(s.inactiveClients) {
+		log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client deactivated")
+	}
 
 	s.activeClients = activeClients
 	setProvidersMetric(ctx, "active", len(s.activeClients))
@@ -89,7 +91,9 @@ func (s *Service) activateClient(ctx context.Context, client consensusclient.Ser
 			inactiveClients = append(inactiveClients, inactiveClient)
 		}
 	}
-	log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client activated")
+	if len(inactiveClients) != len(s.inactiveClients) {
+		log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client activated")
+	}
 
 	s.activeClients = activeClients
 	setProvidersMetric(ctx, "active", len(s.activeClients))
