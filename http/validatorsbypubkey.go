@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -35,9 +35,9 @@ type validatorsByPubKeyJSON struct {
 // with 500 bytes for this which results in us having space for 75 public keys.
 // That said, some nodes have their own built-in limits so use them where appropriate.
 var pubKeyChunkSizes = map[string]int{
-	"default":    30,
+	"default":    75,
 	"lighthouse": 75,
-	"nimbus":     30,
+	"nimbus":     75,
 	"prysm":      75,
 	"teku":       75,
 }

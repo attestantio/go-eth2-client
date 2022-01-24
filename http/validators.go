@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -32,12 +32,12 @@ type validatorsJSON struct {
 // A request should be no more than 8,000 bytes to work with all currently-supported clients.
 // An index has variable size, but assuming 7 characters, including the comma separator, is safe.
 // We also need to reserve space for the state ID and the endpoint itself, to be safe we go
-// with 500 bytes for this which results in us having comfortable space for 1,000 public keys.
+// with 500 bytes for this which results in us having comfortable space for 1,000 indices.
 // That said, some nodes have their own built-in limits so use them where appropriate.
 var indexChunkSizes = map[string]int{
-	"default":    30,
+	"default":    1000,
 	"lighthouse": 1000,
-	"nimbus":     30,
+	"nimbus":     1000,
 	"prysm":      1000,
 	"teku":       1000,
 }
