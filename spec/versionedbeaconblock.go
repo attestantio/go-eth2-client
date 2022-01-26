@@ -50,6 +50,24 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 	}
 }
 
+// Root returns the root of the beacon block.
+func (v *VersionedBeaconBlock) Root() (phase0.Root, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return phase0.Root{}, errors.New("no phase0 block")
+		}
+		return v.Phase0.HashTreeRoot()
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return phase0.Root{}, errors.New("no altair block")
+		}
+		return v.Altair.HashTreeRoot()
+	default:
+		return phase0.Root{}, errors.New("unknown version")
+	}
+}
+
 // BodyRoot returns the body root of the beacon block.
 func (v *VersionedBeaconBlock) BodyRoot() (phase0.Root, error) {
 	switch v.Version {
