@@ -62,3 +62,57 @@ func (v *VersionedSignedBeaconBlock) Attestations() ([]*phase0.Attestation, erro
 		return nil, errors.New("unknown version")
 	}
 }
+
+// BodyRoot returns the body root of the beacon block.
+func (v *VersionedSignedBeaconBlock) BodyRoot() (phase0.Root, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return phase0.Root{}, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.Body.HashTreeRoot()
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return phase0.Root{}, errors.New("no altair block")
+		}
+		return v.Altair.Message.Body.HashTreeRoot()
+	default:
+		return phase0.Root{}, errors.New("unknown version")
+	}
+}
+
+// ParentRoot returns the parent root of the beacon block.
+func (v *VersionedSignedBeaconBlock) ParentRoot() (phase0.Root, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return phase0.Root{}, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.ParentRoot, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return phase0.Root{}, errors.New("no altair block")
+		}
+		return v.Altair.Message.ParentRoot, nil
+	default:
+		return phase0.Root{}, errors.New("unknown version")
+	}
+}
+
+// StateRoot returns the state root of the beacon block.
+func (v *VersionedSignedBeaconBlock) StateRoot() (phase0.Root, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return phase0.Root{}, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.StateRoot, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return phase0.Root{}, errors.New("no altair block")
+		}
+		return v.Altair.Message.StateRoot, nil
+	default:
+		return phase0.Root{}, errors.New("unknown version")
+	}
+}
