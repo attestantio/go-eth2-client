@@ -31,11 +31,9 @@ go get github.com/attestantio/go-eth2-client
 `go-eth2-client` supports beacon nodes that comply with the standard beacon node API.  To date it has been tested against the following beacon nodes:
 
   - [Lighthouse](https://github.com/sigp/lighthouse/) minimum version 2.0.0
-  - [Nimbus](https://github.com/status-im/nimbus-eth2) minimum version ?
+  - [Nimbus](https://github.com/status-im/nimbus-eth2) minimum version 1.7.0
   - [Prysm](https://github.com/prysmaticlabs/prysm) minimum version ?
   - [Teku](https://github.com/consensys/teku) minimum version 21.9.2
-
-Note that the gRPC interface for Prysm is still available in the `grpc` module, however it does not support Altair and is considered deprecated.  The `http` module should be used instead.  gRPC is no longer selected as part of the `auto` module, which is also deprecated in favour of instantiating the `http` module directly.
 
 ## Usage
 

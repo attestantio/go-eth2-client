@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -30,27 +30,6 @@ type Service interface {
 
 	// Address returns the address of the client.
 	Address() string
-}
-
-// PrysmAttesterDutiesProvider is the interface for providing attester duties with prysm-specific parameters.
-type PrysmAttesterDutiesProvider interface {
-	// PrysmAttesterDuties obtains attester duties with prysm-specific parameters.
-	PrysmAttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorPubKeys []phase0.BLSPubKey) ([]*api.AttesterDuty, error)
-}
-
-// PrysmProposerDutiesProvider is the interface for providing proposer duties with prysm-specific parameters.
-type PrysmProposerDutiesProvider interface {
-	// PrysmProposerDuties obtains proposer duties with prysm-specific parameters.
-	PrysmProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorPubKeys []phase0.BLSPubKey) ([]*api.ProposerDuty, error)
-}
-
-// PrysmValidatorBalancesProvider is the interface for providing validator balances.
-type PrysmValidatorBalancesProvider interface {
-	// PrysmValidatorBalances provides the validator balances for a given state.
-	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-	// validatorIDs is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
-	// will be applied.
-	PrysmValidatorBalances(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]phase0.Gwei, error)
 }
 
 // EpochFromStateIDProvider is the interface for providing epochs from state IDs.
@@ -139,12 +118,6 @@ type DepositContractProvider interface {
 	DepositContract(ctx context.Context) (*api.DepositContract, error)
 }
 
-// PrysmAggregateAttestationProvider is the interface for providing aggregate attestations.
-type PrysmAggregateAttestationProvider interface {
-	// PrysmAggregateAttestation fetches the aggregate attestation given an attestation.
-	PrysmAggregateAttestation(ctx context.Context, attestation *phase0.Attestation, validatorPubKey phase0.BLSPubKey, slotSignature phase0.BLSSignature) (*phase0.Attestation, error)
-}
-
 // SignedBeaconBlockProvider is the interface for providing beacon blocks.
 type SignedBeaconBlockProvider interface {
 	// SignedBeaconBlock fetches a signed beacon block given a block ID.
@@ -167,24 +140,6 @@ type SyncCommitteesProvider interface {
 
 	// SyncCommitteeAtEpoch fetches the sync committee for the given epoch at the given state.
 	SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) (*api.SyncCommittee, error)
-}
-
-// ValidatorsWithoutBalanceProvider is the interface for providing validator information, minus the balance.
-type ValidatorsWithoutBalanceProvider interface {
-	// ValidatorsWithoutBalance provides the validators, with their status, for a given state.
-	// Balances are set to 0.
-	// This is a non-standard call, only to be used if fetching balances results in the call being too slow.
-	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-	// validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
-	// will be applied.
-	ValidatorsWithoutBalance(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error)
-
-	// ValidatorsWithoutBalanceByPubKey provides the validators, with their status, for a given state.
-	// This is a non-standard call, only to be used if fetching balances results in the call being too slow.
-	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-	// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
-	// supplied no filter will be applied.
-	ValidatorsWithoutBalanceByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error)
 }
 
 // EventHandlerFunc is the handler for events.
