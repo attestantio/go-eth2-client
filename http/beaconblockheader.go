@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -33,7 +33,7 @@ func (s *Service) BeaconBlockHeader(ctx context.Context, blockID string) (*api.B
 		return nil, errors.Wrap(err, "failed to request beacon block header")
 	}
 	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain beacon block header")
+		return nil, nil
 	}
 
 	var resp beaconBlockHeaderJSON
