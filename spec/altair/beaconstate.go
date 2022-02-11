@@ -42,8 +42,8 @@ type BeaconState struct {
 	Balances                    []uint64             `ssz-max:"1099511627776"`
 	RANDAOMixes                 [][]byte             `ssz-size:"65536,32"`
 	Slashings                   []uint64             `ssz-size:"8192"`
-	PreviousEpochAttestations   []ParticipationFlags `ssz-size:"1099511627776"`
-	CurrentEpochAttestations    []ParticipationFlags `ssz-size:"1099511627776"`
+	PreviousEpochParticipation  []ParticipationFlags `ssz-size:"1099511627776"`
+	CurrentEpochParticipation   []ParticipationFlags `ssz-size:"1099511627776"`
 	JustificationBits           bitfield.Bitvector4  `ssz-size:"1"`
 	PreviousJustifiedCheckpoint *phase0.Checkpoint
 	CurrentJustifiedCheckpoint  *phase0.Checkpoint
@@ -70,8 +70,8 @@ type beaconStateJSON struct {
 	Balances                    []string                  `json:"balances"`
 	RANDAOMixes                 []string                  `json:"randao_mixes"`
 	Slashings                   []string                  `json:"slashings"`
-	PreviousEpochAttestations   []string                  `json:"previous_epoch_attestations"`
-	CurrentEpochAttestations    []string                  `json:"current_epoch_attestations"`
+	PreviousEpochParticipation  []string                  `json:"previous_epoch_participation"`
+	CurrentEpochParticipation   []string                  `json:"current_epoch_participation"`
 	JustificationBits           string                    `json:"justification_bits"`
 	PreviousJustifiedCheckpoint *phase0.Checkpoint        `json:"previous_justified_checkpoint"`
 	CurrentJustifiedCheckpoint  *phase0.Checkpoint        `json:"current_justified_checkpoint"`
@@ -107,13 +107,13 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range s.Slashings {
 		slashings[i] = fmt.Sprintf("%d", s.Slashings[i])
 	}
-	previousEpochAttestations := make([]string, len(s.PreviousEpochAttestations))
-	for i := range s.PreviousEpochAttestations {
-		previousEpochAttestations[i] = fmt.Sprintf("%d", s.PreviousEpochAttestations[i])
+	PreviousEpochParticipation := make([]string, len(s.PreviousEpochParticipation))
+	for i := range s.PreviousEpochParticipation {
+		PreviousEpochParticipation[i] = fmt.Sprintf("%d", s.PreviousEpochParticipation[i])
 	}
-	currentEpochAttestations := make([]string, len(s.CurrentEpochAttestations))
-	for i := range s.CurrentEpochAttestations {
-		currentEpochAttestations[i] = fmt.Sprintf("%d", s.CurrentEpochAttestations[i])
+	CurrentEpochParticipation := make([]string, len(s.CurrentEpochParticipation))
+	for i := range s.CurrentEpochParticipation {
+		CurrentEpochParticipation[i] = fmt.Sprintf("%d", s.CurrentEpochParticipation[i])
 	}
 	inactivityScores := make([]string, len(s.InactivityScores))
 	for i := range s.InactivityScores {
@@ -135,8 +135,8 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 		Balances:                    balances,
 		RANDAOMixes:                 randaoMixes,
 		Slashings:                   slashings,
-		PreviousEpochAttestations:   previousEpochAttestations,
-		CurrentEpochAttestations:    currentEpochAttestations,
+		PreviousEpochParticipation:  PreviousEpochParticipation,
+		CurrentEpochParticipation:   CurrentEpochParticipation,
 		JustificationBits:           fmt.Sprintf("%#x", s.JustificationBits.Bytes()),
 		PreviousJustifiedCheckpoint: s.PreviousJustifiedCheckpoint,
 		CurrentJustifiedCheckpoint:  s.CurrentJustifiedCheckpoint,
@@ -270,27 +270,27 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for slashing %d", i))
 		}
 	}
-	s.PreviousEpochAttestations = make([]ParticipationFlags, len(beaconStateJSON.PreviousEpochAttestations))
-	for i := range beaconStateJSON.PreviousEpochAttestations {
-		if beaconStateJSON.PreviousEpochAttestations[i] == "" {
+	s.PreviousEpochParticipation = make([]ParticipationFlags, len(beaconStateJSON.PreviousEpochParticipation))
+	for i := range beaconStateJSON.PreviousEpochParticipation {
+		if beaconStateJSON.PreviousEpochParticipation[i] == "" {
 			return fmt.Errorf("previous epoch attestation %d missing", i)
 		}
-		previousEpochAttestation, err := strconv.ParseUint(beaconStateJSON.PreviousEpochAttestations[i], 10, 8)
+		previousEpochAttestation, err := strconv.ParseUint(beaconStateJSON.PreviousEpochParticipation[i], 10, 8)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for previous epoch attestation %d", i))
 		}
-		s.PreviousEpochAttestations[i] = ParticipationFlags(previousEpochAttestation)
+		s.PreviousEpochParticipation[i] = ParticipationFlags(previousEpochAttestation)
 	}
-	s.CurrentEpochAttestations = make([]ParticipationFlags, len(beaconStateJSON.CurrentEpochAttestations))
-	for i := range beaconStateJSON.CurrentEpochAttestations {
-		if beaconStateJSON.CurrentEpochAttestations[i] == "" {
+	s.CurrentEpochParticipation = make([]ParticipationFlags, len(beaconStateJSON.CurrentEpochParticipation))
+	for i := range beaconStateJSON.CurrentEpochParticipation {
+		if beaconStateJSON.CurrentEpochParticipation[i] == "" {
 			return fmt.Errorf("current epoch attestation %d missing", i)
 		}
-		currentEpochAttestation, err := strconv.ParseUint(beaconStateJSON.CurrentEpochAttestations[i], 10, 8)
+		currentEpochAttestation, err := strconv.ParseUint(beaconStateJSON.CurrentEpochParticipation[i], 10, 8)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for current epoch attestation %d", i))
 		}
-		s.CurrentEpochAttestations[i] = ParticipationFlags(currentEpochAttestation)
+		s.CurrentEpochParticipation[i] = ParticipationFlags(currentEpochAttestation)
 	}
 	if beaconStateJSON.JustificationBits == "" {
 		return errors.New("justification bits missing")
