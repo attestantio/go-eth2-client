@@ -315,7 +315,7 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 		if beaconStateJSON.InactivityScores[i] == "" {
 			return fmt.Errorf("inactivity score %d missing", i)
 		}
-		if s.InactivityScores[i], err = strconv.ParseUint(beaconStateJSON.InactivityScores[i], 10, 8); err != nil {
+		if s.InactivityScores[i], err = strconv.ParseUint(beaconStateJSON.InactivityScores[i], 10, 64); err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for inactivity score %d", i))
 		}
 	}
