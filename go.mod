@@ -7,7 +7,6 @@ require (
 	github.com/ferranbt/fastssz v0.0.0-20220103083642-bc5fefefa28b
 	github.com/goccy/go-yaml v1.9.5
 	github.com/golang/snappy v0.0.4
-	github.com/holiman/uint256 v1.2.0
 	github.com/klauspost/cpuid/v2 v2.0.11 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
