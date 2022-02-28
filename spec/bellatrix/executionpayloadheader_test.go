@@ -16,10 +16,14 @@ package bellatrix_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/goccy/go-yaml"
+	"github.com/golang/snappy"
 	require "github.com/stretchr/testify/require"
 	"gotest.tools/assert"
 )
@@ -217,7 +221,7 @@ func TestExecutionPayloadHeaderJSON(t *testing.T) {
 		{
 			name:  "TimetstampInvalid",
 			input: []byte(`{"parent_hash":"0x17f4eeae822cc81533016678413443b95e34517e67f12b4a3a92ff6b66f972ef","fee_recipient":"0x58e809c71e4885cb7b3f1d5c793ab04ed239d779","state_root":"0x3d6e230e6eceb8f3db582777b1500b8b31b9d268339e7b32bba8d6f1311b211d","receipts_root":"0xea760203509bdde017a506b12c825976d12b04db7bce9eca9e1ed007056a3f36","logs_bloom":"0x0c803a8d3c6642adee3185bd914c599317d96487831dabda82461f65700b2528781bdadf785664f9d8b11c4ee1139dfeb056125d2abd67e379cabc6d58f1c3ea304b97cf17fcd8a4c53f4dedeaa041acce062fc8fbc88ffc111577db4a936378749f2fd82b4bfcb880821dd5cbefee984bc1ad116096a64a44a2aac8a1791a7ad3a53d91c584ac69a8973daed6daee4432a198c9935fa0e5c2a4a6ca78b821a5b046e571a5c0961f469d40e429066755fec611afe25b560db07f989933556ce0cea4070ca47677b007b4b9857fc092625f82c84526737dc98e173e34fe6e4d0f1a400fd994298b7c2fa8187331c333c415f0499836ff0eed5c762bf570e67b44","prev_randao":"0x76ff751467270668df463600d26dba58297a986e649bac84ea856712d4779c00","block_number":"2983837628677007840","gas_limit":"6738255228996962210","gas_used":"5573520557770513197","timestamp":"true","extra_data":"0xc648","base_fee_per_gas":"88770397543877639215846057887940126737648744594802753726778414602657613619599","block_hash":"0x42c294e902bfc9884c1ce5fef156d4661bb8f0ff488bface37f18c3e7be64b0f","transactions_root":"0x8457d0eb7611a621e7a094059f087415ffcfc91714fc184a1f3c48db06b4d08b"}`),
-			err:   "invalid value for timestamp: strconv.ParseInt: parsing \"true\": invalid syntax",
+			err:   "invalid value for timestamp: strconv.ParseUint: parsing \"true\": invalid syntax",
 		},
 		{
 			name:  "ExtraDataMissing",
@@ -352,45 +356,44 @@ func TestExecutionPayloadHeaderYAML(t *testing.T) {
 	}
 }
 
-// Reinstantiate when SSZ encoding included.
-// func TestExecutionPayloadHeaderSpec(t *testing.T) {
-// 	if os.Getenv("ETH2_SPEC_TESTS_DIR") == "" {
-// 		t.Skip("ETH2_SPEC_TESTS_DIR not suppplied, not running spec tests")
-// 	}
-// 	baseDir := filepath.Join(os.Getenv("ETH2_SPEC_TESTS_DIR"), "tests", "mainnet", "bellatrix", "ssz_static", "ExecutionPayloadHeader", "ssz_random")
-// 	require.NoError(t, filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
-// 		if path == baseDir {
-// 			// Only interested in subdirectories.
-// 			return nil
-// 		}
-// 		require.NoError(t, err)
-// 		if info.IsDir() {
-// 			t.Run(info.Name(), func(t *testing.T) {
-// 				specYAML, err := os.ReadFile(filepath.Join(path, "value.yaml"))
-// 				require.NoError(t, err)
-// 				var res bellatrix.ExecutionPayloadHeader
-// 				require.NoError(t, yaml.Unmarshal(specYAML, &res))
-//
-// 				compressedSpecSSZ, err := os.ReadFile(filepath.Join(path, "serialized.ssz_snappy"))
-// 				require.NoError(t, err)
-// 				var specSSZ []byte
-// 				specSSZ, err = snappy.Decode(specSSZ, compressedSpecSSZ)
-// 				require.NoError(t, err)
-//
-// 				unmarshalled := &bellatrix.ExecutionPayloadHeader{}
-// 				require.NoError(t, unmarshalled.UnmarshalSSZ(specSSZ))
-//
-// 				ssz, err := res.MarshalSSZ()
-// 				require.NoError(t, err)
-// 				require.Equal(t, specSSZ, ssz)
-//
-// 				root, err := res.HashTreeRoot()
-// 				require.NoError(t, err)
-// 				rootsYAML, err := os.ReadFile(filepath.Join(path, "roots.yaml"))
-// 				require.NoError(t, err)
-// 				require.Equal(t, string(rootsYAML), fmt.Sprintf("{root: '%#x'}\n", root))
-// 			})
-// 		}
-// 		return nil
-// 	}))
-// }
+func TestExecutionPayloadHeaderSpec(t *testing.T) {
+	if os.Getenv("ETH2_SPEC_TESTS_DIR") == "" {
+		t.Skip("ETH2_SPEC_TESTS_DIR not suppplied, not running spec tests")
+	}
+	baseDir := filepath.Join(os.Getenv("ETH2_SPEC_TESTS_DIR"), "tests", "mainnet", "bellatrix", "ssz_static", "ExecutionPayloadHeader", "ssz_random")
+	require.NoError(t, filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
+		if path == baseDir {
+			// Only interested in subdirectories.
+			return nil
+		}
+		require.NoError(t, err)
+		if info.IsDir() {
+			t.Run(info.Name(), func(t *testing.T) {
+				specYAML, err := os.ReadFile(filepath.Join(path, "value.yaml"))
+				require.NoError(t, err)
+				var res bellatrix.ExecutionPayloadHeader
+				require.NoError(t, yaml.Unmarshal(specYAML, &res))
+
+				compressedSpecSSZ, err := os.ReadFile(filepath.Join(path, "serialized.ssz_snappy"))
+				require.NoError(t, err)
+				var specSSZ []byte
+				specSSZ, err = snappy.Decode(specSSZ, compressedSpecSSZ)
+				require.NoError(t, err)
+
+				unmarshalled := &bellatrix.ExecutionPayloadHeader{}
+				require.NoError(t, unmarshalled.UnmarshalSSZ(specSSZ))
+
+				ssz, err := res.MarshalSSZ()
+				require.NoError(t, err)
+				require.Equal(t, specSSZ, ssz)
+
+				root, err := res.HashTreeRoot()
+				require.NoError(t, err)
+				rootsYAML, err := os.ReadFile(filepath.Join(path, "roots.yaml"))
+				require.NoError(t, err)
+				require.Equal(t, string(rootsYAML), fmt.Sprintf("{root: '%#x'}\n", root))
+			})
+		}
+		return nil
+	}))
+}

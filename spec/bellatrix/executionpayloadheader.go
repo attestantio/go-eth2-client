@@ -21,30 +21,28 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
-	"github.com/holiman/uint256"
 	"github.com/pkg/errors"
 )
 
 // ExecutionPayloadHeader represents an execution layer payload header.
 type ExecutionPayloadHeader struct {
-	ParentHash       phase0.Hash32
-	FeeRecipient     ExecutionAddress
-	StateRoot        [32]byte  `ssz-size:"32"`
-	ReceiptsRoot     [32]byte  `ssz-size:"32"`
-	LogsBloom        [256]byte // BYTES_PER_LOGS_BLOOM from spec
-	PrevRandao       [32]byte  `ssz-size:"32"`
+	ParentHash       phase0.Hash32    `ssz-size:"32"`
+	FeeRecipient     ExecutionAddress `ssz-size:"20"`
+	StateRoot        [32]byte         `ssz-size:"32"`
+	ReceiptsRoot     [32]byte         `ssz-size:"32"`
+	LogsBloom        [256]byte        `ssz-size:"256"`
+	PrevRandao       [32]byte         `ssz-size:"32"`
 	BlockNumber      uint64
 	GasLimit         uint64
 	GasUsed          uint64
-	Timestamp        time.Time
-	ExtraData        []byte
-	BaseFeePerGas    *uint256.Int
-	BlockHash        phase0.Hash32
-	TransactionsRoot phase0.Root
+	Timestamp        uint64
+	ExtraData        []byte        `ssz-max:"32"`
+	BaseFeePerGas    [32]byte      `ssz-size:"32"`
+	BlockHash        phase0.Hash32 `ssz-size:"32"`
+	TransactionsRoot phase0.Root   `ssz-size:"32"`
 }
 
 // executionPayloadHeaderJSON is the spec representation of the struct.
@@ -85,6 +83,19 @@ type executionPayloadHeaderYAML struct {
 
 // MarshalJSON implements json.Marshaler.
 func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
+	extraData := "0x"
+	if len(e.ExtraData) > 0 {
+		extraData = fmt.Sprintf("%#x", e.ExtraData)
+	}
+
+	// base fee per gas is stored little-endian but we need it
+	// big-endian for big.Int.
+	var baseFeePerGasBEBytes [32]byte
+	for i := 0; i < 32; i++ {
+		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i]
+	}
+	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
+
 	return json.Marshal(&executionPayloadHeaderJSON{
 		ParentHash:       fmt.Sprintf("%#x", e.ParentHash),
 		FeeRecipient:     fmt.Sprintf("%#x", e.FeeRecipient),
@@ -95,9 +106,9 @@ func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
 		BlockNumber:      fmt.Sprintf("%d", e.BlockNumber),
 		GasLimit:         fmt.Sprintf("%d", e.GasLimit),
 		GasUsed:          fmt.Sprintf("%d", e.GasUsed),
-		Timestamp:        fmt.Sprintf("%d", e.Timestamp.Unix()),
-		ExtraData:        fmt.Sprintf("%#x", e.ExtraData),
-		BaseFeePerGas:    fmt.Sprintf("%d", e.BaseFeePerGas),
+		Timestamp:        fmt.Sprintf("%d", e.Timestamp),
+		ExtraData:        extraData,
+		BaseFeePerGas:    baseFeePerGas.String(),
 		BlockHash:        fmt.Sprintf("%#x", e.BlockHash),
 		TransactionsRoot: fmt.Sprintf("%#x", e.TransactionsRoot),
 	})
@@ -216,23 +227,29 @@ func (e *ExecutionPayloadHeader) unpack(data *executionPayloadHeaderJSON) error 
 	if data.Timestamp == "" {
 		return errors.New("timestamp missing")
 	}
-	tmp, err := strconv.ParseInt(data.Timestamp, 10, 64)
+	e.Timestamp, err = strconv.ParseUint(data.Timestamp, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for timestamp")
 	}
-	e.Timestamp = time.Unix(tmp, 0)
 
 	if data.ExtraData == "" {
 		return errors.New("extra data missing")
 	}
-	extraData, err := hex.DecodeString(strings.TrimPrefix(data.ExtraData, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for extra data")
+	switch {
+	case data.ExtraData == "0" || data.ExtraData == "0x":
+		e.ExtraData = make([]byte, 0)
+	case data.ExtraData == "0x0":
+		e.ExtraData = make([]byte, 1)
+	default:
+		extraData, err := hex.DecodeString(strings.TrimPrefix(data.ExtraData, "0x"))
+		if err != nil {
+			return errors.Wrap(err, "invalid value for extra data")
+		}
+		if len(extraData) > 32 {
+			return errors.New("incorrect length for extra data")
+		}
+		e.ExtraData = extraData
 	}
-	if len(extraData) > 32 {
-		return errors.New("incorrect length for extra data")
-	}
-	e.ExtraData = extraData
 
 	if data.BaseFeePerGas == "" {
 		return errors.New("base fee per gas missing")
@@ -242,11 +259,18 @@ func (e *ExecutionPayloadHeader) unpack(data *executionPayloadHeaderJSON) error 
 	if !ok {
 		return errors.New("invalid value for base fee per gas")
 	}
-	var overflow bool
-	e.BaseFeePerGas, overflow = uint256.FromBig(baseFeePerGas)
-	if overflow {
+	if baseFeePerGas.Cmp(maxBaseFeePerGas) > 0 {
 		return errors.New("overflow for base fee per gas")
 	}
+	// We need to store internally as little-endian, but big.Int uses
+	// big-endian so do it manually.
+	baseFeePerGasBEBytes := baseFeePerGas.Bytes()
+	var baseFeePerGasLEBytes [32]byte
+	baseFeeLen := len(baseFeePerGasBEBytes)
+	for i := 0; i < baseFeeLen; i++ {
+		baseFeePerGasLEBytes[i] = baseFeePerGasBEBytes[baseFeeLen-1-i]
+	}
+	copy(e.BaseFeePerGas[:], baseFeePerGasLEBytes[:])
 
 	if data.BlockHash == "" {
 		return errors.New("block hash missing")
@@ -277,6 +301,19 @@ func (e *ExecutionPayloadHeader) unpack(data *executionPayloadHeaderJSON) error 
 
 // MarshalYAML implements yaml.Marshaler.
 func (e *ExecutionPayloadHeader) MarshalYAML() ([]byte, error) {
+	extraData := "0x"
+	if len(e.ExtraData) > 0 {
+		extraData = fmt.Sprintf("%#x", e.ExtraData)
+	}
+
+	// base fee per gas is stored little-endian but we need it
+	// big-endian for big.Int.
+	var baseFeePerGasBEBytes [32]byte
+	for i := 0; i < 32; i++ {
+		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i]
+	}
+	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
+
 	yamlBytes, err := yaml.MarshalWithOptions(&executionPayloadHeaderYAML{
 		ParentHash:       fmt.Sprintf("%#x", e.ParentHash),
 		FeeRecipient:     fmt.Sprintf("%#x", e.FeeRecipient),
@@ -287,9 +324,9 @@ func (e *ExecutionPayloadHeader) MarshalYAML() ([]byte, error) {
 		BlockNumber:      e.BlockNumber,
 		GasLimit:         e.GasLimit,
 		GasUsed:          e.GasUsed,
-		Timestamp:        uint64(e.Timestamp.Unix()),
-		ExtraData:        fmt.Sprintf("%#x", e.ExtraData),
-		BaseFeePerGas:    fmt.Sprintf("%s", e.BaseFeePerGas),
+		Timestamp:        e.Timestamp,
+		ExtraData:        extraData,
+		BaseFeePerGas:    baseFeePerGas.String(),
 		BlockHash:        fmt.Sprintf("%#x", e.BlockHash),
 		TransactionsRoot: fmt.Sprintf("%#x", e.TransactionsRoot),
 	}, yaml.Flow(true))
