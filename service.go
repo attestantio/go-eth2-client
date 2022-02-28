@@ -295,6 +295,13 @@ type NodeSyncingProvider interface {
 	NodeSyncing(ctx context.Context) (*api.SyncState, error)
 }
 
+// ProposalPreparationSubmitter is the interface for submitting proposal preparation requests.
+type ProposalPreparationSubmitter interface {
+	// PrepareBeaconProposer provides the beacon node with information required if a proposal for the given validators
+	// shows up in the next epoch.
+	PrepareBeaconProposer(ctx context.Context, preparations []*api.ProposalPreparation) error
+}
+
 // ProposerDutiesProvider is the interface for providing proposer duties.
 type ProposerDutiesProvider interface {
 	// ProposerDuties obtains proposer duties for the given epoch.
