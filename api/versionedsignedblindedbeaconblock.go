@@ -104,3 +104,29 @@ func (v *VersionedSignedBlindedBeaconBlock) StateRoot() (phase0.Root, error) {
 		return phase0.Root{}, errors.New("unsupported version")
 	}
 }
+
+// AttesterSlashings returns the attester slashings of the beacon block.
+func (v *VersionedSignedBlindedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlashing, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.AttesterSlashings, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// ProposerSlashings returns the proposer slashings of the beacon block.
+func (v *VersionedSignedBlindedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlashing, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.ProposerSlashings, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
