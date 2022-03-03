@@ -134,3 +134,39 @@ func (v *VersionedSignedBeaconBlock) StateRoot() (phase0.Root, error) {
 		return phase0.Root{}, errors.New("unknown version")
 	}
 }
+
+// AttesterSlashings returns the attester slashings of the beacon block.
+func (v *VersionedSignedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlashing, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return nil, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.Body.AttesterSlashings, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return nil, errors.New("no altair block")
+		}
+		return v.Altair.Message.Body.AttesterSlashings, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// ProposerSlashings returns the proposer slashings of the beacon block.
+func (v *VersionedSignedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlashing, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return nil, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.Body.ProposerSlashings, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return nil, errors.New("no altair block")
+		}
+		return v.Altair.Message.Body.ProposerSlashings, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
