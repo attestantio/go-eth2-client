@@ -51,7 +51,7 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 		if v.Bellatrix == nil {
 			return 0, errors.New("no bellatrix block")
 		}
-		return v.Altair.Slot, nil
+		return v.Bellatrix.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}

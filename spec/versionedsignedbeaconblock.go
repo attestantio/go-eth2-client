@@ -180,6 +180,11 @@ func (v *VersionedSignedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlas
 			return nil, errors.New("no altair block")
 		}
 		return v.Altair.Message.Body.AttesterSlashings, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.AttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -198,6 +203,11 @@ func (v *VersionedSignedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlas
 			return nil, errors.New("no altair block")
 		}
 		return v.Altair.Message.Body.ProposerSlashings, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}

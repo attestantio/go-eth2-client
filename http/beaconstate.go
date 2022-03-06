@@ -22,6 +22,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -32,6 +33,10 @@ type phase0BeaconStateJSON struct {
 
 type altairBeaconStateJSON struct {
 	Data *altair.BeaconState `json:"data"`
+}
+
+type bellatrixBeaconStateJSON struct {
+	Data *bellatrix.BeaconState `json:"data"`
 }
 
 // BeaconState fetches a beacon state.
@@ -101,6 +106,12 @@ func (s *Service) beaconStateV2(ctx context.Context, stateID string) (*spec.Vers
 			return nil, errors.Wrap(err, "failed to parse altair beacon state")
 		}
 		res.Altair = resp.Data
+	case spec.DataVersionBellatrix:
+		var resp bellatrixBeaconStateJSON
+		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+			return nil, errors.Wrap(err, "failed to parse bellatrix beacon state")
+		}
+		res.Bellatrix = resp.Data
 	}
 
 	return res, nil

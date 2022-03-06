@@ -18,13 +18,13 @@ import (
 	"context"
 	"encoding/json"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/pkg/errors"
 )
 
-// PrepareBeaconProposer provides the beacon node with information required if a proposal for the given validators
+// SubmitProposalPreparations provides the beacon node with information required if a proposal for the given validators
 // shows up in the next epoch.
-func (s *Service) PrepareBeaconProposer(ctx context.Context, preparations []*api.ProposalPreparation) error {
+func (s *Service) SubmitProposalPreparations(ctx context.Context, preparations []*apiv1.ProposalPreparation) error {
 	var reqBodyReader bytes.Buffer
 	if err := json.NewEncoder(&reqBodyReader).Encode(preparations); err != nil {
 		return errors.Wrap(err, "failed to encode proposal preparations")

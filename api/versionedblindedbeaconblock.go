@@ -27,6 +27,11 @@ type VersionedBlindedBeaconBlock struct {
 	Bellatrix *apiv1.BlindedBeaconBlock
 }
 
+// IsEmpty returns true if there is no block.
+func (v *VersionedBlindedBeaconBlock) IsEmpty() bool {
+	return v.Bellatrix == nil
+}
+
 // Slot returns the slot of the beacon block.
 func (v *VersionedBlindedBeaconBlock) Slot() (phase0.Slot, error) {
 	switch v.Version {

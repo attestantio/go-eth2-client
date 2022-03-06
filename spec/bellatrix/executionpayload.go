@@ -260,12 +260,26 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 		return errors.New("base fee per gas missing")
 	}
 	baseFeePerGas := new(big.Int)
-	baseFeePerGas, ok := baseFeePerGas.SetString(data.BaseFeePerGas, 10)
-	if !ok {
-		return errors.New("invalid value for base fee per gas")
-	}
-	if baseFeePerGas.Cmp(maxBaseFeePerGas) > 0 {
-		return errors.New("overflow for base fee per gas")
+	if data.BaseFeePerGas == "0x0" {
+		baseFeePerGas.SetUint64(0)
+	} else {
+		base := 10
+		input := data.BaseFeePerGas
+		if strings.HasPrefix(data.BaseFeePerGas, "0x") {
+			base = 16
+			input = strings.TrimPrefix(input, "0x")
+			if len(data.BaseFeePerGas)%2 == 1 {
+				input = fmt.Sprintf("0%s", input)
+			}
+		}
+		var ok bool
+		baseFeePerGas, ok = baseFeePerGas.SetString(input, base)
+		if !ok {
+			return errors.New("invalid value for base fee per gas")
+		}
+		if baseFeePerGas.Cmp(maxBaseFeePerGas) > 0 {
+			return errors.New("overflow for base fee per gas")
+		}
 	}
 	// We need to store internally as little-endian, but big.Int uses
 	// big-endian so do it manually.
