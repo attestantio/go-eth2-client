@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,24 +18,25 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/pkg/errors"
 )
 
-// SubmitBeaconBlock submits a beacon block.
-func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
+// SubmitBlindedBeaconBlock submits a blinded beacon block.
+func (s *Service) SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error {
 	var specJSON []byte
 	var err error
 
 	if block == nil {
-		return errors.New("no block supplied")
+		return errors.New("no blinded block supplied")
 	}
 
 	switch block.Version {
 	case spec.DataVersionPhase0:
-		specJSON, err = json.Marshal(block.Phase0)
+		err = errors.New("blinded phase0 blocks not supported")
 	case spec.DataVersionAltair:
-		specJSON, err = json.Marshal(block.Altair)
+		err = errors.New("blinded altair blocks not supported")
 	case spec.DataVersionBellatrix:
 		specJSON, err = json.Marshal(block.Bellatrix)
 	default:
@@ -45,9 +46,9 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSi
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	_, err = s.post(ctx, "/eth/v1/beacon/blocks", bytes.NewBuffer(specJSON))
+	_, err = s.post(ctx, "/eth/v1/beacon/blinded_blocks", bytes.NewBuffer(specJSON))
 	if err != nil {
-		return errors.Wrap(err, "failed to submit beacon block")
+		return errors.Wrap(err, "failed to submit blinded beacon block")
 	}
 
 	return nil

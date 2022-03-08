@@ -36,3 +36,6 @@ const DomainTypeLength = 4
 
 // DomainLength is the number of bytes in a domain.
 const DomainLength = 32
+
+// Hash32Length is the number of bytes in a 32-byte hash.
+const Hash32Length = 32

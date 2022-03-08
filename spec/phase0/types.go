@@ -48,3 +48,6 @@ type BLSPubKey [48]byte
 
 // BLSSignature is a BLS12-381 signature.
 type BLSSignature [96]byte
+
+// Hash32 is a 32-byte hash.
+type Hash32 [32]byte

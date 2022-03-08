@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,19 +17,21 @@ import (
 	"errors"
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // VersionedBeaconBlock contains a versioned beacon block.
 type VersionedBeaconBlock struct {
-	Version DataVersion
-	Phase0  *phase0.BeaconBlock
-	Altair  *altair.BeaconBlock
+	Version   DataVersion
+	Phase0    *phase0.BeaconBlock
+	Altair    *altair.BeaconBlock
+	Bellatrix *bellatrix.BeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBeaconBlock) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil
 }
 
 // Slot returns the slot of the beacon block.
@@ -45,6 +47,11 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 			return 0, errors.New("no altair block")
 		}
 		return v.Altair.Slot, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return 0, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -63,6 +70,11 @@ func (v *VersionedBeaconBlock) Root() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no altair block")
 		}
 		return v.Altair.HashTreeRoot()
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return phase0.Root{}, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -81,6 +93,11 @@ func (v *VersionedBeaconBlock) BodyRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no altair block")
 		}
 		return v.Altair.Body.HashTreeRoot()
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return phase0.Root{}, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -99,6 +116,11 @@ func (v *VersionedBeaconBlock) ParentRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no altair block")
 		}
 		return v.Altair.ParentRoot, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return phase0.Root{}, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -117,6 +139,11 @@ func (v *VersionedBeaconBlock) StateRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no altair block")
 		}
 		return v.Altair.StateRoot, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return phase0.Root{}, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -135,6 +162,11 @@ func (v *VersionedBeaconBlock) Attestations() ([]*phase0.Attestation, error) {
 			return nil, errors.New("no altair block")
 		}
 		return v.Altair.Body.Attestations, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Body.Attestations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -153,6 +185,11 @@ func (v *VersionedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlashing, 
 			return nil, errors.New("no altair block")
 		}
 		return v.Altair.Body.AttesterSlashings, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Body.AttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -171,6 +208,11 @@ func (v *VersionedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlashing, 
 			return nil, errors.New("no altair block")
 		}
 		return v.Altair.Body.ProposerSlashings, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}

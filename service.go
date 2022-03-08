@@ -17,7 +17,8 @@ import (
 	"context"
 	"time"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	api "github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -115,7 +116,7 @@ type ValidatorIDProvider interface {
 // DepositContractProvider is the interface for providng details about the deposit contract.
 type DepositContractProvider interface {
 	// DepositContract provides details of the Ethereum 1 deposit contract for the chain.
-	DepositContract(ctx context.Context) (*api.DepositContract, error)
+	DepositContract(ctx context.Context) (*apiv1.DepositContract, error)
 }
 
 // SignedBeaconBlockProvider is the interface for providing beacon blocks.
@@ -127,23 +128,23 @@ type SignedBeaconBlockProvider interface {
 // BeaconCommitteesProvider is the interface for providing beacon committees.
 type BeaconCommitteesProvider interface {
 	// BeaconCommittees fetches all beacon committees for the epoch at the given state.
-	BeaconCommittees(ctx context.Context, stateID string) ([]*api.BeaconCommittee, error)
+	BeaconCommittees(ctx context.Context, stateID string) ([]*apiv1.BeaconCommittee, error)
 
 	// BeaconCommitteesAtEpoch fetches all beacon committees for the given epoch at the given state.
-	BeaconCommitteesAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) ([]*api.BeaconCommittee, error)
+	BeaconCommitteesAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) ([]*apiv1.BeaconCommittee, error)
 }
 
 // SyncCommitteesProvider is the interface for providing sync committees.
 type SyncCommitteesProvider interface {
 	// SyncCommittee fetches the sync committee for the given state.
-	SyncCommittee(ctx context.Context, stateID string) (*api.SyncCommittee, error)
+	SyncCommittee(ctx context.Context, stateID string) (*apiv1.SyncCommittee, error)
 
 	// SyncCommitteeAtEpoch fetches the sync committee for the given epoch at the given state.
-	SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) (*api.SyncCommittee, error)
+	SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) (*apiv1.SyncCommittee, error)
 }
 
 // EventHandlerFunc is the handler for events.
-type EventHandlerFunc func(*api.Event)
+type EventHandlerFunc func(*apiv1.Event)
 
 //
 // Standard API
@@ -183,14 +184,14 @@ type AttestationsSubmitter interface {
 type AttesterDutiesProvider interface {
 	// AttesterDuties obtains attester duties.
 	// If validatorIndicess is nil it will return all duties for the given epoch.
-	AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.AttesterDuty, error)
+	AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*apiv1.AttesterDuty, error)
 }
 
 // SyncCommitteeDutiesProvider is the interface for providing sync committee duties.
 type SyncCommitteeDutiesProvider interface {
 	// SyncCommitteeDuties obtains sync committee duties.
 	// If validatorIndicess is nil it will return all duties for the given epoch.
-	SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.SyncCommitteeDuty, error)
+	SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*apiv1.SyncCommitteeDuty, error)
 }
 
 // SyncCommitteeMessagesSubmitter is the interface for submitting sync committee messages.
@@ -202,7 +203,7 @@ type SyncCommitteeMessagesSubmitter interface {
 // SyncCommitteeSubscriptionsSubmitter is the interface for submitting sync committee subnet subscription requests.
 type SyncCommitteeSubscriptionsSubmitter interface {
 	// SubmitSyncCommitteeSubscriptions subscribes to sync committees.
-	SubmitSyncCommitteeSubscriptions(ctx context.Context, subscriptions []*api.SyncCommitteeSubscription) error
+	SubmitSyncCommitteeSubscriptions(ctx context.Context, subscriptions []*apiv1.SyncCommitteeSubscription) error
 }
 
 // SyncCommitteeContributionProvider is the interface for providing sync committee contributions.
@@ -220,7 +221,7 @@ type SyncCommitteeContributionsSubmitter interface {
 // BeaconBlockHeadersProvider is the interface for providing beacon block headers.
 type BeaconBlockHeadersProvider interface {
 	// BeaconBlockHeader provides the block header of a given block ID.
-	BeaconBlockHeader(ctx context.Context, blockID string) (*api.BeaconBlockHeader, error)
+	BeaconBlockHeader(ctx context.Context, blockID string) (*apiv1.BeaconBlockHeader, error)
 }
 
 // BeaconBlockProposalProvider is the interface for providing beacon block proposals.
@@ -244,7 +245,7 @@ type BeaconBlockSubmitter interface {
 // BeaconCommitteeSubscriptionsSubmitter is the interface for submitting beacon committee subnet subscription requests.
 type BeaconCommitteeSubscriptionsSubmitter interface {
 	// SubmitBeaconCommitteeSubscriptions subscribes to beacon committees.
-	SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*api.BeaconCommitteeSubscription) error
+	SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*apiv1.BeaconCommitteeSubscription) error
 }
 
 // BeaconStateProvider is the interface for providing beacon state.
@@ -259,6 +260,18 @@ type BeaconStateRootProvider interface {
 	BeaconStateRoot(ctx context.Context, stateID string) (*phase0.Root, error)
 }
 
+// BlindedBeaconBlockProposalProvider is the interface for providing blinded beacon block proposals.
+type BlindedBeaconBlockProposalProvider interface {
+	// BlindedBeaconBlockProposal fetches a blinded proposed beacon block for signing.
+	BlindedBeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*api.VersionedBlindedBeaconBlock, error)
+}
+
+// BlindedBeaconBlockSubmitter is the interface for submitting blinded beacon blocks.
+type BlindedBeaconBlockSubmitter interface {
+	// SubmitBlindedBeaconBlock submits a beacon block.
+	SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error
+}
+
 // EventsProvider is the interface for providing events.
 type EventsProvider interface {
 	// Events feeds requested events with the given topics to the supplied handler.
@@ -268,7 +281,7 @@ type EventsProvider interface {
 // FinalityProvider is the interface for providing finality information.
 type FinalityProvider interface {
 	// Finality provides the finality given a state ID.
-	Finality(ctx context.Context, stateID string) (*api.Finality, error)
+	Finality(ctx context.Context, stateID string) (*apiv1.Finality, error)
 }
 
 // ForkProvider is the interface for providing fork information.
@@ -286,20 +299,27 @@ type ForkScheduleProvider interface {
 // GenesisProvider is the interface for providing genesis information.
 type GenesisProvider interface {
 	// Genesis fetches genesis information for the chain.
-	Genesis(ctx context.Context) (*api.Genesis, error)
+	Genesis(ctx context.Context) (*apiv1.Genesis, error)
 }
 
 // NodeSyncingProvider is the interface for providing synchronization state.
 type NodeSyncingProvider interface {
 	// NodeSyncing provides the state of the node's synchronization with the chain.
-	NodeSyncing(ctx context.Context) (*api.SyncState, error)
+	NodeSyncing(ctx context.Context) (*apiv1.SyncState, error)
+}
+
+// ProposalPreparationsSubmitter is the interface for submitting proposal preparations.
+type ProposalPreparationsSubmitter interface {
+	// SubmitProposalPreparations provides the beacon node with information required if a proposal for the given validators
+	// shows up in the next epoch.
+	SubmitProposalPreparations(ctx context.Context, preparations []*apiv1.ProposalPreparation) error
 }
 
 // ProposerDutiesProvider is the interface for providing proposer duties.
 type ProposerDutiesProvider interface {
 	// ProposerDuties obtains proposer duties for the given epoch.
 	// If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
-	ProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.ProposerDuty, error)
+	ProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*apiv1.ProposerDuty, error)
 }
 
 // SpecProvider is the interface for providing spec data.
@@ -311,7 +331,7 @@ type SpecProvider interface {
 // SyncStateProvider is the interface for providing synchronization state.
 type SyncStateProvider interface {
 	// SyncState provides the state of the node's synchronization with the chain.
-	SyncState(ctx context.Context) (*api.SyncState, error)
+	SyncState(ctx context.Context) (*apiv1.SyncState, error)
 }
 
 // ValidatorBalancesProvider is the interface for providing validator balances.
@@ -329,13 +349,13 @@ type ValidatorsProvider interface {
 	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 	// validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
 	// will be applied.
-	Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error)
+	Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*apiv1.Validator, error)
 
 	// ValidatorsByPubKey provides the validators, with their balance and status, for a given state.
 	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 	// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
 	// supplied no filter will be applied.
-	ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error)
+	ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*apiv1.Validator, error)
 }
 
 // VoluntaryExitSubmitter is the interface for submitting voluntary exits.

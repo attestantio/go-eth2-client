@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -26,11 +26,14 @@ const (
 	DataVersionPhase0 DataVersion = iota
 	// DataVersionAltair is data applicable for the Altair release of the beacon chain.
 	DataVersionAltair
+	// DataVersionBellatrix is data applicable for the Bellatrix release of the beacon chain.
+	DataVersionBellatrix
 )
 
 var responseVersionStrings = [...]string{
 	"PHASE0",
 	"ALTAIR",
+	"BELLATRIX",
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -46,6 +49,8 @@ func (d *DataVersion) UnmarshalJSON(input []byte) error {
 		*d = DataVersionPhase0
 	case `"ALTAIR"`:
 		*d = DataVersionAltair
+	case `"BELLATRIX"`:
+		*d = DataVersionBellatrix
 	default:
 		err = fmt.Errorf("unrecognised response version %s", string(input))
 	}

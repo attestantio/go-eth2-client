@@ -126,6 +126,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.GenesisProvider)(nil), s)
 	assert.Implements(t, (*client.NodeSyncingProvider)(nil), s)
 	assert.Implements(t, (*client.ProposerDutiesProvider)(nil), s)
+	assert.Implements(t, (*client.ProposalPreparationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.SpecProvider)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteeContributionProvider)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteeContributionsSubmitter)(nil), s)
