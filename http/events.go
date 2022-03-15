@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -99,49 +99,56 @@ func (s *Service) handleEvent(msg *sse.Event, handler client.EventHandlerFunc) {
 		headEvent := &api.HeadEvent{}
 		err := json.Unmarshal(msg.Data, headEvent)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to parse head event")
+			log.Error().Err(err).Str("data", string(msg.Data)).Msg("Failed to parse head event")
+			return
 		}
 		event.Data = headEvent
 	case "block":
 		blockEvent := &api.BlockEvent{}
 		err := json.Unmarshal(msg.Data, blockEvent)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to parse block event")
+			log.Error().Err(err).Str("data", string(msg.Data)).Msg("Failed to parse block event")
+			return
 		}
 		event.Data = blockEvent
 	case "attestation":
 		attestation := &phase0.Attestation{}
 		err := json.Unmarshal(msg.Data, attestation)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to parse attestation")
+			log.Error().Err(err).Str("data", string(msg.Data)).Msg("Failed to parse attestation")
+			return
 		}
 		event.Data = attestation
 	case "voluntary_exit":
 		voluntaryExit := &phase0.SignedVoluntaryExit{}
 		err := json.Unmarshal(msg.Data, voluntaryExit)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to parse voluntary exit")
+			log.Error().Err(err).Str("data", string(msg.Data)).Msg("Failed to parse voluntary exit")
+			return
 		}
 		event.Data = voluntaryExit
 	case "finalized_checkpoint":
 		finalizedCheckpointEvent := &api.FinalizedCheckpointEvent{}
 		err := json.Unmarshal(msg.Data, finalizedCheckpointEvent)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to parse finalized checkpoint event")
+			log.Error().Err(err).Str("data", string(msg.Data)).Msg("Failed to parse finalized checkpoint event")
+			return
 		}
 		event.Data = finalizedCheckpointEvent
 	case "chain_reorg":
 		chainReorgEvent := &api.ChainReorgEvent{}
 		err := json.Unmarshal(msg.Data, chainReorgEvent)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to parse chain reorg event")
+			log.Error().Err(err).Str("data", string(msg.Data)).Msg("Failed to parse chain reorg event")
+			return
 		}
 		event.Data = chainReorgEvent
 	case "contribution_and_proof":
 		contributionAndProofEvent := &altair.SignedContributionAndProof{}
 		err := json.Unmarshal(msg.Data, contributionAndProofEvent)
 		if err != nil {
-			log.Error().Err(err).Msg("Failed to parse contribution and proof event")
+			log.Error().Err(err).Str("data", string(msg.Data)).Msg("Failed to parse contribution and proof event")
+			return
 		}
 		event.Data = contributionAndProofEvent
 	case "":
