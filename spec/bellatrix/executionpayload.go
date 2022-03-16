@@ -241,12 +241,14 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 		return errors.New("extra data missing")
 	}
 	switch {
-	case data.ExtraData == "0" || data.ExtraData == "0x":
+	case data.ExtraData == "0x":
 		e.ExtraData = make([]byte, 0)
-	case data.ExtraData == "0x0":
-		e.ExtraData = make([]byte, 1)
 	default:
-		extraData, err := hex.DecodeString(strings.TrimPrefix(data.ExtraData, "0x"))
+		data.ExtraData = strings.TrimPrefix(data.ExtraData, "0x")
+		if len(data.ExtraData)%2 == 1 {
+			data.ExtraData = fmt.Sprintf("0%s", data.ExtraData)
+		}
+		extraData, err := hex.DecodeString(data.ExtraData)
 		if err != nil {
 			return errors.Wrap(err, "invalid value for extra data")
 		}
@@ -260,26 +262,22 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 		return errors.New("base fee per gas missing")
 	}
 	baseFeePerGas := new(big.Int)
-	if data.BaseFeePerGas == "0x0" {
-		baseFeePerGas.SetUint64(0)
+	var ok bool
+	input := data.BaseFeePerGas
+	if strings.HasPrefix(data.BaseFeePerGas, "0x") {
+		input = strings.TrimPrefix(input, "0x")
+		if len(data.BaseFeePerGas)%2 == 1 {
+			input = fmt.Sprintf("0%s", input)
+		}
+		baseFeePerGas, ok = baseFeePerGas.SetString(input, 16)
 	} else {
-		base := 10
-		input := data.BaseFeePerGas
-		if strings.HasPrefix(data.BaseFeePerGas, "0x") {
-			base = 16
-			input = strings.TrimPrefix(input, "0x")
-			if len(data.BaseFeePerGas)%2 == 1 {
-				input = fmt.Sprintf("0%s", input)
-			}
-		}
-		var ok bool
-		baseFeePerGas, ok = baseFeePerGas.SetString(input, base)
-		if !ok {
-			return errors.New("invalid value for base fee per gas")
-		}
-		if baseFeePerGas.Cmp(maxBaseFeePerGas) > 0 {
-			return errors.New("overflow for base fee per gas")
-		}
+		baseFeePerGas, ok = baseFeePerGas.SetString(input, 10)
+	}
+	if !ok {
+		return errors.New("invalid value for base fee per gas")
+	}
+	if baseFeePerGas.Cmp(maxBaseFeePerGas) > 0 {
+		return errors.New("overflow for base fee per gas")
 	}
 	// We need to store internally as little-endian, but big.Int uses
 	// big-endian so do it manually.
