@@ -26,21 +26,24 @@ import (
 
 // BlockEvent is the data for the block event.
 type BlockEvent struct {
-	Slot  phase0.Slot
-	Block phase0.Root
+	Slot                phase0.Slot
+	Block               phase0.Root
+	ExecutionOptimistic bool
 }
 
 // blockEventJSON is the spec representation of the struct.
 type blockEventJSON struct {
-	Slot  string `json:"slot"`
-	Block string `json:"block"`
+	Slot                string `json:"slot"`
+	Block               string `json:"block"`
+	ExecutionOptimistic bool   `json:"execution_optimistic"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (e *BlockEvent) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&blockEventJSON{
-		Slot:  fmt.Sprintf("%d", e.Slot),
-		Block: fmt.Sprintf("%#x", e.Block),
+		Slot:                fmt.Sprintf("%d", e.Slot),
+		Block:               fmt.Sprintf("%#x", e.Block),
+		ExecutionOptimistic: e.ExecutionOptimistic,
 	})
 }
 
@@ -71,6 +74,7 @@ func (e *BlockEvent) UnmarshalJSON(input []byte) error {
 		return fmt.Errorf("incorrect length %d for block", len(block))
 	}
 	copy(e.Block[:], block)
+	e.ExecutionOptimistic = blockEventJSON.ExecutionOptimistic
 
 	return nil
 }

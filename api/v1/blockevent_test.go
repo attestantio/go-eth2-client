@@ -39,47 +39,56 @@ func TestBlockEventJSON(t *testing.T) {
 		},
 		{
 			name:  "SlotMissing",
-			input: []byte(`{"block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028"}`),
+			input: []byte(`{"block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","execution_optimistic":false}`),
 			err:   "slot missing",
 		},
 		{
 			name:  "SlotWrongType",
-			input: []byte(`{"slot":true,"block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028"}`),
+			input: []byte(`{"slot":true,"block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","execution_optimistic":false}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field blockEventJSON.slot of type string",
 		},
 		{
 			name:  "SlotInvalid",
-			input: []byte(`{"slot":"-1","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028"}`),
+			input: []byte(`{"slot":"-1","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","execution_optimistic":false}`),
 			err:   "invalid value for slot: strconv.ParseUint: parsing \"-1\": invalid syntax",
 		},
 		{
 			name:  "BlockMissing",
-			input: []byte(`{"slot":"525277"}`),
+			input: []byte(`{"slot":"525277","execution_optimistic":false}`),
 			err:   "block missing",
 		},
 		{
 			name:  "BlockWrongType",
-			input: []byte(`{"slot":"525277","block":true}`),
+			input: []byte(`{"slot":"525277","block":true,"execution_optimistic":false}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field blockEventJSON.block of type string",
 		},
 		{
 			name:  "BlockInvalid",
-			input: []byte(`{"slot":"525277","block":"invalid"}`),
+			input: []byte(`{"slot":"525277","block":"invalid","execution_optimistic":false}`),
 			err:   "invalid value for block: encoding/hex: invalid byte: U+0069 'i'",
 		},
 		{
 			name:  "BlockShort",
-			input: []byte(`{"slot":"525277","block":"0xe3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028"}`),
+			input: []byte(`{"slot":"525277","block":"0xe3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","execution_optimistic":false}`),
 			err:   "incorrect length 31 for block",
 		},
 		{
 			name:  "BlockLong",
-			input: []byte(`{"slot":"525277","block":"0x9999e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028"}`),
+			input: []byte(`{"slot":"525277","block":"0x9999e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","execution_optimistic":false}`),
 			err:   "incorrect length 33 for block",
 		},
 		{
+			name:  "OptimisticWrongType",
+			input: []byte(`{"slot":"525277","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","execution_optimistic":"false"}`),
+			err:   "invalid JSON: json: cannot unmarshal string into Go struct field blockEventJSON.execution_optimistic of type bool",
+		},
+		{
 			name:  "Good",
-			input: []byte(`{"slot":"525277","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028"}`),
+			input: []byte(`{"slot":"525277","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","execution_optimistic":false}`),
+		},
+		{
+			name:  "Optimistic",
+			input: []byte(`{"slot":"525277","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","execution_optimistic":true}`),
 		},
 	}
 
