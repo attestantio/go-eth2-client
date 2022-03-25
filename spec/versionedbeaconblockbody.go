@@ -26,3 +26,26 @@ type VersionedBeaconBlockBody struct {
 	Altair    *altair.BeaconBlockBody
 	Bellatrix *bellatrix.BeaconBlockBody
 }
+
+// String returns a string version of the structure.
+func (v *VersionedBeaconBlockBody) String() string {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return ""
+		}
+		return v.Phase0.String()
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return ""
+		}
+		return v.Altair.String()
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return ""
+		}
+		return v.Bellatrix.String()
+	default:
+		return "unknown version"
+	}
+}

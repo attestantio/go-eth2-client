@@ -212,3 +212,26 @@ func (v *VersionedSignedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlas
 		return nil, errors.New("unknown version")
 	}
 }
+
+// String returns a string version of the structure.
+func (v *VersionedSignedBeaconBlock) String() string {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return ""
+		}
+		return v.Phase0.String()
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return ""
+		}
+		return v.Altair.String()
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return ""
+		}
+		return v.Bellatrix.String()
+	default:
+		return "unknown version"
+	}
+}
