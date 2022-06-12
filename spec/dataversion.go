@@ -59,5 +59,8 @@ func (d *DataVersion) UnmarshalJSON(input []byte) error {
 
 // String returns a string representation of the
 func (d DataVersion) String() string {
+	if int(d) >= len(responseVersionStrings) {
+		return "unknown"
+	}
 	return responseVersionStrings[d]
 }
