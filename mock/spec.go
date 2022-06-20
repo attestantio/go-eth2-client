@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,9 +15,14 @@ package mock
 
 import (
 	"context"
+	"time"
 )
 
 // Spec provides the spec information of the chain.
+// This returns various useful values.
 func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
-	return map[string]interface{}{}, nil
+	return map[string]interface{}{
+		"SECONDS_PER_SLOT": 12 * time.Second,
+		"SLOTS_PER_EPOCH":  uint64(32),
+	}, nil
 }
