@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,7 +21,8 @@ import (
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -234,6 +235,18 @@ func (s *Erroring) SubmitAttestations(ctx context.Context, attestations []*phase
 	return next.SubmitAttestations(ctx, attestations)
 }
 
+// SubmitProposalPreparations submits proposal preparations.
+func (s *Erroring) SubmitProposalPreparations(ctx context.Context, preparations []*apiv1.ProposalPreparation) error {
+	if err := s.maybeError(ctx); err != nil {
+		return err
+	}
+	next, isNext := s.next.(consensusclient.ProposalPreparationsSubmitter)
+	if !isNext {
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.SubmitProposalPreparations(ctx, preparations)
+}
+
 // SubmitSyncCommitteeContributions submits sync committee contributions.
 func (s *Erroring) SubmitSyncCommitteeContributions(ctx context.Context, contributionAndProofs []*altair.SignedContributionAndProof) error {
 	if err := s.maybeError(ctx); err != nil {
@@ -260,7 +273,7 @@ func (s *Erroring) SubmitSyncCommitteeMessages(ctx context.Context, messages []*
 
 // AttesterDuties obtains attester duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Erroring) AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.AttesterDuty, error) {
+func (s *Erroring) AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*apiv1.AttesterDuty, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -272,7 +285,7 @@ func (s *Erroring) AttesterDuties(ctx context.Context, epoch phase0.Epoch, valid
 }
 
 // BeaconBlockHeader provides the block header of a given block ID.
-func (s *Erroring) BeaconBlockHeader(ctx context.Context, blockID string) (*api.BeaconBlockHeader, error) {
+func (s *Erroring) BeaconBlockHeader(ctx context.Context, blockID string) (*apiv1.BeaconBlockHeader, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -296,7 +309,7 @@ func (s *Erroring) BeaconBlockRoot(ctx context.Context, blockID string) (*phase0
 }
 
 // BeaconCommittees fetches all beacon committees for the epoch at the given state.
-func (s *Erroring) BeaconCommittees(ctx context.Context, stateID string) ([]*api.BeaconCommittee, error) {
+func (s *Erroring) BeaconCommittees(ctx context.Context, stateID string) ([]*apiv1.BeaconCommittee, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -308,7 +321,7 @@ func (s *Erroring) BeaconCommittees(ctx context.Context, stateID string) ([]*api
 }
 
 // BeaconCommitteesAtEpoch fetches all beacon committees for the given epoch at the given state.
-func (s *Erroring) BeaconCommitteesAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) ([]*api.BeaconCommittee, error) {
+func (s *Erroring) BeaconCommitteesAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) ([]*apiv1.BeaconCommittee, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -344,7 +357,7 @@ func (s *Erroring) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedS
 }
 
 // SubmitBeaconCommitteeSubscriptions subscribes to beacon committees.
-func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*api.BeaconCommitteeSubscription) error {
+func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*apiv1.BeaconCommitteeSubscription) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -355,8 +368,20 @@ func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subsc
 	return next.SubmitBeaconCommitteeSubscriptions(ctx, subscriptions)
 }
 
+// SubmitBlindedBeaconBlock submits a blinded beacon block.
+func (s *Erroring) SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error {
+	if err := s.maybeError(ctx); err != nil {
+		return err
+	}
+	next, isNext := s.next.(consensusclient.BlindedBeaconBlockSubmitter)
+	if !isNext {
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.SubmitBlindedBeaconBlock(ctx, block)
+}
+
 // SubmitSyncCommitteeSubscriptions subscribes to sync committees.
-func (s *Erroring) SubmitSyncCommitteeSubscriptions(ctx context.Context, subscriptions []*api.SyncCommitteeSubscription) error {
+func (s *Erroring) SubmitSyncCommitteeSubscriptions(ctx context.Context, subscriptions []*apiv1.SyncCommitteeSubscription) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -392,7 +417,7 @@ func (s *Erroring) Events(ctx context.Context, topics []string, handler consensu
 }
 
 // Finality provides the finality given a state ID.
-func (s *Erroring) Finality(ctx context.Context, stateID string) (*api.Finality, error) {
+func (s *Erroring) Finality(ctx context.Context, stateID string) (*apiv1.Finality, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -428,7 +453,7 @@ func (s *Erroring) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
 }
 
 // Genesis fetches genesis information for the chain.
-func (s *Erroring) Genesis(ctx context.Context) (*api.Genesis, error) {
+func (s *Erroring) Genesis(ctx context.Context) (*apiv1.Genesis, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -440,7 +465,7 @@ func (s *Erroring) Genesis(ctx context.Context) (*api.Genesis, error) {
 }
 
 // NodeSyncing provides the state of the node's synchronization with the chain.
-func (s *Erroring) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
+func (s *Erroring) NodeSyncing(ctx context.Context) (*apiv1.SyncState, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -453,7 +478,7 @@ func (s *Erroring) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
 
 // ProposerDuties obtains proposer duties for the given epoch.
 // If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
-func (s *Erroring) ProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.ProposerDuty, error) {
+func (s *Erroring) ProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*apiv1.ProposerDuty, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -465,7 +490,7 @@ func (s *Erroring) ProposerDuties(ctx context.Context, epoch phase0.Epoch, valid
 }
 
 // SyncCommittee fetches the sync committee for the given state.
-func (s *Erroring) SyncCommittee(ctx context.Context, stateID string) (*api.SyncCommittee, error) {
+func (s *Erroring) SyncCommittee(ctx context.Context, stateID string) (*apiv1.SyncCommittee, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -477,7 +502,7 @@ func (s *Erroring) SyncCommittee(ctx context.Context, stateID string) (*api.Sync
 }
 
 // SyncCommitteeAtEpoch fetches the sync committee for the given epoch at the given state.
-func (s *Erroring) SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) (*api.SyncCommittee, error) {
+func (s *Erroring) SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) (*apiv1.SyncCommittee, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -502,7 +527,7 @@ func (s *Erroring) SyncCommitteeContribution(ctx context.Context, slot phase0.Sl
 
 // SyncCommitteeDuties obtains sync committee duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Erroring) SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.SyncCommitteeDuty, error) {
+func (s *Erroring) SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*apiv1.SyncCommitteeDuty, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -544,7 +569,7 @@ func (s *Erroring) ValidatorBalances(ctx context.Context, stateID string, valida
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
 // will be applied.
-func (s *Erroring) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error) {
+func (s *Erroring) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -559,7 +584,7 @@ func (s *Erroring) Validators(ctx context.Context, stateID string, validatorIndi
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
 // supplied no filter will be applied.
-func (s *Erroring) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error) {
+func (s *Erroring) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -607,7 +632,7 @@ func (s *Erroring) GenesisTime(ctx context.Context) (time.Time, error) {
 }
 
 // DepositContract provides details of the Ethereum 1 deposit contract for the chain.
-func (s *Erroring) DepositContract(ctx context.Context) (*api.DepositContract, error) {
+func (s *Erroring) DepositContract(ctx context.Context) (*apiv1.DepositContract, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}

@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,7 +21,8 @@ import (
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
@@ -208,7 +209,7 @@ func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*phase0.
 
 // AttesterDuties obtains attester duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Sleepy) AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.AttesterDuty, error) {
+func (s *Sleepy) AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*apiv1.AttesterDuty, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.AttesterDutiesProvider)
 	if !isNext {
@@ -218,7 +219,7 @@ func (s *Sleepy) AttesterDuties(ctx context.Context, epoch phase0.Epoch, validat
 }
 
 // BeaconBlockHeader provides the block header of a given block ID.
-func (s *Sleepy) BeaconBlockHeader(ctx context.Context, blockID string) (*api.BeaconBlockHeader, error) {
+func (s *Sleepy) BeaconBlockHeader(ctx context.Context, blockID string) (*apiv1.BeaconBlockHeader, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.BeaconBlockHeadersProvider)
 	if !isNext {
@@ -248,13 +249,33 @@ func (s *Sleepy) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSig
 }
 
 // SubmitBeaconCommitteeSubscriptions subscribes to beacon committees.
-func (s *Sleepy) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*api.BeaconCommitteeSubscription) error {
+func (s *Sleepy) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*apiv1.BeaconCommitteeSubscription) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.BeaconCommitteeSubscriptionsSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
 	return next.SubmitBeaconCommitteeSubscriptions(ctx, subscriptions)
+}
+
+// SubmitProposalPreparations submits proposal preparations.
+func (s *Sleepy) SubmitProposalPreparations(ctx context.Context, preparations []*apiv1.ProposalPreparation) error {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.ProposalPreparationsSubmitter)
+	if !isNext {
+		return errors.New("next does not support this call")
+	}
+	return next.SubmitProposalPreparations(ctx, preparations)
+}
+
+// SubmitBlindedBeaconBlock submits a beacon block.
+func (s *Sleepy) SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.BlindedBeaconBlockSubmitter)
+	if !isNext {
+		return errors.New("next does not support this call")
+	}
+	return next.SubmitBlindedBeaconBlock(ctx, block)
 }
 
 // BeaconState fetches a beacon state.
@@ -278,7 +299,7 @@ func (s *Sleepy) Events(ctx context.Context, topics []string, handler consensusc
 }
 
 // Finality provides the finality given a state ID.
-func (s *Sleepy) Finality(ctx context.Context, stateID string) (*api.Finality, error) {
+func (s *Sleepy) Finality(ctx context.Context, stateID string) (*apiv1.Finality, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.FinalityProvider)
 	if !isNext {
@@ -308,7 +329,7 @@ func (s *Sleepy) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
 }
 
 // Genesis fetches genesis information for the chain.
-func (s *Sleepy) Genesis(ctx context.Context) (*api.Genesis, error) {
+func (s *Sleepy) Genesis(ctx context.Context) (*apiv1.Genesis, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.GenesisProvider)
 	if !isNext {
@@ -318,7 +339,7 @@ func (s *Sleepy) Genesis(ctx context.Context) (*api.Genesis, error) {
 }
 
 // NodeSyncing provides the state of the node's synchronization with the chain.
-func (s *Sleepy) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
+func (s *Sleepy) NodeSyncing(ctx context.Context) (*apiv1.SyncState, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.NodeSyncingProvider)
 	if !isNext {
@@ -329,7 +350,7 @@ func (s *Sleepy) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
 
 // ProposerDuties obtains proposer duties for the given epoch.
 // If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
-func (s *Sleepy) ProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.ProposerDuty, error) {
+func (s *Sleepy) ProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*apiv1.ProposerDuty, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ProposerDutiesProvider)
 	if !isNext {
@@ -365,7 +386,7 @@ func (s *Sleepy) ValidatorBalances(ctx context.Context, stateID string, validato
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
 // will be applied.
-func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error) {
+func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ValidatorsProvider)
 	if !isNext {
@@ -378,7 +399,7 @@ func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndice
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
 // supplied no filter will be applied.
-func (s *Sleepy) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error) {
+func (s *Sleepy) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ValidatorsProvider)
 	if !isNext {
