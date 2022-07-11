@@ -379,3 +379,9 @@ type GenesisTimeProvider interface {
 	// GenesisTime provides the genesis time of the chain.
 	GenesisTime(ctx context.Context) (time.Time, error)
 }
+
+// NodeClientProvider provides the client for the node.
+type NodeClientProvider interface {
+	// NodeClient provides the client for the node.
+	NodeClient(ctx context.Context) (string, error)
+}
