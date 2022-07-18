@@ -37,13 +37,13 @@ func TestValidatorRegistrationJSON(t *testing.T) {
 		{
 			name:  "JSONBad",
 			input: []byte("[]"),
-			err:   "invalid JSON: json: cannot unmarshal array into Go value of type v1.blindedBeaconBlockJSON",
+			err:   "invalid JSON: json: cannot unmarshal array into Go value of type v1.validatorRegistrationJSON",
 		},
 
 		{
 			name:  "FeeRecipientMissing",
 			input: []byte(`{"gas_limit":"100","timestamp":"100","pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f"}`),
-			err:   "fee recipent missing",
+			err:   "fee recipient missing",
 		},
 		{
 			name:  "FeeRecipientWrongType",
@@ -69,7 +69,7 @@ func TestValidatorRegistrationJSON(t *testing.T) {
 		{
 			name:  "GasLimitInvalid",
 			input: []byte(`{"fee_recipient":"0x000102030405060708090a0b0c0d0e0f10111213","gas_limit":"-1","timestamp":"100","pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f"}`),
-			err:   "invalid value for validator index: strconv.ParseUint: parsing \"-1\": invalid syntax",
+			err:   "invalid value for gas limit: strconv.ParseUint: parsing \"-1\": invalid syntax",
 		},
 
 		{
@@ -85,7 +85,7 @@ func TestValidatorRegistrationJSON(t *testing.T) {
 		{
 			name:  "TimestampInvalid",
 			input: []byte(`{"fee_recipient":"0x000102030405060708090a0b0c0d0e0f10111213","gas_limit":"100","timestamp":"-1","pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f"}`),
-			err:   "invalid value for validator index: strconv.ParseUint: parsing \"-1\": invalid syntax",
+			err:   "invalid value for timestamp: strconv.ParseUint: parsing \"-1\": invalid syntax",
 		},
 
 		{
@@ -116,13 +116,13 @@ func TestValidatorRegistrationJSON(t *testing.T) {
 
 		{
 			name:  "Good",
-			input: []byte(`{"fee_recipient":"0x000102030405060708090a0b0c0d0e0f10111213","gas_limit":true,"timestamp":"100","pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f"}`),
+			input: []byte(`{"fee_recipient":"0x000102030405060708090a0b0c0d0e0f10111213","gas_limit":"100","timestamp":"100","pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f"}`),
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res api.BlindedBeaconBlock
+			var res api.ValidatorRegistration
 			err := json.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
@@ -151,7 +151,7 @@ func TestValidatorRegistrationYAML(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res api.BlindedBeaconBlock
+			var res api.ValidatorRegistration
 			err := yaml.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)

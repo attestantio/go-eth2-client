@@ -27,7 +27,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ValidatorRegistration https://github.com/ethereum/beacon-APIs/blob/master/types/registration.yaml
+// Validator Registration represents a ValidatorRegistrationV1.
 type ValidatorRegistration struct {
 	FeeRecipient bellatrix.ExecutionAddress
 	GasLimit     uint64
@@ -35,15 +35,15 @@ type ValidatorRegistration struct {
 	Pubkey       phase0.BLSPubKey
 }
 
-// ValidatorRegistration https://github.com/ethereum/beacon-APIs/blob/master/types/registration.yaml
+// validatorRegistrationJSON is the spec representation of the struct.
 type validatorRegistrationJSON struct {
-	FeeRecipient string `json:"fee_recipient" ssz-size:"20"`
-	GasLimit     string `json:"gas_limit,string"`
-	Timestamp    string `json:"timestamp,string"`
-	Pubkey       string `json:"pubkey" ssz-size:"48"`
+	FeeRecipient string `json:"fee_recipient"`
+	GasLimit     string `json:"gas_limit"`
+	Timestamp    string `json:"timestamp"`
+	Pubkey       string `json:"pubkey"`
 }
 
-// ValidatorRegistration https://github.com/ethereum/beacon-APIs/blob/master/types/registration.yaml
+// validatorRegistrationYAML is the spec representation of the struct.
 type validatorRegistrationYAML struct {
 	FeeRecipient string `yaml:"fee_recipient"`
 	GasLimit     uint64 `yaml:"gas_limit"`
@@ -54,10 +54,10 @@ type validatorRegistrationYAML struct {
 // MarshalJSON implements json.Marshaler.
 func (b *ValidatorRegistration) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&validatorRegistrationJSON{
-		FeeRecipient: fmt.Sprintf("%d", b.FeeRecipient),
+		FeeRecipient: fmt.Sprintf("%#x", b.FeeRecipient),
 		GasLimit:     fmt.Sprintf("%d", b.GasLimit),
 		Timestamp:    fmt.Sprintf("%d", b.Timestamp),
-		Pubkey:       fmt.Sprintf("%d", b.Pubkey),
+		Pubkey:       fmt.Sprintf("%#x", b.Pubkey),
 	})
 }
 
@@ -117,10 +117,10 @@ func (b *ValidatorRegistration) unpack(data *validatorRegistrationJSON) error {
 // MarshalYAML implements yaml.Marshaler.
 func (b *ValidatorRegistration) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&validatorRegistrationYAML{
-		FeeRecipient: fmt.Sprintf("%d", b.FeeRecipient),
+		FeeRecipient: fmt.Sprintf("%#x", b.FeeRecipient),
 		GasLimit:     uint64(b.GasLimit),
 		Timestamp:    uint64(b.Timestamp),
-		Pubkey:       fmt.Sprintf("%d", b.Pubkey),
+		Pubkey:       fmt.Sprintf("%#x", b.Pubkey),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

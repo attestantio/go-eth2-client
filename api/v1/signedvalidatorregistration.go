@@ -25,10 +25,10 @@ import (
 	"github.com/pkg/errors"
 )
 
-// SignedValidatorRegistration https://github.com/ethereum/beacon-APIs/blob/master/types/registration.yaml#L18
+// SignedValidatorRegistration is a signed ValidatorRegistrationV1
 type SignedValidatorRegistration struct {
 	Message   *ValidatorRegistration
-	Signature phase0.BLSSignature
+	Signature phase0.BLSSignature `ssz-size:"96"`
 }
 
 // signedValidatorRegistrationJSON is the spec representation of the struct.
