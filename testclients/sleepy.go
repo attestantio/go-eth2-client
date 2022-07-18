@@ -278,7 +278,7 @@ func (s *Sleepy) SubmitBlindedBeaconBlock(ctx context.Context, block *api.Versio
 	return next.SubmitBlindedBeaconBlock(ctx, block)
 }
 
-// SubmitValidatorregistration submits a beacon block.
+// SubmitValidatorRegistration submits a validator registration.
 func (s *Sleepy) SubmitValidatorRegistration(ctx context.Context, registration *api.VersionedSignedValidatorRegistration) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ValidatorRegistrationSubmitter)

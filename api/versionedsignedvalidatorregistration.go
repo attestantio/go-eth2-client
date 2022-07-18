@@ -33,7 +33,7 @@ func (v *VersionedSignedValidatorRegistration) FeeRecipient() (bellatrix.Executi
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return bellatrix.ExecutionAddress{}, errors.New("no bellatrix block")
+			return bellatrix.ExecutionAddress{}, errors.New("no validator registration")
 		}
 		return v.Bellatrix.Message.FeeRecipient, nil
 	default:
@@ -46,7 +46,7 @@ func (v *VersionedSignedValidatorRegistration) GasLimit() (uint64, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return 0, errors.New("no bellatrix block")
+			return 0, errors.New("no validator registration")
 		}
 		return v.Bellatrix.Message.GasLimit, nil
 	default:
@@ -59,7 +59,7 @@ func (v *VersionedSignedValidatorRegistration) Timestamp() (uint64, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return 0, errors.New("no bellatrix block")
+			return 0, errors.New("no validator registration")
 		}
 		return v.Bellatrix.Message.Timestamp, nil
 	default:
@@ -72,7 +72,7 @@ func (v *VersionedSignedValidatorRegistration) PubKey() (phase0.BLSPubKey, error
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return phase0.BLSPubKey{}, errors.New("no bellatrix block")
+			return phase0.BLSPubKey{}, errors.New("no validator registration")
 		}
 		return v.Bellatrix.Message.Pubkey, nil
 	default:
