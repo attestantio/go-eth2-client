@@ -15,6 +15,7 @@ package api
 
 import (
 	"errors"
+	"time"
 
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -24,7 +25,7 @@ import (
 
 // VersionedValidatorRegistration contains a versioned ValidatorRegistrationV1.
 type VersionedValidatorRegistration struct {
-	Version   spec.DataVersion
+	Version   spec.BuilderVersion
 	Bellatrix *apiv1.ValidatorRegistration
 }
 
@@ -36,7 +37,7 @@ func (v *VersionedValidatorRegistration) IsEmpty() bool {
 // FeeRecipient returns the fee recipient of the validator registration.
 func (v *VersionedValidatorRegistration) FeeRecipient() (bellatrix.ExecutionAddress, error) {
 	switch v.Version {
-	case spec.DataVersionBellatrix:
+	case spec.BuilderVersionV1:
 		if v.Bellatrix == nil {
 			return bellatrix.ExecutionAddress{}, errors.New("no validator registration")
 		}
@@ -49,7 +50,7 @@ func (v *VersionedValidatorRegistration) FeeRecipient() (bellatrix.ExecutionAddr
 // GasLimit returns the gas limit of the validator registration.
 func (v *VersionedValidatorRegistration) GasLimit() (uint64, error) {
 	switch v.Version {
-	case spec.DataVersionBellatrix:
+	case spec.BuilderVersionV1:
 		if v.Bellatrix == nil {
 			return 0, errors.New("no validator registration")
 		}
@@ -60,22 +61,22 @@ func (v *VersionedValidatorRegistration) GasLimit() (uint64, error) {
 }
 
 // Timestamp returns the timestamp of the validator registration.
-func (v *VersionedValidatorRegistration) Timestamp() (uint64, error) {
+func (v *VersionedValidatorRegistration) Timestamp() (time.Time, error) {
 	switch v.Version {
-	case spec.DataVersionBellatrix:
+	case spec.BuilderVersionV1:
 		if v.Bellatrix == nil {
-			return 0, errors.New("no validator registration")
+			return time.Time{}, errors.New("no validator registration")
 		}
 		return v.Bellatrix.Timestamp, nil
 	default:
-		return 0, errors.New("unsupported version")
+		return time.Time{}, errors.New("unsupported version")
 	}
 }
 
 // PubKey returns the public key of the validator registration.
 func (v *VersionedValidatorRegistration) PubKey() (phase0.BLSPubKey, error) {
 	switch v.Version {
-	case spec.DataVersionBellatrix:
+	case spec.BuilderVersionV1:
 		if v.Bellatrix == nil {
 			return phase0.BLSPubKey{}, errors.New("no validator registration")
 		}
