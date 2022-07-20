@@ -57,7 +57,7 @@ func (b *ValidatorRegistration) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&validatorRegistrationJSON{
 		FeeRecipient: fmt.Sprintf("%#x", b.FeeRecipient),
 		GasLimit:     fmt.Sprintf("%d", b.GasLimit),
-		Timestamp:    fmt.Sprintf("%d", b.Timestamp),
+		Timestamp:    fmt.Sprintf("%d", b.Timestamp.Unix()),
 		Pubkey:       fmt.Sprintf("%#x", b.Pubkey),
 	})
 }
@@ -94,11 +94,11 @@ func (b *ValidatorRegistration) unpack(data *validatorRegistrationJSON) error {
 	if data.Timestamp == "" {
 		return errors.New("timestamp missing")
 	}
-	timestamp, err := strconv.ParseUint(data.Timestamp, 10, 64)
+	timestamp, err := strconv.ParseInt(data.Timestamp, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for timestamp")
 	}
-	b.Timestamp = timestamp
+	b.Timestamp = time.Unix(timestamp, 0)
 
 	if data.Pubkey == "" {
 		return errors.New("public key missing")
@@ -120,7 +120,7 @@ func (b *ValidatorRegistration) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&validatorRegistrationYAML{
 		FeeRecipient: fmt.Sprintf("%#x", b.FeeRecipient),
 		GasLimit:     uint64(b.GasLimit),
-		Timestamp:    uint64(b.Timestamp),
+		Timestamp:    uint64(b.Timestamp.Unix()),
 		Pubkey:       fmt.Sprintf("%#x", b.Pubkey),
 	}, yaml.Flow(true))
 	if err != nil {

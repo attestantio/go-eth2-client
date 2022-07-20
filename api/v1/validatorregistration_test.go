@@ -84,8 +84,8 @@ func TestValidatorRegistrationJSON(t *testing.T) {
 		},
 		{
 			name:  "TimestampInvalid",
-			input: []byte(`{"fee_recipient":"0x000102030405060708090a0b0c0d0e0f10111213","gas_limit":"100","timestamp":"-1","pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f"}`),
-			err:   "invalid value for timestamp: strconv.ParseUint: parsing \"-1\": invalid syntax",
+			input: []byte(`{"fee_recipient":"0x000102030405060708090a0b0c0d0e0f10111213","gas_limit":"100","timestamp":"invalid","pubkey":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f"}`),
+			err:   "invalid value for timestamp: strconv.ParseInt: parsing \"invalid\": invalid syntax",
 		},
 
 		{
