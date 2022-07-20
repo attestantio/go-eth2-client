@@ -16,7 +16,6 @@ package http
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -33,12 +32,8 @@ func (s *Service) SubmitValidatorRegistration(ctx context.Context, registration 
 	}
 
 	switch registration.Version {
-	case spec.DataVersionPhase0:
+	case spec.BuilderVersionV1:
 		err = errors.New("builder spec validator registration not supported")
-	case spec.DataVersionAltair:
-		err = errors.New("builder spec validator registration not supported")
-	case spec.DataVersionBellatrix:
-		specJSON, err = json.Marshal(registration.Bellatrix)
 	default:
 		err = errors.New("unknown validator registration version")
 	}
