@@ -25,18 +25,18 @@ import (
 
 // VersionedSignedValidatorRegistration contains a versioned SignedValidatorRegistrationV1.
 type VersionedSignedValidatorRegistration struct {
-	Version   spec.BuilderVersion
-	Bellatrix *apiv1.SignedValidatorRegistration
+	Version spec.BuilderVersion
+	V1      *apiv1.SignedValidatorRegistration
 }
 
 // FeeRecipient returns the fee recipient of the signed validator registration.
 func (v *VersionedSignedValidatorRegistration) FeeRecipient() (bellatrix.ExecutionAddress, error) {
 	switch v.Version {
 	case spec.BuilderVersionV1:
-		if v.Bellatrix == nil {
+		if v.V1 == nil {
 			return bellatrix.ExecutionAddress{}, errors.New("no validator registration")
 		}
-		return v.Bellatrix.Message.FeeRecipient, nil
+		return v.V1.Message.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, errors.New("unsupported version")
 	}
@@ -46,10 +46,10 @@ func (v *VersionedSignedValidatorRegistration) FeeRecipient() (bellatrix.Executi
 func (v *VersionedSignedValidatorRegistration) GasLimit() (uint64, error) {
 	switch v.Version {
 	case spec.BuilderVersionV1:
-		if v.Bellatrix == nil {
+		if v.V1 == nil {
 			return 0, errors.New("no validator registration")
 		}
-		return v.Bellatrix.Message.GasLimit, nil
+		return v.V1.Message.GasLimit, nil
 	default:
 		return 0, errors.New("unsupported version")
 	}
@@ -59,10 +59,10 @@ func (v *VersionedSignedValidatorRegistration) GasLimit() (uint64, error) {
 func (v *VersionedSignedValidatorRegistration) Timestamp() (time.Time, error) {
 	switch v.Version {
 	case spec.BuilderVersionV1:
-		if v.Bellatrix == nil {
+		if v.V1 == nil {
 			return time.Time{}, errors.New("no validator registration")
 		}
-		return v.Bellatrix.Message.Timestamp, nil
+		return v.V1.Message.Timestamp, nil
 	default:
 		return time.Time{}, errors.New("unsupported version")
 	}
@@ -72,10 +72,10 @@ func (v *VersionedSignedValidatorRegistration) Timestamp() (time.Time, error) {
 func (v *VersionedSignedValidatorRegistration) PubKey() (phase0.BLSPubKey, error) {
 	switch v.Version {
 	case spec.BuilderVersionV1:
-		if v.Bellatrix == nil {
+		if v.V1 == nil {
 			return phase0.BLSPubKey{}, errors.New("no validator registration")
 		}
-		return v.Bellatrix.Message.Pubkey, nil
+		return v.V1.Message.Pubkey, nil
 	default:
 		return phase0.BLSPubKey{}, errors.New("unsupported version")
 	}
