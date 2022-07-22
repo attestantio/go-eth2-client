@@ -32,21 +32,26 @@ func (s *Service) monitor(ctx context.Context) {
 			log.Trace().Msg("Context done; monitor stopping")
 			return
 		case <-time.After(30 * time.Second):
-			// Fetch all clients.
-			clients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
-			s.clientsMu.RLock()
-			clients = append(clients, s.activeClients...)
-			clients = append(clients, s.inactiveClients...)
-			s.clientsMu.RUnlock()
+			s.recheck(ctx)
+		}
+	}
+}
 
-			// Ping each client to update its state.
-			for _, client := range clients {
-				if ping(ctx, client) {
-					s.activateClient(ctx, client)
-				} else {
-					s.deactivateClient(ctx, client)
-				}
-			}
+// recheck checks clients to update their state.
+func (s *Service) recheck(ctx context.Context) {
+	// Fetch all clients.
+	clients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
+	s.clientsMu.RLock()
+	clients = append(clients, s.activeClients...)
+	clients = append(clients, s.inactiveClients...)
+	s.clientsMu.RUnlock()
+
+	// Ping each client to update its state.
+	for _, client := range clients {
+		if ping(ctx, client) {
+			s.activateClient(ctx, client)
+		} else {
+			s.deactivateClient(ctx, client)
 		}
 	}
 }
@@ -134,6 +139,18 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 	s.clientsMu.RLock()
 	activeClients := s.activeClients
 	s.clientsMu.RUnlock()
+
+	if len(activeClients) == 0 {
+		// There are no active clients; attempt to re-enable the inactive clients.
+		s.recheck(ctx)
+		s.clientsMu.RLock()
+		activeClients = s.activeClients
+		s.clientsMu.RUnlock()
+	}
+
+	if len(activeClients) == 0 {
+		return nil, errors.New("no active clients to which to make call")
+	}
 
 	var err error
 	var res interface{}

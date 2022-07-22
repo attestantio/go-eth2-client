@@ -67,7 +67,6 @@ func TestDeactivateMulti(t *testing.T) {
 	require.Len(t, multi.activeClients, 3)
 	require.Len(t, multi.inactiveClients, 1)
 	require.Equal(t, erroringClient1, multi.inactiveClients[0])
-
 }
 
 // TestActivateMulti ensures that multiple concurrent calls to activateClient
@@ -115,4 +114,30 @@ func TestActivateMulti(t *testing.T) {
 	require.Len(t, multi.activeClients, 3)
 	require.Len(t, multi.inactiveClients, 1)
 	require.Equal(t, erroringClient1, multi.inactiveClients[0])
+}
+
+// TestRecheck tests the recheck functionality when no nodes are available.
+func TestRecheck(t *testing.T) {
+	ctx := context.Background()
+
+	consensusClient, err := mock.New(ctx)
+	require.NoError(t, err)
+
+	s, err := New(ctx,
+		WithLogLevel(zerolog.Disabled),
+		WithClients([]consensusclient.Service{
+			consensusClient,
+		}),
+	)
+	require.NoError(t, err)
+	multi := s.(*Service)
+
+	_, err = s.(consensusclient.GenesisProvider).Genesis(ctx)
+	require.NoError(t, err)
+
+	multi.deactivateClient(ctx, consensusClient)
+
+	_, err = s.(consensusclient.GenesisProvider).Genesis(ctx)
+	// Should re-activate in recheck so not return an error.
+	require.NoError(t, err)
 }
