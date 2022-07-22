@@ -60,6 +60,16 @@ func TestService(t *testing.T) {
 			err: "No providers active, cannot proceed",
 		},
 		{
+			name: "AllClientsInactiveFallback",
+			params: []multi.Parameter{
+				multi.WithLogLevel(zerolog.Disabled),
+				multi.WithClients([]client.Service{
+					inactiveconsensusclient1,
+				}),
+				multi.WithFallback(),
+			},
+		},
+		{
 			name: "Good",
 			params: []multi.Parameter{
 				multi.WithLogLevel(zerolog.Disabled),

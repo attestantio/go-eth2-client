@@ -130,14 +130,23 @@ type errHandlerFunc func(ctx context.Context, client consensusclient.Service, er
 
 // doCall carries out a call on the active clients in turn until one succeeds.
 func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandlerFunc) (interface{}, error) {
-	// Grab local copy of active clients in case it is updated whilst we are using it.
+	// Grab local copy of clients to attempt in case it is updated whilst we are using it.
 	s.clientsMu.RLock()
-	activeClients := s.activeClients
+	var clients []consensusclient.Service
+	clients = append(clients, s.activeClients...)
+	fallbackOffset := len(clients)
+	if s.fallback {
+		clients = append(clients, s.inactiveClients...)
+	}
 	s.clientsMu.RUnlock()
+
+	if len(clients) == 0 {
+		return nil, errors.New("No active or fallback providers")
+	}
 
 	var err error
 	var res interface{}
-	for _, client := range activeClients {
+	for i, client := range clients {
 		res, err = call(ctx, client)
 		if err != nil {
 			failover := true
@@ -158,6 +167,10 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 			// No response from this client; try the next.
 			err = errors.New("empty response")
 			continue
+		}
+		if i >= fallbackOffset {
+			// Activate fallback
+			s.activateClient(ctx, client)
 		}
 		return res, nil
 	}

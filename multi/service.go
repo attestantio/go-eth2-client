@@ -29,13 +29,16 @@ type Service struct {
 	clientsMu       sync.RWMutex
 	activeClients   []consensusclient.Service
 	inactiveClients []consensusclient.Service
+
+	// fallback enables falling back to inactive clients if no active clients available.
+	fallback bool
 }
 
 // module-wide log.
 var log zerolog.Logger
 
 // New creates a new Ethereum 2 client with multiple endpoints.
-// The endpoints are periodiclaly checked to see if they are active,
+// The endpoints are periodically checked to see if they are active,
 // and requests will retry a different client if the currently active
 // client fails to respond.
 func New(ctx context.Context, params ...Parameter) (consensusclient.Service, error) {
@@ -73,6 +76,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 			http.WithAddress(address),
 		)
 		if err != nil {
+			// FIXME: This requires all providers to be online at startup, rather add to inactive set.
 			log.Error().Str("provider", address).Msg("Provider not present; dropping from rotation")
 			continue
 		}
@@ -84,7 +88,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 			setProviderActiveMetric(ctx, client.Address(), "inactive")
 		}
 	}
-	if len(activeClients) == 0 {
+	if len(activeClients) == 0 && !parameters.fallback {
 		return nil, errors.New("No providers active, cannot proceed")
 	}
 	log.Trace().Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Initial providers")
@@ -94,6 +98,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 	s := &Service{
 		activeClients:   activeClients,
 		inactiveClients: inactiveClients,
+		fallback:        parameters.fallback,
 	}
 
 	// Kick off monitor.
@@ -114,5 +119,9 @@ func (s *Service) Address() string {
 	if len(s.activeClients) > 0 {
 		return s.activeClients[0].Address()
 	}
+	if s.fallback && len(s.inactiveClients) > 0 {
+		return s.inactiveClients[0].Address()
+	}
+
 	return "none"
 }

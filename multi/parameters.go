@@ -28,6 +28,7 @@ type parameters struct {
 	clients   []consensusclient.Service
 	addresses []string
 	timeout   time.Duration
+	fallback  bool
 }
 
 // Parameter is the interface for service parameters.
@@ -73,6 +74,13 @@ func WithClients(clients []consensusclient.Service) Parameter {
 func WithAddresses(addresses []string) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.addresses = addresses
+	})
+}
+
+// WithFallback enables falling back to inactive clients if no active clients available.
+func WithFallback() Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.fallback = true
 	})
 }
 

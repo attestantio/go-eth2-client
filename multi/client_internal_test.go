@@ -116,3 +116,53 @@ func TestActivateMulti(t *testing.T) {
 	require.Len(t, multi.inactiveClients, 1)
 	require.Equal(t, erroringClient1, multi.inactiveClients[0])
 }
+
+// TestNoActivate ensures an error is returned when no active clients are available.
+func TestNoActivate(t *testing.T) {
+	ctx := context.Background()
+
+	consensusClient, err := mock.New(ctx)
+	require.NoError(t, err)
+
+	s, err := New(ctx,
+		WithLogLevel(zerolog.Disabled),
+		WithClients([]consensusclient.Service{
+			consensusClient,
+		}),
+	)
+	require.NoError(t, err)
+	multi := s.(*Service)
+
+	multi.deactivateClient(ctx, consensusClient)
+
+	_, err = s.(consensusclient.GenesisProvider).Genesis(ctx)
+	require.EqualError(t, err, "No active or fallback providers")
+}
+
+// TestFallback ensures fallback to inactive clients if no active clients available.
+func TestFallback(t *testing.T) {
+	ctx := context.Background()
+
+	consensusClient, err := mock.New(ctx)
+	require.NoError(t, err)
+
+	s, err := New(ctx,
+		WithLogLevel(zerolog.Disabled),
+		WithClients([]consensusclient.Service{
+			consensusClient,
+		}),
+		WithFallback(),
+	)
+	require.NoError(t, err)
+	multi := s.(*Service)
+
+	multi.deactivateClient(ctx, consensusClient)
+	require.Len(t, multi.activeClients, 0)
+	require.Len(t, multi.inactiveClients, 1)
+
+	_, err = s.(consensusclient.GenesisProvider).Genesis(ctx)
+	require.NoError(t, err)
+
+	require.Len(t, multi.activeClients, 1)
+	require.Len(t, multi.inactiveClients, 0)
+}
