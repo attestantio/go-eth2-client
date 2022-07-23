@@ -114,7 +114,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.BeaconCommitteeSubscriptionsSubmitter)(nil), s)
 	assert.Implements(t, (*client.BeaconStateProvider)(nil), s)
 	assert.Implements(t, (*client.BlindedBeaconBlockSubmitter)(nil), s)
-	assert.Implements(t, (*client.ValidatorRegistrationSubmitter)(nil), s)
+	assert.Implements(t, (*client.ValidatorRegistrationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.DepositContractProvider)(nil), s)
 	assert.Implements(t, (*client.EventsProvider)(nil), s)
 	assert.Implements(t, (*client.FinalityProvider)(nil), s)

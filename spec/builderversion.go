@@ -32,7 +32,7 @@ var responseBuilderVersionStrings = [...]string{
 
 // MarshalJSON implements json.Marshaler.
 func (d *BuilderVersion) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", responseVersionStrings[*d])), nil
+	return []byte(fmt.Sprintf("%q", responseBuilderVersionStrings[*d])), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -49,8 +49,8 @@ func (d *BuilderVersion) UnmarshalJSON(input []byte) error {
 
 // String returns a string representation of the
 func (d BuilderVersion) String() string {
-	if int(d) >= len(responseVersionStrings) {
+	if int(d) >= len(responseBuilderVersionStrings) {
 		return "unknown"
 	}
-	return responseVersionStrings[d]
+	return responseBuilderVersionStrings[d]
 }

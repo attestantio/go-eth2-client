@@ -20,10 +20,10 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 )
 
-// SubmitValidatorRegistration submits a validator registration.
-func (s *Service) SubmitValidatorRegistration(ctx context.Context, registration *api.VersionedSignedValidatorRegistration) error {
+// SubmitValidatorRegistrations submits a validator registration.
+func (s *Service) SubmitValidatorRegistrations(ctx context.Context, registrations []*api.VersionedSignedValidatorRegistration) error {
 	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		err := client.(consensusclient.ValidatorRegistrationSubmitter).SubmitValidatorRegistration(ctx, registration)
+		err := client.(consensusclient.ValidatorRegistrationsSubmitter).SubmitValidatorRegistrations(ctx, registrations)
 		if err != nil {
 			return nil, err
 		}
