@@ -380,16 +380,16 @@ func (s *Erroring) SubmitBlindedBeaconBlock(ctx context.Context, block *api.Vers
 	return next.SubmitBlindedBeaconBlock(ctx, block)
 }
 
-// SubmitValidatorRegistration submits a validator registration.
-func (s *Erroring) SubmitValidatorRegistration(ctx context.Context, registration *api.VersionedSignedValidatorRegistration) error {
+// SubmitValidatorRegistrations submits a validator registration.
+func (s *Erroring) SubmitValidatorRegistrations(ctx context.Context, registrations []*api.VersionedSignedValidatorRegistration) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
-	next, isNext := s.next.(consensusclient.ValidatorRegistrationSubmitter)
+	next, isNext := s.next.(consensusclient.ValidatorRegistrationsSubmitter)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
-	return next.SubmitValidatorRegistration(ctx, registration)
+	return next.SubmitValidatorRegistrations(ctx, registrations)
 }
 
 // SubmitSyncCommitteeSubscriptions subscribes to sync committees.

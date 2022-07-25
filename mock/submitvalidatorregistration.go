@@ -19,7 +19,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 )
 
-// SubmitValidatorRegistration submits a validator registration.
-func (s *Service) SubmitValidatorRegistration(ctx context.Context, registration *api.VersionedSignedValidatorRegistration) error {
+// SubmitValidatorRegistrations submits a validator registration.
+func (s *Service) SubmitValidatorRegistrations(ctx context.Context, registrations []*api.VersionedSignedValidatorRegistration) error {
 	return nil
 }

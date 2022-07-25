@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSubmitValidatorRegistration(t *testing.T) {
+func TestSubmitValidatorRegistrations(t *testing.T) {
 	ctx := context.Background()
 
 	client1, err := mock.New(ctx, mock.WithName("mock 1"))
@@ -51,7 +51,7 @@ func TestSubmitValidatorRegistration(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		err := multiClient.(consensusclient.ValidatorRegistrationSubmitter).SubmitValidatorRegistration(ctx, &api.VersionedSignedValidatorRegistration{})
+		err := multiClient.(consensusclient.ValidatorRegistrationsSubmitter).SubmitValidatorRegistrations(ctx, []*api.VersionedSignedValidatorRegistration{})
 		require.NoError(t, err)
 	}
 	// At this point we expect mock 3 to be in active (unless probability hates us).
