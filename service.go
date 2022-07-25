@@ -272,6 +272,12 @@ type BlindedBeaconBlockSubmitter interface {
 	SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error
 }
 
+// ValidatorRegistrationsSubmitter is the interface for submitting validator registrations.
+type ValidatorRegistrationsSubmitter interface {
+	// SubmitValidatorRegistrations submits a validator registration.
+	SubmitValidatorRegistrations(ctx context.Context, registrations []*api.VersionedSignedValidatorRegistration) error
+}
+
 // EventsProvider is the interface for providing events.
 type EventsProvider interface {
 	// Events feeds requested events with the given topics to the supplied handler.

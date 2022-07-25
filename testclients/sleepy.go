@@ -278,6 +278,16 @@ func (s *Sleepy) SubmitBlindedBeaconBlock(ctx context.Context, block *api.Versio
 	return next.SubmitBlindedBeaconBlock(ctx, block)
 }
 
+// SubmitValidatorRegistrations submits a validator registration.
+func (s *Sleepy) SubmitValidatorRegistrations(ctx context.Context, registrations []*api.VersionedSignedValidatorRegistration) error {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.ValidatorRegistrationsSubmitter)
+	if !isNext {
+		return errors.New("next does not support this call")
+	}
+	return next.SubmitValidatorRegistrations(ctx, registrations)
+}
+
 // BeaconState fetches a beacon state.
 func (s *Sleepy) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
 	s.sleep(ctx)
