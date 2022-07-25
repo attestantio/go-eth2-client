@@ -28,7 +28,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Validator Registration represents a ValidatorRegistrationV1.
+// ValidatorRegistration represents a ValidatorRegistrationV1.
 type ValidatorRegistration struct {
 	FeeRecipient bellatrix.ExecutionAddress
 	GasLimit     uint64
@@ -53,25 +53,25 @@ type validatorRegistrationYAML struct {
 }
 
 // MarshalJSON implements json.Marshaler.
-func (b *ValidatorRegistration) MarshalJSON() ([]byte, error) {
+func (v *ValidatorRegistration) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&validatorRegistrationJSON{
-		FeeRecipient: fmt.Sprintf("%#x", b.FeeRecipient),
-		GasLimit:     fmt.Sprintf("%d", b.GasLimit),
-		Timestamp:    fmt.Sprintf("%d", b.Timestamp.Unix()),
-		Pubkey:       fmt.Sprintf("%#x", b.Pubkey),
+		FeeRecipient: fmt.Sprintf("%#x", v.FeeRecipient),
+		GasLimit:     fmt.Sprintf("%d", v.GasLimit),
+		Timestamp:    fmt.Sprintf("%d", v.Timestamp.Unix()),
+		Pubkey:       fmt.Sprintf("%#x", v.Pubkey),
 	})
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (b *ValidatorRegistration) UnmarshalJSON(input []byte) error {
+func (v *ValidatorRegistration) UnmarshalJSON(input []byte) error {
 	var data validatorRegistrationJSON
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
-	return b.unpack(&data)
+	return v.unpack(&data)
 }
 
-func (b *ValidatorRegistration) unpack(data *validatorRegistrationJSON) error {
+func (v *ValidatorRegistration) unpack(data *validatorRegistrationJSON) error {
 
 	if data.FeeRecipient == "" {
 		return errors.New("fee recipient missing")
@@ -80,7 +80,7 @@ func (b *ValidatorRegistration) unpack(data *validatorRegistrationJSON) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for fee recipient")
 	}
-	copy(b.FeeRecipient[:], feeRecipient)
+	copy(v.FeeRecipient[:], feeRecipient)
 
 	if data.GasLimit == "" {
 		return errors.New("gas limit missing")
@@ -89,7 +89,7 @@ func (b *ValidatorRegistration) unpack(data *validatorRegistrationJSON) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for gas limit")
 	}
-	b.GasLimit = gasLimit
+	v.GasLimit = gasLimit
 
 	if data.Timestamp == "" {
 		return errors.New("timestamp missing")
@@ -98,7 +98,7 @@ func (b *ValidatorRegistration) unpack(data *validatorRegistrationJSON) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for timestamp")
 	}
-	b.Timestamp = time.Unix(timestamp, 0)
+	v.Timestamp = time.Unix(timestamp, 0)
 
 	if data.Pubkey == "" {
 		return errors.New("public key missing")
@@ -110,18 +110,18 @@ func (b *ValidatorRegistration) unpack(data *validatorRegistrationJSON) error {
 	if len(pubKey) != publicKeyLength {
 		return errors.New("incorrect length for public key")
 	}
-	copy(b.Pubkey[:], pubKey)
+	copy(v.Pubkey[:], pubKey)
 
 	return nil
 }
 
 // MarshalYAML implements yaml.Marshaler.
-func (b *ValidatorRegistration) MarshalYAML() ([]byte, error) {
+func (v *ValidatorRegistration) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&validatorRegistrationYAML{
-		FeeRecipient: fmt.Sprintf("%#x", b.FeeRecipient),
-		GasLimit:     uint64(b.GasLimit),
-		Timestamp:    uint64(b.Timestamp.Unix()),
-		Pubkey:       fmt.Sprintf("%#x", b.Pubkey),
+		FeeRecipient: fmt.Sprintf("%#x", v.FeeRecipient),
+		GasLimit:     v.GasLimit,
+		Timestamp:    uint64(v.Timestamp.Unix()),
+		Pubkey:       fmt.Sprintf("%#x", v.Pubkey),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
@@ -130,18 +130,18 @@ func (b *ValidatorRegistration) MarshalYAML() ([]byte, error) {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (b *ValidatorRegistration) UnmarshalYAML(input []byte) error {
+func (v *ValidatorRegistration) UnmarshalYAML(input []byte) error {
 	// We unmarshal to the JSON struct to save on duplicate code.
 	var data validatorRegistrationJSON
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return err
 	}
-	return b.unpack(&data)
+	return v.unpack(&data)
 }
 
 // String returns a string version of the structure.
-func (b *ValidatorRegistration) String() string {
-	data, err := yaml.Marshal(b)
+func (v *ValidatorRegistration) String() string {
+	data, err := yaml.Marshal(v)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

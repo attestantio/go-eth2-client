@@ -109,3 +109,16 @@ func (v *VersionedBlindedBeaconBlock) StateRoot() (phase0.Root, error) {
 		return phase0.Root{}, errors.New("unsupported version")
 	}
 }
+
+// String returns a string version of the structure.
+func (v *VersionedBlindedBeaconBlock) String() string {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return ""
+		}
+		return v.Bellatrix.String()
+	default:
+		return "unknown version"
+	}
+}
