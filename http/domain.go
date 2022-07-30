@@ -14,6 +14,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -28,12 +29,6 @@ func (s *Service) Domain(ctx context.Context, domainType phase0.DomainType, epoc
 		return phase0.Domain{}, errors.Wrap(err, "failed to obtain fork")
 	}
 
-	// Obtain the genesis validators root.
-	genesis, err := s.Genesis(ctx)
-	if err != nil {
-		return phase0.Domain{}, errors.Wrap(err, "failed to obtain genesis")
-	}
-
 	// Calculate the domain.
 	var forkVersion phase0.Version
 	if epoch < fork.Epoch {
@@ -46,9 +41,19 @@ func (s *Service) Domain(ctx context.Context, domainType phase0.DomainType, epoc
 	}
 
 	forkData := &phase0.ForkData{
-		CurrentVersion:        forkVersion,
-		GenesisValidatorsRoot: genesis.GenesisValidatorsRoot,
+		CurrentVersion: forkVersion,
 	}
+
+	if !bytes.Equal(domainType[:], []byte{0x00, 0x00, 0x00, 0x01}) {
+		// Use the chain's genesis validators root for non-application domain types.
+		genesis, err := s.Genesis(ctx)
+		if err != nil {
+			return phase0.Domain{}, errors.Wrap(err, "failed to obtain genesis")
+		}
+
+		forkData.GenesisValidatorsRoot = genesis.GenesisValidatorsRoot
+	}
+
 	root, err := forkData.HashTreeRoot()
 	if err != nil {
 		return phase0.Domain{}, errors.Wrap(err, "failed to calculate signature domain")
