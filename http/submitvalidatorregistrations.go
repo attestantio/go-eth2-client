@@ -41,7 +41,7 @@ func (s *Service) SubmitValidatorRegistrations(ctx context.Context, registration
 		// Ensure consistent versioning.
 		if version == nil {
 			version = &registration.Version
-		} else if version != &registration.Version {
+		} else if *version != registration.Version {
 			return errors.New("registrations must all be of the same version")
 		}
 
