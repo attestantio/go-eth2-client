@@ -30,11 +30,11 @@ import (
 // SyncCommitteeContribution is the Ethereum 2 sync committee contribution structure.
 type SyncCommitteeContribution struct {
 	Slot              phase0.Slot
-	BeaconBlockRoot   phase0.Root
+	BeaconBlockRoot   phase0.Root `ssz-size:"32"`
 	SubcommitteeIndex uint64
 	// AggregationBits size is SYNC_COMMITTEE_SIZE // SYNC_COMMITTEE_SUBNET_COUNT
 	AggregationBits bitfield.Bitvector128 `ssz-size:"16"`
-	Signature       phase0.BLSSignature
+	Signature       phase0.BLSSignature   `ssz-size:"96"`
 }
 
 // syncCommitteeContributionJSON is the spec representation of the struct.

@@ -30,10 +30,10 @@ import (
 
 // ValidatorRegistration represents a ValidatorRegistrationV1.
 type ValidatorRegistration struct {
-	FeeRecipient bellatrix.ExecutionAddress
+	FeeRecipient bellatrix.ExecutionAddress `ssz-size:"20"`
 	GasLimit     uint64
 	Timestamp    time.Time
-	Pubkey       phase0.BLSPubKey
+	Pubkey       phase0.BLSPubKey `ssz-size:"48"`
 }
 
 // validatorRegistrationJSON is the spec representation of the struct.

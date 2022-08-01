@@ -30,8 +30,8 @@ var syncCommitteeSize = 512
 
 // SyncCommittee is the Ethereum 2 sync committee structure.
 type SyncCommittee struct {
-	Pubkeys         []phase0.BLSPubKey `ssz-size:"512"`
-	AggregatePubkey phase0.BLSPubKey
+	Pubkeys         []phase0.BLSPubKey `ssz-size:"512,48"`
+	AggregatePubkey phase0.BLSPubKey   `ssz-size:"48"`
 }
 
 // syncCommitteeJSON is the spec representation of the struct.

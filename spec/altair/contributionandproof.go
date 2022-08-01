@@ -30,7 +30,7 @@ import (
 type ContributionAndProof struct {
 	AggregatorIndex phase0.ValidatorIndex
 	Contribution    *SyncCommitteeContribution
-	SelectionProof  phase0.BLSSignature
+	SelectionProof  phase0.BLSSignature `ssz-size:"96"`
 }
 
 // contributionAndProofJSON is the spec representation of the struct.
