@@ -42,7 +42,7 @@ type ExecutionPayload struct {
 	ExtraData     []byte        `ssz-max:"32"`
 	BaseFeePerGas [32]byte      `ssz-size:"32"`
 	BlockHash     phase0.Hash32 `ssz-size:"32"`
-	Transactions  []Transaction `ssz-max:"1073741824,1048576"`
+	Transactions  []Transaction `ssz-max:"1048576,1073741824"`
 }
 
 // executionPayloadJSON is the spec representation of the struct.
@@ -241,8 +241,8 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 		return errors.New("extra data missing")
 	}
 	switch {
-	case data.ExtraData == "0x":
-		e.ExtraData = make([]byte, 0)
+	case data.ExtraData == "0x", data.ExtraData == "0":
+		e.ExtraData = []byte{}
 	default:
 		data.ExtraData = strings.TrimPrefix(data.ExtraData, "0x")
 		if len(data.ExtraData)%2 == 1 {

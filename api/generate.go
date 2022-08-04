@@ -11,9 +11,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bellatrix
+package api
 
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f beaconblock_encoding.go beaconblockbody_encoding.go beaconstate_encoding.go executionpayload_encoding.go executionpayloadheader_encoding.go signedbeaconblock_encoding.go
-//go:generate sszgen --path . --objs BeaconBlock,BeaconBlockBody,BeaconState,ExecutionPayload,ExecutionPaylodHeader,SignedBeaconBlock
-//go:generate goimports -w beaconblock_encoding.go beaconblockbody_encoding.go beaconstate_encoding.go executionpayload_encoding.go executionpayloadheader_encoding.go signedbeaconblock_encoding.go
+//go:generate rm -f versionedblindedbeaconblock_encoding.go blindedbeaconblock_encoding.go signedblindedbeaconblock_encoding.go validatorregistration_encoding.go
+//go:generate /home/jgm/sszgen -include ../spec -path . -exclude-objs DataVersion -objs VersionedBlindedBeaconBlock

@@ -75,7 +75,7 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 		if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
 			return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
 		}
-		if !bytes.Equal(resp.Data.Body.Graffiti, graffiti) {
+		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
 			return nil, errors.New("beacon block proposal has incorrect graffiti")
 		}
 		res.Bellatrix = resp.Data

@@ -24,8 +24,8 @@ import (
 // BeaconBlockProposal fetches a proposed beacon block for signing.
 func (s *Service) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
 	// Graffiti should be 32 bytes.
-	fixedGraffiti := make([]byte, 32)
-	copy(fixedGraffiti, graffiti)
+	fixedGraffiti := [32]byte{}
+	copy(fixedGraffiti[:], graffiti)
 
 	// Build a beacon block.
 

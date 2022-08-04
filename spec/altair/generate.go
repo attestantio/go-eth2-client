@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,4 +14,6 @@
 package altair
 
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate sszgen --path . --objs BeaconBlock,BeaconBlockBody,ContributionAndProof,SignedBeaconBlock,SignedContributionAndProof,SyncCommittee,SyncAggregate
+//go:generate rm -f beaconblock_encoding.go beaconblockbody_encoding.go beaconstate_encoding.go contributionandproof_encoding.go signedbeaconblock_encoding.go signedcontributionandproof_encoding.go syncaggregate_encoding.go syncaggregatorselectiondata_encoding.go synccommitteemessage_encoding.go
+//go:generate sszgen ../phase0 --path . --objs BeaconBlock,BeaconBlockBody,BeaconState,ContributionAndProof,SignedBeaconBlock,SignedContributionAndProof,SyncAggregate,SyncAggregatorSelectionData,SyncCommittee
+//go:generate goimports -w beaconblock_encoding.go beaconblockbody_encoding.go beaconstate_encoding.go contributionandproof_encoding.go signedbeaconblock_encoding.go signedcontributionandproof_encoding.go syncaggregate_encoding.go syncaggregatorselectiondata_encoding.go synccommitteemessage_encoding.go
