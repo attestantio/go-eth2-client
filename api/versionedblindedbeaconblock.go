@@ -110,6 +110,25 @@ func (v *VersionedBlindedBeaconBlock) StateRoot() (phase0.Root, error) {
 	}
 }
 
+// TransactionsRoot returns the transactions root of the beacon block.
+func (v *VersionedBlindedBeaconBlock) TransactionsRoot() (phase0.Root, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return phase0.Root{}, errors.New("no bellatrix block")
+		}
+		if v.Bellatrix.Body == nil {
+			return phase0.Root{}, errors.New("no bellatrix block body")
+		}
+		if v.Bellatrix.Body.ExecutionPayloadHeader == nil {
+			return phase0.Root{}, errors.New("no bellatrix block body execution payload header")
+		}
+		return v.Bellatrix.Body.ExecutionPayloadHeader.TransactionsRoot, nil
+	default:
+		return phase0.Root{}, errors.New("unsupported version")
+	}
+}
+
 // String returns a string version of the structure.
 func (v *VersionedBlindedBeaconBlock) String() string {
 	switch v.Version {
