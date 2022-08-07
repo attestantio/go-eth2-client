@@ -80,3 +80,16 @@ func (v *VersionedSignedValidatorRegistration) PubKey() (phase0.BLSPubKey, error
 		return phase0.BLSPubKey{}, errors.New("unsupported version")
 	}
 }
+
+// Root returns the root of the validator registration
+func (v *VersionedSignedValidatorRegistration) Root() (phase0.Root, error) {
+	switch v.Version {
+	case spec.BuilderVersionV1:
+		if v.V1 == nil {
+			return phase0.Root{}, errors.New("no V1 registration")
+		}
+		return v.V1.Message.HashTreeRoot()
+	default:
+		return phase0.Root{}, errors.New("unsupported version")
+	}
+}

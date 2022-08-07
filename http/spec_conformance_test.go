@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build conformance
 // +build conformance
 
 package http_test
@@ -45,6 +46,7 @@ func TestSpecConformance(t *testing.T) {
 		"DOMAIN_RANDAO":                         phase0.DomainType{},
 		"DOMAIN_SELECTION_PROOF":                phase0.DomainType{},
 		"DOMAIN_VOLUNTARY_EXIT":                 phase0.DomainType{},
+		"DOMAIN_APPLICATION_BUILDER":            phase0.DomainType{},
 		"EFFECTIVE_BALANCE_INCREMENT":           uint64(0),
 		"EJECTION_BALANCE":                      uint64(0),
 		"EPOCHS_PER_ETH1_VOTING_PERIOD":         uint64(0),
