@@ -39,19 +39,19 @@ func TestValidatorStateJSON(t *testing.T) {
 	}{
 		{
 			name:       "PendingQueued",
-			input:      []byte(`"Pending_queued"`),
+			input:      []byte(`"pending_queued"`),
 			isPending:  true,
 			hasBalance: true,
 		},
 		{
 			name:       "PendingInitialized",
-			input:      []byte(`"Pending_initialized"`),
+			input:      []byte(`"pending_initialized"`),
 			isPending:  true,
 			hasBalance: true,
 		},
 		{
 			name:         "ActiveOngoing",
-			input:        []byte(`"Active_ongoing"`),
+			input:        []byte(`"active_ongoing"`),
 			isActive:     true,
 			hasActivated: true,
 			isAttesting:  true,
@@ -59,7 +59,7 @@ func TestValidatorStateJSON(t *testing.T) {
 		},
 		{
 			name:         "ActiveExiting",
-			input:        []byte(`"Active_exiting"`),
+			input:        []byte(`"active_exiting"`),
 			isActive:     true,
 			hasActivated: true,
 			isAttesting:  true,
@@ -67,14 +67,14 @@ func TestValidatorStateJSON(t *testing.T) {
 		},
 		{
 			name:         "ActiveSlashed",
-			input:        []byte(`"Active_slashed"`),
+			input:        []byte(`"active_slashed"`),
 			isActive:     true,
 			hasActivated: true,
 			hasBalance:   true,
 		},
 		{
 			name:         "ExitedUnslashed",
-			input:        []byte(`"Exited_unslashed"`),
+			input:        []byte(`"exited_unslashed"`),
 			hasActivated: true,
 			isExited:     true,
 			hasExited:    true,
@@ -82,7 +82,7 @@ func TestValidatorStateJSON(t *testing.T) {
 		},
 		{
 			name:         "ExitedSlashed",
-			input:        []byte(`"Exited_slashed"`),
+			input:        []byte(`"exited_slashed"`),
 			hasActivated: true,
 			isExited:     true,
 			hasExited:    true,
@@ -90,21 +90,21 @@ func TestValidatorStateJSON(t *testing.T) {
 		},
 		{
 			name:         "WithdrawalPossible",
-			input:        []byte(`"Withdrawal_possible"`),
+			input:        []byte(`"withdrawal_possible"`),
 			hasActivated: true,
 			hasExited:    true,
 			hasBalance:   true,
 		},
 		{
 			name:         "WithdrawalDone",
-			input:        []byte(`"Withdrawal_done"`),
+			input:        []byte(`"withdrawal_done"`),
 			hasActivated: true,
 			hasExited:    true,
 			hasBalance:   true,
 		},
 		{
 			name:  "Unknown",
-			input: []byte(`"Unknown"`),
+			input: []byte(`"unknown"`),
 		},
 		{
 			name:  "Invalid",
