@@ -68,12 +68,16 @@ func TestBeaconBlockProposal(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, resp)
 			if resp.Phase0 != nil {
-				assert.Equal(t, test.graffiti, resp.Phase0.Body.Graffiti)
+				assert.Equal(t, test.graffiti, resp.Phase0.Body.Graffiti[:])
 				assert.Equal(t, test.randaoReveal, resp.Phase0.Body.RANDAOReveal)
 			}
 			if resp.Altair != nil {
-				assert.Equal(t, test.graffiti, resp.Altair.Body.Graffiti)
+				assert.Equal(t, test.graffiti, resp.Altair.Body.Graffiti[:])
 				assert.Equal(t, test.randaoReveal, resp.Altair.Body.RANDAOReveal)
+			}
+			if resp.Bellatrix != nil {
+				assert.Equal(t, test.graffiti, resp.Bellatrix.Body.Graffiti[:])
+				assert.Equal(t, test.randaoReveal, resp.Bellatrix.Body.RANDAOReveal)
 			}
 		})
 	}
