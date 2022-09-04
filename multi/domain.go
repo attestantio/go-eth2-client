@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,11 +14,16 @@
 package multi
 
 import (
+	"bytes"
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 )
+
+// emptyDomain is used for comparison purposes.
+var emptyDomain phase0.Domain
 
 // Domain provides a domain for a given domain type at a given epoch.
 func (s *Service) Domain(ctx context.Context,
@@ -33,12 +38,12 @@ func (s *Service) Domain(ctx context.Context,
 		if err != nil {
 			return nil, err
 		}
+		if bytes.Equal(domain[:], emptyDomain[:]) {
+			return nil, errors.New("empty domain not a valid response")
+		}
 		return domain, nil
 	}, nil)
 	if err != nil {
-		return phase0.Domain{}, err
-	}
-	if res == nil {
 		return phase0.Domain{}, err
 	}
 	return res.(phase0.Domain), nil

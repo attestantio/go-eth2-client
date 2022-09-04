@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,22 +18,23 @@ import (
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/pkg/errors"
 )
 
 // GenesisTime provides the genesis time of the chain.
 func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		aggregate, err := client.(consensusclient.GenesisTimeProvider).GenesisTime(ctx)
+		genesisTime, err := client.(consensusclient.GenesisTimeProvider).GenesisTime(ctx)
 		if err != nil {
 			return nil, err
 		}
-		return aggregate, nil
+		if genesisTime.IsZero() {
+			return nil, errors.New("zero genesis time not a valid response")
+		}
+		return genesisTime, nil
 	}, nil)
 	if err != nil {
 		return time.Time{}, err
-	}
-	if res == nil {
-		return time.Time{}, nil
 	}
 	return res.(time.Time), nil
 }

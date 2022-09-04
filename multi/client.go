@@ -163,6 +163,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 			}
 
 			if failover {
+				log.Debug().Str("client", client.Name()).Str("address", client.Address()).Err(err).Msg("Deactivating client on error")
 				// Failed with this client; try the next.
 				s.deactivateClient(ctx, client)
 				continue

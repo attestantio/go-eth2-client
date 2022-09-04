@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,22 +18,23 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 )
 
 // FarFutureEpoch provides the far future epoch of the chain.
 func (s *Service) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		aggregate, err := client.(consensusclient.FarFutureEpochProvider).FarFutureEpoch(ctx)
+		epoch, err := client.(consensusclient.FarFutureEpochProvider).FarFutureEpoch(ctx)
 		if err != nil {
 			return nil, err
 		}
-		return aggregate, nil
+		if epoch == 0 {
+			return nil, errors.New("zero epoch not a valid response")
+		}
+		return epoch, nil
 	}, nil)
 	if err != nil {
 		return 0, err
-	}
-	if res == nil {
-		return 0, nil
 	}
 	return res.(phase0.Epoch), nil
 }

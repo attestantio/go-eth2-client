@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,22 +17,23 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/pkg/errors"
 )
 
 // TargetAggregatorsPerCommittee provides the target number of aggregators for each attestation committee.
 func (s *Service) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		aggregate, err := client.(consensusclient.TargetAggregatorsPerCommitteeProvider).TargetAggregatorsPerCommittee(ctx)
+		aggregators, err := client.(consensusclient.TargetAggregatorsPerCommitteeProvider).TargetAggregatorsPerCommittee(ctx)
 		if err != nil {
 			return nil, err
 		}
-		return aggregate, nil
+		if aggregators == 0 {
+			return nil, errors.New("zero value not a valid response")
+		}
+		return aggregators, nil
 	}, nil)
 	if err != nil {
 		return 0, err
-	}
-	if res == nil {
-		return 0, nil
 	}
 	return res.(uint64), nil
 }
