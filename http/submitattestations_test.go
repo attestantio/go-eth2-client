@@ -74,7 +74,8 @@ func TestSubmitAttestations(t *testing.T) {
 			err = service.(client.AttestationsSubmitter).SubmitAttestations(context.Background(), []*phase0.Attestation{attestation})
 			// We will get an error as the bitlist is the incorrect size (on purpose, to stop our test being broadcast).
 			if err != nil {
-				require.True(t, strings.Contains(err.Error(), "Aggregation bitlist size (128) does not match committee size"))
+				require.True(t, strings.Contains(err.Error(), "Aggregation bitlist size (128) does not match committee size") ||
+					strings.Contains(err.Error(), "Aggregation bit size 128 is greater than committee size"))
 			}
 		})
 	}

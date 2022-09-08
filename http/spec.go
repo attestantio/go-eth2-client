@@ -31,9 +31,12 @@ type specJSON struct {
 
 // Spec provides the spec information of the chain.
 func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
+	s.specMutex.RLock()
 	if s.spec != nil {
+		s.specMutex.RUnlock()
 		return s.spec, nil
 	}
+	s.specMutex.RUnlock()
 
 	s.specMutex.Lock()
 	defer s.specMutex.Unlock()

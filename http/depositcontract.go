@@ -27,9 +27,12 @@ type depositContractJSON struct {
 
 // DepositContract provides details of the Ethereum 1 deposit contract for the chain.
 func (s *Service) DepositContract(ctx context.Context) (*api.DepositContract, error) {
+	s.depositContractMutex.RLock()
 	if s.depositContract != nil {
+		s.depositContractMutex.RUnlock()
 		return s.depositContract, nil
 	}
+	s.depositContractMutex.RUnlock()
 
 	s.depositContractMutex.Lock()
 	defer s.depositContractMutex.Unlock()
