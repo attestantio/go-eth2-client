@@ -19,5 +19,10 @@ import (
 
 // SlotsPerEpoch provides the number of slots per epoch for the chain.
 func (s *Service) SlotsPerEpoch(ctx context.Context) (uint64, error) {
-	return s.spec["SLOTS_PER_EPOCH"].(uint64), nil
+	spec, err := s.Spec(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return spec["SLOTS_PER_EPOCH"].(uint64), nil
 }

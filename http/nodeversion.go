@@ -30,9 +30,12 @@ type nodeVersionDataJSON struct {
 
 // NodeVersion provides the version information of the node.
 func (s *Service) NodeVersion(ctx context.Context) (string, error) {
+	s.nodeVersionMutex.RLock()
 	if s.nodeVersion != "" {
+		s.nodeVersionMutex.RUnlock()
 		return s.nodeVersion, nil
 	}
+	s.nodeVersionMutex.RUnlock()
 
 	s.nodeVersionMutex.Lock()
 	defer s.nodeVersionMutex.Unlock()

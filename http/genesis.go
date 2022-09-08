@@ -27,9 +27,12 @@ type genesisJSON struct {
 
 // Genesis provides the genesis information of the chain.
 func (s *Service) Genesis(ctx context.Context) (*api.Genesis, error) {
+	s.genesisMutex.RLock()
 	if s.genesis != nil {
+		s.genesisMutex.RUnlock()
 		return s.genesis, nil
 	}
+	s.genesisMutex.RUnlock()
 
 	s.genesisMutex.Lock()
 	defer s.genesisMutex.Unlock()

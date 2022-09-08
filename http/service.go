@@ -44,15 +44,15 @@ type Service struct {
 	// Various information from the node that does not change during the
 	// lifetime of a beacon node.
 	genesis              *api.Genesis
-	genesisMutex         sync.Mutex
+	genesisMutex         sync.RWMutex
 	spec                 map[string]interface{}
-	specMutex            sync.Mutex
+	specMutex            sync.RWMutex
 	depositContract      *api.DepositContract
-	depositContractMutex sync.Mutex
+	depositContractMutex sync.RWMutex
 	forkSchedule         []*phase0.Fork
-	forkScheduleMutex    sync.Mutex
+	forkScheduleMutex    sync.RWMutex
 	nodeVersion          string
-	nodeVersionMutex     sync.Mutex
+	nodeVersionMutex     sync.RWMutex
 
 	// API support.
 	supportsV2BeaconBlocks    bool
@@ -119,6 +119,11 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 		return nil, errors.Wrap(err, "failed to confirm node connection")
 	}
 
+	// Periodially refetch static values in case of client update.
+	if err := s.periodicClearStaticValues(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to set update ticker")
+	}
+
 	// Handle flags for API versioning.
 	if err := s.checkAPIVersioning(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to check API versioning")
@@ -153,6 +158,39 @@ func (s *Service) fetchStaticValues(ctx context.Context) error {
 		return errors.Wrap(err, "failed to fetch node version")
 	}
 
+	return nil
+}
+
+// periodicClearStaticValues periodically sets static values to nil so they are
+// refetched the next time they are required.
+func (s *Service) periodicClearStaticValues(ctx context.Context) error {
+	go func(s *Service, ctx context.Context) {
+		// Refreah every 5 minutes.
+		refreshTicker := time.NewTicker(5 * time.Minute)
+		for {
+			select {
+			case <-refreshTicker.C:
+				s.genesisMutex.Lock()
+				s.genesis = nil
+				s.genesisMutex.Unlock()
+				s.specMutex.Lock()
+				s.spec = nil
+				s.specMutex.Unlock()
+				s.depositContractMutex.Lock()
+				s.depositContract = nil
+				s.depositContractMutex.Unlock()
+				s.forkScheduleMutex.Lock()
+				s.forkSchedule = nil
+				s.forkScheduleMutex.Unlock()
+				s.nodeVersionMutex.Lock()
+				s.nodeVersion = ""
+				s.nodeVersionMutex.Unlock()
+			case <-ctx.Done():
+				return
+			}
+		}
+
+	}(s, ctx)
 	return nil
 }
 

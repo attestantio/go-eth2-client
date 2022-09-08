@@ -38,7 +38,7 @@ func TestBeaconState(t *testing.T) {
 		{
 			name:        "Head",
 			stateID:     "head",
-			dataVersion: spec.DataVersionAltair,
+			dataVersion: spec.DataVersionBellatrix,
 		},
 	}
 
