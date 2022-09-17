@@ -28,6 +28,8 @@ type SyncState struct {
 	HeadSlot phase0.Slot
 	// SyncDistance is the distance between the node's highest synced slot and the head slot.
 	SyncDistance phase0.Slot
+	// IsOptimistic is true if the node is optimistic.
+	IsOptimistic bool
 	// IsSyncing is true if the node is syncing.
 	IsSyncing bool
 }
@@ -36,6 +38,7 @@ type SyncState struct {
 type syncStateJSON struct {
 	HeadSlot     string `json:"head_slot"`
 	SyncDistance string `json:"sync_distance"`
+	IsOptimistic bool   `json:"is_optimistic"`
 	IsSyncing    bool   `json:"is_syncing"`
 }
 
@@ -44,6 +47,7 @@ func (s *SyncState) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&syncStateJSON{
 		HeadSlot:     fmt.Sprintf("%d", s.HeadSlot),
 		SyncDistance: fmt.Sprintf("%d", s.SyncDistance),
+		IsOptimistic: s.IsOptimistic,
 		IsSyncing:    s.IsSyncing,
 	})
 }
@@ -72,6 +76,7 @@ func (s *SyncState) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "invalid value for sync distance")
 	}
 	s.SyncDistance = phase0.Slot(syncDistance)
+	s.IsOptimistic = syncStateJSON.IsOptimistic
 	s.IsSyncing = syncStateJSON.IsSyncing
 
 	return nil
