@@ -12,10 +12,4 @@ jobs:
         with:
           go-version: 1.17
       - uses: actions/checkout@v3
-      - name: run tests
-        run: go test -json ./... > test.json
-      - name: Annotate tests
-        if: always()
-        uses: guyarb/golang-test-annotations@v0.5.1
-        with:
-          test-results: test.json
+      - uses: n8maninger/action-golang-test@v1
