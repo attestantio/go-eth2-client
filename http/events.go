@@ -44,7 +44,7 @@ func (s *Service) Events(ctx context.Context, topics []string, handler client.Ev
 		}
 	}
 
-	reference, err := url.Parse(fmt.Sprintf("/eth/v1/events?topics=%s", strings.Join(topics, "&topics=")))
+	reference, err := url.Parse(fmt.Sprintf("eth/v1/events?topics=%s", strings.Join(topics, "&topics=")))
 	if err != nil {
 		return errors.Wrap(err, "invalid endpoint")
 	}

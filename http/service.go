@@ -97,7 +97,10 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 
 	address := parameters.address
 	if !strings.HasPrefix(address, "http") {
-		address = fmt.Sprintf("http://%s", parameters.address)
+		address = fmt.Sprintf("http://%s", address)
+	}
+	if !strings.HasSuffix(address, "/") {
+		address = fmt.Sprintf("%s/", address)
 	}
 	base, err := url.Parse(address)
 	if err != nil {
