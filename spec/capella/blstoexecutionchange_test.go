@@ -176,10 +176,9 @@ func TestBLSToExecutionChangeSpec(t *testing.T) {
 				require.NoError(t, err)
 
 				// Ensure this matches the expected hash tree root.
-				// TODO
-				// ssz, err := res.MarshalSSZ()
-				// require.NoError(t, err)
-				// require.Equal(t, specSSZ, ssz)
+				ssz, err := res.MarshalSSZ()
+				require.NoError(t, err)
+				require.Equal(t, specSSZ, ssz)
 			})
 		}
 		return nil
