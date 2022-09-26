@@ -53,7 +53,7 @@ type BeaconState struct {
 	CurrentSyncCommittee                *altair.SyncCommittee
 	NextSyncCommittee                   *altair.SyncCommittee
 	LatestExecutionPayloadHeader        *ExecutionPayloadHeader
-	WithdrawalQueue                     []*Withdrawal `ssz-size:"1099511627776"`
+	WithdrawalQueue                     []*Withdrawal `ssz-max:"1099511627776"`
 	NextWithdrawalIndex                 WithdrawalIndex
 	NextPartialWithdrawalValidatorIndex phase0.ValidatorIndex
 }
