@@ -129,6 +129,10 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 	if _, exists := config["DOMAIN_APPLICATION_MASK"]; !exists {
 		config["DOMAIN_APPLICATION_MASK"] = phase0.DomainType{0x00, 0x00, 0x00, 0x01}
 	}
+	// The BLS to execution change domain type is not provided by all nodes, so add it here if not present.
+	if _, exists := config["DOMAIN_BLS_TO_EXECUTION_CHANGE"]; !exists {
+		config["DOMAIN_BLS_TO_EXECUTION_CHANGE"] = phase0.DomainType{0x0a, 0x00, 0x00, 0x00}
+	}
 	// The builder application domain type is not officially part of the spec, so add it here if not present.
 	if _, exists := config["DOMAIN_APPLICATION_BUILDER"]; !exists {
 		config["DOMAIN_APPLICATION_BUILDER"] = phase0.DomainType{0x00, 0x00, 0x00, 0x01}
