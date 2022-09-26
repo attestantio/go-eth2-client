@@ -13,3 +13,5 @@ jobs:
           go-version: 1.17
       - uses: actions/checkout@v3
       - uses: n8maninger/action-golang-test@v1
+        with:
+          args: "-race;-timeout=30m"
