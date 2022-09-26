@@ -44,7 +44,7 @@ type ExecutionPayload struct {
 	BaseFeePerGas [32]byte                `ssz-size:"32"`
 	BlockHash     phase0.Hash32           `ssz-size:"32"`
 	Transactions  []bellatrix.Transaction `ssz-max:"1048576,1073741824"`
-	Withdrawals   []*Withdrawal           `ssz-size:"16"`
+	Withdrawals   []*Withdrawal           `ssz-max:"16"`
 }
 
 // executionPayloadJSON is the spec representation of the struct.
