@@ -26,7 +26,8 @@ import (
 )
 
 func TestService(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	tests := []struct {
 		name       string
@@ -101,7 +102,9 @@ func TestService(t *testing.T) {
 }
 
 func TestInterfaces(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	s, err := v1.New(ctx, v1.WithAddress(os.Getenv("HTTP_ADDRESS")), v1.WithTimeout(5*time.Second))
 	require.NoError(t, err)
 

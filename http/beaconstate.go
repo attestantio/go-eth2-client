@@ -53,7 +53,6 @@ func (s *Service) beaconStateV1(ctx context.Context, stateID string) (*spec.Vers
 	url := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", stateID)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request beacon state")
 	}
 	if respBodyReader == nil {
@@ -76,7 +75,6 @@ func (s *Service) beaconStateV2(ctx context.Context, stateID string) (*spec.Vers
 	url := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", stateID)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request beacon state")
 	}
 	if respBodyReader == nil {

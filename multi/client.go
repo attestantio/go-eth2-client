@@ -20,11 +20,15 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 )
 
 // monitor monitors active and inactive connections, and moves them between
 // lists accordingly.
 func (s *Service) monitor(ctx context.Context) {
+	log := s.log.With().Logger()
+	ctx = log.WithContext(ctx)
+
 	log.Trace().Msg("Monitor starting")
 	for {
 		select {
@@ -58,6 +62,8 @@ func (s *Service) recheck(ctx context.Context) {
 
 // deactivateClient deactivates a client, moving it to the inactive list if not currently on it.
 func (s *Service) deactivateClient(ctx context.Context, client consensusclient.Service) {
+	log := zerolog.Ctx(ctx)
+
 	s.clientsMu.Lock()
 	defer s.clientsMu.Unlock()
 
@@ -83,6 +89,8 @@ func (s *Service) deactivateClient(ctx context.Context, client consensusclient.S
 
 // activateClient activates a client, moving it to the active list if not currently on it.
 func (s *Service) activateClient(ctx context.Context, client consensusclient.Service) {
+	log := zerolog.Ctx(ctx)
+
 	s.clientsMu.Lock()
 	defer s.clientsMu.Unlock()
 
@@ -109,6 +117,8 @@ func (s *Service) activateClient(ctx context.Context, client consensusclient.Ser
 // ping pings a client, returning true if it is ready to serve requests and
 // false otherwise.
 func ping(ctx context.Context, client consensusclient.Service) bool {
+	log := zerolog.Ctx(ctx)
+
 	provider, isProvider := client.(consensusclient.NodeSyncingProvider)
 	if !isProvider {
 		log.Debug().Str("provider", client.Address()).Msg("Client does not provide sync state")
@@ -135,6 +145,9 @@ type errHandlerFunc func(ctx context.Context, client consensusclient.Service, er
 
 // doCall carries out a call on the active clients in turn until one succeeds.
 func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandlerFunc) (interface{}, error) {
+	log := s.log.With().Logger()
+	ctx = log.WithContext(ctx)
+
 	// Grab local copy of active clients in case it is updated whilst we are using it.
 	s.clientsMu.RLock()
 	activeClients := s.activeClients

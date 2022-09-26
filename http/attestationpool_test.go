@@ -26,6 +26,9 @@ import (
 )
 
 func TestAttestationPool(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name string
 		slot int64 // -1 for current
@@ -36,16 +39,16 @@ func TestAttestationPool(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
 	require.NoError(t, err)
 
 	// Need to fetch current slot for attestation pools.
-	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
 
 	for _, test := range tests {
@@ -56,7 +59,7 @@ func TestAttestationPool(t *testing.T) {
 			slot = phase0.Slot(uint64(test.slot))
 		}
 		t.Run(test.name, func(t *testing.T) {
-			attestationPool, err := service.(client.AttestationPoolProvider).AttestationPool(context.Background(), slot)
+			attestationPool, err := service.(client.AttestationPoolProvider).AttestationPool(ctx, slot)
 			require.NoError(t, err)
 			require.NotNil(t, attestationPool)
 		})

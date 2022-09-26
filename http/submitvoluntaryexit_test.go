@@ -25,6 +25,9 @@ import (
 )
 
 func TestSubmitVoluntaryExit(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name string
 		exit *phase0.SignedVoluntaryExit
@@ -41,7 +44,7 @@ func TestSubmitVoluntaryExit(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
@@ -49,7 +52,7 @@ func TestSubmitVoluntaryExit(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := service.(client.VoluntaryExitSubmitter).SubmitVoluntaryExit(context.Background(), test.exit)
+			err := service.(client.VoluntaryExitSubmitter).SubmitVoluntaryExit(ctx, test.exit)
 			require.Contains(t, err.Error(), "400")
 		})
 	}

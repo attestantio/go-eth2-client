@@ -16,6 +16,7 @@ package http_test
 import (
 	"context"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -26,6 +27,9 @@ import (
 )
 
 func TestEvents(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name   string
 		topics []string
@@ -36,7 +40,7 @@ func TestEvents(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
@@ -45,12 +49,17 @@ func TestEvents(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
+			eventsMu := sync.Mutex{}
 			events := 0
 			err := service.(client.EventsProvider).Events(ctx, test.topics, func(event *api.Event) {
+				eventsMu.Lock()
 				events++
+				eventsMu.Unlock()
 			})
 			require.NoError(t, err)
 			time.Sleep(30 * time.Second)
+			eventsMu.Lock()
+			defer eventsMu.Unlock()
 			require.NotEqual(t, 0, events)
 			cancel()
 		})

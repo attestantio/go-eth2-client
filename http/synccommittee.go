@@ -32,7 +32,6 @@ func (s *Service) SyncCommittee(ctx context.Context, stateID string) (*api.SyncC
 	url := fmt.Sprintf("/eth/v1/beacon/states/%s/sync_committees", stateID)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request sync committee")
 	}
 	if respBodyReader == nil {
@@ -52,7 +51,6 @@ func (s *Service) SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoc
 	url := fmt.Sprintf("/eth/v1/beacon/states/%s/sync_committees?epoch=%d", stateID, epoch)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request sync committee")
 	}
 	if respBodyReader == nil {

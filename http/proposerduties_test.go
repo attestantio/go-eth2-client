@@ -27,7 +27,8 @@ import (
 )
 
 func TestProposerDuties(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	service, err := http.New(ctx,
 		http.WithLogLevel(zerolog.TraceLevel),
@@ -37,11 +38,11 @@ func TestProposerDuties(t *testing.T) {
 	require.NoError(t, err)
 
 	// Needed to fetch current epoch.
-	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
-	slotsPerEpoch, err := service.(client.SlotsPerEpochProvider).SlotsPerEpoch(context.Background())
+	slotsPerEpoch, err := service.(client.SlotsPerEpochProvider).SlotsPerEpoch(ctx)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -75,7 +76,7 @@ func TestProposerDuties(t *testing.T) {
 			} else {
 				epoch = phase0.Epoch(test.epoch)
 			}
-			duties, err := service.(client.ProposerDutiesProvider).ProposerDuties(context.Background(), epoch, test.validatorIndices)
+			duties, err := service.(client.ProposerDutiesProvider).ProposerDuties(ctx, epoch, test.validatorIndices)
 			require.NoError(t, err)
 			require.NotNil(t, duties)
 			require.Equal(t, test.expected, len(duties))

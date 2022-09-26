@@ -46,7 +46,6 @@ func (s *Service) SlotFromStateID(ctx context.Context, stateID string) (phase0.S
 		slot = phase0.Slot(tmp)
 	}
 
-	log.Trace().Str("state", stateID).Uint64("slot", uint64(slot)).Msg("Calculated from state ID")
 	return slot, nil
 }
 
@@ -85,6 +84,5 @@ func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (phase0.
 		epoch = phase0.Epoch(tmp / slotsPerEpoch)
 	}
 
-	log.Trace().Str("state", stateID).Uint64("epoch", uint64(epoch)).Msg("Calculated from state ID")
 	return epoch, nil
 }

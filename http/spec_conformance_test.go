@@ -31,6 +31,9 @@ import (
 )
 
 func TestSpecConformance(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	expected := map[string]interface{}{
 		"BASE_REWARD_FACTOR":                    uint64(0),
 		"BLS_WITHDRAWAL_PREFIX":                 []byte{},
@@ -95,13 +98,13 @@ func TestSpecConformance(t *testing.T) {
 		"WHISTLEBLOWER_REWARD_QUOTIENT":         uint64(0),
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
 	require.NoError(t, err)
 
-	spec, err := service.Spec(context.Background())
+	spec, err := service.Spec(ctx)
 	require.NoError(t, err)
 	require.NotNil(t, spec)
 

@@ -29,6 +29,9 @@ import (
 )
 
 func TestSubmitValidatorRegistrations(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name          string
 		registrations []*api.VersionedSignedValidatorRegistration
@@ -66,7 +69,7 @@ func TestSubmitValidatorRegistrations(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
@@ -75,7 +78,7 @@ func TestSubmitValidatorRegistrations(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			err := service.(client.ValidatorRegistrationsSubmitter).
-				SubmitValidatorRegistrations(context.Background(), test.registrations)
+				SubmitValidatorRegistrations(ctx, test.registrations)
 			require.Equal(t, test.expectErr.Error(), err.Error())
 		})
 	}

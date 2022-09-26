@@ -15,10 +15,13 @@ package multi
 
 import (
 	"context"
+	"fmt"
+	"math/rand"
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/rs/zerolog"
 )
 
 // Events feeds requested events with the given topics to the supplied handler.
@@ -26,6 +29,9 @@ func (s *Service) Events(ctx context.Context,
 	topics []string,
 	handler consensusclient.EventHandlerFunc,
 ) error {
+	// #nosec G404
+	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Logger()
+
 	// Because events are streams we treat them differently from all other calls.
 	// We listen to all active clients, and only pass along events from the currently active provider.
 
@@ -39,6 +45,7 @@ func (s *Service) Events(ctx context.Context,
 	for _, client := range activeClients {
 		ah := &activeHandler{
 			s:       s,
+			log:     log.With().Logger(),
 			address: client.Address(),
 			handler: handler,
 		}
@@ -53,6 +60,7 @@ func (s *Service) Events(ctx context.Context,
 	for _, inactiveClient := range inactiveClients {
 		ah := &activeHandler{
 			s:       s,
+			log:     log.With().Logger(),
 			address: inactiveClient.Address(),
 			handler: handler,
 		}
@@ -60,18 +68,18 @@ func (s *Service) Events(ctx context.Context,
 			for {
 				provider, isProvider := c.(consensusclient.NodeSyncingProvider)
 				if !isProvider {
-					log.Error().Str("address", ah.address).Strs("topics", topics).Msg("Not a node syncing provider")
+					ah.log.Error().Str("address", ah.address).Strs("topics", topics).Msg("Not a node syncing provider")
 					return
 				}
 				syncState, err := provider.NodeSyncing(ctx)
 				if err != nil {
-					log.Error().Str("address", ah.address).Strs("topics", topics).Err(err).Msg("Failed to obtain sync state from node")
+					ah.log.Error().Str("address", ah.address).Strs("topics", topics).Err(err).Msg("Failed to obtain sync state from node")
 					return
 				}
 				if !syncState.IsSyncing {
 					// Client is now synced, set up the events call.
 					if err := c.(consensusclient.EventsProvider).Events(ctx, topics, ah.handleEvent); err != nil {
-						log.Error().Str("address", ah.address).Strs("topics", topics).Err(err).Msg("Failed to set up events handler")
+						ah.log.Error().Str("address", ah.address).Strs("topics", topics).Err(err).Msg("Failed to set up events handler")
 					}
 					// Return either way.
 					return
@@ -86,17 +94,18 @@ func (s *Service) Events(ctx context.Context,
 
 type activeHandler struct {
 	s       *Service
+	log     zerolog.Logger
 	address string
 	handler consensusclient.EventHandlerFunc
 }
 
 func (h *activeHandler) handleEvent(event *api.Event) {
-	log.Trace().Str("address", h.address).Str("topic", event.Topic).Msg("Event received")
+	h.log.Trace().Str("address", h.address).Str("topic", event.Topic).Msg("Event received")
 	// We only forward events from the currently active provider.  If we did not do this then we could end up with
 	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
 	// block end up with an earlier block.
 	if h.s.Address() == h.address {
-		log.Trace().Str("address", h.address).Str("topic", event.Topic).Msg("Forwarding due to primary active address")
+		h.log.Trace().Str("address", h.address).Str("topic", event.Topic).Msg("Forwarding due to primary active address")
 		h.handler(event)
 	}
 }

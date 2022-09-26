@@ -29,6 +29,9 @@ import (
 )
 
 func TestSubmitBeaconBlock(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name         string
 		randaoReveal phase0.BLSSignature
@@ -51,23 +54,23 @@ func TestSubmitBeaconBlock(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
 	require.NoError(t, err)
 
 	// Need to fetch current slot for proposal.
-	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
 
 	for _, test := range tests {
 		nextSlot := phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds())/uint64(slotDuration.Seconds())) + 1
 		t.Run(test.name, func(t *testing.T) {
 			// Fetch a block to propose.
-			res, err := service.(client.BeaconBlockProposalProvider).BeaconBlockProposal(context.Background(), nextSlot, test.randaoReveal, test.graffiti)
+			res, err := service.(client.BeaconBlockProposalProvider).BeaconBlockProposal(ctx, nextSlot, test.randaoReveal, test.graffiti)
 			require.NoError(t, err)
 			require.NotNil(t, res)
 
@@ -95,8 +98,8 @@ func TestSubmitBeaconBlock(t *testing.T) {
 				t.Fatalf("unknown block version %s", res.Version.String())
 			}
 			// Some implementations return an error and some don't, so do not check.
-			service.(client.BeaconBlockSubmitter).SubmitBeaconBlock(context.Background(), signedBeaconBlock) // nolint:errcheck
-			// err = service.SubmitBeaconBlock(context.Background(), signedBeaconBlock)
+			service.(client.BeaconBlockSubmitter).SubmitBeaconBlock(ctx, signedBeaconBlock) // nolint:errcheck
+			// err = service.SubmitBeaconBlock(ctx, signedBeaconBlock)
 			// require.NotNil(t, err)
 		})
 	}

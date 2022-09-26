@@ -33,7 +33,7 @@ type specJSON struct {
 func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 	s.specMutex.RLock()
 	if s.spec != nil {
-		s.specMutex.RUnlock()
+		defer s.specMutex.RUnlock()
 		return s.spec, nil
 	}
 	s.specMutex.RUnlock()

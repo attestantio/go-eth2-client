@@ -43,12 +43,14 @@ var pubKeyChunkSizes = map[string]int{
 }
 
 // pubKeyChunkSize is the maximum number of validator public keys to send in each request.
-func (s *Service) pubKeyChunkSize() int {
+func (s *Service) pubKeyChunkSize(ctx context.Context) int {
 	if s.userPubKeyChunkSize > 0 {
 		return s.userPubKeyChunkSize
 	}
 
-	nodeVersion := strings.ToLower(s.nodeVersion)
+	// If this errors it will use the default so not a concern.
+	nodeVersion, _ := s.NodeVersion(ctx)
+
 	switch {
 	case strings.Contains(nodeVersion, "lighthouse"):
 		return pubKeyChunkSizes["lighthouse"]
@@ -72,7 +74,7 @@ func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, valida
 		return nil, errors.New("no state ID specified")
 	}
 
-	if len(validatorPubKeys) > s.pubKeyChunkSize() {
+	if len(validatorPubKeys) > s.pubKeyChunkSize(ctx) {
 		return s.chunkedValidatorsByPubKey(ctx, stateID, validatorPubKeys)
 	}
 
@@ -111,7 +113,7 @@ func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, valida
 // chunkedValidatorsByPubKey obtains the validators a chunk at a time.
 func (s *Service) chunkedValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	res := make(map[phase0.ValidatorIndex]*api.Validator)
-	pubKeyChunkSize := s.pubKeyChunkSize()
+	pubKeyChunkSize := s.pubKeyChunkSize(ctx)
 	for i := 0; i < len(validatorPubKeys); i += pubKeyChunkSize {
 		chunkStart := i
 		chunkEnd := i + pubKeyChunkSize

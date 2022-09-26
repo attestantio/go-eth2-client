@@ -26,6 +26,9 @@ import (
 )
 
 func TestAggregateAttestation(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name           string
 		committeeIndex phase0.CommitteeIndex
@@ -36,30 +39,30 @@ func TestAggregateAttestation(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
 	require.NoError(t, err)
 
 	// Need to fetch current slot for attestation.
-	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
 
 	for _, test := range tests {
 		slot := phase0.Slot(time.Since(genesis.GenesisTime).Seconds()) / phase0.Slot(slotDuration.Seconds())
 		t.Run(test.name, func(t *testing.T) {
 			// Fetch attestation data to generate a root.
-			attestationData, err := service.(client.AttestationDataProvider).AttestationData(context.Background(), slot, test.committeeIndex)
+			attestationData, err := service.(client.AttestationDataProvider).AttestationData(ctx, slot, test.committeeIndex)
 			require.NoError(t, err)
 			require.NotNil(t, attestationData)
 			dataRoot, err := attestationData.HashTreeRoot()
 			require.NoError(t, err)
 
 			// Fetch aggregate attestation.
-			_, err = service.(client.AggregateAttestationProvider).AggregateAttestation(context.Background(), slot, dataRoot)
+			_, err = service.(client.AggregateAttestationProvider).AggregateAttestation(ctx, slot, dataRoot)
 			require.NoError(t, err)
 		})
 	}

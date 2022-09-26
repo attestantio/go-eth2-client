@@ -43,12 +43,14 @@ var indexChunkSizes = map[string]int{
 }
 
 // indexChunkSize is the maximum number of validator indices to send in each request.
-func (s *Service) indexChunkSize() int {
+func (s *Service) indexChunkSize(ctx context.Context) int {
 	if s.userIndexChunkSize > 0 {
 		return s.userIndexChunkSize
 	}
 
-	nodeVersion := strings.ToLower(s.nodeVersion)
+	// If this errors it will use the default so not a concern.
+	nodeVersion, _ := s.NodeVersion(ctx)
+
 	switch {
 	case strings.Contains(nodeVersion, "lighthouse"):
 		return indexChunkSizes["lighthouse"]
@@ -71,7 +73,7 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIndic
 		return nil, errors.New("no state ID specified")
 	}
 
-	if len(validatorIndices) > s.indexChunkSize() {
+	if len(validatorIndices) > s.indexChunkSize(ctx) {
 		return s.chunkedValidators(ctx, stateID, validatorIndices)
 	}
 
@@ -110,7 +112,7 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIndic
 // chunkedValidators obtains the validators a chunk at a time.
 func (s *Service) chunkedValidators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	res := make(map[phase0.ValidatorIndex]*api.Validator)
-	indexChunkSize := s.indexChunkSize()
+	indexChunkSize := s.indexChunkSize(ctx)
 	for i := 0; i < len(validatorIndices); i += indexChunkSize {
 		chunkStart := i
 		chunkEnd := i + indexChunkSize

@@ -29,7 +29,7 @@ type forkScheduleJSON struct {
 func (s *Service) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
 	s.forkScheduleMutex.RLock()
 	if s.forkSchedule != nil {
-		s.forkScheduleMutex.RUnlock()
+		defer s.forkScheduleMutex.RUnlock()
 		return s.forkSchedule, nil
 	}
 	s.forkScheduleMutex.RUnlock()
