@@ -30,7 +30,7 @@ import (
 // Withdrawal provides information about a withdrawal.
 type Withdrawal struct {
 	Index   WithdrawalIndex
-	Address bellatrix.ExecutionAddress `ssz-size:"48"`
+	Address bellatrix.ExecutionAddress `ssz-size:"20"`
 	Amount  phase0.Gwei
 }
 
