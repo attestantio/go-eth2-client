@@ -28,6 +28,9 @@ import (
 )
 
 func TestSubmitAttestations(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name string
 	}{
@@ -36,23 +39,23 @@ func TestSubmitAttestations(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
 	require.NoError(t, err)
 
 	// Need to fetch current slot for attestation.
-	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
 
 	for _, test := range tests {
 		thisSlot := phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
 		t.Run(test.name, func(t *testing.T) {
 			// Fetch attestation data.
-			attestationData, err := service.(client.AttestationDataProvider).AttestationData(context.Background(), thisSlot, 0)
+			attestationData, err := service.(client.AttestationDataProvider).AttestationData(ctx, thisSlot, 0)
 			require.NoError(t, err)
 			require.NotNil(t, attestationData)
 
@@ -71,7 +74,7 @@ func TestSubmitAttestations(t *testing.T) {
 				}),
 			}
 
-			err = service.(client.AttestationsSubmitter).SubmitAttestations(context.Background(), []*phase0.Attestation{attestation})
+			err = service.(client.AttestationsSubmitter).SubmitAttestations(ctx, []*phase0.Attestation{attestation})
 			// We will get an error as the bitlist is the incorrect size (on purpose, to stop our test being broadcast).
 			if err != nil {
 				require.True(t, strings.Contains(err.Error(), "Aggregation bitlist size (128) does not match committee size") ||

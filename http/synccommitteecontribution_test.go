@@ -26,7 +26,8 @@ import (
 )
 
 func TestSyncCommitteeContribution(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
@@ -35,9 +36,9 @@ func TestSyncCommitteeContribution(t *testing.T) {
 	require.NoError(t, err)
 
 	// Needed to fetch current epoch.
-	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -63,7 +64,7 @@ func TestSyncCommitteeContribution(t *testing.T) {
 			root, err := service.(client.BeaconBlockRootProvider).BeaconBlockRoot(ctx, "head")
 			require.NoError(t, err)
 			require.NotNil(t, root)
-			contribution, err := service.(client.SyncCommitteeContributionProvider).SyncCommitteeContribution(context.Background(), slot, test.subcommitteeIndex, *root)
+			contribution, err := service.(client.SyncCommitteeContributionProvider).SyncCommitteeContribution(ctx, slot, test.subcommitteeIndex, *root)
 			// Possible that the node is not aggregating sync committee messages...
 			if err != nil {
 				require.EqualError(t, err, "failed to obtain sync committee contribution")

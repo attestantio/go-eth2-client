@@ -26,7 +26,8 @@ import (
 )
 
 func TestSyncCommitteeDuties(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
@@ -35,11 +36,11 @@ func TestSyncCommitteeDuties(t *testing.T) {
 	require.NoError(t, err)
 
 	// Needed to fetch current epoch.
-	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
-	slotsPerEpoch, err := service.(client.SlotsPerEpochProvider).SlotsPerEpoch(context.Background())
+	slotsPerEpoch, err := service.(client.SlotsPerEpochProvider).SlotsPerEpoch(ctx)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -71,7 +72,7 @@ func TestSyncCommitteeDuties(t *testing.T) {
 			} else {
 				epoch = phase0.Epoch(test.epoch)
 			}
-			duties, err := service.(client.SyncCommitteeDutiesProvider).SyncCommitteeDuties(context.Background(), epoch, test.validatorIndices)
+			duties, err := service.(client.SyncCommitteeDutiesProvider).SyncCommitteeDuties(ctx, epoch, test.validatorIndices)
 			require.NoError(t, err)
 			require.NotNil(t, duties)
 			// No guaratee that any included indices will be have a sync duty.

@@ -29,7 +29,7 @@ type depositContractJSON struct {
 func (s *Service) DepositContract(ctx context.Context) (*api.DepositContract, error) {
 	s.depositContractMutex.RLock()
 	if s.depositContract != nil {
-		s.depositContractMutex.RUnlock()
+		defer s.depositContractMutex.RUnlock()
 		return s.depositContract, nil
 	}
 	s.depositContractMutex.RUnlock()

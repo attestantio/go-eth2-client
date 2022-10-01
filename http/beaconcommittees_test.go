@@ -26,6 +26,9 @@ import (
 )
 
 func TestBeaconCommittees(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name    string
 		stateID string
@@ -36,7 +39,7 @@ func TestBeaconCommittees(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
@@ -44,7 +47,7 @@ func TestBeaconCommittees(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			beaconCommittees, err := service.(client.BeaconCommitteesProvider).BeaconCommittees(context.Background(), test.stateID)
+			beaconCommittees, err := service.(client.BeaconCommitteesProvider).BeaconCommittees(ctx, test.stateID)
 			require.NoError(t, err)
 			require.NotNil(t, beaconCommittees)
 		})
@@ -52,7 +55,8 @@ func TestBeaconCommittees(t *testing.T) {
 }
 
 func TestBeaconCommitteesAtEpoch(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
@@ -61,11 +65,11 @@ func TestBeaconCommitteesAtEpoch(t *testing.T) {
 	require.NoError(t, err)
 
 	// Needed to fetch current epoch.
-	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
-	slotsPerEpoch, err := service.(client.SlotsPerEpochProvider).SlotsPerEpoch(context.Background())
+	slotsPerEpoch, err := service.(client.SlotsPerEpochProvider).SlotsPerEpoch(ctx)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -88,7 +92,7 @@ func TestBeaconCommitteesAtEpoch(t *testing.T) {
 			} else {
 				epoch = phase0.Epoch(test.epoch)
 			}
-			beaconCommittees, err := service.(client.BeaconCommitteesProvider).BeaconCommitteesAtEpoch(context.Background(), test.stateID, epoch)
+			beaconCommittees, err := service.(client.BeaconCommitteesProvider).BeaconCommitteesAtEpoch(ctx, test.stateID, epoch)
 			require.NoError(t, err)
 			require.NotNil(t, beaconCommittees)
 		})

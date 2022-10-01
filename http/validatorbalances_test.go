@@ -25,6 +25,9 @@ import (
 )
 
 func TestValidatorBalances(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name       string
 		stateID    string
@@ -41,7 +44,7 @@ func TestValidatorBalances(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
@@ -49,7 +52,7 @@ func TestValidatorBalances(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			balances, err := service.(client.ValidatorBalancesProvider).ValidatorBalances(context.Background(), test.stateID, test.validators)
+			balances, err := service.(client.ValidatorBalancesProvider).ValidatorBalances(ctx, test.stateID, test.validators)
 			require.NoError(t, err)
 			require.NotNil(t, balances)
 		})

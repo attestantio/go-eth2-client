@@ -29,7 +29,7 @@ type genesisJSON struct {
 func (s *Service) Genesis(ctx context.Context) (*api.Genesis, error) {
 	s.genesisMutex.RLock()
 	if s.genesis != nil {
-		s.genesisMutex.RUnlock()
+		defer s.genesisMutex.RUnlock()
 		return s.genesis, nil
 	}
 	s.genesisMutex.RUnlock()

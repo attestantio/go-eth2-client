@@ -26,6 +26,9 @@ import (
 )
 
 func TestAttestationData(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name           string
 		committeeIndex phase0.CommitteeIndex
@@ -43,16 +46,16 @@ func TestAttestationData(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
 	require.NoError(t, err)
 
 	// Need to fetch current slot for attestation data.
-	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
 
 	for _, test := range tests {
@@ -63,7 +66,7 @@ func TestAttestationData(t *testing.T) {
 			slot = phase0.Slot(uint64(test.slot))
 		}
 		t.Run(test.name, func(t *testing.T) {
-			attestationData, err := service.(client.AttestationDataProvider).AttestationData(context.Background(), slot, test.committeeIndex)
+			attestationData, err := service.(client.AttestationDataProvider).AttestationData(ctx, slot, test.committeeIndex)
 			require.NoError(t, err)
 			require.NotNil(t, attestationData)
 		})

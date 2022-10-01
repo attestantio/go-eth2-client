@@ -33,6 +33,9 @@ import (
 
 // Service is an Ethereum 2 client service.
 type Service struct {
+	// log is a service-wide logger.
+	log zerolog.Logger
+
 	// Hold the initialising context to use for streams.
 	ctx context.Context
 
@@ -64,9 +67,6 @@ type Service struct {
 	userPubKeyChunkSize int
 }
 
-// log is a service-wide logger.
-var log zerolog.Logger
-
 // New creates a new Ethereum 2 client service, connecting with a standard HTTP.
 func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	parameters, err := parseAndCheckParameters(params...)
@@ -75,7 +75,7 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	}
 
 	// Set logging.
-	log = zerologger.With().Str("service", "client").Str("impl", "http").Logger()
+	log := zerologger.With().Str("service", "client").Str("impl", "http").Logger()
 	if parameters.logLevel != log.GetLevel() {
 		log = log.Level(parameters.logLevel)
 	}
@@ -105,6 +105,7 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	}
 
 	s := &Service{
+		log:                 log,
 		ctx:                 ctx,
 		base:                base,
 		address:             parameters.address,

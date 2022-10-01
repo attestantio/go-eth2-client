@@ -25,6 +25,9 @@ import (
 )
 
 func TestFinality(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name              string
 		stateID           string
@@ -53,7 +56,7 @@ func TestFinality(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
@@ -61,7 +64,7 @@ func TestFinality(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			stateFinality, err := service.(client.FinalityProvider).Finality(context.Background(), test.stateID)
+			stateFinality, err := service.(client.FinalityProvider).Finality(ctx, test.stateID)
 			if test.expectedErrorCode != 0 {
 				require.Contains(t, err.Error(), fmt.Sprintf("%d", test.expectedErrorCode))
 			} else {

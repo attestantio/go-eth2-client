@@ -56,7 +56,6 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 	url := fmt.Sprintf("/eth/v2/validator/blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request beacon block proposal")
 	}
 	if respBodyReader == nil {
@@ -134,7 +133,6 @@ func (s *Service) beaconBlockProposalV1(ctx context.Context, slot phase0.Slot, r
 	url := fmt.Sprintf("/eth/v1/validator/blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request beacon block proposal")
 	}
 	if respBodyReader == nil {

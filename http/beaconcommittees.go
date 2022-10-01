@@ -32,7 +32,6 @@ func (s *Service) BeaconCommittees(ctx context.Context, stateID string) ([]*api.
 	url := fmt.Sprintf("/eth/v1/beacon/states/%s/committees", stateID)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request beacon committees")
 	}
 	if respBodyReader == nil {
@@ -52,7 +51,6 @@ func (s *Service) BeaconCommitteesAtEpoch(ctx context.Context, stateID string, e
 	url := fmt.Sprintf("/eth/v1/beacon/states/%s/committees?epoch=%d", stateID, epoch)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request beacon committees")
 	}
 	if respBodyReader == nil {

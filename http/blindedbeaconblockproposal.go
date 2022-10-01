@@ -45,7 +45,6 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 	url := fmt.Sprintf("/eth/v1/validator/blinded_blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request blinded beacon block proposal")
 	}
 	if respBodyReader == nil {
