@@ -23,6 +23,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -37,6 +38,10 @@ type altairBeaconBlockProposalJSON struct {
 
 type bellatrixBeaconBlockProposalJSON struct {
 	Data *bellatrix.BeaconBlock `json:"data"`
+}
+
+type capellaBeaconBlockProposalJSON struct {
+	Data *capella.BeaconBlock `json:"data"`
 }
 
 // BeaconBlockProposal fetches a proposed beacon block for signing.
@@ -121,6 +126,22 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 			return nil, errors.New("beacon block proposal has incorrect graffiti")
 		}
 		res.Bellatrix = resp.Data
+	case spec.DataVersionCapella:
+		var resp capellaBeaconBlockProposalJSON
+		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+			return nil, errors.Wrap(err, "failed to parse capella beacon block proposal")
+		}
+		// Ensure the data returned to us is as expected given our input.
+		if resp.Data.Slot != slot {
+			return nil, errors.New("beacon block proposal not for requested slot")
+		}
+		if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
+			return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+		}
+		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
+			return nil, errors.New("beacon block proposal has incorrect graffiti")
+		}
+		res.Capella = resp.Data
 	default:
 		return nil, fmt.Errorf("unsupported block version %s", metadata.Version)
 	}

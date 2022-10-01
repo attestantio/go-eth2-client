@@ -23,6 +23,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -37,6 +38,10 @@ type altairSignedBeaconBlockJSON struct {
 
 type bellatrixSignedBeaconBlockJSON struct {
 	Data *bellatrix.SignedBeaconBlock `json:"data"`
+}
+
+type capellaSignedBeaconBlockJSON struct {
+	Data *capella.SignedBeaconBlock `json:"data"`
 }
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
@@ -108,6 +113,12 @@ func (s *Service) signedBeaconBlockV2(ctx context.Context, blockID string) (*spe
 			return nil, errors.Wrap(err, "failed to parse bellatrix signed beacon block")
 		}
 		res.Bellatrix = resp.Data
+	case spec.DataVersionCapella:
+		var resp capellaSignedBeaconBlockJSON
+		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+			return nil, errors.Wrap(err, "failed to parse capella signed beacon block")
+		}
+		res.Capella = resp.Data
 	default:
 		return nil, fmt.Errorf("unhandled block version %s", metadata.Version)
 	}

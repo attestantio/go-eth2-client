@@ -82,6 +82,10 @@ func TestBeaconBlockProposal(t *testing.T) {
 				assert.Equal(t, test.graffiti, resp.Bellatrix.Body.Graffiti[:])
 				assert.Equal(t, test.randaoReveal, resp.Bellatrix.Body.RANDAOReveal)
 			}
+			if resp.Capella != nil {
+				assert.Equal(t, test.graffiti, resp.Capella.Body.Graffiti[:])
+				assert.Equal(t, test.randaoReveal, resp.Capella.Body.RANDAOReveal)
+			}
 		})
 	}
 }
