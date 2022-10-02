@@ -40,8 +40,8 @@ func init() {
 // If the response from the server is a 404 this will return nil for both the reader and the error.
 func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	// #nosec G404
-	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Logger()
-	log.Trace().Str("endpoint", endpoint).Msg("GET request")
+	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Str("endpoint", endpoint).Logger()
+	log.Trace().Msg("GET request")
 
 	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
 	if err != nil {
@@ -76,7 +76,7 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	statusFamily := resp.StatusCode / 100
 	if statusFamily != 2 {
 		cancel()
-		log.Trace().Str("endpoint", endpoint).Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("GET failed")
+		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("GET failed")
 		return nil, fmt.Errorf("GET failed with status %d: %s", resp.StatusCode, string(data))
 	}
 	cancel()
@@ -89,7 +89,7 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 // post sends an HTTP post request and returns the body.
 func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io.Reader, error) {
 	// #nosec G404
-	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Logger()
+	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Str("endpoint", endpoint).Logger()
 	if e := log.Trace(); e.Enabled() {
 		bodyBytes, err := ioutil.ReadAll(body)
 		if err != nil {
@@ -97,7 +97,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 		}
 		body = bytes.NewReader(bodyBytes)
 
-		e.Str("endpoint", endpoint).Str("body", string(bodyBytes)).Msg("POST request")
+		e.Str("body", string(bodyBytes)).Msg("POST request")
 	}
 
 	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
@@ -127,7 +127,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 
 	statusFamily := resp.StatusCode / 100
 	if statusFamily != 2 {
-		log.Trace().Str("endpoint", endpoint).Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("POST failed")
+		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("POST failed")
 		cancel()
 		return nil, fmt.Errorf("POST failed with status %d: %s", resp.StatusCode, string(data))
 	}
