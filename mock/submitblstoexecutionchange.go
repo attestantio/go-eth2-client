@@ -11,19 +11,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bellatrix
+package mock
 
-import "math/big"
+import (
+	"context"
 
-// FeeRecipientLength is the number of bytes in an execution fee recipient.
-const FeeRecipientLength = 20
+	"github.com/attestantio/go-eth2-client/spec/capella"
+)
 
-// ExecutionAddressLength is the number of bytes in an execution address.
-const ExecutionAddressLength = 20
-
-var maxBaseFeePerGas = new(big.Int).SetBytes([]byte{
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-})
+// SubmitBLSToExecutionChange submits a BLS to execution address change operation.
+func (s *Service) SubmitBLSToExecutionChange(ctx context.Context, blsToExecutionChange *capella.SignedBLSToExecutionChange) error {
+	return nil
+}

@@ -18,6 +18,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -27,6 +28,7 @@ type VersionedSignedBeaconBlock struct {
 	Phase0    *phase0.SignedBeaconBlock
 	Altair    *altair.SignedBeaconBlock
 	Bellatrix *bellatrix.SignedBeaconBlock
+	Capella   *capella.SignedBeaconBlock
 }
 
 // Slot returns the slot of the signed beacon block.
@@ -47,6 +49,11 @@ func (v *VersionedSignedBeaconBlock) Slot() (phase0.Slot, error) {
 			return 0, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.Slot, nil
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil {
+			return 0, errors.New("no capella block")
+		}
+		return v.Capella.Message.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -70,6 +77,11 @@ func (v *VersionedSignedBeaconBlock) Attestations() ([]*phase0.Attestation, erro
 			return nil, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.Body.Attestations, nil
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.Attestations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -93,6 +105,11 @@ func (v *VersionedSignedBeaconBlock) Root() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.HashTreeRoot()
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.Message.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -116,6 +133,11 @@ func (v *VersionedSignedBeaconBlock) BodyRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.Body.HashTreeRoot()
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -139,6 +161,11 @@ func (v *VersionedSignedBeaconBlock) ParentRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.ParentRoot, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.Message.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -162,6 +189,11 @@ func (v *VersionedSignedBeaconBlock) StateRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.StateRoot, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.Message.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -185,6 +217,11 @@ func (v *VersionedSignedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlas
 			return nil, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.Body.AttesterSlashings, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.AttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -208,6 +245,11 @@ func (v *VersionedSignedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlas
 			return nil, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.Body.ProposerSlashings, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -231,6 +273,11 @@ func (v *VersionedSignedBeaconBlock) String() string {
 			return ""
 		}
 		return v.Bellatrix.String()
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return ""
+		}
+		return v.Capella.String()
 	default:
 		return "unknown version"
 	}

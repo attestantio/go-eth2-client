@@ -18,6 +18,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -27,6 +28,7 @@ type VersionedBeaconBlock struct {
 	Phase0    *phase0.BeaconBlock
 	Altair    *altair.BeaconBlock
 	Bellatrix *bellatrix.BeaconBlock
+	Capella   *capella.BeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
@@ -52,6 +54,11 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 			return 0, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Slot, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no capella block")
+		}
+		return v.Capella.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -75,6 +82,11 @@ func (v *VersionedBeaconBlock) Root() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.HashTreeRoot()
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -98,6 +110,11 @@ func (v *VersionedBeaconBlock) BodyRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Body.HashTreeRoot()
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -121,6 +138,11 @@ func (v *VersionedBeaconBlock) ParentRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.ParentRoot, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -144,6 +166,11 @@ func (v *VersionedBeaconBlock) StateRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.StateRoot, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -167,6 +194,11 @@ func (v *VersionedBeaconBlock) Attestations() ([]*phase0.Attestation, error) {
 			return nil, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Body.Attestations, nil
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Body == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Body.Attestations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -190,6 +222,11 @@ func (v *VersionedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlashing, 
 			return nil, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Body.AttesterSlashings, nil
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Body == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Body.AttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -213,6 +250,11 @@ func (v *VersionedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlashing, 
 			return nil, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Body.ProposerSlashings, nil
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Body == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -236,6 +278,11 @@ func (v *VersionedBeaconBlock) String() string {
 			return ""
 		}
 		return v.Bellatrix.String()
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return ""
+		}
+		return v.Capella.String()
 	default:
 		return "unknown version"
 	}

@@ -11,19 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package bellatrix
+package capella
 
-import "math/big"
-
-// FeeRecipientLength is the number of bytes in an execution fee recipient.
-const FeeRecipientLength = 20
-
-// ExecutionAddressLength is the number of bytes in an execution address.
-const ExecutionAddressLength = 20
-
-var maxBaseFeePerGas = new(big.Int).SetBytes([]byte{
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
-})
+// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
+//go:generate rm -f blstoexecutionchange_encoding.go signedblstoexecutionchange_encoding.go withdrawal.go
+//go:generate sszgen --path . --objs BLSToExecutionChange SignedBLSToExecutionChange Withdrawal
+//go:generate goimports -w blstoexecutionchange_encoding.go signedblstoexecutionchange_encoding.go withdrawal_encoding.go
