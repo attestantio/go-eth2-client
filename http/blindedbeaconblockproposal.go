@@ -42,14 +42,13 @@ func (s *Service) BlindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 
 // blindedBeaconBlockProposal fetches a proposed beacon block for signing.
 func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*api.VersionedBlindedBeaconBlock, error) {
-	url := fmt.Sprintf("/eth/v2/validator/blinded_blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti)
+	url := fmt.Sprintf("/eth/v1/validator/blinded_blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
-		return nil, errors.Wrap(err, "failed to request beacon block proposal")
+		return nil, errors.Wrap(err, "failed to request blinded beacon block proposal")
 	}
 	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain beacon block proposal")
+		return nil, errors.New("blinded beacon block proposal response empty")
 	}
 
 	var dataBodyReader bytes.Buffer
@@ -66,17 +65,17 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 	case spec.DataVersionBellatrix:
 		var resp bellatrixBlindedBeaconBlockProposalJSON
 		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse altair beacon block proposal")
+			return nil, errors.Wrap(err, "failed to parse bellatrix blinded beacon block proposal")
 		}
 		// Ensure the data returned to us is as expected given our input.
 		if resp.Data.Slot != slot {
-			return nil, errors.New("beacon block proposal not for requested slot")
+			return nil, errors.New("blinded beacon block proposal not for requested slot")
 		}
 		if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-			return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+			return nil, errors.New("blinded beacon block proposal has incorrect RANDAO reveal")
 		}
-		if !bytes.Equal(resp.Data.Body.Graffiti, graffiti) {
-			return nil, errors.New("beacon block proposal has incorrect graffiti")
+		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
+			return nil, errors.New("blinded beacon block proposal has incorrect graffiti")
 		}
 		res.Bellatrix = resp.Data
 	default:

@@ -21,6 +21,7 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -218,6 +219,12 @@ type SyncCommitteeContributionsSubmitter interface {
 	SubmitSyncCommitteeContributions(ctx context.Context, contributionAndProofs []*altair.SignedContributionAndProof) error
 }
 
+// BLSToExecutionChangeSubmitter is the interface for submitting BLS to execution address changes.
+type BLSToExecutionChangeSubmitter interface {
+	// SubmitBLSToExecutionChange submits a BLS to execution address change operation.
+	SubmitBLSToExecutionChange(ctx context.Context, blsToExecutionChange *capella.SignedBLSToExecutionChange) error
+}
+
 // BeaconBlockHeadersProvider is the interface for providing beacon block headers.
 type BeaconBlockHeadersProvider interface {
 	// BeaconBlockHeader provides the block header of a given block ID.
@@ -270,6 +277,12 @@ type BlindedBeaconBlockProposalProvider interface {
 type BlindedBeaconBlockSubmitter interface {
 	// SubmitBlindedBeaconBlock submits a beacon block.
 	SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error
+}
+
+// ValidatorRegistrationsSubmitter is the interface for submitting validator registrations.
+type ValidatorRegistrationsSubmitter interface {
+	// SubmitValidatorRegistrations submits a validator registration.
+	SubmitValidatorRegistrations(ctx context.Context, registrations []*api.VersionedSignedValidatorRegistration) error
 }
 
 // EventsProvider is the interface for providing events.
@@ -378,4 +391,10 @@ type DomainProvider interface {
 type GenesisTimeProvider interface {
 	// GenesisTime provides the genesis time of the chain.
 	GenesisTime(ctx context.Context) (time.Time, error)
+}
+
+// NodeClientProvider provides the client for the node.
+type NodeClientProvider interface {
+	// NodeClient provides the client for the node.
+	NodeClient(ctx context.Context) (string, error)
 }

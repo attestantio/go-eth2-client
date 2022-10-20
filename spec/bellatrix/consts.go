@@ -18,6 +18,9 @@ import "math/big"
 // FeeRecipientLength is the number of bytes in an execution fee recipient.
 const FeeRecipientLength = 20
 
+// ExecutionAddressLength is the number of bytes in an execution address.
+const ExecutionAddressLength = 20
+
 var maxBaseFeePerGas = new(big.Int).SetBytes([]byte{
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,

@@ -25,6 +25,9 @@ import (
 )
 
 func TestBeaconState(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name        string
 		stateID     string
@@ -35,14 +38,14 @@ func TestBeaconState(t *testing.T) {
 			stateID:     "genesis",
 			dataVersion: spec.DataVersionPhase0,
 		},
-		{
-			name:        "Head",
-			stateID:     "head",
-			dataVersion: spec.DataVersionAltair,
-		},
+		// {
+		// 	name:        "Head",
+		// 	stateID:     "head",
+		// 	dataVersion: spec.DataVersionBellatrix,
+		// },
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
@@ -50,7 +53,7 @@ func TestBeaconState(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			beaconState, err := service.(client.BeaconStateProvider).BeaconState(context.Background(), test.stateID)
+			beaconState, err := service.(client.BeaconStateProvider).BeaconState(ctx, test.stateID)
 			require.NoError(t, err)
 			require.NotNil(t, beaconState)
 			require.Equal(t, test.dataVersion, beaconState.Version)

@@ -26,7 +26,8 @@ import (
 )
 
 func TestSyncCommittee(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
@@ -46,7 +47,7 @@ func TestSyncCommittee(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			committee, err := service.(client.SyncCommitteesProvider).SyncCommittee(context.Background(), test.state)
+			committee, err := service.(client.SyncCommitteesProvider).SyncCommittee(ctx, test.state)
 			require.NoError(t, err)
 			require.NotNil(t, committee)
 			require.True(t, len(committee.Validators) > 0)
@@ -55,7 +56,8 @@ func TestSyncCommittee(t *testing.T) {
 }
 
 func TestSyncCommitteeAtEpoch(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
@@ -64,11 +66,11 @@ func TestSyncCommitteeAtEpoch(t *testing.T) {
 	require.NoError(t, err)
 
 	// Needed to fetch current epoch.
-	genesis, err := service.(client.GenesisProvider).Genesis(context.Background())
+	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(context.Background())
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
-	slotsPerEpoch, err := service.(client.SlotsPerEpochProvider).SlotsPerEpoch(context.Background())
+	slotsPerEpoch, err := service.(client.SlotsPerEpochProvider).SlotsPerEpoch(ctx)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -91,7 +93,7 @@ func TestSyncCommitteeAtEpoch(t *testing.T) {
 			} else {
 				epoch = phase0.Epoch(test.epoch)
 			}
-			committee, err := service.(client.SyncCommitteesProvider).SyncCommitteeAtEpoch(context.Background(), test.state, epoch)
+			committee, err := service.(client.SyncCommitteesProvider).SyncCommitteeAtEpoch(ctx, test.state, epoch)
 			require.NoError(t, err)
 			require.NotNil(t, committee)
 			require.True(t, len(committee.Validators) > 0)

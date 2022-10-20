@@ -11,6 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build conformance
 // +build conformance
 
 package http_test
@@ -30,6 +31,9 @@ import (
 )
 
 func TestSpecConformance(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	expected := map[string]interface{}{
 		"BASE_REWARD_FACTOR":                    uint64(0),
 		"BLS_WITHDRAWAL_PREFIX":                 []byte{},
@@ -45,6 +49,7 @@ func TestSpecConformance(t *testing.T) {
 		"DOMAIN_RANDAO":                         phase0.DomainType{},
 		"DOMAIN_SELECTION_PROOF":                phase0.DomainType{},
 		"DOMAIN_VOLUNTARY_EXIT":                 phase0.DomainType{},
+		"DOMAIN_APPLICATION_BUILDER":            phase0.DomainType{},
 		"EFFECTIVE_BALANCE_INCREMENT":           uint64(0),
 		"EJECTION_BALANCE":                      uint64(0),
 		"EPOCHS_PER_ETH1_VOTING_PERIOD":         uint64(0),
@@ -93,13 +98,13 @@ func TestSpecConformance(t *testing.T) {
 		"WHISTLEBLOWER_REWARD_QUOTIENT":         uint64(0),
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
 	require.NoError(t, err)
 
-	spec, err := service.Spec(context.Background())
+	spec, err := service.Spec(ctx)
 	require.NoError(t, err)
 	require.NotNil(t, spec)
 

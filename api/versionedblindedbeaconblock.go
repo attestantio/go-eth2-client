@@ -18,6 +18,7 @@ import (
 
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -107,5 +108,56 @@ func (v *VersionedBlindedBeaconBlock) StateRoot() (phase0.Root, error) {
 		return v.Bellatrix.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
+	}
+}
+
+// TransactionsRoot returns the transactions root of the beacon block.
+func (v *VersionedBlindedBeaconBlock) TransactionsRoot() (phase0.Root, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return phase0.Root{}, errors.New("no bellatrix block")
+		}
+		if v.Bellatrix.Body == nil {
+			return phase0.Root{}, errors.New("no bellatrix block body")
+		}
+		if v.Bellatrix.Body.ExecutionPayloadHeader == nil {
+			return phase0.Root{}, errors.New("no bellatrix block body execution payload header")
+		}
+		return v.Bellatrix.Body.ExecutionPayloadHeader.TransactionsRoot, nil
+	default:
+		return phase0.Root{}, errors.New("unsupported version")
+	}
+}
+
+// FeeRecipient returns the fee recipient of the blinded beacon block.
+func (v *VersionedBlindedBeaconBlock) FeeRecipient() (bellatrix.ExecutionAddress, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no bellatrix block")
+		}
+		if v.Bellatrix.Body == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no bellatrix block body")
+		}
+		if v.Bellatrix.Body.ExecutionPayloadHeader == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no bellatrix block body execution payload header")
+		}
+		return v.Bellatrix.Body.ExecutionPayloadHeader.FeeRecipient, nil
+	default:
+		return bellatrix.ExecutionAddress{}, errors.New("unsupported version")
+	}
+}
+
+// String returns a string version of the structure.
+func (v *VersionedBlindedBeaconBlock) String() string {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return ""
+		}
+		return v.Bellatrix.String()
+	default:
+		return "unknown version"
 	}
 }

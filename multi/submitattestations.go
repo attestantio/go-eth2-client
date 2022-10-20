@@ -39,11 +39,13 @@ func (s *Service) SubmitAttestations(ctx context.Context,
 			// Lighthouse rejects duplicate attestations.  It is possible that an attestation sent
 			// to another node already propagated to this node, or the caller is attempting to resend
 			// an existing attestation, but either way it is not a failover-worthy error.
+			log := s.log.With().Logger()
 			log.Trace().Msg("Lighthouse rejected submission as it already knew about it")
 			return false /* failover */, err
 		case provider == "lighthouse" && strings.Contains(err.Error(), "UnknownHeadBlock"):
 			// Lighthouse rejects an attestation for a block  that is not its current head.  We assume that
 			// the request is valid and it is the node that it is somehow out of sync, so failover.
+			log := s.log.With().Logger()
 			log.Trace().Err(err).Msg("Lighthouse rejected submission as it did not know about the relevant head block")
 			return true /* failover */, err
 		default:

@@ -33,6 +33,9 @@ import (
 
 // Service is an Ethereum 2 client service.
 type Service struct {
+	// log is a service-wide logger.
+	log zerolog.Logger
+
 	// Hold the initialising context to use for streams.
 	ctx context.Context
 
@@ -44,15 +47,15 @@ type Service struct {
 	// Various information from the node that does not change during the
 	// lifetime of a beacon node.
 	genesis              *api.Genesis
-	genesisMutex         sync.Mutex
+	genesisMutex         sync.RWMutex
 	spec                 map[string]interface{}
-	specMutex            sync.Mutex
+	specMutex            sync.RWMutex
 	depositContract      *api.DepositContract
-	depositContractMutex sync.Mutex
+	depositContractMutex sync.RWMutex
 	forkSchedule         []*phase0.Fork
-	forkScheduleMutex    sync.Mutex
+	forkScheduleMutex    sync.RWMutex
 	nodeVersion          string
-	nodeVersionMutex     sync.Mutex
+	nodeVersionMutex     sync.RWMutex
 
 	// API support.
 	supportsV2BeaconBlocks    bool
@@ -64,9 +67,6 @@ type Service struct {
 	userPubKeyChunkSize int
 }
 
-// log is a service-wide logger.
-var log zerolog.Logger
-
 // New creates a new Ethereum 2 client service, connecting with a standard HTTP.
 func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	parameters, err := parseAndCheckParameters(params...)
@@ -75,7 +75,7 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	}
 
 	// Set logging.
-	log = zerologger.With().Str("service", "client").Str("impl", "http").Logger()
+	log := zerologger.With().Str("service", "client").Str("impl", "http").Logger()
 	if parameters.logLevel != log.GetLevel() {
 		log = log.Level(parameters.logLevel)
 	}
@@ -97,7 +97,10 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 
 	address := parameters.address
 	if !strings.HasPrefix(address, "http") {
-		address = fmt.Sprintf("http://%s", parameters.address)
+		address = fmt.Sprintf("http://%s", address)
+	}
+	if !strings.HasSuffix(address, "/") {
+		address = fmt.Sprintf("%s/", address)
 	}
 	base, err := url.Parse(address)
 	if err != nil {
@@ -105,6 +108,7 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	}
 
 	s := &Service{
+		log:                 log,
 		ctx:                 ctx,
 		base:                base,
 		address:             parameters.address,
@@ -117,6 +121,11 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	// Fetch static values to confirm the connection is good.
 	if err := s.fetchStaticValues(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to confirm node connection")
+	}
+
+	// Periodially refetch static values in case of client update.
+	if err := s.periodicClearStaticValues(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to set update ticker")
 	}
 
 	// Handle flags for API versioning.
@@ -153,6 +162,39 @@ func (s *Service) fetchStaticValues(ctx context.Context) error {
 		return errors.Wrap(err, "failed to fetch node version")
 	}
 
+	return nil
+}
+
+// periodicClearStaticValues periodically sets static values to nil so they are
+// refetched the next time they are required.
+func (s *Service) periodicClearStaticValues(ctx context.Context) error {
+	go func(s *Service, ctx context.Context) {
+		// Refreah every 5 minutes.
+		refreshTicker := time.NewTicker(5 * time.Minute)
+		for {
+			select {
+			case <-refreshTicker.C:
+				s.genesisMutex.Lock()
+				s.genesis = nil
+				s.genesisMutex.Unlock()
+				s.specMutex.Lock()
+				s.spec = nil
+				s.specMutex.Unlock()
+				s.depositContractMutex.Lock()
+				s.depositContract = nil
+				s.depositContractMutex.Unlock()
+				s.forkScheduleMutex.Lock()
+				s.forkSchedule = nil
+				s.forkScheduleMutex.Unlock()
+				s.nodeVersionMutex.Lock()
+				s.nodeVersion = ""
+				s.nodeVersionMutex.Unlock()
+			case <-ctx.Done():
+				return
+			}
+		}
+
+	}(s, ctx)
 	return nil
 }
 

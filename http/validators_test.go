@@ -26,6 +26,9 @@ import (
 )
 
 func TestValidators(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name              string
 		stateID           string
@@ -67,7 +70,7 @@ func TestValidators(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
@@ -75,7 +78,7 @@ func TestValidators(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			validators, err := service.(client.ValidatorsProvider).Validators(context.Background(), test.stateID, test.validatorIndices)
+			validators, err := service.(client.ValidatorsProvider).Validators(ctx, test.stateID, test.validatorIndices)
 			if test.expectedErrorCode != 0 {
 				require.Contains(t, err.Error(), fmt.Sprintf("%d", test.expectedErrorCode))
 			} else {

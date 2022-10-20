@@ -27,9 +27,12 @@ type forkScheduleJSON struct {
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
 func (s *Service) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
+	s.forkScheduleMutex.RLock()
 	if s.forkSchedule != nil {
+		defer s.forkScheduleMutex.RUnlock()
 		return s.forkSchedule, nil
 	}
+	s.forkScheduleMutex.RUnlock()
 
 	s.forkScheduleMutex.Lock()
 	defer s.forkScheduleMutex.Unlock()

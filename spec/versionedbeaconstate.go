@@ -16,6 +16,7 @@ package spec
 import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -25,6 +26,7 @@ type VersionedBeaconState struct {
 	Phase0    *phase0.BeaconState
 	Altair    *altair.BeaconState
 	Bellatrix *bellatrix.BeaconState
+	Capella   *capella.BeaconState
 }
 
 // String returns a string version of the structure.
@@ -45,6 +47,11 @@ func (v *VersionedBeaconState) String() string {
 			return ""
 		}
 		return v.Bellatrix.String()
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return ""
+		}
+		return v.Capella.String()
 	default:
 		return "unknown version"
 	}

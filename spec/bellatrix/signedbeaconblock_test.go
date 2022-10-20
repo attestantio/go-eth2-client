@@ -151,15 +151,14 @@ func TestSignedBeaconBlockSpec(t *testing.T) {
 			t.Run(info.Name(), func(t *testing.T) {
 				specYAML, err := os.ReadFile(filepath.Join(path, "value.yaml"))
 				require.NoError(t, err)
-				var res bellatrix.SignedBeaconBlock
-				require.NoError(t, yaml.Unmarshal(specYAML, &res))
+				res := &bellatrix.SignedBeaconBlock{}
+				require.NoError(t, yaml.Unmarshal(specYAML, res))
 
 				compressedSpecSSZ, err := os.ReadFile(filepath.Join(path, "serialized.ssz_snappy"))
 				require.NoError(t, err)
 				var specSSZ []byte
 				specSSZ, err = snappy.Decode(specSSZ, compressedSpecSSZ)
 				require.NoError(t, err)
-
 				unmarshalled := &bellatrix.SignedBeaconBlock{}
 				require.NoError(t, unmarshalled.UnmarshalSSZ(specSSZ))
 

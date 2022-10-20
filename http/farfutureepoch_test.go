@@ -24,6 +24,9 @@ import (
 )
 
 func TestFarFutureEpoch(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name string
 	}{
@@ -32,7 +35,7 @@ func TestFarFutureEpoch(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
@@ -40,7 +43,7 @@ func TestFarFutureEpoch(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			farFutureEpoch, err := service.(client.FarFutureEpochProvider).FarFutureEpoch(context.Background())
+			farFutureEpoch, err := service.(client.FarFutureEpochProvider).FarFutureEpoch(ctx)
 			require.NoError(t, err)
 			require.NotNil(t, farFutureEpoch)
 		})

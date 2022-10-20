@@ -69,7 +69,7 @@ func TestSyncStateJSON(t *testing.T) {
 		},
 		{
 			name:  "Good",
-			input: []byte(`{"head_slot":"1","sync_distance":"2","is_syncing":true}`),
+			input: []byte(`{"head_slot":"1","sync_distance":"2","is_optimistic":false,"is_syncing":true}`),
 		},
 	}
 

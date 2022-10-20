@@ -39,7 +39,6 @@ func (s *Service) SyncCommitteeContribution(ctx context.Context,
 	url := fmt.Sprintf("/eth/v1/validator/sync_committee_contribution?slot=%d&subcommittee_index=%d&beacon_block_root=%#x", slot, subcommitteeIndex, beaconBlockRoot)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request sync committee contribution")
 	}
 	if respBodyReader == nil {

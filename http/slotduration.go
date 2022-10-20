@@ -20,5 +20,10 @@ import (
 
 // SlotDuration provides the duration of a slot for the chain.
 func (s *Service) SlotDuration(ctx context.Context) (time.Duration, error) {
-	return s.spec["SECONDS_PER_SLOT"].(time.Duration), nil
+	spec, err := s.Spec(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return spec["SECONDS_PER_SLOT"].(time.Duration), nil
 }

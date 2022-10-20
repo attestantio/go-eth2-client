@@ -28,17 +28,20 @@ const (
 	DataVersionAltair
 	// DataVersionBellatrix is data applicable for the Bellatrix release of the beacon chain.
 	DataVersionBellatrix
+	// DataVersionCapella is data applicable for the Capella release of the beacon chain.
+	DataVersionCapella
 )
 
-var responseVersionStrings = [...]string{
+var dataVersionStrings = [...]string{
 	"PHASE0",
 	"ALTAIR",
 	"BELLATRIX",
+	"CAPELLA",
 }
 
 // MarshalJSON implements json.Marshaler.
 func (d *DataVersion) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", responseVersionStrings[*d])), nil
+	return []byte(fmt.Sprintf("%q", dataVersionStrings[*d])), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -51,16 +54,18 @@ func (d *DataVersion) UnmarshalJSON(input []byte) error {
 		*d = DataVersionAltair
 	case `"BELLATRIX"`:
 		*d = DataVersionBellatrix
+	case `"CAPELLA"`:
+		*d = DataVersionCapella
 	default:
-		err = fmt.Errorf("unrecognised response version %s", string(input))
+		err = fmt.Errorf("unrecognised data version %s", string(input))
 	}
 	return err
 }
 
 // String returns a string representation of the
 func (d DataVersion) String() string {
-	if int(d) >= len(responseVersionStrings) {
+	if int(d) >= len(dataVersionStrings) {
 		return "unknown"
 	}
-	return responseVersionStrings[d]
+	return dataVersionStrings[d]
 }

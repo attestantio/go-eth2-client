@@ -31,7 +31,7 @@ import (
 type BlindedBeaconBlockBody struct {
 	RANDAOReveal           phase0.BLSSignature `ssz-size:"96"`
 	ETH1Data               *phase0.ETH1Data
-	Graffiti               []byte                        `ssz-size:"32"`
+	Graffiti               [32]byte                      `ssz-size:"32"`
 	ProposerSlashings      []*phase0.ProposerSlashing    `ssz-max:"16"`
 	AttesterSlashings      []*phase0.AttesterSlashing    `ssz-max:"2"`
 	Attestations           []*phase0.Attestation         `ssz-max:"128"`
@@ -113,12 +113,14 @@ func (b *BlindedBeaconBlockBody) unpack(data *blindedBeaconBlockBodyJSON) error 
 	if data.Graffiti == "" {
 		return errors.New("graffiti missing")
 	}
-	if b.Graffiti, err = hex.DecodeString(strings.TrimPrefix(data.Graffiti, "0x")); err != nil {
+	graffiti, err := hex.DecodeString(strings.TrimPrefix(data.Graffiti, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for graffiti")
 	}
-	if len(b.Graffiti) != phase0.GraffitiLength {
+	if len(graffiti) != phase0.GraffitiLength {
 		return errors.New("incorrect length for graffiti")
 	}
+	copy(b.Graffiti[:], graffiti)
 	if data.ProposerSlashings == nil {
 		return errors.New("proposer slashings missing")
 	}

@@ -14,6 +14,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"testing"
@@ -22,6 +23,7 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/r3labs/sse/v2"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,6 +31,9 @@ import (
 var timeout = 60 * time.Second
 
 func TestEventHandler(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	handled := false
 	handler := func(*api.Event) {
 		handled = true
@@ -131,7 +136,7 @@ func TestEventHandler(t *testing.T) {
 		},
 	}
 
-	s, err := New(context.Background(),
+	s, err := New(ctx,
 		WithTimeout(timeout),
 		WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
@@ -143,7 +148,9 @@ func TestEventHandler(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			handled = false
-			h.handleEvent(test.message, test.handler)
+			log := zerolog.New(&bytes.Buffer{})
+			ctx = log.WithContext(ctx)
+			h.handleEvent(ctx, test.message, test.handler)
 			require.Equal(t, test.handled, handled)
 		})
 	}

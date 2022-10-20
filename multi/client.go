@@ -20,11 +20,15 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 )
 
 // monitor monitors active and inactive connections, and moves them between
 // lists accordingly.
 func (s *Service) monitor(ctx context.Context) {
+	log := s.log.With().Logger()
+	ctx = log.WithContext(ctx)
+
 	log.Trace().Msg("Monitor starting")
 	for {
 		select {
@@ -32,27 +36,34 @@ func (s *Service) monitor(ctx context.Context) {
 			log.Trace().Msg("Context done; monitor stopping")
 			return
 		case <-time.After(30 * time.Second):
-			// Fetch all clients.
-			clients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
-			s.clientsMu.RLock()
-			clients = append(clients, s.activeClients...)
-			clients = append(clients, s.inactiveClients...)
-			s.clientsMu.RUnlock()
+			s.recheck(ctx)
+		}
+	}
+}
 
-			// Ping each client to update its state.
-			for _, client := range clients {
-				if ping(ctx, client) {
-					s.activateClient(ctx, client)
-				} else {
-					s.deactivateClient(ctx, client)
-				}
-			}
+// recheck checks clients to update their state.
+func (s *Service) recheck(ctx context.Context) {
+	// Fetch all clients.
+	clients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
+	s.clientsMu.RLock()
+	clients = append(clients, s.activeClients...)
+	clients = append(clients, s.inactiveClients...)
+	s.clientsMu.RUnlock()
+
+	// Ping each client to update its state.
+	for _, client := range clients {
+		if ping(ctx, client) {
+			s.activateClient(ctx, client)
+		} else {
+			s.deactivateClient(ctx, client)
 		}
 	}
 }
 
 // deactivateClient deactivates a client, moving it to the inactive list if not currently on it.
 func (s *Service) deactivateClient(ctx context.Context, client consensusclient.Service) {
+	log := zerolog.Ctx(ctx)
+
 	s.clientsMu.Lock()
 	defer s.clientsMu.Unlock()
 
@@ -78,6 +89,8 @@ func (s *Service) deactivateClient(ctx context.Context, client consensusclient.S
 
 // activateClient activates a client, moving it to the active list if not currently on it.
 func (s *Service) activateClient(ctx context.Context, client consensusclient.Service) {
+	log := zerolog.Ctx(ctx)
+
 	s.clientsMu.Lock()
 	defer s.clientsMu.Unlock()
 
@@ -104,6 +117,8 @@ func (s *Service) activateClient(ctx context.Context, client consensusclient.Ser
 // ping pings a client, returning true if it is ready to serve requests and
 // false otherwise.
 func ping(ctx context.Context, client consensusclient.Service) bool {
+	log := zerolog.Ctx(ctx)
+
 	provider, isProvider := client.(consensusclient.NodeSyncingProvider)
 	if !isProvider {
 		log.Debug().Str("provider", client.Address()).Msg("Client does not provide sync state")
@@ -130,10 +145,25 @@ type errHandlerFunc func(ctx context.Context, client consensusclient.Service, er
 
 // doCall carries out a call on the active clients in turn until one succeeds.
 func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandlerFunc) (interface{}, error) {
+	log := s.log.With().Logger()
+	ctx = log.WithContext(ctx)
+
 	// Grab local copy of active clients in case it is updated whilst we are using it.
 	s.clientsMu.RLock()
 	activeClients := s.activeClients
 	s.clientsMu.RUnlock()
+
+	if len(activeClients) == 0 {
+		// There are no active clients; attempt to re-enable the inactive clients.
+		s.recheck(ctx)
+		s.clientsMu.RLock()
+		activeClients = s.activeClients
+		s.clientsMu.RUnlock()
+	}
+
+	if len(activeClients) == 0 {
+		return nil, errors.New("no active clients to which to make call")
+	}
 
 	var err error
 	var res interface{}
@@ -146,6 +176,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 			}
 
 			if failover {
+				log.Debug().Str("client", client.Name()).Str("address", client.Address()).Err(err).Msg("Deactivating client on error")
 				// Failed with this client; try the next.
 				s.deactivateClient(ctx, client)
 				continue

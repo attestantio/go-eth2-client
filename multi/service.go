@@ -26,13 +26,12 @@ import (
 
 // Service handles multiple Ethereum 2 clients.
 type Service struct {
+	log zerolog.Logger
+
 	clientsMu       sync.RWMutex
 	activeClients   []consensusclient.Service
 	inactiveClients []consensusclient.Service
 }
-
-// module-wide log.
-var log zerolog.Logger
 
 // New creates a new Ethereum 2 client with multiple endpoints.
 // The endpoints are periodiclaly checked to see if they are active,
@@ -45,10 +44,11 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 	}
 
 	// Set logging.
-	log = zerologger.With().Str("service", "fetcher").Str("impl", "multi").Logger()
+	log := zerologger.With().Str("service", "fetcher").Str("impl", "multi").Logger()
 	if parameters.logLevel != log.GetLevel() {
 		log = log.Level(parameters.logLevel)
 	}
+	ctx = log.WithContext(ctx)
 
 	if parameters.monitor != nil {
 		if err := registerMetrics(ctx, parameters.monitor); err != nil {
@@ -92,6 +92,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 	setProvidersMetric(ctx, "inactive", len(inactiveClients))
 
 	s := &Service{
+		log:             log,
 		activeClients:   activeClients,
 		inactiveClients: inactiveClients,
 	}

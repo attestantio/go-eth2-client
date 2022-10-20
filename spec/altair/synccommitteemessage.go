@@ -29,9 +29,9 @@ import (
 // SyncCommitteeMessage is the Ethereum 2 sync committee message structure.
 type SyncCommitteeMessage struct {
 	Slot            phase0.Slot
-	BeaconBlockRoot phase0.Root
+	BeaconBlockRoot phase0.Root `ssz-size:"32"`
 	ValidatorIndex  phase0.ValidatorIndex
-	Signature       phase0.BLSSignature
+	Signature       phase0.BLSSignature `ssz-size:"96"`
 }
 
 // syncCommitteeMessageJSON is the spec representation of the struct.

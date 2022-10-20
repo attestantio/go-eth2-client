@@ -26,7 +26,8 @@ import (
 )
 
 func TestService(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	tests := []struct {
 		name       string
@@ -101,7 +102,9 @@ func TestService(t *testing.T) {
 }
 
 func TestInterfaces(t *testing.T) {
-	ctx := context.Background()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	s, err := v1.New(ctx, v1.WithAddress(os.Getenv("HTTP_ADDRESS")), v1.WithTimeout(5*time.Second))
 	require.NoError(t, err)
 
@@ -112,6 +115,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.AttestationPoolProvider)(nil), s)
 	assert.Implements(t, (*client.AttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttesterDutiesProvider)(nil), s)
+	assert.Implements(t, (*client.BLSToExecutionChangeSubmitter)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockHeadersProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockProposalProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockRootProvider)(nil), s)
@@ -119,6 +123,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.BeaconCommitteeSubscriptionsSubmitter)(nil), s)
 	assert.Implements(t, (*client.BeaconStateProvider)(nil), s)
 	assert.Implements(t, (*client.BlindedBeaconBlockSubmitter)(nil), s)
+	assert.Implements(t, (*client.ValidatorRegistrationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.DepositContractProvider)(nil), s)
 	assert.Implements(t, (*client.EventsProvider)(nil), s)
 	assert.Implements(t, (*client.FinalityProvider)(nil), s)

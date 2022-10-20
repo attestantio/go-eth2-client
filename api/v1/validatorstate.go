@@ -47,16 +47,16 @@ const (
 )
 
 var validatorStateStrings = [...]string{
-	"Unknown",
-	"Pending_initialized",
-	"Pending_queued",
-	"Active_ongoing",
-	"Active_exiting",
-	"Active_slashed",
-	"Exited_unslashed",
-	"Exited_slashed",
-	"Withdrawal_possible",
-	"Withdrawal_done",
+	"unknown",
+	"pending_initialized",
+	"pending_queued",
+	"active_ongoing",
+	"active_exiting",
+	"active_slashed",
+	"exited_unslashed",
+	"exited_slashed",
+	"withdrawal_possible",
+	"withdrawal_done",
 }
 
 // MarshalJSON implements json.Marshaler.

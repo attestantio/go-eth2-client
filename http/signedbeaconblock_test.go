@@ -24,6 +24,9 @@ import (
 )
 
 func TestSignedBeaconBlock(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name    string
 		stateID string
@@ -38,7 +41,7 @@ func TestSignedBeaconBlock(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
@@ -46,7 +49,7 @@ func TestSignedBeaconBlock(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			res, err := service.(client.SignedBeaconBlockProvider).SignedBeaconBlock(context.Background(), test.stateID)
+			res, err := service.(client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, test.stateID)
 			require.NoError(t, err)
 			require.NotNil(t, res)
 		})

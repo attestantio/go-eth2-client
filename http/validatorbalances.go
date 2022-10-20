@@ -37,7 +37,7 @@ func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validat
 		return nil, errors.New("no state ID specified")
 	}
 
-	if len(validatorIndices) > s.indexChunkSize() {
+	if len(validatorIndices) > s.indexChunkSize(ctx) {
 		return s.chunkedValidatorBalances(ctx, stateID, validatorIndices)
 	}
 
@@ -76,7 +76,7 @@ func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validat
 // chunkedValidatorBalances obtains the validator balances a chunk at a time.
 func (s *Service) chunkedValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
 	res := make(map[phase0.ValidatorIndex]phase0.Gwei)
-	indexChunkSize := s.indexChunkSize()
+	indexChunkSize := s.indexChunkSize(ctx)
 	for i := 0; i < len(validatorIndices); i += indexChunkSize {
 		chunkStart := i
 		chunkEnd := i + indexChunkSize

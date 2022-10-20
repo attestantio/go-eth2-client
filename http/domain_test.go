@@ -26,6 +26,9 @@ import (
 )
 
 func TestDomain(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	tests := []struct {
 		name   string
 		epoch  phase0.Epoch
@@ -38,7 +41,7 @@ func TestDomain(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
+	service, err := http.New(ctx,
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 		http.WithTimeout(timeout),
 	)
@@ -46,7 +49,7 @@ func TestDomain(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			signatureDomain, err := service.(client.DomainProvider).Domain(context.Background(), test.domain, test.epoch)
+			signatureDomain, err := service.(client.DomainProvider).Domain(ctx, test.domain, test.epoch)
 			require.NoError(t, err)
 			require.NotNil(t, signatureDomain)
 			assert.Len(t, signatureDomain, 32)

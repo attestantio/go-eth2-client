@@ -23,6 +23,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -39,6 +40,10 @@ type bellatrixBeaconStateJSON struct {
 	Data *bellatrix.BeaconState `json:"data"`
 }
 
+type capellaBeaconStateJSON struct {
+	Data *capella.BeaconState `json:"data"`
+}
+
 // BeaconState fetches a beacon state.
 // N.B if the requested beacon state is not available this will return nil without an error.
 func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
@@ -53,7 +58,6 @@ func (s *Service) beaconStateV1(ctx context.Context, stateID string) (*spec.Vers
 	url := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", stateID)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request beacon state")
 	}
 	if respBodyReader == nil {
@@ -76,7 +80,6 @@ func (s *Service) beaconStateV2(ctx context.Context, stateID string) (*spec.Vers
 	url := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", stateID)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
-		log.Trace().Str("url", url).Err(err).Msg("Request failed")
 		return nil, errors.Wrap(err, "failed to request beacon state")
 	}
 	if respBodyReader == nil {
@@ -112,6 +115,12 @@ func (s *Service) beaconStateV2(ctx context.Context, stateID string) (*spec.Vers
 			return nil, errors.Wrap(err, "failed to parse bellatrix beacon state")
 		}
 		res.Bellatrix = resp.Data
+	case spec.DataVersionCapella:
+		var resp capellaBeaconStateJSON
+		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+			return nil, errors.Wrap(err, "failed to parse capella beacon state")
+		}
+		res.Capella = resp.Data
 	}
 
 	return res, nil

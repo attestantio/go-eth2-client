@@ -17,6 +17,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -29,10 +30,15 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/r3labs/sse/v2"
+	"github.com/rs/zerolog"
 )
 
 // Events feeds requested events with the given topics to the supplied handler.
 func (s *Service) Events(ctx context.Context, topics []string, handler client.EventHandlerFunc) error {
+	// #nosec G404
+	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Logger()
+	ctx = log.WithContext(ctx)
+
 	if len(topics) == 0 {
 		return errors.New("no topics supplied")
 	}
@@ -44,7 +50,7 @@ func (s *Service) Events(ctx context.Context, topics []string, handler client.Ev
 		}
 	}
 
-	reference, err := url.Parse(fmt.Sprintf("/eth/v1/events?topics=%s", strings.Join(topics, "&topics=")))
+	reference, err := url.Parse(fmt.Sprintf("eth/v1/events?topics=%s", strings.Join(topics, "&topics=")))
 	if err != nil {
 		return errors.Wrap(err, "invalid endpoint")
 	}
@@ -65,7 +71,7 @@ func (s *Service) Events(ctx context.Context, topics []string, handler client.Ev
 			case <-time.After(time.Second):
 				log.Trace().Msg("Connecting to events stream")
 				if err := client.SubscribeRawWithContext(ctx, func(msg *sse.Event) {
-					s.handleEvent(msg, handler)
+					s.handleEvent(ctx, msg, handler)
 				}); err != nil {
 					log.Error().Err(err).Msg("Failed to subscribe to event stream")
 				}
@@ -81,7 +87,9 @@ func (s *Service) Events(ctx context.Context, topics []string, handler client.Ev
 }
 
 // handleEvent parses an event and passes it on to the handler.
-func (s *Service) handleEvent(msg *sse.Event, handler client.EventHandlerFunc) {
+func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler client.EventHandlerFunc) {
+	log := zerolog.Ctx(ctx)
+
 	if handler == nil {
 		log.Debug().Msg("No handler supplied; ignoring")
 		return
