@@ -35,7 +35,8 @@ type BeaconState struct {
 	StateRoots                  [][]byte `ssz-size:"8192,32"`
 	HistoricalRoots             [][]byte `ssz-size:"?,32" ssz-max:"16777216"`
 	ETH1Data                    *ETH1Data
-	ETH1DataVotes               []*ETH1Data           `ssz-max:"1024"` // Should be 2048 for mainnet?
+	ETH1DataVotes               []*ETH1Data `ssz-max:"2048"`
+	ETH1DepositIndex            uint64
 	Validators                  []*Validator          `ssz-max:"1099511627776"`
 	Balances                    []uint64              `ssz-max:"1099511627776"`
 	RANDAOMixes                 [][]byte              `ssz-size:"65536,32"`
@@ -60,6 +61,7 @@ type beaconStateJSON struct {
 	HistoricalRoots             []string              `json:"historical_roots"`
 	ETH1Data                    *ETH1Data             `json:"eth1_data"`
 	ETH1DataVotes               []*ETH1Data           `json:"eth1_data_votes"`
+	ETH1DepositIndex            string                `json:"eth1_deposit_index"`
 	Validators                  []*Validator          `json:"validators"`
 	Balances                    []string              `json:"balances"`
 	RANDAOMixes                 []string              `json:"randao_mixes"`
@@ -109,6 +111,7 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 		HistoricalRoots:             historicalRoots,
 		ETH1Data:                    s.ETH1Data,
 		ETH1DataVotes:               s.ETH1DataVotes,
+		ETH1DepositIndex:            fmt.Sprintf("%d", s.ETH1DepositIndex),
 		Validators:                  s.Validators,
 		Balances:                    balances,
 		RANDAOMixes:                 randaoMixes,
@@ -207,6 +210,12 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	s.ETH1DataVotes = beaconStateJSON.ETH1DataVotes
 	if beaconStateJSON.Validators == nil {
 		return errors.New("validators missing")
+	}
+	if beaconStateJSON.ETH1DepositIndex == "" {
+		return errors.New("eth1 deposit index missing")
+	}
+	if s.ETH1DepositIndex, err = strconv.ParseUint(beaconStateJSON.ETH1DepositIndex, 10, 64); err != nil {
+		return errors.Wrap(err, "invalid value for eth1 deposit index")
 	}
 	s.Validators = beaconStateJSON.Validators
 	s.Balances = make([]uint64, len(beaconStateJSON.Balances))
