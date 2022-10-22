@@ -261,6 +261,12 @@ type BeaconStateProvider interface {
 	BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error)
 }
 
+// BeaconStateRandaoProvider is the interface for providing beacon state RANDAOs.
+type BeaconStateRandaoProvider interface {
+	// BeaconStateRandao fetches a beacon state RANDAO given a state ID.
+	BeaconStateRandao(ctx context.Context, stateID string) (*phase0.Root, error)
+}
+
 // BeaconStateRootProvider is the interface for providing beacon state roots.
 type BeaconStateRootProvider interface {
 	// BeaconStateRoot fetches a beacon state root given a state ID.
