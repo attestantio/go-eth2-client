@@ -14,6 +14,7 @@
 package bellatrix
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 	bitfield "github.com/prysmaticlabs/go-bitfield"
 )
@@ -29,27 +31,27 @@ import (
 // BeaconState represents a beacon state.
 type BeaconState struct {
 	GenesisTime                  uint64
-	GenesisValidatorsRoot        []byte `ssz-size:"32"`
-	Slot                         uint64
+	GenesisValidatorsRoot        phase0.Root `ssz-size:"32"`
+	Slot                         phase0.Slot
 	Fork                         *phase0.Fork
 	LatestBlockHeader            *phase0.BeaconBlockHeader
-	BlockRoots                   [][]byte `ssz-size:"8192,32"`
-	StateRoots                   [][]byte `ssz-size:"8192,32"`
-	HistoricalRoots              [][]byte `ssz-size:"?,32" ssz-max:"16777216"`
+	BlockRoots                   []phase0.Root `ssz-size:"8192,32"`
+	StateRoots                   []phase0.Root `ssz-size:"8192,32"`
+	HistoricalRoots              []phase0.Root `ssz-size:"?,32" ssz-max:"16777216"`
 	ETH1Data                     *phase0.ETH1Data
 	ETH1DataVotes                []*phase0.ETH1Data `ssz-max:"2048"`
 	ETH1DepositIndex             uint64
 	Validators                   []*phase0.Validator         `ssz-max:"1099511627776"`
-	Balances                     []uint64                    `ssz-max:"1099511627776"`
-	RANDAOMixes                  [][]byte                    `ssz-size:"65536,32"`
-	Slashings                    []uint64                    `ssz-size:"8192"`
-	PreviousEpochParticipation   []altair.ParticipationFlags `ssz-size:"1099511627776"`
-	CurrentEpochParticipation    []altair.ParticipationFlags `ssz-size:"1099511627776"`
+	Balances                     []phase0.Gwei               `ssz-max:"1099511627776"`
+	RANDAOMixes                  []phase0.Root               `ssz-size:"65536,32"`
+	Slashings                    []phase0.Gwei               `ssz-size:"8192"`
+	PreviousEpochParticipation   []altair.ParticipationFlags `ssz-max:"1099511627776"`
+	CurrentEpochParticipation    []altair.ParticipationFlags `ssz-max:"1099511627776"`
 	JustificationBits            bitfield.Bitvector4         `ssz-size:"1"`
 	PreviousJustifiedCheckpoint  *phase0.Checkpoint
 	CurrentJustifiedCheckpoint   *phase0.Checkpoint
 	FinalizedCheckpoint          *phase0.Checkpoint
-	InactivityScores             []uint64 `ssz-size:"1099511627776"`
+	InactivityScores             []uint64 `ssz-max:"1099511627776"`
 	CurrentSyncCommittee         *altair.SyncCommittee
 	NextSyncCommittee            *altair.SyncCommittee
 	LatestExecutionPayloadHeader *ExecutionPayloadHeader
@@ -79,6 +81,35 @@ type beaconStateJSON struct {
 	CurrentJustifiedCheckpoint   *phase0.Checkpoint        `json:"current_justified_checkpoint"`
 	FinalizedCheckpoint          *phase0.Checkpoint        `json:"finalized_checkpoint"`
 	InactivityScores             []string                  `json:"inactivity_scores"`
+	CurrentSyncCommittee         *altair.SyncCommittee     `json:"current_sync_committee"`
+	NextSyncCommittee            *altair.SyncCommittee     `json:"next_sync_committee"`
+	LatestExecutionPayloadHeader *ExecutionPayloadHeader   `json:"latest_execution_payload_header"`
+}
+
+// beaconStateYAML is the spec representation of the struct.
+type beaconStateYAML struct {
+	GenesisTime                  uint64                    `json:"genesis_time"`
+	GenesisValidatorsRoot        string                    `json:"genesis_validators_root"`
+	Slot                         uint64                    `json:"slot"`
+	Fork                         *phase0.Fork              `json:"fork"`
+	LatestBlockHeader            *phase0.BeaconBlockHeader `json:"latest_block_header"`
+	BlockRoots                   []string                  `json:"block_roots"`
+	StateRoots                   []string                  `json:"state_roots"`
+	HistoricalRoots              []string                  `json:"historical_roots"`
+	ETH1Data                     *phase0.ETH1Data          `json:"eth1_data"`
+	ETH1DataVotes                []*phase0.ETH1Data        `json:"eth1_data_votes"`
+	ETH1DepositIndex             uint64                    `json:"eth1_deposit_index"`
+	Validators                   []*phase0.Validator       `json:"validators"`
+	Balances                     []uint64                  `json:"balances"`
+	RANDAOMixes                  []string                  `json:"randao_mixes"`
+	Slashings                    []uint64                  `json:"slashings"`
+	PreviousEpochParticipation   []uint8                   `json:"previous_epoch_participation"`
+	CurrentEpochParticipation    []uint8                   `json:"current_epoch_participation"`
+	JustificationBits            string                    `json:"justification_bits"`
+	PreviousJustifiedCheckpoint  *phase0.Checkpoint        `json:"previous_justified_checkpoint"`
+	CurrentJustifiedCheckpoint   *phase0.Checkpoint        `json:"current_justified_checkpoint"`
+	FinalizedCheckpoint          *phase0.Checkpoint        `json:"finalized_checkpoint"`
+	InactivityScores             []uint64                  `json:"inactivity_scores"`
 	CurrentSyncCommittee         *altair.SyncCommittee     `json:"current_sync_committee"`
 	NextSyncCommittee            *altair.SyncCommittee     `json:"next_sync_committee"`
 	LatestExecutionPayloadHeader *ExecutionPayloadHeader   `json:"latest_execution_payload_header"`
@@ -152,35 +183,44 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// nolint:gocyclo
 func (s *BeaconState) UnmarshalJSON(input []byte) error {
-	var err error
-
 	var data beaconStateJSON
-	if err = json.Unmarshal(input, &data); err != nil {
+	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+	return s.unpack(&data)
+}
+
+// unpack unpacks JSON data in to a spec representation.
+// nolint:gocyclo
+func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	if data.GenesisTime == "" {
 		return errors.New("genesis time missing")
 	}
-	if s.GenesisTime, err = strconv.ParseUint(data.GenesisTime, 10, 64); err != nil {
+	genesisTime, err := strconv.ParseUint(data.GenesisTime, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for genesis time")
 	}
+	s.GenesisTime = genesisTime
 	if data.GenesisValidatorsRoot == "" {
 		return errors.New("genesis validators root missing")
 	}
-	if s.GenesisValidatorsRoot, err = hex.DecodeString(strings.TrimPrefix(data.GenesisValidatorsRoot, "0x")); err != nil {
+	genesisValidatorsRoot, err := hex.DecodeString(strings.TrimPrefix(data.GenesisValidatorsRoot, "0x"))
+	if err != nil {
 		return errors.Wrap(err, "invalid value for genesis validators root")
 	}
-	if len(s.GenesisValidatorsRoot) != phase0.RootLength {
-		return fmt.Errorf("incorrect length %d for genesis validators root", len(s.GenesisValidatorsRoot))
+	if len(genesisValidatorsRoot) != phase0.RootLength {
+		return fmt.Errorf("incorrect length %d for genesis validators root", len(genesisValidatorsRoot))
 	}
+	copy(s.GenesisValidatorsRoot[:], genesisValidatorsRoot)
 	if data.Slot == "" {
 		return errors.New("slot missing")
 	}
-	if s.Slot, err = strconv.ParseUint(data.Slot, 10, 64); err != nil {
+	slot, err := strconv.ParseUint(data.Slot, 10, 64)
+	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+	s.Slot = phase0.Slot(slot)
 	if data.Fork == nil {
 		return errors.New("fork missing")
 	}
@@ -192,41 +232,47 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	if len(data.BlockRoots) == 0 {
 		return errors.New("block roots missing")
 	}
-	s.BlockRoots = make([][]byte, len(data.BlockRoots))
+	s.BlockRoots = make([]phase0.Root, len(data.BlockRoots))
 	for i := range data.BlockRoots {
 		if data.BlockRoots[i] == "" {
 			return fmt.Errorf("block root %d missing", i)
 		}
-		if s.BlockRoots[i], err = hex.DecodeString(strings.TrimPrefix(data.BlockRoots[i], "0x")); err != nil {
+		blockRoot, err := hex.DecodeString(strings.TrimPrefix(data.BlockRoots[i], "0x"))
+		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for block root %d", i))
 		}
-		if len(s.BlockRoots[i]) != phase0.RootLength {
-			return fmt.Errorf("incorrect length %d for block root %d", len(s.BlockRoots[i]), i)
+		if len(blockRoot) != phase0.RootLength {
+			return fmt.Errorf("incorrect length %d for block root %d", len(blockRoot), i)
 		}
+		copy(s.BlockRoots[i][:], blockRoot)
 	}
-	s.StateRoots = make([][]byte, len(data.StateRoots))
+	s.StateRoots = make([]phase0.Root, len(data.StateRoots))
 	for i := range data.StateRoots {
 		if data.StateRoots[i] == "" {
 			return fmt.Errorf("state root %d missing", i)
 		}
-		if s.StateRoots[i], err = hex.DecodeString(strings.TrimPrefix(data.StateRoots[i], "0x")); err != nil {
+		stateRoot, err := hex.DecodeString(strings.TrimPrefix(data.StateRoots[i], "0x"))
+		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for state root %d", i))
 		}
-		if len(s.StateRoots[i]) != phase0.RootLength {
-			return fmt.Errorf("incorrect length %d for state root %d", len(s.StateRoots[i]), i)
+		if len(stateRoot) != phase0.RootLength {
+			return fmt.Errorf("incorrect length %d for state root %d", len(stateRoot), i)
 		}
+		copy(s.StateRoots[i][:], stateRoot)
 	}
-	s.HistoricalRoots = make([][]byte, len(data.HistoricalRoots))
+	s.HistoricalRoots = make([]phase0.Root, len(data.HistoricalRoots))
 	for i := range data.HistoricalRoots {
 		if data.HistoricalRoots[i] == "" {
 			return fmt.Errorf("historical root %d missing", i)
 		}
-		if s.HistoricalRoots[i], err = hex.DecodeString(strings.TrimPrefix(data.HistoricalRoots[i], "0x")); err != nil {
+		historicalRoot, err := hex.DecodeString(strings.TrimPrefix(data.HistoricalRoots[i], "0x"))
+		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for historical root %d", i))
 		}
-		if len(s.HistoricalRoots[i]) != phase0.RootLength {
-			return fmt.Errorf("incorrect length %d for historical root %d", len(s.HistoricalRoots[i]), i)
+		if len(historicalRoot) != phase0.RootLength {
+			return fmt.Errorf("incorrect length %d for historical root %d", len(historicalRoot), i)
 		}
+		copy(s.HistoricalRoots[i][:], historicalRoot)
 	}
 	if data.ETH1Data == nil {
 		return errors.New("eth1 data missing")
@@ -244,35 +290,41 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "invalid value for eth1 deposit index")
 	}
 	s.Validators = data.Validators
-	s.Balances = make([]uint64, len(data.Balances))
+	s.Balances = make([]phase0.Gwei, len(data.Balances))
 	for i := range data.Balances {
 		if data.Balances[i] == "" {
 			return fmt.Errorf("balance %d missing", i)
 		}
-		if s.Balances[i], err = strconv.ParseUint(data.Balances[i], 10, 64); err != nil {
+		balance, err := strconv.ParseUint(data.Balances[i], 10, 64)
+		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for balance %d", i))
 		}
+		s.Balances[i] = phase0.Gwei(balance)
 	}
-	s.RANDAOMixes = make([][]byte, len(data.RANDAOMixes))
+	s.RANDAOMixes = make([]phase0.Root, len(data.RANDAOMixes))
 	for i := range data.RANDAOMixes {
 		if data.RANDAOMixes[i] == "" {
 			return fmt.Errorf("RANDAO mix %d missing", i)
 		}
-		if s.RANDAOMixes[i], err = hex.DecodeString(strings.TrimPrefix(data.RANDAOMixes[i], "0x")); err != nil {
+		randaoMix, err := hex.DecodeString(strings.TrimPrefix(data.RANDAOMixes[i], "0x"))
+		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for RANDAO mix %d", i))
 		}
-		if len(s.RANDAOMixes[i]) != phase0.RootLength {
-			return fmt.Errorf("incorrect length %d for RANDAO mix %d", len(s.RANDAOMixes[i]), i)
+		if len(randaoMix) != phase0.RootLength {
+			return fmt.Errorf("incorrect length %d for RANDAO mix %d", len(randaoMix), i)
 		}
+		copy(s.RANDAOMixes[i][:], randaoMix)
 	}
-	s.Slashings = make([]uint64, len(data.Slashings))
+	s.Slashings = make([]phase0.Gwei, len(data.Slashings))
 	for i := range data.Slashings {
 		if data.Slashings[i] == "" {
 			return fmt.Errorf("slashing %d missing", i)
 		}
-		if s.Slashings[i], err = strconv.ParseUint(data.Slashings[i], 10, 64); err != nil {
+		slashings, err := strconv.ParseUint(data.Slashings[i], 10, 64)
+		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for slashing %d", i))
 		}
+		s.Slashings[i] = phase0.Gwei(slashings)
 	}
 	s.PreviousEpochParticipation = make([]altair.ParticipationFlags, len(data.PreviousEpochParticipation))
 	for i := range data.PreviousEpochParticipation {
@@ -336,9 +388,86 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
+// MarshalYAML implements yaml.Marshaler.
+func (s *BeaconState) MarshalYAML() ([]byte, error) {
+	blockRoots := make([]string, len(s.BlockRoots))
+	for i := range s.BlockRoots {
+		blockRoots[i] = fmt.Sprintf("%#x", s.BlockRoots[i])
+	}
+	stateRoots := make([]string, len(s.StateRoots))
+	for i := range s.StateRoots {
+		stateRoots[i] = fmt.Sprintf("%#x", s.StateRoots[i])
+	}
+	historicalRoots := make([]string, len(s.HistoricalRoots))
+	for i := range s.HistoricalRoots {
+		historicalRoots[i] = fmt.Sprintf("%#x", s.HistoricalRoots[i])
+	}
+	balances := make([]uint64, len(s.Balances))
+	for i := range s.Balances {
+		balances[i] = uint64(s.Balances[i])
+	}
+	randaoMixes := make([]string, len(s.RANDAOMixes))
+	for i := range s.RANDAOMixes {
+		randaoMixes[i] = fmt.Sprintf("%#x", s.RANDAOMixes[i])
+	}
+	slashings := make([]uint64, len(s.Slashings))
+	for i := range s.Slashings {
+		slashings[i] = uint64(s.Slashings[i])
+	}
+	PreviousEpochParticipation := make([]uint8, len(s.PreviousEpochParticipation))
+	for i := range s.PreviousEpochParticipation {
+		PreviousEpochParticipation[i] = uint8(s.PreviousEpochParticipation[i])
+	}
+	CurrentEpochParticipation := make([]uint8, len(s.CurrentEpochParticipation))
+	for i := range s.CurrentEpochParticipation {
+		CurrentEpochParticipation[i] = uint8(s.CurrentEpochParticipation[i])
+	}
+	yamlBytes, err := yaml.MarshalWithOptions(&beaconStateYAML{
+		GenesisTime:                  s.GenesisTime,
+		GenesisValidatorsRoot:        fmt.Sprintf("%#x", s.GenesisValidatorsRoot),
+		Slot:                         uint64(s.Slot),
+		Fork:                         s.Fork,
+		LatestBlockHeader:            s.LatestBlockHeader,
+		BlockRoots:                   blockRoots,
+		StateRoots:                   stateRoots,
+		HistoricalRoots:              historicalRoots,
+		ETH1Data:                     s.ETH1Data,
+		ETH1DataVotes:                s.ETH1DataVotes,
+		ETH1DepositIndex:             s.ETH1DepositIndex,
+		Validators:                   s.Validators,
+		Balances:                     balances,
+		RANDAOMixes:                  randaoMixes,
+		Slashings:                    slashings,
+		PreviousEpochParticipation:   PreviousEpochParticipation,
+		CurrentEpochParticipation:    CurrentEpochParticipation,
+		JustificationBits:            fmt.Sprintf("%#x", s.JustificationBits.Bytes()),
+		PreviousJustifiedCheckpoint:  s.PreviousJustifiedCheckpoint,
+		CurrentJustifiedCheckpoint:   s.CurrentJustifiedCheckpoint,
+		FinalizedCheckpoint:          s.FinalizedCheckpoint,
+		InactivityScores:             s.InactivityScores,
+		CurrentSyncCommittee:         s.CurrentSyncCommittee,
+		NextSyncCommittee:            s.NextSyncCommittee,
+		LatestExecutionPayloadHeader: s.LatestExecutionPayloadHeader,
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (s *BeaconState) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var data beaconStateJSON
+	if err := yaml.Unmarshal(input, &data); err != nil {
+		return err
+	}
+	return s.unpack(&data)
+}
+
 // String returns a string version of the structure.
 func (s *BeaconState) String() string {
-	data, err := json.Marshal(s)
+	data, err := yaml.Marshal(s)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

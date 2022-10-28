@@ -4,10 +4,10 @@ go 1.14
 
 require (
 	github.com/fatih/color v1.13.0 // indirect
-	github.com/ferranbt/fastssz v0.1.1
+	github.com/ferranbt/fastssz v0.1.2
 	github.com/goccy/go-yaml v1.9.5
 	github.com/golang/snappy v0.0.4
-	github.com/klauspost/cpuid/v2 v2.1.0 // indirect
+	github.com/klauspost/cpuid/v2 v2.1.2 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
@@ -19,7 +19,7 @@ require (
 	github.com/rs/zerolog v1.26.1
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
-	golang.org/x/sys v0.0.0-20220731174439-a90be440212d // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	gotest.tools v2.2.0+incompatible
 )
