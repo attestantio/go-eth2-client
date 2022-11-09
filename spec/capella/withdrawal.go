@@ -29,31 +29,35 @@ import (
 
 // Withdrawal provides information about a withdrawal.
 type Withdrawal struct {
-	Index   WithdrawalIndex
-	Address bellatrix.ExecutionAddress `ssz-size:"20"`
-	Amount  phase0.Gwei
+	Index          WithdrawalIndex
+	ValidatorIndex phase0.ValidatorIndex
+	Address        bellatrix.ExecutionAddress `ssz-size:"20"`
+	Amount         phase0.Gwei
 }
 
 // withdrawalJSON is an internal representation of the struct.
 type withdrawalJSON struct {
-	Index   string `json:"index"`
-	Address string `json:"address"`
-	Amount  string `json:"amount"`
+	Index          string `json:"index"`
+	ValidatorIndex string `json:"validator_index"`
+	Address        string `json:"address"`
+	Amount         string `json:"amount"`
 }
 
 // withdrawalYAML is an internal representation of the struct.
 type withdrawalYAML struct {
-	Index   uint64 `yaml:"index"`
-	Address string `yaml:"address"`
-	Amount  uint64 `yaml:"amount"`
+	Index          uint64 `yaml:"index"`
+	ValidatorIndex uint64 `yaml:"validator_index"`
+	Address        string `yaml:"address"`
+	Amount         uint64 `yaml:"amount"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (w *Withdrawal) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&withdrawalJSON{
-		Index:   fmt.Sprintf("%d", w.Index),
-		Address: fmt.Sprintf("%#x", w.Address),
-		Amount:  fmt.Sprintf("%d", w.Amount),
+		Index:          fmt.Sprintf("%d", w.Index),
+		ValidatorIndex: fmt.Sprintf("%d", w.ValidatorIndex),
+		Address:        fmt.Sprintf("%#x", w.Address),
+		Amount:         fmt.Sprintf("%d", w.Amount),
 	})
 }
 
@@ -76,6 +80,15 @@ func (w *Withdrawal) unpack(data *withdrawalJSON) error {
 		return errors.Wrap(err, "invalid value for index")
 	}
 	w.Index = WithdrawalIndex(index)
+
+	if data.ValidatorIndex == "" {
+		return errors.New("validator index missing")
+	}
+	validatorIndex, err := strconv.ParseUint(data.ValidatorIndex, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for validator index")
+	}
+	w.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
 
 	if data.Address == "" {
 		return errors.New("address missing")
@@ -104,9 +117,10 @@ func (w *Withdrawal) unpack(data *withdrawalJSON) error {
 // MarshalYAML implements yaml.Marshaler.
 func (w *Withdrawal) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&withdrawalYAML{
-		Index:   uint64(w.Index),
-		Address: fmt.Sprintf("%#x", w.Address),
-		Amount:  uint64(w.Amount),
+		Index:          uint64(w.Index),
+		ValidatorIndex: uint64(w.ValidatorIndex),
+		Address:        fmt.Sprintf("%#x", w.Address),
+		Amount:         uint64(w.Amount),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

@@ -45,57 +45,57 @@ func TestWithdrawalJSON(t *testing.T) {
 		},
 		{
 			name:  "IndexMissing",
-			input: []byte(`{"address":"0x000102030405060708090a0b0c0d0e0f10111213","amount":"1000000000000000000"}`),
+			input: []byte(`{"validator_index":"3","address":"0x000102030405060708090a0b0c0d0e0f10111213","amount":"1000000000000000000"}`),
 			err:   "index missing",
 		},
 		{
 			name:  "IndexWrongType",
-			input: []byte(`{"index":true,"address":"0x000102030405060708090a0b0c0d0e0f10111213","amount":"1000000000000000000"}`),
+			input: []byte(`{"index":true,"validator_index":"3","address":"0x000102030405060708090a0b0c0d0e0f10111213","amount":"1000000000000000000"}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field withdrawalJSON.index of type string",
 		},
 		{
 			name:  "IndexInvalid",
-			input: []byte(`{"index":"true","address":"0x000102030405060708090a0b0c0d0e0f10111213","amount":"1000000000000000000"}`),
+			input: []byte(`{"index":"true","validator_index":"3","address":"0x000102030405060708090a0b0c0d0e0f10111213","amount":"1000000000000000000"}`),
 			err:   "invalid value for index: strconv.ParseUint: parsing \"true\": invalid syntax",
 		},
 		{
 			name:  "AddressMissing",
-			input: []byte(`{"index":"2","amount":"1000000000000000000"}`),
+			input: []byte(`{"index":"2","validator_index":"3","amount":"1000000000000000000"}`),
 			err:   "address missing",
 		},
 		{
 			name:  "AddressWrongType",
-			input: []byte(`{"index":"2","address":true,"amount":"1000000000000000000"}`),
+			input: []byte(`{"index":"2","validator_index":"3","address":true,"amount":"1000000000000000000"}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field withdrawalJSON.address of type string",
 		},
 		{
 			name:  "AddressInvalid",
-			input: []byte(`{"index":"2","address":"invalid","amount":"1000000000000000000"}`),
+			input: []byte(`{"index":"2","validator_index":"3","address":"invalid","amount":"1000000000000000000"}`),
 			err:   "invalid value for address: encoding/hex: invalid byte: U+0069 'i'",
 		},
 		{
 			name:  "AddressWrongLength",
-			input: []byte(`{"index":"2","address":"0x0102030405060708090a0b0c0d0e0f10111213","amount":"1000000000000000000"}`),
+			input: []byte(`{"index":"2","validator_index":"3","address":"0x0102030405060708090a0b0c0d0e0f10111213","amount":"1000000000000000000"}`),
 			err:   "incorrect length for address",
 		},
 		{
 			name:  "AmountMissing",
-			input: []byte(`{"index":"2","address":"0x000102030405060708090a0b0c0d0e0f10111213"}`),
+			input: []byte(`{"index":"2","validator_index":"3","address":"0x000102030405060708090a0b0c0d0e0f10111213"}`),
 			err:   "amount missing",
 		},
 		{
 			name:  "AmountWrongType",
-			input: []byte(`{"index":"2","address":"0x000102030405060708090a0b0c0d0e0f10111213","amount":true}`),
+			input: []byte(`{"index":"2","validator_index":"3","address":"0x000102030405060708090a0b0c0d0e0f10111213","amount":true}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field withdrawalJSON.amount of type string",
 		},
 		{
 			name:  "AmountInvalid",
-			input: []byte(`{"index":"2","address":"0x000102030405060708090a0b0c0d0e0f10111213","amount":"true"}`),
+			input: []byte(`{"index":"2","validator_index":"3","address":"0x000102030405060708090a0b0c0d0e0f10111213","amount":"true"}`),
 			err:   "invalid value for amount: strconv.ParseUint: parsing \"true\": invalid syntax",
 		},
 		{
 			name:  "Good",
-			input: []byte(`{"index":"2","address":"0x000102030405060708090a0b0c0d0e0f10111213","amount":"1000000000000000000"}`),
+			input: []byte(`{"index":"2","validator_index":"3","address":"0x000102030405060708090a0b0c0d0e0f10111213","amount":"1000000000000000000"}`),
 		},
 	}
 
@@ -124,7 +124,7 @@ func TestWithdrawalYAML(t *testing.T) {
 	}{
 		{
 			name:  "Good",
-			input: []byte(`{index: 2, address: '0x000102030405060708090a0b0c0d0e0f10111213', amount: 1000000000000000000}`),
+			input: []byte(`{index: 2, validator_index: 3, address: '0x000102030405060708090a0b0c0d0e0f10111213', amount: 1000000000000000000}`),
 		},
 	}
 
@@ -150,7 +150,7 @@ func TestWithdrawalSpec(t *testing.T) {
 	if os.Getenv("ETH2_SPEC_TESTS_DIR") == "" {
 		t.Skip("ETH2_SPEC_TESTS_DIR not suppplied, not running spec tests")
 	}
-	baseDir := filepath.Join(os.Getenv("ETH2_SPEC_TESTS_DIR"), "tests", "mainnet", "capella", "ssz_static", "BLSToExecutionChange", "ssz_random")
+	baseDir := filepath.Join(os.Getenv("ETH2_SPEC_TESTS_DIR"), "tests", "mainnet", "capella", "ssz_static", "Withdrawal", "ssz_random")
 	require.NoError(t, filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
 		if path == baseDir {
 			// Only interested in subdirectories.
@@ -161,7 +161,7 @@ func TestWithdrawalSpec(t *testing.T) {
 			t.Run(info.Name(), func(t *testing.T) {
 				specYAML, err := ioutil.ReadFile(filepath.Join(path, "value.yaml"))
 				require.NoError(t, err)
-				var res capella.BLSToExecutionChange
+				var res capella.Withdrawal
 				require.NoError(t, yaml.Unmarshal(specYAML, &res))
 
 				compressedSpecSSZ, err := os.ReadFile(filepath.Join(path, "serialized.ssz_snappy"))
