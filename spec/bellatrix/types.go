@@ -13,8 +13,15 @@
 
 package bellatrix
 
+import "fmt"
+
 // Transaction is an opaque execution layer transaction.
 type Transaction []byte
 
 // ExecutionAddress is a execution address.
 type ExecutionAddress [20]byte
+
+// String returns a string version of the structure.
+func (a *ExecutionAddress) String() string {
+	return fmt.Sprintf("%#x", a)
+}
