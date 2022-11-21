@@ -149,6 +149,25 @@ func (v *VersionedBlindedBeaconBlock) FeeRecipient() (bellatrix.ExecutionAddress
 	}
 }
 
+// Timestamp returns the timestamp of the blinded beacon block.
+func (v *VersionedBlindedBeaconBlock) Timestamp() (uint64, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return 0, errors.New("no bellatrix block")
+		}
+		if v.Bellatrix.Body == nil {
+			return 0, errors.New("no bellatrix block body")
+		}
+		if v.Bellatrix.Body.ExecutionPayloadHeader == nil {
+			return 0, errors.New("no bellatrix block body execution payload header")
+		}
+		return v.Bellatrix.Body.ExecutionPayloadHeader.Timestamp, nil
+	default:
+		return 0, errors.New("unsupported version")
+	}
+}
+
 // String returns a string version of the structure.
 func (v *VersionedBlindedBeaconBlock) String() string {
 	switch v.Version {
