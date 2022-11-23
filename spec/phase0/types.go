@@ -34,7 +34,7 @@ type Gwei uint64
 type Root [32]byte
 
 // String returns a string version of the structure.
-func (r *Root) String() string {
+func (r Root) String() string {
 	return fmt.Sprintf("%#x", r)
 }
 
@@ -54,7 +54,7 @@ type Domain [32]byte
 type BLSPubKey [48]byte
 
 // String returns a string version of the structure.
-func (pk *BLSPubKey) String() string {
+func (pk BLSPubKey) String() string {
 	return fmt.Sprintf("%#x", pk)
 }
 
@@ -62,7 +62,7 @@ func (pk *BLSPubKey) String() string {
 type BLSSignature [96]byte
 
 // String returns a string version of the structure.
-func (s *BLSSignature) String() string {
+func (s BLSSignature) String() string {
 	return fmt.Sprintf("%#x", s)
 }
 
@@ -70,6 +70,6 @@ func (s *BLSSignature) String() string {
 type Hash32 [32]byte
 
 // String returns a string version of the structure.
-func (h *Hash32) String() string {
+func (h Hash32) String() string {
 	return fmt.Sprintf("%#x", h)
 }

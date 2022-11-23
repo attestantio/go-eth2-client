@@ -22,6 +22,6 @@ type Transaction []byte
 type ExecutionAddress [20]byte
 
 // String returns a string version of the structure.
-func (a *ExecutionAddress) String() string {
+func (a ExecutionAddress) String() string {
 	return fmt.Sprintf("%#x", a)
 }
