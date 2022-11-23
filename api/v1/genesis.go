@@ -43,7 +43,7 @@ type genesisJSON struct {
 func (g *Genesis) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&genesisJSON{
 		GenesisTime:           fmt.Sprintf("%d", g.GenesisTime.Unix()),
-		GenesisValidatorsRoot: fmt.Sprintf("%#x", g.GenesisValidatorsRoot),
+		GenesisValidatorsRoot: g.GenesisValidatorsRoot.String(),
 		GenesisForkVersion:    fmt.Sprintf("%#x", g.GenesisForkVersion),
 	})
 }

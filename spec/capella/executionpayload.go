@@ -106,8 +106,8 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
 
 	return json.Marshal(&executionPayloadJSON{
-		ParentHash:    fmt.Sprintf("%#x", e.ParentHash),
-		FeeRecipient:  fmt.Sprintf("%#x", e.FeeRecipient),
+		ParentHash:    e.ParentHash.String(),
+		FeeRecipient:  e.FeeRecipient.String(),
 		StateRoot:     fmt.Sprintf("%#x", e.StateRoot),
 		ReceiptsRoot:  fmt.Sprintf("%#x", e.ReceiptsRoot),
 		LogsBloom:     fmt.Sprintf("%#x", e.LogsBloom),
@@ -118,7 +118,7 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 		Timestamp:     fmt.Sprintf("%d", e.Timestamp),
 		ExtraData:     extraData,
 		BaseFeePerGas: baseFeePerGas.String(),
-		BlockHash:     fmt.Sprintf("%#x", e.BlockHash),
+		BlockHash:     e.BlockHash.String(),
 		Transactions:  transactions,
 		Withdrawals:   e.Withdrawals,
 	})
@@ -351,8 +351,8 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
 
 	yamlBytes, err := yaml.MarshalWithOptions(&executionPayloadYAML{
-		ParentHash:    fmt.Sprintf("%#x", e.ParentHash),
-		FeeRecipient:  fmt.Sprintf("%#x", e.FeeRecipient),
+		ParentHash:    e.ParentHash.String(),
+		FeeRecipient:  e.FeeRecipient.String(),
 		StateRoot:     fmt.Sprintf("%#x", e.StateRoot),
 		ReceiptsRoot:  fmt.Sprintf("%#x", e.ReceiptsRoot),
 		LogsBloom:     fmt.Sprintf("%#x", e.LogsBloom),
@@ -363,7 +363,7 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 		Timestamp:     e.Timestamp,
 		ExtraData:     extraData,
 		BaseFeePerGas: baseFeePerGas.String(),
-		BlockHash:     fmt.Sprintf("%#x", e.BlockHash),
+		BlockHash:     e.BlockHash.String(),
 		Transactions:  transactions,
 		Withdrawals:   e.Withdrawals,
 	}, yaml.Flow(true))

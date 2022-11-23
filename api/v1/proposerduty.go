@@ -41,7 +41,7 @@ type proposerDutyJSON struct {
 // MarshalJSON implements json.Marshaler.
 func (p *ProposerDuty) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&proposerDutyJSON{
-		PubKey:         fmt.Sprintf("%#x", p.PubKey),
+		PubKey:         p.PubKey.String(),
 		Slot:           fmt.Sprintf("%d", p.Slot),
 		ValidatorIndex: fmt.Sprintf("%d", p.ValidatorIndex),
 	})

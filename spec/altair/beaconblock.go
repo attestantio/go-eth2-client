@@ -58,8 +58,8 @@ func (b *BeaconBlock) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&beaconBlockJSON{
 		Slot:          fmt.Sprintf("%d", b.Slot),
 		ProposerIndex: fmt.Sprintf("%d", b.ProposerIndex),
-		ParentRoot:    fmt.Sprintf("%#x", b.ParentRoot),
-		StateRoot:     fmt.Sprintf("%#x", b.StateRoot),
+		ParentRoot:    b.ParentRoot.String(),
+		StateRoot:     b.StateRoot.String(),
 		Body:          b.Body,
 	})
 }
@@ -125,8 +125,8 @@ func (b *BeaconBlock) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&beaconBlockYAML{
 		Slot:          uint64(b.Slot),
 		ProposerIndex: uint64(b.ProposerIndex),
-		ParentRoot:    fmt.Sprintf("%#x", b.ParentRoot),
-		StateRoot:     fmt.Sprintf("%#x", b.StateRoot),
+		ParentRoot:    b.ParentRoot.String(),
+		StateRoot:     b.StateRoot.String(),
 		Body:          b.Body,
 	}, yaml.Flow(true))
 	if err != nil {

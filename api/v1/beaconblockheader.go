@@ -43,7 +43,7 @@ type beaconBlockHeaderJSON struct {
 // MarshalJSON implements json.Marshaler.
 func (b *BeaconBlockHeader) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&beaconBlockHeaderJSON{
-		Root:      fmt.Sprintf("%#x", b.Root),
+		Root:      b.Root.String(),
 		Canonical: b.Canonical,
 		Header:    b.Header,
 	})

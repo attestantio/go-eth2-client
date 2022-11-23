@@ -45,7 +45,7 @@ type signingDataYAML struct {
 // MarshalJSON implements json.Marshaler.
 func (s *SigningData) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&signingDataJSON{
-		ObjectRoot: fmt.Sprintf("%#x", s.ObjectRoot),
+		ObjectRoot: s.ObjectRoot.String(),
 		Domain:     fmt.Sprintf("%#x", s.Domain),
 	})
 }
@@ -89,7 +89,7 @@ func (s *SigningData) unpack(signingDataJSON *signingDataJSON) error {
 // MarshalYAML implements yaml.Marshaler.
 func (s *SigningData) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&signingDataYAML{
-		ObjectRoot: fmt.Sprintf("%#x", s.ObjectRoot),
+		ObjectRoot: s.ObjectRoot.String(),
 		Domain:     fmt.Sprintf("%#x", s.Domain),
 	}, yaml.Flow(true))
 	if err != nil {

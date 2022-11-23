@@ -46,7 +46,7 @@ type signedBeaconBlockHeaderYAML struct {
 func (s *SignedBeaconBlockHeader) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&signedBeaconBlockHeaderJSON{
 		Message:   s.Message,
-		Signature: fmt.Sprintf("%#x", s.Signature),
+		Signature: s.Signature.String(),
 	})
 }
 
@@ -80,7 +80,7 @@ func (s *SignedBeaconBlockHeader) unpack(signedBeaconBlockHeaderJSON *signedBeac
 func (s *SignedBeaconBlockHeader) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&signedBeaconBlockHeaderYAML{
 		Message:   s.Message,
-		Signature: fmt.Sprintf("%#x", s.Signature),
+		Signature: s.Signature.String(),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

@@ -59,10 +59,10 @@ type syncCommitteeContributionYAML struct {
 func (s *SyncCommitteeContribution) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&syncCommitteeContributionJSON{
 		Slot:              fmt.Sprintf("%d", s.Slot),
-		BeaconBlockRoot:   fmt.Sprintf("%#x", s.BeaconBlockRoot),
+		BeaconBlockRoot:   s.BeaconBlockRoot.String(),
 		SubcommitteeIndex: fmt.Sprintf("%d", s.SubcommitteeIndex),
 		AggregationBits:   fmt.Sprintf("%#x", []byte(s.AggregationBits)),
-		Signature:         fmt.Sprintf("%#x", s.Signature),
+		Signature:         s.Signature.String(),
 	})
 }
 
@@ -128,10 +128,10 @@ func (s *SyncCommitteeContribution) unpack(syncCommitteeContributionJSON *syncCo
 func (s *SyncCommitteeContribution) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&syncCommitteeContributionYAML{
 		Slot:              uint64(s.Slot),
-		BeaconBlockRoot:   fmt.Sprintf("%#x", s.BeaconBlockRoot),
+		BeaconBlockRoot:   s.BeaconBlockRoot.String(),
 		SubcommitteeIndex: s.SubcommitteeIndex,
 		AggregationBits:   fmt.Sprintf("%#x", []byte(s.AggregationBits)),
-		Signature:         fmt.Sprintf("%#x", s.Signature),
+		Signature:         s.Signature.String(),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

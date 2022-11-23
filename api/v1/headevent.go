@@ -49,17 +49,17 @@ type headEventJSON struct {
 func (e *HeadEvent) MarshalJSON() ([]byte, error) {
 	data := &headEventJSON{
 		Slot:            fmt.Sprintf("%d", e.Slot),
-		Block:           fmt.Sprintf("%#x", e.Block),
-		State:           fmt.Sprintf("%#x", e.State),
+		Block:           e.Block.String(),
+		State:           e.State.String(),
 		EpochTransition: e.EpochTransition,
 	}
 	// Optional fields (for now).
 	var zeroRoot phase0.Root
 	if !bytes.Equal(zeroRoot[:], e.CurrentDutyDependentRoot[:]) {
-		data.CurrentDutyDependentRoot = fmt.Sprintf("%#x", e.CurrentDutyDependentRoot)
+		data.CurrentDutyDependentRoot = e.CurrentDutyDependentRoot.String()
 	}
 	if !bytes.Equal(zeroRoot[:], e.PreviousDutyDependentRoot[:]) {
-		data.PreviousDutyDependentRoot = fmt.Sprintf("%#x", e.PreviousDutyDependentRoot)
+		data.PreviousDutyDependentRoot = e.PreviousDutyDependentRoot.String()
 	}
 
 	return json.Marshal(data)

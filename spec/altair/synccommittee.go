@@ -50,12 +50,12 @@ type syncCommitteeYAML struct {
 func (s *SyncCommittee) MarshalJSON() ([]byte, error) {
 	pubKeys := make([]string, len(s.Pubkeys))
 	for i := range s.Pubkeys {
-		pubKeys[i] = fmt.Sprintf("%#x", s.Pubkeys[i])
+		pubKeys[i] = s.Pubkeys[i].String()
 	}
 
 	return json.Marshal(&syncCommitteeJSON{
 		Pubkeys:         pubKeys,
-		AggregatePubkey: fmt.Sprintf("%#x", s.AggregatePubkey),
+		AggregatePubkey: s.AggregatePubkey.String(),
 	})
 }
 
@@ -103,12 +103,12 @@ func (s *SyncCommittee) unpack(syncCommitteeJSON *syncCommitteeJSON) error {
 func (s *SyncCommittee) MarshalYAML() ([]byte, error) {
 	pubKeys := make([]string, len(s.Pubkeys))
 	for i := range s.Pubkeys {
-		pubKeys[i] = fmt.Sprintf("%#x", s.Pubkeys[i])
+		pubKeys[i] = s.Pubkeys[i].String()
 	}
 
 	yamlBytes, err := yaml.MarshalWithOptions(&syncCommitteeYAML{
 		Pubkeys:         pubKeys,
-		AggregatePubkey: fmt.Sprintf("%#x", s.AggregatePubkey),
+		AggregatePubkey: s.AggregatePubkey.String(),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

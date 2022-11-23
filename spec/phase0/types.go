@@ -13,7 +13,9 @@
 
 package phase0
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Slot is a slot number.
 type Slot uint64
@@ -35,7 +37,7 @@ type Root [32]byte
 
 // String returns a string version of the structure.
 func (r Root) String() string {
-	return fmt.Sprintf("%#x", r)
+	return fmt.Sprintf("%#x", r[:])
 }
 
 // Version is a fork version.
@@ -55,7 +57,7 @@ type BLSPubKey [48]byte
 
 // String returns a string version of the structure.
 func (pk BLSPubKey) String() string {
-	return fmt.Sprintf("%#x", pk)
+	return fmt.Sprintf("%#x", pk[:])
 }
 
 // BLSSignature is a BLS12-381 signature.
@@ -63,7 +65,7 @@ type BLSSignature [96]byte
 
 // String returns a string version of the structure.
 func (s BLSSignature) String() string {
-	return fmt.Sprintf("%#x", s)
+	return fmt.Sprintf("%#x", s[:])
 }
 
 // Hash32 is a 32-byte hash.
@@ -71,5 +73,5 @@ type Hash32 [32]byte
 
 // String returns a string version of the structure.
 func (h Hash32) String() string {
-	return fmt.Sprintf("%#x", h)
+	return fmt.Sprintf("%#x", h[:])
 }

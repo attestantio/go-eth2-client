@@ -47,7 +47,7 @@ type signedBlindedBeaconBlockYAML struct {
 func (s *SignedBlindedBeaconBlock) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&signedBlindedBeaconBlockJSON{
 		Message:   s.Message,
-		Signature: fmt.Sprintf("%#x", s.Signature),
+		Signature: s.Signature.String(),
 	})
 }
 
@@ -84,7 +84,7 @@ func (s *SignedBlindedBeaconBlock) unpack(data *signedBlindedBeaconBlockJSON) er
 func (s *SignedBlindedBeaconBlock) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&signedBlindedBeaconBlockYAML{
 		Message:   s.Message,
-		Signature: fmt.Sprintf("%#x", s.Signature),
+		Signature: s.Signature.String(),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

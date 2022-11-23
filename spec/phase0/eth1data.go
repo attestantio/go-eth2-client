@@ -50,7 +50,7 @@ type eth1DataYAML struct {
 // MarshalJSON implements json.Marshaler.
 func (e *ETH1Data) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&eth1DataJSON{
-		DepositRoot:  fmt.Sprintf("%#x", e.DepositRoot),
+		DepositRoot:  e.DepositRoot.String(),
 		DepositCount: fmt.Sprintf("%d", e.DepositCount),
 		BlockHash:    fmt.Sprintf("%#x", e.BlockHash),
 	})
@@ -99,7 +99,7 @@ func (e *ETH1Data) unpack(eth1DataJSON *eth1DataJSON) error {
 // MarshalYAML implements yaml.Marshaler.
 func (e *ETH1Data) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&eth1DataYAML{
-		DepositRoot:  fmt.Sprintf("%#x", e.DepositRoot),
+		DepositRoot:  e.DepositRoot.String(),
 		DepositCount: e.DepositCount,
 		BlockHash:    fmt.Sprintf("%#x", e.BlockHash),
 	}, yaml.Flow(true))

@@ -54,9 +54,9 @@ type syncCommitteeMessageYAML struct {
 func (s *SyncCommitteeMessage) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&syncCommitteeMessageJSON{
 		Slot:            fmt.Sprintf("%d", s.Slot),
-		BeaconBlockRoot: fmt.Sprintf("%#x", s.BeaconBlockRoot),
+		BeaconBlockRoot: s.BeaconBlockRoot.String(),
 		ValidatorIndex:  fmt.Sprintf("%d", s.ValidatorIndex),
-		Signature:       fmt.Sprintf("%#x", s.Signature),
+		Signature:       s.Signature.String(),
 	})
 }
 
@@ -116,9 +116,9 @@ func (s *SyncCommitteeMessage) unpack(syncCommitteeMessageJSON *syncCommitteeMes
 func (s *SyncCommitteeMessage) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&syncCommitteeMessageYAML{
 		Slot:            uint64(s.Slot),
-		BeaconBlockRoot: fmt.Sprintf("%#x", s.BeaconBlockRoot),
+		BeaconBlockRoot: s.BeaconBlockRoot.String(),
 		ValidatorIndex:  uint64(s.ValidatorIndex),
-		Signature:       fmt.Sprintf("%#x", s.Signature),
+		Signature:      s.Signature.String(),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

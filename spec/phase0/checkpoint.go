@@ -47,7 +47,7 @@ type checkpointYAML struct {
 func (c *Checkpoint) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&checkpointJSON{
 		Epoch: fmt.Sprintf("%d", c.Epoch),
-		Root:  fmt.Sprintf("%#x", c.Root),
+		Root:  c.Root.String(),
 	})
 }
 
@@ -89,7 +89,7 @@ func (c *Checkpoint) unpack(checkpointJSON *checkpointJSON) error {
 func (c *Checkpoint) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&checkpointYAML{
 		Epoch: uint64(c.Epoch),
-		Root:  fmt.Sprintf("%#x", c.Root),
+		Root:  c.Root.String(),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

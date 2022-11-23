@@ -48,7 +48,7 @@ type syncAggregateYAML struct {
 func (s *SyncAggregate) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&syncAggregateJSON{
 		SyncCommitteeBits:      fmt.Sprintf("%#x", s.SyncCommitteeBits.Bytes()),
-		SyncCommitteeSignature: fmt.Sprintf("%#x", s.SyncCommitteeSignature),
+		SyncCommitteeSignature: s.SyncCommitteeSignature.String(),
 	})
 }
 
@@ -99,7 +99,7 @@ func (s *SyncAggregate) unpack(syncAggregateJSON *syncAggregateJSON) error {
 func (s *SyncAggregate) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&syncAggregateYAML{
 		SyncCommitteeBits:      fmt.Sprintf("%#x", s.SyncCommitteeBits.Bytes()),
-		SyncCommitteeSignature: fmt.Sprintf("%#x", s.SyncCommitteeSignature),
+		SyncCommitteeSignature: s.SyncCommitteeSignature.String(),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

@@ -46,7 +46,7 @@ type signedAggregateAndProofYAML struct {
 func (s *SignedAggregateAndProof) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&signedAggregateAndProofJSON{
 		Message:   s.Message,
-		Signature: fmt.Sprintf("%#x", s.Signature),
+		Signature: s.Signature.String(),
 	})
 }
 
@@ -83,7 +83,7 @@ func (s *SignedAggregateAndProof) unpack(signedAggregateAndProofJSON *signedAggr
 func (s *SignedAggregateAndProof) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&signedAggregateAndProofYAML{
 		Message:   s.Message,
-		Signature: fmt.Sprintf("%#x", s.Signature),
+		Signature: s.Signature.String(),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

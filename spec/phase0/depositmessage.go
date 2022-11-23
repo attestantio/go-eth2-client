@@ -49,7 +49,7 @@ type depositMessageYAML struct {
 // MarshalJSON implements json.Marshaler.
 func (d *DepositMessage) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&depositMessageJSON{
-		PublicKey:             fmt.Sprintf("%#x", d.PublicKey),
+		PublicKey:             d.PublicKey.String(),
 		WithdrawalCredentials: fmt.Sprintf("%#x", d.WithdrawalCredentials),
 		Amount:                fmt.Sprintf("%d", d.Amount),
 	})
@@ -100,7 +100,7 @@ func (d *DepositMessage) unpack(depositMessageJSON *depositMessageJSON) error {
 // MarshalYAML implements yaml.Marshaler.
 func (d *DepositMessage) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&depositMessageYAML{
-		PublicKey:             fmt.Sprintf("%#x", d.PublicKey),
+		PublicKey:             d.PublicKey.String(),
 		WithdrawalCredentials: fmt.Sprintf("%#x", d.WithdrawalCredentials),
 		Amount:                uint64(d.Amount),
 	}, yaml.Flow(true))

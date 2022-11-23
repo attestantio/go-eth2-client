@@ -52,8 +52,8 @@ type blsToExecutionChangeYAML struct {
 func (b *BLSToExecutionChange) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&blsToExecutionChangeJSON{
 		ValidatorIndex:     fmt.Sprintf("%d", b.ValidatorIndex),
-		FromBLSPubkey:      fmt.Sprintf("%#x", b.FromBLSPubkey),
-		ToExecutionAddress: fmt.Sprintf("%#x", b.ToExecutionAddress),
+		FromBLSPubkey:      b.FromBLSPubkey.String(),
+		ToExecutionAddress: b.ToExecutionAddress.String(),
 	})
 }
 
@@ -108,8 +108,8 @@ func (b *BLSToExecutionChange) unpack(data *blsToExecutionChangeJSON) error {
 func (b *BLSToExecutionChange) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&blsToExecutionChangeYAML{
 		ValidatorIndex:     uint64(b.ValidatorIndex),
-		FromBLSPubkey:      fmt.Sprintf("%#x", b.FromBLSPubkey),
-		ToExecutionAddress: fmt.Sprintf("%#x", b.ToExecutionAddress),
+		FromBLSPubkey:      b.FromBLSPubkey.String(),
+		ToExecutionAddress: b.ToExecutionAddress.String(),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

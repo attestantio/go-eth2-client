@@ -48,7 +48,7 @@ func (s *SyncCommitteeDuty) MarshalJSON() ([]byte, error) {
 		validatorSyncCommitteeIndices[i] = fmt.Sprintf("%d", s.ValidatorSyncCommitteeIndices[i])
 	}
 	return json.Marshal(&syncCommitteeDutyJSON{
-		PubKey:                        fmt.Sprintf("%#x", s.PubKey),
+		PubKey:                        s.PubKey.String(),
 		ValidatorIndex:                fmt.Sprintf("%d", s.ValidatorIndex),
 		ValidatorSyncCommitteeIndices: validatorSyncCommitteeIndices,
 	})

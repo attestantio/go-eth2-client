@@ -47,7 +47,7 @@ type signedBLSToExecutionChangeYAML struct {
 func (s *SignedBLSToExecutionChange) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&signedBLSToExecutionChangeJSON{
 		Message:   s.Message,
-		Signature: fmt.Sprintf("%#x", s.Signature),
+		Signature: s.Signature.String(),
 	})
 }
 
@@ -85,7 +85,7 @@ func (s *SignedBLSToExecutionChange) unpack(data *signedBLSToExecutionChangeJSON
 func (s *SignedBLSToExecutionChange) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&signedBLSToExecutionChangeYAML{
 		Message:   s.Message,
-		Signature: fmt.Sprintf("%#x", s.Signature),
+		Signature: s.Signature.String(),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

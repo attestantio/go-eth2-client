@@ -41,8 +41,8 @@ type finalizedCheckpointEventJSON struct {
 // MarshalJSON implements json.Marshaler.
 func (e *FinalizedCheckpointEvent) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&finalizedCheckpointEventJSON{
-		Block: fmt.Sprintf("%#x", e.Block),
-		State: fmt.Sprintf("%#x", e.State),
+		Block: e.Block.String(),
+		State: e.State.String(),
 		Epoch: fmt.Sprintf("%d", e.Epoch),
 	})
 }
