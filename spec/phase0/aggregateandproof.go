@@ -51,7 +51,7 @@ func (a *AggregateAndProof) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&aggregateAndProofJSON{
 		AggregatorIndex: fmt.Sprintf("%d", a.AggregatorIndex),
 		Aggregate:       a.Aggregate,
-		SelectionProof:  a.SelectionProof.String(),
+		SelectionProof:  fmt.Sprintf("%#x", a.SelectionProof),
 	})
 }
 
@@ -97,7 +97,7 @@ func (a *AggregateAndProof) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&aggregateAndProofYAML{
 		AggregatorIndex: uint64(a.AggregatorIndex),
 		Aggregate:       a.Aggregate,
-		SelectionProof:  a.SelectionProof.String(),
+		SelectionProof:  fmt.Sprintf("%#x", a.SelectionProof),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

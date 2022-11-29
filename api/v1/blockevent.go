@@ -42,7 +42,7 @@ type blockEventJSON struct {
 func (e *BlockEvent) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&blockEventJSON{
 		Slot:                fmt.Sprintf("%d", e.Slot),
-		Block:               e.Block.String(),
+		Block:               fmt.Sprintf("%#x", e.Block),
 		ExecutionOptimistic: e.ExecutionOptimistic,
 	})
 }

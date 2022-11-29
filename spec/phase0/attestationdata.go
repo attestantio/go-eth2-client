@@ -57,7 +57,7 @@ func (a *AttestationData) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&attestationDataJSON{
 		Slot:            fmt.Sprintf("%d", a.Slot),
 		Index:           fmt.Sprintf("%d", a.Index),
-		BeaconBlockRoot: a.BeaconBlockRoot.String(),
+		BeaconBlockRoot: fmt.Sprintf("%#x", a.BeaconBlockRoot),
 		Source:          a.Source,
 		Target:          a.Target,
 	})
@@ -117,7 +117,7 @@ func (a *AttestationData) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&attestationDataYAML{
 		Slot:            uint64(a.Slot),
 		Index:           uint64(a.Index),
-		BeaconBlockRoot: a.BeaconBlockRoot.String(),
+		BeaconBlockRoot: fmt.Sprintf("%#x", a.BeaconBlockRoot),
 		Source:          a.Source,
 		Target:          a.Target,
 	}, yaml.Flow(true))

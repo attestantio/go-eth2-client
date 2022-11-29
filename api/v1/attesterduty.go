@@ -56,7 +56,7 @@ type attesterDutyJSON struct {
 // MarshalJSON implements json.Marshaler.
 func (a *AttesterDuty) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&attesterDutyJSON{
-		PubKey:                  a.PubKey.String(),
+		PubKey:                  fmt.Sprintf("%#x", a.PubKey),
 		Slot:                    fmt.Sprintf("%d", a.Slot),
 		ValidatorIndex:          fmt.Sprintf("%d", a.ValidatorIndex),
 		CommitteeIndex:          fmt.Sprintf("%d", a.CommitteeIndex),

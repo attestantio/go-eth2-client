@@ -46,7 +46,7 @@ type signedVoluntaryExitYAML struct {
 func (s *SignedVoluntaryExit) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&signedVoluntaryExitJSON{
 		Message:   s.Message,
-		Signature: s.Signature.String(),
+		Signature: fmt.Sprintf("%#x", s.Signature),
 	})
 }
 
@@ -80,7 +80,7 @@ func (s *SignedVoluntaryExit) unpack(signedVoluntaryExitJSON *signedVoluntaryExi
 func (s *SignedVoluntaryExit) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&signedVoluntaryExitYAML{
 		Message:   s.Message,
-		Signature: s.Signature.String(),
+		Signature: fmt.Sprintf("%#x", s.Signature),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

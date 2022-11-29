@@ -82,7 +82,7 @@ func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, valida
 	if len(validatorPubKeys) != 0 {
 		ids := make([]string, len(validatorPubKeys))
 		for i := range validatorPubKeys {
-			ids[i] = validatorPubKeys[i].String()
+			ids[i] = fmt.Sprintf("%#x", validatorPubKeys[i])
 		}
 		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
 	}

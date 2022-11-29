@@ -115,15 +115,15 @@ type beaconStateYAML struct {
 func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	blockRoots := make([]string, len(s.BlockRoots))
 	for i := range s.BlockRoots {
-		blockRoots[i] = s.BlockRoots[i].String()
+		blockRoots[i] = fmt.Sprintf("%#x", s.BlockRoots[i])
 	}
 	stateRoots := make([]string, len(s.StateRoots))
 	for i := range s.StateRoots {
-		stateRoots[i] = s.StateRoots[i].String()
+		stateRoots[i] = fmt.Sprintf("%#x", s.StateRoots[i])
 	}
 	historicalRoots := make([]string, len(s.HistoricalRoots))
 	for i := range s.HistoricalRoots {
-		historicalRoots[i] = s.HistoricalRoots[i].String()
+		historicalRoots[i] = fmt.Sprintf("%#x", s.HistoricalRoots[i])
 	}
 	balances := make([]string, len(s.Balances))
 	for i := range s.Balances {
@@ -131,7 +131,7 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	}
 	randaoMixes := make([]string, len(s.RANDAOMixes))
 	for i := range s.RANDAOMixes {
-		randaoMixes[i] = s.RANDAOMixes[i].String()
+		randaoMixes[i] = fmt.Sprintf("%#x", s.RANDAOMixes[i])
 	}
 	slashings := make([]string, len(s.Slashings))
 	for i := range s.Slashings {
@@ -151,7 +151,7 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	}
 	return json.Marshal(&beaconStateJSON{
 		GenesisTime:                 fmt.Sprintf("%d", s.GenesisTime),
-		GenesisValidatorsRoot:       s.GenesisValidatorsRoot.String(),
+		GenesisValidatorsRoot:       fmt.Sprintf("%#x", s.GenesisValidatorsRoot),
 		Slot:                        fmt.Sprintf("%d", s.Slot),
 		Fork:                        s.Fork,
 		LatestBlockHeader:           s.LatestBlockHeader,
@@ -386,15 +386,15 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 func (s *BeaconState) MarshalYAML() ([]byte, error) {
 	blockRoots := make([]string, len(s.BlockRoots))
 	for i := range s.BlockRoots {
-		blockRoots[i] = s.BlockRoots[i].String()
+		blockRoots[i] = fmt.Sprintf("%#x", s.BlockRoots[i])
 	}
 	stateRoots := make([]string, len(s.StateRoots))
 	for i := range s.StateRoots {
-		stateRoots[i] = s.StateRoots[i].String()
+		stateRoots[i] = fmt.Sprintf("%#x", s.StateRoots[i])
 	}
 	historicalRoots := make([]string, len(s.HistoricalRoots))
 	for i := range s.HistoricalRoots {
-		historicalRoots[i] = s.HistoricalRoots[i].String()
+		historicalRoots[i] = fmt.Sprintf("%#x", s.HistoricalRoots[i])
 	}
 	balances := make([]uint64, len(s.Balances))
 	for i := range s.Balances {
@@ -402,7 +402,7 @@ func (s *BeaconState) MarshalYAML() ([]byte, error) {
 	}
 	randaoMixes := make([]string, len(s.RANDAOMixes))
 	for i := range s.RANDAOMixes {
-		randaoMixes[i] = s.RANDAOMixes[i].String()
+		randaoMixes[i] = fmt.Sprintf("%#x", s.RANDAOMixes[i])
 	}
 	slashings := make([]uint64, len(s.Slashings))
 	for i := range s.Slashings {
@@ -418,7 +418,7 @@ func (s *BeaconState) MarshalYAML() ([]byte, error) {
 	}
 	yamlBytes, err := yaml.MarshalWithOptions(&beaconStateYAML{
 		GenesisTime:                 s.GenesisTime,
-		GenesisValidatorsRoot:       s.GenesisValidatorsRoot.String(),
+		GenesisValidatorsRoot:       fmt.Sprintf("%#x", s.GenesisValidatorsRoot),
 		Slot:                        uint64(s.Slot),
 		Fork:                        s.Fork,
 		LatestBlockHeader:           s.LatestBlockHeader,

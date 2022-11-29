@@ -48,7 +48,7 @@ type forkDataYAML struct {
 func (f *ForkData) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&forkDataJSON{
 		CurrentVersion:        fmt.Sprintf("%#x", f.CurrentVersion),
-		GenesisValidatorsRoot: f.GenesisValidatorsRoot.String(),
+		GenesisValidatorsRoot: fmt.Sprintf("%#x", f.GenesisValidatorsRoot),
 	})
 }
 
@@ -93,7 +93,7 @@ func (f *ForkData) unpack(forkDataJSON *forkDataJSON) error {
 func (f *ForkData) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&forkDataYAML{
 		CurrentVersion:        fmt.Sprintf("%#x", f.CurrentVersion),
-		GenesisValidatorsRoot: f.GenesisValidatorsRoot.String(),
+		GenesisValidatorsRoot: fmt.Sprintf("%#x", f.GenesisValidatorsRoot),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

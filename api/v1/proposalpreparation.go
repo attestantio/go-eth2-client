@@ -43,7 +43,7 @@ type proposalPreparationJSON struct {
 func (p *ProposalPreparation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&proposalPreparationJSON{
 		ValidatorIndex: fmt.Sprintf("%d", p.ValidatorIndex),
-		FeeRecipient:   p.FeeRecipient.String(),
+		FeeRecipient:   fmt.Sprintf("%#x", p.FeeRecipient),
 	})
 }
 

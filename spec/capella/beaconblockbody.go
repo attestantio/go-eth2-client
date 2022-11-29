@@ -74,7 +74,7 @@ type beaconBlockBodyYAML struct {
 // MarshalJSON implements json.Marshaler.
 func (b *BeaconBlockBody) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&beaconBlockBodyJSON{
-		RANDAOReveal:          b.RANDAOReveal.String(),
+		RANDAOReveal:          fmt.Sprintf("%#x", b.RANDAOReveal),
 		ETH1Data:              b.ETH1Data,
 		Graffiti:              fmt.Sprintf("%#x", b.Graffiti),
 		ProposerSlashings:     b.ProposerSlashings,
@@ -160,7 +160,7 @@ func (b *BeaconBlockBody) unpack(data *beaconBlockBodyJSON) error {
 // MarshalYAML implements yaml.Marshaler.
 func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&beaconBlockBodyYAML{
-		RANDAOReveal:          b.RANDAOReveal.String(),
+		RANDAOReveal:          fmt.Sprintf("%#x", b.RANDAOReveal),
 		ETH1Data:              b.ETH1Data,
 		Graffiti:              fmt.Sprintf("%#x", b.Graffiti),
 		ProposerSlashings:     b.ProposerSlashings,

@@ -58,8 +58,8 @@ func (b *BlindedBeaconBlock) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&blindedBeaconBlockJSON{
 		Slot:          fmt.Sprintf("%d", b.Slot),
 		ProposerIndex: fmt.Sprintf("%d", b.ProposerIndex),
-		ParentRoot:    b.ParentRoot.String(),
-		StateRoot:     b.StateRoot.String(),
+		ParentRoot:    fmt.Sprintf("%#x", b.ParentRoot),
+		StateRoot:     fmt.Sprintf("%#x", b.StateRoot),
 		Body:          b.Body,
 	})
 }
@@ -125,8 +125,8 @@ func (b *BlindedBeaconBlock) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&blindedBeaconBlockYAML{
 		Slot:          uint64(b.Slot),
 		ProposerIndex: uint64(b.ProposerIndex),
-		ParentRoot:    b.ParentRoot.String(),
-		StateRoot:     b.StateRoot.String(),
+		ParentRoot:    fmt.Sprintf("%#x", b.ParentRoot),
+		StateRoot:     fmt.Sprintf("%#x", b.StateRoot),
 		Body:          b.Body,
 	}, yaml.Flow(true))
 	if err != nil {

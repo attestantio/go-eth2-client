@@ -56,7 +56,7 @@ func (w *Withdrawal) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&withdrawalJSON{
 		Index:          fmt.Sprintf("%d", w.Index),
 		ValidatorIndex: fmt.Sprintf("%d", w.ValidatorIndex),
-		Address:        w.Address.String(),
+		Address:        fmt.Sprintf("%#x", w.Address),
 		Amount:         fmt.Sprintf("%d", w.Amount),
 	})
 }
@@ -119,7 +119,7 @@ func (w *Withdrawal) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&withdrawalYAML{
 		Index:          uint64(w.Index),
 		ValidatorIndex: uint64(w.ValidatorIndex),
-		Address:        w.Address.String(),
+		Address:        fmt.Sprintf("%#x", w.Address),
 		Amount:         uint64(w.Amount),
 	}, yaml.Flow(true))
 	if err != nil {

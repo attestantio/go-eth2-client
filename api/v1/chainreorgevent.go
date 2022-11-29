@@ -51,10 +51,10 @@ func (e *ChainReorgEvent) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&chainReorgEventJSON{
 		Slot:         fmt.Sprintf("%d", e.Slot),
 		Depth:        fmt.Sprintf("%d", e.Depth),
-		OldHeadBlock: e.OldHeadBlock.String(),
-		NewHeadBlock: e.NewHeadBlock.String(),
-		OldHeadState: e.OldHeadState.String(),
-		NewHeadState: e.NewHeadState.String(),
+		OldHeadBlock: fmt.Sprintf("%#x", e.OldHeadBlock),
+		NewHeadBlock: fmt.Sprintf("%#x", e.NewHeadBlock),
+		OldHeadState: fmt.Sprintf("%#x", e.OldHeadState),
+		NewHeadState: fmt.Sprintf("%#x", e.NewHeadState),
 		Epoch:        fmt.Sprintf("%d", e.Epoch),
 	})
 }

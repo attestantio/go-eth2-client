@@ -101,8 +101,8 @@ func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
 	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
 
 	return json.Marshal(&executionPayloadHeaderJSON{
-		ParentHash:       e.ParentHash.String(),
-		FeeRecipient:     e.FeeRecipient.String(),
+		ParentHash:       fmt.Sprintf("%#x", e.ParentHash),
+		FeeRecipient:     fmt.Sprintf("%#x", e.FeeRecipient),
 		StateRoot:        fmt.Sprintf("%#x", e.StateRoot),
 		ReceiptsRoot:     fmt.Sprintf("%#x", e.ReceiptsRoot),
 		LogsBloom:        fmt.Sprintf("%#x", e.LogsBloom),
@@ -113,9 +113,9 @@ func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
 		Timestamp:        fmt.Sprintf("%d", e.Timestamp),
 		ExtraData:        extraData,
 		BaseFeePerGas:    baseFeePerGas.String(),
-		BlockHash:        e.BlockHash.String(),
-		TransactionsRoot: e.TransactionsRoot.String(),
-		WithdrawalsRoot:  e.WithdrawalsRoot.String(),
+		BlockHash:        fmt.Sprintf("%#x", e.BlockHash),
+		TransactionsRoot: fmt.Sprintf("%#x", e.TransactionsRoot),
+		WithdrawalsRoot:  fmt.Sprintf("%#x", e.WithdrawalsRoot),
 	})
 }
 
@@ -344,8 +344,8 @@ func (e *ExecutionPayloadHeader) MarshalYAML() ([]byte, error) {
 	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
 
 	yamlBytes, err := yaml.MarshalWithOptions(&executionPayloadHeaderYAML{
-		ParentHash:       e.ParentHash.String(),
-		FeeRecipient:     e.FeeRecipient.String(),
+		ParentHash:       fmt.Sprintf("%#x", e.ParentHash),
+		FeeRecipient:     fmt.Sprintf("%#x", e.FeeRecipient),
 		StateRoot:        fmt.Sprintf("%#x", e.StateRoot),
 		ReceiptsRoot:     fmt.Sprintf("%#x", e.ReceiptsRoot),
 		LogsBloom:        fmt.Sprintf("%#x", e.LogsBloom),
@@ -356,9 +356,9 @@ func (e *ExecutionPayloadHeader) MarshalYAML() ([]byte, error) {
 		Timestamp:        e.Timestamp,
 		ExtraData:        extraData,
 		BaseFeePerGas:    baseFeePerGas.String(),
-		BlockHash:        e.BlockHash.String(),
-		TransactionsRoot: e.TransactionsRoot.String(),
-		WithdrawalsRoot:  e.WithdrawalsRoot.String(),
+		BlockHash:        fmt.Sprintf("%#x", e.BlockHash),
+		TransactionsRoot: fmt.Sprintf("%#x", e.TransactionsRoot),
+		WithdrawalsRoot:  fmt.Sprintf("%#x", e.WithdrawalsRoot),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

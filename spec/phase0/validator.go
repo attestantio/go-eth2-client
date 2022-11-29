@@ -64,7 +64,7 @@ type validatorYAML struct {
 // MarshalJSON implements json.Marshaler.
 func (v *Validator) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&validatorJSON{
-		PublicKey:                  v.PublicKey.String(),
+		PublicKey:                  fmt.Sprintf("%#x", v.PublicKey),
 		WithdrawalCredentials:      fmt.Sprintf("%#x", v.WithdrawalCredentials),
 		EffectiveBalance:           fmt.Sprintf("%d", v.EffectiveBalance),
 		Slashed:                    v.Slashed,
@@ -154,7 +154,7 @@ func (v *Validator) unpack(validatorJSON *validatorJSON) error {
 // MarshalYAML implements yaml.Marshaler.
 func (v *Validator) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&validatorYAML{
-		PublicKey:                  v.PublicKey.String(),
+		PublicKey:                  fmt.Sprintf("%#x", v.PublicKey),
 		WithdrawalCredentials:      fmt.Sprintf("%#x", v.WithdrawalCredentials),
 		EffectiveBalance:           uint64(v.EffectiveBalance),
 		Slashed:                    v.Slashed,

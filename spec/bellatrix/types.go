@@ -13,9 +13,7 @@
 
 package bellatrix
 
-import (
-	"fmt"
-)
+import "fmt"
 
 // Transaction is an opaque execution layer transaction.
 type Transaction []byte
@@ -25,5 +23,20 @@ type ExecutionAddress [20]byte
 
 // String returns a string version of the structure.
 func (a ExecutionAddress) String() string {
-	return fmt.Sprintf("%#x", a[:])
+	return fmt.Sprintf("%#x", a)
+}
+
+func (a ExecutionAddress) Format(state fmt.State, v rune) {
+	format := string(v)
+	switch v {
+	case 's':
+		fmt.Fprint(state, a.String())
+	case 'x', 'X':
+		if state.Flag('#') {
+			format = "#" + format
+		}
+		fmt.Fprintf(state, "%"+format, a[:])
+	default:
+		fmt.Fprintf(state, "%"+format, a[:])
+	}
 }

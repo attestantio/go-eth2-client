@@ -51,7 +51,7 @@ func (a *Attestation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&attestationJSON{
 		AggregationBits: fmt.Sprintf("%#x", []byte(a.AggregationBits)),
 		Data:            a.Data,
-		Signature:       a.Signature.String(),
+		Signature:       fmt.Sprintf("%#x", a.Signature),
 	})
 }
 
@@ -97,7 +97,7 @@ func (a *Attestation) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&attestationYAML{
 		AggregationBits: fmt.Sprintf("%#x", []byte(a.AggregationBits)),
 		Data:            a.Data,
-		Signature:       a.Signature.String(),
+		Signature:       fmt.Sprintf("%#x", a.Signature),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

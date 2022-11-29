@@ -47,7 +47,7 @@ type signedContributionAndProofYAML struct {
 func (s *SignedContributionAndProof) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&signedContributionAndProofJSON{
 		Message:   s.Message,
-		Signature: s.Signature.String(),
+		Signature: fmt.Sprintf("%#x", s.Signature),
 	})
 }
 
@@ -84,7 +84,7 @@ func (s *SignedContributionAndProof) unpack(signedContributionAndProofJSON *sign
 func (s *SignedContributionAndProof) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&signedContributionAndProofYAML{
 		Message:   s.Message,
-		Signature: s.Signature.String(),
+		Signature: fmt.Sprintf("%#x", s.Signature),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

@@ -56,7 +56,7 @@ func (i *IndexedAttestation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&indexedAttestationJSON{
 		AttestingIndices: attestingIndices,
 		Data:             i.Data,
-		Signature:        i.Signature.String(),
+		Signature:        fmt.Sprintf("%#x", i.Signature),
 	})
 }
 
@@ -108,7 +108,7 @@ func (i *IndexedAttestation) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&indexedAttestationYAML{
 		AttestingIndices: i.AttestingIndices,
 		Data:             i.Data,
-		Signature:        i.Signature.String(),
+		Signature:        fmt.Sprintf("%#x", i.Signature),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

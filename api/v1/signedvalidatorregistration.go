@@ -47,7 +47,7 @@ type signedValidatorRegistrationYAML struct {
 func (s *SignedValidatorRegistration) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&signedValidatorRegistrationJSON{
 		Message:   s.Message,
-		Signature: s.Signature.String(),
+		Signature: fmt.Sprintf("%#x", s.Signature),
 	})
 }
 
@@ -84,7 +84,7 @@ func (s *SignedValidatorRegistration) unpack(data *signedValidatorRegistrationJS
 func (s *SignedValidatorRegistration) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&signedValidatorRegistrationYAML{
 		Message:   s.Message,
-		Signature: s.Signature.String(),
+		Signature: fmt.Sprintf("%#x", s.Signature),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
