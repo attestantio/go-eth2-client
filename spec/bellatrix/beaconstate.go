@@ -194,14 +194,14 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 // unpack unpacks JSON data in to a spec representation.
 // nolint:gocyclo
 func (s *BeaconState) unpack(data *beaconStateJSON) error {
+	var err error
+
 	if data.GenesisTime == "" {
 		return errors.New("genesis time missing")
 	}
-	genesisTime, err := strconv.ParseUint(data.GenesisTime, 10, 64)
-	if err != nil {
+	if s.GenesisTime, err = strconv.ParseUint(data.GenesisTime, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for genesis time")
 	}
-	s.GenesisTime = genesisTime
 	if data.GenesisValidatorsRoot == "" {
 		return errors.New("genesis validators root missing")
 	}
