@@ -34,8 +34,23 @@ type Gwei uint64
 type Root [32]byte
 
 // String returns a string version of the structure.
-func (r *Root) String() string {
+func (r Root) String() string {
 	return fmt.Sprintf("%#x", r)
+}
+
+func (r Root) Format(state fmt.State, v rune) {
+	format := string(v)
+	switch v {
+	case 's':
+		fmt.Fprint(state, r.String())
+	case 'x', 'X':
+		if state.Flag('#') {
+			format = "#" + format
+		}
+		fmt.Fprintf(state, "%"+format, r[:])
+	default:
+		fmt.Fprintf(state, "%"+format, r[:])
+	}
 }
 
 // Version is a fork version.
@@ -54,22 +69,67 @@ type Domain [32]byte
 type BLSPubKey [48]byte
 
 // String returns a string version of the structure.
-func (pk *BLSPubKey) String() string {
+func (pk BLSPubKey) String() string {
 	return fmt.Sprintf("%#x", pk)
+}
+
+func (pk BLSPubKey) Format(state fmt.State, v rune) {
+	format := string(v)
+	switch v {
+	case 's':
+		fmt.Fprint(state, pk.String())
+	case 'x', 'X':
+		if state.Flag('#') {
+			format = "#" + format
+		}
+		fmt.Fprintf(state, "%"+format, pk[:])
+	default:
+		fmt.Fprintf(state, "%"+format, pk[:])
+	}
 }
 
 // BLSSignature is a BLS12-381 signature.
 type BLSSignature [96]byte
 
 // String returns a string version of the structure.
-func (s *BLSSignature) String() string {
+func (s BLSSignature) String() string {
 	return fmt.Sprintf("%#x", s)
+}
+
+func (s BLSSignature) Format(state fmt.State, v rune) {
+	format := string(v)
+	switch v {
+	case 's':
+		fmt.Fprint(state, s.String())
+	case 'x', 'X':
+		if state.Flag('#') {
+			format = "#" + format
+		}
+		fmt.Fprintf(state, "%"+format, s[:])
+	default:
+		fmt.Fprintf(state, "%"+format, s[:])
+	}
 }
 
 // Hash32 is a 32-byte hash.
 type Hash32 [32]byte
 
 // String returns a string version of the structure.
-func (h *Hash32) String() string {
+func (h Hash32) String() string {
 	return fmt.Sprintf("%#x", h)
+}
+
+func (h Hash32) Format(state fmt.State, v rune) {
+	format := string(v)
+	switch v {
+	case 's':
+		fmt.Fprint(state, h.String())
+	case 'x', 'X':
+		if state.Flag('#') {
+			format = "#" + format
+		}
+		fmt.Fprintf(state, "%"+format, h[:])
+	default:
+		fmt.Fprintf(state, "%"+format, h[:])
+	}
 }
