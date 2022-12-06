@@ -43,7 +43,7 @@ Please read the [Go documentation for this library](https://godoc.org/github.com
 
 Below is a complete annotated example to access a beacon node.
 
-```
+```go
 package main
 
 import (
