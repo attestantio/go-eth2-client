@@ -22,9 +22,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// SubmitBLSToExecutionChange submits a BLS to execution address change operation.
-func (s *Service) SubmitBLSToExecutionChange(ctx context.Context, blsToExecutionChange *capella.SignedBLSToExecutionChange) error {
-	specJSON, err := json.Marshal(blsToExecutionChange)
+// SubmitBLSToExecutionChanges submits BLS to execution address change operations.
+func (s *Service) SubmitBLSToExecutionChanges(ctx context.Context, blsToExecutionChanges []*capella.SignedBLSToExecutionChange) error {
+	specJSON, err := json.Marshal(blsToExecutionChanges)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}

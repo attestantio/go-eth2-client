@@ -219,10 +219,10 @@ type SyncCommitteeContributionsSubmitter interface {
 	SubmitSyncCommitteeContributions(ctx context.Context, contributionAndProofs []*altair.SignedContributionAndProof) error
 }
 
-// BLSToExecutionChangeSubmitter is the interface for submitting BLS to execution address changes.
-type BLSToExecutionChangeSubmitter interface {
-	// SubmitBLSToExecutionChange submits a BLS to execution address change operation.
-	SubmitBLSToExecutionChange(ctx context.Context, blsToExecutionChange *capella.SignedBLSToExecutionChange) error
+// BLSToExecutionChangesSubmitter is the interface for submitting BLS to execution address changes.
+type BLSToExecutionChangesSubmitter interface {
+	// SubmitBLSToExecutionChanges submits BLS to execution address change operations.
+	SubmitBLSToExecutionChanges(ctx context.Context, blsToExecutionChanges []*capella.SignedBLSToExecutionChange) error
 }
 
 // BeaconBlockHeadersProvider is the interface for providing beacon block headers.

@@ -26,20 +26,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSubmitBLSToExecutionChange(t *testing.T) {
+func TestSubmitBLSToExecutionChanges(t *testing.T) {
 	tests := []struct {
 		name string
-		op   *capella.SignedBLSToExecutionChange
+		ops  []*capella.SignedBLSToExecutionChange
 	}{
 		{
 			name: "InvalidSignature",
-			op: &capella.SignedBLSToExecutionChange{
-				Message: &capella.BLSToExecutionChange{
-					ValidatorIndex:     12345,
-					FromBLSPubkey:      phase0.BLSPubKey{},
-					ToExecutionAddress: bellatrix.ExecutionAddress{},
+			ops: []*capella.SignedBLSToExecutionChange{
+				{
+					Message: &capella.BLSToExecutionChange{
+						ValidatorIndex:     12345,
+						FromBLSPubkey:      phase0.BLSPubKey{},
+						ToExecutionAddress: bellatrix.ExecutionAddress{},
+					},
+					Signature: phase0.BLSSignature{},
 				},
-				Signature: phase0.BLSSignature{},
 			},
 		},
 	}
@@ -52,7 +54,7 @@ func TestSubmitBLSToExecutionChange(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := service.(client.BLSToExecutionChangeSubmitter).SubmitBLSToExecutionChange(context.Background(), test.op)
+			err := service.(client.BLSToExecutionChangesSubmitter).SubmitBLSToExecutionChanges(context.Background(), test.ops)
 			require.Contains(t, err.Error(), "400")
 		})
 	}
