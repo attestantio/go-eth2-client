@@ -26,6 +26,7 @@ func (a ExecutionAddress) String() string {
 	return fmt.Sprintf("%#x", a)
 }
 
+// Format formats the execution address.
 func (a ExecutionAddress) Format(state fmt.State, v rune) {
 	format := string(v)
 	switch v {

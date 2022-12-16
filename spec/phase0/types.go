@@ -38,6 +38,7 @@ func (r Root) String() string {
 	return fmt.Sprintf("%#x", r)
 }
 
+// Format formats the root.
 func (r Root) Format(state fmt.State, v rune) {
 	format := string(v)
 	switch v {
@@ -73,6 +74,7 @@ func (pk BLSPubKey) String() string {
 	return fmt.Sprintf("%#x", pk)
 }
 
+// Format formats the public key.
 func (pk BLSPubKey) Format(state fmt.State, v rune) {
 	format := string(v)
 	switch v {
@@ -96,6 +98,7 @@ func (s BLSSignature) String() string {
 	return fmt.Sprintf("%#x", s)
 }
 
+// Format formats the signature.
 func (s BLSSignature) Format(state fmt.State, v rune) {
 	format := string(v)
 	switch v {
@@ -119,6 +122,7 @@ func (h Hash32) String() string {
 	return fmt.Sprintf("%#x", h)
 }
 
+// Format formats the hash.
 func (h Hash32) Format(state fmt.State, v rune) {
 	format := string(v)
 	switch v {
