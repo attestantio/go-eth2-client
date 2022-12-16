@@ -16,7 +16,8 @@ package api
 import (
 	"errors"
 
-	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
+	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
@@ -24,7 +25,8 @@ import (
 // VersionedSignedBlindedBeaconBlock contains a versioned signed blinded beacon block.
 type VersionedSignedBlindedBeaconBlock struct {
 	Version   spec.DataVersion
-	Bellatrix *apiv1.SignedBlindedBeaconBlock
+	Bellatrix *apiv1bellatrix.SignedBlindedBeaconBlock
+	Capella   *apiv1capella.SignedBlindedBeaconBlock
 }
 
 // Slot returns the slot of the signed beacon block.
@@ -35,6 +37,11 @@ func (v *VersionedSignedBlindedBeaconBlock) Slot() (phase0.Slot, error) {
 			return 0, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.Slot, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil {
+			return 0, errors.New("no capella block")
+		}
+		return v.Capella.Message.Slot, nil
 	default:
 		return 0, errors.New("unsupported version")
 	}
@@ -48,6 +55,11 @@ func (v *VersionedSignedBlindedBeaconBlock) Attestations() ([]*phase0.Attestatio
 			return nil, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.Body.Attestations, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.Attestations, nil
 	default:
 		return nil, errors.New("unsupported version")
 	}
@@ -61,6 +73,11 @@ func (v *VersionedSignedBlindedBeaconBlock) Root() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.HashTreeRoot()
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.Message.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -74,6 +91,11 @@ func (v *VersionedSignedBlindedBeaconBlock) BodyRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.Body.HashTreeRoot()
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -87,6 +109,11 @@ func (v *VersionedSignedBlindedBeaconBlock) ParentRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.ParentRoot, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.Message.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -100,6 +127,11 @@ func (v *VersionedSignedBlindedBeaconBlock) StateRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.StateRoot, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.Message.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -113,6 +145,11 @@ func (v *VersionedSignedBlindedBeaconBlock) AttesterSlashings() ([]*phase0.Attes
 			return nil, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.Body.AttesterSlashings, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.AttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -126,6 +163,11 @@ func (v *VersionedSignedBlindedBeaconBlock) ProposerSlashings() ([]*phase0.Propo
 			return nil, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Message.Body.ProposerSlashings, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}

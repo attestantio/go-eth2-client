@@ -72,8 +72,9 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 		cancel()
 		return nil, errors.Wrap(err, "failed to call GET endpoint")
 	}
+	defer resp.Body.Close()
 
-	if resp.StatusCode == 404 {
+	if resp.StatusCode == http.StatusNotFound {
 		// Nothing found.  This is not an error, so we return nil on both counts.
 		cancel()
 		return nil, nil
@@ -135,6 +136,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 		cancel()
 		return nil, errors.Wrap(err, "failed to call POST endpoint")
 	}
+	defer resp.Body.Close()
 
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

@@ -11,10 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1
+package bellatrix
 
 import (
-	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -23,23 +22,8 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
-
-// BlindedBeaconBlockBody represents the body of a blinded beacon block.
-type BlindedBeaconBlockBody struct {
-	RANDAOReveal           phase0.BLSSignature `ssz-size:"96"`
-	ETH1Data               *phase0.ETH1Data
-	Graffiti               [32]byte                      `ssz-size:"32"`
-	ProposerSlashings      []*phase0.ProposerSlashing    `ssz-max:"16"`
-	AttesterSlashings      []*phase0.AttesterSlashing    `ssz-max:"2"`
-	Attestations           []*phase0.Attestation         `ssz-max:"128"`
-	Deposits               []*phase0.Deposit             `ssz-max:"16"`
-	VoluntaryExits         []*phase0.SignedVoluntaryExit `ssz-max:"16"`
-	SyncAggregate          *altair.SyncAggregate
-	ExecutionPayloadHeader *bellatrix.ExecutionPayloadHeader
-}
 
 // blindedBeaconBlockBodyJSON is the spec representation of the struct.
 type blindedBeaconBlockBodyJSON struct {
@@ -53,20 +37,6 @@ type blindedBeaconBlockBodyJSON struct {
 	VoluntaryExits         []*phase0.SignedVoluntaryExit     `json:"voluntary_exits"`
 	SyncAggregate          *altair.SyncAggregate             `json:"sync_aggregate"`
 	ExecutionPayloadHeader *bellatrix.ExecutionPayloadHeader `json:"execution_payload_header"`
-}
-
-// blindedBeaconBlockBodyYAML is the spec representation of the struct.
-type blindedBeaconBlockBodyYAML struct {
-	RANDAOReveal           string                            `yaml:"randao_reveal"`
-	ETH1Data               *phase0.ETH1Data                  `yaml:"eth1_data"`
-	Graffiti               string                            `yaml:"graffiti"`
-	ProposerSlashings      []*phase0.ProposerSlashing        `yaml:"proposer_slashings"`
-	AttesterSlashings      []*phase0.AttesterSlashing        `yaml:"attester_slashings"`
-	Attestations           []*phase0.Attestation             `yaml:"attestations"`
-	Deposits               []*phase0.Deposit                 `yaml:"deposits"`
-	VoluntaryExits         []*phase0.SignedVoluntaryExit     `yaml:"voluntary_exits"`
-	SyncAggregate          *altair.SyncAggregate             `yaml:"sync_aggregate"`
-	ExecutionPayloadHeader *bellatrix.ExecutionPayloadHeader `yaml:"execution_payload_header"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -151,43 +121,4 @@ func (b *BlindedBeaconBlockBody) unpack(data *blindedBeaconBlockBodyJSON) error 
 	b.ExecutionPayloadHeader = data.ExecutionPayloadHeader
 
 	return nil
-}
-
-// MarshalYAML implements yaml.Marshaler.
-func (b *BlindedBeaconBlockBody) MarshalYAML() ([]byte, error) {
-	yamlBytes, err := yaml.MarshalWithOptions(&blindedBeaconBlockBodyYAML{
-		RANDAOReveal:           fmt.Sprintf("%#x", b.RANDAOReveal),
-		ETH1Data:               b.ETH1Data,
-		Graffiti:               fmt.Sprintf("%#x", b.Graffiti),
-		ProposerSlashings:      b.ProposerSlashings,
-		AttesterSlashings:      b.AttesterSlashings,
-		Attestations:           b.Attestations,
-		Deposits:               b.Deposits,
-		VoluntaryExits:         b.VoluntaryExits,
-		SyncAggregate:          b.SyncAggregate,
-		ExecutionPayloadHeader: b.ExecutionPayloadHeader,
-	}, yaml.Flow(true))
-	if err != nil {
-		return nil, err
-	}
-	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
-}
-
-// UnmarshalYAML implements yaml.Unmarshaler.
-func (b *BlindedBeaconBlockBody) UnmarshalYAML(input []byte) error {
-	// We unmarshal to the JSON struct to save on duplicate code.
-	var data blindedBeaconBlockBodyJSON
-	if err := yaml.Unmarshal(input, &data); err != nil {
-		return err
-	}
-	return b.unpack(&data)
-}
-
-// String returns a string version of the structure.
-func (b *BlindedBeaconBlockBody) String() string {
-	data, err := yaml.Marshal(b)
-	if err != nil {
-		return fmt.Sprintf("ERR: %v", err)
-	}
-	return string(data)
 }

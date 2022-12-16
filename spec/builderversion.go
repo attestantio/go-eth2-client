@@ -19,7 +19,7 @@ import (
 )
 
 // BuilderVersion defines the builder spec version.
-type BuilderVersion int
+type BuilderVersion uint64
 
 const (
 	// BuilderVersionV1 is applicable for the V1 release of the builder spec.

@@ -16,7 +16,8 @@ package api
 import (
 	"errors"
 
-	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
+	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -25,7 +26,8 @@ import (
 // VersionedBlindedBeaconBlock contains a versioned blinded beacon block.
 type VersionedBlindedBeaconBlock struct {
 	Version   spec.DataVersion
-	Bellatrix *apiv1.BlindedBeaconBlock
+	Bellatrix *apiv1bellatrix.BlindedBeaconBlock
+	Capella   *apiv1capella.BlindedBeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
@@ -41,6 +43,11 @@ func (v *VersionedBlindedBeaconBlock) Slot() (phase0.Slot, error) {
 			return 0, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Slot, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no capella block")
+		}
+		return v.Capella.Slot, nil
 	default:
 		return 0, errors.New("unsupported version")
 	}
@@ -54,6 +61,11 @@ func (v *VersionedBlindedBeaconBlock) Attestations() ([]*phase0.Attestation, err
 			return nil, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Body.Attestations, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil || v.Capella.Body == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Body.Attestations, nil
 	default:
 		return nil, errors.New("unsupported version")
 	}
@@ -67,6 +79,11 @@ func (v *VersionedBlindedBeaconBlock) Root() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.HashTreeRoot()
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -80,6 +97,11 @@ func (v *VersionedBlindedBeaconBlock) BodyRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.Body.HashTreeRoot()
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -93,6 +115,11 @@ func (v *VersionedBlindedBeaconBlock) ParentRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.ParentRoot, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -106,6 +133,11 @@ func (v *VersionedBlindedBeaconBlock) StateRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
 		return v.Bellatrix.StateRoot, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		return v.Capella.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -125,6 +157,17 @@ func (v *VersionedBlindedBeaconBlock) TransactionsRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no bellatrix block body execution payload header")
 		}
 		return v.Bellatrix.Body.ExecutionPayloadHeader.TransactionsRoot, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Root{}, errors.New("no capella block")
+		}
+		if v.Capella.Body == nil {
+			return phase0.Root{}, errors.New("no capella block body")
+		}
+		if v.Capella.Body.ExecutionPayloadHeader == nil {
+			return phase0.Root{}, errors.New("no capella block body execution payload header")
+		}
+		return v.Capella.Body.ExecutionPayloadHeader.TransactionsRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -144,6 +187,17 @@ func (v *VersionedBlindedBeaconBlock) FeeRecipient() (bellatrix.ExecutionAddress
 			return bellatrix.ExecutionAddress{}, errors.New("no bellatrix block body execution payload header")
 		}
 		return v.Bellatrix.Body.ExecutionPayloadHeader.FeeRecipient, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no capella block")
+		}
+		if v.Capella.Body == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no capella block body")
+		}
+		if v.Capella.Body.ExecutionPayloadHeader == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no capella block body execution payload header")
+		}
+		return v.Capella.Body.ExecutionPayloadHeader.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, errors.New("unsupported version")
 	}
@@ -163,6 +217,17 @@ func (v *VersionedBlindedBeaconBlock) Timestamp() (uint64, error) {
 			return 0, errors.New("no bellatrix block body execution payload header")
 		}
 		return v.Bellatrix.Body.ExecutionPayloadHeader.Timestamp, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no capella block")
+		}
+		if v.Capella.Body == nil {
+			return 0, errors.New("no capella block body")
+		}
+		if v.Capella.Body.ExecutionPayloadHeader == nil {
+			return 0, errors.New("no capella block body execution payload header")
+		}
+		return v.Capella.Body.ExecutionPayloadHeader.Timestamp, nil
 	default:
 		return 0, errors.New("unsupported version")
 	}
@@ -176,6 +241,11 @@ func (v *VersionedBlindedBeaconBlock) String() string {
 			return ""
 		}
 		return v.Bellatrix.String()
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return ""
+		}
+		return v.Capella.String()
 	default:
 		return "unknown version"
 	}

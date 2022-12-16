@@ -39,6 +39,8 @@ func (s *Service) SubmitBlindedBeaconBlock(ctx context.Context, block *api.Versi
 		err = errors.New("blinded altair blocks not supported")
 	case spec.DataVersionBellatrix:
 		specJSON, err = json.Marshal(block.Bellatrix)
+	case spec.DataVersionCapella:
+		specJSON, err = json.Marshal(block.Capella)
 	default:
 		err = errors.New("unknown block version")
 	}

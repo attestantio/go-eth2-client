@@ -41,7 +41,7 @@ func TestSubmitValidatorRegistrations(t *testing.T) {
 			name: "InvalidVersion",
 			registrations: []*api.VersionedSignedValidatorRegistration{
 				{
-					Version: -1,
+					Version: 99999,
 					V1: &v1.SignedValidatorRegistration{
 						Message: &v1.ValidatorRegistration{},
 					},

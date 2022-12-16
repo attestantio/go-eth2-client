@@ -11,10 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1
+package capella
 
 import (
-	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -22,18 +21,8 @@ import (
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
-
-// BlindedBeaconBlock represents a blinded beacon block.
-type BlindedBeaconBlock struct {
-	Slot          phase0.Slot
-	ProposerIndex phase0.ValidatorIndex
-	ParentRoot    phase0.Root `ssz-size:"32"`
-	StateRoot     phase0.Root `ssz-size:"32"`
-	Body          *BlindedBeaconBlockBody
-}
 
 // blindedBeaconBlockJSON is the spec representation of the struct.
 type blindedBeaconBlockJSON struct {
@@ -42,15 +31,6 @@ type blindedBeaconBlockJSON struct {
 	ParentRoot    string                  `json:"parent_root"`
 	StateRoot     string                  `json:"state_root"`
 	Body          *BlindedBeaconBlockBody `json:"body"`
-}
-
-// blindedBeaconBlockYAML is the spec representation of the struct.
-type blindedBeaconBlockYAML struct {
-	Slot          uint64                  `yaml:"slot"`
-	ProposerIndex uint64                  `yaml:"proposer_index"`
-	ParentRoot    string                  `yaml:"parent_root"`
-	StateRoot     string                  `yaml:"state_root"`
-	Body          *BlindedBeaconBlockBody `yaml:"body"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -118,38 +98,4 @@ func (b *BlindedBeaconBlock) unpack(data *blindedBeaconBlockJSON) error {
 	b.Body = data.Body
 
 	return nil
-}
-
-// MarshalYAML implements yaml.Marshaler.
-func (b *BlindedBeaconBlock) MarshalYAML() ([]byte, error) {
-	yamlBytes, err := yaml.MarshalWithOptions(&blindedBeaconBlockYAML{
-		Slot:          uint64(b.Slot),
-		ProposerIndex: uint64(b.ProposerIndex),
-		ParentRoot:    fmt.Sprintf("%#x", b.ParentRoot),
-		StateRoot:     fmt.Sprintf("%#x", b.StateRoot),
-		Body:          b.Body,
-	}, yaml.Flow(true))
-	if err != nil {
-		return nil, err
-	}
-	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
-}
-
-// UnmarshalYAML implements yaml.Unmarshaler.
-func (b *BlindedBeaconBlock) UnmarshalYAML(input []byte) error {
-	// We unmarshal to the JSON struct to save on duplicate code.
-	var data blindedBeaconBlockJSON
-	if err := yaml.Unmarshal(input, &data); err != nil {
-		return err
-	}
-	return b.unpack(&data)
-}
-
-// String returns a string version of the structure.
-func (b *BlindedBeaconBlock) String() string {
-	data, err := yaml.Marshal(b)
-	if err != nil {
-		return fmt.Sprintf("ERR: %v", err)
-	}
-	return string(data)
 }

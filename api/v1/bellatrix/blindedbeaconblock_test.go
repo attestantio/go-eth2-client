@@ -11,14 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1_test
+package bellatrix_test
 
 import (
 	"bytes"
 	"encoding/json"
 	"testing"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	"github.com/goccy/go-yaml"
 	require "github.com/stretchr/testify/require"
 	"gotest.tools/assert"
@@ -37,7 +37,7 @@ func TestBlindedBeaconBlockJSON(t *testing.T) {
 		{
 			name:  "JSONBad",
 			input: []byte("[]"),
-			err:   "invalid JSON: json: cannot unmarshal array into Go value of type v1.blindedBeaconBlockJSON",
+			err:   "invalid JSON: json: cannot unmarshal array into Go value of type bellatrix.blindedBeaconBlockJSON",
 		},
 		{
 			name:  "SlotMissing",
@@ -117,7 +117,7 @@ func TestBlindedBeaconBlockJSON(t *testing.T) {
 		{
 			name:  "BodyWrongType",
 			input: []byte(`{"slot":"1","proposer_index":"2","parent_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","state_root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f","body":true}`),
-			err:   "invalid JSON: invalid JSON: json: cannot unmarshal bool into Go value of type v1.blindedBeaconBlockBodyJSON",
+			err:   "invalid JSON: invalid JSON: json: cannot unmarshal bool into Go value of type bellatrix.blindedBeaconBlockBodyJSON",
 		},
 		{
 			name:  "BodyInvalid",
@@ -132,7 +132,7 @@ func TestBlindedBeaconBlockJSON(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res api.BlindedBeaconBlock
+			var res bellatrix.BlindedBeaconBlock
 			err := json.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
@@ -161,7 +161,7 @@ func TestBlindedBeaconBlockYAML(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res api.BlindedBeaconBlock
+			var res bellatrix.BlindedBeaconBlock
 			err := yaml.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)

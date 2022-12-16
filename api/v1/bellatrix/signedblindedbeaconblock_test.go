@@ -11,14 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1_test
+package bellatrix_test
 
 import (
 	"bytes"
 	"encoding/json"
 	"testing"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	"github.com/goccy/go-yaml"
 	require "github.com/stretchr/testify/require"
 	"gotest.tools/assert"
@@ -37,7 +37,7 @@ func TestSignedBlindedBeaconBlockJSON(t *testing.T) {
 		{
 			name:  "JSONBad",
 			input: []byte("[]"),
-			err:   "invalid JSON: json: cannot unmarshal array into Go value of type v1.signedBlindedBeaconBlockJSON",
+			err:   "invalid JSON: json: cannot unmarshal array into Go value of type bellatrix.signedBlindedBeaconBlockJSON",
 		},
 		{
 			name:  "MessageMissing",
@@ -47,7 +47,7 @@ func TestSignedBlindedBeaconBlockJSON(t *testing.T) {
 		{
 			name:  "MessageWrongType",
 			input: []byte(`{"message":true,"signature":"0x606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf"}`),
-			err:   "invalid JSON: invalid JSON: json: cannot unmarshal bool into Go value of type v1.blindedBeaconBlockJSON",
+			err:   "invalid JSON: invalid JSON: json: cannot unmarshal bool into Go value of type bellatrix.blindedBeaconBlockJSON",
 		},
 		{
 			name:  "MessageInvalid",
@@ -87,7 +87,7 @@ func TestSignedBlindedBeaconBlockJSON(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res api.SignedBlindedBeaconBlock
+			var res bellatrix.SignedBlindedBeaconBlock
 			err := json.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
@@ -116,7 +116,7 @@ func TestSignedBlindedBeaconBlockYAML(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res api.SignedBlindedBeaconBlock
+			var res bellatrix.SignedBlindedBeaconBlock
 			err := yaml.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)

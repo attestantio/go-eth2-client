@@ -19,7 +19,7 @@ import (
 )
 
 // DataVersion defines the spec version of the data in a response.
-type DataVersion int
+type DataVersion uint64
 
 const (
 	// DataVersionPhase0 is data applicable for the initial release of the beacon chain.
