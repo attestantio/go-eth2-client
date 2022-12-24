@@ -38,10 +38,6 @@ type Service struct {
 	// forkSchedule    []*phase0.Fork
 	nodeVersion string
 
-	// Event handlers.
-	// beaconChainHeadUpdatedMutex    sync.RWMutex
-	// beaconChainHeadUpdatedHandlers []client.BeaconChainHeadUpdatedHandler
-
 	// Values that can be altered if required.
 	HeadSlot     phase0.Slot
 	SyncDistance phase0.Slot

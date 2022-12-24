@@ -83,19 +83,6 @@ type TargetAggregatorsPerCommitteeProvider interface {
 	TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error)
 }
 
-// BeaconChainHeadUpdatedSource is the interface for a service that provides beacon chain head updates.
-type BeaconChainHeadUpdatedSource interface {
-	// AddOnBeaconChainHeadUpdatedHandler adds a handler provided with beacon chain head updates.
-	AddOnBeaconChainHeadUpdatedHandler(ctx context.Context, handler BeaconChainHeadUpdatedHandler) error
-}
-
-// BeaconChainHeadUpdatedHandler is the interface that needs to be implemented by processes that wish
-// to receive beacon chain head updated messages.
-type BeaconChainHeadUpdatedHandler interface {
-	// OnBeaconChainHeadUpdated is called whenever we receive a notification of an update to the beacon chain head.
-	OnBeaconChainHeadUpdated(ctx context.Context, slot uint64, blockRoot []byte, stateRoot []byte, epochTransition bool)
-}
-
 // ValidatorIndexProvider is the interface for entities that can provide the index of a validator.
 type ValidatorIndexProvider interface {
 	// Index provides the index of the validator.
