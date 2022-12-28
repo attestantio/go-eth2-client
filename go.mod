@@ -24,3 +24,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 	gotest.tools v2.2.0+incompatible
 )
+
+retract (
+	v1.15.2 // Retraction for 1.15.1.
+	v1.15.1 // Incorrect release number.
+)
