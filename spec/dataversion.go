@@ -33,10 +33,10 @@ const (
 )
 
 var dataVersionStrings = [...]string{
-	"PHASE0",
-	"ALTAIR",
-	"BELLATRIX",
-	"CAPELLA",
+	"phase0",
+	"altair",
+	"bellatrix",
+	"capella",
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -47,14 +47,14 @@ func (d *DataVersion) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (d *DataVersion) UnmarshalJSON(input []byte) error {
 	var err error
-	switch strings.ToUpper(string(input)) {
-	case `"PHASE0"`:
+	switch strings.ToLower(string(input)) {
+	case `"phase0"`:
 		*d = DataVersionPhase0
-	case `"ALTAIR"`:
+	case `"altair"`:
 		*d = DataVersionAltair
-	case `"BELLATRIX"`:
+	case `"bellatrix"`:
 		*d = DataVersionBellatrix
-	case `"CAPELLA"`:
+	case `"capella"`:
 		*d = DataVersionCapella
 	default:
 		err = fmt.Errorf("unrecognised data version %s", string(input))
