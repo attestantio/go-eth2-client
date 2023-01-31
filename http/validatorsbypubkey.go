@@ -54,7 +54,7 @@ func (s *Service) pubKeyChunkSize(ctx context.Context) int {
 	switch {
 	case strings.Contains(strings.ToLower(nodeVersion), "lighthouse"):
 		return pubKeyChunkSizes["lighthouse"]
-	case strings.Contains(strings.ToLower(nodeVersion), "ninbus"):
+	case strings.Contains(strings.ToLower(nodeVersion), "nimbus"):
 		return pubKeyChunkSizes["nimbus"]
 	case strings.Contains(strings.ToLower(nodeVersion), "prysm"):
 		return pubKeyChunkSizes["prysm"]
