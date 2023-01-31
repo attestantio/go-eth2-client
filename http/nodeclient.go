@@ -28,13 +28,13 @@ func (s *Service) NodeClient(ctx context.Context) (string, error) {
 	nodeVersion = strings.ToLower(nodeVersion)
 
 	switch {
-	case strings.HasPrefix(strings.ToLower(nodeVersion), "lighthouse"):
+	case strings.HasPrefix(nodeVersion, "lighthouse"):
 		return "lighthouse", nil
-	case strings.HasPrefix(strings.ToLower(nodeVersion), "nimbus"):
+	case strings.HasPrefix(nodeVersion, "nimbus"):
 		return "nimbus", nil
-	case strings.HasPrefix(strings.ToLower(nodeVersion), "prysm"):
+	case strings.HasPrefix(nodeVersion, "prysm"):
 		return "prysm", nil
-	case strings.HasPrefix(strings.ToLower(nodeVersion), "teku"):
+	case strings.HasPrefix(nodeVersion, "teku"):
 		return "teku", nil
 	default:
 		return nodeVersion, nil
