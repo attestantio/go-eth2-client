@@ -52,13 +52,13 @@ func (s *Service) indexChunkSize(ctx context.Context) int {
 	nodeVersion, _ := s.NodeVersion(ctx)
 
 	switch {
-	case strings.Contains(nodeVersion, "lighthouse"):
+	case strings.Contains(strings.ToLower(nodeVersion), "lighthouse"):
 		return indexChunkSizes["lighthouse"]
-	case strings.Contains(nodeVersion, "ninbus"):
+	case strings.Contains(strings.ToLower(nodeVersion), "ninbus"):
 		return indexChunkSizes["nimbus"]
-	case strings.Contains(nodeVersion, "prysm"):
+	case strings.Contains(strings.ToLower(nodeVersion), "prysm"):
 		return indexChunkSizes["prysm"]
-	case strings.Contains(nodeVersion, "teku"):
+	case strings.Contains(strings.ToLower(nodeVersion), "teku"):
 		return indexChunkSizes["teku"]
 	default:
 		return indexChunkSizes["default"]
