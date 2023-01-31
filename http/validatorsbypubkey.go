@@ -51,14 +51,16 @@ func (s *Service) pubKeyChunkSize(ctx context.Context) int {
 	// If this errors it will use the default so not a concern.
 	nodeVersion, _ := s.NodeVersion(ctx)
 
+	nodeVersion = strings.ToLower(nodeVersion)
+
 	switch {
-	case strings.Contains(strings.ToLower(nodeVersion), "lighthouse"):
+	case strings.Contains(nodeVersion, "lighthouse"):
 		return pubKeyChunkSizes["lighthouse"]
-	case strings.Contains(strings.ToLower(nodeVersion), "nimbus"):
+	case strings.Contains(nodeVersion, "nimbus"):
 		return pubKeyChunkSizes["nimbus"]
-	case strings.Contains(strings.ToLower(nodeVersion), "prysm"):
+	case strings.Contains(nodeVersion, "prysm"):
 		return pubKeyChunkSizes["prysm"]
-	case strings.Contains(strings.ToLower(nodeVersion), "teku"):
+	case strings.Contains(nodeVersion, "teku"):
 		return pubKeyChunkSizes["teku"]
 	default:
 		return pubKeyChunkSizes["default"]

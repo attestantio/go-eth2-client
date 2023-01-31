@@ -51,14 +51,16 @@ func (s *Service) indexChunkSize(ctx context.Context) int {
 	// If this errors it will use the default so not a concern.
 	nodeVersion, _ := s.NodeVersion(ctx)
 
+	nodeVersion = strings.ToLower(nodeVersion)
+
 	switch {
-	case strings.Contains(strings.ToLower(nodeVersion), "lighthouse"):
+	case strings.Contains(nodeVersion, "lighthouse"):
 		return indexChunkSizes["lighthouse"]
-	case strings.Contains(strings.ToLower(nodeVersion), "nimbus"):
+	case strings.Contains(nodeVersion, "nimbus"):
 		return indexChunkSizes["nimbus"]
-	case strings.Contains(strings.ToLower(nodeVersion), "prysm"):
+	case strings.Contains(nodeVersion, "prysm"):
 		return indexChunkSizes["prysm"]
-	case strings.Contains(strings.ToLower(nodeVersion), "teku"):
+	case strings.Contains(nodeVersion, "teku"):
 		return indexChunkSizes["teku"]
 	default:
 		return indexChunkSizes["default"]
