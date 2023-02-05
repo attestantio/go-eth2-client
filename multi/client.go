@@ -131,7 +131,7 @@ func ping(ctx context.Context, client consensusclient.Service) bool {
 		return false
 	}
 
-	return !syncState.IsSyncing
+	return (!syncState.IsSyncing) || (syncState.HeadSlot == 0 && syncState.SyncDistance == 0)
 }
 
 // callFunc is the definition for a call function.  It provides a generic return interface

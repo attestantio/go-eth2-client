@@ -14,6 +14,8 @@
 package spec
 
 import (
+	"errors"
+
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
@@ -27,6 +29,110 @@ type VersionedBeaconState struct {
 	Altair    *altair.BeaconState
 	Bellatrix *bellatrix.BeaconState
 	Capella   *capella.BeaconState
+}
+
+// IsEmpty returns true if there is no block.
+func (v *VersionedBeaconState) IsEmpty() bool {
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil
+}
+
+// Slot returns the slot of the state.
+func (v *VersionedBeaconState) Slot() (phase0.Slot, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return 0, errors.New("no Phase0 state")
+		}
+		return phase0.Slot(v.Phase0.Slot), nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return 0, errors.New("no Altair state")
+		}
+		return v.Altair.Slot, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return 0, errors.New("no Bellatrix state")
+		}
+		return v.Bellatrix.Slot, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no Capella state")
+		}
+		return v.Capella.Slot, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
+// NextWithdrawalValidatorIndex returns the next withdrawal validator index of the state.
+func (v *VersionedBeaconState) NextWithdrawalValidatorIndex() (phase0.ValidatorIndex, error) {
+	switch v.Version {
+	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix:
+		return 0, errors.New("state does not provide next withdrawal validator index")
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no Capella state")
+		}
+		return v.Capella.NextWithdrawalValidatorIndex, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
+// Validators returns the validators of the state.
+func (v *VersionedBeaconState) Validators() ([]*phase0.Validator, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return nil, errors.New("no Phase0 state")
+		}
+		return v.Phase0.Validators, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return nil, errors.New("no Altair state")
+		}
+		return v.Altair.Validators, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return nil, errors.New("no Bellatrix state")
+		}
+		return v.Bellatrix.Validators, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return nil, errors.New("no Capella state")
+		}
+		return v.Capella.Validators, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// ValidatorBalances returns the validator balances of the state.
+func (v *VersionedBeaconState) ValidatorBalances() ([]phase0.Gwei, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return nil, errors.New("no Phase0 state")
+		}
+		return v.Phase0.Balances, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return nil, errors.New("no Altair state")
+		}
+		return v.Altair.Balances, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return nil, errors.New("no Bellatrix state")
+		}
+		return v.Bellatrix.Balances, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return nil, errors.New("no Capella state")
+		}
+		return v.Capella.Balances, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
 }
 
 // String returns a string version of the structure.

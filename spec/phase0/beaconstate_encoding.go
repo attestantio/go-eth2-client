@@ -24,10 +24,10 @@ func (b *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		err = ssz.ErrBytesLengthFn("BeaconState.GenesisValidatorsRoot", size, 32)
 		return
 	}
-	dst = append(dst, b.GenesisValidatorsRoot...)
+	dst = append(dst, b.GenesisValidatorsRoot[:]...)
 
 	// Field (2) 'Slot'
-	dst = ssz.MarshalUint64(dst, b.Slot)
+	dst = ssz.MarshalUint64(dst, uint64(b.Slot))
 
 	// Field (3) 'Fork'
 	if b.Fork == nil {
@@ -55,7 +55,7 @@ func (b *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			err = ssz.ErrBytesLengthFn("BeaconState.BlockRoots[ii]", size, 32)
 			return
 		}
-		dst = append(dst, b.BlockRoots[ii]...)
+		dst = append(dst, b.BlockRoots[ii][:]...)
 	}
 
 	// Field (6) 'StateRoots'
@@ -68,7 +68,7 @@ func (b *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			err = ssz.ErrBytesLengthFn("BeaconState.StateRoots[ii]", size, 32)
 			return
 		}
-		dst = append(dst, b.StateRoots[ii]...)
+		dst = append(dst, b.StateRoots[ii][:]...)
 	}
 
 	// Offset (7) 'HistoricalRoots'
@@ -105,7 +105,7 @@ func (b *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			err = ssz.ErrBytesLengthFn("BeaconState.RANDAOMixes[ii]", size, 32)
 			return
 		}
-		dst = append(dst, b.RANDAOMixes[ii]...)
+		dst = append(dst, b.RANDAOMixes[ii][:]...)
 	}
 
 	// Field (13) 'Slashings'
@@ -114,7 +114,7 @@ func (b *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		return
 	}
 	for ii := 0; ii < 8192; ii++ {
-		dst = ssz.MarshalUint64(dst, b.Slashings[ii])
+		dst = ssz.MarshalUint64(dst, uint64(b.Slashings[ii]))
 	}
 
 	// Offset (14) 'PreviousEpochAttestations'
@@ -172,7 +172,7 @@ func (b *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			err = ssz.ErrBytesLengthFn("BeaconState.HistoricalRoots[ii]", size, 32)
 			return
 		}
-		dst = append(dst, b.HistoricalRoots[ii]...)
+		dst = append(dst, b.HistoricalRoots[ii][:]...)
 	}
 
 	// Field (9) 'ETH1DataVotes'
@@ -203,7 +203,7 @@ func (b *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		return
 	}
 	for ii := 0; ii < len(b.Balances); ii++ {
-		dst = ssz.MarshalUint64(dst, b.Balances[ii])
+		dst = ssz.MarshalUint64(dst, uint64(b.Balances[ii]))
 	}
 
 	// Field (14) 'PreviousEpochAttestations'
@@ -260,13 +260,10 @@ func (b *BeaconState) UnmarshalSSZ(buf []byte) error {
 	b.GenesisTime = ssz.UnmarshallUint64(buf[0:8])
 
 	// Field (1) 'GenesisValidatorsRoot'
-	if cap(b.GenesisValidatorsRoot) == 0 {
-		b.GenesisValidatorsRoot = make([]byte, 0, len(buf[8:40]))
-	}
-	b.GenesisValidatorsRoot = append(b.GenesisValidatorsRoot, buf[8:40]...)
+	copy(b.GenesisValidatorsRoot[:], buf[8:40])
 
 	// Field (2) 'Slot'
-	b.Slot = ssz.UnmarshallUint64(buf[40:48])
+	b.Slot = Slot(ssz.UnmarshallUint64(buf[40:48]))
 
 	// Field (3) 'Fork'
 	if b.Fork == nil {
@@ -285,21 +282,15 @@ func (b *BeaconState) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (5) 'BlockRoots'
-	b.BlockRoots = make([][]byte, 8192)
+	b.BlockRoots = make([]Root, 8192)
 	for ii := 0; ii < 8192; ii++ {
-		if cap(b.BlockRoots[ii]) == 0 {
-			b.BlockRoots[ii] = make([]byte, 0, len(buf[176:262320][ii*32:(ii+1)*32]))
-		}
-		b.BlockRoots[ii] = append(b.BlockRoots[ii], buf[176:262320][ii*32:(ii+1)*32]...)
+		copy(b.BlockRoots[ii][:], buf[176:262320][ii*32:(ii+1)*32])
 	}
 
 	// Field (6) 'StateRoots'
-	b.StateRoots = make([][]byte, 8192)
+	b.StateRoots = make([]Root, 8192)
 	for ii := 0; ii < 8192; ii++ {
-		if cap(b.StateRoots[ii]) == 0 {
-			b.StateRoots[ii] = make([]byte, 0, len(buf[262320:524464][ii*32:(ii+1)*32]))
-		}
-		b.StateRoots[ii] = append(b.StateRoots[ii], buf[262320:524464][ii*32:(ii+1)*32]...)
+		copy(b.StateRoots[ii][:], buf[262320:524464][ii*32:(ii+1)*32])
 	}
 
 	// Offset (7) 'HistoricalRoots'
@@ -335,18 +326,15 @@ func (b *BeaconState) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (12) 'RANDAOMixes'
-	b.RANDAOMixes = make([][]byte, 65536)
+	b.RANDAOMixes = make([]Root, 65536)
 	for ii := 0; ii < 65536; ii++ {
-		if cap(b.RANDAOMixes[ii]) == 0 {
-			b.RANDAOMixes[ii] = make([]byte, 0, len(buf[524552:2621704][ii*32:(ii+1)*32]))
-		}
-		b.RANDAOMixes[ii] = append(b.RANDAOMixes[ii], buf[524552:2621704][ii*32:(ii+1)*32]...)
+		copy(b.RANDAOMixes[ii][:], buf[524560:2621712][ii*32:(ii+1)*32])
 	}
 
 	// Field (13) 'Slashings'
-	b.Slashings = ssz.ExtendUint64(b.Slashings, 8192)
+	b.Slashings = make([]Gwei, 8192)
 	for ii := 0; ii < 8192; ii++ {
-		b.Slashings[ii] = ssz.UnmarshallUint64(buf[2621704:2687240][ii*8 : (ii+1)*8])
+		b.Slashings[ii] = Gwei(ssz.UnmarshallUint64(buf[2621712:2687248][ii*8 : (ii+1)*8]))
 	}
 
 	// Offset (14) 'PreviousEpochAttestations'
@@ -396,12 +384,9 @@ func (b *BeaconState) UnmarshalSSZ(buf []byte) error {
 		if err != nil {
 			return err
 		}
-		b.HistoricalRoots = make([][]byte, num)
+		b.HistoricalRoots = make([]Root, num)
 		for ii := 0; ii < num; ii++ {
-			if cap(b.HistoricalRoots[ii]) == 0 {
-				b.HistoricalRoots[ii] = make([]byte, 0, len(buf[ii*32:(ii+1)*32]))
-			}
-			b.HistoricalRoots[ii] = append(b.HistoricalRoots[ii], buf[ii*32:(ii+1)*32]...)
+			copy(b.HistoricalRoots[ii][:], buf[ii*32:(ii+1)*32])
 		}
 	}
 
@@ -448,9 +433,9 @@ func (b *BeaconState) UnmarshalSSZ(buf []byte) error {
 		if err != nil {
 			return err
 		}
-		b.Balances = ssz.ExtendUint64(b.Balances, num)
+		b.Balances = make([]Gwei, num)
 		for ii := 0; ii < num; ii++ {
-			b.Balances[ii] = ssz.UnmarshallUint64(buf[ii*8 : (ii+1)*8])
+			b.Balances[ii] = Gwei(ssz.UnmarshallUint64(buf[ii*8 : (ii+1)*8]))
 		}
 	}
 
@@ -548,10 +533,10 @@ func (b *BeaconState) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 		err = ssz.ErrBytesLengthFn("BeaconState.GenesisValidatorsRoot", size, 32)
 		return
 	}
-	hh.PutBytes(b.GenesisValidatorsRoot)
+	hh.PutBytes(b.GenesisValidatorsRoot[:])
 
 	// Field (2) 'Slot'
-	hh.PutUint64(b.Slot)
+	hh.PutUint64(uint64(b.Slot))
 
 	// Field (3) 'Fork'
 	if err = b.Fork.HashTreeRootWith(hh); err != nil {
@@ -571,11 +556,7 @@ func (b *BeaconState) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 		}
 		subIndx := hh.Index()
 		for _, i := range b.BlockRoots {
-			if len(i) != 32 {
-				err = ssz.ErrBytesLength
-				return
-			}
-			hh.Append(i)
+			hh.Append(i[:])
 		}
 		hh.Merkleize(subIndx)
 	}
@@ -592,7 +573,7 @@ func (b *BeaconState) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 				err = ssz.ErrBytesLength
 				return
 			}
-			hh.Append(i)
+			hh.Append(i[:])
 		}
 		hh.Merkleize(subIndx)
 	}
@@ -609,7 +590,7 @@ func (b *BeaconState) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 				err = ssz.ErrBytesLength
 				return
 			}
-			hh.Append(i)
+			hh.Append(i[:])
 		}
 		numItems := uint64(len(b.HistoricalRoots))
 		hh.MerkleizeWithMixin(subIndx, numItems, ssz.CalculateLimit(16777216, numItems, 32))
@@ -660,7 +641,7 @@ func (b *BeaconState) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 		}
 		subIndx := hh.Index()
 		for _, i := range b.Balances {
-			hh.AppendUint64(i)
+			hh.AppendUint64(uint64(i))
 		}
 		hh.FillUpTo32()
 		numItems := uint64(len(b.Balances))
@@ -679,7 +660,7 @@ func (b *BeaconState) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 				err = ssz.ErrBytesLength
 				return
 			}
-			hh.Append(i)
+			hh.Append(i[:])
 		}
 		hh.Merkleize(subIndx)
 	}
@@ -692,7 +673,7 @@ func (b *BeaconState) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 		}
 		subIndx := hh.Index()
 		for _, i := range b.Slashings {
-			hh.AppendUint64(i)
+			hh.AppendUint64(uint64(i))
 		}
 		hh.Merkleize(subIndx)
 	}

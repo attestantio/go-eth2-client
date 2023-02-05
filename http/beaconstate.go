@@ -55,7 +55,7 @@ func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.Versio
 
 // beaconStateV1 fetches a beacon state from the V1 endpoint.
 func (s *Service) beaconStateV1(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
-	url := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", stateID)
+	url := fmt.Sprintf("/eth/v1/debug/beacon/states/%s", stateID)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon state")
