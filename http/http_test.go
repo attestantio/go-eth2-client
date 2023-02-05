@@ -2,12 +2,13 @@ package http_test
 
 import (
 	"context"
-	"github.com/attestantio/go-eth2-client/http"
-	"github.com/pkg/errors"
-	"github.com/stretchr/testify/require"
 	nethttp "net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/attestantio/go-eth2-client/http"
+	"github.com/pkg/errors"
+	"github.com/stretchr/testify/require"
 )
 
 func TestError(t *testing.T) {

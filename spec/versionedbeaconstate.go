@@ -43,7 +43,7 @@ func (v *VersionedBeaconState) Slot() (phase0.Slot, error) {
 		if v.Phase0 == nil {
 			return 0, errors.New("no Phase0 state")
 		}
-		return phase0.Slot(v.Phase0.Slot), nil
+		return v.Phase0.Slot, nil
 	case DataVersionAltair:
 		if v.Altair == nil {
 			return 0, errors.New("no Altair state")

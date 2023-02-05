@@ -16,7 +16,6 @@ package phase0_test
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -149,7 +148,7 @@ func TestSignedBeaconBlockHeaderSpec(t *testing.T) {
 		require.NoError(t, err)
 		if info.IsDir() {
 			t.Run(info.Name(), func(t *testing.T) {
-				specYAML, err := ioutil.ReadFile(filepath.Join(path, "value.yaml"))
+				specYAML, err := os.ReadFile(filepath.Join(path, "value.yaml"))
 				require.NoError(t, err)
 				var res phase0.SignedBeaconBlockHeader
 				require.NoError(t, yaml.Unmarshal(specYAML, &res))

@@ -189,7 +189,6 @@ func (s *Service) periodicClearStaticValues(ctx context.Context) error {
 				return
 			}
 		}
-
 	}(s, ctx)
 	return nil
 }

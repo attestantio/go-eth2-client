@@ -21,8 +21,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var providersMetric *prometheus.GaugeVec
-var providerActiveMetric *prometheus.GaugeVec
+var (
+	providersMetric      *prometheus.GaugeVec
+	providerActiveMetric *prometheus.GaugeVec
+)
 
 func registerMetrics(ctx context.Context, monitor metrics.Service) error {
 	if providersMetric != nil {

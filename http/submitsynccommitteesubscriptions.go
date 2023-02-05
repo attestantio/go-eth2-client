@@ -24,7 +24,6 @@ import (
 
 // SubmitSyncCommitteeSubscriptions subscribes to sync committees.
 func (s *Service) SubmitSyncCommitteeSubscriptions(ctx context.Context, subscriptions []*api.SyncCommitteeSubscription) error {
-
 	var reqBodyReader bytes.Buffer
 	if err := json.NewEncoder(&reqBodyReader).Encode(subscriptions); err != nil {
 		return errors.Wrap(err, "failed to encode sync committee subscriptions")

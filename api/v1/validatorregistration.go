@@ -72,7 +72,6 @@ func (v *ValidatorRegistration) UnmarshalJSON(input []byte) error {
 }
 
 func (v *ValidatorRegistration) unpack(data *validatorRegistrationJSON) error {
-
 	if data.FeeRecipient == "" {
 		return errors.New("fee recipient missing")
 	}

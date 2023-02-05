@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -165,7 +164,7 @@ func TestAggregateAndProofSpec(t *testing.T) {
 		require.NoError(t, err)
 		if info.IsDir() {
 			t.Run(info.Name(), func(t *testing.T) {
-				specYAML, err := ioutil.ReadFile(filepath.Join(path, "value.yaml"))
+				specYAML, err := os.ReadFile(filepath.Join(path, "value.yaml"))
 				require.NoError(t, err)
 				var res phase0.AggregateAndProof
 				require.NoError(t, yaml.Unmarshal(specYAML, &res))
@@ -182,7 +181,7 @@ func TestAggregateAndProofSpec(t *testing.T) {
 
 				root, err := res.HashTreeRoot()
 				require.NoError(t, err)
-				rootsYAML, err := ioutil.ReadFile(filepath.Join(path, "roots.yaml"))
+				rootsYAML, err := os.ReadFile(filepath.Join(path, "roots.yaml"))
 				require.NoError(t, err)
 				require.Equal(t, string(rootsYAML), fmt.Sprintf("{root: '%#x'}\n", root))
 			})

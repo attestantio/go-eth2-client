@@ -24,7 +24,6 @@ import (
 
 // SubmitBeaconCommitteeSubscriptions subscribes to beacon committees.
 func (s *Service) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*api.BeaconCommitteeSubscription) error {
-
 	var reqBodyReader bytes.Buffer
 	if err := json.NewEncoder(&reqBodyReader).Encode(subscriptions); err != nil {
 		return errors.Wrap(err, "failed to encode beacon committee subscriptions")

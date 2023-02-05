@@ -54,7 +54,6 @@ func (f *ForkData) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (f *ForkData) UnmarshalJSON(input []byte) error {
-
 	var forkDataJSON forkDataJSON
 	if err := json.Unmarshal(input, &forkDataJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
