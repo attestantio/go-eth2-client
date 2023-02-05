@@ -156,6 +156,7 @@ linters:
     - lll
     - maintidx
     - maligned
+    - musttag
     - nestif
     - nilnil
     - nlreturn
