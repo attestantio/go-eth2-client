@@ -87,8 +87,12 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 		if resp.Data.Slot != slot {
 			return nil, errors.New("beacon block proposal not for requested slot")
 		}
-		if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-			return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+		// Only check the RANDAO reveal if we are not connected to DVT middleware, as that
+		// will return a full signature rather than the element signature we passed it.
+		if !s.connectedToDVTMiddleware {
+			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
+				return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+			}
 		}
 		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
 			return nil, errors.New("beacon block proposal has incorrect graffiti")
@@ -103,8 +107,12 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 		if resp.Data.Slot != slot {
 			return nil, errors.New("beacon block proposal not for requested slot")
 		}
-		if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-			return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+		// Only check the RANDAO reveal if we are not connected to DVT middleware, as that
+		// will return a full signature rather than the element signature we passed it.
+		if !s.connectedToDVTMiddleware {
+			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
+				return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+			}
 		}
 		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
 			return nil, errors.New("beacon block proposal has incorrect graffiti")
@@ -119,8 +127,12 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 		if resp.Data.Slot != slot {
 			return nil, errors.New("beacon block proposal not for requested slot")
 		}
-		if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-			return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+		// Only check the RANDAO reveal if we are not connected to DVT middleware, as that
+		// will return a full signature rather than the element signature we passed it.
+		if !s.connectedToDVTMiddleware {
+			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
+				return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+			}
 		}
 		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
 			return nil, errors.New("beacon block proposal has incorrect graffiti")
@@ -135,8 +147,12 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 		if resp.Data.Slot != slot {
 			return nil, errors.New("beacon block proposal not for requested slot")
 		}
-		if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-			return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+		// Only check the RANDAO reveal if we are not connected to DVT middleware, as that
+		// will return a full signature rather than the element signature we passed it.
+		if !s.connectedToDVTMiddleware {
+			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
+				return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+			}
 		}
 		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
 			return nil, errors.New("beacon block proposal has incorrect graffiti")
@@ -169,8 +185,12 @@ func (s *Service) beaconBlockProposalV1(ctx context.Context, slot phase0.Slot, r
 	if resp.Data.Slot != slot {
 		return nil, errors.New("beacon block proposal not for requested slot")
 	}
-	if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-		return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+	// Only check the RANDAO reveal if we are not connected to DVT middleware, as that
+	// will return a full signature rather than the element signature we passed it.
+	if !s.connectedToDVTMiddleware {
+		if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
+			return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+		}
 	}
 	if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
 		return nil, errors.New("beacon block proposal has incorrect graffiti")

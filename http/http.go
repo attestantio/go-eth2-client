@@ -22,18 +22,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/pkg/errors"
 )
-
-func init() {
-	// We seed math.rand here so that we can obtain different IDs for requests.
-	// This is purely used as a way to match request and response entries in logs, so there is no
-	// requirement for this to cryptographically secure.
-	rand.Seed(time.Now().UnixNano())
-}
 
 // Error represents an http error.
 type Error struct {
