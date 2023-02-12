@@ -87,15 +87,15 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 		if resp.Data.Slot != slot {
 			return nil, errors.New("beacon block proposal not for requested slot")
 		}
-		// Only check the RANDAO reveal if we are not connected to DVT middleware, as that
-		// will return a full signature rather than the element signature we passed it.
+		// Only check the RANDAO reveal and agraffiti if we are not connected to DVT middleware,
+		// as the returned values will be decided by the middleware.
 		if !s.connectedToDVTMiddleware {
 			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
 				return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
 			}
-		}
-		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-			return nil, errors.New("beacon block proposal has incorrect graffiti")
+			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
+				return nil, errors.New("beacon block proposal has incorrect graffiti")
+			}
 		}
 		res.Phase0 = resp.Data
 	case spec.DataVersionAltair:
@@ -107,15 +107,15 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 		if resp.Data.Slot != slot {
 			return nil, errors.New("beacon block proposal not for requested slot")
 		}
-		// Only check the RANDAO reveal if we are not connected to DVT middleware, as that
-		// will return a full signature rather than the element signature we passed it.
+		// Only check the RANDAO reveal and agraffiti if we are not connected to DVT middleware,
+		// as the returned values will be decided by the middleware.
 		if !s.connectedToDVTMiddleware {
 			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
 				return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
 			}
-		}
-		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-			return nil, errors.New("beacon block proposal has incorrect graffiti")
+			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
+				return nil, errors.New("beacon block proposal has incorrect graffiti")
+			}
 		}
 		res.Altair = resp.Data
 	case spec.DataVersionBellatrix:
@@ -127,15 +127,15 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 		if resp.Data.Slot != slot {
 			return nil, errors.New("beacon block proposal not for requested slot")
 		}
-		// Only check the RANDAO reveal if we are not connected to DVT middleware, as that
-		// will return a full signature rather than the element signature we passed it.
+		// Only check the RANDAO reveal and agraffiti if we are not connected to DVT middleware,
+		// as the returned values will be decided by the middleware.
 		if !s.connectedToDVTMiddleware {
 			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
 				return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
 			}
-		}
-		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-			return nil, errors.New("beacon block proposal has incorrect graffiti")
+			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
+				return nil, errors.New("beacon block proposal has incorrect graffiti")
+			}
 		}
 		res.Bellatrix = resp.Data
 	case spec.DataVersionCapella:
@@ -147,15 +147,15 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 		if resp.Data.Slot != slot {
 			return nil, errors.New("beacon block proposal not for requested slot")
 		}
-		// Only check the RANDAO reveal if we are not connected to DVT middleware, as that
-		// will return a full signature rather than the element signature we passed it.
+		// Only check the RANDAO reveal and agraffiti if we are not connected to DVT middleware,
+		// as the returned values will be decided by the middleware.
 		if !s.connectedToDVTMiddleware {
 			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
 				return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
 			}
-		}
-		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-			return nil, errors.New("beacon block proposal has incorrect graffiti")
+			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
+				return nil, errors.New("beacon block proposal has incorrect graffiti")
+			}
 		}
 		res.Capella = resp.Data
 	default:
