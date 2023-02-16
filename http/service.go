@@ -62,6 +62,7 @@ type Service struct {
 	// User-specified chunk sizes.
 	userIndexChunkSize  int
 	userPubKeyChunkSize int
+	extraHeaders        map[string]string
 
 	// Endpoint support.
 	connectedToDVTMiddleware bool
@@ -115,6 +116,7 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 		timeout:             parameters.timeout,
 		userIndexChunkSize:  parameters.indexChunkSize,
 		userPubKeyChunkSize: parameters.pubKeyChunkSize,
+		extraHeaders:        parameters.extraHeaders,
 	}
 
 	// Fetch static values to confirm the connection is good.

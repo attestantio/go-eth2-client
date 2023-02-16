@@ -34,3 +34,31 @@ func TestError(t *testing.T) {
 	require.Equal(t, nethttp.MethodGet, httpError.Method)
 	require.Equal(t, "/eth/v1/beacon/genesis", httpError.Endpoint)
 }
+
+func TestClientShouldSendExtraHeadersWhenProvided(t *testing.T) {
+	authorizationHeader := "Authorization"
+	authorizationToken := "Bearer token"
+	data := []byte("data")
+	srv := httptest.NewServer(nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		if r.Header.Get(authorizationHeader) != authorizationToken {
+			w.WriteHeader(nethttp.StatusUnauthorized)
+			_, _ = w.Write(data)
+			return
+		}
+		w.WriteHeader(nethttp.StatusTeapot)
+		_, _ = w.Write(data)
+	}))
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	_, err := http.New(ctx,
+		http.WithAddress(srv.URL),
+		http.WithExtraHeaders(map[string]string{authorizationHeader: authorizationToken}),
+	)
+
+	require.Error(t, err)
+	var httpError http.Error
+	require.True(t, errors.As(err, &httpError))
+	require.Equal(t, nethttp.StatusTeapot, httpError.StatusCode)
+}
