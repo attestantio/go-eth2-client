@@ -49,8 +49,6 @@ func NewErroring(ctx context.Context,
 		return nil, errors.New("error rate cannot be more than 1")
 	}
 
-	rand.Seed(time.Now().UnixNano())
-
 	return &Erroring{
 		errorRate: errorRate,
 		next:      next,

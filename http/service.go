@@ -63,6 +63,9 @@ type Service struct {
 	userIndexChunkSize  int
 	userPubKeyChunkSize int
 	extraHeaders        map[string]string
+
+	// Endpoint support.
+	connectedToDVTMiddleware bool
 }
 
 // New creates a new Ethereum 2 client service, connecting with a standard HTTP.
@@ -129,6 +132,11 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	// Handle flags for API versioning.
 	if err := s.checkAPIVersioning(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to check API versioning")
+	}
+
+	// Handle connection to DVT middleware.
+	if err := s.checkDVT(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to check DVT connection")
 	}
 
 	// Close the service on context done.
@@ -211,6 +219,21 @@ func (s *Service) checkAPIVersioning(ctx context.Context) error {
 		// some other failure.
 		s.supportsV2BeaconBlocks = false
 	}
+	return nil
+}
+
+// checkDVT checks if connected to DVT middleware and sets
+// internal flags appropriately.
+func (s *Service) checkDVT(ctx context.Context) error {
+	version, err := s.NodeVersion(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to obtain node version for DVT check")
+	}
+
+	if strings.Contains(strings.ToLower(version), "charon") {
+		s.connectedToDVTMiddleware = true
+	}
+
 	return nil
 }
 

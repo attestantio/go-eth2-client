@@ -49,8 +49,6 @@ func NewSleepy(ctx context.Context,
 		return nil, errors.New("max sleep less than min sleep")
 	}
 
-	rand.Seed(time.Now().UnixNano())
-
 	return &Sleepy{
 		minSleep: minSleep,
 		maxSleep: maxSleep,
