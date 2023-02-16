@@ -65,7 +65,9 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 		cancel()
 		return nil, errors.Wrap(err, "failed to create GET request")
 	}
+	s.addExtraHeaders(req)
 	req.Header.Set("Accept", "application/json")
+
 	resp, err := s.client.Do(req)
 	if err != nil {
 		cancel()
@@ -128,8 +130,10 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 		cancel()
 		return nil, errors.Wrap(err, "failed to create POST request")
 	}
+	s.addExtraHeaders(req)
 	req.Header.Set("Content-type", "application/json")
 	req.Header.Set("Accept", "application/json")
+
 	resp, err := s.client.Do(req)
 	if err != nil {
 		cancel()
@@ -159,6 +163,12 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	log.Trace().Str("response", string(data)).Msg("POST response")
 
 	return bytes.NewReader(data), nil
+}
+
+func (s *Service) addExtraHeaders(req *http.Request) {
+	for k, v := range s.extraHeaders {
+		req.Header.Add(k, v)
+	}
 }
 
 // responseMetadata returns metadata related to responses.
