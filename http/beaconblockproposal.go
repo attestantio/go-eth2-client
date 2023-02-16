@@ -87,7 +87,7 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 		if resp.Data.Slot != slot {
 			return nil, errors.New("beacon block proposal not for requested slot")
 		}
-		// Only check the RANDAO reveal and agraffiti if we are not connected to DVT middleware,
+		// Only check the RANDAO reveal and graffiti if we are not connected to DVT middleware,
 		// as the returned values will be decided by the middleware.
 		if !s.connectedToDVTMiddleware {
 			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
