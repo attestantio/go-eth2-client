@@ -378,6 +378,12 @@ type VoluntaryExitSubmitter interface {
 type DomainProvider interface {
 	// Domain provides a domain for a given domain type at a given epoch.
 	Domain(ctx context.Context, domainType phase0.DomainType, epoch phase0.Epoch) (phase0.Domain, error)
+
+	// GenesisDomain returns the domain for the given domain type at genesis.
+	// N.B. this is not always the same as the the domain at epoch 0.  It is possible
+	// for a chain's fork schedule to have multiple forks at genesis.  In this situation,
+	// GenesisDomain() will return the first, and Domain() will return the last.
+	GenesisDomain(ctx context.Context, domainType phase0.DomainType) (phase0.Domain, error)
 }
 
 // GenesisTimeProvider is the interface for providing the genesis time of a chain.

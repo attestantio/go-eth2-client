@@ -48,3 +48,26 @@ func (s *Service) Domain(ctx context.Context,
 	}
 	return res.(phase0.Domain), nil
 }
+
+// GenesisDomain provides a domain for a given domain type.
+func (s *Service) GenesisDomain(ctx context.Context,
+	domainType phase0.DomainType,
+) (
+	phase0.Domain,
+	error,
+) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		domain, err := client.(consensusclient.DomainProvider).GenesisDomain(ctx, domainType)
+		if err != nil {
+			return nil, err
+		}
+		if bytes.Equal(domain[:], emptyDomain[:]) {
+			return nil, errors.New("empty domain not a valid response")
+		}
+		return domain, nil
+	}, nil)
+	if err != nil {
+		return phase0.Domain{}, err
+	}
+	return res.(phase0.Domain), nil
+}

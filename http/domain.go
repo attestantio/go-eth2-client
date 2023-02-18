@@ -29,6 +29,28 @@ func (s *Service) Domain(ctx context.Context, domainType phase0.DomainType, epoc
 		return phase0.Domain{}, errors.Wrap(err, "failed to obtain fork")
 	}
 
+	return s.domain(ctx, domainType, epoch, fork)
+}
+
+// GenesisDomain returns the domain for the given domain type at genesis.
+// N.B. this is not always the same as the the domain at epoch 0.  It is possible
+// for a chain's fork schedule to have multiple forks at genesis.  In this situation,
+// GenesisDomain() will return the first, and Domain() will return the last.
+func (s *Service) GenesisDomain(ctx context.Context, domainType phase0.DomainType) (phase0.Domain, error) {
+	// Obtain the fork for genesis .
+	fork, err := s.forkAtGenesis(ctx)
+	if err != nil {
+		return phase0.Domain{}, errors.Wrap(err, "failed to obtain fork")
+	}
+
+	return s.domain(ctx, domainType, 0, fork)
+}
+
+func (s *Service) domain(ctx context.Context,
+	domainType phase0.DomainType,
+	epoch phase0.Epoch,
+	fork *phase0.Fork,
+) (phase0.Domain, error) {
 	// Calculate the domain.
 	var forkVersion phase0.Version
 	if epoch < fork.Epoch {
@@ -84,4 +106,18 @@ func (s *Service) forkAtEpoch(ctx context.Context, epoch phase0.Epoch) (*phase0.
 		currentFork = forkSchedule[i]
 	}
 	return currentFork, nil
+}
+
+// forkAtGenesis returns the genesis fork.
+func (s *Service) forkAtGenesis(ctx context.Context) (*phase0.Fork, error) {
+	forkSchedule, err := s.ForkSchedule(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain fork schedule")
+	}
+
+	if len(forkSchedule) == 0 {
+		return nil, errors.New("no fork schedule returned")
+	}
+
+	return forkSchedule[0], nil
 }

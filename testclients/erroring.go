@@ -629,6 +629,18 @@ func (s *Erroring) Domain(ctx context.Context, domainType phase0.DomainType, epo
 	return next.Domain(ctx, domainType, epoch)
 }
 
+// GenesisDomain provides a domain for a given domain type.
+func (s *Erroring) GenesisDomain(ctx context.Context, domainType phase0.DomainType) (phase0.Domain, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return phase0.Domain{}, err
+	}
+	next, isNext := s.next.(consensusclient.DomainProvider)
+	if !isNext {
+		return phase0.Domain{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.GenesisDomain(ctx, domainType)
+}
+
 // GenesisTime provides the genesis time of the chain.
 func (s *Erroring) GenesisTime(ctx context.Context) (time.Time, error) {
 	if err := s.maybeError(ctx); err != nil {

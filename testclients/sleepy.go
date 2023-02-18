@@ -436,6 +436,16 @@ func (s *Sleepy) Domain(ctx context.Context, domainType phase0.DomainType, epoch
 	return next.Domain(ctx, domainType, epoch)
 }
 
+// GenesisDomain provides a domain for a given domain type at genesis.
+func (s *Sleepy) GenesisDomain(ctx context.Context, domainType phase0.DomainType) (phase0.Domain, error) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.DomainProvider)
+	if !isNext {
+		return phase0.Domain{}, errors.New("next does not support this call")
+	}
+	return next.GenesisDomain(ctx, domainType)
+}
+
 // GenesisTime provides the genesis time of the chain.
 func (s *Sleepy) GenesisTime(ctx context.Context) (time.Time, error) {
 	s.sleep(ctx)

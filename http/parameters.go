@@ -75,6 +75,7 @@ func WithPubKeyChunkSize(pubKeyChunkSize int) Parameter {
 	})
 }
 
+// WithExtraHeaders sets additional headers to be sent with each HTTP request.
 func WithExtraHeaders(headers map[string]string) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.extraHeaders = headers
