@@ -60,7 +60,7 @@ func TestService(t *testing.T) {
 				v1.WithAddress(string([]byte{0x01})),
 				v1.WithTimeout(5 * time.Second),
 			},
-			err: "invalid URL: parse \"http://\\x01\": net/url: invalid control character in URL",
+			err: `invalid URL: parse "http://\x01/": net/url: invalid control character in URL`,
 		},
 		{
 			name: "IndexChunkSizeZero",

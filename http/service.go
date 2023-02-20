@@ -54,11 +54,6 @@ type Service struct {
 	nodeVersion          string
 	nodeVersionMutex     sync.RWMutex
 
-	// API support.
-	supportsV2BeaconBlocks    bool
-	supportsV2BeaconState     bool
-	supportsV2ValidatorBlocks bool
-
 	// User-specified chunk sizes.
 	userIndexChunkSize  int
 	userPubKeyChunkSize int
@@ -129,11 +124,6 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 		return nil, errors.Wrap(err, "failed to set update ticker")
 	}
 
-	// Handle flags for API versioning.
-	if err := s.checkAPIVersioning(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to check API versioning")
-	}
-
 	// Handle connection to DVT middleware.
 	if err := s.checkDVT(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to check DVT connection")
@@ -200,25 +190,6 @@ func (s *Service) periodicClearStaticValues(ctx context.Context) error {
 			}
 		}
 	}(s, ctx)
-	return nil
-}
-
-// checkAPIVersioning checks the versions of some APIs and sets
-// internal flags appropriately.
-func (s *Service) checkAPIVersioning(ctx context.Context) error {
-	// Start by setting the API v2 flag for blocks and fetching block 0.
-	s.supportsV2BeaconBlocks = true
-	_, err := s.SignedBeaconBlock(ctx, "0")
-	if err == nil {
-		// It's good.  Assume that other V2 APIs introduced with Altair
-		// are present.
-		s.supportsV2BeaconState = true
-		s.supportsV2ValidatorBlocks = true
-	} else {
-		// Assume this is down to the V2 endpoint missing rather than
-		// some other failure.
-		s.supportsV2BeaconBlocks = false
-	}
 	return nil
 }
 

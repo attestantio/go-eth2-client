@@ -50,14 +50,6 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, ran
 	fixedGraffiti := [32]byte{}
 	copy(fixedGraffiti[:], graffiti)
 
-	if s.supportsV2BeaconBlocks {
-		return s.beaconBlockProposalV2(ctx, slot, randaoReveal, fixedGraffiti[:])
-	}
-	return s.beaconBlockProposalV1(ctx, slot, randaoReveal, fixedGraffiti[:])
-}
-
-// beaconBlockProposalV2 fetches a proposed beacon block for signing.
-func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
 	url := fmt.Sprintf("/eth/v2/validator/blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
@@ -160,45 +152,6 @@ func (s *Service) beaconBlockProposalV2(ctx context.Context, slot phase0.Slot, r
 		res.Capella = resp.Data
 	default:
 		return nil, fmt.Errorf("unsupported block version %s", metadata.Version)
-	}
-
-	return res, nil
-}
-
-// beaconBlockProposalV1 fetches a proposed beacon block for signing.
-func (s *Service) beaconBlockProposalV1(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
-	url := fmt.Sprintf("/eth/v1/validator/blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti)
-	respBodyReader, err := s.get(ctx, url)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to request beacon block proposal")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain beacon block proposal")
-	}
-
-	var resp phase0BeaconBlockProposalJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse beacon block proposal")
-	}
-
-	// Ensure the data returned to us is as expected given our input.
-	if resp.Data.Slot != slot {
-		return nil, errors.New("beacon block proposal not for requested slot")
-	}
-	// Only check the RANDAO reveal and graffiti if we are not connected to DVT middleware,
-	// as the returned values will be decided by the middleware.
-	if !s.connectedToDVTMiddleware {
-		if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-			return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
-		}
-		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-			return nil, errors.New("beacon block proposal has incorrect graffiti")
-		}
-	}
-
-	res := &spec.VersionedBeaconBlock{
-		Version: spec.DataVersionPhase0,
-		Phase0:  resp.Data,
 	}
 
 	return res, nil

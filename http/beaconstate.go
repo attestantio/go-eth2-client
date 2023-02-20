@@ -47,36 +47,6 @@ type capellaBeaconStateJSON struct {
 // BeaconState fetches a beacon state.
 // N.B if the requested beacon state is not available this will return nil without an error.
 func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
-	if s.supportsV2BeaconState {
-		return s.beaconStateV2(ctx, stateID)
-	}
-	return s.beaconStateV1(ctx, stateID)
-}
-
-// beaconStateV1 fetches a beacon state from the V1 endpoint.
-func (s *Service) beaconStateV1(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
-	url := fmt.Sprintf("/eth/v1/debug/beacon/states/%s", stateID)
-	respBodyReader, err := s.get(ctx, url)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to request beacon state")
-	}
-	if respBodyReader == nil {
-		return nil, nil
-	}
-
-	var resp phase0BeaconStateJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse beacon state")
-	}
-
-	return &spec.VersionedBeaconState{
-		Version: spec.DataVersionPhase0,
-		Phase0:  resp.Data,
-	}, nil
-}
-
-// beaconStateV2 fetches a beacon state from the V2 endpoint.
-func (s *Service) beaconStateV2(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
 	url := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", stateID)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
