@@ -15,3 +15,8 @@ package capella
 
 // WithdrawalIndex is the index of a withdrawal operation.
 type WithdrawalIndex uint64
+
+// Withdrawals provides information about withdrawals.
+type Withdrawals struct {
+	Withdrawals []*Withdrawal `ssz-max:"16"`
+}
