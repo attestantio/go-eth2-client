@@ -80,10 +80,10 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 		// as the returned values will be decided by the middleware.
 		if !s.connectedToDVTMiddleware {
 			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-				return nil, errors.New("blinded beacon block proposal has incorrect RANDAO reveal")
+				return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", resp.Data.Body.RANDAOReveal[:], randaoReveal[:])
 			}
 			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-				return nil, errors.New("blinded beacon block proposal has incorrect graffiti")
+				return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", resp.Data.Body.Graffiti[:], graffiti)
 			}
 		}
 		res.Bellatrix = resp.Data
@@ -100,10 +100,10 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 		// as the returned values will be decided by the middleware.
 		if !s.connectedToDVTMiddleware {
 			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-				return nil, errors.New("blinded beacon block proposal has incorrect RANDAO reveal")
+				return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", resp.Data.Body.RANDAOReveal[:], randaoReveal[:])
 			}
 			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-				return nil, errors.New("blinded beacon block proposal has incorrect graffiti")
+				return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", resp.Data.Body.Graffiti[:], graffiti)
 			}
 		}
 		res.Capella = resp.Data

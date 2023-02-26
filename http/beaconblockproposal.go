@@ -47,9 +47,13 @@ type capellaBeaconBlockProposalJSON struct {
 // BeaconBlockProposal fetches a proposed beacon block for signing.
 func (s *Service) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
 	// Graffiti should be 32 bytes.
-	fixedGraffiti := [32]byte{}
-	copy(fixedGraffiti[:], graffiti)
+	fixedGraffiti := make([]byte, 32)
+	copy(fixedGraffiti, graffiti)
 
+	return s.beaconBlockProposal(ctx, slot, randaoReveal, fixedGraffiti)
+}
+
+func (s *Service) beaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
 	url := fmt.Sprintf("/eth/v2/validator/blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti)
 	respBodyReader, err := s.get(ctx, url)
 	if err != nil {
@@ -83,10 +87,10 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, ran
 		// as the returned values will be decided by the middleware.
 		if !s.connectedToDVTMiddleware {
 			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-				return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+				return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", resp.Data.Body.RANDAOReveal[:], randaoReveal[:])
 			}
 			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-				return nil, errors.New("beacon block proposal has incorrect graffiti")
+				return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", resp.Data.Body.Graffiti[:], graffiti)
 			}
 		}
 		res.Phase0 = resp.Data
@@ -103,10 +107,10 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, ran
 		// as the returned values will be decided by the middleware.
 		if !s.connectedToDVTMiddleware {
 			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-				return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+				return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", resp.Data.Body.RANDAOReveal[:], randaoReveal[:])
 			}
 			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-				return nil, errors.New("beacon block proposal has incorrect graffiti")
+				return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", resp.Data.Body.Graffiti[:], graffiti)
 			}
 		}
 		res.Altair = resp.Data
@@ -123,10 +127,10 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, ran
 		// as the returned values will be decided by the middleware.
 		if !s.connectedToDVTMiddleware {
 			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-				return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+				return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", resp.Data.Body.RANDAOReveal[:], randaoReveal[:])
 			}
 			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-				return nil, errors.New("beacon block proposal has incorrect graffiti")
+				return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", resp.Data.Body.Graffiti[:], graffiti)
 			}
 		}
 		res.Bellatrix = resp.Data
@@ -143,10 +147,10 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, ran
 		// as the returned values will be decided by the middleware.
 		if !s.connectedToDVTMiddleware {
 			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-				return nil, errors.New("beacon block proposal has incorrect RANDAO reveal")
+				return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", resp.Data.Body.RANDAOReveal[:], randaoReveal[:])
 			}
 			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-				return nil, errors.New("beacon block proposal has incorrect graffiti")
+				return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", resp.Data.Body.Graffiti[:], graffiti)
 			}
 		}
 		res.Capella = resp.Data
