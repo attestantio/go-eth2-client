@@ -3,16 +3,17 @@
 package capella
 
 import (
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	ssz "github.com/ferranbt/fastssz"
 )
 
 // MarshalSSZ ssz marshals the Withdrawals object
-func (w *Withdrawals) MarshalSSZ() ([]byte, error) {
+func (w *ExecutionPayloadWithdrawals) MarshalSSZ() ([]byte, error) {
 	return ssz.MarshalSSZ(w)
 }
 
 // MarshalSSZTo ssz marshals the Withdrawals object to a target array
-func (w *Withdrawals) MarshalSSZTo(buf []byte) (dst []byte, err error) {
+func (w *ExecutionPayloadWithdrawals) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	offset := int(4)
 
@@ -35,7 +36,7 @@ func (w *Withdrawals) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 }
 
 // UnmarshalSSZ ssz unmarshals the Withdrawals object
-func (w *Withdrawals) UnmarshalSSZ(buf []byte) error {
+func (w *ExecutionPayloadWithdrawals) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
 	if size < 4 {
@@ -61,10 +62,10 @@ func (w *Withdrawals) UnmarshalSSZ(buf []byte) error {
 		if err != nil {
 			return err
 		}
-		w.Withdrawals = make([]*Withdrawal, num)
+		w.Withdrawals = make([]*capella.Withdrawal, num)
 		for ii := 0; ii < num; ii++ {
 			if w.Withdrawals[ii] == nil {
-				w.Withdrawals[ii] = new(Withdrawal)
+				w.Withdrawals[ii] = new(capella.Withdrawal)
 			}
 			if err = w.Withdrawals[ii].UnmarshalSSZ(buf[ii*44 : (ii+1)*44]); err != nil {
 				return err
@@ -75,7 +76,7 @@ func (w *Withdrawals) UnmarshalSSZ(buf []byte) error {
 }
 
 // SizeSSZ returns the ssz encoded size in bytes for the Withdrawals object
-func (w *Withdrawals) SizeSSZ() (size int) {
+func (w *ExecutionPayloadWithdrawals) SizeSSZ() (size int) {
 	size = 4
 
 	// Field (0) 'Withdrawals'
@@ -85,12 +86,12 @@ func (w *Withdrawals) SizeSSZ() (size int) {
 }
 
 // HashTreeRoot ssz hashes the Withdrawals object
-func (w *Withdrawals) HashTreeRoot() ([32]byte, error) {
+func (w *ExecutionPayloadWithdrawals) HashTreeRoot() ([32]byte, error) {
 	return ssz.HashWithDefaultHasher(w)
 }
 
 // HashTreeRootWith ssz hashes the Withdrawals object with a hasher
-func (w *Withdrawals) HashTreeRootWith(hh ssz.HashWalker) (err error) {
+func (w *ExecutionPayloadWithdrawals) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'Withdrawals'
@@ -114,6 +115,6 @@ func (w *Withdrawals) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 }
 
 // GetTree ssz hashes the Withdrawals object
-func (w *Withdrawals) GetTree() (*ssz.Node, error) {
+func (w *ExecutionPayloadWithdrawals) GetTree() (*ssz.Node, error) {
 	return ssz.ProofTree(w)
 }

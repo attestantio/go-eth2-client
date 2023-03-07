@@ -4,16 +4,17 @@
 package bellatrix
 
 import (
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	ssz "github.com/ferranbt/fastssz"
 )
 
 // MarshalSSZ ssz marshals the Transactions object
-func (t *Transactions) MarshalSSZ() ([]byte, error) {
+func (t *ExecutionPayloadTransactions) MarshalSSZ() ([]byte, error) {
 	return ssz.MarshalSSZ(t)
 }
 
 // MarshalSSZTo ssz marshals the Transactions object to a target array
-func (t *Transactions) MarshalSSZTo(buf []byte) (dst []byte, err error) {
+func (t *ExecutionPayloadTransactions) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	offset := int(4)
 
@@ -48,7 +49,7 @@ func (t *Transactions) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 }
 
 // UnmarshalSSZ ssz unmarshals the Transactions object
-func (t *Transactions) UnmarshalSSZ(buf []byte) error {
+func (t *ExecutionPayloadTransactions) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
 	if size < 4 {
@@ -74,7 +75,7 @@ func (t *Transactions) UnmarshalSSZ(buf []byte) error {
 		if err != nil {
 			return err
 		}
-		t.Transactions = make([]Transaction, num)
+		t.Transactions = make([]bellatrix.Transaction, num)
 		err = ssz.UnmarshalDynamic(buf, num, func(indx int, buf []byte) (err error) {
 			if len(buf) > 1073741824 {
 				return ssz.ErrBytesLength
@@ -93,7 +94,7 @@ func (t *Transactions) UnmarshalSSZ(buf []byte) error {
 }
 
 // SizeSSZ returns the ssz encoded size in bytes for the Transactions object
-func (t *Transactions) SizeSSZ() (size int) {
+func (t *ExecutionPayloadTransactions) SizeSSZ() (size int) {
 	size = 4
 
 	// Field (0) 'Transactions'
@@ -106,12 +107,12 @@ func (t *Transactions) SizeSSZ() (size int) {
 }
 
 // HashTreeRoot ssz hashes the Transactions object
-func (t *Transactions) HashTreeRoot() ([32]byte, error) {
+func (t *ExecutionPayloadTransactions) HashTreeRoot() ([32]byte, error) {
 	return ssz.HashWithDefaultHasher(t)
 }
 
 // HashTreeRootWith ssz hashes the Transactions object with a hasher
-func (t *Transactions) HashTreeRootWith(hh ssz.HashWalker) (err error) {
+func (t *ExecutionPayloadTransactions) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'Transactions'
@@ -142,6 +143,6 @@ func (t *Transactions) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 }
 
 // GetTree ssz hashes the Transactions object
-func (t *Transactions) GetTree() (*ssz.Node, error) {
+func (t *ExecutionPayloadTransactions) GetTree() (*ssz.Node, error) {
 	return ssz.ProofTree(t)
 }
