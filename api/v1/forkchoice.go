@@ -138,7 +138,7 @@ type forkChoiceNodeJSON struct {
 	Weight             string      `json:"weight"`
 	Validity           string      `json:"validity"`
 	ExecutionBlockHash string      `json:"execution_block_hash"`
-	ExtraData          interface{} `json:"extra_data"`
+	ExtraData          interface{} `json:"extra_data,omitempty"`
 }
 
 // MarshalJSON implements json.Marshaler.
