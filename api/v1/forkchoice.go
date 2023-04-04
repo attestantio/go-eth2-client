@@ -207,7 +207,7 @@ func (f *ForkChoiceNode) UnmarshalJSON(input []byte) error {
 	}
 	f.Weight = weight
 
-	validity, err := parseForkChoiceValidity(forkChoiceNodeJSON.Validity)
+	validity, err := parseForkChoiceValidity(strings.ToUpper(forkChoiceNodeJSON.Validity))
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("invalid value for validity: %s", forkChoiceNodeJSON.Validity))
 	}
