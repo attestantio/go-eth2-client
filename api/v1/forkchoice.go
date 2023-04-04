@@ -125,20 +125,20 @@ type ForkChoiceNode struct {
 	// ExecutiionBlockHash is the execution block hash of the node.
 	ExecutionBlockHash phase0.Root
 	// ExtraData is the extra data of the node.
-	ExtraData interface{}
+	ExtraData string
 }
 
 // forkChoiceNodeJSON is the json representation of the struct.
 type forkChoiceNodeJSON struct {
-	Slot               string      `json:"slot"`
-	BlockRoot          string      `json:"block_root"`
-	ParentRoot         string      `json:"parent_root"`
-	JustifiedEpoch     string      `json:"justified_epoch"`
-	FinalizedEpoch     string      `json:"finalized_epoch"`
-	Weight             string      `json:"weight"`
-	Validity           string      `json:"validity"`
-	ExecutionBlockHash string      `json:"execution_block_hash"`
-	ExtraData          interface{} `json:"extra_data,omitempty"`
+	Slot               string `json:"slot"`
+	BlockRoot          string `json:"block_root"`
+	ParentRoot         string `json:"parent_root"`
+	JustifiedEpoch     string `json:"justified_epoch"`
+	FinalizedEpoch     string `json:"finalized_epoch"`
+	Weight             string `json:"weight"`
+	Validity           string `json:"validity"`
+	ExecutionBlockHash string `json:"execution_block_hash"`
+	ExtraData          string `json:"extra_data,omitempty"`
 }
 
 // MarshalJSON implements json.Marshaler.
