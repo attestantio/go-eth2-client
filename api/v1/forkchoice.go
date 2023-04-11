@@ -184,9 +184,6 @@ func (f *ForkChoiceNode) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("invalid value for parent root: %s", forkChoiceNodeJSON.ParentRoot))
 	}
-	if len(parentRoot) != rootLength {
-		return fmt.Errorf("incorrect length %d for parent root", len(parentRoot))
-	}
 	copy(f.ParentRoot[:], parentRoot)
 
 	justifiedEpoch, err := strconv.ParseUint(forkChoiceNodeJSON.JustifiedEpoch, 10, 64)
