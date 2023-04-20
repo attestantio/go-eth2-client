@@ -35,7 +35,7 @@ type Erroring struct {
 }
 
 // NewErroring creates a new Ethereum 2 client that errors at a given rate.
-func NewErroring(ctx context.Context,
+func NewErroring(_ context.Context,
 	errorRate float64,
 	next consensusclient.Service,
 ) (consensusclient.Service, error) {
@@ -68,7 +68,7 @@ func (s *Erroring) Address() string {
 }
 
 // maybeError may return an error depending on the error arte.
-func (s *Erroring) maybeError(ctx context.Context) error {
+func (s *Erroring) maybeError(_ context.Context) error {
 	// #nosec G404
 	roll := rand.Float64()
 	if roll < s.errorRate {

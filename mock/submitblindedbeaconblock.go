@@ -20,6 +20,6 @@ import (
 )
 
 // SubmitBlindedBeaconBlock submits a blinded beacon block.
-func (s *Service) SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error {
+func (s *Service) SubmitBlindedBeaconBlock(_ context.Context, _ *api.VersionedSignedBlindedBeaconBlock) error {
 	return nil
 }

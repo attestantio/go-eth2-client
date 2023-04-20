@@ -20,6 +20,6 @@ import (
 )
 
 // AggregateAndProofDomain provides the aggregate and proof domain.
-func (s *Service) AggregateAndProofDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Service) AggregateAndProofDomain(_ context.Context) (spec.DomainType, error) {
 	return spec.DomainType{0x06, 0x00, 0x00, 0x00}, nil
 }

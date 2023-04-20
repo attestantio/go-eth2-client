@@ -20,7 +20,7 @@ import (
 )
 
 // AggregateAttestation fetches the aggregate attestation given an attestation.
-func (s *Service) AggregateAttestation(ctx context.Context, slot spec.Slot, attestationDataRoot spec.Root) (*spec.Attestation, error) {
+func (s *Service) AggregateAttestation(_ context.Context, _ spec.Slot, _ spec.Root) (*spec.Attestation, error) {
 	return &spec.Attestation{
 		Data: &spec.AttestationData{
 			Source: &spec.Checkpoint{},

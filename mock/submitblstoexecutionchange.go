@@ -20,6 +20,6 @@ import (
 )
 
 // SubmitBLSToExecutionChange submits a BLS to execution address change operation.
-func (s *Service) SubmitBLSToExecutionChange(ctx context.Context, blsToExecutionChange *capella.SignedBLSToExecutionChange) error {
+func (s *Service) SubmitBLSToExecutionChange(_ context.Context, _ *capella.SignedBLSToExecutionChange) error {
 	return nil
 }

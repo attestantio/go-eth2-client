@@ -20,6 +20,6 @@ import (
 )
 
 // DepositContract provides details of the Ethereum 1 deposit contract for the chain.
-func (s *Service) DepositContract(ctx context.Context) (*api.DepositContract, error) {
+func (s *Service) DepositContract(_ context.Context) (*api.DepositContract, error) {
 	return &api.DepositContract{}, nil
 }

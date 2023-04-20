@@ -21,7 +21,7 @@ import (
 )
 
 // BeaconCommitteesAtEpoch fetches all beacon committees for the given epoch at the given state.
-func (s *Service) BeaconCommitteesAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) ([]*api.BeaconCommittee, error) {
+func (s *Service) BeaconCommitteesAtEpoch(_ context.Context, _ string, _ phase0.Epoch) ([]*api.BeaconCommittee, error) {
 	res := make([]*api.BeaconCommittee, 5)
 	for i := 0; i < 5; i++ {
 		res[i] = &api.BeaconCommittee{}

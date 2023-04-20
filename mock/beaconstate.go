@@ -21,7 +21,7 @@ import (
 )
 
 // BeaconState fetches a beacon state given a state ID.
-func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
+func (s *Service) BeaconState(_ context.Context, _ string) (*spec.VersionedBeaconState, error) {
 	return &spec.VersionedBeaconState{
 		Version: spec.DataVersionPhase0,
 		Phase0: &phase0.BeaconState{

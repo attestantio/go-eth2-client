@@ -20,7 +20,7 @@ import (
 
 // Spec provides the spec information of the chain.
 // This returns various useful values.
-func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
+func (s *Service) Spec(_ context.Context) (map[string]interface{}, error) {
 	return map[string]interface{}{
 		"SECONDS_PER_SLOT": 12 * time.Second,
 		"SLOTS_PER_EPOCH":  uint64(32),

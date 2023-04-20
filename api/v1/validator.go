@@ -92,6 +92,6 @@ func (v *Validator) String() string {
 }
 
 // PubKey implements ValidatorPubKeyProvider
-func (v *Validator) PubKey(ctx context.Context) (phase0.BLSPubKey, error) {
+func (v *Validator) PubKey(_ context.Context) (phase0.BLSPubKey, error) {
 	return v.Validator.PublicKey, nil
 }

@@ -20,6 +20,6 @@ import (
 )
 
 // SubmitBeaconBlock submits a beacon block.
-func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
+func (s *Service) SubmitBeaconBlock(_ context.Context, _ *spec.VersionedSignedBeaconBlock) error {
 	return nil
 }

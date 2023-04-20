@@ -20,6 +20,6 @@ import (
 )
 
 // SubmitValidatorRegistrations submits a validator registration.
-func (s *Service) SubmitValidatorRegistrations(ctx context.Context, registrations []*api.VersionedSignedValidatorRegistration) error {
+func (s *Service) SubmitValidatorRegistrations(_ context.Context, _ []*api.VersionedSignedValidatorRegistration) error {
 	return nil
 }

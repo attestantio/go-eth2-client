@@ -21,7 +21,7 @@ import (
 )
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
-func (s *Service) SignedBeaconBlock(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error) {
+func (s *Service) SignedBeaconBlock(_ context.Context, _ string) (*spec.VersionedSignedBeaconBlock, error) {
 	return &spec.VersionedSignedBeaconBlock{
 		Version: spec.DataVersionPhase0,
 		Phase0: &phase0.SignedBeaconBlock{

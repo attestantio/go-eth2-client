@@ -22,7 +22,7 @@ import (
 )
 
 // SyncCommitteeContribution provides a sync committee contribution.
-func (s *Service) SyncCommitteeContribution(ctx context.Context, slot phase0.Slot, subcommitteeIndex uint64, beaconBlockRoot phase0.Root) (*altair.SyncCommitteeContribution, error) {
+func (s *Service) SyncCommitteeContribution(_ context.Context, _ phase0.Slot, _ uint64, _ phase0.Root) (*altair.SyncCommitteeContribution, error) {
 	return &altair.SyncCommitteeContribution{
 		Slot: 5,
 		BeaconBlockRoot: phase0.Root([32]byte{
