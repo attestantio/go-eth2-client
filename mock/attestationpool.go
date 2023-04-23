@@ -20,7 +20,7 @@ import (
 )
 
 // AttestationPool fetches the attestation pool for the given slot.
-func (s *Service) AttestationPool(ctx context.Context, slot spec.Slot) ([]*spec.Attestation, error) {
+func (s *Service) AttestationPool(_ context.Context, _ spec.Slot) ([]*spec.Attestation, error) {
 	res := make([]*spec.Attestation, 5)
 	for i := 0; i < 5; i++ {
 		res[i] = &spec.Attestation{

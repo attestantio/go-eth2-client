@@ -20,6 +20,6 @@ import (
 )
 
 // SubmitAggregateAttestations submits aggregate attestations.
-func (s *Service) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*spec.SignedAggregateAndProof) error {
+func (s *Service) SubmitAggregateAttestations(_ context.Context, _ []*spec.SignedAggregateAndProof) error {
 	return nil
 }

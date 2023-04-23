@@ -20,6 +20,6 @@ import (
 )
 
 // VoluntaryExitDomain provides the voluntary exit domain.
-func (s *Service) VoluntaryExitDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Service) VoluntaryExitDomain(_ context.Context) (spec.DomainType, error) {
 	return spec.DomainType{0x04, 0x00, 0x00, 0x00}, nil
 }

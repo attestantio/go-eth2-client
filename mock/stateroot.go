@@ -20,6 +20,6 @@ import (
 )
 
 // BeaconStateRoot fetches a beacon state root given a state ID.
-func (s *Service) BeaconStateRoot(ctx context.Context, stateID string) (*spec.Root, error) {
+func (s *Service) BeaconStateRoot(_ context.Context, _ string) (*spec.Root, error) {
 	return &spec.Root{}, nil
 }

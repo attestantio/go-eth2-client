@@ -20,7 +20,7 @@ import (
 )
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Service) ForkSchedule(ctx context.Context) ([]*spec.Fork, error) {
+func (s *Service) ForkSchedule(_ context.Context) ([]*spec.Fork, error) {
 	return []*spec.Fork{
 		{
 			PreviousVersion: spec.Version{0x01, 0x02, 0x03, 0x04},

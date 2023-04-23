@@ -21,7 +21,7 @@ import (
 )
 
 // Finality provides the finality given a state ID.
-func (s *Service) Finality(ctx context.Context, stateID string) (*api.Finality, error) {
+func (s *Service) Finality(_ context.Context, _ string) (*api.Finality, error) {
 	return &api.Finality{
 		Finalized: &spec.Checkpoint{
 			Epoch: 6,

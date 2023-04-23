@@ -21,6 +21,6 @@ import (
 
 // SubmitProposalPreparations provides the beacon node with information required if a proposal for the given validators
 // shows up in the next epoch.
-func (s *Service) SubmitProposalPreparations(ctx context.Context, preparations []*apiv1.ProposalPreparation) error {
+func (s *Service) SubmitProposalPreparations(_ context.Context, _ []*apiv1.ProposalPreparation) error {
 	return nil
 }

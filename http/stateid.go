@@ -24,7 +24,7 @@ import (
 )
 
 // SlotFromStateID parses the state ID and returns the relevant slot.
-func (s *Service) SlotFromStateID(ctx context.Context, stateID string) (phase0.Slot, error) {
+func (s *Service) SlotFromStateID(_ context.Context, stateID string) (phase0.Slot, error) {
 	var slot phase0.Slot
 	switch {
 	case stateID == "genesis":

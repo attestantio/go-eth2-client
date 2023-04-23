@@ -20,7 +20,7 @@ import (
 )
 
 // AttestationData fetches the attestation data for the given slot and committee index.
-func (s *Service) AttestationData(ctx context.Context, slot spec.Slot, committeeIndex spec.CommitteeIndex) (*spec.AttestationData, error) {
+func (s *Service) AttestationData(_ context.Context, _ spec.Slot, _ spec.CommitteeIndex) (*spec.AttestationData, error) {
 	return &spec.AttestationData{
 		Source: &spec.Checkpoint{},
 		Target: &spec.Checkpoint{},

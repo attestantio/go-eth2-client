@@ -20,6 +20,6 @@ import (
 )
 
 // BeaconAttesterDomain provides the beacon attester domain.
-func (s *Service) BeaconAttesterDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Service) BeaconAttesterDomain(_ context.Context) (spec.DomainType, error) {
 	return spec.DomainType{0x01, 0x00, 0x00, 0x00}, nil
 }

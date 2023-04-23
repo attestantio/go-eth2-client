@@ -23,6 +23,6 @@ import (
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
 // will be applied.
-func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []spec.ValidatorIndex) (map[spec.ValidatorIndex]spec.Gwei, error) {
+func (s *Service) ValidatorBalances(_ context.Context, _ string, _ []spec.ValidatorIndex) (map[spec.ValidatorIndex]spec.Gwei, error) {
 	return map[spec.ValidatorIndex]spec.Gwei{}, nil
 }

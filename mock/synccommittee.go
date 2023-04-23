@@ -21,11 +21,11 @@ import (
 )
 
 // SyncCommittee fetches the sync committee for the given state.
-func (s *Service) SyncCommittee(ctx context.Context, stateID string) (*api.SyncCommittee, error) {
+func (s *Service) SyncCommittee(_ context.Context, _ string) (*api.SyncCommittee, error) {
 	return &api.SyncCommittee{}, nil
 }
 
 // SyncCommitteeAtEpoch fetches the sync committee for the given epoch at the given state.
-func (s *Service) SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) (*api.SyncCommittee, error) {
+func (s *Service) SyncCommitteeAtEpoch(_ context.Context, _ string, _ phase0.Epoch) (*api.SyncCommittee, error) {
 	return &api.SyncCommittee{}, nil
 }

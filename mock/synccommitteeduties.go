@@ -22,7 +22,7 @@ import (
 
 // SyncCommitteeDuties obtains sync committee duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Service) SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.SyncCommitteeDuty, error) {
+func (s *Service) SyncCommitteeDuties(_ context.Context, _ phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.SyncCommitteeDuty, error) {
 	res := make([]*api.SyncCommitteeDuty, len(validatorIndices))
 	for i := range validatorIndices {
 		res[i] = &api.SyncCommitteeDuty{

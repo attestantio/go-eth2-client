@@ -20,6 +20,6 @@ import (
 )
 
 // FarFutureEpoch provides the values for FAR_FUTURE_EOPCH of the chain.
-func (s *Service) FarFutureEpoch(ctx context.Context) (spec.Epoch, error) {
+func (s *Service) FarFutureEpoch(_ context.Context) (spec.Epoch, error) {
 	return spec.Epoch(0xffffffffffffffff), nil
 }

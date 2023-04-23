@@ -20,6 +20,6 @@ import (
 )
 
 // SelectionProofDomain provides the selection proof domain.
-func (s *Service) SelectionProofDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Service) SelectionProofDomain(_ context.Context) (spec.DomainType, error) {
 	return spec.DomainType{0x05, 0x00, 0x00, 0x00}, nil
 }

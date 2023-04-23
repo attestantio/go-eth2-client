@@ -18,6 +18,6 @@ import (
 )
 
 // TargetAggregatorsPerCommittee provides the target number of aggregators for each attestation committee.
-func (s *Service) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error) {
+func (s *Service) TargetAggregatorsPerCommittee(_ context.Context) (uint64, error) {
 	return 4, nil
 }

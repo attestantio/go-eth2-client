@@ -37,7 +37,7 @@ type Sleepy struct {
 
 // NewSleepy creates a new Ethereum 2 client that sleeps for random amount of time
 // within a set of bounds between minSleep and maxSleep before continuing.
-func NewSleepy(ctx context.Context,
+func NewSleepy(_ context.Context,
 	minSleep time.Duration,
 	maxSleep time.Duration,
 	next consensusclient.Service,
@@ -69,7 +69,7 @@ func (s *Sleepy) Address() string {
 }
 
 // sleep sleeps for a bounded amount of time.
-func (s *Sleepy) sleep(ctx context.Context) {
+func (s *Sleepy) sleep(_ context.Context) {
 	// #nosec G404
 	duration := time.Duration(s.minSleep.Milliseconds()+rand.Int63n(s.maxSleep.Milliseconds()-s.minSleep.Milliseconds())) * time.Millisecond
 	time.Sleep(duration)
