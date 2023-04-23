@@ -167,7 +167,6 @@ linters:
     - sqlclosecheck
     - structcheck
     - thelper
-    - unparam
     - varcheck
     - varnamelen
     - wastedassign
