@@ -22,7 +22,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ProposerSlashing provides information about a proposer slashing
+// ProposerSlashing provides information about a proposer slashing.
 type ProposerSlashing struct {
 	SignedHeader1 *SignedBeaconBlockHeader
 	SignedHeader2 *SignedBeaconBlockHeader

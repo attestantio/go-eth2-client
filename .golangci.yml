@@ -145,7 +145,6 @@ linters:
     - gochecknoinits
     - gocognit
     - goconst
-    - godot
     - goerr113
     - gofumpt
     - goheader

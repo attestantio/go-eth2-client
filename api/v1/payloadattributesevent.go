@@ -14,7 +14,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// PayloadAttributesEvent represents the data of a payload_attributes event
+// PayloadAttributesEvent represents the data of a payload_attributes event.
 type PayloadAttributesEvent struct {
 	// Version is the fork version of the beacon chain.
 	Version spec.DataVersion
@@ -22,7 +22,7 @@ type PayloadAttributesEvent struct {
 	Data *PayloadAttributesData
 }
 
-// PayloadAttributesData represents the data of a payload_attributes event
+// PayloadAttributesData represents the data of a payload_attributes event.
 type PayloadAttributesData struct {
 	// ProposerIndex is the index of the proposer.
 	ProposerIndex phase0.ValidatorIndex

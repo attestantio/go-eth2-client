@@ -168,7 +168,7 @@ type AttestationsSubmitter interface {
 	SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error
 }
 
-// AttesterDutiesProvider is the interface for providing attester duties
+// AttesterDutiesProvider is the interface for providing attester duties.
 type AttesterDutiesProvider interface {
 	// AttesterDuties obtains attester duties.
 	// If validatorIndicess is nil it will return all duties for the given epoch.
