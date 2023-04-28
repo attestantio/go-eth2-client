@@ -1,4 +1,4 @@
-// Copyright © 2021, 2022 Attestant Limited.
+// Copyright © 2021 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -29,6 +30,7 @@ type VersionedSignedBeaconBlock struct {
 	Altair    *altair.SignedBeaconBlock
 	Bellatrix *bellatrix.SignedBeaconBlock
 	Capella   *capella.SignedBeaconBlock
+	Deneb     *deneb.SignedBeaconBlock
 }
 
 // Slot returns the slot of the signed beacon block.
@@ -54,6 +56,11 @@ func (v *VersionedSignedBeaconBlock) Slot() (phase0.Slot, error) {
 			return 0, errors.New("no capella block")
 		}
 		return v.Capella.Message.Slot, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil {
+			return 0, errors.New("no denb block")
+		}
+		return v.Deneb.Message.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -82,6 +89,11 @@ func (v *VersionedSignedBeaconBlock) Attestations() ([]*phase0.Attestation, erro
 			return nil, errors.New("no capella block")
 		}
 		return v.Capella.Message.Body.Attestations, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.Attestations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -110,6 +122,11 @@ func (v *VersionedSignedBeaconBlock) Root() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no capella block")
 		}
 		return v.Capella.Message.HashTreeRoot()
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -138,6 +155,11 @@ func (v *VersionedSignedBeaconBlock) BodyRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no capella block")
 		}
 		return v.Capella.Message.Body.HashTreeRoot()
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -166,6 +188,11 @@ func (v *VersionedSignedBeaconBlock) ParentRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no capella block")
 		}
 		return v.Capella.Message.ParentRoot, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -194,6 +221,11 @@ func (v *VersionedSignedBeaconBlock) StateRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no capella block")
 		}
 		return v.Capella.Message.StateRoot, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -222,6 +254,11 @@ func (v *VersionedSignedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlas
 			return nil, errors.New("no capella block")
 		}
 		return v.Capella.Message.Body.AttesterSlashings, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.AttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -250,6 +287,11 @@ func (v *VersionedSignedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlas
 			return nil, errors.New("no capella block")
 		}
 		return v.Capella.Message.Body.ProposerSlashings, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -278,6 +320,11 @@ func (v *VersionedSignedBeaconBlock) String() string {
 			return ""
 		}
 		return v.Capella.String()
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return ""
+		}
+		return v.Deneb.String()
 	default:
 		return "unknown version"
 	}

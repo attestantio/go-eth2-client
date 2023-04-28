@@ -137,6 +137,10 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 	if _, exists := config["DOMAIN_APPLICATION_BUILDER"]; !exists {
 		config["DOMAIN_APPLICATION_BUILDER"] = phase0.DomainType{0x00, 0x00, 0x00, 0x01}
 	}
+	// The blob sidecar domain type is not provided by all nodes, so add it here if not present.
+	if _, exists := config["DOMAIN_BLOB_SIDECAR"]; !exists {
+		config["DOMAIN_BLOB_SIDECAR"] = phase0.DomainType{0x0b, 0x00, 0x00, 0x00}
+	}
 
 	s.spec = config
 	return s.spec, nil
