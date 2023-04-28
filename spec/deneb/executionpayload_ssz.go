@@ -7,6 +7,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	ssz "github.com/ferranbt/fastssz"
+	"github.com/holiman/uint256"
 )
 
 // MarshalSSZ ssz marshals the ExecutionPayload object
@@ -71,8 +72,9 @@ func (e *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset += len(e.Withdrawals) * 44
 
 	// Field (15) 'ExcessDataGas'
+	excessDataGas := e.ExcessDataGas.Bytes32()
 	for i := 0; i < 32; i++ {
-		dst = append(dst, e.ExcessDataGas[31-i])
+		dst = append(dst, excessDataGas[31-i])
 	}
 
 	// Field (10) 'ExtraData'
@@ -183,9 +185,12 @@ func (e *ExecutionPayload) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (15) 'ExcessDataGas'
+	excessDataGasBE := make([]byte,32)
 	for i := 0; i < 32; i++ {
-		e.ExcessDataGas[i] = buf[543-i]
+		excessDataGasBE[i] = buf[599-i]
 	}
+	e.ExcessDataGas = &uint256.Int{}
+	e.ExcessDataGas.SetBytes32(excessDataGasBE)
 
 	// Field (10) 'ExtraData'
 	{
@@ -359,8 +364,9 @@ func (e *ExecutionPayload) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 
 	// Field (15) 'ExcessDataGas'
 	excessDataGas := make([]byte,32)
+	excessDataGasBE := e.ExcessDataGas.Bytes32()
 	for i := 0; i < 32; i++ {
-		excessDataGas[i] = e.ExcessDataGas[31-i]
+		excessDataGas[i] = excessDataGasBE[31-i]
 	}
 	hh.PutBytes(excessDataGas)
 

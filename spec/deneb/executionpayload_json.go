@@ -68,8 +68,6 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 	}
 	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
 
-	excessDataGas := new(big.Int).SetBytes(e.ExcessDataGas[:])
-
 	return json.Marshal(&executionPayloadJSON{
 		ParentHash:    e.ParentHash.String(),
 		FeeRecipient:  e.FeeRecipient.String(),
@@ -86,7 +84,7 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 		BlockHash:     e.BlockHash.String(),
 		Transactions:  transactions,
 		Withdrawals:   e.Withdrawals,
-		ExcessDataGas: excessDataGas.String(),
+		ExcessDataGas: e.ExcessDataGas.Dec(),
 	})
 }
 
@@ -301,12 +299,10 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	if data.ExcessDataGas == "" {
 		return errors.New("excess data gas missing")
 	}
-	excessDataGas, err := uint256.FromDecimal(data.ExcessDataGas)
+	e.ExcessDataGas, err = uint256.FromDecimal(data.ExcessDataGas)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for excess data gas")
 	}
-	excessDataGasBytes := excessDataGas.Bytes32()
-	copy(e.ExcessDataGas[:], excessDataGasBytes[:])
 
 	return nil
 }

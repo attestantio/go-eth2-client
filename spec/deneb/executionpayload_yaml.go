@@ -62,8 +62,6 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 	}
 	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
 
-	excessDataGas := new(big.Int).SetBytes(e.ExcessDataGas[:])
-
 	yamlBytes, err := yaml.MarshalWithOptions(&executionPayloadYAML{
 		ParentHash:    e.ParentHash.String(),
 		FeeRecipient:  e.FeeRecipient.String(),
@@ -80,7 +78,7 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 		BlockHash:     fmt.Sprintf("%#x", e.BlockHash),
 		Transactions:  transactions,
 		Withdrawals:   e.Withdrawals,
-		ExcessDataGas: excessDataGas.String(),
+		ExcessDataGas: e.ExcessDataGas.Dec(),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

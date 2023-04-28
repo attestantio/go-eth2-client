@@ -5,6 +5,7 @@ package deneb
 
 import (
 	ssz "github.com/ferranbt/fastssz"
+	"github.com/holiman/uint256"
 )
 
 // MarshalSSZ ssz marshals the ExecutionPayloadHeader object
@@ -64,8 +65,9 @@ func (e *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error
 	dst = append(dst, e.WithdrawalsRoot[:]...)
 
 	// Field (15) 'ExcessDataGas'
+	excessDataGas := e.ExcessDataGas.Bytes32()
 	for i := 0; i < 32; i++ {
-		dst = append(dst, e.ExcessDataGas[31-i])
+		dst = append(dst, excessDataGas[31-i])
 	}
 
 	// Field (10) 'ExtraData'
@@ -141,9 +143,12 @@ func (e *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) error {
 	copy(e.WithdrawalsRoot[:], buf[536:568])
 
 	// Field (15) 'ExcessDataGas'
+	excessDataGasBE := make([]byte,32)
 	for i := 0; i < 32; i++ {
-		e.ExcessDataGas[i] = buf[599-i]
+		excessDataGasBE[i] = buf[599-i]
 	}
+	e.ExcessDataGas = &uint256.Int{}
+	e.ExcessDataGas.SetBytes32(excessDataGasBE)
 
 	// Field (10) 'ExtraData'
 	{
@@ -235,8 +240,9 @@ func (e *ExecutionPayloadHeader) HashTreeRootWith(hh ssz.HashWalker) (err error)
 
 	// Field (15) 'ExcessDataGas'
 	excessDataGas := make([]byte,32)
+	excessDataGasBE := e.ExcessDataGas.Bytes32()
 	for i := 0; i < 32; i++ {
-		excessDataGas[i] = e.ExcessDataGas[31-i]
+		excessDataGas[i] = excessDataGasBE[31-i]
 	}
 	hh.PutBytes(excessDataGas)
 

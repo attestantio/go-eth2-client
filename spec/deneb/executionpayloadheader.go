@@ -19,6 +19,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
+	"github.com/holiman/uint256"
 )
 
 // ExecutionPayloadHeader represents an execution layer payload header.
@@ -38,7 +39,7 @@ type ExecutionPayloadHeader struct {
 	BlockHash        phase0.Hash32 `ssz-size:"32"`
 	TransactionsRoot phase0.Root   `ssz-size:"32"`
 	WithdrawalsRoot  phase0.Root   `ssz-size:"32"`
-	ExcessDataGas    [32]byte      `ssz-size:"32"`
+	ExcessDataGas    *uint256.Int  `ssz-size:"32"`
 }
 
 // String returns a string version of the structure.
