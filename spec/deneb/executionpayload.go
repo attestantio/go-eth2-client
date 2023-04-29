@@ -36,7 +36,7 @@ type ExecutionPayload struct {
 	GasUsed       uint64
 	Timestamp     uint64
 	ExtraData     []byte                  `ssz-max:"32"`
-	BaseFeePerGas [32]byte                `ssz-size:"32"`
+	BaseFeePerGas *uint256.Int            `ssz-size:"32"`
 	BlockHash     phase0.Hash32           `ssz-size:"32"`
 	Transactions  []bellatrix.Transaction `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
 	Withdrawals   []*capella.Withdrawal   `ssz-max:"16"`

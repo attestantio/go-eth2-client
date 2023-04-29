@@ -16,7 +16,6 @@ package deneb
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 
 	"github.com/goccy/go-yaml"
 )
@@ -48,14 +47,6 @@ func (e *ExecutionPayloadHeader) MarshalYAML() ([]byte, error) {
 		extraData = fmt.Sprintf("%#x", e.ExtraData)
 	}
 
-	// Base fee per gas is stored little-endian but we need it
-	// big-endian for big.Int.
-	var baseFeePerGasBEBytes [32]byte
-	for i := 0; i < 32; i++ {
-		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[31-i]
-	}
-	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
-
 	yamlBytes, err := yaml.MarshalWithOptions(&executionPayloadHeaderYAML{
 		ParentHash:       e.ParentHash.String(),
 		FeeRecipient:     e.FeeRecipient.String(),
@@ -68,7 +59,7 @@ func (e *ExecutionPayloadHeader) MarshalYAML() ([]byte, error) {
 		GasUsed:          e.GasUsed,
 		Timestamp:        e.Timestamp,
 		ExtraData:        extraData,
-		BaseFeePerGas:    baseFeePerGas.String(),
+		BaseFeePerGas:    e.BaseFeePerGas.Dec(),
 		BlockHash:        e.BlockHash.String(),
 		TransactionsRoot: e.TransactionsRoot.String(),
 		WithdrawalsRoot:  e.WithdrawalsRoot.String(),

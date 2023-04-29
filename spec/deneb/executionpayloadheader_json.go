@@ -17,7 +17,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"strconv"
 	"strings"
 
@@ -54,14 +53,6 @@ func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
 		extraData = fmt.Sprintf("%#x", e.ExtraData)
 	}
 
-	// Base fee per gas is stored little-endian but we need it
-	// big-endian for big.Int.
-	var baseFeePerGasBEBytes [32]byte
-	for i := 0; i < 32; i++ {
-		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[31-i]
-	}
-	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
-
 	return json.Marshal(&executionPayloadHeaderJSON{
 		ParentHash:       e.ParentHash.String(),
 		FeeRecipient:     e.FeeRecipient.String(),
@@ -74,7 +65,7 @@ func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
 		GasUsed:          fmt.Sprintf("%d", e.GasUsed),
 		Timestamp:        fmt.Sprintf("%d", e.Timestamp),
 		ExtraData:        extraData,
-		BaseFeePerGas:    baseFeePerGas.String(),
+		BaseFeePerGas:    e.BaseFeePerGas.Dec(),
 		BlockHash:        fmt.Sprintf("%#x", e.BlockHash),
 		TransactionsRoot: e.TransactionsRoot.String(),
 		WithdrawalsRoot:  e.WithdrawalsRoot.String(),
@@ -224,33 +215,14 @@ func (e *ExecutionPayloadHeader) unpack(data *executionPayloadHeaderJSON) error 
 	if data.BaseFeePerGas == "" {
 		return errors.New("base fee per gas missing")
 	}
-	baseFeePerGas := new(big.Int)
-	var ok bool
-	input := data.BaseFeePerGas
 	if strings.HasPrefix(data.BaseFeePerGas, "0x") {
-		input = strings.TrimPrefix(input, "0x")
-		if len(data.BaseFeePerGas)%2 == 1 {
-			input = fmt.Sprintf("0%s", input)
-		}
-		baseFeePerGas, ok = baseFeePerGas.SetString(input, 16)
+		e.BaseFeePerGas, err = uint256.FromHex(data.BaseFeePerGas)
 	} else {
-		baseFeePerGas, ok = baseFeePerGas.SetString(input, 10)
+		e.BaseFeePerGas, err = uint256.FromDecimal(data.BaseFeePerGas)
 	}
-	if !ok {
-		return errors.New("invalid value for base fee per gas")
+	if err != nil {
+		return errors.Wrap(err, "invalid value for base fee per gas")
 	}
-	if baseFeePerGas.Cmp(maxBaseFeePerGas) > 0 {
-		return errors.New("overflow for base fee per gas")
-	}
-	// We need to store internally as little-endian, but big.Int uses
-	// big-endian so do it manually.
-	baseFeePerGasBEBytes := baseFeePerGas.Bytes()
-	var baseFeePerGasLEBytes [32]byte
-	baseFeeLen := len(baseFeePerGasBEBytes)
-	for i := 0; i < baseFeeLen; i++ {
-		baseFeePerGasLEBytes[i] = baseFeePerGasBEBytes[baseFeeLen-1-i]
-	}
-	copy(e.BaseFeePerGas[:], baseFeePerGasLEBytes[:])
 
 	if data.BlockHash == "" {
 		return errors.New("block hash missing")

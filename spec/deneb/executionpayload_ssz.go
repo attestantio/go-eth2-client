@@ -55,7 +55,10 @@ func (e *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset += len(e.ExtraData)
 
 	// Field (11) 'BaseFeePerGas'
-	dst = append(dst, e.BaseFeePerGas[:]...)
+	baseFeePerGas := e.BaseFeePerGas.Bytes32()
+	for i := 0; i < 32; i++ {
+		dst = append(dst, baseFeePerGas[31-i])
+	}
 
 	// Field (12) 'BlockHash'
 	dst = append(dst, e.BlockHash[:]...)
@@ -169,7 +172,11 @@ func (e *ExecutionPayload) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (11) 'BaseFeePerGas'
-	copy(e.BaseFeePerGas[:], buf[440:472])
+	baseFeePerGasBE := make([]byte,32)
+	for i := 0; i < 32; i++ {
+		baseFeePerGasBE[i] = buf[471-i]
+	}
+	e.BaseFeePerGas = &uint256.Int{}
 
 	// Field (12) 'BlockHash'
 	copy(e.BlockHash[:], buf[472:504])
@@ -318,7 +325,12 @@ func (e *ExecutionPayload) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	}
 
 	// Field (11) 'BaseFeePerGas'
-	hh.PutBytes(e.BaseFeePerGas[:])
+	baseFeePerGas := make([]byte,32)
+	baseFeePerGasBE := e.BaseFeePerGas.Bytes32()
+	for i := 0; i < 32; i++ {
+		baseFeePerGas[i] = baseFeePerGasBE[31-i]
+	}
+	hh.PutBytes(baseFeePerGas)
 
 	// Field (12) 'BlockHash'
 	hh.PutBytes(e.BlockHash[:])
