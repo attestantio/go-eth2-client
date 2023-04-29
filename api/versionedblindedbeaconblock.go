@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2022, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,6 +18,7 @@ import (
 
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
+	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -28,6 +29,7 @@ type VersionedBlindedBeaconBlock struct {
 	Version   spec.DataVersion
 	Bellatrix *apiv1bellatrix.BlindedBeaconBlock
 	Capella   *apiv1capella.BlindedBeaconBlock
+	Deneb     *apiv1deneb.BlindedBeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
@@ -48,6 +50,11 @@ func (v *VersionedBlindedBeaconBlock) Slot() (phase0.Slot, error) {
 			return 0, errors.New("no capella block")
 		}
 		return v.Capella.Slot, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return 0, errors.New("no deneb block")
+		}
+		return v.Deneb.Slot, nil
 	default:
 		return 0, errors.New("unsupported version")
 	}
@@ -66,6 +73,11 @@ func (v *VersionedBlindedBeaconBlock) Attestations() ([]*phase0.Attestation, err
 			return nil, errors.New("no capella block")
 		}
 		return v.Capella.Body.Attestations, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Body == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Body.Attestations, nil
 	default:
 		return nil, errors.New("unsupported version")
 	}
@@ -84,6 +96,11 @@ func (v *VersionedBlindedBeaconBlock) Root() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no capella block")
 		}
 		return v.Capella.HashTreeRoot()
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, errors.New("no deneb block")
+		}
+		return v.Deneb.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -102,6 +119,11 @@ func (v *VersionedBlindedBeaconBlock) BodyRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no capella block")
 		}
 		return v.Capella.Body.HashTreeRoot()
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, errors.New("no deneb block")
+		}
+		return v.Deneb.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -120,6 +142,11 @@ func (v *VersionedBlindedBeaconBlock) ParentRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no capella block")
 		}
 		return v.Capella.ParentRoot, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, errors.New("no deneb block")
+		}
+		return v.Deneb.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -138,6 +165,11 @@ func (v *VersionedBlindedBeaconBlock) StateRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no capella block")
 		}
 		return v.Capella.StateRoot, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, errors.New("no deneb block")
+		}
+		return v.Deneb.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -168,6 +200,17 @@ func (v *VersionedBlindedBeaconBlock) TransactionsRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no capella block body execution payload header")
 		}
 		return v.Capella.Body.ExecutionPayloadHeader.TransactionsRoot, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, errors.New("no deneb block")
+		}
+		if v.Deneb.Body == nil {
+			return phase0.Root{}, errors.New("no deneb block body")
+		}
+		if v.Deneb.Body.ExecutionPayloadHeader == nil {
+			return phase0.Root{}, errors.New("no deneb block body execution payload header")
+		}
+		return v.Deneb.Body.ExecutionPayloadHeader.TransactionsRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -198,6 +241,17 @@ func (v *VersionedBlindedBeaconBlock) FeeRecipient() (bellatrix.ExecutionAddress
 			return bellatrix.ExecutionAddress{}, errors.New("no capella block body execution payload header")
 		}
 		return v.Capella.Body.ExecutionPayloadHeader.FeeRecipient, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no deneb block")
+		}
+		if v.Deneb.Body == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no deneb block body")
+		}
+		if v.Deneb.Body.ExecutionPayloadHeader == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no deneb block body execution payload header")
+		}
+		return v.Deneb.Body.ExecutionPayloadHeader.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, errors.New("unsupported version")
 	}
@@ -228,6 +282,17 @@ func (v *VersionedBlindedBeaconBlock) Timestamp() (uint64, error) {
 			return 0, errors.New("no capella block body execution payload header")
 		}
 		return v.Capella.Body.ExecutionPayloadHeader.Timestamp, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return 0, errors.New("no deneb block")
+		}
+		if v.Deneb.Body == nil {
+			return 0, errors.New("no deneb block body")
+		}
+		if v.Deneb.Body.ExecutionPayloadHeader == nil {
+			return 0, errors.New("no deneb block body execution payload header")
+		}
+		return v.Deneb.Body.ExecutionPayloadHeader.Timestamp, nil
 	default:
 		return 0, errors.New("unsupported version")
 	}
@@ -246,6 +311,11 @@ func (v *VersionedBlindedBeaconBlock) String() string {
 			return ""
 		}
 		return v.Capella.String()
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return ""
+		}
+		return v.Deneb.String()
 	default:
 		return "unknown version"
 	}
