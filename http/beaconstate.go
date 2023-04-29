@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -42,6 +43,10 @@ type bellatrixBeaconStateJSON struct {
 
 type capellaBeaconStateJSON struct {
 	Data *capella.BeaconState `json:"data"`
+}
+
+type denebBeaconStateJSON struct {
+	Data *deneb.BeaconState `json:"data"`
 }
 
 // BeaconState fetches a beacon state.
@@ -91,6 +96,12 @@ func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.Versio
 			return nil, errors.Wrap(err, "failed to parse capella beacon state")
 		}
 		res.Capella = resp.Data
+	case spec.DataVersionDeneb:
+		var resp denebBeaconStateJSON
+		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+			return nil, errors.Wrap(err, "failed to parse deneb beacon state")
+		}
+		res.Deneb = resp.Data
 	}
 
 	return res, nil
