@@ -45,42 +45,42 @@ func TestSignedBLSToExecutionChangeJSON(t *testing.T) {
 		},
 		{
 			name:  "MessageMissing",
-			input: []byte(`{"signature":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}`),
+			input: []byte(`{"signature":"0x0102030405060708090a0B0c0d0e0f10111213141415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}`),
 			err:   "message missing",
 		},
 		{
 			name:  "MessageWrongType",
-			input: []byte(`{"message":true,"signature":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}`),
+			input: []byte(`{"message":true,"signature":"0x0102030405060708090a0B0c0d0e0f10111213141415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}`),
 			err:   "invalid JSON: invalid JSON: json: cannot unmarshal bool into Go value of type capella.blsToExecutionChangeJSON",
 		},
 		{
 			name:  "MessageInvalid",
-			input: []byte(`{"message":{"validator_index":true,"from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"},"signature":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}`),
+			input: []byte(`{"message":{"validator_index":true,"from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"},"signature":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}`),
 			err:   "invalid JSON: invalid JSON: json: cannot unmarshal bool into Go struct field blsToExecutionChangeJSON.validator_index of type string",
 		},
 		{
 			name:  "SignatureMissing",
-			input: []byte(`{"message":{"validator_index":"2","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"}}`),
+			input: []byte(`{"message":{"validator_index":"2","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"}}`),
 			err:   "signature missing",
 		},
 		{
 			name:  "SignatureWrongType",
-			input: []byte(`{"message":{"validator_index":"2","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"},"signature":true}`),
+			input: []byte(`{"message":{"validator_index":"2","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"},"signature":true}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field signedBLSToExecutionChangeJSON.signature of type string",
 		},
 		{
 			name:  "SignatureInvalid",
-			input: []byte(`{"message":{"validator_index":"2","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"},"signature":"invalid"}`),
+			input: []byte(`{"message":{"validator_index":"2","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"},"signature":"invalid"}`),
 			err:   "invalid value for signature: encoding/hex: invalid byte: U+0069 'i'",
 		},
 		{
 			name:  "SignatureWrongLength",
-			input: []byte(`{"message":{"validator_index":"2","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"},"signature":"0x0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}`),
+			input: []byte(`{"message":{"validator_index":"2","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"},"signature":"0x0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}`),
 			err:   "incorrect length for signature",
 		},
 		{
 			name:  "Good",
-			input: []byte(`{"message":{"validator_index":"2","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"},"signature":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}`),
+			input: []byte(`{"message":{"validator_index":"2","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"},"signature":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}`),
 		},
 	}
 
@@ -109,7 +109,7 @@ func TestBLSToExecutionChangeryExitYAML(t *testing.T) {
 	}{
 		{
 			name:  "Good",
-			input: []byte(`{message: {validator_index: 2, from_bls_pubkey: '0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b', to_execution_address: '0x000102030405060708090a0b0c0d0e0f10111213'}, signature: '0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f'}`),
+			input: []byte(`{message: {validator_index: 2, from_bls_pubkey: '0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b', to_execution_address: '0x0102030405060708090a0B0c0d0e0f1011121314'}, signature: '0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f'}`),
 		},
 	}
 
