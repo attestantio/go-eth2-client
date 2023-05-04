@@ -172,7 +172,7 @@ func (e *ExecutionPayload) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (11) 'BaseFeePerGas'
-	baseFeePerGasBE := make([]byte,32)
+	baseFeePerGasBE := make([]byte, 32)
 	for i := 0; i < 32; i++ {
 		baseFeePerGasBE[i] = buf[471-i]
 	}
@@ -192,9 +192,9 @@ func (e *ExecutionPayload) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (15) 'ExcessDataGas'
-	excessDataGasBE := make([]byte,32)
+	excessDataGasBE := make([]byte, 32)
 	for i := 0; i < 32; i++ {
-		excessDataGasBE[i] = buf[599-i]
+		excessDataGasBE[i] = buf[543-i]
 	}
 	e.ExcessDataGas = &uint256.Int{}
 	e.ExcessDataGas.SetBytes32(excessDataGasBE)
@@ -325,7 +325,7 @@ func (e *ExecutionPayload) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	}
 
 	// Field (11) 'BaseFeePerGas'
-	baseFeePerGas := make([]byte,32)
+	baseFeePerGas := make([]byte, 32)
 	baseFeePerGasBE := e.BaseFeePerGas.Bytes32()
 	for i := 0; i < 32; i++ {
 		baseFeePerGas[i] = baseFeePerGasBE[31-i]
@@ -375,7 +375,7 @@ func (e *ExecutionPayload) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	}
 
 	// Field (15) 'ExcessDataGas'
-	excessDataGas := make([]byte,32)
+	excessDataGas := make([]byte, 32)
 	excessDataGasBE := e.ExcessDataGas.Bytes32()
 	for i := 0; i < 32; i++ {
 		excessDataGas[i] = excessDataGasBE[31-i]
