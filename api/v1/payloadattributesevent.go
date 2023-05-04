@@ -205,7 +205,7 @@ func (e *PayloadAttributesEvent) MarshalJSON() ([]byte, error) {
 		payloadAttributes, err = json.Marshal(&payloadAttributesV1JSON{
 			Timestamp:             fmt.Sprintf("%d", e.Data.V1.Timestamp),
 			PrevRandao:            fmt.Sprintf("%#x", e.Data.V1.PrevRandao),
-			SuggestedFeeRecipient: fmt.Sprintf("%#x", e.Data.V1.SuggestedFeeRecipient),
+			SuggestedFeeRecipient: e.Data.V1.SuggestedFeeRecipient.String(),
 		})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to marshal payload attributes v1")
@@ -217,7 +217,7 @@ func (e *PayloadAttributesEvent) MarshalJSON() ([]byte, error) {
 		payloadAttributes, err = json.Marshal(&payloadAttributesV2JSON{
 			Timestamp:             fmt.Sprintf("%d", e.Data.V2.Timestamp),
 			PrevRandao:            fmt.Sprintf("%#x", e.Data.V2.PrevRandao),
-			SuggestedFeeRecipient: fmt.Sprintf("%#x", e.Data.V2.SuggestedFeeRecipient),
+			SuggestedFeeRecipient: e.Data.V2.SuggestedFeeRecipient.String(),
 			Withdrawals:           e.Data.V2.Withdrawals,
 		})
 		if err != nil {

@@ -103,7 +103,7 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 
 	return json.Marshal(&executionPayloadJSON{
 		ParentHash:    fmt.Sprintf("%#x", e.ParentHash),
-		FeeRecipient:  fmt.Sprintf("%#x", e.FeeRecipient),
+		FeeRecipient:  e.FeeRecipient.String(),
 		StateRoot:     fmt.Sprintf("%#x", e.StateRoot),
 		ReceiptsRoot:  fmt.Sprintf("%#x", e.ReceiptsRoot),
 		LogsBloom:     fmt.Sprintf("%#x", e.LogsBloom),
@@ -342,7 +342,7 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 
 	yamlBytes, err := yaml.MarshalWithOptions(&executionPayloadYAML{
 		ParentHash:    fmt.Sprintf("%#x", e.ParentHash),
-		FeeRecipient:  fmt.Sprintf("%#x", e.FeeRecipient),
+		FeeRecipient:  e.FeeRecipient.String(),
 		StateRoot:     fmt.Sprintf("%#x", e.StateRoot),
 		ReceiptsRoot:  fmt.Sprintf("%#x", e.ReceiptsRoot),
 		LogsBloom:     fmt.Sprintf("%#x", e.LogsBloom),
