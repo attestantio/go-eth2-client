@@ -18,3 +18,9 @@ const VersionedHashLength = 32
 
 // KzgCommitmentLength is the number of bytes in a KZG commitment.
 const KzgCommitmentLength = 48
+
+// BlobLength is the number of bytes in a data blob.
+const BlobLength = 131072
+
+// KzgProofLength is the number of bytes in a KZG proof.
+const KzgProofLength = 48

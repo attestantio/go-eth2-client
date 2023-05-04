@@ -18,6 +18,9 @@ import "fmt"
 // VersionedHash is a hash with version information.
 type VersionedHash [32]byte
 
+// Blob is a data blob.
+type Blob [131072]byte
+
 // BlobIndex is the index of a blob in a block.
 type BlobIndex uint64
 
@@ -31,6 +34,30 @@ func (k KzgCommitment) String() string {
 
 // Format formats the KZG commitment.
 func (k KzgCommitment) Format(state fmt.State, v rune) {
+	format := string(v)
+	switch v {
+	case 's':
+		fmt.Fprint(state, k.String())
+	case 'x', 'X':
+		if state.Flag('#') {
+			format = "#" + format
+		}
+		fmt.Fprintf(state, "%"+format, k[:])
+	default:
+		fmt.Fprintf(state, "%"+format, k[:])
+	}
+}
+
+// KzgProof is an KZG proof.
+type KzgProof [48]byte
+
+// String returns a string version of the structure.
+func (k KzgProof) String() string {
+	return fmt.Sprintf("%#x", k)
+}
+
+// Format formats the KZG proof.
+func (k KzgProof) Format(state fmt.State, v rune) {
 	format := string(v)
 	switch v {
 	case 's':
