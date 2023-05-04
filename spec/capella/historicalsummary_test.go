@@ -51,6 +51,9 @@ func TestHistoricalSummarySpec(t *testing.T) {
 
 				unmarshalled := &capella.HistoricalSummary{}
 				require.NoError(t, unmarshalled.UnmarshalSSZ(specSSZ))
+				remarshalled, err := unmarshalled.MarshalSSZ()
+				require.NoError(t, err)
+				require.Equal(t, specSSZ, remarshalled)
 
 				ssz, err := res.MarshalSSZ()
 				require.NoError(t, err)

@@ -177,6 +177,7 @@ func (e *ExecutionPayload) UnmarshalSSZ(buf []byte) error {
 		baseFeePerGasBE[i] = buf[471-i]
 	}
 	e.BaseFeePerGas = &uint256.Int{}
+	e.BaseFeePerGas.SetBytes32(baseFeePerGasBE)
 
 	// Field (12) 'BlockHash'
 	copy(e.BlockHash[:], buf[472:504])

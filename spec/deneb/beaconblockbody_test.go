@@ -297,6 +297,9 @@ func TestBeaconBlockBodySpec(t *testing.T) {
 
 				unmarshalled := &deneb.BeaconBlockBody{}
 				require.NoError(t, unmarshalled.UnmarshalSSZ(specSSZ))
+				remarshalled, err := unmarshalled.MarshalSSZ()
+				require.NoError(t, err)
+				require.Equal(t, specSSZ, remarshalled)
 
 				ssz, err := res.MarshalSSZ()
 				require.NoError(t, err)

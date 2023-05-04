@@ -150,6 +150,12 @@ func TestProposerSlashingSpec(t *testing.T) {
 				specSSZ, err = snappy.Decode(specSSZ, compressedSpecSSZ)
 				require.NoError(t, err)
 
+				unmarshalled := &phase0.ProposerSlashing{}
+				require.NoError(t, unmarshalled.UnmarshalSSZ(specSSZ))
+				remarshalled, err := unmarshalled.MarshalSSZ()
+				require.NoError(t, err)
+				require.Equal(t, specSSZ, remarshalled)
+
 				ssz, err := res.MarshalSSZ()
 				require.NoError(t, err)
 				require.Equal(t, specSSZ, ssz)

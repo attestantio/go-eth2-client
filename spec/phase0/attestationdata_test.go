@@ -16,6 +16,7 @@ package phase0_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -224,10 +225,21 @@ func TestAttestationDataSpec(t *testing.T) {
 				specSSZ, err = snappy.Decode(specSSZ, compressedSpecSSZ)
 				require.NoError(t, err)
 
-				// Ensure this matches the expected hash tree root.
+				unmarshalled := &phase0.AttestationData{}
+				require.NoError(t, unmarshalled.UnmarshalSSZ(specSSZ))
+				remarshalled, err := unmarshalled.MarshalSSZ()
+				require.NoError(t, err)
+				require.Equal(t, specSSZ, remarshalled)
+
 				ssz, err := res.MarshalSSZ()
 				require.NoError(t, err)
 				require.Equal(t, specSSZ, ssz)
+
+				root, err := res.HashTreeRoot()
+				require.NoError(t, err)
+				rootsYAML, err := os.ReadFile(filepath.Join(path, "roots.yaml"))
+				require.NoError(t, err)
+				require.Equal(t, string(rootsYAML), fmt.Sprintf("{root: '%#x'}\n", root))
 			})
 		}
 		return nil

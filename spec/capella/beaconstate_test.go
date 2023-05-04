@@ -48,8 +48,12 @@ func TestBeaconStateSpec(t *testing.T) {
 				var specSSZ []byte
 				specSSZ, err = snappy.Decode(specSSZ, compressedSpecSSZ)
 				require.NoError(t, err)
+
 				unmarshalled := &capella.BeaconState{}
 				require.NoError(t, unmarshalled.UnmarshalSSZ(specSSZ))
+				remarshalled, err := unmarshalled.MarshalSSZ()
+				require.NoError(t, err)
+				require.Equal(t, specSSZ, remarshalled)
 
 				ssz, err := res.MarshalSSZ()
 				require.NoError(t, err)
