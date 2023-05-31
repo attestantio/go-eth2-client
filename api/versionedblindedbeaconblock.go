@@ -34,7 +34,7 @@ type VersionedBlindedBeaconBlock struct {
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBlindedBeaconBlock) IsEmpty() bool {
-	return v.Bellatrix == nil
+	return v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil
 }
 
 // Slot returns the slot of the beacon block.
