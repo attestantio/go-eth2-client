@@ -43,6 +43,7 @@ type executionPayloadHeaderJSON struct {
 	BlockHash        string `json:"block_hash"`
 	TransactionsRoot string `json:"transactions_root"`
 	WithdrawalsRoot  string `json:"withdrawals_root"`
+	DataGasUsed      string `json:"data_gas_used"`
 	ExcessDataGas    string `json:"excess_data_gas"`
 }
 
@@ -69,7 +70,8 @@ func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
 		BlockHash:        fmt.Sprintf("%#x", e.BlockHash),
 		TransactionsRoot: e.TransactionsRoot.String(),
 		WithdrawalsRoot:  e.WithdrawalsRoot.String(),
-		ExcessDataGas:    e.ExcessDataGas.Dec(),
+		DataGasUsed:      fmt.Sprintf("%d", e.DataGasUsed),
+		ExcessDataGas:    fmt.Sprintf("%d", e.ExcessDataGas),
 	})
 }
 
@@ -263,10 +265,23 @@ func (e *ExecutionPayloadHeader) unpack(data *executionPayloadHeaderJSON) error 
 	if data.ExcessDataGas == "" {
 		return errors.New("excess data gas missing")
 	}
-	e.ExcessDataGas, err = uint256.FromDecimal(data.ExcessDataGas)
+	if data.DataGasUsed == "" {
+		return errors.New("data gas used missing")
+	}
+	dataGasUsed, err := strconv.ParseUint(data.DataGasUsed, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for data gas used")
+	}
+	e.DataGasUsed = dataGasUsed
+
+	if data.ExcessDataGas == "" {
+		return errors.New("excess data gas used missing")
+	}
+	excessDataGas, err := strconv.ParseUint(data.ExcessDataGas, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for excess data gas")
 	}
+	e.ExcessDataGas = excessDataGas
 
 	return nil
 }

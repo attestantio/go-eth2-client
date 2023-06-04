@@ -38,7 +38,8 @@ type executionPayloadYAML struct {
 	BlockHash     string                `yaml:"block_hash"`
 	Transactions  []string              `yaml:"transactions"`
 	Withdrawals   []*capella.Withdrawal `yaml:"withdrawals"`
-	ExcessDataGas string                `yaml:"excess_data_gas"`
+	DataGasUsed   uint64                `yaml:"data_gas_used"`
+	ExcessDataGas uint64                `yaml:"excess_data_gas"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
@@ -69,7 +70,8 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 		BlockHash:     fmt.Sprintf("%#x", e.BlockHash),
 		Transactions:  transactions,
 		Withdrawals:   e.Withdrawals,
-		ExcessDataGas: e.ExcessDataGas.Dec(),
+		DataGasUsed:   e.DataGasUsed,
+		ExcessDataGas: e.ExcessDataGas,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

@@ -8,6 +8,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
+	"github.com/pkg/errors"
 )
 
 // MarshalSSZ ssz marshals the BeaconBlockBody object
@@ -169,8 +170,8 @@ func (b *BeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 
 	// Field (11) 'BlobKzgCommitments'
-	if size := len(b.BlobKzgCommitments); size > 4 {
-		err = ssz.ErrListTooBigFn("BeaconBlockBody.BlobKzgCommitments", size, 4)
+	if size := len(b.BlobKzgCommitments); size > 4096 {
+		err = ssz.ErrListTooBigFn("BeaconBlockBody.BlobKzgCommitments", size, 4096)
 		return
 	}
 	for ii := 0; ii < len(b.BlobKzgCommitments); ii++ {
@@ -262,7 +263,7 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 		buf = tail[o3:o4]
 		num, err := ssz.DivideInt2(len(buf), 416, 16)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "invalid size for proposer slashings")
 		}
 		b.ProposerSlashings = make([]*phase0.ProposerSlashing, num)
 		for ii := 0; ii < num; ii++ {
@@ -324,7 +325,7 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 		buf = tail[o6:o7]
 		num, err := ssz.DivideInt2(len(buf), 1240, 16)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "invalid size for deposits")
 		}
 		b.Deposits = make([]*phase0.Deposit, num)
 		for ii := 0; ii < num; ii++ {
@@ -342,7 +343,7 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 		buf = tail[o7:o9]
 		num, err := ssz.DivideInt2(len(buf), 112, 16)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "invalid size for voluntary exits")
 		}
 		b.VoluntaryExits = make([]*phase0.SignedVoluntaryExit, num)
 		for ii := 0; ii < num; ii++ {
@@ -371,7 +372,7 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 		buf = tail[o10:o11]
 		num, err := ssz.DivideInt2(len(buf), 172, 16)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "invalid size for bls to execution changes")
 		}
 		b.BLSToExecutionChanges = make([]*capella.SignedBLSToExecutionChange, num)
 		for ii := 0; ii < num; ii++ {
@@ -387,9 +388,9 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 	// Field (11) 'BlobKzgCommitments'
 	{
 		buf = tail[o11:]
-		num, err := ssz.DivideInt2(len(buf), 48, 4)
+		num, err := ssz.DivideInt2(len(buf), 48, 4096)
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "invalid size %d for blob kzg commitments", len(buf))
 		}
 		b.BlobKzgCommitments = make([]KzgCommitment, num)
 		for ii := 0; ii < num; ii++ {
@@ -573,8 +574,8 @@ func (b *BeaconBlockBody) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 
 	// Field (11) 'BlobKzgCommitments'
 	{
-		if size := len(b.BlobKzgCommitments); size > 4 {
-			err = ssz.ErrListTooBigFn("BeaconBlockBody.BlobKzgCommitments", size, 4)
+		if size := len(b.BlobKzgCommitments); size > 4096 {
+			err = ssz.ErrListTooBigFn("BeaconBlockBody.BlobKzgCommitments", size, 4096)
 			return
 		}
 		subIndx := hh.Index()
@@ -582,7 +583,7 @@ func (b *BeaconBlockBody) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 			hh.PutBytes(i[:])
 		}
 		numItems := uint64(len(b.BlobKzgCommitments))
-		hh.MerkleizeWithMixin(subIndx, numItems, 4)
+		hh.MerkleizeWithMixin(subIndx, numItems, 4096)
 	}
 
 	hh.Merkleize(indx)

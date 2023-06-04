@@ -24,6 +24,8 @@ require (
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.5 // indirect
+	github.com/huandu/go-clone v1.6.0 // indirect
+	github.com/huandu/go-clone/generic v1.6.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.1.2 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

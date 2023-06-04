@@ -39,7 +39,8 @@ type ExecutionPayloadHeader struct {
 	BlockHash        phase0.Hash32 `ssz-size:"32"`
 	TransactionsRoot phase0.Root   `ssz-size:"32"`
 	WithdrawalsRoot  phase0.Root   `ssz-size:"32"`
-	ExcessDataGas    *uint256.Int  `ssz-size:"32"`
+	DataGasUsed      uint64
+	ExcessDataGas    uint64
 }
 
 // String returns a string version of the structure.
