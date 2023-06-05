@@ -125,7 +125,9 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	s.addExtraHeaders(req)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
-	req.Header.Set("User-Agent", "go-eth2-client/0.16.4")
+	if req.Header.Get("User-Agent") == "" {
+		req.Header.Set("User-Agent", "go-eth2-client/0.16.5")
+	}
 
 	resp, err := s.client.Do(req)
 	if err != nil {
