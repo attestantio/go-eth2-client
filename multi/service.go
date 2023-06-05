@@ -71,6 +71,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 			http.WithLogLevel(parameters.logLevel),
 			http.WithTimeout(parameters.timeout),
 			http.WithAddress(address),
+			http.WithExtraHeaders(parameters.extraHeaders),
 		)
 		if err != nil {
 			log.Error().Str("provider", address).Msg("Provider not present; dropping from rotation")
