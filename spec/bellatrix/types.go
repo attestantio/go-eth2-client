@@ -14,52 +14,64 @@
 package bellatrix
 
 import (
+	"bytes"
+	"encoding/hex"
 	"fmt"
 
-	"golang.org/x/crypto/sha3"
+	"github.com/pkg/errors"
 )
 
 // Transaction is an opaque execution layer transaction.
 type Transaction []byte
 
-// ExecutionAddress is a execution address.
-type ExecutionAddress [20]byte
-
-// String returns an EIP-55 string version of the address.
-func (a ExecutionAddress) String() string {
-	bytes := []byte(fmt.Sprintf("%x", a[:]))
-
-	keccak := sha3.NewLegacyKeccak256()
-	keccak.Write(bytes)
-	hash := keccak.Sum(nil)
-
-	for i := 0; i < len(bytes); i++ {
-		hashByte := hash[i/2]
-		if i%2 == 0 {
-			hashByte >>= 4
-		} else {
-			hashByte &= 0xf
-		}
-		if bytes[i] > '9' && hashByte > 7 {
-			bytes[i] -= 32
-		}
+// UnmarshalJSON implements json.Unmarshaler.
+func (t Transaction) UnmarshalJSON(input []byte) error {
+	if len(input) == 0 {
+		return errors.New("input missing")
 	}
 
-	return fmt.Sprintf("0x%s", string(bytes))
+	if !bytes.HasPrefix(input, []byte{'"', '0', 'x'}) {
+		return errors.New("invalid prefix")
+	}
+	if !bytes.HasSuffix(input, []byte{'"'}) {
+		return errors.New("invalid suffix")
+	}
+
+	_, err := hex.Decode(t, input[3:len(input)-1])
+	if err != nil {
+		return errors.Wrapf(err, "invalid value %s", string(input[3:len(input)-1]))
+	}
+
+	return nil
 }
 
-// Format formats the execution address.
-func (a ExecutionAddress) Format(state fmt.State, v rune) {
-	format := string(v)
-	switch v {
-	case 's':
-		fmt.Fprint(state, a.String())
-	case 'x', 'X':
-		if state.Flag('#') {
-			format = "#" + format
-		}
-		fmt.Fprintf(state, "%"+format, a[:])
-	default:
-		fmt.Fprintf(state, "%"+format, a[:])
+// MarshalJSON implements json.Marshaler.
+func (t Transaction) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%#x"`, t)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (t *Transaction) UnmarshalYAML(input []byte) error {
+	if len(input) == 0 {
+		return errors.New("input missing")
 	}
+
+	if !bytes.HasPrefix(input, []byte{'\'', '0', 'x'}) {
+		return errors.New("invalid prefix")
+	}
+	if !bytes.HasSuffix(input, []byte{'\''}) {
+		return errors.New("invalid suffix")
+	}
+
+	_, err := hex.Decode(*t, input[3:len(input)-1])
+	if err != nil {
+		return errors.Wrapf(err, "invalid value %s", string(input[3:len(input)-1]))
+	}
+
+	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (t Transaction) MarshalYAML() ([]byte, error) {
+	return []byte(fmt.Sprintf(`'%#x'`, t)), nil
 }

@@ -15,8 +15,10 @@ package deneb
 
 import (
 	"bytes"
+	"encoding/json"
 
 	"github.com/goccy/go-yaml"
+	"github.com/pkg/errors"
 )
 
 // blobIdentifierYAML is the spec representation of the struct.
@@ -34,15 +36,22 @@ func (b *BlobIdentifier) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
 func (b *BlobIdentifier) UnmarshalYAML(input []byte) error {
-	// We unmarshal to the JSON struct to save on duplicate code.
+	// This is very inefficient, but YAML is only used for spec tests so we do this
+	// rather than maintain a custom YAML unmarshaller.
 	var data blobIdentifierJSON
 	if err := yaml.Unmarshal(input, &data); err != nil {
-		return err
+		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
-	return b.unpack(&data)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal JSON")
+	}
+
+	return b.UnmarshalJSON(bytes)
 }

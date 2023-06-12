@@ -61,7 +61,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 
 	s := &Service{
 		name:        parameters.name,
-		genesisTime: time.Now(),
+		genesisTime: parameters.genesisTime,
 		timeout:     parameters.timeout,
 		nodeVersion: "mock",
 

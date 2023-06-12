@@ -15,9 +15,11 @@ package deneb
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 
 	"github.com/goccy/go-yaml"
+	"github.com/pkg/errors"
 )
 
 // blobSidecarYAML is the spec representation of the struct.
@@ -52,10 +54,16 @@ func (b *BlobSidecar) MarshalYAML() ([]byte, error) {
 
 // UnmarshalYAML implements yaml.Unmarshaler.
 func (b *BlobSidecar) UnmarshalYAML(input []byte) error {
-	// We unmarshal to the JSON struct to save on duplicate code.
+	// This is very inefficient, but YAML is only used for spec tests so we do this
+	// rather than maintain a custom YAML unmarshaller.
 	var data blobSidecarJSON
 	if err := yaml.Unmarshal(input, &data); err != nil {
-		return err
+		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
-	return b.unpack(&data)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal JSON")
+	}
+
+	return b.UnmarshalJSON(bytes)
 }

@@ -14,138 +14,76 @@
 package deneb
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 
+	"github.com/attestantio/go-eth2-client/codecs"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // blobSidecarJSON is the spec representation of the struct.
 type blobSidecarJSON struct {
-	BlockRoot       string `json:"block_root"`
-	Index           string `json:"index"`
-	Slot            string `json:"slot"`
-	BlockParentRoot string `json:"block_parent_root"`
-	ProposerIndex   string `json:"proposer_index"`
-	Blob            string `json:"blob"`
-	KzgCommitment   string `json:"kzg_commitment"`
-	KzgProof        string `json:"kzg_proof"`
+	BlockRoot       phase0.Root   `json:"block_root"`
+	Index           string        `json:"index"`
+	Slot            string        `json:"slot"`
+	BlockParentRoot phase0.Root   `json:"block_parent_root"`
+	ProposerIndex   string        `json:"proposer_index"`
+	Blob            Blob          `json:"blob"`
+	KzgCommitment   KzgCommitment `json:"kzg_commitment"`
+	KzgProof        KzgProof      `json:"kzg_proof"`
 }
 
-// MarshalJSON implements json.Marshaler.
 func (b *BlobSidecar) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&blobSidecarJSON{
-		BlockRoot:       b.BlockRoot.String(),
+		BlockRoot:       b.BlockRoot,
 		Index:           fmt.Sprintf("%d", b.Index),
 		Slot:            fmt.Sprintf("%d", b.Slot),
-		BlockParentRoot: b.BlockParentRoot.String(),
+		BlockParentRoot: b.BlockParentRoot,
 		ProposerIndex:   fmt.Sprintf("%d", b.ProposerIndex),
-		Blob:            fmt.Sprintf("%#x", b.Blob),
-		KzgCommitment:   b.KzgCommitment.String(),
-		KzgProof:        b.KzgProof.String(),
+		Blob:            b.Blob,
+		KzgCommitment:   b.KzgCommitment,
+		KzgProof:        b.KzgProof,
 	})
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
 func (b *BlobSidecar) UnmarshalJSON(input []byte) error {
-	var data blobSidecarJSON
-	if err := json.Unmarshal(input, &data); err != nil {
-		return errors.Wrap(err, "invalid JSON")
-	}
-	return b.unpack(&data)
-}
-
-func (b *BlobSidecar) unpack(data *blobSidecarJSON) error {
-	if data.BlockRoot == "" {
-		return errors.New("block root missing")
-	}
-	blockRoot, err := hex.DecodeString(strings.TrimPrefix(data.BlockRoot, "0x"))
+	raw, err := codecs.RawJSON(&blobSidecarJSON{}, input)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for block root")
+		return err
 	}
-	if len(blockRoot) != phase0.RootLength {
-		return errors.New("incorrect length for block root")
-	}
-	copy(b.BlockRoot[:], blockRoot)
 
-	if data.Index == "" {
-		return errors.New("index missing")
+	if err := b.BlockRoot.UnmarshalJSON(raw["block_root"]); err != nil {
+		return errors.Wrap(err, "block_root")
 	}
-	index, err := strconv.ParseUint(data.Index, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for index")
-	}
-	b.Index = BlobIndex(index)
 
-	if data.Slot == "" {
-		return errors.New("slot missing")
+	if err := b.Index.UnmarshalJSON(raw["index"]); err != nil {
+		return errors.Wrap(err, "index")
 	}
-	slot, err := strconv.ParseUint(data.Slot, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for slot")
-	}
-	b.Slot = phase0.Slot(slot)
 
-	if data.BlockParentRoot == "" {
-		return errors.New("block parent root missing")
+	if err := b.Slot.UnmarshalJSON(raw["slot"]); err != nil {
+		return errors.Wrap(err, "slot")
 	}
-	blockParentRoot, err := hex.DecodeString(strings.TrimPrefix(data.BlockParentRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for block parent root")
-	}
-	if len(blockParentRoot) != phase0.RootLength {
-		return errors.New("incorrect length for block parent root")
-	}
-	copy(b.BlockParentRoot[:], blockParentRoot)
 
-	if data.ProposerIndex == "" {
-		return errors.New("proposer index missing")
+	if err := b.BlockParentRoot.UnmarshalJSON(raw["block_parent_root"]); err != nil {
+		return errors.Wrap(err, "block_parent_root")
 	}
-	proposerIndex, err := strconv.ParseUint(data.ProposerIndex, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for proposer index")
-	}
-	b.ProposerIndex = phase0.ValidatorIndex(proposerIndex)
 
-	if data.Blob == "" {
-		return errors.New("blob missing")
+	if err := b.ProposerIndex.UnmarshalJSON(raw["proposer_index"]); err != nil {
+		return errors.Wrap(err, "proposer_index")
 	}
-	blob, err := hex.DecodeString(strings.TrimPrefix(data.Blob, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for blob")
-	}
-	if len(blob) != BlobLength {
-		return errors.New("incorrect length for blob")
-	}
-	copy(b.Blob[:], blob)
 
-	if data.KzgCommitment == "" {
-		return errors.New("kzg commitment missing")
+	if err := b.Blob.UnmarshalJSON(raw["blob"]); err != nil {
+		return errors.Wrap(err, "blob")
 	}
-	KzgCommitment, err := hex.DecodeString(strings.TrimPrefix(data.KzgCommitment, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for kzg commitment")
-	}
-	if len(KzgCommitment) != KzgCommitmentLength {
-		return errors.New("incorrect length for kzg commitment")
-	}
-	copy(b.KzgCommitment[:], KzgCommitment)
 
-	if data.KzgProof == "" {
-		return errors.New("kzg proof missing")
+	if err := b.KzgCommitment.UnmarshalJSON(raw["kzg_commitment"]); err != nil {
+		return errors.Wrap(err, "kzg_commitment")
 	}
-	KzgProof, err := hex.DecodeString(strings.TrimPrefix(data.KzgProof, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for kzg proof")
+
+	if err := b.KzgProof.UnmarshalJSON(raw["kzg_proof"]); err != nil {
+		return errors.Wrap(err, "kzg_proof")
 	}
-	if len(KzgProof) != KzgProofLength {
-		return errors.New("incorrect length for kzg proof")
-	}
-	copy(b.KzgProof[:], KzgProof)
 
 	return nil
 }

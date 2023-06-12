@@ -46,12 +46,12 @@ func TestSignedBeaconBlockJSON(t *testing.T) {
 		{
 			name:  "MessageWrongType",
 			input: []byte(`{"message":true,"signature":"0x606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf"}`),
-			err:   "invalid JSON: invalid JSON: json: cannot unmarshal bool into Go value of type deneb.beaconBlockJSON",
+			err:   "invalid JSON: invalid JSON: json: cannot unmarshal bool into Go value of type map[string]json.RawMessage",
 		},
 		{
 			name:  "MessageInvalid",
 			input: []byte(`{"message":{},"signature":"0x606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf"}`),
-			err:   "invalid JSON: slot missing",
+			err:   "invalid JSON: slot: missing",
 		},
 		{
 			name:  "SignatureMissing",

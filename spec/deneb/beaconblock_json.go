@@ -14,13 +14,10 @@
 package deneb
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/codecs"
 	"github.com/pkg/errors"
 )
 
@@ -46,56 +43,31 @@ func (b *BeaconBlock) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *BeaconBlock) UnmarshalJSON(input []byte) error {
-	var data beaconBlockJSON
-	if err := json.Unmarshal(input, &data); err != nil {
-		return errors.Wrap(err, "invalid JSON")
+	raw, err := codecs.RawJSON(&beaconBlockJSON{}, input)
+	if err != nil {
+		return err
 	}
-	return b.unpack(&data)
-}
 
-func (b *BeaconBlock) unpack(data *beaconBlockJSON) error {
-	if data.Slot == "" {
-		return errors.New("slot missing")
+	if err := b.Slot.UnmarshalJSON(raw["slot"]); err != nil {
+		return errors.Wrap(err, "slot")
 	}
-	slot, err := strconv.ParseUint(data.Slot, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for slot")
+
+	if err := b.ProposerIndex.UnmarshalJSON(raw["proposer_index"]); err != nil {
+		return errors.Wrap(err, "proposer_index")
 	}
-	b.Slot = phase0.Slot(slot)
-	if data.ProposerIndex == "" {
-		return errors.New("proposer index missing")
+
+	if err := b.ParentRoot.UnmarshalJSON(raw["parent_root"]); err != nil {
+		return errors.Wrap(err, "parent_root")
 	}
-	proposerIndex, err := strconv.ParseUint(data.ProposerIndex, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for proposer index")
+
+	if err := b.StateRoot.UnmarshalJSON(raw["state_root"]); err != nil {
+		return errors.Wrap(err, "state_root")
 	}
-	b.ProposerIndex = phase0.ValidatorIndex(proposerIndex)
-	if data.ParentRoot == "" {
-		return errors.New("parent root missing")
+
+	b.Body = &BeaconBlockBody{}
+	if err := b.Body.UnmarshalJSON(raw["body"]); err != nil {
+		return errors.Wrap(err, "body")
 	}
-	parentRoot, err := hex.DecodeString(strings.TrimPrefix(data.ParentRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for parent root")
-	}
-	if len(parentRoot) != phase0.RootLength {
-		return errors.New("incorrect length for parent root")
-	}
-	copy(b.ParentRoot[:], parentRoot)
-	if data.StateRoot == "" {
-		return errors.New("state root missing")
-	}
-	stateRoot, err := hex.DecodeString(strings.TrimPrefix(data.StateRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for state root")
-	}
-	if len(stateRoot) != phase0.RootLength {
-		return errors.New("incorrect length for state root")
-	}
-	copy(b.StateRoot[:], stateRoot)
-	if data.Body == nil {
-		return errors.New("body missing")
-	}
-	b.Body = data.Body
 
 	return nil
 }

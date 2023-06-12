@@ -25,7 +25,7 @@ type BlobSidecar struct {
 	BlockRoot       phase0.Root `ssz-size:"32"`
 	Index           BlobIndex
 	Slot            phase0.Slot
-	BlockParentRoot phase0.Root `ssz-size:"32"`
+	BlockParentRoot phase0.Root ` ssz-size:"32"`
 	ProposerIndex   phase0.ValidatorIndex
 	Blob            Blob          `ssz-size:"131072"`
 	KzgCommitment   KzgCommitment `ssz-size:"48"`

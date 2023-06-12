@@ -14,11 +14,12 @@
 package deneb
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"strings"
 
+	"github.com/attestantio/go-eth2-client/codecs"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -27,7 +28,7 @@ import (
 
 // beaconBlockBodyJSON is the spec representation of the struct.
 type beaconBlockBodyJSON struct {
-	RANDAOReveal          string                                `json:"randao_reveal"`
+	RANDAOReveal          phase0.BLSSignature                   `json:"randao_reveal"`
 	ETH1Data              *phase0.ETH1Data                      `json:"eth1_data"`
 	Graffiti              string                                `json:"graffiti"`
 	ProposerSlashings     []*phase0.ProposerSlashing            `json:"proposer_slashings"`
@@ -49,7 +50,7 @@ func (b *BeaconBlockBody) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&beaconBlockBodyJSON{
-		RANDAOReveal:          fmt.Sprintf("%#x", b.RANDAOReveal),
+		RANDAOReveal:          b.RANDAOReveal,
 		ETH1Data:              b.ETH1Data,
 		Graffiti:              fmt.Sprintf("%#x", b.Graffiti),
 		ProposerSlashings:     b.ProposerSlashings,
@@ -66,82 +67,71 @@ func (b *BeaconBlockBody) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
-	var data beaconBlockBodyJSON
-	if err := json.Unmarshal(input, &data); err != nil {
-		return errors.Wrap(err, "invalid JSON")
+	raw, err := codecs.RawJSON(&beaconBlockBodyJSON{}, input)
+	if err != nil {
+		return err
 	}
-	return b.unpack(&data)
-}
 
-func (b *BeaconBlockBody) unpack(data *beaconBlockBodyJSON) error {
-	if data.RANDAOReveal == "" {
-		return errors.New("RANDAO reveal missing")
+	if err := b.RANDAOReveal.UnmarshalJSON(raw["randao_reveal"]); err != nil {
+		return errors.Wrap(err, "randao_reveal")
 	}
-	randaoReveal, err := hex.DecodeString(strings.TrimPrefix(data.RANDAOReveal, "0x"))
+
+	if err := json.Unmarshal(raw["eth1_data"], &b.ETH1Data); err != nil {
+		return errors.Wrap(err, "eth1_data")
+	}
+
+	graffiti := raw["graffiti"]
+	if !bytes.HasPrefix(graffiti, []byte{'"', '0', 'x'}) {
+		return errors.New("graffiti: invalid prefix")
+	}
+	if !bytes.HasSuffix(graffiti, []byte{'"'}) {
+		return errors.New("graffiti: invalid suffix")
+	}
+	if len(graffiti) != 1+2+32*2+1 {
+		return errors.New("graffiti: incorrect length")
+	}
+	length, err := hex.Decode(b.Graffiti[:], graffiti[3:3+32*2])
 	if err != nil {
-		return errors.Wrap(err, "invalid value for RANDAO reveal")
+		return errors.Wrap(err, "graffiti")
 	}
-	if len(randaoReveal) != phase0.SignatureLength {
-		return errors.New("incorrect length for RANDAO reveal")
+	if length != 32 {
+		return errors.New("graffiti: incorrect length")
 	}
-	copy(b.RANDAOReveal[:], randaoReveal)
-	if data.ETH1Data == nil {
-		return errors.New("ETH1 data missing")
+
+	if err := json.Unmarshal(raw["proposer_slashings"], &b.ProposerSlashings); err != nil {
+		return errors.Wrap(err, "proposer_slashings")
 	}
-	b.ETH1Data = data.ETH1Data
-	if data.Graffiti == "" {
-		return errors.New("graffiti missing")
+
+	if err := json.Unmarshal(raw["attester_slashings"], &b.AttesterSlashings); err != nil {
+		return errors.Wrap(err, "attester_slashings")
 	}
-	graffiti, err := hex.DecodeString(strings.TrimPrefix(data.Graffiti, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for graffiti")
+
+	if err := json.Unmarshal(raw["attestations"], &b.Attestations); err != nil {
+		return errors.Wrap(err, "attestations")
 	}
-	if len(graffiti) != phase0.GraffitiLength {
-		return errors.New("incorrect length for graffiti")
+
+	if err := json.Unmarshal(raw["deposits"], &b.Deposits); err != nil {
+		return errors.Wrap(err, "deposits")
 	}
-	copy(b.Graffiti[:], graffiti)
-	if data.ProposerSlashings == nil {
-		return errors.New("proposer slashings missing")
+
+	if err := json.Unmarshal(raw["voluntary_exits"], &b.VoluntaryExits); err != nil {
+		return errors.Wrap(err, "voluntary_exits")
 	}
-	b.ProposerSlashings = data.ProposerSlashings
-	if data.AttesterSlashings == nil {
-		return errors.New("attester slashings missing")
+
+	if err := json.Unmarshal(raw["sync_aggregate"], &b.SyncAggregate); err != nil {
+		return errors.Wrap(err, "sync_aggregate")
 	}
-	b.AttesterSlashings = data.AttesterSlashings
-	if data.Attestations == nil {
-		return errors.New("attestations missing")
+
+	if err := json.Unmarshal(raw["execution_payload"], &b.ExecutionPayload); err != nil {
+		return errors.Wrap(err, "execution_payload")
 	}
-	b.Attestations = data.Attestations
-	if data.Deposits == nil {
-		return errors.New("deposits missing")
+
+	if err := json.Unmarshal(raw["bls_to_execution_changes"], &b.BLSToExecutionChanges); err != nil {
+		return errors.Wrap(err, "bls_to_execution_changes")
 	}
-	b.Deposits = data.Deposits
-	if data.VoluntaryExits == nil {
-		return errors.New("voluntary exits missing")
-	}
-	b.VoluntaryExits = data.VoluntaryExits
-	if data.SyncAggregate == nil {
-		return errors.New("sync aggregate missing")
-	}
-	b.SyncAggregate = data.SyncAggregate
-	if data.ExecutionPayload == nil {
-		return errors.New("execution payload missing")
-	}
-	b.ExecutionPayload = data.ExecutionPayload
-	b.BLSToExecutionChanges = data.BLSToExecutionChanges
-	if data.BlobKzgCommitments == nil {
-		return errors.New("blob kzg commitments missing")
-	}
-	b.BlobKzgCommitments = make([]KzgCommitment, len(data.BlobKzgCommitments))
-	for i := range data.BlobKzgCommitments {
-		data, err := hex.DecodeString(strings.TrimPrefix(data.BlobKzgCommitments[i], "0x"))
-		if err != nil {
-			return errors.Wrap(err, "failed to parse blob KZG commitment")
-		}
-		if len(data) != KzgCommitmentLength {
-			return errors.New("incorrect length for blob KZG commitment")
-		}
-		copy(b.BlobKzgCommitments[i][:], data)
+
+	if err := json.Unmarshal(raw["blob_kzg_commitments"], &b.BlobKzgCommitments); err != nil {
+		return errors.Wrap(err, "blob_kzg_commitments")
 	}
 
 	return nil

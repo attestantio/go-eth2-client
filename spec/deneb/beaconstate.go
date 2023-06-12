@@ -52,12 +52,12 @@ type BeaconState struct {
 	LatestExecutionPayloadHeader *ExecutionPayloadHeader
 	NextWithdrawalIndex          capella.WithdrawalIndex
 	NextWithdrawalValidatorIndex phase0.ValidatorIndex
-	HistoricalSummaries          []*capella.HistoricalSummary `ssz-max:"16777216" ssz-size:"?,32"`
+	HistoricalSummaries          []*capella.HistoricalSummary `ssz-max:"16777216"`
 }
 
 // String returns a string version of the structure.
-func (s *BeaconState) String() string {
-	data, err := yaml.Marshal(s)
+func (b *BeaconState) String() string {
+	data, err := yaml.Marshal(b)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

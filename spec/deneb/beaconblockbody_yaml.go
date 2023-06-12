@@ -15,12 +15,14 @@ package deneb
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
+	"github.com/pkg/errors"
 )
 
 // beaconBlockBodyYAML is the spec representation of the struct.
@@ -47,7 +49,7 @@ func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
 	}
 
 	yamlBytes, err := yaml.MarshalWithOptions(&beaconBlockBodyYAML{
-		RANDAOReveal:          fmt.Sprintf("%#x", b.RANDAOReveal),
+		RANDAOReveal:          b.RANDAOReveal.String(),
 		ETH1Data:              b.ETH1Data,
 		Graffiti:              fmt.Sprintf("%#x", b.Graffiti),
 		ProposerSlashings:     b.ProposerSlashings,
@@ -68,10 +70,16 @@ func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
 
 // UnmarshalYAML implements yaml.Unmarshaler.
 func (b *BeaconBlockBody) UnmarshalYAML(input []byte) error {
-	// We unmarshal to the JSON struct to save on duplicate code.
+	// This is very inefficient, but YAML is only used for spec tests so we do this
+	// rather than maintain a custom YAML unmarshaller.
 	var data beaconBlockBodyJSON
 	if err := yaml.Unmarshal(input, &data); err != nil {
-		return err
+		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
-	return b.unpack(&data)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal JSON")
+	}
+
+	return b.UnmarshalJSON(bytes)
 }

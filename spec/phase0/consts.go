@@ -25,9 +25,6 @@ const RootLength = 32
 // PublicKeyLength is the number of bytes in a public key.
 const PublicKeyLength = 48
 
-// SignatureLength is the number of bytes in a signature.
-const SignatureLength = 96
-
 // GraffitiLength is the number of bytes in a block graffiti.
 const GraffitiLength = 32
 

@@ -14,60 +14,40 @@
 package deneb
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"strconv"
-	"strings"
 
+	"github.com/attestantio/go-eth2-client/codecs"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // blobIdentifierJSON is the spec representation of the struct.
 type blobIdentifierJSON struct {
-	BlockRoot string `json:"block_root"`
-	Index     string `json:"index"`
+	BlockRoot phase0.Root `json:"block_root"`
+	Index     string      `json:"index"`
 }
 
-// MarshalJSON implements json.Marshaler.
 func (b *BlobIdentifier) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&blobIdentifierJSON{
-		BlockRoot: b.BlockRoot.String(),
+		BlockRoot: b.BlockRoot,
 		Index:     fmt.Sprintf("%d", b.Index),
 	})
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
 func (b *BlobIdentifier) UnmarshalJSON(input []byte) error {
-	var data blobIdentifierJSON
-	if err := json.Unmarshal(input, &data); err != nil {
-		return errors.Wrap(err, "invalid JSON")
-	}
-	return b.unpack(&data)
-}
-
-func (b *BlobIdentifier) unpack(data *blobIdentifierJSON) error {
-	if data.BlockRoot == "" {
-		return errors.New("block root missing")
-	}
-	blockRoot, err := hex.DecodeString(strings.TrimPrefix(data.BlockRoot, "0x"))
+	raw, err := codecs.RawJSON(&blobIdentifierJSON{}, input)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for block root")
+		return err
 	}
-	if len(blockRoot) != phase0.RootLength {
-		return errors.New("incorrect length for block root")
-	}
-	copy(b.BlockRoot[:], blockRoot)
 
-	if data.Index == "" {
-		return errors.New("index missing")
+	if err := b.BlockRoot.UnmarshalJSON(raw["block_root"]); err != nil {
+		return errors.Wrap(err, "block_root")
 	}
-	index, err := strconv.ParseUint(data.Index, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for index")
+
+	if err := b.Index.UnmarshalJSON(raw["index"]); err != nil {
+		return errors.Wrap(err, "index")
 	}
-	b.Index = BlobIndex(index)
 
 	return nil
 }

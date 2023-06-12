@@ -13,9 +13,6 @@
 
 package altair
 
-// ParticipationFlags are validator participation flags in an epoch.
-type ParticipationFlags uint8
-
 // ParticipationFlag is an individual particiation flag for a validator.
 type ParticipationFlag int
 

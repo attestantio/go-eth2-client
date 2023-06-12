@@ -37,42 +37,42 @@ func TestBlobIdentifierJSON(t *testing.T) {
 		{
 			name:  "JSONBad",
 			input: []byte("[]"),
-			err:   "invalid JSON: json: cannot unmarshal array into Go value of type deneb.blobIdentifierJSON",
+			err:   "invalid JSON: json: cannot unmarshal array into Go value of type map[string]json.RawMessage",
 		},
 		{
 			name:  "BlockRootMissing",
 			input: []byte(`{"index":"17189299593882149153"}`),
-			err:   "block root missing",
+			err:   "block_root: missing",
 		},
 		{
 			name:  "BlockRootWrongType",
 			input: []byte(`{"block_root":true,"index":"17189299593882149153"}`),
-			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field blobIdentifierJSON.block_root of type string",
+			err:   "block_root: invalid prefix",
 		},
 		{
 			name:  "BlockRootInvalid",
 			input: []byte(`{"block_root":"true","index":"17189299593882149153"}`),
-			err:   "invalid value for block root: encoding/hex: invalid byte: U+0074 't'",
+			err:   "block_root: invalid prefix",
 		},
 		{
 			name:  "BlockRootIncorrectLength",
 			input: []byte(`{"block_root":"0x813b05d7c10dc4bdf45201a3539ec805ff4e016fbadd98a8b24cbf1f428ec7","index":"17189299593882149153"}`),
-			err:   "incorrect length for block root",
+			err:   "block_root: incorrect length",
 		},
 		{
 			name:  "IndexMissing",
 			input: []byte(`{"block_root":"0x813b05d7c10dc4bdf45201a3539ec805ff4e016fbadd98a8b24cbf1f428ec799"}`),
-			err:   "index missing",
+			err:   "index: missing",
 		},
 		{
 			name:  "IndexWrongType",
 			input: []byte(`{"block_root":"0x813b05d7c10dc4bdf45201a3539ec805ff4e016fbadd98a8b24cbf1f428ec799","index":true}`),
-			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field blobIdentifierJSON.index of type string",
+			err:   "index: invalid prefix",
 		},
 		{
 			name:  "IndexInvalid",
 			input: []byte(`{"block_root":"0x813b05d7c10dc4bdf45201a3539ec805ff4e016fbadd98a8b24cbf1f428ec799","index":"-1"}`),
-			err:   "invalid value for index: strconv.ParseUint: parsing \"-1\": invalid syntax",
+			err:   "index: invalid value -1: strconv.ParseUint: parsing \"-1\": invalid syntax",
 		},
 		{
 			name:  "Good",

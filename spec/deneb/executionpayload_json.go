@@ -14,12 +14,13 @@
 package deneb
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
+	"github.com/attestantio/go-eth2-client/codecs"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -29,23 +30,23 @@ import (
 
 // executionPayloadJSON is the spec representation of the struct.
 type executionPayloadJSON struct {
-	ParentHash    string                `json:"parent_hash"`
-	FeeRecipient  string                `json:"fee_recipient"`
-	StateRoot     string                `json:"state_root"`
-	ReceiptsRoot  string                `json:"receipts_root"`
-	LogsBloom     string                `json:"logs_bloom"`
-	PrevRandao    string                `json:"prev_randao"`
-	BlockNumber   string                `json:"block_number"`
-	GasLimit      string                `json:"gas_limit"`
-	GasUsed       string                `json:"gas_used"`
-	Timestamp     string                `json:"timestamp"`
-	ExtraData     string                `json:"extra_data"`
-	BaseFeePerGas string                `json:"base_fee_per_gas"`
-	BlockHash     string                `json:"block_hash"`
-	Transactions  []string              `json:"transactions"`
-	Withdrawals   []*capella.Withdrawal `json:"withdrawals"`
-	DataGasUsed   string                `json:"data_gas_used"`
-	ExcessDataGas string                `json:"excess_data_gas"`
+	ParentHash    phase0.Hash32              `json:"parent_hash"`
+	FeeRecipient  bellatrix.ExecutionAddress `json:"fee_recipient"`
+	StateRoot     phase0.Root                `json:"state_root"`
+	ReceiptsRoot  phase0.Root                `json:"receipts_root"`
+	LogsBloom     string                     `json:"logs_bloom"`
+	PrevRandao    string                     `json:"prev_randao"`
+	BlockNumber   string                     `json:"block_number"`
+	GasLimit      string                     `json:"gas_limit"`
+	GasUsed       string                     `json:"gas_used"`
+	Timestamp     string                     `json:"timestamp"`
+	ExtraData     string                     `json:"extra_data"`
+	BaseFeePerGas string                     `json:"base_fee_per_gas"`
+	BlockHash     phase0.Hash32              `json:"block_hash"`
+	Transactions  []string                   `json:"transactions"`
+	Withdrawals   []*capella.Withdrawal      `json:"withdrawals"`
+	DataGasUsed   string                     `json:"data_gas_used"`
+	ExcessDataGas string                     `json:"excess_data_gas"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -61,10 +62,10 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&executionPayloadJSON{
-		ParentHash:    e.ParentHash.String(),
-		FeeRecipient:  e.FeeRecipient.String(),
-		StateRoot:     e.StateRoot.String(),
-		ReceiptsRoot:  e.ReceiptsRoot.String(),
+		ParentHash:    e.ParentHash,
+		FeeRecipient:  e.FeeRecipient,
+		StateRoot:     e.StateRoot,
+		ReceiptsRoot:  e.ReceiptsRoot,
 		LogsBloom:     fmt.Sprintf("%#x", e.LogsBloom),
 		PrevRandao:    fmt.Sprintf("%#x", e.PrevRandao),
 		BlockNumber:   fmt.Sprintf("%d", e.BlockNumber),
@@ -73,7 +74,7 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 		Timestamp:     fmt.Sprintf("%d", e.Timestamp),
 		ExtraData:     extraData,
 		BaseFeePerGas: e.BaseFeePerGas.Dec(),
-		BlockHash:     e.BlockHash.String(),
+		BlockHash:     e.BlockHash,
 		Transactions:  transactions,
 		Withdrawals:   e.Withdrawals,
 		DataGasUsed:   fmt.Sprintf("%d", e.DataGasUsed),
@@ -82,211 +83,156 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
+//
+//nolint:gocyclo
 func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
-	var data executionPayloadJSON
-	if err := json.Unmarshal(input, &data); err != nil {
-		return errors.Wrap(err, "invalid JSON")
-	}
-	return e.unpack(&data)
-}
-
-// nolint:gocyclo
-func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
-	if data.ParentHash == "" {
-		return errors.New("parent hash missing")
-	}
-	parentHash, err := hex.DecodeString(strings.TrimPrefix(data.ParentHash, "0x"))
+	raw, err := codecs.RawJSON(&executionPayloadJSON{}, input)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for parent hash")
+		return err
 	}
-	if len(parentHash) != phase0.Hash32Length {
-		return errors.New("incorrect length for parent hash")
-	}
-	copy(e.ParentHash[:], parentHash)
 
-	if data.FeeRecipient == "" {
-		return errors.New("fee recipient missing")
+	if err := e.ParentHash.UnmarshalJSON(raw["parent_hash"]); err != nil {
+		return errors.Wrap(err, "parent_hash")
 	}
-	feeRecipient, err := hex.DecodeString(strings.TrimPrefix(data.FeeRecipient, "0x"))
+
+	if err := e.FeeRecipient.UnmarshalJSON(raw["fee_recipient"]); err != nil {
+		return errors.Wrap(err, "fee_recipient")
+	}
+
+	if err := e.StateRoot.UnmarshalJSON(raw["state_root"]); err != nil {
+		return errors.Wrap(err, "state_root")
+	}
+
+	if err := e.ReceiptsRoot.UnmarshalJSON(raw["receipts_root"]); err != nil {
+		return errors.Wrap(err, "receipts_root")
+	}
+
+	logsBloom := raw["logs_bloom"]
+	if !bytes.HasPrefix(logsBloom, []byte{'"', '0', 'x'}) {
+		return errors.New("logs_bloom: invalid prefix")
+	}
+	if !bytes.HasSuffix(logsBloom, []byte{'"'}) {
+		return errors.New("logs_bloom: invalid suffix")
+	}
+	if len(logsBloom) != 1+2+256*2+1 {
+		return errors.New("logs_bloom: incorrect length")
+	}
+	length, err := hex.Decode(e.LogsBloom[:], logsBloom[3:3+256*2])
 	if err != nil {
-		return errors.Wrap(err, "invalid value for fee recipient")
+		return errors.Wrap(err, "logs_bloom")
 	}
-	if len(feeRecipient) != bellatrix.FeeRecipientLength {
-		return errors.New("incorrect length for fee recipient")
+	if length != 256 {
+		return errors.New("logs_bloom: incorrect length")
 	}
-	copy(e.FeeRecipient[:], feeRecipient)
 
-	if data.StateRoot == "" {
-		return errors.New("state root missing")
+	prevRandao := raw["prev_randao"]
+	if !bytes.HasPrefix(prevRandao, []byte{'"', '0', 'x'}) {
+		return errors.New("prev_randao: invalid prefix")
 	}
-	stateRoot, err := hex.DecodeString(strings.TrimPrefix(data.StateRoot, "0x"))
+	if !bytes.HasSuffix(prevRandao, []byte{'"'}) {
+		return errors.New("prev_randao: invalid suffix")
+	}
+	if len(prevRandao) != 1+2+32*2+1 {
+		return errors.New("prev_randao: incorrect length")
+	}
+	length, err = hex.Decode(e.PrevRandao[:], prevRandao[3:3+32*2])
 	if err != nil {
-		return errors.Wrap(err, "invalid value for state root")
+		return errors.Wrap(err, "prev_randao")
 	}
-	if len(stateRoot) != 32 {
-		return errors.New("incorrect length for state root")
+	if length != 32 {
+		return errors.New("prev_randao: incorrect length")
 	}
-	copy(e.StateRoot[:], stateRoot)
 
-	if data.ReceiptsRoot == "" {
-		return errors.New("receipts root missing")
-	}
-	receiptsRoot, err := hex.DecodeString(strings.TrimPrefix(data.ReceiptsRoot, "0x"))
+	tmpUint, err := strconv.ParseUint(string(bytes.Trim(raw["block_number"], `"`)), 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for receipts root")
+		return errors.Wrap(err, "block_number")
 	}
-	if len(receiptsRoot) != 32 {
-		return errors.New("incorrect length for receipts root")
-	}
-	copy(e.ReceiptsRoot[:], receiptsRoot)
+	e.BlockNumber = tmpUint
 
-	if data.LogsBloom == "" {
-		return errors.New("logs bloom missing")
-	}
-	logsBloom, err := hex.DecodeString(strings.TrimPrefix(data.LogsBloom, "0x"))
+	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["gas_limit"], `"`)), 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for logs bloom")
+		return errors.Wrap(err, "gas_limit")
 	}
-	if len(logsBloom) != 256 {
-		return errors.New("incorrect length for logs bloom")
-	}
-	copy(e.LogsBloom[:], logsBloom)
+	e.GasLimit = tmpUint
 
-	if data.PrevRandao == "" {
-		return errors.New("prev randao missing")
-	}
-	prevRandao, err := hex.DecodeString(strings.TrimPrefix(data.PrevRandao, "0x"))
+	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["gas_used"], `"`)), 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for prev randao")
+		return errors.Wrap(err, "gas_used")
 	}
-	if len(prevRandao) != 32 {
-		return errors.New("incorrect length for prev randao")
-	}
-	copy(e.PrevRandao[:], prevRandao)
+	e.GasUsed = tmpUint
 
-	if data.BlockNumber == "" {
-		return errors.New("block number missing")
-	}
-	blockNumber, err := strconv.ParseUint(data.BlockNumber, 10, 64)
+	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["timestamp"], `"`)), 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for block number")
+		return errors.Wrap(err, "timestamp")
 	}
-	e.BlockNumber = blockNumber
+	e.Timestamp = tmpUint
 
-	if data.GasLimit == "" {
-		return errors.New("gas limit missing")
-	}
-	gasLimit, err := strconv.ParseUint(data.GasLimit, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for gas limit")
-	}
-	e.GasLimit = gasLimit
-
-	if data.GasUsed == "" {
-		return errors.New("gas used missing")
-	}
-	gasUsed, err := strconv.ParseUint(data.GasUsed, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for gas used")
-	}
-	e.GasUsed = gasUsed
-
-	if data.Timestamp == "" {
-		return errors.New("timestamp missing")
-	}
-	e.Timestamp, err = strconv.ParseUint(data.Timestamp, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for timestamp")
-	}
-
-	if data.ExtraData == "" {
-		return errors.New("extra data missing")
-	}
+	var tmpBytes []byte
 	switch {
-	case data.ExtraData == "0x", data.ExtraData == "0":
-		e.ExtraData = []byte{}
+	case bytes.Equal(raw["extra_data"], []byte{'0', 'x'}), bytes.Equal(raw["extra_data"], []byte{'0'}):
+		// Empty.
 	default:
-		data.ExtraData = strings.TrimPrefix(data.ExtraData, "0x")
-		if len(data.ExtraData)%2 == 1 {
-			data.ExtraData = fmt.Sprintf("0%s", data.ExtraData)
+		tmpBytes = bytes.TrimPrefix(bytes.Trim(raw["extra_data"], `"`), []byte{'0', 'x'})
+		if len(tmpBytes)%2 == 1 {
+			tmpBytes = []byte(fmt.Sprintf("0%s", string(tmpBytes)))
 		}
-		extraData, err := hex.DecodeString(data.ExtraData)
+		tmp, err := hex.DecodeString(string(tmpBytes))
 		if err != nil {
-			return errors.Wrap(err, "invalid value for extra data")
+			return errors.Wrap(err, "extra_data")
 		}
-		if len(extraData) > 32 {
-			return errors.New("incorrect length for extra data")
+		if len(tmp) > 32 {
+			return errors.New("extra_data: incorrect length")
 		}
-		e.ExtraData = extraData
+		e.ExtraData = tmp
 	}
 
-	if data.BaseFeePerGas == "" {
-		return errors.New("base fee per gas missing")
-	}
-	if strings.HasPrefix(data.BaseFeePerGas, "0x") {
-		e.BaseFeePerGas, err = uint256.FromHex(data.BaseFeePerGas)
+	tmpBytes = bytes.Trim(raw["base_fee_per_gas"], `"`)
+	tmpBytes = bytes.TrimPrefix(tmpBytes, []byte{'0', 'x'})
+	if bytes.HasPrefix(tmpBytes, []byte{'0', 'x'}) {
+		e.BaseFeePerGas, err = uint256.FromHex(string(tmpBytes))
 	} else {
-		e.BaseFeePerGas, err = uint256.FromDecimal(data.BaseFeePerGas)
+		e.BaseFeePerGas, err = uint256.FromDecimal(string(tmpBytes))
 	}
 	if err != nil {
-		return errors.Wrap(err, "invalid value for base fee per gas")
+		return errors.Wrap(err, "base_fee_per_gas")
 	}
 
-	if data.BlockHash == "" {
-		return errors.New("block hash missing")
+	if err := e.BlockHash.UnmarshalJSON(raw["block_hash"]); err != nil {
+		return errors.Wrap(err, "block_hash")
 	}
-	blockHash, err := hex.DecodeString(strings.TrimPrefix(data.BlockHash, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for block hash")
-	}
-	if len(blockHash) != phase0.Hash32Length {
-		return errors.New("incorrect length for block hash")
-	}
-	copy(e.BlockHash[:], blockHash)
 
-	if data.Transactions == nil {
-		return errors.New("transactions missing")
+	transactions := make([]json.RawMessage, 0)
+	if err := json.Unmarshal(raw["transactions"], &transactions); err != nil {
+		return errors.Wrap(err, "transactions")
 	}
-	transactions := make([]bellatrix.Transaction, len(data.Transactions))
-	for i := range data.Transactions {
-		if data.Transactions[i] == "" {
-			return errors.New("transaction missing")
+	e.Transactions = make([]bellatrix.Transaction, len(transactions))
+	for i := range transactions {
+		if len(transactions[i]) == 0 ||
+			bytes.Equal(transactions[i], []byte{'"', '"'}) ||
+			bytes.Equal(transactions[i], []byte{'"', '0', 'x', '"'}) {
+			return fmt.Errorf("transaction %d: missing", i)
 		}
-		if data.Transactions[i] == "0" {
-			// Special case for null transaction.
-			transactions[i] = bellatrix.Transaction{}
-		} else {
-			tmp, err := hex.DecodeString(strings.TrimPrefix(data.Transactions[i], "0x"))
-			if err != nil {
-				return errors.Wrapf(err, "invalid value for transaction %d", i)
-			}
-			transactions[i] = bellatrix.Transaction(tmp)
+		e.Transactions[i] = make([]byte, (len(transactions[i])-4)/2)
+		if err := json.Unmarshal(transactions[i], &e.Transactions[i]); err != nil {
+			return errors.Wrapf(err, "transaction %d", i)
 		}
 	}
-	e.Transactions = transactions
 
-	if data.Withdrawals == nil {
-		return errors.New("withdrawals missing")
+	if err := json.Unmarshal(raw["withdrawals"], &e.Withdrawals); err != nil {
+		return errors.Wrap(err, "withdrawals")
 	}
-	e.Withdrawals = data.Withdrawals
 
-	if data.DataGasUsed == "" {
-		return errors.New("data gas used missing")
-	}
-	dataGasUsed, err := strconv.ParseUint(data.DataGasUsed, 10, 64)
+	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["data_gas_used"], `"`)), 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for data gas used")
+		return errors.Wrap(err, "data_gas_used")
 	}
-	e.DataGasUsed = dataGasUsed
+	e.DataGasUsed = tmpUint
 
-	if data.ExcessDataGas == "" {
-		return errors.New("excess data gas missing")
-	}
-	excessDataGas, err := strconv.ParseUint(data.ExcessDataGas, 10, 64)
+	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["excess_data_gas"], `"`)), 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for excess data gas")
+		return errors.Wrap(err, "excess_data_gas")
 	}
-	e.ExcessDataGas = excessDataGas
+	e.ExcessDataGas = tmpUint
 
 	return nil
 }
