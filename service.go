@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -111,6 +112,12 @@ type DepositContractProvider interface {
 type SignedBeaconBlockProvider interface {
 	// SignedBeaconBlock fetches a signed beacon block given a block ID.
 	SignedBeaconBlock(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error)
+}
+
+// BeaconBlockBlobsProvider is the interface for providing blobs for a given beacon block.
+type BeaconBlockBlobsProvider interface {
+	// BeaconBlockBlobs fetches the blobs given a block ID.
+	BeaconBlockBlobs(ctx context.Context, blockID string) ([]*deneb.BlobSidecar, error)
 }
 
 // BeaconCommitteesProvider is the interface for providing beacon committees.

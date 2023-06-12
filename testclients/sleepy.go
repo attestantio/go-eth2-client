@@ -1,4 +1,4 @@
-// Copyright © 2021, 2022 Attestant Limited.
+// Copyright © 2021 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -454,4 +455,14 @@ func (s *Sleepy) GenesisTime(ctx context.Context) (time.Time, error) {
 		return time.Time{}, errors.New("next does not support this call")
 	}
 	return next.GenesisTime(ctx)
+}
+
+// BeaconBlockBlobs fetches the blobs given a block ID.
+func (s *Sleepy) BeaconBlockBlobs(ctx context.Context, blockID string) ([]*deneb.BlobSidecar, error) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.BeaconBlockBlobsProvider)
+	if !isNext {
+		return []*deneb.BlobSidecar{}, errors.New("next does not support this call")
+	}
+	return next.BeaconBlockBlobs(ctx, blockID)
 }

@@ -25,6 +25,7 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -675,6 +676,18 @@ func (s *Erroring) SignedBeaconBlock(ctx context.Context, blockID string) (*spec
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.SignedBeaconBlock(ctx, blockID)
+}
+
+// BeaconBlockBlobs fetches the blobs given a block ID.
+func (s *Erroring) BeaconBlockBlobs(ctx context.Context, blockID string) ([]*deneb.BlobSidecar, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.BeaconBlockBlobsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.BeaconBlockBlobs(ctx, blockID)
 }
 
 // BeaconStateRoot fetches a beacon state root given a state ID.
