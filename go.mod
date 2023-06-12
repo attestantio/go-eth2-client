@@ -7,6 +7,7 @@ require (
 	github.com/goccy/go-yaml v1.9.2
 	github.com/golang/snappy v0.0.4
 	github.com/holiman/uint256 v1.2.2
+	github.com/huandu/go-clone/generic v1.6.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20210809151128-385d8c5e3fb7
@@ -14,7 +15,6 @@ require (
 	github.com/rs/zerolog v1.26.1
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.0.0-20211215165025-cf75a172585e
-	gotest.tools v2.2.0+incompatible
 )
 
 require (
@@ -23,9 +23,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/huandu/go-clone v1.6.0 // indirect
-	github.com/huandu/go-clone/generic v1.6.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.1.2 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

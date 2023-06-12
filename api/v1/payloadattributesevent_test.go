@@ -6,7 +6,7 @@ import (
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	require "github.com/stretchr/testify/require"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestPayloadAttributesEventJSON(t *testing.T) {

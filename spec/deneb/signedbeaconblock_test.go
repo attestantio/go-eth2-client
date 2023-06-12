@@ -20,7 +20,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/goccy/go-yaml"
 	require "github.com/stretchr/testify/require"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSignedBeaconBlockJSON(t *testing.T) {
