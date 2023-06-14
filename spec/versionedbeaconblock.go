@@ -71,6 +71,39 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 	}
 }
 
+// ProposerIndex returns the proposer index of the beacon block.
+func (v *VersionedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return 0, errors.New("no phase0 block")
+		}
+		return v.Phase0.ProposerIndex, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return 0, errors.New("no altair block")
+		}
+		return v.Altair.ProposerIndex, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return 0, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.ProposerIndex, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no capella block")
+		}
+		return v.Capella.ProposerIndex, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return 0, errors.New("no deneb block")
+		}
+		return v.Deneb.ProposerIndex, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
 // Root returns the root of the beacon block.
 func (v *VersionedBeaconBlock) Root() (phase0.Root, error) {
 	switch v.Version {
