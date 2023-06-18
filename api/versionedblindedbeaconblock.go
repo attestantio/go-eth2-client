@@ -60,6 +60,29 @@ func (v *VersionedBlindedBeaconBlock) Slot() (phase0.Slot, error) {
 	}
 }
 
+// ProposerIndex returns the proposer index of the beacon block.
+func (v *VersionedBlindedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return 0, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.ProposerIndex, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no capella block")
+		}
+		return v.Capella.ProposerIndex, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return 0, errors.New("no deneb block")
+		}
+		return v.Deneb.ProposerIndex, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
 // Attestations returns the attestations of the beacon block.
 func (v *VersionedBlindedBeaconBlock) Attestations() ([]*phase0.Attestation, error) {
 	switch v.Version {
