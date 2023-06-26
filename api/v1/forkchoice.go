@@ -86,25 +86,63 @@ type forkChoiceJSON struct {
 	ForkChoiceNodes     []*ForkChoiceNode  `json:"fork_choice_nodes"`
 }
 
-type ForkChoiceNodeValidity string
+// ForkChoiceNodeValidity represents the validity of a fork choice node.
+type ForkChoiceNodeValidity uint64
 
 const (
-	ForkChoiceNodeValidityInvalid    ForkChoiceNodeValidity = "INVALID"
-	ForkChoiceNodeValidityValid      ForkChoiceNodeValidity = "VALID"
-	ForkChoiceNodeValidityOptimistic ForkChoiceNodeValidity = "OPTIMISTIC"
+	// ForkChoiceNodeValidityUnknown is an unknown fork choice node.
+	ForkChoiceNodeValidityUnknown ForkChoiceNodeValidity = iota
+	// ForkChoiceNodeValidityInvalid is an invalid fork choice node.
+	ForkChoiceNodeValidityInvalid
+	// ForkChoiceNodeValidityValid is a valid fork choice node.
+	ForkChoiceNodeValidityValid
+	// ForkChoiceNodeValidityOptimistic is an optimistic fork choice node.
+	ForkChoiceNodeValidityOptimistic
 )
 
-func parseForkChoiceValidity(input string) (ForkChoiceNodeValidity, error) {
-	switch input {
-	case "INVALID":
+var ForkChoiceNodeValidityStrings = [...]string{
+	"unknown",
+	"invalid",
+	"valid",
+	"optimistic",
+}
+
+func ForkChoiceNodeValidityFromString(input string) (ForkChoiceNodeValidity, error) {
+	switch strings.ToLower(string(input)) {
+	case "invalid":
 		return ForkChoiceNodeValidityInvalid, nil
-	case "VALID":
+	case "valid":
 		return ForkChoiceNodeValidityValid, nil
-	case "OPTIMISTIC":
+	case "optimistic":
 		return ForkChoiceNodeValidityOptimistic, nil
 	default:
-		return "", errors.New(fmt.Sprintf("invalid value for fork choice node validity: %s", input))
+		return ForkChoiceNodeValidityUnknown, fmt.Errorf("unrecognised fork choice validity: %s", string(input))
 	}
+}
+
+// MarshalJSON implements json.Marshaler.
+func (d *ForkChoiceNodeValidity) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("%q", ForkChoiceNodeValidityStrings[*d])), nil
+}
+
+// UnmarshalJSON implements json.Unmarshaler.
+func (d *ForkChoiceNodeValidity) UnmarshalJSON(input []byte) error {
+	var err error
+
+	inputString := strings.Trim(string(input), "\"")
+	if *d, err = ForkChoiceNodeValidityFromString(inputString); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// String returns a string representation of the
+func (d ForkChoiceNodeValidity) String() string {
+	if int(d) >= len(ForkChoiceNodeValidityStrings) {
+		return "unknown"
+	}
+	return ForkChoiceNodeValidityStrings[d]
 }
 
 type ForkChoiceNode struct {
@@ -150,7 +188,7 @@ func (f *ForkChoiceNode) MarshalJSON() ([]byte, error) {
 		JustifiedEpoch:     fmt.Sprintf("%d", f.JustifiedEpoch),
 		FinalizedEpoch:     fmt.Sprintf("%d", f.FinalizedEpoch),
 		Weight:             fmt.Sprintf("%d", f.Weight),
-		Validity:           string(f.Validity),
+		Validity:           f.Validity.String(),
 		ExecutionBlockHash: fmt.Sprintf("%#x", f.ExecutionBlockHash),
 		ExtraData:          f.ExtraData,
 	})
@@ -204,7 +242,7 @@ func (f *ForkChoiceNode) UnmarshalJSON(input []byte) error {
 	}
 	f.Weight = weight
 
-	validity, err := parseForkChoiceValidity(strings.ToUpper(forkChoiceNodeJSON.Validity))
+	validity, err := ForkChoiceNodeValidityFromString(forkChoiceNodeJSON.Validity)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("invalid value for validity: %s", forkChoiceNodeJSON.Validity))
 	}
