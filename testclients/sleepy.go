@@ -455,3 +455,13 @@ func (s *Sleepy) GenesisTime(ctx context.Context) (time.Time, error) {
 	}
 	return next.GenesisTime(ctx)
 }
+
+// ForkChoice fetches the node's current fork choice context.
+func (s *Sleepy) ForkChoice(ctx context.Context) (*apiv1.ForkChoice, error) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.ForkChoiceProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+	return next.ForkChoice(ctx)
+}
