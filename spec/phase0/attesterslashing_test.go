@@ -25,7 +25,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/golang/snappy"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAttesterSlashingJSON(t *testing.T) {
@@ -149,6 +149,12 @@ func TestAttesterSlashingSpec(t *testing.T) {
 				var specSSZ []byte
 				specSSZ, err = snappy.Decode(specSSZ, compressedSpecSSZ)
 				require.NoError(t, err)
+
+				unmarshalled := &phase0.AttesterSlashing{}
+				require.NoError(t, unmarshalled.UnmarshalSSZ(specSSZ))
+				remarshalled, err := unmarshalled.MarshalSSZ()
+				require.NoError(t, err)
+				require.Equal(t, specSSZ, remarshalled)
 
 				ssz, err := res.MarshalSSZ()
 				require.NoError(t, err)

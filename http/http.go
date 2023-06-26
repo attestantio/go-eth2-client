@@ -123,8 +123,11 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 		return nil, errors.Wrap(err, "failed to create POST request")
 	}
 	s.addExtraHeaders(req)
-	req.Header.Set("Content-type", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	if req.Header.Get("User-Agent") == "" {
+		req.Header.Set("User-Agent", "go-eth2-client/0.17.0")
+	}
 
 	resp, err := s.client.Do(req)
 	if err != nil {

@@ -25,6 +25,7 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -35,7 +36,7 @@ type Erroring struct {
 }
 
 // NewErroring creates a new Ethereum 2 client that errors at a given rate.
-func NewErroring(ctx context.Context,
+func NewErroring(_ context.Context,
 	errorRate float64,
 	next consensusclient.Service,
 ) (consensusclient.Service, error) {
@@ -68,7 +69,7 @@ func (s *Erroring) Address() string {
 }
 
 // maybeError may return an error depending on the error arte.
-func (s *Erroring) maybeError(ctx context.Context) error {
+func (s *Erroring) maybeError(_ context.Context) error {
 	// #nosec G404
 	roll := rand.Float64()
 	if roll < s.errorRate {
@@ -675,6 +676,18 @@ func (s *Erroring) SignedBeaconBlock(ctx context.Context, blockID string) (*spec
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.SignedBeaconBlock(ctx, blockID)
+}
+
+// BeaconBlockBlobs fetches the blobs given a block ID.
+func (s *Erroring) BeaconBlockBlobs(ctx context.Context, blockID string) ([]*deneb.BlobSidecar, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.BeaconBlockBlobsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.BeaconBlockBlobs(ctx, blockID)
 }
 
 // BeaconStateRoot fetches a beacon state root given a state ID.

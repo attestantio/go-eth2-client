@@ -21,7 +21,7 @@ import (
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/goccy/go-yaml"
 	require "github.com/stretchr/testify/require"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidatorRegistrationJSON(t *testing.T) {

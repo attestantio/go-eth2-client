@@ -24,7 +24,7 @@ import (
 )
 
 // BlindedBeaconBlockProposal fetches a blinded proposed beacon block for signing.
-func (s *Service) BlindedBeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*api.VersionedBlindedBeaconBlock, error) {
+func (s *Service) BlindedBeaconBlockProposal(_ context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*api.VersionedBlindedBeaconBlock, error) {
 	// Graffiti should be 32 bytes.
 	fixedGraffiti := [32]byte{}
 	copy(fixedGraffiti[:], graffiti)

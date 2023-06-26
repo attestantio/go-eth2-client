@@ -20,7 +20,7 @@ import (
 )
 
 // NodeSyncing provides the state of the node's synchronization with the chain.
-func (s *Service) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
+func (s *Service) NodeSyncing(_ context.Context) (*api.SyncState, error) {
 	return &api.SyncState{
 		HeadSlot:     s.HeadSlot,
 		SyncDistance: s.SyncDistance,

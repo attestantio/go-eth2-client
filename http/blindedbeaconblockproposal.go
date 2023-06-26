@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2022, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,6 +23,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
+	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -34,6 +35,10 @@ type bellatrixBlindedBeaconBlockProposalJSON struct {
 
 type capellaBlindedBeaconBlockProposalJSON struct {
 	Data *apiv1capella.BlindedBeaconBlock `json:"data"`
+}
+
+type denebBlindedBeaconBlockProposalJSON struct {
+	Data *apiv1deneb.BlindedBeaconBlock `json:"data"`
 }
 
 // BlindedBeaconBlockProposal fetches a proposed beacon block for signing.
@@ -107,6 +112,26 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 			}
 		}
 		res.Capella = resp.Data
+	case spec.DataVersionDeneb:
+		var resp denebBlindedBeaconBlockProposalJSON
+		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+			return nil, errors.Wrap(err, "failed to parse deneb blinded beacon block proposal")
+		}
+		// Ensure the data returned to us is as expected given our input.
+		if resp.Data.Slot != slot {
+			return nil, errors.New("blinded beacon block proposal not for requested slot")
+		}
+		// Only check the RANDAO reveal and graffiti if we are not connected to DVT middleware,
+		// as the returned values will be decided by the middleware.
+		if !s.connectedToDVTMiddleware {
+			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
+				return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", resp.Data.Body.RANDAOReveal[:], randaoReveal[:])
+			}
+			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
+				return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", resp.Data.Body.Graffiti[:], graffiti)
+			}
+		}
+		res.Deneb = resp.Data
 	default:
 		return nil, fmt.Errorf("unsupported block version %s", metadata.Version)
 	}

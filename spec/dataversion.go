@@ -1,4 +1,4 @@
-// Copyright © 2021, 2022 Attestant Limited.
+// Copyright © 2021 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -30,6 +30,8 @@ const (
 	DataVersionBellatrix
 	// DataVersionCapella is data applicable for the Capella release of the beacon chain.
 	DataVersionCapella
+	// DataVersionDeneb is data applicable for the Deneb release of the beacon chain.
+	DataVersionDeneb
 )
 
 var dataVersionStrings = [...]string{
@@ -37,6 +39,7 @@ var dataVersionStrings = [...]string{
 	"altair",
 	"bellatrix",
 	"capella",
+	"deneb",
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -56,13 +59,15 @@ func (d *DataVersion) UnmarshalJSON(input []byte) error {
 		*d = DataVersionBellatrix
 	case `"capella"`:
 		*d = DataVersionCapella
+	case `"deneb"`:
+		*d = DataVersionDeneb
 	default:
 		err = fmt.Errorf("unrecognised data version %s", string(input))
 	}
 	return err
 }
 
-// String returns a string representation of the
+// String returns a string representation of the struct.
 func (d DataVersion) String() string {
 	if int(d) >= len(dataVersionStrings) {
 		return "unknown"

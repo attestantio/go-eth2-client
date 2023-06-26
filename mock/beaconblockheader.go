@@ -21,7 +21,7 @@ import (
 )
 
 // BeaconBlockHeader provides the block header of a given block ID.
-func (s *Service) BeaconBlockHeader(ctx context.Context, blockID string) (*api.BeaconBlockHeader, error) {
+func (s *Service) BeaconBlockHeader(_ context.Context, _ string) (*api.BeaconBlockHeader, error) {
 	return &api.BeaconBlockHeader{
 		Header: &spec.SignedBeaconBlockHeader{
 			Message: &spec.BeaconBlockHeader{},

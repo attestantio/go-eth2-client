@@ -81,7 +81,7 @@ func (v *VersionedSignedValidatorRegistration) PubKey() (phase0.BLSPubKey, error
 	}
 }
 
-// Root returns the root of the validator registration
+// Root returns the root of the validator registration.
 func (v *VersionedSignedValidatorRegistration) Root() (phase0.Root, error) {
 	switch v.Version {
 	case spec.BuilderVersionV1:

@@ -46,7 +46,7 @@ type Service struct {
 // log is a service-wide logger.
 var log zerolog.Logger
 
-// New creates a new Ethereum 2 client service, mocking connections
+// New creates a new Ethereum 2 client service, mocking connections.
 func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	parameters, err := parseAndCheckParameters(params...)
 	if err != nil {
@@ -61,7 +61,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 
 	s := &Service{
 		name:        parameters.name,
-		genesisTime: time.Now(),
+		genesisTime: parameters.genesisTime,
 		timeout:     parameters.timeout,
 		nodeVersion: "mock",
 

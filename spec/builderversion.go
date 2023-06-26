@@ -47,7 +47,7 @@ func (d *BuilderVersion) UnmarshalJSON(input []byte) error {
 	return err
 }
 
-// String returns a string representation of the
+// String returns a string representation of the struct.
 func (d BuilderVersion) String() string {
 	if int(d) >= len(responseBuilderVersionStrings) {
 		return "unknown"

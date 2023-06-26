@@ -18,6 +18,6 @@ import (
 )
 
 // SlotsPerEpoch provides the slots per epoch of the chain.
-func (s *Service) SlotsPerEpoch(ctx context.Context) (uint64, error) {
+func (s *Service) SlotsPerEpoch(_ context.Context) (uint64, error) {
 	return 32, nil
 }

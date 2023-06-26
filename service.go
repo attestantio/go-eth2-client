@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -113,6 +114,12 @@ type SignedBeaconBlockProvider interface {
 	SignedBeaconBlock(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error)
 }
 
+// BeaconBlockBlobsProvider is the interface for providing blobs for a given beacon block.
+type BeaconBlockBlobsProvider interface {
+	// BeaconBlockBlobs fetches the blobs given a block ID.
+	BeaconBlockBlobs(ctx context.Context, blockID string) ([]*deneb.BlobSidecar, error)
+}
+
 // BeaconCommitteesProvider is the interface for providing beacon committees.
 type BeaconCommitteesProvider interface {
 	// BeaconCommittees fetches all beacon committees for the epoch at the given state.
@@ -168,7 +175,7 @@ type AttestationsSubmitter interface {
 	SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error
 }
 
-// AttesterDutiesProvider is the interface for providing attester duties
+// AttesterDutiesProvider is the interface for providing attester duties.
 type AttesterDutiesProvider interface {
 	// AttesterDuties obtains attester duties.
 	// If validatorIndicess is nil it will return all duties for the given epoch.

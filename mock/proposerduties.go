@@ -22,7 +22,7 @@ import (
 
 // ProposerDuties obtains proposer duties for the given epoch.
 // If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
-func (s *Service) ProposerDuties(ctx context.Context, epoch spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.ProposerDuty, error) {
+func (s *Service) ProposerDuties(_ context.Context, _ spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.ProposerDuty, error) {
 	res := make([]*api.ProposerDuty, len(validatorIndices))
 	for i := range validatorIndices {
 		res[i] = &api.ProposerDuty{

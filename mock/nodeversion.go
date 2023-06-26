@@ -18,6 +18,6 @@ import (
 )
 
 // NodeVersion returns a free-text string with the node version.
-func (s *Service) NodeVersion(ctx context.Context) (string, error) {
+func (s *Service) NodeVersion(_ context.Context) (string, error) {
 	return s.nodeVersion, nil
 }

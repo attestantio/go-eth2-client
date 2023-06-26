@@ -21,9 +21,10 @@ import (
 )
 
 type parameters struct {
-	logLevel zerolog.Level
-	name     string
-	timeout  time.Duration
+	logLevel    zerolog.Level
+	name        string
+	timeout     time.Duration
+	genesisTime time.Time
 }
 
 // Parameter is the interface for service parameters.
@@ -58,12 +59,20 @@ func WithTimeout(timeout time.Duration) Parameter {
 	})
 }
 
+// WithGenesisTime sets the genesis time for the mock.
+func WithGenesisTime(genesisTime time.Time) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.genesisTime = genesisTime
+	})
+}
+
 // parseAndCheckParameters parses and checks parameters to ensure that mandatory parameters are present and correct.
 func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	parameters := parameters{
-		logLevel: zerolog.GlobalLevel(),
-		name:     "mock",
-		timeout:  2 * time.Second,
+		logLevel:    zerolog.GlobalLevel(),
+		name:        "mock",
+		timeout:     2 * time.Second,
+		genesisTime: time.Now(),
 	}
 	for _, p := range params {
 		if params != nil {

@@ -20,6 +20,6 @@ import (
 )
 
 // DepositDomain provides the deposit domain.
-func (s *Service) DepositDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Service) DepositDomain(_ context.Context) (spec.DomainType, error) {
 	return spec.DomainType{0x03, 0x00, 0x00, 0x00}, nil
 }

@@ -20,6 +20,6 @@ import (
 )
 
 // Fork fetches fork information for the given state.
-func (s *Service) Fork(ctx context.Context, stateID string) (*spec.Fork, error) {
+func (s *Service) Fork(ctx context.Context, _ string) (*spec.Fork, error) {
 	return s.forkAtEpoch(ctx, 1)
 }

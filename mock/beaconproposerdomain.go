@@ -20,6 +20,6 @@ import (
 )
 
 // BeaconProposerDomain provides the beacon proposer domain.
-func (s *Service) BeaconProposerDomain(ctx context.Context) (spec.DomainType, error) {
+func (s *Service) BeaconProposerDomain(_ context.Context) (spec.DomainType, error) {
 	return spec.DomainType{0x00, 0x00, 0x00, 0x00}, nil
 }

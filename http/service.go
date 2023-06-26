@@ -120,9 +120,7 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	}
 
 	// Periodially refetch static values in case of client update.
-	if err := s.periodicClearStaticValues(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to set update ticker")
-	}
+	s.periodicClearStaticValues(ctx)
 
 	// Handle connection to DVT middleware.
 	if err := s.checkDVT(ctx); err != nil {
@@ -163,7 +161,7 @@ func (s *Service) fetchStaticValues(ctx context.Context) error {
 
 // periodicClearStaticValues periodically sets static values to nil so they are
 // refetched the next time they are required.
-func (s *Service) periodicClearStaticValues(ctx context.Context) error {
+func (s *Service) periodicClearStaticValues(ctx context.Context) {
 	go func(s *Service, ctx context.Context) {
 		// Refreah every 5 minutes.
 		refreshTicker := time.NewTicker(5 * time.Minute)
@@ -190,7 +188,6 @@ func (s *Service) periodicClearStaticValues(ctx context.Context) error {
 			}
 		}
 	}(s, ctx)
-	return nil
 }
 
 // checkDVT checks if connected to DVT middleware and sets

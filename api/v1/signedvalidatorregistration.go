@@ -25,7 +25,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// SignedValidatorRegistration is a signed ValidatorRegistrationV1
+// SignedValidatorRegistration is a signed ValidatorRegistrationV1.
 type SignedValidatorRegistration struct {
 	Message   *ValidatorRegistration
 	Signature phase0.BLSSignature `ssz-size:"96"`

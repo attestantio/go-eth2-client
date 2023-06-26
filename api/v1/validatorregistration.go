@@ -55,7 +55,7 @@ type validatorRegistrationYAML struct {
 // MarshalJSON implements json.Marshaler.
 func (v *ValidatorRegistration) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&validatorRegistrationJSON{
-		FeeRecipient: fmt.Sprintf("%#x", v.FeeRecipient),
+		FeeRecipient: v.FeeRecipient.String(),
 		GasLimit:     fmt.Sprintf("%d", v.GasLimit),
 		Timestamp:    fmt.Sprintf("%d", v.Timestamp.Unix()),
 		Pubkey:       fmt.Sprintf("%#x", v.Pubkey),
@@ -117,7 +117,7 @@ func (v *ValidatorRegistration) unpack(data *validatorRegistrationJSON) error {
 // MarshalYAML implements yaml.Marshaler.
 func (v *ValidatorRegistration) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&validatorRegistrationYAML{
-		FeeRecipient: fmt.Sprintf("%#x", v.FeeRecipient),
+		FeeRecipient: v.FeeRecipient.String(),
 		GasLimit:     v.GasLimit,
 		Timestamp:    uint64(v.Timestamp.Unix()),
 		Pubkey:       fmt.Sprintf("%#x", v.Pubkey),

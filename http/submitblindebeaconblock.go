@@ -41,6 +41,8 @@ func (s *Service) SubmitBlindedBeaconBlock(ctx context.Context, block *api.Versi
 		specJSON, err = json.Marshal(block.Bellatrix)
 	case spec.DataVersionCapella:
 		specJSON, err = json.Marshal(block.Capella)
+	case spec.DataVersionDeneb:
+		specJSON, err = json.Marshal(block.Deneb)
 	default:
 		err = errors.New("unknown block version")
 	}

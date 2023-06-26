@@ -20,7 +20,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/goccy/go-yaml"
 	require "github.com/stretchr/testify/require"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHistoricalSummaryYAML(t *testing.T) {

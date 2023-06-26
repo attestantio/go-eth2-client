@@ -41,7 +41,7 @@ func registerMetrics(ctx context.Context, monitor metrics.Service) error {
 	return nil
 }
 
-func registerPrometheusMetrics(ctx context.Context) error {
+func registerPrometheusMetrics(_ context.Context) error {
 	providersMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "consensusclient",
 		Subsystem: "multi",
@@ -64,7 +64,7 @@ func registerPrometheusMetrics(ctx context.Context) error {
 	return nil
 }
 
-func setProviderActiveMetric(ctx context.Context, provider string, state string) {
+func setProviderActiveMetric(_ context.Context, provider string, state string) {
 	if providerActiveMetric != nil {
 		if state == "active" {
 			providerActiveMetric.WithLabelValues(provider).Set(1)
@@ -74,7 +74,7 @@ func setProviderActiveMetric(ctx context.Context, provider string, state string)
 	}
 }
 
-func setProvidersMetric(ctx context.Context, state string, count int) {
+func setProvidersMetric(_ context.Context, state string, count int) {
 	if providersMetric != nil {
 		providersMetric.WithLabelValues(state).Set(float64(count))
 	}
