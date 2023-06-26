@@ -137,7 +137,7 @@ func (d *ForkChoiceNodeValidity) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
-// String returns a string representation of the
+// String returns a string representation of the ForkChoiceNodeValidity.
 func (d ForkChoiceNodeValidity) String() string {
 	if int(d) >= len(ForkChoiceNodeValidityStrings) {
 		return "unknown"
