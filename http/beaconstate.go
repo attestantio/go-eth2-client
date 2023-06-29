@@ -18,7 +18,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
+	"net/http"
+	"time"
 
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -52,57 +53,103 @@ type denebBeaconStateJSON struct {
 // BeaconState fetches a beacon state.
 // N.B if the requested beacon state is not available this will return nil without an error.
 func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
-	url := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", stateID)
-	respBodyReader, err := s.get(ctx, url)
+	res, err := s.get2(ctx, fmt.Sprintf("/eth/v2/debug/beacon/states/%s", stateID))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon state")
 	}
-	if respBodyReader == nil {
+	if res.statusCode == http.StatusNotFound {
 		return nil, nil
 	}
 
-	var dataBodyReader bytes.Buffer
-	metadataReader := io.TeeReader(respBodyReader, &dataBodyReader)
-	var metadata responseMetadata
-	if err := json.NewDecoder(metadataReader).Decode(&metadata); err != nil {
-		return nil, errors.Wrap(err, "failed to parse response")
+	started := time.Now()
+	defer fmt.Printf("Took %v\n", time.Since(started))
+	switch res.contentType {
+	case ContentTypeSSZ:
+		return s.beaconStateFromSSZ(res)
+	case ContentTypeJSON:
+		return s.beaconStateFromJSON(res)
+	default:
+		return nil, fmt.Errorf("unhandled content type %v", res.contentType)
 	}
-	res := &spec.VersionedBeaconState{
-		Version: metadata.Version,
+}
+
+func (s *Service) beaconStateFromSSZ(res *httpResponse) (*spec.VersionedBeaconState, error) {
+	state := &spec.VersionedBeaconState{
+		Version: res.consensusVersion,
 	}
 
-	switch metadata.Version {
+	switch res.consensusVersion {
+	case spec.DataVersionPhase0:
+		state.Phase0 = &phase0.BeaconState{}
+		if err := state.Phase0.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode phase0 beacon state")
+		}
+	case spec.DataVersionAltair:
+		state.Altair = &altair.BeaconState{}
+		if err := state.Altair.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode altair beacon state")
+		}
+	case spec.DataVersionBellatrix:
+		state.Bellatrix = &bellatrix.BeaconState{}
+		if err := state.Bellatrix.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode bellatrix beacon state")
+		}
+	case spec.DataVersionCapella:
+		state.Capella = &capella.BeaconState{}
+		if err := state.Capella.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode capella beacon state")
+		}
+	case spec.DataVersionDeneb:
+		state.Deneb = &deneb.BeaconState{}
+		if err := state.Deneb.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode deneb beacon state")
+		}
+	default:
+		return nil, fmt.Errorf("unhandled state version %s", res.consensusVersion)
+	}
+
+	return state, nil
+}
+
+func (s *Service) beaconStateFromJSON(res *httpResponse) (*spec.VersionedBeaconState, error) {
+	state := &spec.VersionedBeaconState{
+		Version: res.consensusVersion,
+	}
+
+	reader := bytes.NewBuffer(res.body)
+
+	switch state.Version {
 	case spec.DataVersionPhase0:
 		var resp phase0BeaconStateJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse phase 0 beacon state")
 		}
-		res.Phase0 = resp.Data
+		state.Phase0 = resp.Data
 	case spec.DataVersionAltair:
 		var resp altairBeaconStateJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse altair beacon state")
 		}
-		res.Altair = resp.Data
+		state.Altair = resp.Data
 	case spec.DataVersionBellatrix:
 		var resp bellatrixBeaconStateJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse bellatrix beacon state")
 		}
-		res.Bellatrix = resp.Data
+		state.Bellatrix = resp.Data
 	case spec.DataVersionCapella:
 		var resp capellaBeaconStateJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse capella beacon state")
 		}
-		res.Capella = resp.Data
+		state.Capella = resp.Data
 	case spec.DataVersionDeneb:
 		var resp denebBeaconStateJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse deneb beacon state")
 		}
-		res.Deneb = resp.Data
+		state.Deneb = resp.Data
 	}
 
-	return res, nil
+	return state, nil
 }

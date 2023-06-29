@@ -25,6 +25,8 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 )
 
 // Error represents an http error.
@@ -169,4 +171,126 @@ func (s *Service) addExtraHeaders(req *http.Request) {
 // responseMetadata returns metadata related to responses.
 type responseMetadata struct {
 	Version spec.DataVersion `json:"version"`
+}
+
+type httpResponse struct {
+	statusCode       int
+	contentType      ContentType
+	consensusVersion spec.DataVersion
+	body             []byte
+}
+
+// get2 sends an HTTP get request and returns the body.
+// If the response from the server is a 404 this will return nil for both the reader and the error.
+func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, error) {
+	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "get")
+	defer span.End()
+
+	// #nosec G404
+	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Str("endpoint", endpoint).Logger()
+	log.Trace().Msg("GET request")
+
+	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
+	if err != nil {
+		return nil, errors.Wrap(err, "invalid endpoint")
+	}
+
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, url.String(), nil)
+	if err != nil {
+		cancel()
+		return nil, errors.Wrap(err, "failed to create GET request")
+	}
+	s.addExtraHeaders(req)
+	// Prefer SSZ, JSON if not.
+	req.Header.Set("Accept", "application/octet-stream;q=1,application/json;q=0.9")
+	span.AddEvent("Sending request")
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		span.RecordError(errors.New("Request failed"))
+		return nil, errors.Wrap(err, "failed to call GET endpoint")
+	}
+	defer resp.Body.Close()
+	log = log.With().Int("status_code", resp.StatusCode).Logger()
+
+	res := &httpResponse{
+		statusCode: resp.StatusCode,
+	}
+
+	if resp.StatusCode == http.StatusNotFound {
+		// Nothing found.  Note that this is not considered an error.
+		span.RecordError(errors.New("endpoint not found"))
+		log.Debug().Msg("Endpoint not found")
+		return res, nil
+	}
+
+	if resp.StatusCode == http.StatusNoContent {
+		// Nothing returned.  Note that this is not considered an error.
+		span.AddEvent("Received empty response")
+		log.Trace().Msg("Endpoint returned no content")
+		return res, nil
+	}
+
+	res.body, err = io.ReadAll(resp.Body)
+	if err != nil {
+		span.RecordError(err)
+		log.Warn().Err(err).Msg("Failed to read body")
+		return nil, errors.Wrap(err, "failed to read body")
+	}
+
+	statusFamily := resp.StatusCode / 100
+	if statusFamily != 2 {
+		span.SetStatus(codes.Error, fmt.Sprintf("Status code %d", resp.StatusCode))
+		trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
+		log.Debug().Int("status_code", resp.StatusCode).RawJSON("response", trimmedResponse).Msg("GET failed")
+		return nil, Error{
+			Method:     http.MethodGet,
+			StatusCode: resp.StatusCode,
+			Endpoint:   endpoint,
+			Data:       res.body,
+		}
+	}
+
+	res.consensusVersion, err = consensusVersionFromResp(resp)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse consensus version")
+	}
+
+	res.contentType, err = contentTypeFromResp(resp)
+	if err != nil {
+		// For now, assume that unknown type is JSON.
+		log.Debug().Err(err).Msg("Failed to obtain content type; assuming JSON")
+		res.contentType = ContentTypeJSON
+	}
+
+	return res, nil
+}
+
+func consensusVersionFromResp(resp *http.Response) (spec.DataVersion, error) {
+	respConsensusVersions, exists := resp.Header["Eth-Consensus-Version"]
+	if !exists {
+		return spec.DataVersionUnknown, errors.New("no consensus version supplied in response")
+	}
+	if len(respConsensusVersions) != 1 {
+		return spec.DataVersionUnknown, fmt.Errorf("malformed consensus version (%d entries)", len(respConsensusVersions))
+	}
+	res := spec.DataVersionUnknown
+	if err := res.UnmarshalJSON([]byte(fmt.Sprintf("%q", respConsensusVersions[0]))); err != nil {
+		return spec.DataVersionUnknown, errors.Wrap(err, "failed to parse consensus version")
+	}
+
+	return res, nil
+}
+
+func contentTypeFromResp(resp *http.Response) (ContentType, error) {
+	respContentTypes, exists := resp.Header["Content-Type"]
+	if !exists {
+		return ContentTypeUnknown, errors.New("no content type supplied in response")
+	}
+	if len(respContentTypes) != 1 {
+		return ContentTypeUnknown, fmt.Errorf("malformed content type (%d entries)", len(respContentTypes))
+	}
+	return ParseFromMediaType(respContentTypes[0])
 }
