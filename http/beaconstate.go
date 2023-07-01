@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -61,8 +60,6 @@ func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.Versio
 		return nil, nil
 	}
 
-	started := time.Now()
-	defer fmt.Printf("Took %v\n", time.Since(started))
 	switch res.contentType {
 	case ContentTypeSSZ:
 		return s.beaconStateFromSSZ(res)

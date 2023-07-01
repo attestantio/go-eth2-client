@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/attestantio/go-eth2-client/api"
@@ -57,7 +56,6 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request signed beacon block")
 	}
-	defer res.reader.Close()
 	if res.statusCode == http.StatusNotFound {
 		return nil, nil
 	}
@@ -112,25 +110,20 @@ func (s *Service) blindedBeaconBlockProposalFromSSZ(res *httpResponse) (*api.Ver
 		Version: res.consensusVersion,
 	}
 
-	data, err := io.ReadAll(res.reader)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to read block")
-	}
-
 	switch res.consensusVersion {
 	case spec.DataVersionBellatrix:
 		block.Bellatrix = &apiv1bellatrix.BlindedBeaconBlock{}
-		if err := block.Bellatrix.UnmarshalSSZ(data); err != nil {
+		if err := block.Bellatrix.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Wrap(err, "failed to decode bellatrix blinded beacon block proposal")
 		}
 	case spec.DataVersionCapella:
 		block.Capella = &apiv1capella.BlindedBeaconBlock{}
-		if err := block.Capella.UnmarshalSSZ(data); err != nil {
+		if err := block.Capella.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Wrap(err, "failed to decode capella blinded beacon block proposal")
 		}
 	case spec.DataVersionDeneb:
 		block.Deneb = &apiv1deneb.BlindedBeaconBlock{}
-		if err := block.Deneb.UnmarshalSSZ(data); err != nil {
+		if err := block.Deneb.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Wrap(err, "failed to decode deneb blinded beacon block proposal")
 		}
 	default:
@@ -145,22 +138,23 @@ func (s *Service) blindedBeaconBlockProposalFromJSON(res *httpResponse) (*api.Ve
 		Version: res.consensusVersion,
 	}
 
+	reader := bytes.NewBuffer(res.body)
 	switch block.Version {
 	case spec.DataVersionBellatrix:
 		var resp bellatrixBlindedBeaconBlockProposalJSON
-		if err := json.NewDecoder(res.reader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse bellatrix blinded beacon block proposal")
 		}
 		block.Bellatrix = resp.Data
 	case spec.DataVersionCapella:
 		var resp capellaBlindedBeaconBlockProposalJSON
-		if err := json.NewDecoder(res.reader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse capella blinded beacon block proposal")
 		}
 		block.Capella = resp.Data
 	case spec.DataVersionDeneb:
 		var resp denebBlindedBeaconBlockProposalJSON
-		if err := json.NewDecoder(res.reader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse deneb blinded beacon block proposal")
 		}
 		block.Deneb = resp.Data

@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -183,7 +183,7 @@ type httpResponse struct {
 // get2 sends an HTTP get request and returns the body.
 // If the response from the server is a 404 this will return nil for both the reader and the error.
 func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, error) {
-	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "get")
+	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "get2")
 	defer span.End()
 
 	// #nosec G404
