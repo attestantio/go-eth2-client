@@ -34,6 +34,7 @@ type blobSidecarJSON struct {
 	KzgProof        KzgProof      `json:"kzg_proof"`
 }
 
+// MarshalJSON implements json.Marshaler.
 func (b *BlobSidecar) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&blobSidecarJSON{
 		BlockRoot:       b.BlockRoot,
@@ -47,6 +48,7 @@ func (b *BlobSidecar) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
 func (b *BlobSidecar) UnmarshalJSON(input []byte) error {
 	raw, err := codecs.RawJSON(&blobSidecarJSON{}, input)
 	if err != nil {

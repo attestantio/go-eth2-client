@@ -14,14 +14,13 @@
 package deneb_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/goccy/go-yaml"
-	require "github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	require "github.com/stretchr/testify/require"
 )
 
 func TestExecutionPayloadJSON(t *testing.T) {
@@ -382,20 +381,6 @@ func TestExecutionPayloadJSON(t *testing.T) {
 			}
 		})
 	}
-}
-
-func testYAMLFormat(input []byte) string {
-	val := make(map[string]any)
-	if err := yaml.UnmarshalWithOptions(input, &val, yaml.UseOrderedMap()); err != nil {
-		panic(err)
-	}
-
-	res, err := yaml.MarshalWithOptions(val, yaml.Flow(true))
-	if err != nil {
-		panic(err)
-	}
-
-	return string(bytes.ToLower(bytes.ReplaceAll(res, []byte(`"`), []byte(`'`))))
 }
 
 func TestExecutionPayloadYAML(t *testing.T) {
