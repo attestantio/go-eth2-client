@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2022 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -75,6 +75,10 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIndic
 		return nil, errors.New("no state ID specified")
 	}
 
+	if len(validatorIndices) == 0 {
+		return s.validatorsFromState(ctx, stateID)
+	}
+
 	if len(validatorIndices) > s.indexChunkSize(ctx) {
 		return s.chunkedValidators(ctx, stateID, validatorIndices)
 	}
@@ -108,6 +112,55 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIndic
 	for _, validator := range validatorsJSON.Data {
 		res[validator.Index] = validator
 	}
+	return res, nil
+}
+
+// validatorsFromState fetches all validators from state.
+// This is more efficient than fetching the validators endpoint, as validators uses JSON only,
+// whereas state can be provided using SSZ.
+func (s *Service) validatorsFromState(ctx context.Context, stateID string) (map[phase0.ValidatorIndex]*api.Validator, error) {
+	state, err := s.BeaconState(ctx, stateID)
+	if err != nil {
+		return nil, err
+	}
+
+	validators, err := state.Validators()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain validators from state")
+	}
+
+	balances, err := state.ValidatorBalances()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain validator balances from state")
+	}
+
+	slot, err := state.Slot()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain slot from state")
+	}
+	slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
+	if err != nil {
+		return nil, err
+	}
+	epoch := phase0.Epoch(uint64(slot) / slotsPerEpoch)
+
+	farFutureEpoch, err := s.FarFutureEpoch(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	res := make(map[phase0.ValidatorIndex]*api.Validator, len(validators))
+	for i, validator := range validators {
+		index := phase0.ValidatorIndex(i)
+		state := api.ValidatorToState(validator, epoch, farFutureEpoch)
+		res[index] = &api.Validator{
+			Index:     index,
+			Balance:   balances[i],
+			Status:    state,
+			Validator: validator,
+		}
+	}
+
 	return res, nil
 }
 
