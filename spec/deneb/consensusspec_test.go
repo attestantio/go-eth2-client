@@ -267,5 +267,12 @@ func testYAMLFormat(input []byte) string {
 		panic(err)
 	}
 
-	return string(bytes.ToLower(bytes.ReplaceAll(res, []byte(`"`), []byte(`'`))))
+	replacements := [][][]byte{
+		{[]byte(`"`), []byte(`'`)},
+	}
+	for _, replacement := range replacements {
+		res = bytes.ReplaceAll(res, replacement[0], replacement[1])
+	}
+
+	return string(bytes.ToLower(res))
 }

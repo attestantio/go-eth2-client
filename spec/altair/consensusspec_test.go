@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package phase0_test
+package altair_test
 
 import (
 	"bytes"
@@ -20,6 +20,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/goccy/go-yaml"
@@ -56,11 +57,11 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "BeaconBlock",
-			s:    &phase0.BeaconBlock{},
+			s:    &altair.BeaconBlock{},
 		},
 		{
 			name: "BeaconBlockBody",
-			s:    &phase0.BeaconBlockBody{},
+			s:    &altair.BeaconBlockBody{},
 		},
 		{
 			name: "BeaconBlockHeader",
@@ -68,11 +69,15 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "BeaconState",
-			s:    &phase0.BeaconState{},
+			s:    &altair.BeaconState{},
 		},
 		{
 			name: "Checkpoint",
 			s:    &phase0.Checkpoint{},
+		},
+		{
+			name: "ContributionAndProof",
+			s:    &altair.ContributionAndProof{},
 		},
 		{
 			name: "Deposit",
@@ -116,15 +121,31 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "SignedBeaconBlock",
-			s:    &phase0.SignedBeaconBlock{},
+			s:    &altair.SignedBeaconBlock{},
 		},
 		{
 			name: "SignedBeaconBlockHeader",
 			s:    &phase0.SignedBeaconBlockHeader{},
 		},
 		{
+			name: "SignedContributionAndproof",
+			s:    &altair.SignedContributionAndProof{},
+		},
+		{
 			name: "SignedVoluntaryExit",
 			s:    &phase0.SignedVoluntaryExit{},
+		},
+		{
+			name: "SyncAggregate",
+			s:    &altair.SyncAggregate{},
+		},
+		{
+			name: "SyncCommitteeContribuion",
+			s:    &altair.SyncCommitteeContribution{},
+		},
+		{
+			name: "SyncCommitteeMessage",
+			s:    &altair.SyncCommitteeMessage{},
 		},
 		{
 			name: "Validator",
@@ -136,7 +157,7 @@ func TestConsensusSpec(t *testing.T) {
 		},
 	}
 
-	baseDir := filepath.Join(os.Getenv("CONSENSUS_SPEC_TESTS_DIR"), "tests", "mainnet", "phase0", "ssz_static")
+	baseDir := filepath.Join(os.Getenv("CONSENSUS_SPEC_TESTS_DIR"), "tests", "mainnet", "altair", "ssz_static")
 	for _, test := range tests {
 		dir := filepath.Join(baseDir, test.name, "ssz_random")
 		require.NoError(t, filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {

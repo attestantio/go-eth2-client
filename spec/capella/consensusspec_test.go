@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package phase0_test
+package capella_test
 
 import (
 	"bytes"
@@ -20,6 +20,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/goccy/go-yaml"
@@ -56,11 +58,11 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "BeaconBlock",
-			s:    &phase0.BeaconBlock{},
+			s:    &capella.BeaconBlock{},
 		},
 		{
 			name: "BeaconBlockBody",
-			s:    &phase0.BeaconBlockBody{},
+			s:    &capella.BeaconBlockBody{},
 		},
 		{
 			name: "BeaconBlockHeader",
@@ -68,11 +70,15 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "BeaconState",
-			s:    &phase0.BeaconState{},
+			s:    &capella.BeaconState{},
 		},
 		{
 			name: "Checkpoint",
 			s:    &phase0.Checkpoint{},
+		},
+		{
+			name: "ContributionAndProof",
+			s:    &altair.ContributionAndProof{},
 		},
 		{
 			name: "Deposit",
@@ -91,12 +97,24 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &phase0.ETH1Data{},
 		},
 		{
+			name: "ExecutionPayload",
+			s:    &capella.ExecutionPayload{},
+		},
+		{
+			name: "ExecutionPayloadHeader",
+			s:    &capella.ExecutionPayloadHeader{},
+		},
+		{
 			name: "Fork",
 			s:    &phase0.Fork{},
 		},
 		{
 			name: "ForkData",
 			s:    &phase0.ForkData{},
+		},
+		{
+			name: "HistoricalSummary",
+			s:    &capella.HistoricalSummary{},
 		},
 		{
 			name: "IndexedAttestation",
@@ -116,15 +134,31 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "SignedBeaconBlock",
-			s:    &phase0.SignedBeaconBlock{},
+			s:    &capella.SignedBeaconBlock{},
 		},
 		{
 			name: "SignedBeaconBlockHeader",
 			s:    &phase0.SignedBeaconBlockHeader{},
 		},
 		{
+			name: "SignedContributionAndproof",
+			s:    &altair.SignedContributionAndProof{},
+		},
+		{
 			name: "SignedVoluntaryExit",
 			s:    &phase0.SignedVoluntaryExit{},
+		},
+		{
+			name: "SyncAggregate",
+			s:    &altair.SyncAggregate{},
+		},
+		{
+			name: "SyncCommitteeContribuion",
+			s:    &altair.SyncCommitteeContribution{},
+		},
+		{
+			name: "SyncCommitteeMessage",
+			s:    &altair.SyncCommitteeMessage{},
 		},
 		{
 			name: "Validator",
@@ -134,9 +168,13 @@ func TestConsensusSpec(t *testing.T) {
 			name: "VoluntaryExit",
 			s:    &phase0.VoluntaryExit{},
 		},
+		{
+			name: "Withdrawal",
+			s:    &capella.Withdrawal{},
+		},
 	}
 
-	baseDir := filepath.Join(os.Getenv("CONSENSUS_SPEC_TESTS_DIR"), "tests", "mainnet", "phase0", "ssz_static")
+	baseDir := filepath.Join(os.Getenv("CONSENSUS_SPEC_TESTS_DIR"), "tests", "mainnet", "capella", "ssz_static")
 	for _, test := range tests {
 		dir := filepath.Join(baseDir, test.name, "ssz_random")
 		require.NoError(t, filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -199,6 +237,8 @@ func testYAMLFormat(input []byte) string {
 
 	replacements := [][][]byte{
 		{[]byte(`"`), []byte(`'`)},
+		// Field 'extra_data' in BeaconBlockBody/case_3 has a non-standard format, fix here.
+		{[]byte(`extra_data: 0,`), []byte(`extra_data: '0x',`)},
 	}
 	for _, replacement := range replacements {
 		res = bytes.ReplaceAll(res, replacement[0], replacement[1])
