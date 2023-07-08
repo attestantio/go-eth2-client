@@ -38,11 +38,11 @@ func TestBeaconState(t *testing.T) {
 			stateID:     "genesis",
 			dataVersion: spec.DataVersionPhase0,
 		},
-		// {
-		// 	name:        "Head",
-		// 	stateID:     "head",
-		// 	dataVersion: spec.DataVersionBellatrix,
-		// },
+		{
+			name:        "Head",
+			stateID:     "head",
+			dataVersion: spec.DataVersionCapella,
+		},
 	}
 
 	service, err := http.New(ctx,
