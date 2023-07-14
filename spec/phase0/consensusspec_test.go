@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package deneb_test
+package phase0_test
 
 import (
 	"bytes"
@@ -20,9 +20,6 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/attestantio/go-eth2-client/spec/altair"
-	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/goccy/go-yaml"
@@ -59,11 +56,11 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "BeaconBlock",
-			s:    &deneb.BeaconBlock{},
+			s:    &phase0.BeaconBlock{},
 		},
 		{
 			name: "BeaconBlockBody",
-			s:    &deneb.BeaconBlockBody{},
+			s:    &phase0.BeaconBlockBody{},
 		},
 		{
 			name: "BeaconBlockHeader",
@@ -71,27 +68,11 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "BeaconState",
-			s:    &deneb.BeaconState{},
-		},
-		{
-			name: "BlobIdentifier",
-			s:    &deneb.BlobIdentifier{},
-		},
-		{
-			name: "BlobSidecar",
-			s:    &deneb.BlobSidecar{},
-		},
-		{
-			name: "BLSToExecutionChange",
-			s:    &capella.BLSToExecutionChange{},
+			s:    &phase0.BeaconState{},
 		},
 		{
 			name: "Checkpoint",
 			s:    &phase0.Checkpoint{},
-		},
-		{
-			name: "ContributionAndProof",
-			s:    &altair.ContributionAndProof{},
 		},
 		{
 			name: "Deposit",
@@ -110,14 +91,6 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &phase0.ETH1Data{},
 		},
 		{
-			name: "ExecutionPayload",
-			s:    &deneb.ExecutionPayload{},
-		},
-		{
-			name: "ExecutionPayloadHeader",
-			s:    &deneb.ExecutionPayloadHeader{},
-		},
-		{
 			name: "Fork",
 			s:    &phase0.Fork{},
 		},
@@ -125,25 +98,14 @@ func TestConsensusSpec(t *testing.T) {
 			name: "ForkData",
 			s:    &phase0.ForkData{},
 		},
-		// TODO
-		// {
-		// 	name: "HistoricalBatch",
-		// 	s:    &phase0.HistoricalBatch{},
-		// },
-		{
-			name: "HistoricalSummary",
-			s:    &capella.HistoricalSummary{},
-		},
 		{
 			name: "IndexedAttestation",
 			s:    &phase0.IndexedAttestation{},
 		},
-		// TODO lightclient*, sync*, others?
 		{
 			name: "PendingAttestation",
 			s:    &phase0.PendingAttestation{},
 		},
-		// TODO Powblock
 		{
 			name: "ProposerSlashing",
 			s:    &phase0.ProposerSlashing{},
@@ -154,43 +116,15 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "SignedBeaconBlock",
-			s:    &deneb.SignedBeaconBlock{},
+			s:    &phase0.SignedBeaconBlock{},
 		},
 		{
 			name: "SignedBeaconBlockHeader",
 			s:    &phase0.SignedBeaconBlockHeader{},
 		},
 		{
-			name: "SignedBlobSidecar",
-			s:    &deneb.SignedBlobSidecar{},
-		},
-		{
-			name: "SignedBLSToExecutionChange",
-			s:    &capella.SignedBLSToExecutionChange{},
-		},
-		{
-			name: "SignedContributionAndProof",
-			s:    &altair.SignedContributionAndProof{},
-		},
-		{
 			name: "SignedVoluntaryExit",
 			s:    &phase0.SignedVoluntaryExit{},
-		},
-		{
-			name: "SyncAggregate",
-			s:    &altair.SyncAggregate{},
-		},
-		{
-			name: "SyncCommittee",
-			s:    &altair.SyncCommittee{},
-		},
-		{
-			name: "SyncCommitteeContribution",
-			s:    &altair.SyncCommitteeContribution{},
-		},
-		{
-			name: "SyncCommitteeMessage",
-			s:    &altair.SyncCommitteeMessage{},
 		},
 		{
 			name: "Validator",
@@ -200,13 +134,9 @@ func TestConsensusSpec(t *testing.T) {
 			name: "VoluntaryExit",
 			s:    &phase0.VoluntaryExit{},
 		},
-		{
-			name: "Withdrawal",
-			s:    &capella.Withdrawal{},
-		},
 	}
 
-	baseDir := filepath.Join(os.Getenv("CONSENSUS_SPEC_TESTS_DIR"), "tests", "mainnet", "deneb", "ssz_static")
+	baseDir := filepath.Join(os.Getenv("CONSENSUS_SPEC_TESTS_DIR"), "tests", "mainnet", "phase0", "ssz_static")
 	for _, test := range tests {
 		dir := filepath.Join(baseDir, test.name, "ssz_random")
 		require.NoError(t, filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {

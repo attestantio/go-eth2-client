@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package deneb_test
+package capella_test
 
 import (
 	"bytes"
@@ -22,7 +22,6 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 	"github.com/goccy/go-yaml"
@@ -59,11 +58,11 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "BeaconBlock",
-			s:    &deneb.BeaconBlock{},
+			s:    &capella.BeaconBlock{},
 		},
 		{
 			name: "BeaconBlockBody",
-			s:    &deneb.BeaconBlockBody{},
+			s:    &capella.BeaconBlockBody{},
 		},
 		{
 			name: "BeaconBlockHeader",
@@ -71,19 +70,7 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "BeaconState",
-			s:    &deneb.BeaconState{},
-		},
-		{
-			name: "BlobIdentifier",
-			s:    &deneb.BlobIdentifier{},
-		},
-		{
-			name: "BlobSidecar",
-			s:    &deneb.BlobSidecar{},
-		},
-		{
-			name: "BLSToExecutionChange",
-			s:    &capella.BLSToExecutionChange{},
+			s:    &capella.BeaconState{},
 		},
 		{
 			name: "Checkpoint",
@@ -111,11 +98,11 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "ExecutionPayload",
-			s:    &deneb.ExecutionPayload{},
+			s:    &capella.ExecutionPayload{},
 		},
 		{
 			name: "ExecutionPayloadHeader",
-			s:    &deneb.ExecutionPayloadHeader{},
+			s:    &capella.ExecutionPayloadHeader{},
 		},
 		{
 			name: "Fork",
@@ -125,11 +112,6 @@ func TestConsensusSpec(t *testing.T) {
 			name: "ForkData",
 			s:    &phase0.ForkData{},
 		},
-		// TODO
-		// {
-		// 	name: "HistoricalBatch",
-		// 	s:    &phase0.HistoricalBatch{},
-		// },
 		{
 			name: "HistoricalSummary",
 			s:    &capella.HistoricalSummary{},
@@ -138,12 +120,10 @@ func TestConsensusSpec(t *testing.T) {
 			name: "IndexedAttestation",
 			s:    &phase0.IndexedAttestation{},
 		},
-		// TODO lightclient*, sync*, others?
 		{
 			name: "PendingAttestation",
 			s:    &phase0.PendingAttestation{},
 		},
-		// TODO Powblock
 		{
 			name: "ProposerSlashing",
 			s:    &phase0.ProposerSlashing{},
@@ -154,22 +134,14 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "SignedBeaconBlock",
-			s:    &deneb.SignedBeaconBlock{},
+			s:    &capella.SignedBeaconBlock{},
 		},
 		{
 			name: "SignedBeaconBlockHeader",
 			s:    &phase0.SignedBeaconBlockHeader{},
 		},
 		{
-			name: "SignedBlobSidecar",
-			s:    &deneb.SignedBlobSidecar{},
-		},
-		{
-			name: "SignedBLSToExecutionChange",
-			s:    &capella.SignedBLSToExecutionChange{},
-		},
-		{
-			name: "SignedContributionAndProof",
+			name: "SignedContributionAndproof",
 			s:    &altair.SignedContributionAndProof{},
 		},
 		{
@@ -181,11 +153,7 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &altair.SyncAggregate{},
 		},
 		{
-			name: "SyncCommittee",
-			s:    &altair.SyncCommittee{},
-		},
-		{
-			name: "SyncCommitteeContribution",
+			name: "SyncCommitteeContribuion",
 			s:    &altair.SyncCommitteeContribution{},
 		},
 		{
@@ -206,7 +174,7 @@ func TestConsensusSpec(t *testing.T) {
 		},
 	}
 
-	baseDir := filepath.Join(os.Getenv("CONSENSUS_SPEC_TESTS_DIR"), "tests", "mainnet", "deneb", "ssz_static")
+	baseDir := filepath.Join(os.Getenv("CONSENSUS_SPEC_TESTS_DIR"), "tests", "mainnet", "capella", "ssz_static")
 	for _, test := range tests {
 		dir := filepath.Join(baseDir, test.name, "ssz_random")
 		require.NoError(t, filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -269,6 +237,8 @@ func testYAMLFormat(input []byte) string {
 
 	replacements := [][][]byte{
 		{[]byte(`"`), []byte(`'`)},
+		// Field 'extra_data' in BeaconBlockBody/case_3 has a non-standard format, fix here.
+		{[]byte(`extra_data: 0,`), []byte(`extra_data: '0x',`)},
 	}
 	for _, replacement := range replacements {
 		res = bytes.ReplaceAll(res, replacement[0], replacement[1])

@@ -35,6 +35,7 @@ type blindedBlobSidecarJSON struct {
 	KzgProof        deneb.KzgProof      `json:"kzg_proof"`
 }
 
+// MarshalJSON implements json.Marshaler.
 func (b *BlindedBlobSidecar) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&blindedBlobSidecarJSON{
 		BlockRoot:       b.BlockRoot,
@@ -48,6 +49,7 @@ func (b *BlindedBlobSidecar) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
 func (b *BlindedBlobSidecar) UnmarshalJSON(input []byte) error {
 	raw, err := codecs.RawJSON(&blindedBlobSidecarJSON{}, input)
 	if err != nil {

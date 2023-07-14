@@ -22,7 +22,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// UnmarshalRawMessage generates raw JSON for a struct,
+// RawJSON generates raw JSON for a struct,
 // ensuring that all values are present.
 func RawJSON(b any, input []byte) (map[string]json.RawMessage, error) {
 	// Make generic map from input.

@@ -50,3 +50,23 @@ func (g *Gwei) UnmarshalJSON(input []byte) error {
 func (g Gwei) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%d"`, g)), nil
 }
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (g *Gwei) UnmarshalYAML(input []byte) error {
+	if len(input) == 0 {
+		return errors.New("input missing")
+	}
+
+	val, err := strconv.ParseUint(string(input), 10, 64)
+	if err != nil {
+		return errors.Wrapf(err, "invalid value %s", string(input))
+	}
+	*g = Gwei(val)
+
+	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (g Gwei) MarshalYAML() ([]byte, error) {
+	return []byte(fmt.Sprintf(`%d`, g)), nil
+}

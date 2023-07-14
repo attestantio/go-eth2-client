@@ -28,6 +28,7 @@ type blobIdentifierJSON struct {
 	Index     string      `json:"index"`
 }
 
+// MarshalJSON implements json.Marshaler.
 func (b *BlobIdentifier) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&blobIdentifierJSON{
 		BlockRoot: b.BlockRoot,
@@ -35,6 +36,7 @@ func (b *BlobIdentifier) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
 func (b *BlobIdentifier) UnmarshalJSON(input []byte) error {
 	raw, err := codecs.RawJSON(&blobIdentifierJSON{}, input)
 	if err != nil {

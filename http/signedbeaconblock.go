@@ -18,7 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
+	"net/http"
 
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -52,58 +52,102 @@ type denebSignedBeaconBlockJSON struct {
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
 // N.B if a signed beacon block for the block ID is not available this will return nil without an error.
 func (s *Service) SignedBeaconBlock(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v2/beacon/blocks/%s", blockID))
+	res, err := s.get2(ctx, fmt.Sprintf("/eth/v2/beacon/blocks/%s", blockID))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request signed beacon block")
 	}
-	if respBodyReader == nil {
+	if res.statusCode == http.StatusNotFound {
 		return nil, nil
 	}
 
-	var dataBodyReader bytes.Buffer
-	metadataReader := io.TeeReader(respBodyReader, &dataBodyReader)
-	var metadata responseMetadata
-	if err := json.NewDecoder(metadataReader).Decode(&metadata); err != nil {
-		return nil, errors.Wrap(err, "failed to parse response")
+	switch res.contentType {
+	case ContentTypeSSZ:
+		return s.signedBeaconBlockFromSSZ(res)
+	case ContentTypeJSON:
+		return s.signedBeaconBlockFromJSON(res)
+	default:
+		return nil, fmt.Errorf("unhandled content type %v", res.contentType)
 	}
-	res := &spec.VersionedSignedBeaconBlock{
-		Version: metadata.Version,
+}
+
+func (s *Service) signedBeaconBlockFromSSZ(res *httpResponse) (*spec.VersionedSignedBeaconBlock, error) {
+	block := &spec.VersionedSignedBeaconBlock{
+		Version: res.consensusVersion,
 	}
 
-	switch metadata.Version {
+	switch res.consensusVersion {
+	case spec.DataVersionPhase0:
+		block.Phase0 = &phase0.SignedBeaconBlock{}
+		if err := block.Phase0.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode phase0 signed beacon block")
+		}
+	case spec.DataVersionAltair:
+		block.Altair = &altair.SignedBeaconBlock{}
+		if err := block.Altair.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode altair signed beacon block")
+		}
+	case spec.DataVersionBellatrix:
+		block.Bellatrix = &bellatrix.SignedBeaconBlock{}
+		if err := block.Bellatrix.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode bellatrix signed beacon block")
+		}
+	case spec.DataVersionCapella:
+		block.Capella = &capella.SignedBeaconBlock{}
+		if err := block.Capella.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode capella signed beacon block")
+		}
+	case spec.DataVersionDeneb:
+		block.Deneb = &deneb.SignedBeaconBlock{}
+		if err := block.Deneb.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode deneb signed beacon block")
+		}
+	default:
+		return nil, fmt.Errorf("unhandled block version %s", res.consensusVersion)
+	}
+
+	return block, nil
+}
+
+func (s *Service) signedBeaconBlockFromJSON(res *httpResponse) (*spec.VersionedSignedBeaconBlock, error) {
+	block := &spec.VersionedSignedBeaconBlock{
+		Version: res.consensusVersion,
+	}
+
+	reader := bytes.NewBuffer(res.body)
+	switch block.Version {
 	case spec.DataVersionPhase0:
 		var resp phase0SignedBeaconBlockJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse phase 0 signed beacon block")
 		}
-		res.Phase0 = resp.Data
+		block.Phase0 = resp.Data
 	case spec.DataVersionAltair:
 		var resp altairSignedBeaconBlockJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse altair signed beacon block")
 		}
-		res.Altair = resp.Data
+		block.Altair = resp.Data
 	case spec.DataVersionBellatrix:
 		var resp bellatrixSignedBeaconBlockJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse bellatrix signed beacon block")
 		}
-		res.Bellatrix = resp.Data
+		block.Bellatrix = resp.Data
 	case spec.DataVersionCapella:
 		var resp capellaSignedBeaconBlockJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse capella signed beacon block")
 		}
-		res.Capella = resp.Data
+		block.Capella = resp.Data
 	case spec.DataVersionDeneb:
 		var resp denebSignedBeaconBlockJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse deneb signed beacon block")
 		}
-		res.Deneb = resp.Data
+		block.Deneb = resp.Data
 	default:
-		return nil, fmt.Errorf("unhandled block version %s", metadata.Version)
+		return nil, fmt.Errorf("unhandled block version %s", res.consensusVersion)
 	}
 
-	return res, nil
+	return block, nil
 }
