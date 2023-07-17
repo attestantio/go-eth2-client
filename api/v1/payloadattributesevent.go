@@ -40,7 +40,7 @@ type PayloadAttributesData struct {
 	V2 *PayloadAttributesV2
 }
 
-// PayloadAttributes represents the payload attributes.
+// PayloadAttributesV1 represents the payload attributes.
 type PayloadAttributesV1 struct {
 	// Timestamp is the timestamp of the payload.
 	Timestamp uint64
@@ -93,7 +93,7 @@ type payloadAttributesV2JSON struct {
 	Withdrawals           []*capella.Withdrawal `json:"withdrawals"`
 }
 
-// MarshalJSON implements json.Marshaler.
+// UnmarshalJSON implements json.Unmarshaler.
 func (p *PayloadAttributesV1) UnmarshalJSON(input []byte) error {
 	var payloadAttributes payloadAttributesV1JSON
 	if err := json.Unmarshal(input, &payloadAttributes); err != nil {
@@ -140,7 +140,7 @@ func (p *PayloadAttributesV1) unpack(data *payloadAttributesV1JSON) error {
 	return nil
 }
 
-// MarshalJSON implements json.Marshaler.
+// UnmarshalJSON implements json.Unmarshaler.
 func (p *PayloadAttributesV2) UnmarshalJSON(input []byte) error {
 	var payloadAttributes payloadAttributesV2JSON
 	if err := json.Unmarshal(input, &payloadAttributes); err != nil {

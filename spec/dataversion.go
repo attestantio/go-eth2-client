@@ -22,8 +22,10 @@ import (
 type DataVersion uint64
 
 const (
+	// DataVersionUnknown is an unknown data version.
+	DataVersionUnknown DataVersion = iota
 	// DataVersionPhase0 is data applicable for the initial release of the beacon chain.
-	DataVersionPhase0 DataVersion = iota
+	DataVersionPhase0
 	// DataVersionAltair is data applicable for the Altair release of the beacon chain.
 	DataVersionAltair
 	// DataVersionBellatrix is data applicable for the Bellatrix release of the beacon chain.
@@ -35,6 +37,7 @@ const (
 )
 
 var dataVersionStrings = [...]string{
+	"unknown",
 	"phase0",
 	"altair",
 	"bellatrix",

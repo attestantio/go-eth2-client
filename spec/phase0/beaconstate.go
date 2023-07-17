@@ -14,12 +14,14 @@
 package phase0
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 	bitfield "github.com/prysmaticlabs/go-bitfield"
 )
@@ -74,6 +76,31 @@ type beaconStateJSON struct {
 	FinalizedCheckpoint         *Checkpoint           `json:"finalized_checkpoint"`
 }
 
+// beaconStateYAML is the spec representation of the struct.
+type beaconStateYAML struct {
+	GenesisTime                 uint64                `json:"genesis_time"`
+	GenesisValidatorsRoot       Root                  `json:"genesis_validators_root"`
+	Slot                        uint64                `json:"slot"`
+	Fork                        *Fork                 `json:"fork"`
+	LatestBlockHeader           *BeaconBlockHeader    `json:"latest_block_header"`
+	BlockRoots                  []Root                `json:"block_roots"`
+	StateRoots                  []Root                `json:"state_roots"`
+	HistoricalRoots             []Root                `json:"historical_roots"`
+	ETH1Data                    *ETH1Data             `json:"eth1_data"`
+	ETH1DataVotes               []*ETH1Data           `json:"eth1_data_votes"`
+	ETH1DepositIndex            uint64                `json:"eth1_deposit_index"`
+	Validators                  []*Validator          `json:"validators"`
+	Balances                    []Gwei                `json:"balances"`
+	RANDAOMixes                 []Root                `json:"randao_mixes"`
+	Slashings                   []Gwei                `json:"slashings"`
+	PreviousEpochAttestations   []*PendingAttestation `json:"previous_epoch_attestations"`
+	CurrentEpochAttestations    []*PendingAttestation `json:"current_epoch_attestations"`
+	JustificationBits           string                `json:"justification_bits"`
+	PreviousJustifiedCheckpoint *Checkpoint           `json:"previous_justified_checkpoint"`
+	CurrentJustifiedCheckpoint  *Checkpoint           `json:"current_justified_checkpoint"`
+	FinalizedCheckpoint         *Checkpoint           `json:"finalized_checkpoint"`
+}
+
 // MarshalJSON implements json.Marshaler.
 func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	blockRoots := make([]string, len(s.BlockRoots))
@@ -111,6 +138,7 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 		HistoricalRoots:             historicalRoots,
 		ETH1Data:                    s.ETH1Data,
 		ETH1DataVotes:               s.ETH1DataVotes,
+		ETH1DepositIndex:            fmt.Sprintf("%d", s.ETH1DepositIndex),
 		Validators:                  s.Validators,
 		Balances:                    balances,
 		RANDAOMixes:                 randaoMixes,
@@ -125,24 +153,31 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-// nolint:gocyclo
 func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	var err error
 
-	var beaconStateJSON beaconStateJSON
-	if err = json.Unmarshal(input, &beaconStateJSON); err != nil {
+	var data beaconStateJSON
+	if err = json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
-	if beaconStateJSON.GenesisTime == "" {
+
+	return s.unpack(&data)
+}
+
+// nolint:gocyclo
+func (s *BeaconState) unpack(data *beaconStateJSON) error {
+	var err error
+
+	if data.GenesisTime == "" {
 		return errors.New("genesis time missing")
 	}
-	if s.GenesisTime, err = strconv.ParseUint(beaconStateJSON.GenesisTime, 10, 64); err != nil {
+	if s.GenesisTime, err = strconv.ParseUint(data.GenesisTime, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for genesis time")
 	}
-	if beaconStateJSON.GenesisValidatorsRoot == "" {
+	if data.GenesisValidatorsRoot == "" {
 		return errors.New("genesis validators root missing")
 	}
-	genesisValidatorsRoot, err := hex.DecodeString(strings.TrimPrefix(beaconStateJSON.GenesisValidatorsRoot, "0x"))
+	genesisValidatorsRoot, err := hex.DecodeString(strings.TrimPrefix(data.GenesisValidatorsRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for genesis validators root")
 	}
@@ -150,31 +185,31 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 		return fmt.Errorf("incorrect length %d for genesis validators root", len(genesisValidatorsRoot))
 	}
 	copy(s.GenesisValidatorsRoot[:], genesisValidatorsRoot)
-	if beaconStateJSON.Slot == "" {
+	if data.Slot == "" {
 		return errors.New("slot missing")
 	}
-	slot, err := strconv.ParseUint(beaconStateJSON.Slot, 10, 64)
+	slot, err := strconv.ParseUint(data.Slot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
 	s.Slot = Slot(slot)
-	if beaconStateJSON.Fork == nil {
+	if data.Fork == nil {
 		return errors.New("fork missing")
 	}
-	s.Fork = beaconStateJSON.Fork
-	if beaconStateJSON.LatestBlockHeader == nil {
+	s.Fork = data.Fork
+	if data.LatestBlockHeader == nil {
 		return errors.New("latest block header missing")
 	}
-	s.LatestBlockHeader = beaconStateJSON.LatestBlockHeader
-	if len(beaconStateJSON.BlockRoots) == 0 {
+	s.LatestBlockHeader = data.LatestBlockHeader
+	if len(data.BlockRoots) == 0 {
 		return errors.New("block roots missing")
 	}
-	s.BlockRoots = make([]Root, len(beaconStateJSON.BlockRoots))
-	for i := range beaconStateJSON.BlockRoots {
-		if beaconStateJSON.BlockRoots[i] == "" {
+	s.BlockRoots = make([]Root, len(data.BlockRoots))
+	for i := range data.BlockRoots {
+		if data.BlockRoots[i] == "" {
 			return fmt.Errorf("block root %d missing", i)
 		}
-		blockRoot, err := hex.DecodeString(strings.TrimPrefix(beaconStateJSON.BlockRoots[i], "0x"))
+		blockRoot, err := hex.DecodeString(strings.TrimPrefix(data.BlockRoots[i], "0x"))
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for block root %d", i))
 		}
@@ -183,12 +218,12 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 		}
 		copy(s.BlockRoots[i][:], blockRoot)
 	}
-	s.StateRoots = make([]Root, len(beaconStateJSON.StateRoots))
-	for i := range beaconStateJSON.StateRoots {
-		if beaconStateJSON.StateRoots[i] == "" {
+	s.StateRoots = make([]Root, len(data.StateRoots))
+	for i := range data.StateRoots {
+		if data.StateRoots[i] == "" {
 			return fmt.Errorf("state root %d missing", i)
 		}
-		stateRoot, err := hex.DecodeString(strings.TrimPrefix(beaconStateJSON.StateRoots[i], "0x"))
+		stateRoot, err := hex.DecodeString(strings.TrimPrefix(data.StateRoots[i], "0x"))
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for state root %d", i))
 		}
@@ -197,12 +232,12 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 		}
 		copy(s.StateRoots[i][:], stateRoot)
 	}
-	s.HistoricalRoots = make([]Root, len(beaconStateJSON.HistoricalRoots))
-	for i := range beaconStateJSON.HistoricalRoots {
-		if beaconStateJSON.HistoricalRoots[i] == "" {
+	s.HistoricalRoots = make([]Root, len(data.HistoricalRoots))
+	for i := range data.HistoricalRoots {
+		if data.HistoricalRoots[i] == "" {
 			return fmt.Errorf("historical root %d missing", i)
 		}
-		historicalRoot, err := hex.DecodeString(strings.TrimPrefix(beaconStateJSON.HistoricalRoots[i], "0x"))
+		historicalRoot, err := hex.DecodeString(strings.TrimPrefix(data.HistoricalRoots[i], "0x"))
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for historical root %d", i))
 		}
@@ -211,39 +246,39 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 		}
 		copy(s.HistoricalRoots[i][:], historicalRoot)
 	}
-	if beaconStateJSON.ETH1Data == nil {
+	if data.ETH1Data == nil {
 		return errors.New("eth1 data missing")
 	}
-	s.ETH1Data = beaconStateJSON.ETH1Data
+	s.ETH1Data = data.ETH1Data
 	// ETH1DataVotes can be empty.
-	s.ETH1DataVotes = beaconStateJSON.ETH1DataVotes
-	if beaconStateJSON.Validators == nil {
+	s.ETH1DataVotes = data.ETH1DataVotes
+	if data.Validators == nil {
 		return errors.New("validators missing")
 	}
-	if beaconStateJSON.ETH1DepositIndex == "" {
+	if data.ETH1DepositIndex == "" {
 		return errors.New("eth1 deposit index missing")
 	}
-	if s.ETH1DepositIndex, err = strconv.ParseUint(beaconStateJSON.ETH1DepositIndex, 10, 64); err != nil {
+	if s.ETH1DepositIndex, err = strconv.ParseUint(data.ETH1DepositIndex, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for eth1 deposit index")
 	}
-	s.Validators = beaconStateJSON.Validators
-	s.Balances = make([]Gwei, len(beaconStateJSON.Balances))
-	for i := range beaconStateJSON.Balances {
-		if beaconStateJSON.Balances[i] == "" {
+	s.Validators = data.Validators
+	s.Balances = make([]Gwei, len(data.Balances))
+	for i := range data.Balances {
+		if data.Balances[i] == "" {
 			return fmt.Errorf("balance %d missing", i)
 		}
-		balance, err := strconv.ParseUint(beaconStateJSON.Balances[i], 10, 64)
+		balance, err := strconv.ParseUint(data.Balances[i], 10, 64)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for balance %d", i))
 		}
 		s.Balances[i] = Gwei(balance)
 	}
-	s.RANDAOMixes = make([]Root, len(beaconStateJSON.RANDAOMixes))
-	for i := range beaconStateJSON.RANDAOMixes {
-		if beaconStateJSON.RANDAOMixes[i] == "" {
+	s.RANDAOMixes = make([]Root, len(data.RANDAOMixes))
+	for i := range data.RANDAOMixes {
+		if data.RANDAOMixes[i] == "" {
 			return fmt.Errorf("RANDAO mix %d missing", i)
 		}
-		randaoMix, err := hex.DecodeString(strings.TrimPrefix(beaconStateJSON.RANDAOMixes[i], "0x"))
+		randaoMix, err := hex.DecodeString(strings.TrimPrefix(data.RANDAOMixes[i], "0x"))
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for RANDAO mix %d", i))
 		}
@@ -252,39 +287,80 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 		}
 		copy(s.RANDAOMixes[i][:], randaoMix)
 	}
-	s.Slashings = make([]Gwei, len(beaconStateJSON.Slashings))
-	for i := range beaconStateJSON.Slashings {
-		if beaconStateJSON.Slashings[i] == "" {
+	s.Slashings = make([]Gwei, len(data.Slashings))
+	for i := range data.Slashings {
+		if data.Slashings[i] == "" {
 			return fmt.Errorf("slashing %d missing", i)
 		}
-		slashings, err := strconv.ParseUint(beaconStateJSON.Slashings[i], 10, 64)
+		slashings, err := strconv.ParseUint(data.Slashings[i], 10, 64)
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for slashing %d", i))
 		}
 		s.Slashings[i] = Gwei(slashings)
 	}
-	s.PreviousEpochAttestations = beaconStateJSON.PreviousEpochAttestations
-	s.CurrentEpochAttestations = beaconStateJSON.CurrentEpochAttestations
-	if beaconStateJSON.JustificationBits == "" {
+	s.PreviousEpochAttestations = data.PreviousEpochAttestations
+	s.CurrentEpochAttestations = data.CurrentEpochAttestations
+	if data.JustificationBits == "" {
 		return errors.New("justification bits missing")
 	}
-	if s.JustificationBits, err = hex.DecodeString(strings.TrimPrefix(beaconStateJSON.JustificationBits, "0x")); err != nil {
+	if s.JustificationBits, err = hex.DecodeString(strings.TrimPrefix(data.JustificationBits, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for justification bits")
 	}
-	if beaconStateJSON.PreviousJustifiedCheckpoint == nil {
+	if data.PreviousJustifiedCheckpoint == nil {
 		return errors.New("previous justified checkpoint missing")
 	}
-	s.PreviousJustifiedCheckpoint = beaconStateJSON.PreviousJustifiedCheckpoint
-	if beaconStateJSON.CurrentJustifiedCheckpoint == nil {
+	s.PreviousJustifiedCheckpoint = data.PreviousJustifiedCheckpoint
+	if data.CurrentJustifiedCheckpoint == nil {
 		return errors.New("current justified checkpoint missing")
 	}
-	s.CurrentJustifiedCheckpoint = beaconStateJSON.CurrentJustifiedCheckpoint
-	if beaconStateJSON.FinalizedCheckpoint == nil {
+	s.CurrentJustifiedCheckpoint = data.CurrentJustifiedCheckpoint
+	if data.FinalizedCheckpoint == nil {
 		return errors.New("finalized checkpoint missing")
 	}
-	s.FinalizedCheckpoint = beaconStateJSON.FinalizedCheckpoint
+	s.FinalizedCheckpoint = data.FinalizedCheckpoint
 
 	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (s *BeaconState) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&beaconStateYAML{
+		GenesisTime:                 s.GenesisTime,
+		GenesisValidatorsRoot:       s.GenesisValidatorsRoot,
+		Slot:                        uint64(s.Slot),
+		Fork:                        s.Fork,
+		LatestBlockHeader:           s.LatestBlockHeader,
+		BlockRoots:                  s.BlockRoots,
+		StateRoots:                  s.StateRoots,
+		HistoricalRoots:             s.HistoricalRoots,
+		ETH1Data:                    s.ETH1Data,
+		ETH1DataVotes:               s.ETH1DataVotes,
+		ETH1DepositIndex:            s.ETH1DepositIndex,
+		Validators:                  s.Validators,
+		Balances:                    s.Balances,
+		RANDAOMixes:                 s.RANDAOMixes,
+		Slashings:                   s.Slashings,
+		PreviousEpochAttestations:   s.PreviousEpochAttestations,
+		CurrentEpochAttestations:    s.CurrentEpochAttestations,
+		JustificationBits:           fmt.Sprintf("%#x", s.JustificationBits.Bytes()),
+		PreviousJustifiedCheckpoint: s.PreviousJustifiedCheckpoint,
+		CurrentJustifiedCheckpoint:  s.CurrentJustifiedCheckpoint,
+		FinalizedCheckpoint:         s.FinalizedCheckpoint,
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
+	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (s *BeaconState) UnmarshalYAML(input []byte) error {
+	// We unmarshal to the JSON struct to save on duplicate code.
+	var data beaconStateJSON
+	if err := yaml.Unmarshal(input, &data); err != nil {
+		return err
+	}
+	return s.unpack(&data)
 }
 
 // String returns a string version of the structure.

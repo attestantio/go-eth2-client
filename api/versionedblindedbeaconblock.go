@@ -37,7 +37,7 @@ func (v *VersionedBlindedBeaconBlock) IsEmpty() bool {
 	return v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil
 }
 
-// Slot returns the slot of the beacon block.
+// Slot returns the slot of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) Slot() (phase0.Slot, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
@@ -83,7 +83,53 @@ func (v *VersionedBlindedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, er
 	}
 }
 
-// Attestations returns the attestations of the beacon block.
+// RandaoReveal returns the RANDAO reveal of the blinded beacon block.
+func (v *VersionedBlindedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Body.RANDAOReveal, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil || v.Capella.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no capella block")
+		}
+		return v.Capella.Body.RANDAOReveal, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no deneb block")
+		}
+		return v.Deneb.Body.RANDAOReveal, nil
+	default:
+		return phase0.BLSSignature{}, errors.New("unsupported version")
+	}
+}
+
+// Graffiti returns the graffiti of the blinded beacon block.
+func (v *VersionedBlindedBeaconBlock) Graffiti() ([32]byte, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
+			return [32]byte{}, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Body.Graffiti, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil || v.Capella.Body == nil {
+			return [32]byte{}, errors.New("no capella block")
+		}
+		return v.Capella.Body.Graffiti, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Body == nil {
+			return [32]byte{}, errors.New("no deneb block")
+		}
+		return v.Deneb.Body.Graffiti, nil
+	default:
+		return [32]byte{}, errors.New("unsupported version")
+	}
+}
+
+// Attestations returns the attestations of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) Attestations() ([]*phase0.Attestation, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
@@ -106,7 +152,7 @@ func (v *VersionedBlindedBeaconBlock) Attestations() ([]*phase0.Attestation, err
 	}
 }
 
-// Root returns the root of the beacon block.
+// Root returns the root of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) Root() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
@@ -129,7 +175,7 @@ func (v *VersionedBlindedBeaconBlock) Root() (phase0.Root, error) {
 	}
 }
 
-// BodyRoot returns the body root of the beacon block.
+// BodyRoot returns the body root of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) BodyRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
@@ -152,7 +198,7 @@ func (v *VersionedBlindedBeaconBlock) BodyRoot() (phase0.Root, error) {
 	}
 }
 
-// ParentRoot returns the parent root of the beacon block.
+// ParentRoot returns the parent root of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) ParentRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
@@ -175,7 +221,7 @@ func (v *VersionedBlindedBeaconBlock) ParentRoot() (phase0.Root, error) {
 	}
 }
 
-// StateRoot returns the state root of the beacon block.
+// StateRoot returns the state root of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) StateRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
@@ -198,7 +244,7 @@ func (v *VersionedBlindedBeaconBlock) StateRoot() (phase0.Root, error) {
 	}
 }
 
-// TransactionsRoot returns the transactions root of the beacon block.
+// TransactionsRoot returns the transactions root of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) TransactionsRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:

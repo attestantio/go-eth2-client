@@ -79,6 +79,9 @@ func (d *Deposit) unpack(depositJSON *depositJSON) error {
 		if d.Proof[i], err = hex.DecodeString(strings.TrimPrefix(depositJSON.Proof[i], "0x")); err != nil {
 			return errors.Wrap(err, "invalid value for proof")
 		}
+		if len(d.Proof[i]) != 32 {
+			return fmt.Errorf("incorrect size %d for deposit proof", len(d.Proof[i]))
+		}
 	}
 	if depositJSON.Data == nil {
 		return errors.New("data missing")

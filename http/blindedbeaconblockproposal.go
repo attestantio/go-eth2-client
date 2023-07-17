@@ -18,7 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
+	"net/http"
 
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
@@ -44,97 +44,123 @@ type denebBlindedBeaconBlockProposalJSON struct {
 // BlindedBeaconBlockProposal fetches a proposed beacon block for signing.
 func (s *Service) BlindedBeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*api.VersionedBlindedBeaconBlock, error) {
 	// Graffiti should be 32 bytes.
-	fixedGraffiti := make([]byte, 32)
-	copy(fixedGraffiti, graffiti)
+	var fixedGraffiti [32]byte
+	copy(fixedGraffiti[:], graffiti)
 
 	return s.blindedBeaconBlockProposal(ctx, slot, randaoReveal, fixedGraffiti)
 }
 
 // blindedBeaconBlockProposal fetches a proposed beacon block for signing.
-func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*api.VersionedBlindedBeaconBlock, error) {
-	url := fmt.Sprintf("/eth/v1/validator/blinded_blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti)
-	respBodyReader, err := s.get(ctx, url)
+func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti [32]byte) (*api.VersionedBlindedBeaconBlock, error) {
+	res, err := s.get2(ctx, fmt.Sprintf("/eth/v1/validator/blinded_blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti))
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request blinded beacon block proposal")
+		return nil, errors.Wrap(err, "failed to request signed beacon block")
 	}
-	if respBodyReader == nil {
-		return nil, errors.New("blinded beacon block proposal response empty")
-	}
-
-	var dataBodyReader bytes.Buffer
-	metadataReader := io.TeeReader(respBodyReader, &dataBodyReader)
-	var metadata responseMetadata
-	if err := json.NewDecoder(metadataReader).Decode(&metadata); err != nil {
-		return nil, errors.Wrap(err, "failed to parse response")
-	}
-	res := &api.VersionedBlindedBeaconBlock{
-		Version: metadata.Version,
+	if res.statusCode == http.StatusNotFound {
+		return nil, nil
 	}
 
-	switch metadata.Version {
+	var block *api.VersionedBlindedBeaconBlock
+	switch res.contentType {
+	case ContentTypeSSZ:
+		block, err = s.blindedBeaconBlockProposalFromSSZ(res)
+	case ContentTypeJSON:
+		block, err = s.blindedBeaconBlockProposalFromJSON(res)
+	default:
+		return nil, fmt.Errorf("unhandled content type %v", res.contentType)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Ensure the data returned to us is as expected given our input.
+	blockSlot, err := block.Slot()
+	if err != nil {
+		return nil, err
+	}
+	if blockSlot != slot {
+		return nil, errors.New("blinded beacon block proposal not for requested slot")
+	}
+
+	// Only check the RANDAO reveal and graffiti if we are not connected to DVT middleware,
+	// as the returned values will be decided by the middleware.
+	if !s.connectedToDVTMiddleware {
+		blockRandaoReveal, err := block.RandaoReveal()
+		if err != nil {
+			return nil, err
+		}
+		if !bytes.Equal(blockRandaoReveal[:], randaoReveal[:]) {
+			return nil, fmt.Errorf("blinded beacon block proposal has RANDAO reveal %#x; expected %#x", blockRandaoReveal[:], randaoReveal[:])
+		}
+
+		blockGraffiti, err := block.Graffiti()
+		if err != nil {
+			return nil, err
+		}
+		if !bytes.Equal(blockGraffiti[:], graffiti[:]) {
+			return nil, fmt.Errorf("blinded beacon block proposal has graffiti %#x; expected %#x", blockGraffiti[:], graffiti[:])
+		}
+	}
+
+	return block, nil
+}
+
+func (s *Service) blindedBeaconBlockProposalFromSSZ(res *httpResponse) (*api.VersionedBlindedBeaconBlock, error) {
+	block := &api.VersionedBlindedBeaconBlock{
+		Version: res.consensusVersion,
+	}
+
+	switch res.consensusVersion {
+	case spec.DataVersionBellatrix:
+		block.Bellatrix = &apiv1bellatrix.BlindedBeaconBlock{}
+		if err := block.Bellatrix.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode bellatrix blinded beacon block proposal")
+		}
+	case spec.DataVersionCapella:
+		block.Capella = &apiv1capella.BlindedBeaconBlock{}
+		if err := block.Capella.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode capella blinded beacon block proposal")
+		}
+	case spec.DataVersionDeneb:
+		block.Deneb = &apiv1deneb.BlindedBeaconBlock{}
+		if err := block.Deneb.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode deneb blinded beacon block proposal")
+		}
+	default:
+		return nil, fmt.Errorf("unhandled block proposal version %s", res.consensusVersion)
+	}
+
+	return block, nil
+}
+
+func (s *Service) blindedBeaconBlockProposalFromJSON(res *httpResponse) (*api.VersionedBlindedBeaconBlock, error) {
+	block := &api.VersionedBlindedBeaconBlock{
+		Version: res.consensusVersion,
+	}
+
+	reader := bytes.NewBuffer(res.body)
+	switch block.Version {
 	case spec.DataVersionBellatrix:
 		var resp bellatrixBlindedBeaconBlockProposalJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse bellatrix blinded beacon block proposal")
 		}
-		// Ensure the data returned to us is as expected given our input.
-		if resp.Data.Slot != slot {
-			return nil, errors.New("blinded beacon block proposal not for requested slot")
-		}
-		// Only check the RANDAO reveal and graffiti if we are not connected to DVT middleware,
-		// as the returned values will be decided by the middleware.
-		if !s.connectedToDVTMiddleware {
-			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-				return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", resp.Data.Body.RANDAOReveal[:], randaoReveal[:])
-			}
-			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-				return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", resp.Data.Body.Graffiti[:], graffiti)
-			}
-		}
-		res.Bellatrix = resp.Data
+		block.Bellatrix = resp.Data
 	case spec.DataVersionCapella:
 		var resp capellaBlindedBeaconBlockProposalJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse capella blinded beacon block proposal")
 		}
-		// Ensure the data returned to us is as expected given our input.
-		if resp.Data.Slot != slot {
-			return nil, errors.New("blinded beacon block proposal not for requested slot")
-		}
-		// Only check the RANDAO reveal and graffiti if we are not connected to DVT middleware,
-		// as the returned values will be decided by the middleware.
-		if !s.connectedToDVTMiddleware {
-			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-				return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", resp.Data.Body.RANDAOReveal[:], randaoReveal[:])
-			}
-			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-				return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", resp.Data.Body.Graffiti[:], graffiti)
-			}
-		}
-		res.Capella = resp.Data
+		block.Capella = resp.Data
 	case spec.DataVersionDeneb:
 		var resp denebBlindedBeaconBlockProposalJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
 			return nil, errors.Wrap(err, "failed to parse deneb blinded beacon block proposal")
 		}
-		// Ensure the data returned to us is as expected given our input.
-		if resp.Data.Slot != slot {
-			return nil, errors.New("blinded beacon block proposal not for requested slot")
-		}
-		// Only check the RANDAO reveal and graffiti if we are not connected to DVT middleware,
-		// as the returned values will be decided by the middleware.
-		if !s.connectedToDVTMiddleware {
-			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-				return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", resp.Data.Body.RANDAOReveal[:], randaoReveal[:])
-			}
-			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-				return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", resp.Data.Body.Graffiti[:], graffiti)
-			}
-		}
-		res.Deneb = resp.Data
+		block.Deneb = resp.Data
 	default:
-		return nil, fmt.Errorf("unsupported block version %s", metadata.Version)
+		return nil, fmt.Errorf("unsupported block version %s", res.consensusVersion)
 	}
 
-	return res, nil
+	return block, nil
 }
