@@ -214,3 +214,95 @@ func (v *VersionedSignedBlindedBeaconBlock) ProposerSlashings() ([]*phase0.Propo
 		return nil, errors.New("unknown version")
 	}
 }
+
+// ProposerIndex returns the proposer index of the beacon block.
+func (v *VersionedSignedBlindedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Message == nil {
+			return 0, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.ProposerIndex, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil {
+			return 0, errors.New("no capella block")
+		}
+		return v.Capella.Message.ProposerIndex, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil {
+			return 0, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.ProposerIndex, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
+// BlockHash returns the hash of the beacon block.
+func (v *VersionedSignedBlindedBeaconBlock) BlockHash() (phase0.Hash32, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil || v.Bellatrix.Message.Body.ExecutionPayloadHeader == nil {
+			return phase0.Hash32{}, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.ExecutionPayloadHeader.BlockHash, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayloadHeader == nil {
+			return phase0.Hash32{}, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.ExecutionPayloadHeader.BlockHash, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil || v.Deneb.Message.Body.ExecutionPayloadHeader == nil {
+			return phase0.Hash32{}, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.ExecutionPayloadHeader.BlockHash, nil
+	default:
+		return phase0.Hash32{}, errors.New("unknown version")
+	}
+}
+
+// BlockNumber returns the block number of the beacon block.
+func (v *VersionedSignedBlindedBeaconBlock) BlockNumber() (uint64, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil || v.Bellatrix.Message.Body.ExecutionPayloadHeader == nil {
+			return 0, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayloadHeader == nil {
+			return 0, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil || v.Deneb.Message.Body.ExecutionPayloadHeader == nil {
+			return 0, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
+// Signature returns the signature of the beacon block.
+func (v *VersionedSignedBlindedBeaconBlock) Signature() (phase0.BLSSignature, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return phase0.BLSSignature{}, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Signature, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.BLSSignature{}, errors.New("no capella block")
+		}
+		return v.Capella.Signature, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.BLSSignature{}, errors.New("no deneb block")
+		}
+		return v.Deneb.Signature, nil
+	default:
+		return phase0.BLSSignature{}, errors.New("unknown version")
+	}
+}
