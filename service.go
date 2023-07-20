@@ -297,6 +297,12 @@ type FinalityProvider interface {
 	Finality(ctx context.Context, stateID string) (*apiv1.Finality, error)
 }
 
+// ForkChoiceProvider is the interface for providing fork choice information.
+type ForkChoiceProvider interface {
+	// Fork fetches all current fork choice context.
+	ForkChoice(ctx context.Context) (*apiv1.ForkChoice, error)
+}
+
 // ForkProvider is the interface for providing fork information.
 type ForkProvider interface {
 	// Fork fetches fork information for the given state.

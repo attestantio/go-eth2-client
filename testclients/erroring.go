@@ -701,3 +701,15 @@ func (s *Erroring) BeaconStateRoot(ctx context.Context, stateID string) (*phase0
 	}
 	return next.BeaconStateRoot(ctx, stateID)
 }
+
+// Fork fetches the node's current fork choice context.
+func (s *Erroring) ForkChoice(ctx context.Context) (*apiv1.ForkChoice, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.ForkChoiceProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.ForkChoice(ctx)
+}
