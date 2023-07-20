@@ -108,7 +108,7 @@ var ForkChoiceNodeValidityStrings = [...]string{
 }
 
 func ForkChoiceNodeValidityFromString(input string) (ForkChoiceNodeValidity, error) {
-	switch strings.ToLower(string(input)) {
+	switch strings.ToLower(input) {
 	case "invalid":
 		return ForkChoiceNodeValidityInvalid, nil
 	case "valid":
@@ -116,7 +116,7 @@ func ForkChoiceNodeValidityFromString(input string) (ForkChoiceNodeValidity, err
 	case "optimistic":
 		return ForkChoiceNodeValidityOptimistic, nil
 	default:
-		return ForkChoiceNodeValidityUnknown, fmt.Errorf("unrecognised fork choice validity: %s", string(input))
+		return ForkChoiceNodeValidityUnknown, fmt.Errorf("unrecognised fork choice validity: %s", input)
 	}
 }
 

@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/assert"
 )
 
 func TestForkChoiceJSON(t *testing.T) {

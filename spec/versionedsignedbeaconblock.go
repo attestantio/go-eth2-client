@@ -297,6 +297,36 @@ func (v *VersionedSignedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlas
 	}
 }
 
+// SyncAggregate returns the sync aggregate of the beacon block.
+func (v *VersionedSignedBeaconBlock) SyncAggregate() (*altair.SyncAggregate, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return nil, errors.New("phase0 block does not have sync aggregate")
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return nil, errors.New("no altair block")
+		}
+		return v.Altair.Message.Body.SyncAggregate, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.SyncAggregate, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.SyncAggregate, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.SyncAggregate, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
 // String returns a string version of the structure.
 func (v *VersionedSignedBeaconBlock) String() string {
 	switch v.Version {
