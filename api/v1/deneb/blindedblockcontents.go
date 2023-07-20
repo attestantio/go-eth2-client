@@ -22,7 +22,7 @@ import (
 // BlindedBlockContents represents the contents of a block, both blinded block and blob.
 type BlindedBlockContents struct {
 	BlindedBlock        *BlindedBeaconBlock
-	BlindedBlobSidecars []*BlindedBlobSidecar `ssz-max:"4"`
+	BlindedBlobSidecars []*BlindedBlobSidecar `ssz-max:"6"`
 }
 
 // String returns a string version of the structure.
