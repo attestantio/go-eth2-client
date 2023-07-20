@@ -66,6 +66,29 @@ func (v *VersionedSignedBeaconBlock) Slot() (phase0.Slot, error) {
 	}
 }
 
+// BlockHash returns the block hash of the beacon block.
+func (v *VersionedSignedBeaconBlock) BlockHash() (phase0.Hash32, error) {
+	switch v.Version {
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil || v.Bellatrix.Message.Body.ExecutionPayload == nil {
+			return phase0.Hash32{}, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.ExecutionPayload.BlockHash, nil
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayload == nil {
+			return phase0.Hash32{}, errors.New("no capella block")
+		}
+		return v.Bellatrix.Message.Body.ExecutionPayload.BlockHash, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil || v.Deneb.Message.Body.ExecutionPayload == nil {
+			return phase0.Hash32{}, errors.New("no denb block")
+		}
+		return v.Bellatrix.Message.Body.ExecutionPayload.BlockHash, nil
+	default:
+		return phase0.Hash32{}, errors.New("unknown version")
+	}
+}
+
 // Attestations returns the attestations of the beacon block.
 func (v *VersionedSignedBeaconBlock) Attestations() ([]*phase0.Attestation, error) {
 	switch v.Version {
