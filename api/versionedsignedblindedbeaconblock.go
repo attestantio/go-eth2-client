@@ -238,8 +238,8 @@ func (v *VersionedSignedBlindedBeaconBlock) ProposerIndex() (phase0.ValidatorInd
 	}
 }
 
-// BlockHash returns the hash of the beacon block.
-func (v *VersionedSignedBlindedBeaconBlock) BlockHash() (phase0.Hash32, error) {
+// ExecutionBlockHash returns the hash of the beacon block.
+func (v *VersionedSignedBlindedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil || v.Bellatrix.Message.Body.ExecutionPayloadHeader == nil {
@@ -261,8 +261,8 @@ func (v *VersionedSignedBlindedBeaconBlock) BlockHash() (phase0.Hash32, error) {
 	}
 }
 
-// BlockNumber returns the block number of the beacon block.
-func (v *VersionedSignedBlindedBeaconBlock) BlockNumber() (uint64, error) {
+// ExecutionBlockNumber returns the block number of the beacon block.
+func (v *VersionedSignedBlindedBeaconBlock) ExecutionBlockNumber() (uint64, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil || v.Bellatrix.Message.Body.ExecutionPayloadHeader == nil {
