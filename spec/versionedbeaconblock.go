@@ -23,28 +23,6 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// BeaconBlock interface has all the methods to extract data from all beacon block types.
-type BeaconBlock interface {
-	// IsEmpty returns true if there is no block.
-	IsEmpty() bool
-	// Slot returns the slot of the beacon block.
-	Slot() (phase0.Slot, error)
-	// ProposerIndex returns the proposer index of the beacon block.
-	ProposerIndex() (phase0.ValidatorIndex, error)
-	// Root returns the root of the beacon block.
-	Root() (phase0.Root, error)
-	// BodyRoot returns the body root of the beacon block.
-	BodyRoot() (phase0.Root, error)
-	// ParentRoot returns the parent root of the beacon block.
-	ParentRoot() (phase0.Root, error)
-	// StateRoot returns the state root of the beacon block.
-	StateRoot() (phase0.Root, error)
-	// Attestations returns the attestations of the beacon block.
-	Attestations() ([]*phase0.Attestation, error)
-	// String returns a string version of the structure.
-	String() string
-}
-
 // VersionedBeaconBlock contains a versioned beacon block.
 type VersionedBeaconBlock struct {
 	Version   DataVersion
