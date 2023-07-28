@@ -66,8 +66,8 @@ func (v *VersionedSignedBeaconBlock) Slot() (phase0.Slot, error) {
 	}
 }
 
-// BlockHash returns the block hash of the beacon block.
-func (v *VersionedSignedBeaconBlock) BlockHash() (phase0.Hash32, error) {
+// ExecutionBlockHash returns the block hash of the beacon block.
+func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error) {
 	switch v.Version {
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil || v.Bellatrix.Message.Body.ExecutionPayload == nil {
