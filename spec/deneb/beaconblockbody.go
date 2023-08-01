@@ -35,7 +35,7 @@ type BeaconBlockBody struct {
 	SyncAggregate         *altair.SyncAggregate
 	ExecutionPayload      *ExecutionPayload
 	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `ssz-max:"16"`
-	BlobKzgCommitments    []KzgCommitment                       `ssz-max:"6"  ssz-size:"?,48"`
+	BlobKzgCommitments    []KzgCommitment                       `ssz-max:"4096" ssz-size:"?,48"`
 }
 
 // String returns a string version of the structure.
