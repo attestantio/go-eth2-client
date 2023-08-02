@@ -427,6 +427,16 @@ func (s *Sleepy) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.
 	return next.SubmitVoluntaryExit(ctx, voluntaryExit)
 }
 
+// VoluntaryExitPool fetches the voluntary exit pool.
+func (s *Sleepy) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVoluntaryExit, error) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.VoluntaryExitPoolProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+	return next.VoluntaryExitPool(ctx)
+}
+
 // Domain provides a domain for a given domain type at a given epoch.
 func (s *Sleepy) Domain(ctx context.Context, domainType phase0.DomainType, epoch phase0.Epoch) (phase0.Domain, error) {
 	s.sleep(ctx)

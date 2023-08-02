@@ -145,6 +145,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.ValidatorBalancesProvider)(nil), s)
 	assert.Implements(t, (*client.ValidatorsProvider)(nil), s)
 	assert.Implements(t, (*client.VoluntaryExitSubmitter)(nil), s)
+	assert.Implements(t, (*client.VoluntaryExitPoolProvider)(nil), s)
 
 	// Non-standard extensions.
 	assert.Implements(t, (*client.DomainProvider)(nil), s)
