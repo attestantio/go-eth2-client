@@ -51,7 +51,7 @@ type BeaconState struct {
 	LatestExecutionPayloadHeader *ExecutionPayloadHeader
 	NextWithdrawalIndex          WithdrawalIndex
 	NextWithdrawalValidatorIndex phase0.ValidatorIndex
-	HistoricalSummaries          []*HistoricalSummary `ssz-max:"16777216" ssz-size:"?,32"`
+	HistoricalSummaries          []*HistoricalSummary `ssz-max:"16777216"`
 }
 
 // String returns a string version of the structure.

@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2022, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,6 +14,6 @@
 package capella
 
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f blstoexecutionchange_encoding.go signedblstoexecutionchange_encoding.go withdrawal.go
-//go:generate sszgen --path . --objs BLSToExecutionChange SignedBLSToExecutionChange Withdrawal
-//go:generate goimports -w blstoexecutionchange_encoding.go signedblstoexecutionchange_encoding.go withdrawal_encoding.go
+//go:generate rm -f beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go blstoexecutionchange_ssz.go executionpayloadheader_ssz.go executionpayload_ssz.go historicalsummary_ssz.go signedbeaconblock_ssz.go signedblstoexecutionchange_ssz.go withdrawal_ssz.go
+//go:generate sszgen -suffix ssz -include ../phase0,../altair,../bellatrix -path . -objs BeaconBlockBody,BeaconBlock,BeaconState,BLSToExecutionChange,ExecutionPayload,ExecutionPayloadHeader,HistoricalSummary,SignedBeaconBlock,SignedBLSToExecutionChange,Withdrawal
+//go:generate goimports -w beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go blstoexecutionchange_ssz.go executionpayloadheader_ssz.go executionpayload_ssz.go historicalsummary_ssz.go signedbeaconblock_ssz.go signedblstoexecutionchange_ssz.go withdrawal_ssz.go
