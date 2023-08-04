@@ -14,6 +14,6 @@
 package bellatrix
 
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f beaconblock_encoding.go beaconblockbody_encoding.go beaconstate_encoding.go executionpayload_encoding.go executionpayloadheader_encoding.go signedbeaconblock_encoding.go
-//go:generate sszgen --path . --objs BeaconBlock,BeaconBlockBody,BeaconState,ExecutionPayload,ExecutionPaylodHeader,SignedBeaconBlock
-//go:generate goimports -w beaconblock_encoding.go beaconblockbody_encoding.go beaconstate_encoding.go executionpayload_encoding.go executionpayloadheader_encoding.go signedbeaconblock_encoding.go
+//go:generate rm -f beaconblock_ssz.go beaconblockbody_ssz.go beaconstate_ssz.go executionpayload_ssz.go executionpayloadheader_ssz.go signedbeaconblock_ssz.go
+//go:generate sszgen -suffix ssz -include ../phase0,../altair -path . -objs BeaconBlock,BeaconBlockBody,BeaconState,ExecutionPayload,ExecutionPaylodHeader,SignedBeaconBlock
+//go:generate goimports -w beaconblock_ssz.go beaconblockbody_ssz.go beaconstate_ssz.go executionpayload_ssz.go executionpayloadheader_ssz.go signedbeaconblock_ssz.go
