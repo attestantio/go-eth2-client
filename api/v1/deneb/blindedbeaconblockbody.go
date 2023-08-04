@@ -36,7 +36,7 @@ type BlindedBeaconBlockBody struct {
 	SyncAggregate          *altair.SyncAggregate
 	ExecutionPayloadHeader *deneb.ExecutionPayloadHeader
 	BLSToExecutionChanges  []*capella.SignedBLSToExecutionChange `ssz-max:"16"`
-	BlobKzgCommitments     []deneb.KzgCommitment                 `ssz-max:"6"  ssz-size:"?,48"`
+	BlobKzgCommitments     []deneb.KzgCommitment                 `ssz-max:"4096" ssz-size:"?,48"`
 }
 
 // String returns a string version of the structure.

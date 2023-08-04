@@ -170,8 +170,8 @@ func (b *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 	}
 
 	// Field (11) 'BlobKzgCommitments'
-	if size := len(b.BlobKzgCommitments); size > 6 {
-		err = ssz.ErrListTooBigFn("BlindedBeaconBlockBody.BlobKzgCommitments", size, 6)
+	if size := len(b.BlobKzgCommitments); size > 4096 {
+		err = ssz.ErrListTooBigFn("BlindedBeaconBlockBody.BlobKzgCommitments", size, 4096)
 		return
 	}
 	for ii := 0; ii < len(b.BlobKzgCommitments); ii++ {
@@ -388,7 +388,7 @@ func (b *BlindedBeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 	// Field (11) 'BlobKzgCommitments'
 	{
 		buf = tail[o11:]
-		num, err := ssz.DivideInt2(len(buf), 48, 6)
+		num, err := ssz.DivideInt2(len(buf), 48, 4096)
 		if err != nil {
 			return err
 		}
@@ -574,8 +574,8 @@ func (b *BlindedBeaconBlockBody) HashTreeRootWith(hh ssz.HashWalker) (err error)
 
 	// Field (11) 'BlobKzgCommitments'
 	{
-		if size := len(b.BlobKzgCommitments); size > 6 {
-			err = ssz.ErrListTooBigFn("BlindedBeaconBlockBody.BlobKzgCommitments", size, 6)
+		if size := len(b.BlobKzgCommitments); size > 4096 {
+			err = ssz.ErrListTooBigFn("BlindedBeaconBlockBody.BlobKzgCommitments", size, 4096)
 			return
 		}
 		subIndx := hh.Index()
@@ -583,7 +583,7 @@ func (b *BlindedBeaconBlockBody) HashTreeRootWith(hh ssz.HashWalker) (err error)
 			hh.PutBytes(i[:])
 		}
 		numItems := uint64(len(b.BlobKzgCommitments))
-		hh.MerkleizeWithMixin(subIndx, numItems, 6)
+		hh.MerkleizeWithMixin(subIndx, numItems, 4096)
 	}
 
 	hh.Merkleize(indx)
