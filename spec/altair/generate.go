@@ -14,6 +14,6 @@
 package altair
 
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f beaconblock_encoding.go beaconblockbody_encoding.go beaconstate_encoding.go contributionandproof_encoding.go signedbeaconblock_encoding.go signedcontributionandproof_encoding.go syncaggregate_encoding.go syncaggregatorselectiondata_encoding.go synccommitteemessage_encoding.go
-//go:generate sszgen ../phase0 --path . --objs BeaconBlock,BeaconBlockBody,BeaconState,ContributionAndProof,SignedBeaconBlock,SignedContributionAndProof,SyncAggregate,SyncAggregatorSelectionData,SyncCommittee
-//go:generate goimports -w beaconblock_encoding.go beaconblockbody_encoding.go beaconstate_encoding.go contributionandproof_encoding.go signedbeaconblock_encoding.go signedcontributionandproof_encoding.go syncaggregate_encoding.go syncaggregatorselectiondata_encoding.go synccommitteemessage_encoding.go
+//go:generate rm -f beaconblock_ssz.go beaconblockbody_ssz.go beaconstate_ssz.go contributionandproof_ssz.go signedbeaconblock_ssz.go signedcontributionandproof_ssz.go syncaggregate_ssz.go syncaggregatorselectiondata_ssz.go synccommittee_ssz.go synccommitteecontribution_ssz.go synccommitteemessage_ssz.go
+//go:generate sszgen -suffix ssz -include ../phase0 -path . -objs BeaconBlock,BeaconBlockBody,BeaconState,ContributionAndProof,SignedBeaconBlock,SignedContributionAndProof,SyncAggregate,SyncAggregatorSelectionData,SyncCommittee,SyncCommitteeContribution,SyncCommitteeMessage
+//go:generate goimports -w beaconblock_ssz.go beaconblockbody_ssz.go beaconstate_ssz.go contributionandproof_ssz.go signedbeaconblock_ssz.go signedcontributionandproof_ssz.go syncaggregate_ssz.go syncaggregatorselectiondata_ssz.go synccommitteecontribution_ssz.go synccommitteemessage_ssz.go
