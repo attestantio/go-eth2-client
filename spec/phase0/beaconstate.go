@@ -37,7 +37,7 @@ type BeaconState struct {
 	StateRoots                  []Root `ssz-size:"8192,32"`
 	HistoricalRoots             []Root `ssz-max:"16777216" ssz-size:"?,32"`
 	ETH1Data                    *ETH1Data
-	ETH1DataVotes               []*ETH1Data `ssz-max:"1024"` // Should be 2048 for mainnet?
+	ETH1DataVotes               []*ETH1Data `ssz-max:"2048"`
 	ETH1DepositIndex            uint64
 	Validators                  []*Validator          `ssz-max:"1099511627776"`
 	Balances                    []Gwei                `ssz-max:"1099511627776"`
