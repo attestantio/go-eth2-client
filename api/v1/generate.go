@@ -14,6 +14,6 @@
 package v1
 
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f blindedbeaconblock_encoding.go signedblindedbeaconblock_encoding.go validatorregistration_encoding.go
-//go:generate sszgen -include ../../spec/phase0,../../spec/altair,../../spec/bellatrix -path . -objs BlindedBeaconBlock,SignedBlindedBeaconBlock,ValidatorRegistration
-//go:generate goimports -w blindedbeaconblock_encoding.go signedblindedbeaconblock_encoding.go validatorregistration_encoding.go
+//go:generate rm -f signedvalidatorregistration_ssz.go validatorregistration_ssz.go
+//go:generate sszgen -suffix ssz -include ../../spec/phase0,../../spec/altair,../../spec/bellatrix -path . -objs SignedValidatorRegistration,ValidatorRegistration
+//go:generate goimports -w signedvalidatorregistration_ssz.go validatorregistration_ssz.go

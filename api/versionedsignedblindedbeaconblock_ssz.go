@@ -11,13 +11,13 @@ import (
 	ssz "github.com/ferranbt/fastssz"
 )
 
-// MarshalSSZ ssz marshals the VersionedBlindedBeaconBlock object
-func (v *VersionedBlindedBeaconBlock) MarshalSSZ() ([]byte, error) {
+// MarshalSSZ ssz marshals the VersionedSignedBlindedBeaconBlock object
+func (v *VersionedSignedBlindedBeaconBlock) MarshalSSZ() ([]byte, error) {
 	return ssz.MarshalSSZ(v)
 }
 
-// MarshalSSZTo ssz marshals the VersionedBlindedBeaconBlock object to a target array
-func (v *VersionedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
+// MarshalSSZTo ssz marshals the VersionedSignedBlindedBeaconBlock object to a target array
+func (v *VersionedSignedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	offset := int(20)
 
@@ -27,21 +27,21 @@ func (v *VersionedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err 
 	// Offset (1) 'Bellatrix'
 	dst = ssz.WriteOffset(dst, offset)
 	if v.Bellatrix == nil {
-		v.Bellatrix = new(apiv1bellatrix.BlindedBeaconBlock)
+		v.Bellatrix = new(apiv1bellatrix.SignedBlindedBeaconBlock)
 	}
 	offset += v.Bellatrix.SizeSSZ()
 
 	// Offset (2) 'Capella'
 	dst = ssz.WriteOffset(dst, offset)
 	if v.Capella == nil {
-		v.Capella = new(apiv1capella.BlindedBeaconBlock)
+		v.Capella = new(apiv1capella.SignedBlindedBeaconBlock)
 	}
 	offset += v.Capella.SizeSSZ()
 
 	// Offset (3) 'Deneb'
 	dst = ssz.WriteOffset(dst, offset)
 	if v.Deneb == nil {
-		v.Deneb = new(apiv1deneb.BlindedBeaconBlock)
+		v.Deneb = new(apiv1deneb.SignedBlindedBeaconBlock)
 	}
 	offset += v.Deneb.SizeSSZ()
 
@@ -63,8 +63,8 @@ func (v *VersionedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err 
 	return
 }
 
-// UnmarshalSSZ ssz unmarshals the VersionedBlindedBeaconBlock object
-func (v *VersionedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) error {
+// UnmarshalSSZ ssz unmarshals the VersionedSignedBlindedBeaconBlock object
+func (v *VersionedSignedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
 	if size < 20 {
@@ -100,7 +100,7 @@ func (v *VersionedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) error {
 	{
 		buf = tail[o1:o2]
 		if v.Bellatrix == nil {
-			v.Bellatrix = new(apiv1bellatrix.BlindedBeaconBlock)
+			v.Bellatrix = new(apiv1bellatrix.SignedBlindedBeaconBlock)
 		}
 		if err = v.Bellatrix.UnmarshalSSZ(buf); err != nil {
 			return err
@@ -111,7 +111,7 @@ func (v *VersionedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) error {
 	{
 		buf = tail[o2:o3]
 		if v.Capella == nil {
-			v.Capella = new(apiv1capella.BlindedBeaconBlock)
+			v.Capella = new(apiv1capella.SignedBlindedBeaconBlock)
 		}
 		if err = v.Capella.UnmarshalSSZ(buf); err != nil {
 			return err
@@ -122,7 +122,7 @@ func (v *VersionedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) error {
 	{
 		buf = tail[o3:]
 		if v.Deneb == nil {
-			v.Deneb = new(apiv1deneb.BlindedBeaconBlock)
+			v.Deneb = new(apiv1deneb.SignedBlindedBeaconBlock)
 		}
 		if err = v.Deneb.UnmarshalSSZ(buf); err != nil {
 			return err
@@ -131,38 +131,38 @@ func (v *VersionedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) error {
 	return err
 }
 
-// SizeSSZ returns the ssz encoded size in bytes for the VersionedBlindedBeaconBlock object
-func (v *VersionedBlindedBeaconBlock) SizeSSZ() (size int) {
+// SizeSSZ returns the ssz encoded size in bytes for the VersionedSignedBlindedBeaconBlock object
+func (v *VersionedSignedBlindedBeaconBlock) SizeSSZ() (size int) {
 	size = 20
 
 	// Field (1) 'Bellatrix'
 	if v.Bellatrix == nil {
-		v.Bellatrix = new(apiv1bellatrix.BlindedBeaconBlock)
+		v.Bellatrix = new(apiv1bellatrix.SignedBlindedBeaconBlock)
 	}
 	size += v.Bellatrix.SizeSSZ()
 
 	// Field (2) 'Capella'
 	if v.Capella == nil {
-		v.Capella = new(apiv1capella.BlindedBeaconBlock)
+		v.Capella = new(apiv1capella.SignedBlindedBeaconBlock)
 	}
 	size += v.Capella.SizeSSZ()
 
 	// Field (3) 'Deneb'
 	if v.Deneb == nil {
-		v.Deneb = new(apiv1deneb.BlindedBeaconBlock)
+		v.Deneb = new(apiv1deneb.SignedBlindedBeaconBlock)
 	}
 	size += v.Deneb.SizeSSZ()
 
 	return
 }
 
-// HashTreeRoot ssz hashes the VersionedBlindedBeaconBlock object
-func (v *VersionedBlindedBeaconBlock) HashTreeRoot() ([32]byte, error) {
+// HashTreeRoot ssz hashes the VersionedSignedBlindedBeaconBlock object
+func (v *VersionedSignedBlindedBeaconBlock) HashTreeRoot() ([32]byte, error) {
 	return ssz.HashWithDefaultHasher(v)
 }
 
-// HashTreeRootWith ssz hashes the VersionedBlindedBeaconBlock object with a hasher
-func (v *VersionedBlindedBeaconBlock) HashTreeRootWith(hh ssz.HashWalker) (err error) {
+// HashTreeRootWith ssz hashes the VersionedSignedBlindedBeaconBlock object with a hasher
+func (v *VersionedSignedBlindedBeaconBlock) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'Version'
@@ -187,7 +187,7 @@ func (v *VersionedBlindedBeaconBlock) HashTreeRootWith(hh ssz.HashWalker) (err e
 	return
 }
 
-// GetTree ssz hashes the VersionedBlindedBeaconBlock object
-func (v *VersionedBlindedBeaconBlock) GetTree() (*ssz.Node, error) {
+// GetTree ssz hashes the VersionedSignedBlindedBeaconBlock object
+func (v *VersionedSignedBlindedBeaconBlock) GetTree() (*ssz.Node, error) {
 	return ssz.ProofTree(v)
 }
