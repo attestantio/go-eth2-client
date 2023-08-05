@@ -1,3 +1,6 @@
+dev:
+  - add 'withdrawable done' state to validators
+
 0.18.1:
   - add blinded block contents
   - add helpers to versioned signed blinded beacon block
