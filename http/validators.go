@@ -152,7 +152,7 @@ func (s *Service) validatorsFromState(ctx context.Context, stateID string) (map[
 	res := make(map[phase0.ValidatorIndex]*api.Validator, len(validators))
 	for i, validator := range validators {
 		index := phase0.ValidatorIndex(i)
-		state := api.ValidatorToState(validator, epoch, farFutureEpoch)
+		state := api.ValidatorToState(validator, &balances[i], epoch, farFutureEpoch)
 		res[index] = &api.Validator{
 			Index:     index,
 			Balance:   balances[i],

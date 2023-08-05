@@ -147,7 +147,11 @@ func (v ValidatorState) HasBalance() bool {
 }
 
 // ValidatorToState is a helper that calculates the validator status given a validator struct.
-func ValidatorToState(validator *phase0.Validator, currentEpoch phase0.Epoch, farFutureEpoch phase0.Epoch) ValidatorState {
+func ValidatorToState(validator *phase0.Validator,
+	balance *phase0.Gwei,
+	currentEpoch phase0.Epoch,
+	farFutureEpoch phase0.Epoch,
+) ValidatorState {
 	if validator == nil {
 		return ValidatorStateUnknown
 	}
@@ -179,6 +183,11 @@ func ValidatorToState(validator *phase0.Validator, currentEpoch phase0.Epoch, fa
 		return ValidatorStateExitedUnslashed
 	}
 
-	// Withdrawable.  No balance available so state possible.
+	// Withdrawable.
+	if balance != nil && *balance == 0 {
+		// We have a definite balance of 0.
+		return ValidatorStateWithdrawalDone
+	}
+	// No balance information, or balance > 0.
 	return ValidatorStateWithdrawalPossible
 }
