@@ -25,14 +25,14 @@ import (
 
 // blindedBlobSidecarYAML is the spec representation of the struct.
 type blindedBlobSidecarYAML struct {
-	BlockRoot       phase0.Root         `json:"block_root"`
-	Index           uint64              `json:"index"`
-	Slot            uint64              `json:"slot"`
-	BlockParentRoot phase0.Root         `json:"block_parent_root"`
-	ProposerIndex   uint64              `json:"proposer_index"`
-	BlobRoot        phase0.Root         `json:"blob_root"`
-	KzgCommitment   deneb.KzgCommitment `json:"kzg_commitment"`
-	KzgProof        deneb.KzgProof      `json:"kzg_proof"`
+	BlockRoot       phase0.Root         `yaml:"block_root"`
+	Index           uint64              `yaml:"index"`
+	Slot            uint64              `yaml:"slot"`
+	BlockParentRoot phase0.Root         `yaml:"block_parent_root"`
+	ProposerIndex   uint64              `yaml:"proposer_index"`
+	BlobRoot        phase0.Root         `yaml:"blob_root"`
+	KzgCommitment   deneb.KzgCommitment `yaml:"kzg_commitment"`
+	KzgProof        deneb.KzgProof      `yaml:"kzg_proof"`
 }
 
 // MarshalYAML implements json.Marshaler.
