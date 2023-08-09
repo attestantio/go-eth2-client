@@ -16,14 +16,14 @@ package deneb
 import (
 	"fmt"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/goccy/go-yaml"
 )
 
 // SignedBlockContents represents the contents of a block, both block and blob.
 type SignedBlockContents struct {
-	Message   *BlockContents
-	Signature phase0.BLSSignature `ssz-size:"96"`
+	SignedBlock        *deneb.SignedBeaconBlock
+	SignedBlobSidecars []*deneb.SignedBlobSidecar `ssz-max:"6"`
 }
 
 // String returns a string version of the structure.

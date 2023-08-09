@@ -23,8 +23,8 @@ import (
 
 // blindedBlockContentsYAML is the spec representation of the struct.
 type blindedBlockContentsYAML struct {
-	BlindedBlock        *BlindedBeaconBlock   `json:"blinded_block"`
-	BlindedBlobSidecars []*BlindedBlobSidecar `json:"blinded_blob_sidecars"`
+	BlindedBlock        *BlindedBeaconBlock   `yaml:"blinded_block"`
+	BlindedBlobSidecars []*BlindedBlobSidecar `yaml:"blinded_blob_sidecars"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -41,10 +41,11 @@ func (b *BlindedBlockContents) MarshalYAML() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *BlindedBlockContents) UnmarshalYAML(input []byte) error {
-	var data blindedBlockContentsYAML
+	var data blindedBlockContentsJSON
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
+
 	bytes, err := json.Marshal(data)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")

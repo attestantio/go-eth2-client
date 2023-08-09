@@ -14,55 +14,41 @@
 package deneb
 
 import (
-	"encoding/hex"
 	"encoding/json"
-	"fmt"
-	"strings"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/codecs"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/pkg/errors"
 )
 
 // signedBlockContentsJSON is the spec representation of the struct.
 type signedBlockContentsJSON struct {
-	Message   *BlockContents `json:"message"`
-	Signature string         `json:"signature"`
+	SignedBlock        *deneb.SignedBeaconBlock   `json:"signed_block"`
+	SignedBlobSidecars []*deneb.SignedBlobSidecar `json:"signed_blob_sidecars"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (s *SignedBlockContents) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&signedBlockContentsJSON{
-		Message:   s.Message,
-		Signature: s.Signature.String(),
+		SignedBlock:        s.SignedBlock,
+		SignedBlobSidecars: s.SignedBlobSidecars,
 	})
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (s *SignedBlockContents) UnmarshalJSON(input []byte) error {
-	var data signedBlockContentsJSON
-	if err := json.Unmarshal(input, &data); err != nil {
-		return errors.Wrap(err, "invalid JSON")
-	}
-	return s.unpack(&data)
-}
-
-func (s *SignedBlockContents) unpack(data *signedBlockContentsJSON) error {
-	if data.Message == nil {
-		return errors.New("message missing")
-	}
-	s.Message = data.Message
-
-	if data.Signature == "" {
-		return errors.New("signature missing")
-	}
-	signature, err := hex.DecodeString(strings.TrimPrefix(data.Signature, "0x"))
+	raw, err := codecs.RawJSON(&signedBlockContentsJSON{}, input)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for signature")
+		return err
 	}
-	if len(signature) != phase0.SignatureLength {
-		return fmt.Errorf("incorrect length %d for signature", len(signature))
+
+	if err := json.Unmarshal(raw["signed_block"], &s.SignedBlock); err != nil {
+		return errors.Wrap(err, "signed_block")
 	}
-	copy(s.Signature[:], signature)
+
+	if err := json.Unmarshal(raw["signed_blob_sidecars"], &s.SignedBlobSidecars); err != nil {
+		return errors.Wrap(err, "signed_blob_sidecars")
+	}
 
 	return nil
 }
