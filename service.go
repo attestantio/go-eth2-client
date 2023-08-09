@@ -383,6 +383,12 @@ type VoluntaryExitSubmitter interface {
 	SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error
 }
 
+// VoluntaryExitPoolProvider is the interface for providing voluntary exit pools.
+type VoluntaryExitPoolProvider interface {
+	// VoluntaryExitPool fetches the voluntary exit pool.
+	VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVoluntaryExit, error)
+}
+
 //
 // Local extensions
 //

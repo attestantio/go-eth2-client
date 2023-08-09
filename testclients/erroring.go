@@ -618,6 +618,18 @@ func (s *Erroring) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase
 	return next.SubmitVoluntaryExit(ctx, voluntaryExit)
 }
 
+// VoluntaryExitPool fetches the voluntary exit pool.
+func (s *Erroring) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVoluntaryExit, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.VoluntaryExitPoolProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.VoluntaryExitPool(ctx)
+}
+
 // Domain provides a domain for a given domain type at a given epoch.
 func (s *Erroring) Domain(ctx context.Context, domainType phase0.DomainType, epoch phase0.Epoch) (phase0.Domain, error) {
 	if err := s.maybeError(ctx); err != nil {
