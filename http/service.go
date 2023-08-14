@@ -165,6 +165,7 @@ func (s *Service) periodicClearStaticValues(ctx context.Context) {
 	go func(s *Service, ctx context.Context) {
 		// Refreah every 5 minutes.
 		refreshTicker := time.NewTicker(5 * time.Minute)
+		defer refreshTicker.Stop()
 		for {
 			select {
 			case <-refreshTicker.C:
