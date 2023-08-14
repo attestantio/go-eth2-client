@@ -26,7 +26,7 @@ type BlindedBlobSidecar struct {
 	BlockRoot       phase0.Root `ssz-size:"32"`
 	Index           deneb.BlobIndex
 	Slot            phase0.Slot
-	BlockParentRoot phase0.Root ` ssz-size:"32"`
+	BlockParentRoot phase0.Root `ssz-size:"32"`
 	ProposerIndex   phase0.ValidatorIndex
 	BlobRoot        phase0.Root         `ssz-size:"32"`
 	KzgCommitment   deneb.KzgCommitment `ssz-size:"48"`
