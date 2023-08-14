@@ -16,6 +16,7 @@ package deneb
 import (
 	"encoding/json"
 
+	"github.com/attestantio/go-eth2-client/codecs"
 	"github.com/pkg/errors"
 )
 
@@ -35,23 +36,18 @@ func (b *BlindedBlockContents) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *BlindedBlockContents) UnmarshalJSON(input []byte) error {
-	var data blindedBlockContentsJSON
-	if err := json.Unmarshal(input, &data); err != nil {
-		return errors.Wrap(err, "invalid JSON")
+	raw, err := codecs.RawJSON(&blindedBlockContentsJSON{}, input)
+	if err != nil {
+		return err
 	}
-	return b.unpack(&data)
-}
 
-func (b *BlindedBlockContents) unpack(data *blindedBlockContentsJSON) error {
-	if data.BlindedBlock == nil {
-		return errors.New("blinded block missing")
+	if err := json.Unmarshal(raw["blinded_block"], &b.BlindedBlock); err != nil {
+		return errors.Wrap(err, "blinded_block")
 	}
-	b.BlindedBlock = data.BlindedBlock
 
-	if data.BlindedBlobSidecars == nil {
-		return errors.New("blinded blob sidecars missing")
+	if err := json.Unmarshal(raw["blinded_blob_sidecars"], &b.BlindedBlobSidecars); err != nil {
+		return errors.Wrap(err, "blinded_blob_sidecars")
 	}
-	b.BlindedBlobSidecars = data.BlindedBlobSidecars
 
 	return nil
 }

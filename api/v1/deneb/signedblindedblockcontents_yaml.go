@@ -23,8 +23,8 @@ import (
 
 // signedBlindedBlockContentsYAML is the spec representation of the struct.
 type signedBlindedBlockContentsYAML struct {
-	SignedBlindedBlock        *SignedBlindedBeaconBlock   `json:"signed_blinded_block"`
-	SignedBlindedBlobSidecars []*SignedBlindedBlobSidecar `json:"signed_blinded_blob_sidecars"`
+	SignedBlindedBlock        *SignedBlindedBeaconBlock   `yaml:"signed_blinded_block"`
+	SignedBlindedBlobSidecars []*SignedBlindedBlobSidecar `yaml:"signed_blinded_blob_sidecars"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -41,7 +41,7 @@ func (s *SignedBlindedBlockContents) MarshalYAML() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (s *SignedBlindedBlockContents) UnmarshalYAML(input []byte) error {
-	var data signedBlindedBlockContentsYAML
+	var data signedBlindedBlockContentsJSON
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
