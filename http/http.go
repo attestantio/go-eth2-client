@@ -16,6 +16,7 @@ package http
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math/rand"
@@ -253,44 +254,58 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 		}
 	}
 
-	res.consensusVersion, err = consensusVersionFromResp(resp)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse consensus version")
-	}
-
-	res.contentType, err = contentTypeFromResp(resp)
-	if err != nil {
+	if err := populateContentType(res, resp); err != nil {
 		// For now, assume that unknown type is JSON.
 		log.Debug().Err(err).Msg("Failed to obtain content type; assuming JSON")
 		res.contentType = ContentTypeJSON
 	}
 
+	if err := populateConsensusVersion(res, resp); err != nil {
+		return nil, errors.Wrap(err, "failed to parse consensus version")
+	}
+
 	return res, nil
 }
 
-func consensusVersionFromResp(resp *http.Response) (spec.DataVersion, error) {
+func populateConsensusVersion(res *httpResponse, resp *http.Response) error {
+	res.consensusVersion = spec.DataVersionUnknown
 	respConsensusVersions, exists := resp.Header["Eth-Consensus-Version"]
 	if !exists {
-		return spec.DataVersionUnknown, errors.New("no consensus version supplied in response")
+		// No consensus version supplied in response; obtain it from the body if possible.
+		if res.contentType != ContentTypeJSON {
+			return errors.New("no consensus version header")
+		}
+		var metadata responseMetadata
+		if err := json.Unmarshal(res.body, &metadata); err != nil {
+			return errors.Wrap(err, "no consensus version header and failed to parse response")
+		}
+		res.consensusVersion = metadata.Version
+		return nil
 	}
 	if len(respConsensusVersions) != 1 {
-		return spec.DataVersionUnknown, fmt.Errorf("malformed consensus version (%d entries)", len(respConsensusVersions))
+		return fmt.Errorf("malformed consensus version (%d entries)", len(respConsensusVersions))
 	}
-	res := spec.DataVersionUnknown
-	if err := res.UnmarshalJSON([]byte(fmt.Sprintf("%q", respConsensusVersions[0]))); err != nil {
-		return spec.DataVersionUnknown, errors.Wrap(err, "failed to parse consensus version")
+	if err := res.consensusVersion.UnmarshalJSON([]byte(fmt.Sprintf("%q", respConsensusVersions[0]))); err != nil {
+		return errors.Wrap(err, "failed to parse consensus version")
 	}
 
-	return res, nil
+	return nil
 }
 
-func contentTypeFromResp(resp *http.Response) (ContentType, error) {
+func populateContentType(res *httpResponse, resp *http.Response) error {
 	respContentTypes, exists := resp.Header["Content-Type"]
 	if !exists {
-		return ContentTypeUnknown, errors.New("no content type supplied in response")
+		return errors.New("no content type supplied in response")
 	}
 	if len(respContentTypes) != 1 {
-		return ContentTypeUnknown, fmt.Errorf("malformed content type (%d entries)", len(respContentTypes))
+		return fmt.Errorf("malformed content type (%d entries)", len(respContentTypes))
 	}
-	return ParseFromMediaType(respContentTypes[0])
+
+	var err error
+	res.contentType, err = ParseFromMediaType(respContentTypes[0])
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

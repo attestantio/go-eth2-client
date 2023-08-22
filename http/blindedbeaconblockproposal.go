@@ -54,7 +54,7 @@ func (s *Service) BlindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti [32]byte) (*api.VersionedBlindedBeaconBlock, error) {
 	res, err := s.get2(ctx, fmt.Sprintf("/eth/v1/validator/blinded_blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti))
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request signed beacon block")
+		return nil, errors.Wrap(err, "failed to request blinded beacon block proposal")
 	}
 	if res.statusCode == http.StatusNotFound {
 		return nil, nil
