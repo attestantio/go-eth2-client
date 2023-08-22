@@ -33,22 +33,22 @@ func (s *Service) SubmitValidatorRegistrations(ctx context.Context, registration
 	var version *spec.BuilderVersion
 	var unversionedRegistrations []interface{}
 
-	for _, registration := range registrations {
-		if registration == nil {
+	for i := range registrations {
+		if registrations[i] == nil {
 			return errors.New("nil registration supplied")
 		}
 
 		// Ensure consistent versioning.
 		if version == nil {
-			version = &registration.Version
-		} else if *version != registration.Version {
+			version = &registrations[i].Version
+		} else if *version != registrations[i].Version {
 			return errors.New("registrations must all be of the same version")
 		}
 
 		// Append to unversionedRegistrations.
-		switch registration.Version {
+		switch registrations[i].Version {
 		case spec.BuilderVersionV1:
-			unversionedRegistrations = append(unversionedRegistrations, registration.V1)
+			unversionedRegistrations = append(unversionedRegistrations, registrations[i].V1)
 		default:
 			return errors.New("unknown validator registration version")
 		}
