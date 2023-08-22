@@ -1,5 +1,6 @@
-dev:
+0.18.2:
   - add 'withdrawable done' state to validators
+  - use JSON metadata if not present in HTTP header
 
 0.18.1:
   - add blinded block contents
