@@ -1,3 +1,6 @@
+0.18.3:
+  - do not crash if beacon state is unavailable
+
 0.18.2:
   - add 'withdrawable done' state to validators
   - use JSON metadata if not present in HTTP header

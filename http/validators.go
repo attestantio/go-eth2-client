@@ -123,6 +123,9 @@ func (s *Service) validatorsFromState(ctx context.Context, stateID string) (map[
 	if err != nil {
 		return nil, err
 	}
+	if state == nil {
+		return nil, errors.New("no beacon state")
+	}
 
 	validators, err := state.Validators()
 	if err != nil {
