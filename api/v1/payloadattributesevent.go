@@ -38,6 +38,8 @@ type PayloadAttributesData struct {
 	V1 *PayloadAttributesV1
 	// V2 is the v2 payload attributes.
 	V2 *PayloadAttributesV2
+	// V3 is the v3 payload attributes.
+	V3 *PayloadAttributesV3
 }
 
 // PayloadAttributesV1 represents the payload attributes.
@@ -60,6 +62,20 @@ type PayloadAttributesV2 struct {
 	SuggestedFeeRecipient bellatrix.ExecutionAddress
 	// Withdrawals is the list of withdrawals.
 	Withdrawals []*capella.Withdrawal
+}
+
+// PayloadAttributesV3 represents the payload attributes v3.
+type PayloadAttributesV3 struct {
+	// Timestamp is the timestamp of the payload.
+	Timestamp uint64
+	// PrevRandao is the previous randao.
+	PrevRandao [32]byte
+	// SuggestedFeeRecipient is the suggested fee recipient.
+	SuggestedFeeRecipient bellatrix.ExecutionAddress
+	// Withdrawals is the list of withdrawals.
+	Withdrawals []*capella.Withdrawal
+	// ParentBeaconBlockRoot is the parent beacon block root.
+	ParentBeaconBlockRoot phase0.Root
 }
 
 // payloadAttributesEventJSON is the spec representation of the event.
@@ -91,6 +107,15 @@ type payloadAttributesV2JSON struct {
 	PrevRandao            string                `json:"prev_randao"`
 	SuggestedFeeRecipient string                `json:"suggested_fee_recipient"`
 	Withdrawals           []*capella.Withdrawal `json:"withdrawals"`
+}
+
+// payloadAttributesV3JSON is the spec representation of the payload attributes v3.
+type payloadAttributesV3JSON struct {
+	Timestamp             string                `json:"timestamp"`
+	PrevRandao            string                `json:"prev_randao"`
+	SuggestedFeeRecipient string                `json:"suggested_fee_recipient"`
+	Withdrawals           []*capella.Withdrawal `json:"withdrawals"`
+	ParentBeaconBlockRoot string                `json:"parent_beacon_block_root"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -192,6 +217,69 @@ func (p *PayloadAttributesV2) unpack(data *payloadAttributesV2JSON) error {
 	return nil
 }
 
+func (p *PayloadAttributesV3) UnmarshalJSON(input []byte) error {
+	var payloadAttributes payloadAttributesV3JSON
+	if err := json.Unmarshal(input, &payloadAttributes); err != nil {
+		return errors.Wrap(err, "invalid JSON")
+	}
+	return p.unpack(&payloadAttributes)
+}
+
+func (p *PayloadAttributesV3) unpack(data *payloadAttributesV3JSON) error {
+	var err error
+
+	if data.Timestamp == "" {
+		return errors.New("payload attributes timestamp missing")
+	}
+	p.Timestamp, err = strconv.ParseUint(data.Timestamp, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for payload attributes timestamp")
+	}
+
+	if data.PrevRandao == "" {
+		return errors.New("payload attributes prev randao missing")
+	}
+	prevRandao, err := hex.DecodeString(strings.TrimPrefix(data.PrevRandao, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for payload attributes prev randao")
+	}
+	if len(prevRandao) != 32 {
+		return errors.New("incorrect length for payload attributes prev randao")
+	}
+	copy(p.PrevRandao[:], prevRandao)
+
+	if data.SuggestedFeeRecipient == "" {
+		return errors.New("payload attributes suggested fee recipient missing")
+	}
+	feeRecipient, err := hex.DecodeString(strings.TrimPrefix(data.SuggestedFeeRecipient, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for payload attributes suggested fee recipient")
+	}
+	if len(feeRecipient) != bellatrix.FeeRecipientLength {
+		return errors.New("incorrect length for payload attributes suggested fee recipient")
+	}
+	copy(p.SuggestedFeeRecipient[:], feeRecipient)
+
+	if data.Withdrawals == nil {
+		return errors.New("payload attributes withdrawals missing")
+	}
+	p.Withdrawals = data.Withdrawals
+
+	if data.ParentBeaconBlockRoot == "" {
+		return errors.New("payload attributes parent beacon block root missing")
+	}
+	parentBeaconBlockRoot, err := hex.DecodeString(strings.TrimPrefix(data.ParentBeaconBlockRoot, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for payload attributes parent beacon block root")
+	}
+	if len(parentBeaconBlockRoot) != phase0.RootLength {
+		return errors.New("incorrect length for payload attributes parent beacon block root")
+	}
+	copy(p.ParentBeaconBlockRoot[:], parentBeaconBlockRoot)
+
+	return nil
+}
+
 // MarshalJSON implements json.Marshaler.
 func (e *PayloadAttributesEvent) MarshalJSON() ([]byte, error) {
 	var payloadAttributes []byte
@@ -222,6 +310,20 @@ func (e *PayloadAttributesEvent) MarshalJSON() ([]byte, error) {
 		})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to marshal payload attributes v2")
+		}
+	case spec.DataVersionDeneb:
+		if e.Data.V3 == nil {
+			return nil, errors.New("no payload attributes v3 data")
+		}
+		payloadAttributes, err = json.Marshal(&payloadAttributesV3JSON{
+			Timestamp:             fmt.Sprintf("%d", e.Data.V3.Timestamp),
+			PrevRandao:            fmt.Sprintf("%#x", e.Data.V3.PrevRandao),
+			SuggestedFeeRecipient: e.Data.V3.SuggestedFeeRecipient.String(),
+			Withdrawals:           e.Data.V3.Withdrawals,
+			ParentBeaconBlockRoot: fmt.Sprintf("%#x", e.Data.V3.ParentBeaconBlockRoot),
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to marshal payload attributes v3")
 		}
 	default:
 		return nil, fmt.Errorf("unsupported payload attributes version: %s", e.Version)
@@ -329,6 +431,13 @@ func (e *PayloadAttributesEvent) unpack(data *payloadAttributesEventJSON) error 
 			return err
 		}
 		e.Data.V2 = &payloadAttributes
+	case spec.DataVersionDeneb:
+		var payloadAttributes PayloadAttributesV3
+		err = json.Unmarshal(data.Data.PayloadAttributes, &payloadAttributes)
+		if err != nil {
+			return err
+		}
+		e.Data.V3 = &payloadAttributes
 	default:
 		return errors.New("unsupported data version")
 	}
