@@ -66,6 +66,39 @@ func (v *VersionedSignedBeaconBlock) Slot() (phase0.Slot, error) {
 	}
 }
 
+// ProposerIndex returns the proposer index of the beacon block.
+func (v *VersionedSignedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return 0, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.ProposerIndex, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return 0, errors.New("no altair block")
+		}
+		return v.Altair.Message.ProposerIndex, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return 0, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.ProposerIndex, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no capella block")
+		}
+		return v.Capella.Message.ProposerIndex, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return 0, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.ProposerIndex, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
 // ExecutionBlockHash returns the block hash of the beacon block.
 func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error) {
 	switch v.Version {
@@ -78,12 +111,12 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error)
 		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayload == nil {
 			return phase0.Hash32{}, errors.New("no capella block")
 		}
-		return v.Bellatrix.Message.Body.ExecutionPayload.BlockHash, nil
+		return v.Capella.Message.Body.ExecutionPayload.BlockHash, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil || v.Deneb.Message.Body.ExecutionPayload == nil {
 			return phase0.Hash32{}, errors.New("no denb block")
 		}
-		return v.Bellatrix.Message.Body.ExecutionPayload.BlockHash, nil
+		return v.Deneb.Message.Body.ExecutionPayload.BlockHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -109,6 +142,64 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockNumber() (uint64, error) {
 		return v.Deneb.Message.Body.ExecutionPayload.BlockNumber, nil
 	default:
 		return 0, errors.New("unknown version")
+	}
+}
+
+func (v *VersionedSignedBeaconBlock) ExecutionTransactions() ([]bellatrix.Transaction, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return nil, errors.New("phase0 block does not have execution transactions")
+	case DataVersionAltair:
+		return nil, errors.New("altair block does not have execution transactions")
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil || v.Bellatrix.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.ExecutionPayload.Transactions, nil
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.ExecutionPayload.Transactions, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil || v.Deneb.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.ExecutionPayload.Transactions, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+func (v *VersionedSignedBeaconBlock) Graffiti() ([]byte, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil || v.Phase0.Message == nil || v.Phase0.Message.Body == nil {
+			return nil, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.Body.Graffiti[:], nil
+	case DataVersionAltair:
+		if v.Altair == nil || v.Altair.Message == nil || v.Altair.Message.Body == nil {
+			return nil, errors.New("no altair block")
+		}
+		return v.Altair.Message.Body.Graffiti[:], nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.Graffiti[:], nil
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.Graffiti[:], nil
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil || v.Deneb.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.Graffiti[:], nil
+	default:
+		return nil, errors.New("unknown version")
 	}
 }
 
@@ -277,6 +368,138 @@ func (v *VersionedSignedBeaconBlock) StateRoot() (phase0.Root, error) {
 	}
 }
 
+// RandaoReveal returns the randao reveal of the beacon block.
+func (v *VersionedSignedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil || v.Phase0.Message == nil || v.Phase0.Message.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.Body.RANDAOReveal, nil
+	case DataVersionAltair:
+		if v.Altair == nil || v.Altair.Message == nil || v.Altair.Message.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no altair block")
+		}
+		return v.Altair.Message.Body.RANDAOReveal, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.RANDAOReveal, nil
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.RANDAOReveal, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.RANDAOReveal, nil
+	default:
+		return phase0.BLSSignature{}, errors.New("unknown version")
+	}
+}
+
+// ETH1Data returns the eth1 data of the beacon block.
+func (v *VersionedSignedBeaconBlock) ETH1Data() (*phase0.ETH1Data, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil || v.Phase0.Message == nil || v.Phase0.Message.Body == nil {
+			return nil, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.Body.ETH1Data, nil
+	case DataVersionAltair:
+		if v.Altair == nil || v.Altair.Message == nil || v.Altair.Message.Body == nil {
+			return nil, errors.New("no altair block")
+		}
+		return v.Altair.Message.Body.ETH1Data, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.ETH1Data, nil
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.ETH1Data, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.ETH1Data, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// Deposits returns the deposits of the beacon block.
+func (v *VersionedSignedBeaconBlock) Deposits() ([]*phase0.Deposit, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil || v.Phase0.Message == nil || v.Phase0.Message.Body == nil {
+			return nil, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.Body.Deposits, nil
+	case DataVersionAltair:
+		if v.Altair == nil || v.Altair.Message == nil || v.Altair.Message.Body == nil {
+			return nil, errors.New("no altair block")
+		}
+		return v.Altair.Message.Body.Deposits, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.Deposits, nil
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.Deposits, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.Deposits, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// VoluntaryExits returns the voluntary exits of the beacon block.
+func (v *VersionedSignedBeaconBlock) VoluntaryExits() ([]*phase0.SignedVoluntaryExit, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil || v.Phase0.Message == nil || v.Phase0.Message.Body == nil {
+			return nil, errors.New("no phase0 block")
+		}
+		return v.Phase0.Message.Body.VoluntaryExits, nil
+	case DataVersionAltair:
+		if v.Altair == nil || v.Altair.Message == nil || v.Altair.Message.Body == nil {
+			return nil, errors.New("no altair block")
+		}
+		return v.Altair.Message.Body.VoluntaryExits, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Message.Body.VoluntaryExits, nil
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.VoluntaryExits, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.VoluntaryExits, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
 // AttesterSlashings returns the attester slashings of the beacon block.
 func (v *VersionedSignedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlashing, error) {
 	switch v.Version {
@@ -368,6 +591,73 @@ func (v *VersionedSignedBeaconBlock) SyncAggregate() (*altair.SyncAggregate, err
 			return nil, errors.New("no deneb block")
 		}
 		return v.Deneb.Message.Body.SyncAggregate, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// BLSToExecutionChanges returns the bls to execution changes of the beacon block.
+func (v *VersionedSignedBeaconBlock) BLSToExecutionChanges() ([]*capella.SignedBLSToExecutionChange, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return nil, errors.New("phase0 block does not have bls to execution changes")
+	case DataVersionAltair:
+		return nil, errors.New("altair block does not have bls to execution changes")
+	case DataVersionBellatrix:
+		return nil, errors.New("bellatrix block does not have bls to execution changes")
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.BLSToExecutionChanges, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.BLSToExecutionChanges, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// Withdrawals returns the withdrawals of the beacon block.
+func (v *VersionedSignedBeaconBlock) Withdrawals() ([]*capella.Withdrawal, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return nil, errors.New("phase0 block does not have execution withdrawals")
+	case DataVersionAltair:
+		return nil, errors.New("altair block does not have execution withdrawals")
+	case DataVersionBellatrix:
+		return nil, errors.New("bellatrix block does not have execution withdrawals")
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no capella block")
+		}
+		return v.Capella.Message.Body.ExecutionPayload.Withdrawals, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil || v.Deneb.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.ExecutionPayload.Withdrawals, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// BlobKzgCommitments returns the blob kzg commitments of the beacon block.
+func (v *VersionedSignedBeaconBlock) BlobKzgCommitments() ([]deneb.KzgCommitment, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return nil, errors.New("phase0 block does not have kzg commitments")
+	case DataVersionAltair:
+		return nil, errors.New("altair block does not have kzg commitments")
+	case DataVersionBellatrix:
+		return nil, errors.New("bellatrix block does not have kzg commitments")
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
+			return nil, errors.New("no deneb block")
+		}
+		return v.Deneb.Message.Body.BlobKzgCommitments, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
