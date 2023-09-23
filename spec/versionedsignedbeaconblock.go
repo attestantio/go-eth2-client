@@ -171,35 +171,35 @@ func (v *VersionedSignedBeaconBlock) ExecutionTransactions() ([]bellatrix.Transa
 	}
 }
 
-func (v *VersionedSignedBeaconBlock) Graffiti() ([]byte, error) {
+func (v *VersionedSignedBeaconBlock) Graffiti() ([32]byte, error) {
 	switch v.Version {
 	case DataVersionPhase0:
 		if v.Phase0 == nil || v.Phase0.Message == nil || v.Phase0.Message.Body == nil {
-			return nil, errors.New("no phase0 block")
+			return [32]byte{}, errors.New("no phase0 block")
 		}
-		return v.Phase0.Message.Body.Graffiti[:], nil
+		return v.Phase0.Message.Body.Graffiti, nil
 	case DataVersionAltair:
 		if v.Altair == nil || v.Altair.Message == nil || v.Altair.Message.Body == nil {
-			return nil, errors.New("no altair block")
+			return [32]byte{}, errors.New("no altair block")
 		}
-		return v.Altair.Message.Body.Graffiti[:], nil
+		return v.Altair.Message.Body.Graffiti, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil {
-			return nil, errors.New("no bellatrix block")
+			return [32]byte{}, errors.New("no bellatrix block")
 		}
-		return v.Bellatrix.Message.Body.Graffiti[:], nil
+		return v.Bellatrix.Message.Body.Graffiti, nil
 	case DataVersionCapella:
 		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayload == nil {
-			return nil, errors.New("no capella block")
+			return [32]byte{}, errors.New("no capella block")
 		}
-		return v.Capella.Message.Body.Graffiti[:], nil
+		return v.Capella.Message.Body.Graffiti, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil || v.Deneb.Message.Body.ExecutionPayload == nil {
-			return nil, errors.New("no deneb block")
+			return [32]byte{}, errors.New("no deneb block")
 		}
-		return v.Deneb.Message.Body.Graffiti[:], nil
+		return v.Deneb.Message.Body.Graffiti, nil
 	default:
-		return nil, errors.New("unknown version")
+		return [32]byte{}, errors.New("unknown version")
 	}
 }
 
