@@ -114,9 +114,11 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 		extraHeaders:        parameters.extraHeaders,
 	}
 
-	// Fetch static values to confirm the connection is good.
-	if err := s.fetchStaticValues(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to confirm node connection")
+	if parameters.connectionCheck {
+		// Fetch static values to confirm the connection is good.
+		if err := s.fetchStaticValues(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to confirm node connection")
+		}
 	}
 
 	// Periodially refetch static values in case of client update.

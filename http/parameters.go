@@ -27,6 +27,7 @@ type parameters struct {
 	indexChunkSize  int
 	pubKeyChunkSize int
 	extraHeaders    map[string]string
+	connectionCheck bool
 }
 
 // Parameter is the interface for service parameters.
@@ -82,6 +83,13 @@ func WithExtraHeaders(headers map[string]string) Parameter {
 	})
 }
 
+// WithConnectionCheck enables/disables the client connection check.
+func WithConnectionCheck(connectionCheck bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.connectionCheck = connectionCheck
+	})
+}
+
 // parseAndCheckParameters parses and checks parameters to ensure that mandatory parameters are present and correct.
 func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	parameters := parameters{
@@ -90,6 +98,7 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 		indexChunkSize:  -1,
 		pubKeyChunkSize: -1,
 		extraHeaders:    make(map[string]string),
+		connectionCheck: true,
 	}
 	for _, p := range params {
 		if params != nil {
