@@ -116,7 +116,7 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 
 	if parameters.connectionCheck {
 		// Fetch static values to confirm the connection is good.
-		if err := s.fetchStaticValues(ctx); err != nil {
+		if err := s.FetchStaticValues(ctx); err != nil {
 			return nil, errors.Wrap(err, "failed to confirm node connection")
 		}
 	}
@@ -125,8 +125,10 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	s.periodicClearStaticValues(ctx)
 
 	// Handle connection to DVT middleware.
-	if err := s.checkDVT(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to check DVT connection")
+	if parameters.connectionCheck {
+		if err := s.CheckDVT(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to check DVT connection")
+		}
 	}
 
 	// Close the service on context done.
@@ -139,9 +141,9 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	return s, nil
 }
 
-// fetchStaticValues fetches values that never change.
+// FetchStaticValues fetches values that never change.
 // This caches the values, avoiding future API calls.
-func (s *Service) fetchStaticValues(ctx context.Context) error {
+func (s *Service) FetchStaticValues(ctx context.Context) error {
 	if _, err := s.Genesis(ctx); err != nil {
 		return errors.Wrap(err, "failed to fetch genesis")
 	}
@@ -193,9 +195,9 @@ func (s *Service) periodicClearStaticValues(ctx context.Context) {
 	}(s, ctx)
 }
 
-// checkDVT checks if connected to DVT middleware and sets
+// CheckDVT checks if connected to DVT middleware and sets
 // internal flags appropriately.
-func (s *Service) checkDVT(ctx context.Context) error {
+func (s *Service) CheckDVT(ctx context.Context) error {
 	version, err := s.NodeVersion(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain node version for DVT check")
@@ -203,6 +205,8 @@ func (s *Service) checkDVT(ctx context.Context) error {
 
 	if strings.Contains(strings.ToLower(version), "charon") {
 		s.connectedToDVTMiddleware = true
+	} else {
+		s.connectedToDVTMiddleware = false
 	}
 
 	return nil
