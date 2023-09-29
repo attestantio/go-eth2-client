@@ -159,6 +159,14 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 			return
 		}
 		event.Data = contributionAndProofEvent
+	case "payload_attributes":
+		payloadAttributesEvent := &api.PayloadAttributesEvent{}
+		err := json.Unmarshal(msg.Data, payloadAttributesEvent)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse payload attributes event")
+			return
+		}
+		event.Data = payloadAttributesEvent
 	case "":
 		// Used as keepalive.  Ignore.
 		return
