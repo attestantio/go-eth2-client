@@ -135,6 +135,16 @@ func (s *Service) beaconBlockProposalFromSSZ(res *httpResponse) (*spec.Versioned
 	}
 
 	switch res.consensusVersion {
+	case spec.DataVersionPhase0:
+		block.Phase0 = &phase0.BeaconBlock{}
+		if err := block.Phase0.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode phase0 beacon block proposal")
+		}
+	case spec.DataVersionAltair:
+		block.Altair = &altair.BeaconBlock{}
+		if err := block.Altair.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode altair beacon block proposal")
+		}
 	case spec.DataVersionBellatrix:
 		block.Bellatrix = &bellatrix.BeaconBlock{}
 		if err := block.Bellatrix.UnmarshalSSZ(res.body); err != nil {
@@ -164,6 +174,18 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*spec.Versione
 
 	reader := bytes.NewBuffer(res.body)
 	switch block.Version {
+	case spec.DataVersionPhase0:
+		var resp phase0BeaconBlockProposalJSON
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
+			return nil, errors.Wrap(err, "failed to parse phase0 beacon block proposal")
+		}
+		block.Phase0 = resp.Data
+	case spec.DataVersionAltair:
+		var resp altairBeaconBlockProposalJSON
+		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
+			return nil, errors.Wrap(err, "failed to parse altair beacon block proposal")
+		}
+		block.Altair = resp.Data
 	case spec.DataVersionBellatrix:
 		var resp bellatrixBeaconBlockProposalJSON
 		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
