@@ -44,7 +44,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 	}
 
 	// Set logging.
-	log := zerologger.With().Str("service", "fetcher").Str("impl", "multi").Logger()
+	log := zerologger.With().Str("service", "client").Str("impl", "multi").Logger()
 	if parameters.logLevel != log.GetLevel() {
 		log = log.Level(parameters.logLevel)
 	}
