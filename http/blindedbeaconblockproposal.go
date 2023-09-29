@@ -27,6 +27,8 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 )
 
 type bellatrixBlindedBeaconBlockProposalJSON struct {
@@ -52,11 +54,17 @@ func (s *Service) BlindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 
 // blindedBeaconBlockProposal fetches a proposed beacon block for signing.
 func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti [32]byte) (*api.VersionedBlindedBeaconBlock, error) {
+	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "blindedBeaconBlockProposal")
+	defer span.End()
+
 	res, err := s.get2(ctx, fmt.Sprintf("/eth/v1/validator/blinded_blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti))
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "Failed to request beacon block proposal")
 		return nil, errors.Wrap(err, "failed to request blinded beacon block proposal")
 	}
 	if res.statusCode == http.StatusNotFound {
+		span.SetStatus(codes.Error, "Client returned 404")
 		return nil, nil
 	}
 
@@ -67,9 +75,12 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 	case ContentTypeJSON:
 		block, err = s.blindedBeaconBlockProposalFromJSON(res)
 	default:
+		span.SetStatus(codes.Error, fmt.Sprintf("Unhandled content type %s", res.contentType))
 		return nil, fmt.Errorf("unhandled content type %v", res.contentType)
 	}
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "Failed to decode body")
 		return nil, err
 	}
 
@@ -79,6 +90,7 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 		return nil, err
 	}
 	if blockSlot != slot {
+		span.SetStatus(codes.Error, fmt.Sprintf("Proposal slot %d; expected %d", blockSlot, slot))
 		return nil, errors.New("blinded beacon block proposal not for requested slot")
 	}
 
@@ -90,6 +102,7 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 			return nil, err
 		}
 		if !bytes.Equal(blockRandaoReveal[:], randaoReveal[:]) {
+			span.SetStatus(codes.Error, fmt.Sprintf("Proposal RANDAO reveal %#x; expected %#x", blockRandaoReveal[:], randaoReveal[:]))
 			return nil, fmt.Errorf("blinded beacon block proposal has RANDAO reveal %#x; expected %#x", blockRandaoReveal[:], randaoReveal[:])
 		}
 
@@ -98,6 +111,7 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 			return nil, err
 		}
 		if !bytes.Equal(blockGraffiti[:], graffiti[:]) {
+			span.SetStatus(codes.Error, fmt.Sprintf("Proposal graffiti %#x; expected %#x", blockGraffiti[:], graffiti[:]))
 			return nil, fmt.Errorf("blinded beacon block proposal has graffiti %#x; expected %#x", blockGraffiti[:], graffiti[:])
 		}
 	}
