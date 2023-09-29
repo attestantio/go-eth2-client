@@ -27,6 +27,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 )
 
@@ -259,6 +260,7 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 		log.Debug().Err(err).Msg("Failed to obtain content type; assuming JSON")
 		res.contentType = ContentTypeJSON
 	}
+	span.SetAttributes(attribute.String("content-type", res.contentType.String()))
 
 	if err := populateConsensusVersion(res, resp); err != nil {
 		return nil, errors.Wrap(err, "failed to parse consensus version")
