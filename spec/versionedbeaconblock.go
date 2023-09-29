@@ -71,6 +71,102 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 	}
 }
 
+// RandaoReveal returns the RANDAO reveal of the beacon block.
+func (v *VersionedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return phase0.BLSSignature{}, errors.New("no phase0 block")
+		}
+		if v.Phase0.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no phase0 block body")
+		}
+		return v.Phase0.Body.RANDAOReveal, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return phase0.BLSSignature{}, errors.New("no altair block")
+		}
+		if v.Altair.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no altair block body")
+		}
+		return v.Altair.Body.RANDAOReveal, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return phase0.BLSSignature{}, errors.New("no bellatrix block")
+		}
+		if v.Bellatrix.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no bellatrix block body")
+		}
+		return v.Bellatrix.Body.RANDAOReveal, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.BLSSignature{}, errors.New("no capella block")
+		}
+		if v.Capella.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no capella block body")
+		}
+		return v.Capella.Body.RANDAOReveal, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.BLSSignature{}, errors.New("no deneb block")
+		}
+		if v.Deneb.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no deneb block body")
+		}
+		return v.Deneb.Body.RANDAOReveal, nil
+	default:
+		return phase0.BLSSignature{}, errors.New("unknown version")
+	}
+}
+
+// Graffiti returns the graffiti of the beacon block.
+func (v *VersionedBeaconBlock) Graffiti() ([32]byte, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return [32]byte{}, errors.New("no phase0 block")
+		}
+		if v.Phase0.Body == nil {
+			return [32]byte{}, errors.New("no phase0 block body")
+		}
+		return v.Phase0.Body.Graffiti, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return [32]byte{}, errors.New("no altair block")
+		}
+		if v.Altair.Body == nil {
+			return [32]byte{}, errors.New("no altair block body")
+		}
+		return v.Altair.Body.Graffiti, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return [32]byte{}, errors.New("no bellatrix block")
+		}
+		if v.Bellatrix.Body == nil {
+			return [32]byte{}, errors.New("no bellatrix block body")
+		}
+		return v.Bellatrix.Body.Graffiti, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return [32]byte{}, errors.New("no capella block")
+		}
+		if v.Capella.Body == nil {
+			return [32]byte{}, errors.New("no capella block body")
+		}
+		return v.Capella.Body.Graffiti, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return [32]byte{}, errors.New("no deneb block")
+		}
+		if v.Deneb.Body == nil {
+			return [32]byte{}, errors.New("no deneb block body")
+		}
+		return v.Deneb.Body.Graffiti, nil
+	default:
+		return [32]byte{}, errors.New("unknown version")
+	}
+}
+
 // ProposerIndex returns the proposer index of the beacon block.
 func (v *VersionedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
 	switch v.Version {
