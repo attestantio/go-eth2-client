@@ -565,7 +565,7 @@ func (s *Erroring) Spec(ctx context.Context) (map[string]interface{}, error) {
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
 // will be applied.
-func (s *Erroring) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
+func (s *Erroring) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (*apiv1.Response[map[phase0.ValidatorIndex]phase0.Gwei], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}

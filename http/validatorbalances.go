@@ -25,14 +25,19 @@ import (
 )
 
 type validatorBalancesJSON struct {
-	Data []*api.ValidatorBalance `json:"data"`
+	ExecutionOptimistic bool                    `json:"execution_optimistic"`
+	Finalized           bool                    `json:"finalized"`
+	Data                []*api.ValidatorBalance `json:"data"`
 }
 
 // ValidatorBalances provides the validator balances for a given state.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
 // will be applied.
-func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
+
+type validatorBalancesResponse = api.Response[map[phase0.ValidatorIndex]phase0.Gwei]
+
+func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (*validatorBalancesResponse, error) {
 	if stateID == "" {
 		return nil, errors.New("no state ID specified")
 	}
@@ -66,16 +71,25 @@ func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validat
 		return nil, errors.New("no validator balances returned")
 	}
 
-	res := make(map[phase0.ValidatorIndex]phase0.Gwei)
+	res := &validatorBalancesResponse{
+		Data: make(map[phase0.ValidatorIndex]phase0.Gwei),
+		Metadata: map[string]interface{}{
+			api.MetadataKeyExecutionOptimistic: validatorBalancesJSON.ExecutionOptimistic,
+			api.MetadataKeyFinalized:           validatorBalancesJSON.Finalized,
+		},
+	}
+
 	for _, validatorBalance := range validatorBalancesJSON.Data {
-		res[validatorBalance.Index] = validatorBalance.Balance
+		res.Data[validatorBalance.Index] = validatorBalance.Balance
 	}
 	return res, nil
 }
 
 // chunkedValidatorBalances obtains the validator balances a chunk at a time.
-func (s *Service) chunkedValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
-	res := make(map[phase0.ValidatorIndex]phase0.Gwei)
+func (s *Service) chunkedValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (*validatorBalancesResponse, error) {
+	res := &validatorBalancesResponse{
+		Data: make(map[phase0.ValidatorIndex]phase0.Gwei),
+	}
 	indexChunkSize := s.indexChunkSize(ctx)
 	for i := 0; i < len(validatorIndices); i += indexChunkSize {
 		chunkStart := i
@@ -88,8 +102,28 @@ func (s *Service) chunkedValidatorBalances(ctx context.Context, stateID string, 
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain chunk")
 		}
-		for k, v := range chunkRes {
-			res[k] = v
+		for k, v := range chunkRes.Data {
+			res.Data[k] = v
+		}
+
+		// For metadata, if any of the chunks are optimistic then the result is optimistic.
+		// If any of the chunks are not finalized then the result is not finalized.
+		finalized, err := chunkRes.Finalized()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain finalized")
+		}
+
+		if !finalized {
+			res.Metadata[api.MetadataKeyFinalized] = finalized
+		}
+
+		executionOptimistic, err := chunkRes.ExecutionOptimistic()
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain execution optimistic")
+		}
+
+		if executionOptimistic {
+			res.Metadata[api.MetadataKeyExecutionOptimistic] = executionOptimistic
 		}
 	}
 	return res, nil

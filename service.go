@@ -359,7 +359,7 @@ type ValidatorBalancesProvider interface {
 	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 	// validatorIndices is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
 	// will be applied.
-	ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error)
+	ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (*apiv1.Response[map[phase0.ValidatorIndex]phase0.Gwei], error)
 }
 
 // ValidatorsProvider is the interface for providing validator information.
