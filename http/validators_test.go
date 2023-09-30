@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -34,6 +35,7 @@ func TestValidators(t *testing.T) {
 		stateID           string
 		expectedErrorCode int
 		validatorIndices  []phase0.ValidatorIndex
+		validatorStates   []v1.ValidatorState
 	}{
 		{
 			name:              "Invalid",
@@ -62,6 +64,14 @@ func TestValidators(t *testing.T) {
 			stateID: "justified",
 		},
 		{
+			name:    "SomeStates",
+			stateID: "head",
+			validatorStates: []v1.ValidatorState{
+				v1.ValidatorStateActiveOngoing,
+				v1.ValidatorStateExitedSlashed,
+			},
+		},
+		{
 			name:    "ManyValidators",
 			stateID: "head",
 			validatorIndices: []phase0.ValidatorIndex{
@@ -78,7 +88,7 @@ func TestValidators(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			validators, err := service.(client.ValidatorsProvider).Validators(ctx, test.stateID, test.validatorIndices)
+			validators, err := service.(client.ValidatorsProvider).Validators(ctx, test.stateID, test.validatorIndices, test.validatorStates)
 			if test.expectedErrorCode != 0 {
 				require.Contains(t, err.Error(), fmt.Sprintf("%d", test.expectedErrorCode))
 			} else {

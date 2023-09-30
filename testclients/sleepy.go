@@ -23,6 +23,7 @@ import (
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -395,13 +396,15 @@ func (s *Sleepy) ValidatorBalances(ctx context.Context, stateID string, validato
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
 // will be applied.
-func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
+// validatorStates is a list of validator states to restrict the returned values.  If no validators states are supplied no filter
+// will be applied.
+func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex, validatorStates []v1.ValidatorState) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ValidatorsProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.Validators(ctx, stateID, validatorIndices)
+	return next.Validators(ctx, stateID, validatorIndices, validatorStates)
 }
 
 // ValidatorsByPubKey provides the validators, with their balance and status, for a given state.

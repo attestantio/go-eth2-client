@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -70,7 +71,8 @@ func (s *Service) indexChunkSize(ctx context.Context) int {
 // Validators provides the validators, with their balance and status, for a given state.
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
-func (s *Service) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error) {
+// validatorStates is a list of validator states to restrict the returned values.  If no states are supplied no filter will be applied.
+func (s *Service) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex, validatorStates []v1.ValidatorState) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	if stateID == "" {
 		return nil, errors.New("no state ID specified")
 	}
@@ -80,7 +82,7 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIndic
 	}
 
 	if len(validatorIndices) > s.indexChunkSize(ctx) {
-		return s.chunkedValidators(ctx, stateID, validatorIndices)
+		return s.chunkedValidators(ctx, stateID, validatorIndices, validatorStates)
 	}
 
 	url := fmt.Sprintf("/eth/v1/beacon/states/%s/validators", stateID)
@@ -90,6 +92,17 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIndic
 			ids[i] = fmt.Sprintf("%d", validatorIndices[i])
 		}
 		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
+	}
+	if len(validatorStates) != 0 {
+		states := make([]string, len(validatorStates))
+		for i := range validatorStates {
+			states[i] = fmt.Sprintf("%s", validatorStates[i])
+		}
+		if len(validatorIndices) != 0 {
+			url = fmt.Sprintf("%s&status=%s", url, strings.Join(states, ","))
+		} else {
+			url = fmt.Sprintf("%s?status=%s", url, strings.Join(states, ","))
+		}
 	}
 
 	respBodyReader, err := s.get(ctx, url)
@@ -168,7 +181,7 @@ func (s *Service) validatorsFromState(ctx context.Context, stateID string) (map[
 }
 
 // chunkedValidators obtains the validators a chunk at a time.
-func (s *Service) chunkedValidators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error) {
+func (s *Service) chunkedValidators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex, validatorStates []v1.ValidatorState) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	res := make(map[phase0.ValidatorIndex]*api.Validator)
 	indexChunkSize := s.indexChunkSize(ctx)
 	for i := 0; i < len(validatorIndices); i += indexChunkSize {
@@ -178,7 +191,7 @@ func (s *Service) chunkedValidators(ctx context.Context, stateID string, validat
 			chunkEnd = len(validatorIndices)
 		}
 		chunk := validatorIndices[chunkStart:chunkEnd]
-		chunkRes, err := s.Validators(ctx, stateID, chunk)
+		chunkRes, err := s.Validators(ctx, stateID, chunk, validatorStates)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain chunk")
 		}

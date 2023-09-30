@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -51,7 +52,7 @@ func TestValidators(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.(consensusclient.ValidatorsProvider).Validators(ctx, "1", []phase0.ValidatorIndex{})
+		res, err := multiClient.(consensusclient.ValidatorsProvider).Validators(ctx, "1", []phase0.ValidatorIndex{}, []v1.ValidatorState{})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}
