@@ -95,7 +95,7 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIndic
 	if len(validatorStates) != 0 {
 		states := make([]string, len(validatorStates))
 		for i := range validatorStates {
-			states[i] = fmt.Sprintf("%s", validatorStates[i])
+			states[i] = validatorStates[i].String()
 		}
 		if len(validatorIndices) != 0 {
 			url = fmt.Sprintf("%s&status=%s", url, strings.Join(states, ","))
