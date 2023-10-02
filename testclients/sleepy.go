@@ -23,7 +23,6 @@ import (
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -398,7 +397,7 @@ func (s *Sleepy) ValidatorBalances(ctx context.Context, stateID string, validato
 // will be applied.
 // validatorStates is a list of validator states to restrict the returned values.  If no validators states are supplied no filter
 // will be applied.
-func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex, validatorStates []v1.ValidatorState) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
+func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex, validatorStates []apiv1.ValidatorState) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ValidatorsProvider)
 	if !isNext {

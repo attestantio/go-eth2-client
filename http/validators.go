@@ -20,7 +20,6 @@ import (
 	"strings"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -72,7 +71,7 @@ func (s *Service) indexChunkSize(ctx context.Context) int {
 // stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 // validatorIndices is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
 // validatorStates is a list of validator states to restrict the returned values.  If no states are supplied no filter will be applied.
-func (s *Service) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex, validatorStates []v1.ValidatorState) (map[phase0.ValidatorIndex]*api.Validator, error) {
+func (s *Service) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex, validatorStates []api.ValidatorState) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	if stateID == "" {
 		return nil, errors.New("no state ID specified")
 	}
@@ -181,7 +180,7 @@ func (s *Service) validatorsFromState(ctx context.Context, stateID string) (map[
 }
 
 // chunkedValidators obtains the validators a chunk at a time.
-func (s *Service) chunkedValidators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex, validatorStates []v1.ValidatorState) (map[phase0.ValidatorIndex]*api.Validator, error) {
+func (s *Service) chunkedValidators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex, validatorStates []api.ValidatorState) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	res := make(map[phase0.ValidatorIndex]*api.Validator)
 	indexChunkSize := s.indexChunkSize(ctx)
 	for i := 0; i < len(validatorIndices); i += indexChunkSize {

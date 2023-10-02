@@ -23,7 +23,6 @@ import (
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
@@ -583,7 +582,7 @@ func (s *Erroring) ValidatorBalances(ctx context.Context, stateID string, valida
 // will be applied.
 // validatorStates is a list of validator states to restrict the returned values.  If no validators states are supplied no filter
 // will be applied.
-func (s *Erroring) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex, validatorStates []v1.ValidatorState) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
+func (s *Erroring) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex, validatorStates []apiv1.ValidatorState) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}

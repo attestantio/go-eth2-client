@@ -18,7 +18,6 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -30,7 +29,7 @@ import (
 func (s *Service) Validators(ctx context.Context,
 	stateID string,
 	validatorIndices []phase0.ValidatorIndex,
-	validatorStates []v1.ValidatorState,
+	validatorStates []api.ValidatorState,
 ) (
 	map[phase0.ValidatorIndex]*api.Validator,
 	error,
