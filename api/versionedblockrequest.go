@@ -67,12 +67,12 @@ func (v *VersionedBlockRequest) ExecutionBlockHash() (phase0.Hash32, error) {
 		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayload == nil {
 			return phase0.Hash32{}, errors.New("no capella block")
 		}
-		return v.Bellatrix.Message.Body.ExecutionPayload.BlockHash, nil
+		return v.Capella.Message.Body.ExecutionPayload.BlockHash, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil || v.Deneb.SignedBlock.Message.Body == nil || v.Deneb.SignedBlock.Message.Body.ExecutionPayload == nil {
 			return phase0.Hash32{}, errors.New("no denb block")
 		}
-		return v.Bellatrix.Message.Body.ExecutionPayload.BlockHash, nil
+		return v.Deneb.SignedBlock.Message.Body.ExecutionPayload.BlockHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
