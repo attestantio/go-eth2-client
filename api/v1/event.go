@@ -40,6 +40,7 @@ var SupportedEventTopics = map[string]bool{
 	"voluntary_exit":         true,
 	"contribution_and_proof": true,
 	"payload_attributes":     true,
+	"blob_sidecar":           true,
 }
 
 // eventJSON is the spec representation of the struct.
@@ -99,6 +100,8 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		e.Data = &altair.SignedContributionAndProof{}
 	case "payload_attributes":
 		e.Data = &PayloadAttributesEvent{}
+	case "blob_sidecar":
+		e.Data = &BlobSidecarEvent{}
 	default:
 		return fmt.Errorf("unsupported event topic %s", eventJSON.Topic)
 	}
