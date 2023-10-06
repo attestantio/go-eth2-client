@@ -19,8 +19,9 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
-	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,19 +30,23 @@ func TestBeaconState(t *testing.T) {
 	defer cancel()
 
 	tests := []struct {
-		name        string
-		stateID     string
-		dataVersion spec.DataVersion
+		name     string
+		opts     *api.BeaconStateOpts
+		expected *phase0.BeaconState
+		err      string
+		errCode  int
 	}{
 		{
-			name:        "Genesis",
-			stateID:     "genesis",
-			dataVersion: spec.DataVersionPhase0,
+			name: "NilOpts",
+			err:  "no options specified",
 		},
 		{
-			name:        "Head",
-			stateID:     "head",
-			dataVersion: spec.DataVersionCapella,
+			name: "Genesis",
+			opts: &api.BeaconStateOpts{State: "genesis"},
+		},
+		{
+			name: "Head",
+			opts: &api.BeaconStateOpts{State: "head"},
 		},
 	}
 
@@ -53,10 +58,16 @@ func TestBeaconState(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			beaconState, err := service.(client.BeaconStateProvider).BeaconState(ctx, test.stateID)
-			require.NoError(t, err)
-			require.NotNil(t, beaconState)
-			require.Equal(t, test.dataVersion, beaconState.Version)
+			response, err := service.(client.BeaconStateProvider).BeaconState(ctx, test.opts)
+			switch {
+			case test.err != "":
+				require.ErrorContains(t, err, test.err)
+			case test.errCode != 0:
+				require.Equal(t, test.errCode, err.(api.Error).StatusCode)
+			default:
+				require.NoError(t, err)
+				require.NotNil(t, response)
+			}
 		})
 	}
 }

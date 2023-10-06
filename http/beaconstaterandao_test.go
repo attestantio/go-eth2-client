@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
 )
@@ -30,29 +31,29 @@ func TestBeaconStateRandao(t *testing.T) {
 
 	tests := []struct {
 		name              string
-		stateID           string
+		opts              *api.BeaconStateRandaoOpts
 		expectedErrorCode int
 	}{
 		{
 			name:              "Invalid",
-			stateID:           "current",
+			opts:              &api.BeaconStateRandaoOpts{State: "current"},
 			expectedErrorCode: 400,
 		},
 		{
-			name:    "Zero",
-			stateID: "0",
+			name: "Zero",
+			opts: &api.BeaconStateRandaoOpts{State: "0"},
 		},
 		{
-			name:    "Head",
-			stateID: "head",
+			name: "Head",
+			opts: &api.BeaconStateRandaoOpts{State: "head"},
 		},
 		{
-			name:    "Finalized",
-			stateID: "finalized",
+			name: "Finalized",
+			opts: &api.BeaconStateRandaoOpts{State: "finalized"},
 		},
 		{
-			name:    "Justified",
-			stateID: "justified",
+			name: "Justified",
+			opts: &api.BeaconStateRandaoOpts{State: "justified"},
 		},
 	}
 
@@ -64,12 +65,14 @@ func TestBeaconStateRandao(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			stateRandao, err := service.(client.BeaconStateRandaoProvider).BeaconStateRandao(ctx, test.stateID)
+			response, err := service.(client.BeaconStateRandaoProvider).BeaconStateRandao(ctx, test.opts)
 			if test.expectedErrorCode != 0 {
 				require.Contains(t, err.Error(), fmt.Sprintf("%d", test.expectedErrorCode))
 			} else {
 				require.NoError(t, err)
-				require.NotNil(t, stateRandao)
+				require.NotNil(t, response)
+				require.NotNil(t, response.Data)
+				require.NotNil(t, response.Metadata)
 			}
 		})
 	}

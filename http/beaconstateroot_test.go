@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
 )
@@ -30,29 +31,29 @@ func TestBeaconStateRoot(t *testing.T) {
 
 	tests := []struct {
 		name              string
-		stateID           string
+		opts              *api.BeaconStateRootOpts
 		expectedErrorCode int
 	}{
 		{
 			name:              "Invalid",
-			stateID:           "current",
+			opts:              &api.BeaconStateRootOpts{State: "current"},
 			expectedErrorCode: 400,
 		},
 		{
-			name:    "Zero",
-			stateID: "0",
+			name: "Zero",
+			opts: &api.BeaconStateRootOpts{State: "0"},
 		},
 		{
-			name:    "Head",
-			stateID: "head",
+			name: "Head",
+			opts: &api.BeaconStateRootOpts{State: "head"},
 		},
 		{
-			name:    "Finalized",
-			stateID: "finalized",
+			name: "Finalized",
+			opts: &api.BeaconStateRootOpts{State: "finalized"},
 		},
 		{
-			name:    "Justified",
-			stateID: "justified",
+			name: "Justified",
+			opts: &api.BeaconStateRootOpts{State: "justified"},
 		},
 	}
 
@@ -64,12 +65,14 @@ func TestBeaconStateRoot(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			stateRoot, err := service.(client.BeaconStateRootProvider).BeaconStateRoot(ctx, test.stateID)
+			response, err := service.(client.BeaconStateRootProvider).BeaconStateRoot(ctx, test.opts)
 			if test.expectedErrorCode != 0 {
 				require.Contains(t, err.Error(), fmt.Sprintf("%d", test.expectedErrorCode))
 			} else {
 				require.NoError(t, err)
-				require.NotNil(t, stateRoot)
+				require.NotNil(t, response)
+				require.NotNil(t, response.Data)
+				require.NotNil(t, response.Metadata)
 			}
 		})
 	}

@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
 )
@@ -28,12 +29,16 @@ func TestBeaconBlockHeader(t *testing.T) {
 	defer cancel()
 
 	tests := []struct {
-		name    string
-		stateID string
+		name string
+		opts *api.BeaconBlockHeaderOpts
 	}{
 		{
-			name:    "Good",
-			stateID: "head",
+			name: "Genesis",
+			opts: &api.BeaconBlockHeaderOpts{Block: "0"},
+		},
+		{
+			name: "Good",
+			opts: &api.BeaconBlockHeaderOpts{Block: "head"},
 		},
 	}
 
@@ -45,7 +50,7 @@ func TestBeaconBlockHeader(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			beaconBlockHeader, err := service.(client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, test.stateID)
+			beaconBlockHeader, err := service.(client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, test.opts)
 			require.NoError(t, err)
 			require.NotNil(t, beaconBlockHeader)
 		})

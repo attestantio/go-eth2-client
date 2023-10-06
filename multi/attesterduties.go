@@ -17,21 +17,20 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // AttesterDuties obtains attester duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
 func (s *Service) AttesterDuties(ctx context.Context,
-	epoch phase0.Epoch,
-	validatorIndices []phase0.ValidatorIndex,
+	opts *api.AttesterDutiesOpts,
 ) (
-	[]*api.AttesterDuty,
+	*api.Response[[]*apiv1.AttesterDuty],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		block, err := client.(consensusclient.AttesterDutiesProvider).AttesterDuties(ctx, epoch, validatorIndices)
+		block, err := client.(consensusclient.AttesterDutiesProvider).AttesterDuties(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -43,5 +42,5 @@ func (s *Service) AttesterDuties(ctx context.Context,
 	if res == nil {
 		return nil, nil
 	}
-	return res.([]*api.AttesterDuty), nil
+	return res.(*api.Response[[]*apiv1.AttesterDuty]), nil
 }

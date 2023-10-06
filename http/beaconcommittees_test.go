@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,9 +17,9 @@ import (
 	"context"
 	"os"
 	"testing"
-	"time"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -29,13 +29,24 @@ func TestBeaconCommittees(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	epoch := phase0.Epoch(0)
+
 	tests := []struct {
-		name    string
-		stateID string
+		name string
+		opts *api.BeaconCommitteesOpts
 	}{
 		{
-			name:    "Good",
-			stateID: "head",
+			name: "Good",
+			opts: &api.BeaconCommitteesOpts{
+				State: "head",
+			},
+		},
+		{
+			name: "AtGenesisEpoch",
+			opts: &api.BeaconCommitteesOpts{
+				State: "genesis",
+				Epoch: &epoch,
+			},
 		},
 	}
 
@@ -47,52 +58,7 @@ func TestBeaconCommittees(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			beaconCommittees, err := service.(client.BeaconCommitteesProvider).BeaconCommittees(ctx, test.stateID)
-			require.NoError(t, err)
-			require.NotNil(t, beaconCommittees)
-		})
-	}
-}
-
-func TestBeaconCommitteesAtEpoch(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
-
-	// Needed to fetch current epoch.
-	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
-	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
-	require.NoError(t, err)
-	slotsPerEpoch, err := service.(client.SlotsPerEpochProvider).SlotsPerEpoch(ctx)
-	require.NoError(t, err)
-
-	tests := []struct {
-		name    string
-		stateID string
-		epoch   int64 // -1 for current
-	}{
-		{
-			name:    "Good",
-			stateID: "head",
-			epoch:   -1,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var epoch phase0.Epoch
-			if test.epoch == -1 {
-				epoch = phase0.Epoch(uint64(time.Since(genesis.GenesisTime).Seconds()) / (uint64(slotDuration.Seconds()) * slotsPerEpoch))
-			} else {
-				epoch = phase0.Epoch(test.epoch)
-			}
-			beaconCommittees, err := service.(client.BeaconCommitteesProvider).BeaconCommitteesAtEpoch(ctx, test.stateID, epoch)
+			beaconCommittees, err := service.(client.BeaconCommitteesProvider).BeaconCommittees(ctx, test.opts)
 			require.NoError(t, err)
 			require.NotNil(t, beaconCommittees)
 		})

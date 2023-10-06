@@ -17,10 +17,11 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // Spec provides the spec information of the chain.
-func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
+func (s *Service) Spec(ctx context.Context) (*api.Response[map[string]any], error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		aggregate, err := client.(consensusclient.SpecProvider).Spec(ctx)
 		if err != nil {
@@ -34,5 +35,5 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 	if res == nil {
 		return nil, nil
 	}
-	return res.(map[string]interface{}), nil
+	return res.(*api.Response[map[string]any]), nil
 }

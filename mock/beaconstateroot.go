@@ -16,10 +16,15 @@ package mock
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// BeaconStateRoot fetches a beacon state root given a state ID.
-func (s *Service) BeaconStateRoot(_ context.Context, _ string) (*spec.Root, error) {
-	return &spec.Root{}, nil
+// BeaconStateRoot fetches a beacon state's root given a state ID.
+func (s *Service) BeaconStateRoot(_ context.Context, _ *api.BeaconStateRootOpts) (*api.Response[*phase0.Root], error) {
+	data := phase0.Root{}
+	return &api.Response[*phase0.Root]{
+		Data:     &data,
+		Metadata: make(map[string]any),
+	}, nil
 }

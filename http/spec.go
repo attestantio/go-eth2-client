@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,27 +14,26 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
-type specJSON struct {
-	Data map[string]string `json:"data"`
-}
-
 // Spec provides the spec information of the chain.
-func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
+func (s *Service) Spec(ctx context.Context) (*api.Response[map[string]any], error) {
 	s.specMutex.RLock()
 	if s.spec != nil {
 		defer s.specMutex.RUnlock()
-		return s.spec, nil
+		return &api.Response[map[string]any]{
+			Data:     s.spec,
+			Metadata: make(map[string]any),
+		}, nil
 	}
 	s.specMutex.RUnlock()
 
@@ -42,25 +41,25 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 	defer s.specMutex.Unlock()
 	if s.spec != nil {
 		// Someone else fetched this whilst we were waiting for the lock.
-		return s.spec, nil
+		return &api.Response[map[string]any]{
+			Data:     s.spec,
+			Metadata: make(map[string]any),
+		}, nil
 	}
 
 	// Up to us to fetch the information.
-	respBodyReader, err := s.get(ctx, "/eth/v1/config/spec")
+	httpResponse, err := s.get2(ctx, "/eth/v1/config/spec")
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request spec")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain spec")
+		return nil, err
 	}
 
-	var specJSON specJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&specJSON); err != nil {
-		return nil, errors.Wrap(err, "failed to parse spec")
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), map[string]string{})
+	if err != nil {
+		return nil, err
 	}
 
-	config := make(map[string]interface{})
-	for k, v := range specJSON.Data {
+	config := make(map[string]any)
+	for k, v := range data {
 		// Handle domains.
 		if strings.HasPrefix(k, "DOMAIN_") {
 			byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
@@ -143,5 +142,9 @@ func (s *Service) Spec(ctx context.Context) (map[string]interface{}, error) {
 	}
 
 	s.spec = config
-	return s.spec, nil
+
+	return &api.Response[map[string]any]{
+		Data:     s.spec,
+		Metadata: metadata,
+	}, nil
 }

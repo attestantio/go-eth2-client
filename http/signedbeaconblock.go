@@ -51,7 +51,12 @@ type denebSignedBeaconBlockJSON struct {
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
 // N.B if a signed beacon block for the block ID is not available this will return nil without an error.
-func (s *Service) SignedBeaconBlock(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error) {
+func (s *Service) SignedBeaconBlock(ctx context.Context,
+	blockID string,
+) (
+	*spec.VersionedSignedBeaconBlock,
+	error,
+) {
 	res, err := s.get2(ctx, fmt.Sprintf("/eth/v2/beacon/blocks/%s", blockID))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request signed beacon block")

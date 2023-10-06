@@ -201,15 +201,17 @@ func (s *Service) providerInfo(ctx context.Context, provider consensusclient.Ser
 	providerName := "<unknown>"
 	nodeVersionProvider, isNodeVersionProvider := provider.(consensusclient.NodeVersionProvider)
 	if isNodeVersionProvider {
-		nodeVersion, err := nodeVersionProvider.NodeVersion(ctx)
+		response, err := nodeVersionProvider.NodeVersion(ctx)
 		if err == nil {
 			switch {
-			case strings.Contains(strings.ToLower(nodeVersion), "lighthouse"):
+			case strings.Contains(strings.ToLower(response.Data), "lighthouse"):
 				providerName = "lighthouse"
-			case strings.Contains(strings.ToLower(nodeVersion), "prysm"):
+			case strings.Contains(strings.ToLower(response.Data), "prysm"):
 				providerName = "prysm"
-			case strings.Contains(strings.ToLower(nodeVersion), "teku"):
+			case strings.Contains(strings.ToLower(response.Data), "teku"):
 				providerName = "teku"
+			case strings.Contains(strings.ToLower(response.Data), "nimbus"):
+				providerName = "nimbus"
 			}
 		}
 	}

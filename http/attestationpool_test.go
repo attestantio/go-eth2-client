@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,6 +20,7 @@ import (
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -59,7 +60,7 @@ func TestAttestationPool(t *testing.T) {
 			slot = phase0.Slot(uint64(test.slot))
 		}
 		t.Run(test.name, func(t *testing.T) {
-			attestationPool, err := service.(client.AttestationPoolProvider).AttestationPool(ctx, slot)
+			attestationPool, err := service.(client.AttestationPoolProvider).AttestationPool(ctx, &api.AttestationPoolOpts{Slot: slot})
 			require.NoError(t, err)
 			require.NotNil(t, attestationPool)
 		})

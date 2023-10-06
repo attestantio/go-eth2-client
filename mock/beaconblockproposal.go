@@ -16,17 +16,18 @@ package mock
 import (
 	"context"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/prysmaticlabs/go-bitfield"
 )
 
 // BeaconBlockProposal fetches a proposed beacon block for signing.
-func (s *Service) BeaconBlockProposal(_ context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
-	// Graffiti should be 32 bytes.
-	fixedGraffiti := [32]byte{}
-	copy(fixedGraffiti[:], graffiti)
-
+func (s *Service) BeaconBlockProposal(_ context.Context,
+	opts *api.BeaconBlockProposalOpts,
+) (
+	*api.Response[*spec.VersionedBeaconBlock], error,
+) {
 	// Build a beacon block.
 
 	// Create a few attestations.
@@ -37,7 +38,7 @@ func (s *Service) BeaconBlockProposal(_ context.Context, slot phase0.Slot, randa
 		attestations[i] = &phase0.Attestation{
 			AggregationBits: aggregationBits,
 			Data: &phase0.AttestationData{
-				Slot:  slot - 1,
+				Slot:  opts.Slot - 1,
 				Index: phase0.CommitteeIndex(i),
 				BeaconBlockRoot: phase0.Root([32]byte{
 					0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
@@ -70,7 +71,7 @@ func (s *Service) BeaconBlockProposal(_ context.Context, slot phase0.Slot, randa
 	}
 
 	block := &phase0.BeaconBlock{
-		Slot:          slot,
+		Slot:          opts.Slot,
 		ProposerIndex: 1,
 		ParentRoot: phase0.Root([32]byte{
 			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
@@ -81,7 +82,7 @@ func (s *Service) BeaconBlockProposal(_ context.Context, slot phase0.Slot, randa
 			0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
 		}),
 		Body: &phase0.BeaconBlockBody{
-			RANDAOReveal: randaoReveal,
+			RANDAOReveal: opts.RandaoReveal,
 			ETH1Data: &phase0.ETH1Data{
 				DepositRoot: phase0.Root([32]byte{
 					0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4c, 0x4d, 0x4e, 0x4f,
@@ -93,7 +94,7 @@ func (s *Service) BeaconBlockProposal(_ context.Context, slot phase0.Slot, randa
 					0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e, 0x7f,
 				},
 			},
-			Graffiti:          fixedGraffiti,
+			Graffiti:          opts.Graffiti,
 			ProposerSlashings: []*phase0.ProposerSlashing{},
 			AttesterSlashings: []*phase0.AttesterSlashing{},
 			Attestations:      attestations,
@@ -102,10 +103,13 @@ func (s *Service) BeaconBlockProposal(_ context.Context, slot phase0.Slot, randa
 		},
 	}
 
-	versionedBlock := &spec.VersionedBeaconBlock{
+	data := &spec.VersionedBeaconBlock{
 		Version: spec.DataVersionPhase0,
 		Phase0:  block,
 	}
 
-	return versionedBlock, nil
+	return &api.Response[*spec.VersionedBeaconBlock]{
+		Data:     data,
+		Metadata: make(map[string]any),
+	}, nil
 }

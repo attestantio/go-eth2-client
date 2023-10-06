@@ -194,12 +194,14 @@ func (s *Service) periodicClearStaticValues(ctx context.Context) {
 // checkDVT checks if connected to DVT middleware and sets
 // internal flags appropriately.
 func (s *Service) checkDVT(ctx context.Context) error {
-	version, err := s.NodeVersion(ctx)
+	response, err := s.NodeVersion(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain node version for DVT check")
 	}
 
-	if strings.Contains(strings.ToLower(version), "charon") {
+	version := strings.ToLower(response.Data)
+
+	if strings.Contains(version, "charon") {
 		s.connectedToDVTMiddleware = true
 	}
 

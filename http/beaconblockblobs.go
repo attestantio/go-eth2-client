@@ -14,38 +14,36 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"sort"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/pkg/errors"
 )
 
-type beaconBlockBlobsJSON struct {
-	Data []*deneb.BlobSidecar `json:"data"`
-}
-
 // BeaconBlockBlobs fetches the blobs given a block ID.
-func (s *Service) BeaconBlockBlobs(ctx context.Context, blockID string) ([]*deneb.BlobSidecar, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/blob_sidecars/%s", blockID))
+func (s *Service) BeaconBlockBlobs(ctx context.Context, opts *api.BeaconBlockBlobsOpts) (*api.Response[[]*deneb.BlobSidecar], error) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+	if opts.Block == "" {
+		return nil, errors.New("no block specified")
+	}
+
+	httpResponse, err := s.get2(ctx, fmt.Sprintf("/eth/v1/beacon/blob_sidecars/%s", opts.Block))
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request blobs")
-	}
-	if respBodyReader == nil {
-		return nil, nil
+		return nil, err
 	}
 
-	var resp beaconBlockBlobsJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse blobs")
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*deneb.BlobSidecar{})
+	if err != nil {
+		return nil, err
 	}
 
-	// Data is not guaranteed to be returned in indx order, so fix that.
-	sort.Slice(resp.Data, func(i int, j int) bool {
-		return resp.Data[i].Index < resp.Data[j].Index
-	})
-
-	return resp.Data, nil
+	return &api.Response[[]*deneb.BlobSidecar]{
+		Metadata: metadata,
+		Data:     data,
+	}, nil
 }

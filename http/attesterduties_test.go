@@ -19,6 +19,8 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -29,14 +31,22 @@ func TestAttesterDuties(t *testing.T) {
 	defer cancel()
 
 	tests := []struct {
-		name         string
-		epoch        phase0.Epoch
-		validatorIDs []phase0.ValidatorIndex
+		name     string
+		opts     *api.AttesterDutiesOpts
+		expected []*apiv1.AttesterDuty
+		err      string
+		errCode  int
 	}{
 		{
-			name:         "Good",
-			epoch:        1,
-			validatorIDs: []phase0.ValidatorIndex{0, 1},
+			name: "NilOpts",
+			err:  "no options specified",
+		},
+		{
+			name: "Good",
+			opts: &api.AttesterDutiesOpts{
+				Epoch:   0,
+				Indices: []phase0.ValidatorIndex{0, 1},
+			},
 		},
 	}
 
@@ -48,9 +58,19 @@ func TestAttesterDuties(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			duties, err := service.(client.AttesterDutiesProvider).AttesterDuties(ctx, test.epoch, test.validatorIDs)
-			require.NoError(t, err)
-			require.NotNil(t, duties)
+			response, err := service.(client.AttesterDutiesProvider).AttesterDuties(ctx, test.opts)
+			switch {
+			case test.err != "":
+				require.ErrorContains(t, err, test.err)
+			case test.errCode != 0:
+				require.Equal(t, test.errCode, err.(api.Error).StatusCode)
+			default:
+				require.NoError(t, err)
+				require.NotNil(t, response)
+				if test.expected != nil {
+					require.Equal(t, response.Data, test.expected)
+				}
+			}
 		})
 	}
 }

@@ -17,10 +17,11 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // NodeVersion provides the version information of the node.
-func (s *Service) NodeVersion(ctx context.Context) (string, error) {
+func (s *Service) NodeVersion(ctx context.Context) (*api.Response[string], error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		aggregate, err := client.(consensusclient.NodeVersionProvider).NodeVersion(ctx)
 		if err != nil {
@@ -29,10 +30,11 @@ func (s *Service) NodeVersion(ctx context.Context) (string, error) {
 		return aggregate, nil
 	}, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if res == nil {
-		return "", nil
+		return nil, nil
 	}
-	return res.(string), nil
+
+	return res.(*api.Response[string]), nil
 }

@@ -17,19 +17,19 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AttestationData fetches the attestation data for the given slot and committee index.
 func (s *Service) AttestationData(ctx context.Context,
-	slot phase0.Slot,
-	committeeIndex phase0.CommitteeIndex,
+	opts *api.AttestationDataOpts,
 ) (
-	*phase0.AttestationData,
+	*api.Response[*phase0.AttestationData],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		attestationData, err := client.(consensusclient.AttestationDataProvider).AttestationData(ctx, slot, committeeIndex)
+		attestationData, err := client.(consensusclient.AttestationDataProvider).AttestationData(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -41,5 +41,5 @@ func (s *Service) AttestationData(ctx context.Context,
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*phase0.AttestationData), nil
+	return res.(*api.Response[*phase0.AttestationData]), nil
 }

@@ -24,24 +24,13 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 )
-
-// Error represents an http error.
-type Error struct {
-	Method     string
-	Endpoint   string
-	StatusCode int
-	Data       []byte
-}
-
-func (e Error) Error() string {
-	return fmt.Sprintf("%s failed with status %d: %s", e.Method, e.StatusCode, e.Data)
-}
 
 // get sends an HTTP get request and returns the body.
 // If the response from the server is a 404 this will return nil for both the reader and the error.
@@ -87,7 +76,7 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	if statusFamily != 2 {
 		cancel()
 		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("GET failed")
-		return nil, Error{
+		return nil, api.Error{
 			Method:     http.MethodGet,
 			StatusCode: resp.StatusCode,
 			Endpoint:   endpoint,
@@ -150,7 +139,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	if statusFamily != 2 {
 		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("POST failed")
 		cancel()
-		return nil, Error{
+		return nil, api.Error{
 			Method:     http.MethodPost,
 			StatusCode: resp.StatusCode,
 			Endpoint:   endpoint,
@@ -176,8 +165,10 @@ type responseMetadata struct {
 }
 
 type httpResponse struct {
-	statusCode       int
-	contentType      ContentType
+	statusCode  int
+	contentType ContentType
+	headers     map[string]string
+	// TODO remove?  This is specific to a few endpoints, and otherwise available in headers.
 	consensusVersion spec.DataVersion
 	body             []byte
 }
@@ -220,21 +211,20 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 	res := &httpResponse{
 		statusCode: resp.StatusCode,
 	}
-
-	if resp.StatusCode == http.StatusNotFound {
-		// Nothing found.  Note that this is not considered an error.
-		span.RecordError(errors.New("endpoint not found"))
-		log.Debug().Msg("Endpoint not found")
-		return res, nil
-	}
+	populateHeaders(res, resp)
 
 	if resp.StatusCode == http.StatusNoContent {
-		// Nothing returned.  Note that this is not considered an error.
+		// Nothing returned.  This is not considered an error.
 		span.AddEvent("Received empty response")
 		log.Trace().Msg("Endpoint returned no content")
 		return res, nil
 	}
 
+	// Although it would be more efficient to keep the body as a Reader, that would
+	// require the calling function to be aware that it needs to clode the body
+	// once it is done with it.  To avoid that complexity, we read here and store the
+	// body as a byte array.
+	// TODO can we pass the reader?  Or does cancelling the request context close the reader?
 	res.body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		span.RecordError(err)
@@ -247,7 +237,7 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 		span.SetStatus(codes.Error, fmt.Sprintf("Status code %d", resp.StatusCode))
 		trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
 		log.Debug().Int("status_code", resp.StatusCode).RawJSON("response", trimmedResponse).Msg("GET failed")
-		return nil, Error{
+		return nil, api.Error{
 			Method:     http.MethodGet,
 			StatusCode: resp.StatusCode,
 			Endpoint:   endpoint,
@@ -294,6 +284,13 @@ func populateConsensusVersion(res *httpResponse, resp *http.Response) error {
 	return nil
 }
 
+func populateHeaders(res *httpResponse, resp *http.Response) {
+	res.headers = make(map[string]string, len(resp.Header))
+	for k, v := range resp.Header {
+		res.headers[k] = strings.Join(v, ";")
+	}
+}
+
 func populateContentType(res *httpResponse, resp *http.Response) error {
 	respContentTypes, exists := resp.Header["Content-Type"]
 	if !exists {
@@ -310,4 +307,14 @@ func populateContentType(res *httpResponse, resp *http.Response) error {
 	}
 
 	return nil
+}
+
+func metadataFromHeaders(headers map[string]string) map[string]any {
+	metadata := make(map[string]any)
+	for k, v := range headers {
+		// TODO need to be selective here; use separate function.
+		metadata[k] = v
+	}
+
+	return metadata
 }

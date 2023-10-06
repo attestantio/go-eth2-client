@@ -16,15 +16,24 @@ package mock
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AggregateAttestation fetches the aggregate attestation given an attestation.
-func (s *Service) AggregateAttestation(_ context.Context, _ spec.Slot, _ spec.Root) (*spec.Attestation, error) {
-	return &spec.Attestation{
-		Data: &spec.AttestationData{
-			Source: &spec.Checkpoint{},
-			Target: &spec.Checkpoint{},
+func (s *Service) AggregateAttestation(_ context.Context,
+	_ *api.AggregateAttestationOpts,
+) (
+	*api.Response[*phase0.Attestation],
+	error,
+) {
+	return &api.Response[*phase0.Attestation]{
+		Data: &phase0.Attestation{
+			Data: &phase0.AttestationData{
+				Source: &phase0.Checkpoint{},
+				Target: &phase0.Checkpoint{},
+			},
 		},
+		Metadata: make(map[string]any),
 	}, nil
 }

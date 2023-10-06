@@ -18,20 +18,17 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // BlindedBeaconBlockProposal fetches a proposed blinded beacon block for signing.
 func (s *Service) BlindedBeaconBlockProposal(ctx context.Context,
-	slot phase0.Slot,
-	randaoReveal phase0.BLSSignature,
-	graffiti []byte,
+	opts *api.BlindedBeaconBlockProposalOpts,
 ) (
-	*api.VersionedBlindedBeaconBlock,
+	*api.Response[*api.VersionedBlindedBeaconBlock],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		block, err := client.(consensusclient.BlindedBeaconBlockProposalProvider).BlindedBeaconBlockProposal(ctx, slot, randaoReveal, graffiti)
+		block, err := client.(consensusclient.BlindedBeaconBlockProposalProvider).BlindedBeaconBlockProposal(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -43,5 +40,5 @@ func (s *Service) BlindedBeaconBlockProposal(ctx context.Context,
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*api.VersionedBlindedBeaconBlock), nil
+	return res.(*api.Response[*api.VersionedBlindedBeaconBlock]), nil
 }

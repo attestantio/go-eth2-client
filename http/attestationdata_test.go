@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,6 +20,7 @@ import (
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -30,19 +31,18 @@ func TestAttestationData(t *testing.T) {
 	defer cancel()
 
 	tests := []struct {
-		name           string
-		committeeIndex phase0.CommitteeIndex
-		slot           int64 // -1 for current
+		name    string
+		opts    *api.AttestationDataOpts
+		err     string
+		errCode int
 	}{
-		// {
-		// 	name:           "Future",
-		// 	committeeIndex: 1,
-		// 	slot:           0x00ffffff,
-		// },
 		{
-			name:           "Good",
-			committeeIndex: 0,
-			slot:           -1,
+			name: "NilOpts",
+			err:  "no options specified",
+		},
+		{
+			name: "Good",
+			opts: &api.AttestationDataOpts{},
 		},
 	}
 
@@ -59,16 +59,20 @@ func TestAttestationData(t *testing.T) {
 	require.NoError(t, err)
 
 	for _, test := range tests {
-		var slot phase0.Slot
-		if test.slot == -1 {
-			slot = phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
-		} else {
-			slot = phase0.Slot(uint64(test.slot))
+		if test.opts != nil && test.opts.Slot == 0 {
+			test.opts.Slot = phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
 		}
 		t.Run(test.name, func(t *testing.T) {
-			attestationData, err := service.(client.AttestationDataProvider).AttestationData(ctx, slot, test.committeeIndex)
-			require.NoError(t, err)
-			require.NotNil(t, attestationData)
+			response, err := service.(client.AttestationDataProvider).AttestationData(ctx, test.opts)
+			switch {
+			case test.err != "":
+				require.ErrorContains(t, err, test.err)
+			case test.errCode != 0:
+				require.Equal(t, test.errCode, err.(api.Error).StatusCode)
+			default:
+				require.NoError(t, err)
+				require.NotNil(t, response)
+			}
 		})
 	}
 }

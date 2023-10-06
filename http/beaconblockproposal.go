@@ -16,10 +16,9 @@ package http
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
@@ -31,182 +30,171 @@ import (
 	"go.opentelemetry.io/otel/codes"
 )
 
-type phase0BeaconBlockProposalJSON struct {
-	Data *phase0.BeaconBlock `json:"data"`
-}
-
-type altairBeaconBlockProposalJSON struct {
-	Data *altair.BeaconBlock `json:"data"`
-}
-
-type bellatrixBeaconBlockProposalJSON struct {
-	Data *bellatrix.BeaconBlock `json:"data"`
-}
-
-type capellaBeaconBlockProposalJSON struct {
-	Data *capella.BeaconBlock `json:"data"`
-}
-
-type denebBeaconBlockProposalJSON struct {
-	Data *deneb.BeaconBlock `json:"data"`
-}
-
-// BeaconBlockProposal fetches a proposed beacon block for signing.
-func (s *Service) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
-	// Graffiti should be 32 bytes.
-	var fixedGraffiti [32]byte
-	copy(fixedGraffiti[:], graffiti)
-
-	return s.beaconBlockProposal(ctx, slot, randaoReveal, fixedGraffiti)
-}
-
+// BeaconBlockProposal fetches a potential beacon block for signing.
+//
 //nolint:gocyclo
-func (s *Service) beaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti [32]byte) (*spec.VersionedBeaconBlock, error) {
-	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "beaconBlockProposal")
+func (s *Service) BeaconBlockProposal(ctx context.Context, opts *api.BeaconBlockProposalOpts) (*api.Response[*spec.VersionedBeaconBlock], error) {
+	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "BeaconBlockProposal")
 	defer span.End()
 
-	url := fmt.Sprintf("/eth/v2/validator/blocks/%d?randao_reveal=%#x&graffiti=%#x", slot, randaoReveal, graffiti)
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+	if opts.Slot == 0 {
+		return nil, errors.New("no slot specified")
+	}
+
+	url := fmt.Sprintf("/eth/v2/validator/blocks/%d?randao_reveal=%#x&graffiti=%#x", opts.Slot, opts.RandaoReveal, opts.Graffiti)
+
+	if opts.SkipRandaoVerification {
+		if !opts.RandaoReveal.IsInfinity() {
+			return nil, errors.New("randao reveal must be point at infinity if skip randao verification is set")
+		}
+		url = fmt.Sprintf("%s&skip_randao_verification", url)
+	}
 
 	res, err := s.get2(ctx, url)
 	if err != nil {
 		span.RecordError(err)
-		span.SetStatus(codes.Error, "Failed to request beacon block proposal")
+		span.SetStatus(codes.Error, "Failed to request proposal")
 		return nil, errors.Wrap(err, "failed to request beacon block proposal")
 	}
-	if res.statusCode == http.StatusNotFound {
-		span.SetStatus(codes.Error, "Client returned 404")
-		return nil, nil
-	}
 
-	var block *spec.VersionedBeaconBlock
+	var response *api.Response[*spec.VersionedBeaconBlock]
 	switch res.contentType {
 	case ContentTypeSSZ:
-		block, err = s.beaconBlockProposalFromSSZ(res)
+		response, err = s.beaconBlockProposalFromSSZ(res)
 	case ContentTypeJSON:
-		block, err = s.beaconBlockProposalFromJSON(res)
+		response, err = s.beaconBlockProposalFromJSON(res)
 	default:
-		span.SetStatus(codes.Error, fmt.Sprintf("Unhandled content type %s", res.contentType))
 		return nil, fmt.Errorf("unhandled content type %v", res.contentType)
 	}
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, "Failed to decode body")
 		return nil, err
 	}
 
 	// Ensure the data returned to us is as expected given our input.
-	blockSlot, err := block.Slot()
+	blockSlot, err := response.Data.Slot()
 	if err != nil {
 		return nil, err
 	}
-	if blockSlot != slot {
-		span.SetStatus(codes.Error, fmt.Sprintf("Proposal slot %d; expected %d", blockSlot, slot))
+	if blockSlot != opts.Slot {
+		span.SetStatus(codes.Error, fmt.Sprintf("Proposal slot %d; expected %d", blockSlot, opts.Slot))
 		return nil, errors.New("beacon block proposal not for requested slot")
 	}
 
 	// Only check the RANDAO reveal and graffiti if we are not connected to DVT middleware,
 	// as the returned values will be decided by the middleware.
 	if !s.connectedToDVTMiddleware {
-		blockRandaoReveal, err := block.RandaoReveal()
+		blockRandaoReveal, err := response.Data.RandaoReveal()
 		if err != nil {
 			return nil, err
 		}
-		if !bytes.Equal(blockRandaoReveal[:], randaoReveal[:]) {
-			span.SetStatus(codes.Error, fmt.Sprintf("Proposal RANDAO reveal %#x; expected requested %#x", blockRandaoReveal[:], randaoReveal[:]))
-			return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", blockRandaoReveal[:], randaoReveal[:])
+		if !bytes.Equal(blockRandaoReveal[:], opts.RandaoReveal[:]) {
+			span.SetStatus(codes.Error, fmt.Sprintf("Proposal RANDAO reveal %#x; expected requested %#x", blockRandaoReveal[:], opts.RandaoReveal[:]))
+			return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", blockRandaoReveal[:], opts.RandaoReveal[:])
 		}
 
-		blockGraffiti, err := block.Graffiti()
+		blockGraffiti, err := response.Data.Graffiti()
 		if err != nil {
 			return nil, err
 		}
-		if !bytes.Equal(blockGraffiti[:], graffiti[:]) {
-			span.SetStatus(codes.Error, fmt.Sprintf("Proposal graffiti %#x; expected %#x", blockGraffiti[:], graffiti[:]))
-			return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", blockGraffiti[:], graffiti[:])
+		if !bytes.Equal(blockGraffiti[:], opts.Graffiti[:]) {
+			span.SetStatus(codes.Error, fmt.Sprintf("Proposal graffiti %#x; expected %#x", blockGraffiti[:], opts.Graffiti[:]))
+			return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", blockGraffiti[:], opts.Graffiti[:])
 		}
 	}
 
-	return block, nil
+	return response, nil
 }
 
-func (s *Service) beaconBlockProposalFromSSZ(res *httpResponse) (*spec.VersionedBeaconBlock, error) {
-	block := &spec.VersionedBeaconBlock{
-		Version: res.consensusVersion,
+func (s *Service) beaconBlockProposalFromSSZ(res *httpResponse) (*api.Response[*spec.VersionedBeaconBlock], error) {
+	response := &api.Response[*spec.VersionedBeaconBlock]{
+		Data: &spec.VersionedBeaconBlock{
+			Version: res.consensusVersion,
+		},
+		Metadata: metadataFromHeaders(res.headers),
 	}
 
 	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
-		block.Phase0 = &phase0.BeaconBlock{}
-		if err := block.Phase0.UnmarshalSSZ(res.body); err != nil {
+		response.Data.Phase0 = &phase0.BeaconBlock{}
+		if err := response.Data.Phase0.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Wrap(err, "failed to decode phase0 beacon block proposal")
 		}
 	case spec.DataVersionAltair:
-		block.Altair = &altair.BeaconBlock{}
-		if err := block.Altair.UnmarshalSSZ(res.body); err != nil {
+		response.Data.Altair = &altair.BeaconBlock{}
+		if err := response.Data.Altair.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Wrap(err, "failed to decode altair beacon block proposal")
 		}
 	case spec.DataVersionBellatrix:
-		block.Bellatrix = &bellatrix.BeaconBlock{}
-		if err := block.Bellatrix.UnmarshalSSZ(res.body); err != nil {
+		response.Data.Bellatrix = &bellatrix.BeaconBlock{}
+		if err := response.Data.Bellatrix.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Wrap(err, "failed to decode bellatrix beacon block proposal")
 		}
 	case spec.DataVersionCapella:
-		block.Capella = &capella.BeaconBlock{}
-		if err := block.Capella.UnmarshalSSZ(res.body); err != nil {
+		response.Data.Capella = &capella.BeaconBlock{}
+		if err := response.Data.Capella.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Wrap(err, "failed to decode capella beacon block proposal")
 		}
 	case spec.DataVersionDeneb:
-		block.Deneb = &deneb.BeaconBlock{}
-		if err := block.Deneb.UnmarshalSSZ(res.body); err != nil {
+		response.Data.Deneb = &deneb.BeaconBlock{}
+		if err := response.Data.Deneb.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Wrap(err, "failed to decode deneb beacon block proposal")
 		}
 	default:
 		return nil, fmt.Errorf("unhandled block proposal version %s", res.consensusVersion)
 	}
 
-	return block, nil
+	return response, nil
 }
 
-func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*spec.VersionedBeaconBlock, error) {
-	block := &spec.VersionedBeaconBlock{
-		Version: res.consensusVersion,
+func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[*spec.VersionedBeaconBlock], error) {
+	response := &api.Response[*spec.VersionedBeaconBlock]{
+		Data: &spec.VersionedBeaconBlock{
+			Version: res.consensusVersion,
+		},
 	}
 
-	reader := bytes.NewBuffer(res.body)
-	switch block.Version {
+	switch response.Data.Version {
 	case spec.DataVersionPhase0:
-		var resp phase0BeaconBlockProposalJSON
-		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse phase0 beacon block proposal")
+		data, metadata, err := decodeJSONResponse(bytes.NewReader(res.body), phase0.BeaconBlock{})
+		if err != nil {
+			return nil, err
 		}
-		block.Phase0 = resp.Data
+		response.Data.Phase0 = &data
+		response.Metadata = metadata
 	case spec.DataVersionAltair:
-		var resp altairBeaconBlockProposalJSON
-		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse altair beacon block proposal")
+		data, metadata, err := decodeJSONResponse(bytes.NewReader(res.body), altair.BeaconBlock{})
+		if err != nil {
+			return nil, err
 		}
-		block.Altair = resp.Data
+		response.Data.Altair = &data
+		response.Metadata = metadata
 	case spec.DataVersionBellatrix:
-		var resp bellatrixBeaconBlockProposalJSON
-		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse bellatrix beacon block proposal")
+		data, metadata, err := decodeJSONResponse(bytes.NewReader(res.body), bellatrix.BeaconBlock{})
+		if err != nil {
+			return nil, err
 		}
-		block.Bellatrix = resp.Data
+		response.Data.Bellatrix = &data
+		response.Metadata = metadata
 	case spec.DataVersionCapella:
-		var resp capellaBeaconBlockProposalJSON
-		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse capella beacon block proposal")
+		data, metadata, err := decodeJSONResponse(bytes.NewReader(res.body), capella.BeaconBlock{})
+		if err != nil {
+			return nil, err
 		}
-		block.Capella = resp.Data
+		response.Data.Capella = &data
+		response.Metadata = metadata
 	case spec.DataVersionDeneb:
-		var resp denebBeaconBlockProposalJSON
-		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse deneb beacon block proposal")
+		data, metadata, err := decodeJSONResponse(bytes.NewReader(res.body), deneb.BeaconBlock{})
+		if err != nil {
+			return nil, err
 		}
-		block.Deneb = resp.Data
+		response.Data.Deneb = &data
+		response.Metadata = metadata
 	default:
 		return nil, fmt.Errorf("unsupported block version %s", res.consensusVersion)
 	}
 
-	return block, nil
+	return response, nil
 }

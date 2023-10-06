@@ -16,10 +16,19 @@ package mock
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // Fork fetches fork information for the given state.
-func (s *Service) Fork(ctx context.Context, _ string) (*spec.Fork, error) {
-	return s.forkAtEpoch(ctx, 1)
+func (s *Service) Fork(ctx context.Context, _ *api.ForkOpts) (*api.Response[*phase0.Fork], error) {
+	fork, err := s.forkAtEpoch(ctx, 1)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.Response[*phase0.Fork]{
+		Data:     fork,
+		Metadata: make(map[string]any),
+	}, nil
 }

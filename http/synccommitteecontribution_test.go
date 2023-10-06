@@ -20,6 +20,7 @@ import (
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -61,10 +62,10 @@ func TestSyncCommitteeContribution(t *testing.T) {
 			} else {
 				slot = phase0.Slot(test.slot)
 			}
-			root, err := service.(client.BeaconBlockRootProvider).BeaconBlockRoot(ctx, "head")
+			rootResponse, err := service.(client.BeaconBlockRootProvider).BeaconBlockRoot(ctx, &api.BeaconBlockRootOpts{Block: "head"})
 			require.NoError(t, err)
-			require.NotNil(t, root)
-			contribution, err := service.(client.SyncCommitteeContributionProvider).SyncCommitteeContribution(ctx, slot, test.subcommitteeIndex, *root)
+			require.NotNil(t, rootResponse)
+			contribution, err := service.(client.SyncCommitteeContributionProvider).SyncCommitteeContribution(ctx, slot, test.subcommitteeIndex, *rootResponse.Data)
 			// Possible that the node is not aggregating sync committee messages...
 			if err != nil {
 				require.EqualError(t, err, "failed to obtain sync committee contribution")
