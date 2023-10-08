@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -92,12 +93,15 @@ func TestValidatorBalances(t *testing.T) {
 			case test.err != "":
 				require.ErrorContains(t, err, test.err)
 			case test.errCode != 0:
-				require.Equal(t, test.errCode, err.(api.Error).StatusCode)
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) {
+					require.Equal(t, test.errCode, apiErr.StatusCode)
+				}
 			default:
 				require.NoError(t, err)
 				require.NotNil(t, response)
 				if test.expected != nil {
-					require.Equal(t, response.Data, test.expected)
+					require.Equal(t, test.expected, response.Data)
 				}
 			}
 		})

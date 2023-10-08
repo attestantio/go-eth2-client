@@ -34,11 +34,24 @@ func TestSubmitBeaconBlock(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	service, err := http.New(ctx,
+		http.WithTimeout(timeout),
+		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+	)
+	require.NoError(t, err)
+
+	// Need to fetch current slot for proposal.
+	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx)
+	require.NoError(t, err)
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
+	require.NoError(t, err)
+
 	tests := []struct {
 		name                   string
 		randaoReveal           phase0.BLSSignature
 		graffiti               [32]byte
 		skipRandaoVerification bool
+		slot                   phase0.Slot
 	}{
 		{
 			name: "Good",
@@ -54,27 +67,15 @@ func TestSubmitBeaconBlock(t *testing.T) {
 				0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
 			},
 			skipRandaoVerification: true,
+			slot:                   phase0.Slot(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds())/uint64(slotDuration.Seconds())) + 1,
 		},
 	}
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
-
-	// Need to fetch current slot for proposal.
-	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
-	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
-	require.NoError(t, err)
-
 	for _, test := range tests {
-		nextSlot := phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds())/uint64(slotDuration.Seconds())) + 1
 		t.Run(test.name, func(t *testing.T) {
 			// Fetch a block to propose.
 			res, err := service.(client.BeaconBlockProposalProvider).BeaconBlockProposal(ctx, &api.BeaconBlockProposalOpts{
-				Slot:                   nextSlot,
+				Slot:                   test.slot,
 				RandaoReveal:           test.randaoReveal,
 				Graffiti:               test.graffiti,
 				SkipRandaoVerification: test.skipRandaoVerification,

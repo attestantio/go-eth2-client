@@ -32,14 +32,6 @@ func TestSubmitAttestations(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "Good",
-		},
-	}
-
 	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
@@ -47,19 +39,29 @@ func TestSubmitAttestations(t *testing.T) {
 	require.NoError(t, err)
 
 	// Need to fetch current slot for attestation.
-	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
 	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
 
+	tests := []struct {
+		name    string
+		opts    *api.AttestationDataOpts
+		err     string
+		errCode int
+	}{
+		{
+			name: "Good",
+			opts: &api.AttestationDataOpts{
+				Slot: phase0.Slot(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / uint64(slotDuration.Seconds())),
+			},
+		},
+	}
+
 	for _, test := range tests {
-		thisSlot := phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
 		t.Run(test.name, func(t *testing.T) {
 			// Fetch attestation data.
-			attestationDataResponse, err := service.(client.AttestationDataProvider).AttestationData(ctx, &api.AttestationDataOpts{
-				Slot:           thisSlot,
-				CommitteeIndex: 0,
-			})
+			attestationDataResponse, err := service.(client.AttestationDataProvider).AttestationData(ctx, test.opts)
 			require.NoError(t, err)
 
 			aggregationBits := bitfield.NewBitlist(160)
@@ -78,8 +80,11 @@ func TestSubmitAttestations(t *testing.T) {
 			}
 
 			err = service.(client.AttestationsSubmitter).SubmitAttestations(ctx, []*phase0.Attestation{attestation})
-			// We will get an error as the bitlist is the incorrect size (on purpose, to stop our test being broadcast).
-			if err != nil {
+			switch {
+			case test.err != "":
+				require.ErrorContains(t, err, test.err)
+			case err != nil:
+				// We will get an error as the bitlist is the incorrect size (on purpose, to stop our test being broadcast).
 				require.True(t, strings.Contains(err.Error(), "Aggregation bitlist size (160) does not match committee size") ||
 					strings.Contains(err.Error(), "Aggregation bit size 160 is greater than committee size") ||
 					strings.Contains(err.Error(), "Invalid(BeaconStateError(InvalidBitfield))"))

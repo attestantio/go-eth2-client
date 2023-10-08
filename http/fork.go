@@ -24,12 +24,17 @@ import (
 )
 
 // Fork fetches fork information for the given options.
-func (s *Service) Fork(ctx context.Context, opts *api.ForkOpts) (*api.Response[*phase0.Fork], error) {
+func (s *Service) Fork(ctx context.Context,
+	opts *api.ForkOpts,
+) (
+	*api.Response[*phase0.Fork],
+	error,
+) {
 	if opts == nil {
 		return nil, errors.New("no options specified")
 	}
 	if opts.State == "" {
-		return nil, errors.New("no state ID specified")
+		return nil, errors.New("no state specified")
 	}
 
 	res, err := s.get2(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/fork", opts.State))

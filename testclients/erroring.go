@@ -1,4 +1,4 @@
-// Copyright © 2021, 2022 Attestant Limited.
+// Copyright © 2021 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -484,7 +484,7 @@ func (s *Erroring) Events(ctx context.Context, topics []string, handler consensu
 }
 
 // Finality provides the finality given a state ID.
-func (s *Erroring) Finality(ctx context.Context, stateID string) (*apiv1.Finality, error) {
+func (s *Erroring) Finality(ctx context.Context, opts *api.FinalityOpts) (*api.Response[*apiv1.Finality], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -493,7 +493,7 @@ func (s *Erroring) Finality(ctx context.Context, stateID string) (*apiv1.Finalit
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.Finality(ctx, stateID)
+	return next.Finality(ctx, opts)
 }
 
 // Fork fetches fork information for the given state.
@@ -515,7 +515,7 @@ func (s *Erroring) Fork(ctx context.Context,
 }
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Erroring) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
+func (s *Erroring) ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.Fork], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -528,7 +528,7 @@ func (s *Erroring) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
 }
 
 // Genesis fetches genesis information for the chain.
-func (s *Erroring) Genesis(ctx context.Context) (*apiv1.Genesis, error) {
+func (s *Erroring) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -541,7 +541,7 @@ func (s *Erroring) Genesis(ctx context.Context) (*apiv1.Genesis, error) {
 }
 
 // NodeSyncing provides the state of the node's synchronization with the chain.
-func (s *Erroring) NodeSyncing(ctx context.Context) (*apiv1.SyncState, error) {
+func (s *Erroring) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncState], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -572,7 +572,7 @@ func (s *Erroring) ProposerDuties(ctx context.Context,
 }
 
 // SyncCommittee fetches the sync committee for the given state.
-func (s *Erroring) SyncCommittee(ctx context.Context, stateID string) (*apiv1.SyncCommittee, error) {
+func (s *Erroring) SyncCommittee(ctx context.Context, opts *api.SyncCommitteeOpts) (*api.Response[*apiv1.SyncCommittee], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -581,24 +581,11 @@ func (s *Erroring) SyncCommittee(ctx context.Context, stateID string) (*apiv1.Sy
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.SyncCommittee(ctx, stateID)
-}
-
-// SyncCommitteeAtEpoch fetches the sync committee for the given epoch at the given state.
-func (s *Erroring) SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) (*apiv1.SyncCommittee, error) {
-	if err := s.maybeError(ctx); err != nil {
-		return nil, err
-	}
-	next, isNext := s.next.(consensusclient.SyncCommitteesProvider)
-	if !isNext {
-		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
-	}
-
-	return next.SyncCommitteeAtEpoch(ctx, stateID, epoch)
+	return next.SyncCommittee(ctx, opts)
 }
 
 // SyncCommitteeContribution provides a sync committee contribution.
-func (s *Erroring) SyncCommitteeContribution(ctx context.Context, slot phase0.Slot, subcommitteeIndex uint64, beaconBlockRoot phase0.Root) (*altair.SyncCommitteeContribution, error) {
+func (s *Erroring) SyncCommitteeContribution(ctx context.Context, opts *api.SyncCommitteeContributionOpts) (*api.Response[*altair.SyncCommitteeContribution], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -607,12 +594,12 @@ func (s *Erroring) SyncCommitteeContribution(ctx context.Context, slot phase0.Sl
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.SyncCommitteeContribution(ctx, slot, subcommitteeIndex, beaconBlockRoot)
+	return next.SyncCommitteeContribution(ctx, opts)
 }
 
 // SyncCommitteeDuties obtains sync committee duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Erroring) SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*apiv1.SyncCommitteeDuty, error) {
+func (s *Erroring) SyncCommitteeDuties(ctx context.Context, opts *api.SyncCommitteeDutiesOpts) (*api.Response[[]*apiv1.SyncCommitteeDuty], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -621,7 +608,7 @@ func (s *Erroring) SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, 
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.SyncCommitteeDuties(ctx, epoch, validatorIndices)
+	return next.SyncCommitteeDuties(ctx, opts)
 }
 
 // Spec provides the spec information of the chain.
@@ -768,7 +755,7 @@ func (s *Erroring) DepositContract(ctx context.Context) (*api.Response[*apiv1.De
 }
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
-func (s *Erroring) SignedBeaconBlock(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error) {
+func (s *Erroring) SignedBeaconBlock(ctx context.Context, opts *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -777,7 +764,7 @@ func (s *Erroring) SignedBeaconBlock(ctx context.Context, blockID string) (*spec
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.SignedBeaconBlock(ctx, blockID)
+	return next.SignedBeaconBlock(ctx, opts)
 }
 
 // BeaconBlockBlobs fetches the blobs given a block ID.
@@ -812,7 +799,7 @@ func (s *Erroring) BeaconStateRoot(ctx context.Context,
 }
 
 // Fork fetches the node's current fork choice context.
-func (s *Erroring) ForkChoice(ctx context.Context) (*apiv1.ForkChoice, error) {
+func (s *Erroring) ForkChoice(ctx context.Context) (*api.Response[*apiv1.ForkChoice], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}

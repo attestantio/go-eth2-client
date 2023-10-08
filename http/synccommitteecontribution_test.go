@@ -23,6 +23,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,40 +38,41 @@ func TestSyncCommitteeContribution(t *testing.T) {
 	require.NoError(t, err)
 
 	// Needed to fetch current epoch.
-	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
 	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
 
 	tests := []struct {
-		name              string
-		slot              int64 // -1 for current
-		subcommitteeIndex uint64
+		name string
+		opts *api.SyncCommitteeContributionOpts
 	}{
 		{
-			name:              "Current",
-			slot:              -1,
-			subcommitteeIndex: 0,
+			name: "Current",
+			opts: &api.SyncCommitteeContributionOpts{
+				Slot:              0,
+				SubcommitteeIndex: 0,
+			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var slot phase0.Slot
-			if test.slot == -1 {
-				slot = phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
-			} else {
-				slot = phase0.Slot(test.slot)
+			if test.opts.Slot == 0 {
+				test.opts.Slot = phase0.Slot(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
 			}
 			rootResponse, err := service.(client.BeaconBlockRootProvider).BeaconBlockRoot(ctx, &api.BeaconBlockRootOpts{Block: "head"})
 			require.NoError(t, err)
-			require.NotNil(t, rootResponse)
-			contribution, err := service.(client.SyncCommitteeContributionProvider).SyncCommitteeContribution(ctx, slot, test.subcommitteeIndex, *rootResponse.Data)
+			test.opts.BeaconBlockRoot = *rootResponse.Data
+			response, err := service.(client.SyncCommitteeContributionProvider).SyncCommitteeContribution(ctx, test.opts)
 			// Possible that the node is not aggregating sync committee messages...
 			if err != nil {
-				require.EqualError(t, err, "failed to obtain sync committee contribution")
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) {
+					require.Equal(t, 404, apiErr.StatusCode)
+				}
 			} else {
-				require.NotNil(t, contribution)
+				require.NotNil(t, response.Data)
 			}
 		})
 	}

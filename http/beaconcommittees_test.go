@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -32,9 +33,21 @@ func TestBeaconCommittees(t *testing.T) {
 	epoch := phase0.Epoch(0)
 
 	tests := []struct {
-		name string
-		opts *api.BeaconCommitteesOpts
+		name     string
+		opts     *api.BeaconCommitteesOpts
+		expected *phase0.Attestation
+		err      string
+		errCode  int
 	}{
+		{
+			name: "NilOpts",
+			err:  "no options specified",
+		},
+		{
+			name: "NilState",
+			opts: &api.BeaconCommitteesOpts{},
+			err:  "no state specified",
+		},
 		{
 			name: "Good",
 			opts: &api.BeaconCommitteesOpts{
@@ -42,7 +55,7 @@ func TestBeaconCommittees(t *testing.T) {
 			},
 		},
 		{
-			name: "AtGenesisEpoch",
+			name: "Genesis",
 			opts: &api.BeaconCommitteesOpts{
 				State: "genesis",
 				Epoch: &epoch,
@@ -58,9 +71,22 @@ func TestBeaconCommittees(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			beaconCommittees, err := service.(client.BeaconCommitteesProvider).BeaconCommittees(ctx, test.opts)
-			require.NoError(t, err)
-			require.NotNil(t, beaconCommittees)
+			response, err := service.(client.BeaconCommitteesProvider).BeaconCommittees(ctx, test.opts)
+			switch {
+			case test.err != "":
+				require.ErrorContains(t, err, test.err)
+			case test.errCode != 0:
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) {
+					require.Equal(t, test.errCode, apiErr.StatusCode)
+				}
+			default:
+				require.NoError(t, err)
+				require.NotNil(t, response)
+				if test.expected != nil {
+					require.Equal(t, test.expected, response.Data)
+				}
+			}
 		})
 	}
 }

@@ -25,7 +25,12 @@ import (
 )
 
 // AttesterDuties obtains attester duties.
-func (s *Service) AttesterDuties(ctx context.Context, opts *api.AttesterDutiesOpts) (*api.Response[[]*apiv1.AttesterDuty], error) {
+func (s *Service) AttesterDuties(ctx context.Context,
+	opts *api.AttesterDutiesOpts,
+) (
+	*api.Response[[]*apiv1.AttesterDuty],
+	error,
+) {
 	if opts == nil {
 		return nil, errors.New("no options specified")
 	}

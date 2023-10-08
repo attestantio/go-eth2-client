@@ -361,14 +361,14 @@ func (s *Sleepy) Events(ctx context.Context, topics []string, handler consensusc
 }
 
 // Finality provides the finality given a state ID.
-func (s *Sleepy) Finality(ctx context.Context, stateID string) (*apiv1.Finality, error) {
+func (s *Sleepy) Finality(ctx context.Context, opts *api.FinalityOpts) (*api.Response[*apiv1.Finality], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.FinalityProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
 
-	return next.Finality(ctx, stateID)
+	return next.Finality(ctx, opts)
 }
 
 // Fork fetches fork information for the given state.
@@ -388,7 +388,7 @@ func (s *Sleepy) Fork(ctx context.Context,
 }
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Sleepy) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
+func (s *Sleepy) ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.Fork], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ForkScheduleProvider)
 	if !isNext {
@@ -399,7 +399,7 @@ func (s *Sleepy) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
 }
 
 // Genesis fetches genesis information for the chain.
-func (s *Sleepy) Genesis(ctx context.Context) (*apiv1.Genesis, error) {
+func (s *Sleepy) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.GenesisProvider)
 	if !isNext {
@@ -410,7 +410,7 @@ func (s *Sleepy) Genesis(ctx context.Context) (*apiv1.Genesis, error) {
 }
 
 // NodeSyncing provides the state of the node's synchronization with the chain.
-func (s *Sleepy) NodeSyncing(ctx context.Context) (*apiv1.SyncState, error) {
+func (s *Sleepy) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncState], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.NodeSyncingProvider)
 	if !isNext {
@@ -549,7 +549,7 @@ func (s *Sleepy) GenesisTime(ctx context.Context) (time.Time, error) {
 }
 
 // ForkChoice fetches the node's current fork choice context.
-func (s *Sleepy) ForkChoice(ctx context.Context) (*apiv1.ForkChoice, error) {
+func (s *Sleepy) ForkChoice(ctx context.Context) (*api.Response[*apiv1.ForkChoice], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ForkChoiceProvider)
 	if !isNext {

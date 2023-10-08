@@ -33,7 +33,7 @@ func (s *Service) BeaconStateRandao(ctx context.Context, opts *api.BeaconStateRa
 		return nil, errors.New("no options specified")
 	}
 	if opts.State == "" {
-		return nil, errors.New("no state ID specified")
+		return nil, errors.New("no state specified")
 	}
 
 	httpResponse, err := s.get2(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/randao", opts.State))

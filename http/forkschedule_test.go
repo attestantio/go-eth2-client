@@ -43,12 +43,13 @@ func TestForkSchedule(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			forkSchedule, err := service.(client.ForkScheduleProvider).ForkSchedule(ctx)
+			response, err := service.(client.ForkScheduleProvider).ForkSchedule(ctx)
 			require.NoError(t, err)
-			require.NotNil(t, forkSchedule)
-			require.NotEmpty(t, forkSchedule)
-			require.NotNil(t, forkSchedule[0].PreviousVersion)
-			require.NotNil(t, forkSchedule[0].CurrentVersion)
+			require.NotNil(t, response)
+			require.NotEmpty(t, response.Data)
+			require.NotNil(t, response.Data[0])
+			require.NotNil(t, response.Data[0].PreviousVersion)
+			require.NotNil(t, response.Data[0].CurrentVersion)
 		})
 	}
 }

@@ -51,6 +51,22 @@ func mustParseRoot(input string) *phase0.Root {
 	return &res
 }
 
+// mustParseSignature is used for testing.
+func mustParseSignature(input string) *phase0.BLSSignature {
+	sig, err := hex.DecodeString(strings.TrimPrefix(input, "0x"))
+	if err != nil {
+		panic("invalid signature")
+	}
+	if len(sig) != phase0.SignatureLength {
+		panic("invalid length signature")
+	}
+
+	var res phase0.BLSSignature
+	copy(res[:], sig)
+
+	return &res
+}
+
 // mustParsePubKey is used for testing.
 func mustParsePubKey(input string) *phase0.BLSPubKey {
 	pubKey, err := hex.DecodeString(strings.TrimPrefix(input, "0x"))

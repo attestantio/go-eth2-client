@@ -25,7 +25,12 @@ import (
 )
 
 // ProposerDuties obtains proposer duties for the given options.
-func (s *Service) ProposerDuties(ctx context.Context, opts *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error) {
+func (s *Service) ProposerDuties(ctx context.Context,
+	opts *api.ProposerDutiesOpts,
+) (
+	*api.Response[[]*apiv1.ProposerDuty],
+	error,
+) {
 	if opts == nil {
 		return nil, errors.New("no options specified")
 	}

@@ -36,7 +36,7 @@ func (s *Service) ValidatorBalances(ctx context.Context,
 		return nil, errors.New("no options specified")
 	}
 	if opts.State == "" {
-		return nil, errors.New("no state ID specified")
+		return nil, errors.New("no state specified")
 	}
 
 	if len(opts.Indices) > s.indexChunkSize(ctx) {

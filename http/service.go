@@ -60,6 +60,7 @@ type Service struct {
 	extraHeaders        map[string]string
 
 	// Endpoint support.
+	enforceJSON              bool
 	connectedToDVTMiddleware bool
 }
 
@@ -112,6 +113,7 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 		userIndexChunkSize:  parameters.indexChunkSize,
 		userPubKeyChunkSize: parameters.pubKeyChunkSize,
 		extraHeaders:        parameters.extraHeaders,
+		enforceJSON:         parameters.enforceJSON,
 	}
 
 	// Fetch static values to confirm the connection is good.

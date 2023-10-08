@@ -17,11 +17,12 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // Genesis provides the genesis for the chain.
-func (s *Service) Genesis(ctx context.Context) (*api.Genesis, error) {
+func (s *Service) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		genesis, err := client.(consensusclient.GenesisProvider).Genesis(ctx)
 		if err != nil {
@@ -35,5 +36,5 @@ func (s *Service) Genesis(ctx context.Context) (*api.Genesis, error) {
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*api.Genesis), nil
+	return res.(*api.Response[*apiv1.Genesis]), nil
 }

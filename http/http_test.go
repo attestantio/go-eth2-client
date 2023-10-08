@@ -28,7 +28,7 @@ func TestError(t *testing.T) {
 	require.NotNil(t, err)
 	require.Equal(t, "failed to confirm node connection: failed to fetch genesis: failed to request genesis: GET failed with status 418: data", err.Error())
 
-	var apiError api.Error
+	var apiError *api.Error
 	require.True(t, errors.As(err, &apiError))
 	require.Equal(t, status, apiError.StatusCode)
 	require.Equal(t, data, apiError.Data)
@@ -59,7 +59,7 @@ func TestClientShouldSendExtraHeadersWhenProvided(t *testing.T) {
 	)
 
 	require.Error(t, err)
-	var apiError api.Error
+	var apiError *api.Error
 	require.True(t, errors.As(err, &apiError))
 	require.Equal(t, nethttp.StatusTeapot, apiError.StatusCode)
 }

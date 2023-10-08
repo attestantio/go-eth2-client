@@ -39,7 +39,7 @@ func TestProposerDuties(t *testing.T) {
 	require.NoError(t, err)
 
 	// Needed to fetch current epoch.
-	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx)
 	require.NoError(t, err)
 	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
@@ -66,7 +66,7 @@ func TestProposerDuties(t *testing.T) {
 		},
 		{
 			name:     "Current",
-			opts:     &api.ProposerDutiesOpts{Epoch: phase0.Epoch(uint64(time.Since(genesis.GenesisTime).Seconds()) / (uint64(slotDuration.Seconds()) * slotsPerEpoch))},
+			opts:     &api.ProposerDutiesOpts{Epoch: phase0.Epoch(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / (uint64(slotDuration.Seconds()) * slotsPerEpoch))},
 			expected: int(slotsPerEpoch),
 		},
 	}

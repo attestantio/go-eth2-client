@@ -28,7 +28,12 @@ type beaconBlockRootJSON struct {
 }
 
 // BeaconBlockRoot fetches a block's root given a set of options.
-func (s *Service) BeaconBlockRoot(ctx context.Context, opts *api.BeaconBlockRootOpts) (*api.Response[*phase0.Root], error) {
+func (s *Service) BeaconBlockRoot(ctx context.Context,
+	opts *api.BeaconBlockRootOpts,
+) (
+	*api.Response[*phase0.Root],
+	error,
+) {
 	if opts == nil {
 		return nil, errors.New("no options specified")
 	}

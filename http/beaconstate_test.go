@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,6 +15,7 @@ package http_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -41,8 +43,25 @@ func TestBeaconState(t *testing.T) {
 			err:  "no options specified",
 		},
 		{
+			name: "NilState",
+			opts: &api.BeaconStateOpts{},
+			err:  "no state specified",
+		},
+		{
 			name: "Genesis",
 			opts: &api.BeaconStateOpts{State: "genesis"},
+		},
+		{
+			name: "Altair",
+			opts: &api.BeaconStateOpts{State: "2375680"},
+		},
+		{
+			name: "Bellatrix",
+			opts: &api.BeaconStateOpts{State: "4636672"},
+		},
+		{
+			name: "Capella",
+			opts: &api.BeaconStateOpts{State: "6209536"},
 		},
 		{
 			name: "Head",
@@ -56,17 +75,55 @@ func TestBeaconState(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	jsonService, err := http.New(ctx,
+		http.WithTimeout(timeout),
+		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+		http.WithEnforceJSON(true),
+	)
+	require.NoError(t, err)
+
 	for _, test := range tests {
+		// Run with and without enforced JSON.
 		t.Run(test.name, func(t *testing.T) {
 			response, err := service.(client.BeaconStateProvider).BeaconState(ctx, test.opts)
 			switch {
 			case test.err != "":
 				require.ErrorContains(t, err, test.err)
 			case test.errCode != 0:
-				require.Equal(t, test.errCode, err.(api.Error).StatusCode)
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) {
+					require.Equal(t, test.errCode, apiErr.StatusCode)
+				}
 			default:
-				require.NoError(t, err)
-				require.NotNil(t, response)
+				// Possible that the beacon node does not contain the state, so allow a 404.
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) {
+					require.Equal(t, 404, apiErr.StatusCode)
+				} else {
+					require.NoError(t, err)
+					require.NotNil(t, response.Data)
+				}
+			}
+		})
+		t.Run(fmt.Sprintf("%s (json)", test.name), func(t *testing.T) {
+			response, err := jsonService.(client.BeaconStateProvider).BeaconState(ctx, test.opts)
+			switch {
+			case test.err != "":
+				require.ErrorContains(t, err, test.err)
+			case test.errCode != 0:
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) {
+					require.Equal(t, test.errCode, apiErr.StatusCode)
+				}
+			default:
+				// Possible that the beacon node does not contain the state, so allow a 404.
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) {
+					require.Equal(t, 404, apiErr.StatusCode)
+				} else {
+					require.NoError(t, err)
+					require.NotNil(t, response.Data)
+				}
 			}
 		})
 	}

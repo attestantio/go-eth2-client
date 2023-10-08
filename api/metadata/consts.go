@@ -11,10 +11,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package api
+// Package metadata contains keys for well-known metadata fields provided in
+// an API response.
+package metadata
 
-// Response is a response from the beacon API which may contain metadata.
-type Response[T any] struct {
-	Data     T
-	Metadata map[string]any
-}
+const (
+	// Finalized is a boolean value describing if the response contains finalized data.
+	Finalized = "finalized"
+	// ExecutionOptimistic is a boolean value describing if the response contains execution data
+	// that has not been fully verified at the time of response.
+	ExecutionOptimistic = "execution_optimistic"
+	// DependentRoot is the block root on which the returned data is based.
+	DependentRoot = "dependent_root"
+)

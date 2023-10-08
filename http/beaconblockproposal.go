@@ -27,13 +27,17 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
 )
 
 // BeaconBlockProposal fetches a potential beacon block for signing.
 //
 //nolint:gocyclo
-func (s *Service) BeaconBlockProposal(ctx context.Context, opts *api.BeaconBlockProposalOpts) (*api.Response[*spec.VersionedBeaconBlock], error) {
+func (s *Service) BeaconBlockProposal(ctx context.Context,
+	opts *api.BeaconBlockProposalOpts,
+) (
+	*api.Response[*spec.VersionedBeaconBlock],
+	error,
+) {
 	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "BeaconBlockProposal")
 	defer span.End()
 
@@ -55,8 +59,6 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, opts *api.BeaconBlock
 
 	res, err := s.get2(ctx, url)
 	if err != nil {
-		span.RecordError(err)
-		span.SetStatus(codes.Error, "Failed to request proposal")
 		return nil, errors.Wrap(err, "failed to request beacon block proposal")
 	}
 
@@ -79,7 +81,6 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, opts *api.BeaconBlock
 		return nil, err
 	}
 	if blockSlot != opts.Slot {
-		span.SetStatus(codes.Error, fmt.Sprintf("Proposal slot %d; expected %d", blockSlot, opts.Slot))
 		return nil, errors.New("beacon block proposal not for requested slot")
 	}
 
@@ -91,7 +92,6 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, opts *api.BeaconBlock
 			return nil, err
 		}
 		if !bytes.Equal(blockRandaoReveal[:], opts.RandaoReveal[:]) {
-			span.SetStatus(codes.Error, fmt.Sprintf("Proposal RANDAO reveal %#x; expected requested %#x", blockRandaoReveal[:], opts.RandaoReveal[:]))
 			return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", blockRandaoReveal[:], opts.RandaoReveal[:])
 		}
 
@@ -100,7 +100,6 @@ func (s *Service) BeaconBlockProposal(ctx context.Context, opts *api.BeaconBlock
 			return nil, err
 		}
 		if !bytes.Equal(blockGraffiti[:], opts.Graffiti[:]) {
-			span.SetStatus(codes.Error, fmt.Sprintf("Proposal graffiti %#x; expected %#x", blockGraffiti[:], opts.Graffiti[:]))
 			return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", blockGraffiti[:], opts.Graffiti[:])
 		}
 	}
@@ -156,44 +155,23 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[
 		},
 	}
 
-	switch response.Data.Version {
+	var err error
+	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
-		data, metadata, err := decodeJSONResponse(bytes.NewReader(res.body), phase0.BeaconBlock{})
-		if err != nil {
-			return nil, err
-		}
-		response.Data.Phase0 = &data
-		response.Metadata = metadata
+		response.Data.Phase0, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &phase0.BeaconBlock{})
 	case spec.DataVersionAltair:
-		data, metadata, err := decodeJSONResponse(bytes.NewReader(res.body), altair.BeaconBlock{})
-		if err != nil {
-			return nil, err
-		}
-		response.Data.Altair = &data
-		response.Metadata = metadata
+		response.Data.Altair, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &altair.BeaconBlock{})
 	case spec.DataVersionBellatrix:
-		data, metadata, err := decodeJSONResponse(bytes.NewReader(res.body), bellatrix.BeaconBlock{})
-		if err != nil {
-			return nil, err
-		}
-		response.Data.Bellatrix = &data
-		response.Metadata = metadata
+		response.Data.Bellatrix, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &bellatrix.BeaconBlock{})
 	case spec.DataVersionCapella:
-		data, metadata, err := decodeJSONResponse(bytes.NewReader(res.body), capella.BeaconBlock{})
-		if err != nil {
-			return nil, err
-		}
-		response.Data.Capella = &data
-		response.Metadata = metadata
+		response.Data.Capella, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &capella.BeaconBlock{})
 	case spec.DataVersionDeneb:
-		data, metadata, err := decodeJSONResponse(bytes.NewReader(res.body), deneb.BeaconBlock{})
-		if err != nil {
-			return nil, err
-		}
-		response.Data.Deneb = &data
-		response.Metadata = metadata
+		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &deneb.BeaconBlock{})
 	default:
-		return nil, fmt.Errorf("unsupported block version %s", res.consensusVersion)
+		err = fmt.Errorf("unsupported version %s", res.consensusVersion)
+	}
+	if err != nil {
+		return nil, err
 	}
 
 	return response, nil

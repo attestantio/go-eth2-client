@@ -24,7 +24,12 @@ import (
 )
 
 // BeaconBlockBlobs fetches the blobs given a block ID.
-func (s *Service) BeaconBlockBlobs(ctx context.Context, opts *api.BeaconBlockBlobsOpts) (*api.Response[[]*deneb.BlobSidecar], error) {
+func (s *Service) BeaconBlockBlobs(ctx context.Context,
+	opts *api.BeaconBlockBlobsOpts,
+) (
+	*api.Response[[]*deneb.BlobSidecar],
+	error,
+) {
 	if opts == nil {
 		return nil, errors.New("no options specified")
 	}

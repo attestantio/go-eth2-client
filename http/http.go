@@ -76,7 +76,7 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	if statusFamily != 2 {
 		cancel()
 		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("GET failed")
-		return nil, api.Error{
+		return nil, &api.Error{
 			Method:     http.MethodGet,
 			StatusCode: resp.StatusCode,
 			Endpoint:   endpoint,
@@ -137,9 +137,9 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 
 	statusFamily := resp.StatusCode / 100
 	if statusFamily != 2 {
-		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("POST failed")
 		cancel()
-		return nil, api.Error{
+		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("POST failed")
+		return nil, &api.Error{
 			Method:     http.MethodPost,
 			StatusCode: resp.StatusCode,
 			Endpoint:   endpoint,
@@ -196,8 +196,13 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 		return nil, errors.Wrap(err, "failed to create GET request")
 	}
 	s.addExtraHeaders(req)
-	// Prefer SSZ, JSON if not.
-	req.Header.Set("Accept", "application/octet-stream;q=1,application/json;q=0.9")
+	if s.enforceJSON {
+		// JSON only.
+		req.Header.Set("Accept", "application/json")
+	} else {
+		// Prefer SSZ, JSON if not.
+		req.Header.Set("Accept", "application/octet-stream;q=1,application/json;q=0.9")
+	}
 	span.AddEvent("Sending request")
 
 	resp, err := s.client.Do(req)
@@ -237,7 +242,7 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 		span.SetStatus(codes.Error, fmt.Sprintf("Status code %d", resp.StatusCode))
 		trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
 		log.Debug().Int("status_code", resp.StatusCode).RawJSON("response", trimmedResponse).Msg("GET failed")
-		return nil, api.Error{
+		return nil, &api.Error{
 			Method:     http.MethodGet,
 			StatusCode: resp.StatusCode,
 			Endpoint:   endpoint,

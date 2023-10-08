@@ -24,7 +24,12 @@ import (
 )
 
 // BeaconBlockHeader provides the block header given the opts.
-func (s *Service) BeaconBlockHeader(ctx context.Context, opts *api.BeaconBlockHeaderOpts) (*api.Response[*apiv1.BeaconBlockHeader], error) {
+func (s *Service) BeaconBlockHeader(ctx context.Context,
+	opts *api.BeaconBlockHeaderOpts,
+) (
+	*api.Response[*apiv1.BeaconBlockHeader],
+	error,
+) {
 	if opts == nil {
 		return nil, errors.New("no options specified")
 	}

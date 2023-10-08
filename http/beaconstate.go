@@ -16,7 +16,6 @@ package http
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/attestantio/go-eth2-client/api"
@@ -29,26 +28,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-type phase0BeaconStateJSON struct {
-	Data *phase0.BeaconState `json:"data"`
-}
-
-type altairBeaconStateJSON struct {
-	Data *altair.BeaconState `json:"data"`
-}
-
-type bellatrixBeaconStateJSON struct {
-	Data *bellatrix.BeaconState `json:"data"`
-}
-
-type capellaBeaconStateJSON struct {
-	Data *capella.BeaconState `json:"data"`
-}
-
-type denebBeaconStateJSON struct {
-	Data *deneb.BeaconState `json:"data"`
-}
-
 // BeaconState fetches a beacon state.
 func (s *Service) BeaconState(ctx context.Context,
 	opts *api.BeaconStateOpts,
@@ -60,21 +39,21 @@ func (s *Service) BeaconState(ctx context.Context,
 		return nil, errors.New("no options specified")
 	}
 	if opts.State == "" {
-		return nil, errors.New("no state ID specified")
+		return nil, errors.New("no state specified")
 	}
 
-	res, err := s.get2(ctx, fmt.Sprintf("/eth/v2/debug/beacon/states/%s", opts.State))
+	httpResponse, err := s.get2(ctx, fmt.Sprintf("/eth/v2/debug/beacon/states/%s", opts.State))
 	if err != nil {
 		return nil, err
 	}
 
-	switch res.contentType {
+	switch httpResponse.contentType {
 	case ContentTypeSSZ:
-		return s.beaconStateFromSSZ(res)
+		return s.beaconStateFromSSZ(httpResponse)
 	case ContentTypeJSON:
-		return s.beaconStateFromJSON(res)
+		return s.beaconStateFromJSON(httpResponse)
 	default:
-		return nil, fmt.Errorf("unhandled content type %v", res.contentType)
+		return nil, fmt.Errorf("unhandled content type %v", httpResponse.contentType)
 	}
 }
 
@@ -120,48 +99,30 @@ func (s *Service) beaconStateFromSSZ(res *httpResponse) (*api.Response[*spec.Ver
 }
 
 func (s *Service) beaconStateFromJSON(res *httpResponse) (*api.Response[*spec.VersionedBeaconState], error) {
-	state := &spec.VersionedBeaconState{
-		Version: res.consensusVersion,
+	response := &api.Response[*spec.VersionedBeaconState]{
+		Data: &spec.VersionedBeaconState{
+			Version: res.consensusVersion,
+		},
 	}
 
-	reader := bytes.NewBuffer(res.body)
-
-	switch state.Version {
+	var err error
+	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
-		var resp phase0BeaconStateJSON
-		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse phase 0 beacon state")
-		}
-		state.Phase0 = resp.Data
+		response.Data.Phase0, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &phase0.BeaconState{})
 	case spec.DataVersionAltair:
-		var resp altairBeaconStateJSON
-		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse altair beacon state")
-		}
-		state.Altair = resp.Data
+		response.Data.Altair, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &altair.BeaconState{})
 	case spec.DataVersionBellatrix:
-		var resp bellatrixBeaconStateJSON
-		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse bellatrix beacon state")
-		}
-		state.Bellatrix = resp.Data
+		response.Data.Bellatrix, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &bellatrix.BeaconState{})
 	case spec.DataVersionCapella:
-		var resp capellaBeaconStateJSON
-		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse capella beacon state")
-		}
-		state.Capella = resp.Data
+		response.Data.Capella, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &capella.BeaconState{})
 	case spec.DataVersionDeneb:
-		var resp denebBeaconStateJSON
-		if err := json.NewDecoder(reader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse deneb beacon state")
-		}
-		state.Deneb = resp.Data
+		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &deneb.BeaconState{})
+	default:
+		err = fmt.Errorf("unsupported version %s", res.consensusVersion)
+	}
+	if err != nil {
+		return nil, err
 	}
 
-	return &api.Response[*spec.VersionedBeaconState]{
-		Data: state,
-		// TODO metadata
-		Metadata: make(map[string]any),
-	}, nil
+	return response, nil
 }

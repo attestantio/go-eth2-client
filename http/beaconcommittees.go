@@ -24,12 +24,17 @@ import (
 )
 
 // BeaconCommittees fetches all beacon committees for the epoch at the given state.
-func (s *Service) BeaconCommittees(ctx context.Context, opts *api.BeaconCommitteesOpts) (*api.Response[[]*apiv1.BeaconCommittee], error) {
+func (s *Service) BeaconCommittees(ctx context.Context,
+	opts *api.BeaconCommitteesOpts,
+) (
+	*api.Response[[]*apiv1.BeaconCommittee],
+	error,
+) {
 	if opts == nil {
 		return nil, errors.New("no options specified")
 	}
 	if opts.State == "" {
-		return nil, errors.New("no state ID specified")
+		return nil, errors.New("no state specified")
 	}
 
 	url := fmt.Sprintf("/eth/v1/beacon/states/%s/committees", opts.State)

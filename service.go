@@ -111,7 +111,7 @@ type DepositContractProvider interface {
 // SignedBeaconBlockProvider is the interface for providing beacon blocks.
 type SignedBeaconBlockProvider interface {
 	// SignedBeaconBlock fetches a signed beacon block given a block ID.
-	SignedBeaconBlock(ctx context.Context, blockID string) (*spec.VersionedSignedBeaconBlock, error)
+	SignedBeaconBlock(ctx context.Context, opts *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error)
 }
 
 // BeaconBlockBlobsProvider is the interface for providing blobs for a given beacon block.
@@ -129,10 +129,7 @@ type BeaconCommitteesProvider interface {
 // SyncCommitteesProvider is the interface for providing sync committees.
 type SyncCommitteesProvider interface {
 	// SyncCommittee fetches the sync committee for the given state.
-	SyncCommittee(ctx context.Context, stateID string) (*apiv1.SyncCommittee, error)
-
-	// SyncCommitteeAtEpoch fetches the sync committee for the given epoch at the given state.
-	SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) (*apiv1.SyncCommittee, error)
+	SyncCommittee(ctx context.Context, opts *api.SyncCommitteeOpts) (*api.Response[*apiv1.SyncCommittee], error)
 }
 
 // EventHandlerFunc is the handler for events.
@@ -182,7 +179,7 @@ type AttesterDutiesProvider interface {
 type SyncCommitteeDutiesProvider interface {
 	// SyncCommitteeDuties obtains sync committee duties.
 	// If validatorIndicess is nil it will return all duties for the given epoch.
-	SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*apiv1.SyncCommitteeDuty, error)
+	SyncCommitteeDuties(ctx context.Context, opts *api.SyncCommitteeDutiesOpts) (*api.Response[[]*apiv1.SyncCommitteeDuty], error)
 }
 
 // SyncCommitteeMessagesSubmitter is the interface for submitting sync committee messages.
@@ -200,7 +197,7 @@ type SyncCommitteeSubscriptionsSubmitter interface {
 // SyncCommitteeContributionProvider is the interface for providing sync committee contributions.
 type SyncCommitteeContributionProvider interface {
 	// SyncCommitteeContribution provides a sync committee contribution.
-	SyncCommitteeContribution(ctx context.Context, slot phase0.Slot, subcommitteeIndex uint64, beaconBlockRoot phase0.Root) (*altair.SyncCommitteeContribution, error)
+	SyncCommitteeContribution(ctx context.Context, opts *api.SyncCommitteeContributionOpts) (*api.Response[*altair.SyncCommitteeContribution], error)
 }
 
 // SyncCommitteeContributionsSubmitter is the interface for submitting sync committee contributions.
@@ -290,13 +287,13 @@ type EventsProvider interface {
 // FinalityProvider is the interface for providing finality information.
 type FinalityProvider interface {
 	// Finality provides the finality given a state ID.
-	Finality(ctx context.Context, stateID string) (*apiv1.Finality, error)
+	Finality(ctx context.Context, opts *api.FinalityOpts) (*api.Response[*apiv1.Finality], error)
 }
 
 // ForkChoiceProvider is the interface for providing fork choice information.
 type ForkChoiceProvider interface {
 	// Fork fetches all current fork choice context.
-	ForkChoice(ctx context.Context) (*apiv1.ForkChoice, error)
+	ForkChoice(ctx context.Context) (*api.Response[*apiv1.ForkChoice], error)
 }
 
 // ForkProvider is the interface for providing fork information.
@@ -308,19 +305,19 @@ type ForkProvider interface {
 // ForkScheduleProvider is the interface for providing fork schedule data.
 type ForkScheduleProvider interface {
 	// ForkSchedule provides details of past and future changes in the chain's fork version.
-	ForkSchedule(ctx context.Context) ([]*phase0.Fork, error)
+	ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.Fork], error)
 }
 
 // GenesisProvider is the interface for providing genesis information.
 type GenesisProvider interface {
 	// Genesis fetches genesis information for the chain.
-	Genesis(ctx context.Context) (*apiv1.Genesis, error)
+	Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], error)
 }
 
 // NodeSyncingProvider is the interface for providing synchronization state.
 type NodeSyncingProvider interface {
 	// NodeSyncing provides the state of the node's synchronization with the chain.
-	NodeSyncing(ctx context.Context) (*apiv1.SyncState, error)
+	NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncState], error)
 }
 
 // ProposalPreparationsSubmitter is the interface for submitting proposal preparations.

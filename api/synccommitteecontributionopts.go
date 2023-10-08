@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,18 +11,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package api
 
-import (
-	"context"
-	"time"
-)
+import "github.com/attestantio/go-eth2-client/spec/phase0"
 
-// GenesisTime provides the genesis time of the chain.
-func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
-	genesisResponse, err := s.Genesis(ctx)
-	if err != nil {
-		return time.Time{}, err
-	}
-	return genesisResponse.Data.GenesisTime, nil
+// SyncCommitteeContributionOpts are the options for obtaining sync committee contributions.
+type SyncCommitteeContributionOpts struct {
+	// Slot is the slot for which the data is obtained.
+	Slot phase0.Slot
+	// SubcommitteeIndex is the index of the sync subcommittee for which the data is obtained.
+	SubcommitteeIndex uint64
+	// BeaconBlockRoot is the root of the beacon block for which the data is obtained.
+	BeaconBlockRoot phase0.Root
 }

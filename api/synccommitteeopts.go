@@ -13,8 +13,14 @@
 
 package api
 
-// Response is a response from the beacon API which may contain metadata.
-type Response[T any] struct {
-	Data     T
-	Metadata map[string]any
+import "github.com/attestantio/go-eth2-client/spec/phase0"
+
+// SyncCommitteeOpts are the options for obtaining sync committees.
+type SyncCommitteeOpts struct {
+	// State is the state at which the data is obtained.
+	// It can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
+	State string
+	// Epoch is the epoch for which the data is obtained.
+	// This is optional; if not supplied it will obtain the data at the epoch relating to the state.
+	Epoch *phase0.Epoch
 }

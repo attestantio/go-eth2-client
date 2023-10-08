@@ -77,7 +77,7 @@ func (s *Service) pubKeyChunkSize(ctx context.Context) int {
 // supplied no filter will be applied.
 func (s *Service) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*api.Validator, error) {
 	if stateID == "" {
-		return nil, errors.New("no state ID specified")
+		return nil, errors.New("no state specified")
 	}
 
 	if len(validatorPubKeys) > s.pubKeyChunkSize(ctx) {

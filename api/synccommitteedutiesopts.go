@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,18 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package api
 
-import (
-	"context"
-	"time"
-)
+import "github.com/attestantio/go-eth2-client/spec/phase0"
 
-// GenesisTime provides the genesis time of the chain.
-func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
-	genesisResponse, err := s.Genesis(ctx)
-	if err != nil {
-		return time.Time{}, err
-	}
-	return genesisResponse.Data.GenesisTime, nil
+// SyncCommitteeDutiesOpts are the options for obtaining sync committee duties.
+type SyncCommitteeDutiesOpts struct {
+	// Epoch is the epoch for which the data is obtained.
+	Epoch phase0.Epoch
+	// Indices is a list of validators for which to obtain the duties.
+	Indices []phase0.ValidatorIndex
 }

@@ -23,12 +23,34 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAggregateAttestation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
+
+	service, err := http.New(ctx,
+		http.WithTimeout(timeout),
+		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+	)
+	require.NoError(t, err)
+
+	// Need to fetch current slot for attestation.
+	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx)
+	require.NoError(t, err)
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
+	require.NoError(t, err)
+
+	// Fetch attestation data to generate a root.
+	attestationDataResponse, err := service.(client.AttestationDataProvider).AttestationData(ctx, &api.AttestationDataOpts{
+		Slot:           phase0.Slot(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / phase0.Slot(slotDuration.Seconds()),
+		CommitteeIndex: 0,
+	})
+	require.NoError(t, err)
+	dataRoot, err := attestationDataResponse.Data.HashTreeRoot()
+	require.NoError(t, err)
 
 	tests := []struct {
 		name     string
@@ -42,51 +64,39 @@ func TestAggregateAttestation(t *testing.T) {
 			err:  "no options specified",
 		},
 		{
-			name:    "NotFound",
-			opts:    &api.AggregateAttestationOpts{},
+			name: "NilRoot",
+			opts: &api.AggregateAttestationOpts{
+				Slot: phase0.Slot(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / phase0.Slot(slotDuration.Seconds()),
+			},
+			err: "no attestation data root specified",
+		},
+		{
+			// Will generally get "not found" because the beacon node is unlikely to be an aggregator.
+			name: "NotFound",
+			opts: &api.AggregateAttestationOpts{
+				Slot:                phase0.Slot(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / phase0.Slot(slotDuration.Seconds()),
+				AttestationDataRoot: dataRoot,
+			},
 			errCode: 404,
 		},
 	}
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
-
-	// Need to fetch current slot for attestation.
-	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
-	require.NoError(t, err)
-	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
-	require.NoError(t, err)
-
 	for _, test := range tests {
-		slot := phase0.Slot(time.Since(genesis.GenesisTime).Seconds()) / phase0.Slot(slotDuration.Seconds())
 		t.Run(test.name, func(t *testing.T) {
-			// Fetch attestation data to generate a root.
-			attestationDataResponse, err := service.(client.AttestationDataProvider).AttestationData(ctx, &api.AttestationDataOpts{
-				Slot:           slot,
-				CommitteeIndex: 0,
-			})
-			require.NoError(t, err)
-			dataRoot, err := attestationDataResponse.Data.HashTreeRoot()
-			require.NoError(t, err)
-
-			if test.opts != nil {
-				test.opts.AttestationDataRoot = dataRoot
-			}
-
 			response, err := service.(client.AggregateAttestationProvider).AggregateAttestation(ctx, test.opts)
 			switch {
 			case test.err != "":
 				require.ErrorContains(t, err, test.err)
 			case test.errCode != 0:
-				require.Equal(t, test.errCode, err.(api.Error).StatusCode)
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) {
+					require.Equal(t, test.errCode, apiErr.StatusCode)
+				}
 			default:
 				require.NoError(t, err)
 				require.NotNil(t, response)
 				if test.expected != nil {
-					require.Equal(t, response.Data, test.expected)
+					require.Equal(t, test.expected, response.Data)
 				}
 			}
 		})

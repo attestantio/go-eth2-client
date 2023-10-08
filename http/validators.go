@@ -78,7 +78,7 @@ func (s *Service) Validators(ctx context.Context,
 		return nil, errors.New("no options specified")
 	}
 	if opts.State == "" {
-		return nil, errors.New("no state ID specified")
+		return nil, errors.New("no state specified")
 	}
 	if len(opts.Indices) > 0 && len(opts.PubKeys) > 0 {
 		return nil, errors.New("cannot specify both indices and public keys")
