@@ -167,6 +167,14 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 			return
 		}
 		event.Data = payloadAttributesEvent
+	case "blob_sidecar":
+		blobSidecar := &api.BlobSidecarEvent{}
+		err := json.Unmarshal(msg.Data, blobSidecar)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse blob sidecar event")
+			return
+		}
+		event.Data = blobSidecar
 	case "":
 		// Used as keepalive.  Ignore.
 		return
