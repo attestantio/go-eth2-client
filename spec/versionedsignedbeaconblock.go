@@ -90,7 +90,7 @@ func (v *VersionedSignedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, err
 		}
 		return v.Capella.Message.ProposerIndex, nil
 	case DataVersionDeneb:
-		if v.Deneb == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil {
 			return 0, errors.New("no deneb block")
 		}
 		return v.Deneb.Message.ProposerIndex, nil
@@ -260,7 +260,7 @@ func (v *VersionedSignedBeaconBlock) Root() (phase0.Root, error) {
 		}
 		return v.Capella.Message.HashTreeRoot()
 	case DataVersionDeneb:
-		if v.Deneb == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 		return v.Deneb.Message.HashTreeRoot()
@@ -293,7 +293,7 @@ func (v *VersionedSignedBeaconBlock) BodyRoot() (phase0.Root, error) {
 		}
 		return v.Capella.Message.Body.HashTreeRoot()
 	case DataVersionDeneb:
-		if v.Deneb == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 		return v.Deneb.Message.Body.HashTreeRoot()
@@ -326,7 +326,7 @@ func (v *VersionedSignedBeaconBlock) ParentRoot() (phase0.Root, error) {
 		}
 		return v.Capella.Message.ParentRoot, nil
 	case DataVersionDeneb:
-		if v.Deneb == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 		return v.Deneb.Message.ParentRoot, nil
@@ -359,7 +359,7 @@ func (v *VersionedSignedBeaconBlock) StateRoot() (phase0.Root, error) {
 		}
 		return v.Capella.Message.StateRoot, nil
 	case DataVersionDeneb:
-		if v.Deneb == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 		return v.Deneb.Message.StateRoot, nil
@@ -524,7 +524,7 @@ func (v *VersionedSignedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlas
 		}
 		return v.Capella.Message.Body.AttesterSlashings, nil
 	case DataVersionDeneb:
-		if v.Deneb == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
 		return v.Deneb.Message.Body.AttesterSlashings, nil
@@ -557,7 +557,7 @@ func (v *VersionedSignedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlas
 		}
 		return v.Capella.Message.Body.ProposerSlashings, nil
 	case DataVersionDeneb:
-		if v.Deneb == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
 		return v.Deneb.Message.Body.ProposerSlashings, nil
@@ -587,7 +587,7 @@ func (v *VersionedSignedBeaconBlock) SyncAggregate() (*altair.SyncAggregate, err
 		}
 		return v.Capella.Message.Body.SyncAggregate, nil
 	case DataVersionDeneb:
-		if v.Deneb == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
 		return v.Deneb.Message.Body.SyncAggregate, nil

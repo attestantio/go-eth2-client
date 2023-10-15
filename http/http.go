@@ -153,6 +153,81 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	return bytes.NewReader(data), nil
 }
 
+// post2 sends an HTTP post request and returns the body.
+func (s *Service) post2(ctx context.Context,
+	endpoint string,
+	body io.Reader,
+	contentType ContentType,
+	headers map[string]string,
+) (
+	io.Reader,
+	error,
+) {
+	// #nosec G404
+	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Str("endpoint", endpoint).Logger()
+	if e := log.Trace(); e.Enabled() {
+		bodyBytes, err := io.ReadAll(body)
+		if err != nil {
+			return nil, errors.New("failed to read request body")
+		}
+		body = bytes.NewReader(bodyBytes)
+
+		e.Str("body", string(bodyBytes)).Msg("POST request")
+	}
+
+	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
+	if err != nil {
+		return nil, errors.Wrap(err, "invalid endpoint")
+	}
+
+	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, url.String(), body)
+	if err != nil {
+		cancel()
+		return nil, errors.Wrap(err, "failed to create POST request")
+	}
+	s.addExtraHeaders(req)
+	req.Header.Set("Content-Type", contentType.MediaType())
+	// Always take response of POST in JSON, as it's generally small.
+	req.Header.Set("Accept", "application/json")
+	for k, v := range headers {
+		req.Header.Set(k, v)
+	}
+	if req.Header.Get("User-Agent") == "" {
+		req.Header.Set("User-Agent", "go-eth2-client/0.19.0")
+	}
+
+	resp, err := s.client.Do(req)
+	if err != nil {
+		cancel()
+		return nil, errors.Wrap(err, "failed to call POST endpoint")
+	}
+	defer resp.Body.Close()
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		cancel()
+		return nil, errors.Wrap(err, "failed to read POST response")
+	}
+
+	statusFamily := resp.StatusCode / 100
+	if statusFamily != 2 {
+		cancel()
+		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("POST failed")
+		return nil, &api.Error{
+			Method:     http.MethodPost,
+			StatusCode: resp.StatusCode,
+			Endpoint:   endpoint,
+			Data:       data,
+		}
+	}
+	cancel()
+
+	log.Trace().Str("response", string(data)).Msg("POST response")
+
+	return bytes.NewReader(data), nil
+}
+
 func (s *Service) addExtraHeaders(req *http.Request) {
 	for k, v := range s.extraHeaders {
 		req.Header.Add(k, v)
@@ -165,10 +240,9 @@ type responseMetadata struct {
 }
 
 type httpResponse struct {
-	statusCode  int
-	contentType ContentType
-	headers     map[string]string
-	// TODO remove?  This is specific to a few endpoints, and otherwise available in headers.
+	statusCode       int
+	contentType      ContentType
+	headers          map[string]string
 	consensusVersion spec.DataVersion
 	body             []byte
 }
@@ -317,7 +391,7 @@ func populateContentType(res *httpResponse, resp *http.Response) error {
 func metadataFromHeaders(headers map[string]string) map[string]any {
 	metadata := make(map[string]any)
 	for k, v := range headers {
-		// TODO need to be selective here; use separate function.
+		// TODO need to be selective here?
 		metadata[k] = v
 	}
 

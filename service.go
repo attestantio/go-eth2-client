@@ -233,7 +233,15 @@ type BeaconBlockRootProvider interface {
 // BeaconBlockSubmitter is the interface for submitting beacon blocks.
 type BeaconBlockSubmitter interface {
 	// SubmitBeaconBlock submits a beacon block.
+	//
+	// Deprecated: this will not work from the deneb hard-fork onwards.  Use ProposalSubmitter.SubmitProposal() instead.
 	SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error
+}
+
+// ProposalSubmitter is the interface for submitting proposals.
+type ProposalSubmitter interface {
+	// SubmitProposal submits a proposal.
+	SubmitProposal(ctx context.Context, block *api.VersionedSignedProposal) error
 }
 
 // BeaconCommitteeSubscriptionsSubmitter is the interface for submitting beacon committee subnet subscription requests.

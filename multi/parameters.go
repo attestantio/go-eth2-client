@@ -29,6 +29,7 @@ type parameters struct {
 	addresses    []string
 	timeout      time.Duration
 	extraHeaders map[string]string
+	enforceJSON  bool
 }
 
 // Parameter is the interface for service parameters.
@@ -74,6 +75,13 @@ func WithClients(clients []consensusclient.Service) Parameter {
 func WithAddresses(addresses []string) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.addresses = addresses
+	})
+}
+
+// WithEnforceJSON forces all requests and responses to be in JSON, not sending or requesting SSZ.
+func WithEnforceJSON(enforceJSON bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.enforceJSON = enforceJSON
 	})
 }
 

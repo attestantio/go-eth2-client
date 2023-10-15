@@ -71,6 +71,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 			http.WithLogLevel(parameters.logLevel),
 			http.WithTimeout(parameters.timeout),
 			http.WithAddress(address),
+			http.WithEnforceJSON(parameters.enforceJSON),
 			http.WithExtraHeaders(parameters.extraHeaders),
 		)
 		if err != nil {

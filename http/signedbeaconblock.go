@@ -92,7 +92,7 @@ func (s *Service) signedBeaconBlockFromSSZ(res *httpResponse) (*api.Response[*sp
 	case spec.DataVersionDeneb:
 		response.Data.Deneb = &deneb.SignedBeaconBlock{}
 		if err := response.Data.Deneb.UnmarshalSSZ(res.body); err != nil {
-			return nil, errors.Wrap(err, "failed to decode deneb signed beacon block")
+			return nil, errors.Wrap(err, "failed to decode deneb signed block contents")
 		}
 	default:
 		return nil, fmt.Errorf("unhandled block version %s", res.consensusVersion)
