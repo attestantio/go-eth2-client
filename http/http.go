@@ -305,7 +305,6 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 	// require the calling function to be aware that it needs to clode the body
 	// once it is done with it.  To avoid that complexity, we read here and store the
 	// body as a byte array.
-	// TODO can we pass the reader?  Or does cancelling the request context close the reader?
 	res.body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		span.RecordError(err)
@@ -393,7 +392,6 @@ func populateContentType(res *httpResponse, resp *http.Response) error {
 func metadataFromHeaders(headers map[string]string) map[string]any {
 	metadata := make(map[string]any)
 	for k, v := range headers {
-		// TODO need to be selective here?
 		metadata[k] = v
 	}
 
