@@ -416,3 +416,8 @@ type NodeClientProvider interface {
 	// NodeClient provides the client for the node.
 	NodeClient(ctx context.Context) (string, error)
 }
+
+type PeerProvider interface {
+	// Peers provides the peers for the node.
+	Peers(ctx context.Context, peerStates []string, peerDirections []string) (*apiv1.Peers, error)
+}
