@@ -30,12 +30,12 @@ func TestNodePeersJSON(t *testing.T) {
 		{
 			name:  "JSONBad",
 			input: []byte("[]"),
-			err:   "json: cannot unmarshal array into Go value of type v1.NodePeers",
+			err:   "json: cannot unmarshal array into Go value of type v1.Peers",
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res api.NodePeers
+			var res api.Peers
 			err := json.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
@@ -71,12 +71,12 @@ func TestNodePeerJSON(t *testing.T) {
 		{
 			name:  "JSONBad",
 			input: []byte("[]"),
-			err:   "json: cannot unmarshal array into Go value of type v1.NodePeer",
+			err:   "json: cannot unmarshal array into Go value of type v1.Peer",
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res api.NodePeer
+			var res api.Peer
 			err := json.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)

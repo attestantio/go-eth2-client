@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// NodePeer is the data regarding which peer a node has.
-type NodePeer struct {
+// Peer is the data regarding which peer a node has.
+type Peer struct {
 	PeerID             string `json:"peer_id"`
 	Enr                string `json:"enr,omitempty"`
 	LastSeenP2pAddress string `json:"last_seen_p2p_address"`
@@ -14,13 +14,13 @@ type NodePeer struct {
 	Direction          string `json:"direction"`
 }
 
-// NodePeers is the response from a /eth/v1/node/peers endpoint.
-type NodePeers struct {
-	Data []NodePeer             `json:"data"`
+// Peers is the response from a /eth/v1/node/peers endpoint.
+type Peers struct {
+	Data []Peer                 `json:"data"`
 	Meta map[string]interface{} `json:"meta,omitempty"`
 }
 
-func (e *NodePeers) String() string {
+func (e *Peers) String() string {
 	data, err := json.Marshal(e)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
@@ -28,7 +28,7 @@ func (e *NodePeers) String() string {
 	return string(data)
 }
 
-func (e *NodePeer) String() string {
+func (e *Peer) String() string {
 	data, err := json.Marshal(e)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
