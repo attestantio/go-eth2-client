@@ -393,6 +393,8 @@ func (s *Erroring) BeaconBlockProposal(ctx context.Context,
 }
 
 // SubmitBeaconBlock submits a beacon block.
+//
+// Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitProposal() instead.
 func (s *Erroring) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
@@ -419,6 +421,8 @@ func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subsc
 }
 
 // SubmitBlindedBeaconBlock submits a blinded beacon block.
+//
+// Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitBlindedProposal() instead.
 func (s *Erroring) SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err

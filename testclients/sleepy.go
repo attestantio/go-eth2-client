@@ -284,6 +284,8 @@ func (s *Sleepy) BeaconBlockProposal(ctx context.Context,
 }
 
 // SubmitBeaconBlock submits a beacon block.
+//
+// Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitProposal() instead.
 func (s *Sleepy) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.BeaconBlockSubmitter)
@@ -317,6 +319,8 @@ func (s *Sleepy) SubmitProposalPreparations(ctx context.Context, preparations []
 }
 
 // SubmitBlindedBeaconBlock submits a beacon block.
+//
+// Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitBlindedProposal() instead.
 func (s *Sleepy) SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.BlindedBeaconBlockSubmitter)

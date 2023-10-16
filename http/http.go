@@ -154,6 +154,8 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 }
 
 // post2 sends an HTTP post request and returns the body.
+//
+//nolint:unparam
 func (s *Service) post2(ctx context.Context,
 	endpoint string,
 	body io.Reader,
