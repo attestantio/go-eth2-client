@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,43 +17,45 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"strings"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/pkg/errors"
 )
 
-// SubmitBeaconBlock submits a beacon block.
-//
-// Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitProposal() instead.
-func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
+// SubmitBlindedProposal submits a blinded proposal.
+func (s *Service) SubmitBlindedProposal(ctx context.Context, proposal *api.VersionedSignedBlindedProposal) error {
 	var specJSON []byte
 	var err error
 
-	if block == nil {
-		return errors.New("no block supplied")
+	if proposal == nil {
+		return errors.New("no blinded proposal supplied")
 	}
 
-	switch block.Version {
+	switch proposal.Version {
 	case spec.DataVersionPhase0:
-		specJSON, err = json.Marshal(block.Phase0)
+		err = errors.New("blinded phase0 proposals not supported")
 	case spec.DataVersionAltair:
-		specJSON, err = json.Marshal(block.Altair)
+		err = errors.New("blinded altair proposals not supported")
 	case spec.DataVersionBellatrix:
-		specJSON, err = json.Marshal(block.Bellatrix)
+		specJSON, err = json.Marshal(proposal.Bellatrix)
 	case spec.DataVersionCapella:
-		specJSON, err = json.Marshal(block.Capella)
+		specJSON, err = json.Marshal(proposal.Capella)
 	case spec.DataVersionDeneb:
-		specJSON, err = json.Marshal(block.Deneb)
+		specJSON, err = json.Marshal(proposal.Deneb)
 	default:
-		err = errors.New("unknown block version")
+		err = errors.New("unknown proposal version")
 	}
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	_, err = s.post(ctx, "/eth/v1/beacon/blocks", bytes.NewBuffer(specJSON))
+	headers := make(map[string]string)
+	headers["Eth-Consensus-Version"] = strings.ToLower(proposal.Version.String())
+	_, err = s.post2(ctx, "/eth/v2/beacon/blinded_blocks", bytes.NewBuffer(specJSON), ContentTypeJSON, headers)
 	if err != nil {
-		return errors.Wrap(err, "failed to submit beacon block")
+		return errors.Wrap(err, "failed to submit blinded proposal")
 	}
 
 	return nil

@@ -277,7 +277,15 @@ type BlindedBeaconBlockProposalProvider interface {
 // BlindedBeaconBlockSubmitter is the interface for submitting blinded beacon blocks.
 type BlindedBeaconBlockSubmitter interface {
 	// SubmitBlindedBeaconBlock submits a beacon block.
+	//
+	// Deprecated: this will not work from the deneb hard-fork onwards.  Use BlindedProposalSubmitter.SubmitBlindedProposal() instead.
 	SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error
+}
+
+// BlindedProposalSubmitter is the interface for submitting blinded proposals.
+type BlindedProposalSubmitter interface {
+	// SubmitBlindedProposal submits a beacon block.
+	SubmitBlindedProposal(ctx context.Context, block *api.VersionedSignedBlindedProposal) error
 }
 
 // ValidatorRegistrationsSubmitter is the interface for submitting validator registrations.
