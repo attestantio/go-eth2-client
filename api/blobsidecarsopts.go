@@ -13,8 +13,8 @@
 
 package api
 
-// BeaconBlockBlobsOpts are the options for obtaining beacon block blobs.
-type BeaconBlockBlobsOpts struct {
-	// Block is the ID of the block which the data is obtained.
+// BlobSidecarsOpts are the options for obtaining blob sidecars.
+type BlobSidecarsOpts struct {
+	// Block is the ID of the block for which the data is obtained.
 	Block string
 }

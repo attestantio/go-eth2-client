@@ -114,10 +114,10 @@ type SignedBeaconBlockProvider interface {
 	SignedBeaconBlock(ctx context.Context, opts *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error)
 }
 
-// BeaconBlockBlobsProvider is the interface for providing blobs for a given beacon block.
-type BeaconBlockBlobsProvider interface {
-	// BeaconBlockBlobs fetches the blobs given a block ID.
-	BeaconBlockBlobs(ctx context.Context, blockID string) ([]*deneb.BlobSidecar, error)
+// BlobSidecarsProvider is the interface for providing blobs for a given beacon block.
+type BlobSidecarsProvider interface {
+	// BlobSidecars fetches the blobs given a block ID.
+	BlobSidecars(ctx context.Context, opts *api.BlobSidecarsOpts) (*api.Response[[]*deneb.BlobSidecar], error)
 }
 
 // BeaconCommitteesProvider is the interface for providing beacon committees.
@@ -371,12 +371,6 @@ type ValidatorBalancesProvider interface {
 type ValidatorsProvider interface {
 	// Validators provides the validators, with their balance and status, for the given options.
 	Validators(ctx context.Context, opts *api.ValidatorsOpts) (*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator], error)
-
-	// ValidatorsByPubKey provides the validators, with their balance and status, for a given state.
-	// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-	// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
-	// supplied no filter will be applied.
-	ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*apiv1.Validator, error)
 }
 
 // VoluntaryExitSubmitter is the interface for submitting voluntary exits.

@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	api "github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -36,6 +36,20 @@ var indexChunkSizes = map[string]int{
 	"nimbus":     1000,
 	"prysm":      1000,
 	"teku":       1000,
+}
+
+// pubKeyChunkSizes defines the per-beacon-node size of a public key chunk.
+// A request should be no more than 8,000 bytes to work with all currently-supported clients.
+// A public key, including 0x header and comma separator, takes up 99 bytes.
+// We also need to reserve space for the state ID and the endpoint itself, to be safe we go
+// with 500 bytes for this which results in us having space for 75 public keys.
+// That said, some nodes have their own built-in limits so use them where appropriate.
+var pubKeyChunkSizes = map[string]int{
+	"default":    75,
+	"lighthouse": 75,
+	"nimbus":     75,
+	"prysm":      75,
+	"teku":       75,
 }
 
 // indexChunkSize is the maximum number of validator indices to send in each request.
@@ -64,6 +78,35 @@ func (s *Service) indexChunkSize(ctx context.Context) int {
 		return indexChunkSizes["teku"]
 	default:
 		return indexChunkSizes["default"]
+	}
+}
+
+// pubKeyChunkSize is the maximum number of validator public keys to send in each request.
+func (s *Service) pubKeyChunkSize(ctx context.Context) int {
+	if s.userPubKeyChunkSize > 0 {
+		return s.userPubKeyChunkSize
+	}
+
+	nodeClient := ""
+	response, err := s.NodeClient(ctx)
+	if err == nil {
+		nodeClient = response.Data
+	} else {
+		// Use default.
+		nodeClient = "default"
+	}
+
+	switch {
+	case strings.Contains(nodeClient, "lighthouse"):
+		return pubKeyChunkSizes["lighthouse"]
+	case strings.Contains(nodeClient, "nimbus"):
+		return pubKeyChunkSizes["nimbus"]
+	case strings.Contains(nodeClient, "prysm"):
+		return pubKeyChunkSizes["prysm"]
+	case strings.Contains(nodeClient, "teku"):
+		return pubKeyChunkSizes["teku"]
+	default:
+		return pubKeyChunkSizes["default"]
 	}
 }
 
@@ -102,7 +145,7 @@ func (s *Service) Validators(ctx context.Context,
 		}
 		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
 	case len(opts.PubKeys) > 0:
-		ids := make([]string, len(opts.Indices))
+		ids := make([]string, len(opts.PubKeys))
 		for i := range opts.PubKeys {
 			ids[i] = opts.PubKeys[i].String()
 		}
@@ -192,7 +235,26 @@ func (s *Service) validatorsFromState(ctx context.Context,
 }
 
 // chunkedValidators obtains the validators a chunk at a time.
-func (s *Service) chunkedValidators(ctx context.Context, opts *api.ValidatorsOpts) (*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator], error) {
+func (s *Service) chunkedValidators(ctx context.Context,
+	opts *api.ValidatorsOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
+	error,
+) {
+	if len(opts.Indices) > 0 {
+		return s.chunkedValidatorsByIndex(ctx, opts)
+	}
+
+	return s.chunkedValidatorsByPubkey(ctx, opts)
+}
+
+// chunkedValidatorsByIndex obtains validators with index a chunk at a time.
+func (s *Service) chunkedValidatorsByIndex(ctx context.Context,
+	opts *api.ValidatorsOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
+	error,
+) {
 	data := make(map[phase0.ValidatorIndex]*apiv1.Validator)
 	metadata := make(map[string]any)
 	indexChunkSize := s.indexChunkSize(ctx)
@@ -204,6 +266,41 @@ func (s *Service) chunkedValidators(ctx context.Context, opts *api.ValidatorsOpt
 		}
 		chunk := opts.Indices[chunkStart:chunkEnd]
 		chunkRes, err := s.Validators(ctx, &api.ValidatorsOpts{State: opts.State, Indices: chunk})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain chunk")
+		}
+		for k, v := range chunkRes.Data {
+			data[k] = v
+		}
+		for k, v := range chunkRes.Metadata {
+			metadata[k] = v
+		}
+	}
+
+	return &api.Response[map[phase0.ValidatorIndex]*apiv1.Validator]{
+		Data:     data,
+		Metadata: metadata,
+	}, nil
+}
+
+// chunkedValidatorsByIndex obtains validators with public key a chunk at a time.
+func (s *Service) chunkedValidatorsByPubkey(ctx context.Context,
+	opts *api.ValidatorsOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
+	error,
+) {
+	data := make(map[phase0.ValidatorIndex]*apiv1.Validator)
+	metadata := make(map[string]any)
+	pubkeyChunkSize := s.pubKeyChunkSize(ctx)
+	for i := 0; i < len(opts.PubKeys); i += pubkeyChunkSize {
+		chunkStart := i
+		chunkEnd := i + pubkeyChunkSize
+		if len(opts.PubKeys) < chunkEnd {
+			chunkEnd = len(opts.PubKeys)
+		}
+		chunk := opts.PubKeys[chunkStart:chunkEnd]
+		chunkRes, err := s.Validators(ctx, &api.ValidatorsOpts{State: opts.State, PubKeys: chunk})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain chunk")
 		}

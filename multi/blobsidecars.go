@@ -11,44 +11,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package http
+package multi
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
-	"github.com/pkg/errors"
 )
 
-// BeaconBlockBlobs fetches the blobs given a block ID.
-func (s *Service) BeaconBlockBlobs(ctx context.Context,
-	opts *api.BeaconBlockBlobsOpts,
-) (
-	*api.Response[[]*deneb.BlobSidecar],
-	error,
-) {
-	if opts == nil {
-		return nil, errors.New("no options specified")
-	}
-	if opts.Block == "" {
-		return nil, errors.New("no block specified")
-	}
-
-	httpResponse, err := s.get2(ctx, fmt.Sprintf("/eth/v1/beacon/blob_sidecars/%s", opts.Block))
+// BlobSidecars fetches the blob sidecars given options.
+func (s *Service) BlobSidecars(ctx context.Context, opts *api.BlobSidecarsOpts) ([]*deneb.BlobSidecar, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+		blobSidecars, err := client.(consensusclient.BlobSidecarsProvider).BlobSidecars(ctx, opts)
+		if err != nil {
+			return nil, err
+		}
+		return blobSidecars, nil
+	}, nil)
 	if err != nil {
 		return nil, err
 	}
-
-	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*deneb.BlobSidecar{})
-	if err != nil {
-		return nil, err
+	if res == nil {
+		return nil, nil
 	}
-
-	return &api.Response[[]*deneb.BlobSidecar]{
-		Metadata: metadata,
-		Data:     data,
-	}, nil
+	return res.([]*deneb.BlobSidecar), nil
 }

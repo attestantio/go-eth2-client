@@ -483,20 +483,6 @@ func (s *Sleepy) Validators(ctx context.Context,
 	return next.Validators(ctx, opts)
 }
 
-// ValidatorsByPubKey provides the validators, with their balance and status, for a given state.
-// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
-// supplied no filter will be applied.
-func (s *Sleepy) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
-	s.sleep(ctx)
-	next, isNext := s.next.(consensusclient.ValidatorsProvider)
-	if !isNext {
-		return nil, errors.New("next does not support this call")
-	}
-
-	return next.ValidatorsByPubKey(ctx, stateID, validatorPubKeys)
-}
-
 // SubmitVoluntaryExit submits a voluntary exit.
 func (s *Sleepy) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error {
 	s.sleep(ctx)
@@ -563,13 +549,13 @@ func (s *Sleepy) ForkChoice(ctx context.Context) (*api.Response[*apiv1.ForkChoic
 	return next.ForkChoice(ctx)
 }
 
-// BeaconBlockBlobs fetches the blobs given a block ID.
-func (s *Sleepy) BeaconBlockBlobs(ctx context.Context, blockID string) ([]*deneb.BlobSidecar, error) {
+// BlobSidecars fetches the blobs sidecars given options.
+func (s *Sleepy) BlobSidecars(ctx context.Context, opts *api.BlobSidecarsOpts) (*api.Response[[]*deneb.BlobSidecar], error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(consensusclient.BeaconBlockBlobsProvider)
+	next, isNext := s.next.(consensusclient.BlobSidecarsProvider)
 	if !isNext {
-		return []*deneb.BlobSidecar{}, errors.New("next does not support this call")
+		return nil, errors.New("next does not support this call")
 	}
 
-	return next.BeaconBlockBlobs(ctx, blockID)
+	return next.BlobSidecars(ctx, opts)
 }

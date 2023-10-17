@@ -21,7 +21,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// KzgProof is an KZG commitment.
+// KzgProof is an KZG proof.
 type KzgProof [48]byte
 
 // KzgProofLength is the number of bytes in a KZG proof.

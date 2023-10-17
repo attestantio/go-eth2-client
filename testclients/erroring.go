@@ -664,22 +664,6 @@ func (s *Erroring) Validators(ctx context.Context,
 	return next.Validators(ctx, opts)
 }
 
-// ValidatorsByPubKey provides the validators, with their balance and status, for a given state.
-// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
-// supplied no filter will be applied.
-func (s *Erroring) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
-	if err := s.maybeError(ctx); err != nil {
-		return nil, err
-	}
-	next, isNext := s.next.(consensusclient.ValidatorsProvider)
-	if !isNext {
-		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
-	}
-
-	return next.ValidatorsByPubKey(ctx, stateID, validatorPubKeys)
-}
-
 // SubmitVoluntaryExit submits a voluntary exit.
 func (s *Erroring) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error {
 	if err := s.maybeError(ctx); err != nil {
@@ -771,17 +755,17 @@ func (s *Erroring) SignedBeaconBlock(ctx context.Context, opts *api.SignedBeacon
 	return next.SignedBeaconBlock(ctx, opts)
 }
 
-// BeaconBlockBlobs fetches the blobs given a block ID.
-func (s *Erroring) BeaconBlockBlobs(ctx context.Context, blockID string) ([]*deneb.BlobSidecar, error) {
+// BlobSidecars fetches the blobs given a block ID.
+func (s *Erroring) BlobSidecars(ctx context.Context, opts *api.BlobSidecarsOpts) (*api.Response[[]*deneb.BlobSidecar], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
-	next, isNext := s.next.(consensusclient.BeaconBlockBlobsProvider)
+	next, isNext := s.next.(consensusclient.BlobSidecarsProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.BeaconBlockBlobs(ctx, blockID)
+	return next.BlobSidecars(ctx, opts)
 }
 
 // BeaconStateRoot fetches a beacon state root given a state ID.

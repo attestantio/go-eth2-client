@@ -345,7 +345,9 @@ func populateConsensusVersion(res *httpResponse, resp *http.Response) error {
 	if !exists {
 		// No consensus version supplied in response; obtain it from the body if possible.
 		if res.contentType != ContentTypeJSON {
-			return errors.New("no consensus version header")
+			// Not present here either.  Many responses do not provide this information, so assume
+			// this is one of them.
+			return nil
 		}
 		var metadata responseMetadata
 		if err := json.Unmarshal(res.body, &metadata); err != nil {
