@@ -107,11 +107,6 @@ func (e *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 
-	// Field (15) 'ExecutionWitness'
-	if dst, err = e.ExecutionWitness.MarshalSSZTo(dst); err != nil {
-		return
-	}
-
 	return
 }
 
