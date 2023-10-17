@@ -24,14 +24,13 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/gballet/go-verkle"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 type ExecutionWitness struct {
-	StateDiff   verkle.StateDiff    `json:"stateDiff"`
-	VerkleProof *verkle.VerkleProof `json:"verkleProof"`
+	StateDiff   []StemStateDiff `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
+	VerkleProof *VerkleProof    `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
 }
 
 // ExecutionPayload represents an execution layer payload.
@@ -51,7 +50,7 @@ type ExecutionPayload struct {
 	BlockHash        phase0.Hash32           `ssz-size:"32"`
 	Transactions     []bellatrix.Transaction `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
 	Withdrawals      []*Withdrawal           `ssz-max:"16"`
-	ExecutionWitness *ExecutionWitness
+	ExecutionWitness *ExecutionWitness       `ssz-size:"1"`
 }
 
 // executionPayloadJSON is the spec representation of the struct.
