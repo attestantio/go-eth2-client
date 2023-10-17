@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package capella_test
+package verkle_test
 
 import (
 	"encoding/json"
