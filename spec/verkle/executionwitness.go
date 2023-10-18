@@ -33,8 +33,8 @@ type VerkleProof struct {
 
 type SuffixStateDiff struct {
 	Suffix       uint8  `ssz-size:"1"`
-	CurrentValue []byte `ssz-size:"0,32"`
-	NewValue     []byte `ssz-size:"0,32"`
+	CurrentValue []byte `ssz-max:"32"`
+	NewValue     []byte `ssz-max:"32"`
 }
 
 type StemStateDiff struct {
