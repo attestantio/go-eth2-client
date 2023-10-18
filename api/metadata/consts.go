@@ -16,7 +16,7 @@
 package metadata
 
 const (
-	// Finalized is a boolean value describing if the response contains finalized data.
+	// Finalized describes if the response contains finalized data.
 	Finalized = "finalized"
 	// ExecutionOptimistic is a boolean value describing if the response contains execution data
 	// that has not been fully verified at the time of response.
