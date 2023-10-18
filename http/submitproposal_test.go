@@ -30,7 +30,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSubmitBeaconBlock(t *testing.T) {
+func TestSubmitProposal(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -83,7 +83,7 @@ func TestSubmitBeaconBlock(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, res)
 
-			signedBeaconBlock := &spec.VersionedSignedBeaconBlock{}
+			signedBeaconBlock := &api.VersionedSignedProposal{}
 			switch {
 			case res.Data.Phase0 != nil:
 				signedBeaconBlock.Version = spec.DataVersionPhase0
@@ -113,9 +113,7 @@ func TestSubmitBeaconBlock(t *testing.T) {
 				t.Fatalf("unknown block version %s", res.Data.Version.String())
 			}
 			// Some implementations return an error and some don't, so do not check.
-			service.(client.BeaconBlockSubmitter).SubmitBeaconBlock(ctx, signedBeaconBlock) // nolint:errcheck
-			// err = service.SubmitBeaconBlock(ctx, signedBeaconBlock)
-			// require.NotNil(t, err)
+			service.(client.ProposalSubmitter).SubmitProposal(ctx, signedBeaconBlock) // nolint:errcheck
 		})
 	}
 }

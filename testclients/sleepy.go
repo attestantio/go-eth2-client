@@ -267,20 +267,20 @@ func (s *Sleepy) BeaconBlockHeader(ctx context.Context,
 	return next.BeaconBlockHeader(ctx, opts)
 }
 
-// BeaconBlockProposal fetches a proposed beacon block for signing.
-func (s *Sleepy) BeaconBlockProposal(ctx context.Context,
-	opts *api.BeaconBlockProposalOpts,
+// Proposal fetches a proposal for signing.
+func (s *Sleepy) Proposal(ctx context.Context,
+	opts *api.ProposalOpts,
 ) (
-	*api.Response[*spec.VersionedBeaconBlock],
+	*api.Response[*api.VersionedProposal],
 	error,
 ) {
 	s.sleep(ctx)
-	next, isNext := s.next.(consensusclient.BeaconBlockProposalProvider)
+	next, isNext := s.next.(consensusclient.ProposalProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
 
-	return next.BeaconBlockProposal(ctx, opts)
+	return next.Proposal(ctx, opts)
 }
 
 // SubmitBeaconBlock submits a beacon block.

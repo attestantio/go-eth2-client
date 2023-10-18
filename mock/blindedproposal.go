@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2022 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,16 +17,18 @@ import (
 	"context"
 
 	"github.com/attestantio/go-eth2-client/api"
+	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/prysmaticlabs/go-bitfield"
 )
 
-// BeaconBlockProposal fetches a proposed beacon block for signing.
-func (s *Service) BeaconBlockProposal(_ context.Context,
-	opts *api.BeaconBlockProposalOpts,
+// BlindedProposal fetches a blinded proposal for signing.
+func (s *Service) BlindedProposal(_ context.Context,
+	opts *api.BlindedProposalOpts,
 ) (
-	*api.Response[*spec.VersionedBeaconBlock], error,
+	*api.Response[*api.VersionedBlindedProposal],
+	error,
 ) {
 	// Build a beacon block.
 
@@ -70,7 +72,7 @@ func (s *Service) BeaconBlockProposal(_ context.Context,
 		}
 	}
 
-	block := &phase0.BeaconBlock{
+	blindedBlock := &apiv1bellatrix.BlindedBeaconBlock{
 		Slot:          opts.Slot,
 		ProposerIndex: 1,
 		ParentRoot: phase0.Root([32]byte{
@@ -81,7 +83,7 @@ func (s *Service) BeaconBlockProposal(_ context.Context,
 			0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29, 0x2a, 0x2b, 0x2c, 0x2d, 0x2e, 0x2f,
 			0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x3a, 0x3b, 0x3c, 0x3d, 0x3e, 0x3f,
 		}),
-		Body: &phase0.BeaconBlockBody{
+		Body: &apiv1bellatrix.BlindedBeaconBlockBody{
 			RANDAOReveal: opts.RandaoReveal,
 			ETH1Data: &phase0.ETH1Data{
 				DepositRoot: phase0.Root([32]byte{
@@ -103,13 +105,13 @@ func (s *Service) BeaconBlockProposal(_ context.Context,
 		},
 	}
 
-	data := &spec.VersionedBeaconBlock{
-		Version: spec.DataVersionPhase0,
-		Phase0:  block,
+	versionedProposal := &api.VersionedBlindedProposal{
+		Version:   spec.DataVersionPhase0,
+		Bellatrix: blindedBlock,
 	}
 
-	return &api.Response[*spec.VersionedBeaconBlock]{
-		Data:     data,
+	return &api.Response[*api.VersionedBlindedProposal]{
+		Data:     versionedProposal,
 		Metadata: make(map[string]any),
 	}, nil
 }

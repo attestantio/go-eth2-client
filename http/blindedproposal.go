@@ -27,14 +27,14 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-// BlindedBeaconBlockProposal fetches a proposed beacon block for signing.
-func (s *Service) BlindedBeaconBlockProposal(ctx context.Context,
-	opts *api.BlindedBeaconBlockProposalOpts,
+// BlindedProposal fetches a proposal for signing.
+func (s *Service) BlindedProposal(ctx context.Context,
+	opts *api.BlindedProposalOpts,
 ) (
-	*api.Response[*api.VersionedBlindedBeaconBlock],
+	*api.Response[*api.VersionedBlindedProposal],
 	error,
 ) {
-	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "blindedBeaconBlockProposal")
+	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "BlindedProposal")
 	defer span.End()
 
 	if opts == nil {
@@ -58,12 +58,12 @@ func (s *Service) BlindedBeaconBlockProposal(ctx context.Context,
 		return nil, errors.Wrap(err, "failed to request blinded beacon block proposal")
 	}
 
-	var response *api.Response[*api.VersionedBlindedBeaconBlock]
+	var response *api.Response[*api.VersionedBlindedProposal]
 	switch res.contentType {
 	case ContentTypeSSZ:
-		response, err = s.blindedBeaconBlockProposalFromSSZ(res)
+		response, err = s.blindedProposalFromSSZ(res)
 	case ContentTypeJSON:
-		response, err = s.blindedBeaconBlockProposalFromJSON(res)
+		response, err = s.blindedProposalFromJSON(res)
 	default:
 		return nil, fmt.Errorf("unhandled content type %v", res.contentType)
 	}
@@ -103,9 +103,9 @@ func (s *Service) BlindedBeaconBlockProposal(ctx context.Context,
 	return response, nil
 }
 
-func (s *Service) blindedBeaconBlockProposalFromSSZ(res *httpResponse) (*api.Response[*api.VersionedBlindedBeaconBlock], error) {
-	response := &api.Response[*api.VersionedBlindedBeaconBlock]{
-		Data: &api.VersionedBlindedBeaconBlock{
+func (s *Service) blindedProposalFromSSZ(res *httpResponse) (*api.Response[*api.VersionedBlindedProposal], error) {
+	response := &api.Response[*api.VersionedBlindedProposal]{
+		Data: &api.VersionedBlindedProposal{
 			Version: res.consensusVersion,
 		},
 		Metadata: metadataFromHeaders(res.headers),
@@ -123,7 +123,7 @@ func (s *Service) blindedBeaconBlockProposalFromSSZ(res *httpResponse) (*api.Res
 			return nil, errors.Wrap(err, "failed to decode capella blinded beacon block proposal")
 		}
 	case spec.DataVersionDeneb:
-		response.Data.Deneb = &apiv1deneb.BlindedBeaconBlock{}
+		response.Data.Deneb = &apiv1deneb.BlindedBlockContents{}
 		if err := response.Data.Deneb.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Wrap(err, "failed to decode deneb blinded beacon block proposal")
 		}
@@ -134,9 +134,9 @@ func (s *Service) blindedBeaconBlockProposalFromSSZ(res *httpResponse) (*api.Res
 	return response, nil
 }
 
-func (s *Service) blindedBeaconBlockProposalFromJSON(res *httpResponse) (*api.Response[*api.VersionedBlindedBeaconBlock], error) {
-	response := &api.Response[*api.VersionedBlindedBeaconBlock]{
-		Data: &api.VersionedBlindedBeaconBlock{
+func (s *Service) blindedProposalFromJSON(res *httpResponse) (*api.Response[*api.VersionedBlindedProposal], error) {
+	response := &api.Response[*api.VersionedBlindedProposal]{
+		Data: &api.VersionedBlindedProposal{
 			Version: res.consensusVersion,
 		},
 	}
@@ -148,7 +148,7 @@ func (s *Service) blindedBeaconBlockProposalFromJSON(res *httpResponse) (*api.Re
 	case spec.DataVersionCapella:
 		response.Data.Capella, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1capella.BlindedBeaconBlock{})
 	case spec.DataVersionDeneb:
-		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1deneb.BlindedBeaconBlock{})
+		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1deneb.BlindedBlockContents{})
 	default:
 		return nil, fmt.Errorf("unsupported version %s", res.consensusVersion)
 	}

@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2022, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,289 +20,363 @@ import (
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// VersionedSignedBlindedProposal contains a versioned signed blinded proposal.
-type VersionedSignedBlindedProposal struct {
+// VersionedBlindedProposal contains a versioned blinded proposal.
+type VersionedBlindedProposal struct {
 	Version   spec.DataVersion
-	Bellatrix *apiv1bellatrix.SignedBlindedBeaconBlock
-	Capella   *apiv1capella.SignedBlindedBeaconBlock
-	Deneb     *apiv1deneb.SignedBlindedBlockContents
+	Bellatrix *apiv1bellatrix.BlindedBeaconBlock
+	Capella   *apiv1capella.BlindedBeaconBlock
+	Deneb     *apiv1deneb.BlindedBlockContents
 }
 
-// Slot returns the slot of the signed blinded proposal.
-func (v *VersionedSignedBlindedProposal) Slot() (phase0.Slot, error) {
+// IsEmpty returns true if there is no proposal.
+func (v *VersionedBlindedProposal) IsEmpty() bool {
+	return v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil
+}
+
+// Slot returns the slot of the blinded proposal.
+func (v *VersionedBlindedProposal) Slot() (phase0.Slot, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil || v.Bellatrix.Message == nil {
+		if v.Bellatrix == nil {
 			return 0, errors.New("no bellatrix block")
 		}
-		return v.Bellatrix.Message.Slot, nil
+		return v.Bellatrix.Slot, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil || v.Capella.Message == nil {
+		if v.Capella == nil {
 			return 0, errors.New("no capella block")
 		}
-		return v.Capella.Message.Slot, nil
+		return v.Capella.Slot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlindedBlock == nil || v.Deneb.SignedBlindedBlock.Message == nil {
+		if v.Deneb == nil || v.Deneb.BlindedBlock == nil {
 			return 0, errors.New("no deneb block")
 		}
-		return v.Deneb.SignedBlindedBlock.Message.Slot, nil
+		return v.Deneb.BlindedBlock.Slot, nil
 	default:
 		return 0, errors.New("unsupported version")
 	}
 }
 
-// Attestations returns the attestations of the blinded proposal.
-func (v *VersionedSignedBlindedProposal) Attestations() ([]*phase0.Attestation, error) {
+// ProposerIndex returns the proposer index of the blinded proposal.
+func (v *VersionedBlindedProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil {
+		if v.Bellatrix == nil {
+			return 0, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.ProposerIndex, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no capella block")
+		}
+		return v.Capella.ProposerIndex, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.BlindedBlock == nil {
+			return 0, errors.New("no deneb block")
+		}
+		return v.Deneb.BlindedBlock.ProposerIndex, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
+// RandaoReveal returns the RANDAO reveal of the blinded proposal.
+func (v *VersionedBlindedProposal) RandaoReveal() (phase0.BLSSignature, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Body.RANDAOReveal, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil || v.Capella.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no capella block")
+		}
+		return v.Capella.Body.RANDAOReveal, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.BlindedBlock == nil || v.Deneb.BlindedBlock.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no deneb block")
+		}
+		return v.Deneb.BlindedBlock.Body.RANDAOReveal, nil
+	default:
+		return phase0.BLSSignature{}, errors.New("unsupported version")
+	}
+}
+
+// Graffiti returns the graffiti of the blinded proposal.
+func (v *VersionedBlindedProposal) Graffiti() ([32]byte, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
+			return [32]byte{}, errors.New("no bellatrix block")
+		}
+		return v.Bellatrix.Body.Graffiti, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil || v.Capella.Body == nil {
+			return [32]byte{}, errors.New("no capella block")
+		}
+		return v.Capella.Body.Graffiti, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.BlindedBlock == nil || v.Deneb.BlindedBlock.Body == nil {
+			return [32]byte{}, errors.New("no deneb block")
+		}
+		return v.Deneb.BlindedBlock.Body.Graffiti, nil
+	default:
+		return [32]byte{}, errors.New("unsupported version")
+	}
+}
+
+// Attestations returns the attestations of the blinded proposal.
+func (v *VersionedBlindedProposal) Attestations() ([]*phase0.Attestation, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return nil, errors.New("no bellatrix block")
 		}
-		return v.Bellatrix.Message.Body.Attestations, nil
+		return v.Bellatrix.Body.Attestations, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil {
+		if v.Capella == nil || v.Capella.Body == nil {
 			return nil, errors.New("no capella block")
 		}
-		return v.Capella.Message.Body.Attestations, nil
+		return v.Capella.Body.Attestations, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlindedBlock == nil || v.Deneb.SignedBlindedBlock.Message == nil || v.Deneb.SignedBlindedBlock.Message.Body == nil {
+		if v.Deneb == nil || v.Deneb.BlindedBlock == nil || v.Deneb.BlindedBlock.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
-		return v.Deneb.SignedBlindedBlock.Message.Body.Attestations, nil
+		return v.Deneb.BlindedBlock.Body.Attestations, nil
 	default:
 		return nil, errors.New("unsupported version")
 	}
 }
 
 // Root returns the root of the blinded proposal.
-func (v *VersionedSignedBlindedProposal) Root() (phase0.Root, error) {
+func (v *VersionedBlindedProposal) Root() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
-		return v.Bellatrix.Message.HashTreeRoot()
+		return v.Bellatrix.HashTreeRoot()
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
-		return v.Capella.Message.HashTreeRoot()
+		return v.Capella.HashTreeRoot()
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlindedBlock == nil {
+		if v.Deneb == nil || v.Deneb.BlindedBlock == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
-		return v.Deneb.SignedBlindedBlock.Message.HashTreeRoot()
+		return v.Deneb.BlindedBlock.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
 }
 
 // BodyRoot returns the body root of the blinded proposal.
-func (v *VersionedSignedBlindedProposal) BodyRoot() (phase0.Root, error) {
+func (v *VersionedBlindedProposal) BodyRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
-		return v.Bellatrix.Message.Body.HashTreeRoot()
+		return v.Bellatrix.Body.HashTreeRoot()
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
-		return v.Capella.Message.Body.HashTreeRoot()
+		return v.Capella.Body.HashTreeRoot()
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlindedBlock == nil || v.Deneb.SignedBlindedBlock.Message == nil || v.Deneb.SignedBlindedBlock.Message.Body == nil {
+		if v.Deneb == nil || v.Deneb.BlindedBlock == nil || v.Deneb.BlindedBlock.Body == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
-		return v.Deneb.SignedBlindedBlock.Message.Body.HashTreeRoot()
+		return v.Deneb.BlindedBlock.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
 }
 
 // ParentRoot returns the parent root of the blinded proposal.
-func (v *VersionedSignedBlindedProposal) ParentRoot() (phase0.Root, error) {
+func (v *VersionedBlindedProposal) ParentRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
-		return v.Bellatrix.Message.ParentRoot, nil
+		return v.Bellatrix.ParentRoot, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
-		return v.Capella.Message.ParentRoot, nil
+		return v.Capella.ParentRoot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlindedBlock == nil || v.Deneb.SignedBlindedBlock.Message == nil {
+		if v.Deneb == nil || v.Deneb.BlindedBlock == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
-		return v.Deneb.SignedBlindedBlock.Message.ParentRoot, nil
+		return v.Deneb.BlindedBlock.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
 }
 
 // StateRoot returns the state root of the blinded proposal.
-func (v *VersionedSignedBlindedProposal) StateRoot() (phase0.Root, error) {
+func (v *VersionedBlindedProposal) StateRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
-		return v.Bellatrix.Message.StateRoot, nil
+		return v.Bellatrix.StateRoot, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
-		return v.Capella.Message.StateRoot, nil
+		return v.Capella.StateRoot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlindedBlock == nil || v.Deneb.SignedBlindedBlock.Message == nil {
+		if v.Deneb == nil || v.Deneb.BlindedBlock == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
-		return v.Deneb.SignedBlindedBlock.Message.StateRoot, nil
+		return v.Deneb.BlindedBlock.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
 }
 
-// AttesterSlashings returns the attester slashings of the blinded proposal.
-func (v *VersionedSignedBlindedProposal) AttesterSlashings() ([]*phase0.AttesterSlashing, error) {
+// TransactionsRoot returns the transactions root of the blinded proposal.
+func (v *VersionedBlindedProposal) TransactionsRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return nil, errors.New("no bellatrix block")
+			return phase0.Root{}, errors.New("no bellatrix block")
 		}
-		return v.Bellatrix.Message.Body.AttesterSlashings, nil
+		if v.Bellatrix.Body == nil {
+			return phase0.Root{}, errors.New("no bellatrix block body")
+		}
+		if v.Bellatrix.Body.ExecutionPayloadHeader == nil {
+			return phase0.Root{}, errors.New("no bellatrix block body execution payload header")
+		}
+		return v.Bellatrix.Body.ExecutionPayloadHeader.TransactionsRoot, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
-			return nil, errors.New("no capella block")
+			return phase0.Root{}, errors.New("no capella block")
 		}
-		return v.Capella.Message.Body.AttesterSlashings, nil
+		if v.Capella.Body == nil {
+			return phase0.Root{}, errors.New("no capella block body")
+		}
+		if v.Capella.Body.ExecutionPayloadHeader == nil {
+			return phase0.Root{}, errors.New("no capella block body execution payload header")
+		}
+		return v.Capella.Body.ExecutionPayloadHeader.TransactionsRoot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlindedBlock == nil || v.Deneb.SignedBlindedBlock.Message == nil || v.Deneb.SignedBlindedBlock.Message.Body == nil {
-			return nil, errors.New("no deneb block")
+		if v.Deneb == nil ||
+			v.Deneb.BlindedBlock == nil ||
+			v.Deneb.BlindedBlock.Body == nil ||
+			v.Deneb.BlindedBlock.Body.ExecutionPayloadHeader == nil {
+			return phase0.Root{}, errors.New("no deneb block")
 		}
-		return v.Deneb.SignedBlindedBlock.Message.Body.AttesterSlashings, nil
+		return v.Deneb.BlindedBlock.Body.ExecutionPayloadHeader.TransactionsRoot, nil
 	default:
-		return nil, errors.New("unknown version")
+		return phase0.Root{}, errors.New("unsupported version")
 	}
 }
 
-// ProposerSlashings returns the proposer slashings of the blinded proposal.
-func (v *VersionedSignedBlindedProposal) ProposerSlashings() ([]*phase0.ProposerSlashing, error) {
+// FeeRecipient returns the fee recipient of the blinded proposal.
+func (v *VersionedBlindedProposal) FeeRecipient() (bellatrix.ExecutionAddress, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return nil, errors.New("no bellatrix block")
+			return bellatrix.ExecutionAddress{}, errors.New("no bellatrix block")
 		}
-		return v.Bellatrix.Message.Body.ProposerSlashings, nil
+		if v.Bellatrix.Body == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no bellatrix block body")
+		}
+		if v.Bellatrix.Body.ExecutionPayloadHeader == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no bellatrix block body execution payload header")
+		}
+		return v.Bellatrix.Body.ExecutionPayloadHeader.FeeRecipient, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
-			return nil, errors.New("no capella block")
+			return bellatrix.ExecutionAddress{}, errors.New("no capella block")
 		}
-		return v.Capella.Message.Body.ProposerSlashings, nil
+		if v.Capella.Body == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no capella block body")
+		}
+		if v.Capella.Body.ExecutionPayloadHeader == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no capella block body execution payload header")
+		}
+		return v.Capella.Body.ExecutionPayloadHeader.FeeRecipient, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlindedBlock == nil || v.Deneb.SignedBlindedBlock.Message == nil || v.Deneb.SignedBlindedBlock.Message.Body == nil {
-			return nil, errors.New("no deneb block")
+		if v.Deneb == nil ||
+			v.Deneb.BlindedBlock == nil ||
+			v.Deneb.BlindedBlock.Body == nil ||
+			v.Deneb.BlindedBlock.Body.ExecutionPayloadHeader == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no deneb block")
 		}
-		return v.Deneb.SignedBlindedBlock.Message.Body.ProposerSlashings, nil
+		return v.Deneb.BlindedBlock.Body.ExecutionPayloadHeader.FeeRecipient, nil
 	default:
-		return nil, errors.New("unknown version")
+		return bellatrix.ExecutionAddress{}, errors.New("unsupported version")
 	}
 }
 
-// ProposerIndex returns the proposer index of the blinded proposal.
-func (v *VersionedSignedBlindedProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
+// Timestamp returns the timestamp of the blinded proposal.
+func (v *VersionedBlindedProposal) Timestamp() (uint64, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil || v.Bellatrix.Message == nil {
+		if v.Bellatrix == nil {
 			return 0, errors.New("no bellatrix block")
 		}
-		return v.Bellatrix.Message.ProposerIndex, nil
+		if v.Bellatrix.Body == nil {
+			return 0, errors.New("no bellatrix block body")
+		}
+		if v.Bellatrix.Body.ExecutionPayloadHeader == nil {
+			return 0, errors.New("no bellatrix block body execution payload header")
+		}
+		return v.Bellatrix.Body.ExecutionPayloadHeader.Timestamp, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil || v.Capella.Message == nil {
+		if v.Capella == nil {
 			return 0, errors.New("no capella block")
 		}
-		return v.Capella.Message.ProposerIndex, nil
+		if v.Capella.Body == nil {
+			return 0, errors.New("no capella block body")
+		}
+		if v.Capella.Body.ExecutionPayloadHeader == nil {
+			return 0, errors.New("no capella block body execution payload header")
+		}
+		return v.Capella.Body.ExecutionPayloadHeader.Timestamp, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlindedBlock == nil || v.Deneb.SignedBlindedBlock.Message == nil {
+		if v.Deneb == nil ||
+			v.Deneb.BlindedBlock == nil ||
+			v.Deneb.BlindedBlock.Body == nil ||
+			v.Deneb.BlindedBlock.Body.ExecutionPayloadHeader == nil {
 			return 0, errors.New("no deneb block")
 		}
-		return v.Deneb.SignedBlindedBlock.Message.ProposerIndex, nil
+		return v.Deneb.BlindedBlock.Body.ExecutionPayloadHeader.Timestamp, nil
 	default:
-		return 0, errors.New("unknown version")
+		return 0, errors.New("unsupported version")
 	}
 }
 
-// ExecutionBlockHash returns the hash of the blinded proposal.
-func (v *VersionedSignedBlindedProposal) ExecutionBlockHash() (phase0.Hash32, error) {
-	switch v.Version {
-	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil || v.Bellatrix.Message.Body.ExecutionPayloadHeader == nil {
-			return phase0.Hash32{}, errors.New("no bellatrix block")
-		}
-		return v.Bellatrix.Message.Body.ExecutionPayloadHeader.BlockHash, nil
-	case spec.DataVersionCapella:
-		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayloadHeader == nil {
-			return phase0.Hash32{}, errors.New("no capella block")
-		}
-		return v.Capella.Message.Body.ExecutionPayloadHeader.BlockHash, nil
-	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlindedBlock == nil || v.Deneb.SignedBlindedBlock.Message == nil || v.Deneb.SignedBlindedBlock.Message.Body == nil || v.Deneb.SignedBlindedBlock.Message.Body.ExecutionPayloadHeader == nil {
-			return phase0.Hash32{}, errors.New("no deneb block")
-		}
-		return v.Deneb.SignedBlindedBlock.Message.Body.ExecutionPayloadHeader.BlockHash, nil
-	default:
-		return phase0.Hash32{}, errors.New("unknown version")
-	}
-}
-
-// ExecutionBlockNumber returns the block number of the blinded proposal.
-func (v *VersionedSignedBlindedProposal) ExecutionBlockNumber() (uint64, error) {
-	switch v.Version {
-	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil || v.Bellatrix.Message.Body.ExecutionPayloadHeader == nil {
-			return 0, errors.New("no bellatrix block")
-		}
-		return v.Bellatrix.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
-	case spec.DataVersionCapella:
-		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayloadHeader == nil {
-			return 0, errors.New("no capella block")
-		}
-		return v.Capella.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
-	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlindedBlock == nil || v.Deneb.SignedBlindedBlock.Message == nil || v.Deneb.SignedBlindedBlock.Message.Body == nil || v.Deneb.SignedBlindedBlock.Message.Body.ExecutionPayloadHeader == nil {
-			return 0, errors.New("no deneb block")
-		}
-		return v.Deneb.SignedBlindedBlock.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
-	default:
-		return 0, errors.New("unknown version")
-	}
-}
-
-// Signature returns the signature of the blinded proposal.
-func (v *VersionedSignedBlindedProposal) Signature() (phase0.BLSSignature, error) {
+// String returns a string version of the structure.
+func (v *VersionedBlindedProposal) String() string {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return phase0.BLSSignature{}, errors.New("no bellatrix block")
+			return ""
 		}
-		return v.Bellatrix.Signature, nil
+		return v.Bellatrix.String()
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
-			return phase0.BLSSignature{}, errors.New("no capella block")
+			return ""
 		}
-		return v.Capella.Signature, nil
+		return v.Capella.String()
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlindedBlock == nil {
-			return phase0.BLSSignature{}, errors.New("no deneb block")
+		if v.Deneb == nil {
+			return ""
 		}
-		return v.Deneb.SignedBlindedBlock.Signature, nil
+		return v.Deneb.String()
 	default:
-		return phase0.BLSSignature{}, errors.New("unknown version")
+		return "unknown version"
 	}
 }

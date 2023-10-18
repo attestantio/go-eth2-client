@@ -16,7 +16,6 @@ package spec
 import (
 	"errors"
 
-	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
@@ -31,7 +30,7 @@ type VersionedBeaconBlock struct {
 	Altair    *altair.BeaconBlock
 	Bellatrix *bellatrix.BeaconBlock
 	Capella   *capella.BeaconBlock
-	Deneb     *apiv1deneb.BlockContents
+	Deneb     *deneb.BeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
@@ -66,10 +65,7 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 		if v.Deneb == nil {
 			return 0, errors.New("no deneb block contents")
 		}
-		if v.Deneb.Block == nil {
-			return 0, errors.New("no deneb block")
-		}
-		return v.Deneb.Block.Slot, nil
+		return v.Deneb.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -114,13 +110,10 @@ func (v *VersionedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
 		if v.Deneb == nil {
 			return phase0.BLSSignature{}, errors.New("no deneb block contents")
 		}
-		if v.Deneb.Block == nil {
-			return phase0.BLSSignature{}, errors.New("no deneb block")
-		}
-		if v.Deneb.Block.Body == nil {
+		if v.Deneb.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no deneb block body")
 		}
-		return v.Deneb.Block.Body.RANDAOReveal, nil
+		return v.Deneb.Body.RANDAOReveal, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -165,13 +158,10 @@ func (v *VersionedBeaconBlock) Graffiti() ([32]byte, error) {
 		if v.Deneb == nil {
 			return [32]byte{}, errors.New("no deneb block contents")
 		}
-		if v.Deneb.Block == nil {
-			return [32]byte{}, errors.New("no deneb block")
-		}
-		if v.Deneb.Block.Body == nil {
+		if v.Deneb.Body == nil {
 			return [32]byte{}, errors.New("no deneb block body")
 		}
-		return v.Deneb.Block.Body.Graffiti, nil
+		return v.Deneb.Body.Graffiti, nil
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -204,10 +194,7 @@ func (v *VersionedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
 		if v.Deneb == nil {
 			return 0, errors.New("no deneb block contents")
 		}
-		if v.Deneb.Block == nil {
-			return 0, errors.New("no deneb block")
-		}
-		return v.Deneb.Block.ProposerIndex, nil
+		return v.Deneb.ProposerIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -240,10 +227,7 @@ func (v *VersionedBeaconBlock) Root() (phase0.Root, error) {
 		if v.Deneb == nil {
 			return phase0.Root{}, errors.New("no deneb block contents")
 		}
-		if v.Deneb.Block == nil {
-			return phase0.Root{}, errors.New("no deneb block")
-		}
-		return v.Deneb.Block.HashTreeRoot()
+		return v.Deneb.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -276,10 +260,7 @@ func (v *VersionedBeaconBlock) BodyRoot() (phase0.Root, error) {
 		if v.Deneb == nil {
 			return phase0.Root{}, errors.New("no deneb block contents")
 		}
-		if v.Deneb.Block == nil {
-			return phase0.Root{}, errors.New("no deneb block")
-		}
-		return v.Deneb.Block.Body.HashTreeRoot()
+		return v.Deneb.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -312,10 +293,7 @@ func (v *VersionedBeaconBlock) ParentRoot() (phase0.Root, error) {
 		if v.Deneb == nil {
 			return phase0.Root{}, errors.New("no deneb block contents")
 		}
-		if v.Deneb.Block == nil {
-			return phase0.Root{}, errors.New("no deneb block")
-		}
-		return v.Deneb.Block.ParentRoot, nil
+		return v.Deneb.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -348,10 +326,7 @@ func (v *VersionedBeaconBlock) StateRoot() (phase0.Root, error) {
 		if v.Deneb == nil {
 			return phase0.Root{}, errors.New("no deneb block contents")
 		}
-		if v.Deneb.Block == nil {
-			return phase0.Root{}, errors.New("no deneb block")
-		}
-		return v.Deneb.Block.StateRoot, nil
+		return v.Deneb.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -381,10 +356,10 @@ func (v *VersionedBeaconBlock) Attestations() ([]*phase0.Attestation, error) {
 		}
 		return v.Capella.Body.Attestations, nil
 	case DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.Block == nil || v.Deneb.Block.Body == nil {
+		if v.Deneb == nil || v.Deneb.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
-		return v.Deneb.Block.Body.Attestations, nil
+		return v.Deneb.Body.Attestations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -414,10 +389,10 @@ func (v *VersionedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlashing, 
 		}
 		return v.Capella.Body.AttesterSlashings, nil
 	case DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.Block == nil || v.Deneb.Block.Body == nil {
+		if v.Deneb == nil || v.Deneb.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
-		return v.Deneb.Block.Body.AttesterSlashings, nil
+		return v.Deneb.Body.AttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -447,31 +422,10 @@ func (v *VersionedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlashing, 
 		}
 		return v.Capella.Body.ProposerSlashings, nil
 	case DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.Block == nil || v.Deneb.Block.Body == nil {
+		if v.Deneb == nil || v.Deneb.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
-		return v.Deneb.Block.Body.ProposerSlashings, nil
-	default:
-		return nil, errors.New("unknown version")
-	}
-}
-
-// BlobSidecars returns the blob sidecars of the beacon block.
-func (v *VersionedBeaconBlock) BlobSidecars() ([]*deneb.BlobSidecar, error) {
-	switch v.Version {
-	case DataVersionPhase0:
-		return make([]*deneb.BlobSidecar, 0), nil
-	case DataVersionAltair:
-		return make([]*deneb.BlobSidecar, 0), nil
-	case DataVersionBellatrix:
-		return make([]*deneb.BlobSidecar, 0), nil
-	case DataVersionCapella:
-		return make([]*deneb.BlobSidecar, 0), nil
-	case DataVersionDeneb:
-		if v.Deneb == nil {
-			return nil, errors.New("no deneb block")
-		}
-		return v.Deneb.BlobSidecars, nil
+		return v.Deneb.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}

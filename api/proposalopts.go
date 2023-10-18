@@ -15,8 +15,8 @@ package api
 
 import "github.com/attestantio/go-eth2-client/spec/phase0"
 
-// BeaconBlockProposalOpts are the options for obtaining beacon block proposals.
-type BeaconBlockProposalOpts struct {
+// ProposalOpts are the options for obtaining proposals.
+type ProposalOpts struct {
 	// Slot is the slot for which the proposal should be fetched.
 	Slot phase0.Slot
 	// RandaoReveal is the RANDAO reveal for the proposal.

@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -26,7 +26,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBeaconBlockProposal(t *testing.T) {
+func TestProposal(t *testing.T) {
 	ctx := context.Background()
 
 	client1, err := mock.New(ctx, mock.WithName("mock 1"))
@@ -51,7 +51,7 @@ func TestBeaconBlockProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.(consensusclient.BeaconBlockProposalProvider).BeaconBlockProposal(ctx, &api.BeaconBlockProposalOpts{})
+		res, err := multiClient.(consensusclient.ProposalProvider).Proposal(ctx, &api.ProposalOpts{})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

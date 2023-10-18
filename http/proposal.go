@@ -29,16 +29,16 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-// BeaconBlockProposal fetches a potential beacon block for signing.
+// Proposal fetches a potential beacon block for signing.
 //
 //nolint:gocyclo
-func (s *Service) BeaconBlockProposal(ctx context.Context,
-	opts *api.BeaconBlockProposalOpts,
+func (s *Service) Proposal(ctx context.Context,
+	opts *api.ProposalOpts,
 ) (
-	*api.Response[*spec.VersionedBeaconBlock],
+	*api.Response[*api.VersionedProposal],
 	error,
 ) {
-	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "BeaconBlockProposal")
+	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "Proposal")
 	defer span.End()
 
 	if opts == nil {
@@ -62,7 +62,7 @@ func (s *Service) BeaconBlockProposal(ctx context.Context,
 		return nil, errors.Wrap(err, "failed to request beacon block proposal")
 	}
 
-	var response *api.Response[*spec.VersionedBeaconBlock]
+	var response *api.Response[*api.VersionedProposal]
 	switch res.contentType {
 	case ContentTypeSSZ:
 		response, err = s.beaconBlockProposalFromSSZ(res)
@@ -107,9 +107,9 @@ func (s *Service) BeaconBlockProposal(ctx context.Context,
 	return response, nil
 }
 
-func (s *Service) beaconBlockProposalFromSSZ(res *httpResponse) (*api.Response[*spec.VersionedBeaconBlock], error) {
-	response := &api.Response[*spec.VersionedBeaconBlock]{
-		Data: &spec.VersionedBeaconBlock{
+func (s *Service) beaconBlockProposalFromSSZ(res *httpResponse) (*api.Response[*api.VersionedProposal], error) {
+	response := &api.Response[*api.VersionedProposal]{
+		Data: &api.VersionedProposal{
 			Version: res.consensusVersion,
 		},
 		Metadata: metadataFromHeaders(res.headers),
@@ -148,9 +148,9 @@ func (s *Service) beaconBlockProposalFromSSZ(res *httpResponse) (*api.Response[*
 	return response, nil
 }
 
-func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[*spec.VersionedBeaconBlock], error) {
-	response := &api.Response[*spec.VersionedBeaconBlock]{
-		Data: &spec.VersionedBeaconBlock{
+func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[*api.VersionedProposal], error) {
+	response := &api.Response[*api.VersionedProposal]{
+		Data: &api.VersionedProposal{
 			Version: res.consensusVersion,
 		},
 	}

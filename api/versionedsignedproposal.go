@@ -35,6 +35,16 @@ type VersionedSignedProposal struct {
 // String returns a string version of the structure.
 func (v *VersionedSignedProposal) String() string {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil {
+			return ""
+		}
+		return v.Phase0.String()
+	case spec.DataVersionAltair:
+		if v.Altair == nil {
+			return ""
+		}
+		return v.Altair.String()
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return ""

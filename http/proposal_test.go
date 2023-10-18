@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBlindedBeaconBlockProposal(t *testing.T) {
+func TestProposal(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -45,8 +45,8 @@ func TestBlindedBeaconBlockProposal(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		opts     *api.BlindedBeaconBlockProposalOpts
-		expected *api.VersionedBlindedBeaconBlock
+		opts     *api.ProposalOpts
+		expected *api.VersionedProposal
 		err      string
 		errCode  int
 	}{
@@ -56,12 +56,12 @@ func TestBlindedBeaconBlockProposal(t *testing.T) {
 		},
 		{
 			name: "NilSlot",
-			opts: &api.BlindedBeaconBlockProposalOpts{},
+			opts: &api.ProposalOpts{},
 			err:  "no slot specified",
 		},
 		{
 			name: "InvalidSkipRANDAO",
-			opts: &api.BlindedBeaconBlockProposalOpts{
+			opts: &api.ProposalOpts{
 				RandaoReveal: phase0.BLSSignature([96]byte{
 					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -74,14 +74,14 @@ func TestBlindedBeaconBlockProposal(t *testing.T) {
 					0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 					0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
 				},
-				SkipRandaoVerification: true,
 				Slot:                   phase0.Slot(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds())/uint64(slotDuration.Seconds())) + 1,
+				SkipRandaoVerification: true,
 			},
 			err: "randao reveal must be point at infinity if skip randao verification is set",
 		},
 		{
 			name: "Good",
-			opts: &api.BlindedBeaconBlockProposalOpts{
+			opts: &api.ProposalOpts{
 				RandaoReveal: phase0.BLSSignature([96]byte{
 					0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 					0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -94,15 +94,15 @@ func TestBlindedBeaconBlockProposal(t *testing.T) {
 					0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
 					0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
 				},
-				SkipRandaoVerification: true,
 				Slot:                   phase0.Slot(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds())/uint64(slotDuration.Seconds())) + 1,
+				SkipRandaoVerification: true,
 			},
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			response, err := service.(client.BlindedBeaconBlockProposalProvider).BlindedBeaconBlockProposal(ctx, test.opts)
+			response, err := service.(client.ProposalProvider).Proposal(ctx, test.opts)
 			switch {
 			case test.err != "":
 				require.ErrorContains(t, err, test.err)

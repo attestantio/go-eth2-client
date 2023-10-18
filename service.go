@@ -218,10 +218,10 @@ type BeaconBlockHeadersProvider interface {
 	BeaconBlockHeader(ctx context.Context, opts *api.BeaconBlockHeaderOpts) (*api.Response[*apiv1.BeaconBlockHeader], error)
 }
 
-// BeaconBlockProposalProvider is the interface for providing beacon block proposals.
-type BeaconBlockProposalProvider interface {
-	// BeaconBlockProposal fetches a beacon block for signing.
-	BeaconBlockProposal(ctx context.Context, opts *api.BeaconBlockProposalOpts) (*api.Response[*spec.VersionedBeaconBlock], error)
+// ProposalProvider is the interface for providing proposals.
+type ProposalProvider interface {
+	// Proposal fetches a proposal for signing.
+	Proposal(ctx context.Context, opts *api.ProposalOpts) (*api.Response[*api.VersionedProposal], error)
 }
 
 // BeaconBlockRootProvider is the interface for providing beacon block roots.
@@ -268,10 +268,10 @@ type BeaconStateRootProvider interface {
 	BeaconStateRoot(ctx context.Context, opts *api.BeaconStateRootOpts) (*api.Response[*phase0.Root], error)
 }
 
-// BlindedBeaconBlockProposalProvider is the interface for providing blinded beacon block proposals.
-type BlindedBeaconBlockProposalProvider interface {
-	// BlindedBeaconBlockProposal fetches a blinded proposed beacon block for signing.
-	BlindedBeaconBlockProposal(ctx context.Context, opts *api.BlindedBeaconBlockProposalOpts) (*api.Response[*api.VersionedBlindedBeaconBlock], error)
+// BlindedProposalProvider is the interface for providing blinded beacon block proposals.
+type BlindedProposalProvider interface {
+	// BlindedProposal fetches a blinded proposed beacon block for signing.
+	BlindedProposal(ctx context.Context, opts *api.BlindedProposalOpts) (*api.Response[*api.VersionedBlindedProposal], error)
 }
 
 // BlindedBeaconBlockSubmitter is the interface for submitting blinded beacon blocks.

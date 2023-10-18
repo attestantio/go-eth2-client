@@ -15,8 +15,8 @@ package api
 
 import "github.com/attestantio/go-eth2-client/spec/phase0"
 
-// BlindedBeaconBlockProposalOpts are the options for obtaining blinded beacon block proposals.
-type BlindedBeaconBlockProposalOpts struct {
+// BlindedProposalOpts are the options for obtaining blinded proposals.
+type BlindedProposalOpts struct {
 	// Slot is the slot for which the proposal should be fetched.
 	Slot phase0.Slot
 	// RandaoReveal is the RANDAO reveal for the proposal.

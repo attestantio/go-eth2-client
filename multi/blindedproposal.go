@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,15 +20,15 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 )
 
-// BlindedBeaconBlockProposal fetches a proposed blinded beacon block for signing.
-func (s *Service) BlindedBeaconBlockProposal(ctx context.Context,
-	opts *api.BlindedBeaconBlockProposalOpts,
+// BlindedProposal fetches a blinded proposal for signing.
+func (s *Service) BlindedProposal(ctx context.Context,
+	opts *api.BlindedProposalOpts,
 ) (
-	*api.Response[*api.VersionedBlindedBeaconBlock],
+	*api.Response[*api.VersionedBlindedProposal],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		block, err := client.(consensusclient.BlindedBeaconBlockProposalProvider).BlindedBeaconBlockProposal(ctx, opts)
+		block, err := client.(consensusclient.BlindedProposalProvider).BlindedProposal(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -40,5 +40,5 @@ func (s *Service) BlindedBeaconBlockProposal(ctx context.Context,
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*api.Response[*api.VersionedBlindedBeaconBlock]), nil
+	return res.(*api.Response[*api.VersionedBlindedProposal]), nil
 }
