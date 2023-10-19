@@ -95,6 +95,7 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range s.InactivityScores {
 		inactivityScores[i] = fmt.Sprintf("%d", s.InactivityScores[i])
 	}
+
 	return json.Marshal(&beaconStateJSON{
 		GenesisTime:                  fmt.Sprintf("%d", s.GenesisTime),
 		GenesisValidatorsRoot:        fmt.Sprintf("%#x", s.GenesisValidatorsRoot),
@@ -133,11 +134,13 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&data)
 }
 
 // unpack unpacks JSON data in to a spec representation.
-// nolint:gocyclo
+//
+//nolint:gocyclo
 func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	var err error
 
@@ -338,7 +341,7 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	}
 	s.NextWithdrawalIndex = WithdrawalIndex(nextWithdrawalIndex)
 	if data.NextWithdrawalValidatorIndex == "" {
-		return errors.New("next validator validator index missing")
+		return errors.New("next withdrawal validator index missing")
 	}
 	nextWithdrawalValidatorIndex, err := strconv.ParseUint(data.NextWithdrawalValidatorIndex, 10, 64)
 	if err != nil {

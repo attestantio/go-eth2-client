@@ -33,7 +33,7 @@ func (s *Service) Domain(ctx context.Context, domainType phase0.DomainType, epoc
 }
 
 // GenesisDomain returns the domain for the given domain type at genesis.
-// N.B. this is not always the same as the the domain at epoch 0.  It is possible
+// N.B. this is not always the same as the domain at epoch 0.  It is possible
 // for a chain's fork schedule to have multiple forks at genesis.  In this situation,
 // GenesisDomain() will return the first, and Domain() will return the last.
 func (s *Service) GenesisDomain(ctx context.Context, domainType phase0.DomainType) (phase0.Domain, error) {
@@ -84,6 +84,7 @@ func (s *Service) domain(ctx context.Context,
 	var domain phase0.Domain
 	copy(domain[:], domainType[:])
 	copy(domain[4:], root[:])
+
 	return domain, nil
 }
 
@@ -105,6 +106,7 @@ func (s *Service) forkAtEpoch(ctx context.Context, epoch phase0.Epoch) (*phase0.
 		}
 		currentFork = response.Data[i]
 	}
+
 	return currentFork, nil
 }
 

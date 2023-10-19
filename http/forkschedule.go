@@ -26,6 +26,7 @@ func (s *Service) ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.For
 	s.forkScheduleMutex.RLock()
 	if s.forkSchedule != nil {
 		defer s.forkScheduleMutex.RUnlock()
+
 		return &api.Response[[]*phase0.Fork]{
 			Data:     s.forkSchedule,
 			Metadata: make(map[string]any),

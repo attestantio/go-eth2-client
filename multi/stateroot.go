@@ -33,13 +33,12 @@ func (s *Service) BeaconStateRoot(ctx context.Context,
 		if err != nil {
 			return nil, err
 		}
+
 		return stateRoot, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
+
 	return res.(*api.Response[*phase0.Root]), nil
 }

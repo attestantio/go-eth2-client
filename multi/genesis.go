@@ -28,13 +28,12 @@ func (s *Service) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], e
 		if err != nil {
 			return nil, err
 		}
+
 		return genesis, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
+
 	return res.(*api.Response[*apiv1.Genesis]), nil
 }

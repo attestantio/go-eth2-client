@@ -59,12 +59,14 @@ func NewErroring(_ context.Context,
 // Name returns the name of the client implementation.
 func (s *Erroring) Name() string {
 	nextName := s.next.Name()
+
 	return fmt.Sprintf("erroring(%v,%s)", s.errorRate, nextName)
 }
 
 // Address returns the address of the client.
 func (s *Erroring) Address() string {
 	nextAddress := s.next.Address()
+
 	return fmt.Sprintf("erroring:%v,%s", s.errorRate, nextAddress)
 }
 
@@ -75,6 +77,7 @@ func (s *Erroring) maybeError(_ context.Context) error {
 	if roll < s.errorRate {
 		return errors.New("error")
 	}
+
 	return nil
 }
 
@@ -786,7 +789,7 @@ func (s *Erroring) BeaconStateRoot(ctx context.Context,
 	return next.BeaconStateRoot(ctx, opts)
 }
 
-// Fork fetches the node's current fork choice context.
+// ForkChoice fetches the node's current fork choice context.
 func (s *Erroring) ForkChoice(ctx context.Context) (*api.Response[*apiv1.ForkChoice], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err

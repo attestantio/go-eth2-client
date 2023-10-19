@@ -28,13 +28,12 @@ func (s *Service) Finality(ctx context.Context, opts *api.FinalityOpts) (*api.Re
 		if err != nil {
 			return nil, err
 		}
+
 		return finality, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
+
 	return res.(*api.Response[*apiv1.Finality]), nil
 }

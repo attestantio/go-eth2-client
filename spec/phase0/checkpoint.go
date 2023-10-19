@@ -58,6 +58,7 @@ func (c *Checkpoint) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return c.unpack(&checkpointJSON)
 }
 
@@ -94,6 +95,7 @@ func (c *Checkpoint) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -104,6 +106,7 @@ func (c *Checkpoint) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &checkpointJSON); err != nil {
 		return err
 	}
+
 	return c.unpack(&checkpointJSON)
 }
 
@@ -113,5 +116,6 @@ func (c *Checkpoint) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

@@ -33,13 +33,12 @@ func (s *Service) SignedBeaconBlock(ctx context.Context,
 		if err != nil {
 			return nil, err
 		}
+
 		return block, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
+
 	return res.(*api.Response[*spec.VersionedSignedBeaconBlock]), nil
 }

@@ -30,6 +30,7 @@ func (s *Service) Spec(ctx context.Context) (*api.Response[map[string]any], erro
 	s.specMutex.RLock()
 	if s.spec != nil {
 		defer s.specMutex.RUnlock()
+
 		return &api.Response[map[string]any]{
 			Data:     s.spec,
 			Metadata: make(map[string]any),
@@ -67,6 +68,7 @@ func (s *Service) Spec(ctx context.Context) (*api.Response[map[string]any], erro
 				var domainType phase0.DomainType
 				copy(domainType[:], byteVal)
 				config[k] = domainType
+
 				continue
 			}
 		}
@@ -78,6 +80,7 @@ func (s *Service) Spec(ctx context.Context) (*api.Response[map[string]any], erro
 				var version phase0.Version
 				copy(version[:], byteVal)
 				config[k] = version
+
 				continue
 			}
 		}
@@ -87,6 +90,7 @@ func (s *Service) Spec(ctx context.Context) (*api.Response[map[string]any], erro
 			byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
 			if err == nil {
 				config[k] = byteVal
+
 				continue
 			}
 		}
@@ -96,6 +100,7 @@ func (s *Service) Spec(ctx context.Context) (*api.Response[map[string]any], erro
 			intVal, err := strconv.ParseInt(v, 10, 64)
 			if err == nil && intVal != 0 {
 				config[k] = time.Unix(intVal, 0)
+
 				continue
 			}
 		}
@@ -105,6 +110,7 @@ func (s *Service) Spec(ctx context.Context) (*api.Response[map[string]any], erro
 			intVal, err := strconv.ParseUint(v, 10, 64)
 			if err == nil && intVal != 0 {
 				config[k] = time.Duration(intVal) * time.Second
+
 				continue
 			}
 		}
@@ -112,11 +118,13 @@ func (s *Service) Spec(ctx context.Context) (*api.Response[map[string]any], erro
 		// Handle integers.
 		if v == "0" {
 			config[k] = uint64(0)
+
 			continue
 		}
 		intVal, err := strconv.ParseUint(v, 10, 64)
 		if err == nil && intVal != 0 {
 			config[k] = intVal
+
 			continue
 		}
 

@@ -51,6 +51,7 @@ func (s *Service) Events(ctx context.Context,
 		}
 		if err := client.(consensusclient.EventsProvider).Events(ctx, topics, ah.handleEvent); err != nil {
 			inactiveClients = append(inactiveClients, client)
+
 			continue
 		}
 		log.Trace().Str("address", ah.address).Strs("topics", topics).Msg("Events handler active")
@@ -69,11 +70,13 @@ func (s *Service) Events(ctx context.Context,
 				provider, isProvider := c.(consensusclient.NodeSyncingProvider)
 				if !isProvider {
 					ah.log.Error().Str("address", ah.address).Strs("topics", topics).Msg("Not a node syncing provider")
+
 					return
 				}
 				syncResponse, err := provider.NodeSyncing(ctx)
 				if err != nil {
 					ah.log.Error().Str("address", ah.address).Strs("topics", topics).Err(err).Msg("Failed to obtain sync state from node")
+
 					return
 				}
 				if !syncResponse.Data.IsSyncing {
@@ -81,6 +84,7 @@ func (s *Service) Events(ctx context.Context,
 					if err := c.(consensusclient.EventsProvider).Events(ctx, topics, ah.handleEvent); err != nil {
 						ah.log.Error().Str("address", ah.address).Strs("topics", topics).Err(err).Msg("Failed to set up events handler")
 					}
+
 					// Return either way.
 					return
 				}

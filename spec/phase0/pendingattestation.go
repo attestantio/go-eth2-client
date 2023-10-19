@@ -66,6 +66,7 @@ func (p *PendingAttestation) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &pendingAttestationJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return p.unpack(&pendingAttestationJSON)
 }
 
@@ -112,6 +113,7 @@ func (p *PendingAttestation) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -122,6 +124,7 @@ func (p *PendingAttestation) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &pendingAttestationJSON); err != nil {
 		return err
 	}
+
 	return p.unpack(&pendingAttestationJSON)
 }
 
@@ -131,5 +134,6 @@ func (p *PendingAttestation) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

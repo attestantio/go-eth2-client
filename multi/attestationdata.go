@@ -33,13 +33,12 @@ func (s *Service) AttestationData(ctx context.Context,
 		if err != nil {
 			return nil, err
 		}
+
 		return attestationData, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
+
 	return res.(*api.Response[*phase0.AttestationData]), nil
 }

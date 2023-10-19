@@ -23,5 +23,6 @@ func (s *Service) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, er
 	if err != nil {
 		return 0, err
 	}
+
 	return response.Data["TARGET_AGGREGATORS_PER_COMMITTEE"].(uint64), nil
 }

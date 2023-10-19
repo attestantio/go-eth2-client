@@ -44,6 +44,7 @@ func (d *BuilderVersion) UnmarshalJSON(input []byte) error {
 	default:
 		err = fmt.Errorf("unrecognised response version %s", string(input))
 	}
+
 	return err
 }
 
@@ -52,5 +53,6 @@ func (d BuilderVersion) String() string {
 	if int(d) >= len(responseBuilderVersionStrings) {
 		return "unknown"
 	}
+
 	return responseBuilderVersionStrings[d]
 }

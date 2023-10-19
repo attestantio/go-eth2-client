@@ -27,7 +27,7 @@ type signedBlindedBlobSidecarYAML struct {
 	Signature string              `yaml:"signature"`
 }
 
-// MarshalJSON implements json.Marshaler.
+// MarshalYAML implements yaml.Marshaler.
 func (s *SignedBlindedBlobSidecar) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&signedBlindedBlobSidecarYAML{
 		Message:   s.Message,
@@ -36,10 +36,11 @@ func (s *SignedBlindedBlobSidecar) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
+// UnmarshalYAML implements yaml.Unmarshaler.
 func (s *SignedBlindedBlobSidecar) UnmarshalYAML(input []byte) error {
 	var data signedBlindedBlobSidecarJSON
 	if err := yaml.Unmarshal(input, &data); err != nil {

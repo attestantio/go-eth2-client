@@ -34,6 +34,7 @@ func (s *Service) monitor(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			log.Trace().Msg("Context done; monitor stopping")
+
 			return
 		case <-time.After(30 * time.Second):
 			s.recheck(ctx)
@@ -122,12 +123,14 @@ func ping(ctx context.Context, client consensusclient.Service) bool {
 	provider, isProvider := client.(consensusclient.NodeSyncingProvider)
 	if !isProvider {
 		log.Debug().Str("provider", client.Address()).Msg("Client does not provide sync state")
+
 		return false
 	}
 
 	response, err := provider.NodeSyncing(ctx)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to obtain sync state from node")
+
 		return false
 	}
 
@@ -179,6 +182,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 				log.Debug().Str("client", client.Name()).Str("address", client.Address()).Err(err).Msg("Deactivating client on error")
 				// Failed with this client; try the next.
 				s.deactivateClient(ctx, client)
+
 				continue
 			}
 
@@ -188,10 +192,13 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		if res == nil {
 			// No response from this client; try the next.
 			err = errors.New("empty response")
+
 			continue
 		}
+
 		return res, nil
 	}
+
 	return nil, err
 }
 

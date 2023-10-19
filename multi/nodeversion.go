@@ -27,13 +27,11 @@ func (s *Service) NodeVersion(ctx context.Context) (*api.Response[string], error
 		if err != nil {
 			return nil, err
 		}
+
 		return aggregate, nil
 	}, nil)
 	if err != nil {
 		return nil, err
-	}
-	if res == nil {
-		return nil, nil
 	}
 
 	return res.(*api.Response[string]), nil

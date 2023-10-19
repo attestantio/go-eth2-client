@@ -51,16 +51,19 @@ func (v *VersionedProposal) Slot() (phase0.Slot, error) {
 		if v.Bellatrix == nil {
 			return 0, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.Slot, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return 0, errors.New("no capella block")
 		}
+
 		return v.Capella.Slot, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Block == nil {
 			return 0, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Block.Slot, nil
 	default:
 		return 0, errors.New("unsupported version")
@@ -74,16 +77,19 @@ func (v *VersionedProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
 		if v.Bellatrix == nil {
 			return 0, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.ProposerIndex, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return 0, errors.New("no capella block")
 		}
+
 		return v.Capella.ProposerIndex, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Block == nil {
 			return 0, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Block.ProposerIndex, nil
 	default:
 		return 0, errors.New("unknown version")
@@ -97,16 +103,19 @@ func (v *VersionedProposal) RandaoReveal() (phase0.BLSSignature, error) {
 		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.Body.RANDAOReveal, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil || v.Capella.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no capella block")
 		}
+
 		return v.Capella.Body.RANDAOReveal, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Block == nil || v.Deneb.Block.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Block.Body.RANDAOReveal, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unsupported version")
@@ -120,16 +129,19 @@ func (v *VersionedProposal) Graffiti() ([32]byte, error) {
 		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return [32]byte{}, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.Body.Graffiti, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil || v.Capella.Body == nil {
 			return [32]byte{}, errors.New("no capella block")
 		}
+
 		return v.Capella.Body.Graffiti, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Block == nil || v.Deneb.Block.Body == nil {
 			return [32]byte{}, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Block.Body.Graffiti, nil
 	default:
 		return [32]byte{}, errors.New("unsupported version")
@@ -143,16 +155,19 @@ func (v *VersionedProposal) Attestations() ([]*phase0.Attestation, error) {
 		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return nil, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.Body.Attestations, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil || v.Capella.Body == nil {
 			return nil, errors.New("no capella block")
 		}
+
 		return v.Capella.Body.Attestations, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Block == nil || v.Deneb.Block.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Block.Body.Attestations, nil
 	default:
 		return nil, errors.New("unsupported version")
@@ -166,16 +181,19 @@ func (v *VersionedProposal) Root() (phase0.Root, error) {
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.HashTreeRoot()
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
+
 		return v.Capella.HashTreeRoot()
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Block == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Block.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
@@ -189,16 +207,19 @@ func (v *VersionedProposal) BodyRoot() (phase0.Root, error) {
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.Body.HashTreeRoot()
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
+
 		return v.Capella.Body.HashTreeRoot()
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Block == nil || v.Deneb.Block.Body == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Block.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
@@ -212,16 +233,19 @@ func (v *VersionedProposal) ParentRoot() (phase0.Root, error) {
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.ParentRoot, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
+
 		return v.Capella.ParentRoot, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Block == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Block.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
@@ -235,16 +259,19 @@ func (v *VersionedProposal) StateRoot() (phase0.Root, error) {
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.StateRoot, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
+
 		return v.Capella.StateRoot, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Block == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Block.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
@@ -264,6 +291,7 @@ func (v *VersionedProposal) Transactions() ([]bellatrix.Transaction, error) {
 		if v.Bellatrix.Body.ExecutionPayload == nil {
 			return nil, errors.New("no bellatrix block body execution payload header")
 		}
+
 		return v.Bellatrix.Body.ExecutionPayload.Transactions, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
@@ -275,6 +303,7 @@ func (v *VersionedProposal) Transactions() ([]bellatrix.Transaction, error) {
 		if v.Capella.Body.ExecutionPayload == nil {
 			return nil, errors.New("no capella block body execution payload header")
 		}
+
 		return v.Capella.Body.ExecutionPayload.Transactions, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
@@ -283,6 +312,7 @@ func (v *VersionedProposal) Transactions() ([]bellatrix.Transaction, error) {
 			v.Deneb.Block.Body.ExecutionPayload == nil {
 			return nil, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Block.Body.ExecutionPayload.Transactions, nil
 	default:
 		return nil, errors.New("unsupported version")
@@ -302,6 +332,7 @@ func (v *VersionedProposal) FeeRecipient() (bellatrix.ExecutionAddress, error) {
 		if v.Bellatrix.Body.ExecutionPayload == nil {
 			return bellatrix.ExecutionAddress{}, errors.New("no bellatrix block body execution payload header")
 		}
+
 		return v.Bellatrix.Body.ExecutionPayload.FeeRecipient, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
@@ -313,6 +344,7 @@ func (v *VersionedProposal) FeeRecipient() (bellatrix.ExecutionAddress, error) {
 		if v.Capella.Body.ExecutionPayload == nil {
 			return bellatrix.ExecutionAddress{}, errors.New("no capella block body execution payload header")
 		}
+
 		return v.Capella.Body.ExecutionPayload.FeeRecipient, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
@@ -321,6 +353,7 @@ func (v *VersionedProposal) FeeRecipient() (bellatrix.ExecutionAddress, error) {
 			v.Deneb.Block.Body.ExecutionPayload == nil {
 			return bellatrix.ExecutionAddress{}, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Block.Body.ExecutionPayload.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, errors.New("unsupported version")
@@ -340,6 +373,7 @@ func (v *VersionedProposal) Timestamp() (uint64, error) {
 		if v.Bellatrix.Body.ExecutionPayload == nil {
 			return 0, errors.New("no bellatrix block body execution payload header")
 		}
+
 		return v.Bellatrix.Body.ExecutionPayload.Timestamp, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
@@ -351,6 +385,7 @@ func (v *VersionedProposal) Timestamp() (uint64, error) {
 		if v.Capella.Body.ExecutionPayload == nil {
 			return 0, errors.New("no capella block body execution payload header")
 		}
+
 		return v.Capella.Body.ExecutionPayload.Timestamp, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
@@ -359,6 +394,7 @@ func (v *VersionedProposal) Timestamp() (uint64, error) {
 			v.Deneb.Block.Body.ExecutionPayload == nil {
 			return 0, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Block.Body.ExecutionPayload.Timestamp, nil
 	default:
 		return 0, errors.New("unsupported version")
@@ -380,6 +416,7 @@ func (v *VersionedProposal) BlobSidecars() ([]*deneb.BlobSidecar, error) {
 		if v.Deneb == nil {
 			return nil, errors.New("no deneb block")
 		}
+
 		return v.Deneb.BlobSidecars, nil
 	default:
 		return nil, errors.New("unknown version")
@@ -393,16 +430,19 @@ func (v *VersionedProposal) String() string {
 		if v.Bellatrix == nil {
 			return ""
 		}
+
 		return v.Bellatrix.String()
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return ""
 		}
+
 		return v.Capella.String()
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil {
 			return ""
 		}
+
 		return v.Deneb.String()
 	default:
 		return "unknown version"

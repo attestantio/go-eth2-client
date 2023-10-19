@@ -29,6 +29,7 @@ func (s *Service) NodeVersion(ctx context.Context) (*api.Response[string], error
 	s.nodeVersionMutex.RLock()
 	if s.nodeVersion != "" {
 		defer s.nodeVersionMutex.RUnlock()
+
 		return &api.Response[string]{
 			Data:     s.nodeVersion,
 			Metadata: make(map[string]any),

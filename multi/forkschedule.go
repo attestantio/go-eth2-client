@@ -28,13 +28,12 @@ func (s *Service) ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.For
 		if err != nil {
 			return nil, err
 		}
+
 		return forkSchedule, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
+
 	return res.(*api.Response[[]*phase0.Fork]), nil
 }

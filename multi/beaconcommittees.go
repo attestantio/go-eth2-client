@@ -33,13 +33,12 @@ func (s *Service) BeaconCommittees(ctx context.Context,
 		if err != nil {
 			return nil, err
 		}
+
 		return beaconCommittees, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
+
 	return res.(*api.Response[[]*apiv1.BeaconCommittee]), nil
 }

@@ -28,13 +28,12 @@ func (s *Service) BeaconState(ctx context.Context, opts *api.BeaconStateOpts) (*
 		if err != nil {
 			return nil, err
 		}
+
 		return beaconState, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
+
 	return res.(*api.Response[*spec.VersionedBeaconState]), nil
 }

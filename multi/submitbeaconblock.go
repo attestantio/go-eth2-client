@@ -29,7 +29,9 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSi
 		if err != nil {
 			return nil, err
 		}
+
 		return true, nil
 	}, nil)
+
 	return err
 }

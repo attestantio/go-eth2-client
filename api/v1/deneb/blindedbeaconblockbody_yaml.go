@@ -64,6 +64,7 @@ func (b *BlindedBeaconBlockBody) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -74,5 +75,6 @@ func (b *BlindedBeaconBlockBody) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return err
 	}
+
 	return b.unpack(&data)
 }

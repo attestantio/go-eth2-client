@@ -26,6 +26,7 @@ func (s *Service) DepositContract(ctx context.Context) (*api.Response[*apiv1.Dep
 	s.depositContractMutex.RLock()
 	if s.depositContract != nil {
 		defer s.depositContractMutex.RUnlock()
+
 		return &api.Response[*apiv1.DepositContract]{
 			Data:     s.depositContract,
 			Metadata: map[string]any{},

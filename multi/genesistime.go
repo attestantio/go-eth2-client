@@ -31,10 +31,12 @@ func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
 		if genesisTime.IsZero() {
 			return nil, errors.New("zero genesis time not a valid response")
 		}
+
 		return genesisTime, nil
 	}, nil)
 	if err != nil {
 		return time.Time{}, err
 	}
+
 	return res.(time.Time), nil
 }

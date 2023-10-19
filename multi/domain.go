@@ -41,11 +41,13 @@ func (s *Service) Domain(ctx context.Context,
 		if bytes.Equal(domain[:], emptyDomain[:]) {
 			return nil, errors.New("empty domain not a valid response")
 		}
+
 		return domain, nil
 	}, nil)
 	if err != nil {
 		return phase0.Domain{}, err
 	}
+
 	return res.(phase0.Domain), nil
 }
 
@@ -64,10 +66,12 @@ func (s *Service) GenesisDomain(ctx context.Context,
 		if bytes.Equal(domain[:], emptyDomain[:]) {
 			return nil, errors.New("empty domain not a valid response")
 		}
+
 		return domain, nil
 	}, nil)
 	if err != nil {
 		return phase0.Domain{}, err
 	}
+
 	return res.(phase0.Domain), nil
 }

@@ -31,10 +31,12 @@ func (s *Service) SlotDuration(ctx context.Context) (time.Duration, error) {
 		if duration == 0 {
 			return nil, errors.New("zero duration not a valid response")
 		}
+
 		return duration, nil
 	}, nil)
 	if err != nil {
 		return 0, err
 	}
+
 	return res.(time.Duration), nil
 }

@@ -27,7 +27,9 @@ func (s *Service) SubmitProposal(ctx context.Context, proposal *api.VersionedSig
 		if err != nil {
 			return nil, err
 		}
+
 		return true, nil
 	}, nil)
+
 	return err
 }

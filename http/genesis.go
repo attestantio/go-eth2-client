@@ -31,6 +31,7 @@ func (s *Service) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], e
 	s.genesisMutex.RLock()
 	if s.genesis != nil {
 		defer s.genesisMutex.RUnlock()
+
 		return &api.Response[*apiv1.Genesis]{
 			Data:     s.genesis,
 			Metadata: make(map[string]any),

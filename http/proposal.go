@@ -30,8 +30,6 @@ import (
 )
 
 // Proposal fetches a potential beacon block for signing.
-//
-//nolint:gocyclo
 func (s *Service) Proposal(ctx context.Context,
 	opts *api.ProposalOpts,
 ) (

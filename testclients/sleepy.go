@@ -60,12 +60,14 @@ func NewSleepy(_ context.Context,
 // Name returns the name of the client implementation.
 func (s *Sleepy) Name() string {
 	nextName := s.next.Name()
+
 	return fmt.Sprintf("sleepy(%v,%v,%s)", s.minSleep, s.maxSleep, nextName)
 }
 
 // Address returns the address of the client.
 func (s *Sleepy) Address() string {
 	nextAddress := s.next.Address()
+
 	return fmt.Sprintf("sleepy:%v,%v,%s", s.minSleep, s.maxSleep, nextAddress)
 }
 

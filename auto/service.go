@@ -60,5 +60,6 @@ func tryHTTP(ctx context.Context, parameters *parameters) (client.Service, error
 	if err != nil {
 		return nil, errors.Wrap(err, "failed when trying to open connection with standard API")
 	}
+
 	return client, nil
 }

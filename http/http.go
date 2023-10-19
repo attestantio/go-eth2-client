@@ -48,6 +48,7 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, url.String(), nil)
 	if err != nil {
 		cancel()
+
 		return nil, errors.Wrap(err, "failed to create GET request")
 	}
 	s.addExtraHeaders(req)
@@ -56,6 +57,7 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	resp, err := s.client.Do(req)
 	if err != nil {
 		cancel()
+
 		return nil, errors.Wrap(err, "failed to call GET endpoint")
 	}
 	defer resp.Body.Close()
@@ -63,12 +65,14 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	if resp.StatusCode == http.StatusNotFound {
 		// Nothing found.  This is not an error, so we return nil on both counts.
 		cancel()
+
 		return nil, nil
 	}
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		cancel()
+
 		return nil, errors.Wrap(err, "failed to read GET response")
 	}
 
@@ -76,6 +80,7 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 	if statusFamily != 2 {
 		cancel()
 		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("GET failed")
+
 		return nil, &api.Error{
 			Method:     http.MethodGet,
 			StatusCode: resp.StatusCode,
@@ -113,6 +118,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, url.String(), body)
 	if err != nil {
 		cancel()
+
 		return nil, errors.Wrap(err, "failed to create POST request")
 	}
 	s.addExtraHeaders(req)
@@ -125,6 +131,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	resp, err := s.client.Do(req)
 	if err != nil {
 		cancel()
+
 		return nil, errors.Wrap(err, "failed to call POST endpoint")
 	}
 	defer resp.Body.Close()
@@ -132,6 +139,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		cancel()
+
 		return nil, errors.Wrap(err, "failed to read POST response")
 	}
 
@@ -139,6 +147,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	if statusFamily != 2 {
 		cancel()
 		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("POST failed")
+
 		return nil, &api.Error{
 			Method:     http.MethodPost,
 			StatusCode: resp.StatusCode,
@@ -186,6 +195,7 @@ func (s *Service) post2(ctx context.Context,
 	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, url.String(), body)
 	if err != nil {
 		cancel()
+
 		return nil, errors.Wrap(err, "failed to create POST request")
 	}
 	s.addExtraHeaders(req)
@@ -202,6 +212,7 @@ func (s *Service) post2(ctx context.Context,
 	resp, err := s.client.Do(req)
 	if err != nil {
 		cancel()
+
 		return nil, errors.Wrap(err, "failed to call POST endpoint")
 	}
 	defer resp.Body.Close()
@@ -209,6 +220,7 @@ func (s *Service) post2(ctx context.Context,
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		cancel()
+
 		return nil, errors.Wrap(err, "failed to read POST response")
 	}
 
@@ -216,6 +228,7 @@ func (s *Service) post2(ctx context.Context,
 	if statusFamily != 2 {
 		cancel()
 		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("POST failed")
+
 		return nil, &api.Error{
 			Method:     http.MethodPost,
 			StatusCode: resp.StatusCode,
@@ -269,6 +282,7 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, url.String(), nil)
 	if err != nil {
 		cancel()
+
 		return nil, errors.Wrap(err, "failed to create GET request")
 	}
 	s.addExtraHeaders(req)
@@ -284,6 +298,7 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 	resp, err := s.client.Do(req)
 	if err != nil {
 		span.RecordError(errors.New("Request failed"))
+
 		return nil, errors.Wrap(err, "failed to call GET endpoint")
 	}
 	defer resp.Body.Close()
@@ -298,6 +313,7 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 		// Nothing returned.  This is not considered an error.
 		span.AddEvent("Received empty response")
 		log.Trace().Msg("Endpoint returned no content")
+
 		return res, nil
 	}
 
@@ -309,6 +325,7 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 	if err != nil {
 		span.RecordError(err)
 		log.Warn().Err(err).Msg("Failed to read body")
+
 		return nil, errors.Wrap(err, "failed to read body")
 	}
 
@@ -317,6 +334,7 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 		span.SetStatus(codes.Error, fmt.Sprintf("Status code %d", resp.StatusCode))
 		trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
 		log.Debug().Int("status_code", resp.StatusCode).RawJSON("response", trimmedResponse).Msg("GET failed")
+
 		return nil, &api.Error{
 			Method:     http.MethodGet,
 			StatusCode: resp.StatusCode,
@@ -354,6 +372,7 @@ func populateConsensusVersion(res *httpResponse, resp *http.Response) error {
 			return errors.Wrap(err, "no consensus version header and failed to parse response")
 		}
 		res.consensusVersion = metadata.Version
+
 		return nil
 	}
 	if len(respConsensusVersions) != 1 {

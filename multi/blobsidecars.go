@@ -28,6 +28,7 @@ func (s *Service) BlobSidecars(ctx context.Context, opts *api.BlobSidecarsOpts) 
 		if err != nil {
 			return nil, err
 		}
+
 		return blobSidecars, nil
 	}, nil)
 	if err != nil {
@@ -36,5 +37,6 @@ func (s *Service) BlobSidecars(ctx context.Context, opts *api.BlobSidecarsOpts) 
 	if res == nil {
 		return nil, nil
 	}
+
 	return res.([]*deneb.BlobSidecar), nil
 }

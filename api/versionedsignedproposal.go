@@ -39,26 +39,31 @@ func (v *VersionedSignedProposal) String() string {
 		if v.Phase0 == nil {
 			return ""
 		}
+
 		return v.Phase0.String()
 	case spec.DataVersionAltair:
 		if v.Altair == nil {
 			return ""
 		}
+
 		return v.Altair.String()
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return ""
 		}
+
 		return v.Bellatrix.String()
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return ""
 		}
+
 		return v.Capella.String()
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil {
 			return ""
 		}
+
 		return v.Deneb.String()
 	default:
 		return "unsupported version"

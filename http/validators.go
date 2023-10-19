@@ -58,7 +58,7 @@ func (s *Service) indexChunkSize(ctx context.Context) int {
 		return s.userIndexChunkSize
 	}
 
-	nodeClient := ""
+	var nodeClient string
 	response, err := s.NodeClient(ctx)
 	if err == nil {
 		nodeClient = response.Data
@@ -87,7 +87,7 @@ func (s *Service) pubKeyChunkSize(ctx context.Context) int {
 		return s.userPubKeyChunkSize
 	}
 
-	nodeClient := ""
+	var nodeClient string
 	response, err := s.NodeClient(ctx)
 	if err == nil {
 		nodeClient = response.Data

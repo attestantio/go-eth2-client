@@ -26,5 +26,6 @@ func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "failed to obtain genesis")
 	}
+
 	return response.Data.GenesisTime, nil
 }

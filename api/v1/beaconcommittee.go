@@ -45,6 +45,7 @@ func (b *BeaconCommittee) MarshalJSON() ([]byte, error) {
 	for i := range b.Validators {
 		validators[i] = fmt.Sprintf("%d", b.Validators[i])
 	}
+
 	return json.Marshal(&beaconCommitteeJSON{
 		Slot:       fmt.Sprintf("%d", b.Slot),
 		Index:      fmt.Sprintf("%d", b.Index),
@@ -100,5 +101,6 @@ func (b *BeaconCommittee) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }
