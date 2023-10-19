@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
@@ -38,37 +39,37 @@ type BeaconBlockBody struct {
 	VoluntaryExits        []*phase0.SignedVoluntaryExit `ssz-max:"16"`
 	SyncAggregate         *altair.SyncAggregate
 	ExecutionPayload      *ExecutionPayload
-	BLSToExecutionChanges []*SignedBLSToExecutionChange `ssz-max:"16"`
+	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `ssz-max:"16"`
 }
 
 // beaconBlockBodyJSON is the spec representation of the struct.
 type beaconBlockBodyJSON struct {
-	RANDAOReveal          string                        `json:"randao_reveal"`
-	ETH1Data              *phase0.ETH1Data              `json:"eth1_data"`
-	Graffiti              string                        `json:"graffiti"`
-	ProposerSlashings     []*phase0.ProposerSlashing    `json:"proposer_slashings"`
-	AttesterSlashings     []*phase0.AttesterSlashing    `json:"attester_slashings"`
-	Attestations          []*phase0.Attestation         `json:"attestations"`
-	Deposits              []*phase0.Deposit             `json:"deposits"`
-	VoluntaryExits        []*phase0.SignedVoluntaryExit `json:"voluntary_exits"`
-	SyncAggregate         *altair.SyncAggregate         `json:"sync_aggregate"`
-	ExecutionPayload      *ExecutionPayload             `json:"execution_payload"`
-	BLSToExecutionChanges []*SignedBLSToExecutionChange `json:"bls_to_execution_changes"`
+	RANDAOReveal          string                                `json:"randao_reveal"`
+	ETH1Data              *phase0.ETH1Data                      `json:"eth1_data"`
+	Graffiti              string                                `json:"graffiti"`
+	ProposerSlashings     []*phase0.ProposerSlashing            `json:"proposer_slashings"`
+	AttesterSlashings     []*phase0.AttesterSlashing            `json:"attester_slashings"`
+	Attestations          []*phase0.Attestation                 `json:"attestations"`
+	Deposits              []*phase0.Deposit                     `json:"deposits"`
+	VoluntaryExits        []*phase0.SignedVoluntaryExit         `json:"voluntary_exits"`
+	SyncAggregate         *altair.SyncAggregate                 `json:"sync_aggregate"`
+	ExecutionPayload      *ExecutionPayload                     `json:"execution_payload"`
+	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `json:"bls_to_execution_changes"`
 }
 
 // beaconBlockBodyYAML is the spec representation of the struct.
 type beaconBlockBodyYAML struct {
-	RANDAOReveal          string                        `yaml:"randao_reveal"`
-	ETH1Data              *phase0.ETH1Data              `yaml:"eth1_data"`
-	Graffiti              string                        `yaml:"graffiti"`
-	ProposerSlashings     []*phase0.ProposerSlashing    `yaml:"proposer_slashings"`
-	AttesterSlashings     []*phase0.AttesterSlashing    `yaml:"attester_slashings"`
-	Attestations          []*phase0.Attestation         `yaml:"attestations"`
-	Deposits              []*phase0.Deposit             `yaml:"deposits"`
-	VoluntaryExits        []*phase0.SignedVoluntaryExit `yaml:"voluntary_exits"`
-	SyncAggregate         *altair.SyncAggregate         `yaml:"sync_aggregate"`
-	ExecutionPayload      *ExecutionPayload             `yaml:"execution_payload"`
-	BLSToExecutionChanges []*SignedBLSToExecutionChange `yaml:"bls_to_execution_changes"`
+	RANDAOReveal          string                                `yaml:"randao_reveal"`
+	ETH1Data              *phase0.ETH1Data                      `yaml:"eth1_data"`
+	Graffiti              string                                `yaml:"graffiti"`
+	ProposerSlashings     []*phase0.ProposerSlashing            `yaml:"proposer_slashings"`
+	AttesterSlashings     []*phase0.AttesterSlashing            `yaml:"attester_slashings"`
+	Attestations          []*phase0.Attestation                 `yaml:"attestations"`
+	Deposits              []*phase0.Deposit                     `yaml:"deposits"`
+	VoluntaryExits        []*phase0.SignedVoluntaryExit         `yaml:"voluntary_exits"`
+	SyncAggregate         *altair.SyncAggregate                 `yaml:"sync_aggregate"`
+	ExecutionPayload      *ExecutionPayload                     `yaml:"execution_payload"`
+	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `yaml:"bls_to_execution_changes"`
 }
 
 // MarshalJSON implements json.Marshaler.

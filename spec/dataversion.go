@@ -34,6 +34,7 @@ const (
 	DataVersionCapella
 	// DataVersionDeneb is data applicable for the Deneb release of the beacon chain.
 	DataVersionDeneb
+	DataVersionVerkle
 )
 
 var dataVersionStrings = [...]string{

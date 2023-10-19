@@ -23,14 +23,15 @@ import (
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 type ExecutionWitness struct {
-	StateDiff   []StemStateDiff `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
-	VerkleProof *VerkleProof    `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
+	StateDiff   []*StemStateDiff `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
+	VerkleProof *VerkleProof     `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
 }
 
 // ExecutionPayload represents an execution layer payload.
@@ -49,47 +50,47 @@ type ExecutionPayload struct {
 	BaseFeePerGas    [32]byte                `ssz-size:"32"`
 	BlockHash        phase0.Hash32           `ssz-size:"32"`
 	Transactions     []bellatrix.Transaction `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
-	Withdrawals      []*Withdrawal           `ssz-max:"16"`
+	Withdrawals      []*capella.Withdrawal   `ssz-max:"16"`
 	ExecutionWitness *ExecutionWitness       `ssz-size:"1"`
 }
 
 // executionPayloadJSON is the spec representation of the struct.
 type executionPayloadJSON struct {
-	ParentHash       string            `json:"parent_hash"`
-	FeeRecipient     string            `json:"fee_recipient"`
-	StateRoot        string            `json:"state_root"`
-	ReceiptsRoot     string            `json:"receipts_root"`
-	LogsBloom        string            `json:"logs_bloom"`
-	PrevRandao       string            `json:"prev_randao"`
-	BlockNumber      string            `json:"block_number"`
-	GasLimit         string            `json:"gas_limit"`
-	GasUsed          string            `json:"gas_used"`
-	Timestamp        string            `json:"timestamp"`
-	ExtraData        string            `json:"extra_data"`
-	BaseFeePerGas    string            `json:"base_fee_per_gas"`
-	BlockHash        string            `json:"block_hash"`
-	Transactions     []string          `json:"transactions"`
-	Withdrawals      []*Withdrawal     `json:"withdrawals"`
-	ExecutionWitness *ExecutionWitness `json:"execution_witness"`
+	ParentHash       string                `json:"parent_hash"`
+	FeeRecipient     string                `json:"fee_recipient"`
+	StateRoot        string                `json:"state_root"`
+	ReceiptsRoot     string                `json:"receipts_root"`
+	LogsBloom        string                `json:"logs_bloom"`
+	PrevRandao       string                `json:"prev_randao"`
+	BlockNumber      string                `json:"block_number"`
+	GasLimit         string                `json:"gas_limit"`
+	GasUsed          string                `json:"gas_used"`
+	Timestamp        string                `json:"timestamp"`
+	ExtraData        string                `json:"extra_data"`
+	BaseFeePerGas    string                `json:"base_fee_per_gas"`
+	BlockHash        string                `json:"block_hash"`
+	Transactions     []string              `json:"transactions"`
+	Withdrawals      []*capella.Withdrawal `json:"withdrawals"`
+	ExecutionWitness *ExecutionWitness     `json:"execution_witness"`
 }
 
 // executionPayloadYAML is the spec representation of the struct.
 type executionPayloadYAML struct {
-	ParentHash    string        `yaml:"parent_hash"`
-	FeeRecipient  string        `yaml:"fee_recipient"`
-	StateRoot     string        `yaml:"state_root"`
-	ReceiptsRoot  string        `yaml:"receipts_root"`
-	LogsBloom     string        `yaml:"logs_bloom"`
-	PrevRandao    string        `yaml:"prev_randao"`
-	BlockNumber   uint64        `yaml:"block_number"`
-	GasLimit      uint64        `yaml:"gas_limit"`
-	GasUsed       uint64        `yaml:"gas_used"`
-	Timestamp     uint64        `yaml:"timestamp"`
-	ExtraData     string        `yaml:"extra_data"`
-	BaseFeePerGas string        `yaml:"base_fee_per_gas"`
-	BlockHash     string        `yaml:"block_hash"`
-	Transactions  []string      `yaml:"transactions"`
-	Withdrawals   []*Withdrawal `yaml:"withdrawals"`
+	ParentHash    string                `yaml:"parent_hash"`
+	FeeRecipient  string                `yaml:"fee_recipient"`
+	StateRoot     string                `yaml:"state_root"`
+	ReceiptsRoot  string                `yaml:"receipts_root"`
+	LogsBloom     string                `yaml:"logs_bloom"`
+	PrevRandao    string                `yaml:"prev_randao"`
+	BlockNumber   uint64                `yaml:"block_number"`
+	GasLimit      uint64                `yaml:"gas_limit"`
+	GasUsed       uint64                `yaml:"gas_used"`
+	Timestamp     uint64                `yaml:"timestamp"`
+	ExtraData     string                `yaml:"extra_data"`
+	BaseFeePerGas string                `yaml:"base_fee_per_gas"`
+	BlockHash     string                `yaml:"block_hash"`
+	Transactions  []string              `yaml:"transactions"`
+	Withdrawals   []*capella.Withdrawal `yaml:"withdrawals"`
 	// ignore YAML for now
 }
 

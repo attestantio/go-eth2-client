@@ -21,6 +21,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/verkle"
 )
 
 // VersionedBeaconBlock contains a versioned beacon block.
@@ -31,6 +32,7 @@ type VersionedBeaconBlock struct {
 	Bellatrix *bellatrix.BeaconBlock
 	Capella   *capella.BeaconBlock
 	Deneb     *deneb.BeaconBlock
+	Verkle    *verkle.BeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
@@ -66,6 +68,11 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 			return 0, errors.New("no deneb block")
 		}
 		return v.Deneb.Slot, nil
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return 0, errors.New("no capella block")
+		}
+		return v.Verkle.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -114,6 +121,14 @@ func (v *VersionedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
 			return phase0.BLSSignature{}, errors.New("no deneb block body")
 		}
 		return v.Deneb.Body.RANDAOReveal, nil
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return phase0.BLSSignature{}, errors.New("no verkle block")
+		}
+		if v.Verkle.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no verkle block body")
+		}
+		return v.Verkle.Body.RANDAOReveal, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -162,6 +177,14 @@ func (v *VersionedBeaconBlock) Graffiti() ([32]byte, error) {
 			return [32]byte{}, errors.New("no deneb block body")
 		}
 		return v.Deneb.Body.Graffiti, nil
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return [32]byte{}, errors.New("no verkle block")
+		}
+		if v.Verkle.Body == nil {
+			return [32]byte{}, errors.New("no verkle block body")
+		}
+		return v.Verkle.Body.Graffiti, nil
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -195,6 +218,11 @@ func (v *VersionedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
 			return 0, errors.New("no deneb block")
 		}
 		return v.Deneb.ProposerIndex, nil
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return 0, errors.New("no verkle block")
+		}
+		return v.Verkle.ProposerIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -228,6 +256,11 @@ func (v *VersionedBeaconBlock) Root() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 		return v.Deneb.HashTreeRoot()
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return phase0.Root{}, errors.New("no verkle block")
+		}
+		return v.Verkle.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -261,6 +294,11 @@ func (v *VersionedBeaconBlock) BodyRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 		return v.Deneb.Body.HashTreeRoot()
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return phase0.Root{}, errors.New("no verkle block")
+		}
+		return v.Verkle.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -294,6 +332,11 @@ func (v *VersionedBeaconBlock) ParentRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 		return v.Deneb.ParentRoot, nil
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return phase0.Root{}, errors.New("no verkle block")
+		}
+		return v.Verkle.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -327,6 +370,11 @@ func (v *VersionedBeaconBlock) StateRoot() (phase0.Root, error) {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 		return v.Deneb.StateRoot, nil
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return phase0.Root{}, errors.New("no verkle block")
+		}
+		return v.Verkle.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -360,6 +408,11 @@ func (v *VersionedBeaconBlock) Attestations() ([]*phase0.Attestation, error) {
 			return nil, errors.New("no deneb block")
 		}
 		return v.Deneb.Body.Attestations, nil
+	case DataVersionVerkle:
+		if v.Verkle == nil || v.Verkle.Body == nil {
+			return nil, errors.New("no verkle block")
+		}
+		return v.Verkle.Body.Attestations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -393,6 +446,11 @@ func (v *VersionedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlashing, 
 			return nil, errors.New("no deneb block")
 		}
 		return v.Deneb.Body.AttesterSlashings, nil
+	case DataVersionVerkle:
+		if v.Verkle == nil || v.Verkle.Body == nil {
+			return nil, errors.New("no verkle block")
+		}
+		return v.Verkle.Body.AttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -426,6 +484,11 @@ func (v *VersionedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlashing, 
 			return nil, errors.New("no deneb block")
 		}
 		return v.Deneb.Body.ProposerSlashings, nil
+	case DataVersionVerkle:
+		if v.Verkle == nil || v.Verkle.Body == nil {
+			return nil, errors.New("no verkle block")
+		}
+		return v.Verkle.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -459,6 +522,11 @@ func (v *VersionedBeaconBlock) String() string {
 			return ""
 		}
 		return v.Deneb.String()
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return ""
+		}
+		return v.Verkle.String()
 	default:
 		return "unknown version"
 	}
