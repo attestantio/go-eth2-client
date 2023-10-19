@@ -131,7 +131,10 @@ func TestValidatorStateJSON(t *testing.T) {
 				assert.Equal(t, test.isExited, res.IsExited())
 				assert.Equal(t, test.hasExited, res.HasExited())
 				assert.Equal(t, test.hasBalance, res.HasBalance())
-				assert.Equal(t, strings.Trim(string(rt), `"`), res.String())
+
+				valState, err := res.String()
+				require.NoError(t, err)
+				assert.Equal(t, strings.Trim(string(rt), `"`), valState)
 			}
 		})
 	}
@@ -260,4 +263,19 @@ func TestValidatorToState(t *testing.T) {
 			assert.Equal(t, test.state, state)
 		})
 	}
+}
+
+func TestString(t *testing.T) {
+	t.Run("valid state", func(t *testing.T) {
+		state := api.ValidatorStateActiveOngoing
+		resp, err := state.String()
+		require.NoError(t, err)
+		require.Equal(t, resp, "active_ongoing")
+	})
+
+	t.Run("invalid state", func(t *testing.T) {
+		state := api.ValidatorState(25)
+		_, err := state.String()
+		require.Error(t, err)
+	})
 }

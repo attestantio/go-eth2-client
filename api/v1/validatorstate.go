@@ -15,6 +15,7 @@ package v1
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -94,8 +95,12 @@ func (v *ValidatorState) UnmarshalJSON(input []byte) error {
 	return err
 }
 
-func (v ValidatorState) String() string {
-	return validatorStateStrings[v]
+func (v ValidatorState) String() (string, error) {
+	if int(v) < 0 || int(v) > len(validatorStateStrings) {
+		return "", errors.New("invalid validator state")
+	}
+
+	return validatorStateStrings[v], nil
 }
 
 // IsPending returns true if the validator is pending.
