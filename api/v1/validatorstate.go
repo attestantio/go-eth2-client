@@ -95,7 +95,7 @@ func (v *ValidatorState) UnmarshalJSON(input []byte) error {
 }
 
 func (v ValidatorState) String() (string, error) {
-	if int(v) < 0 || int(v) > len(validatorStateStrings) {
+	if int(v) < 0 || int(v) >= len(validatorStateStrings) {
 		return "", fmt.Errorf("unrecognised validator state %d", v)
 	}
 
