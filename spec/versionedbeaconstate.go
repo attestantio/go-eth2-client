@@ -21,6 +21,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/verkle"
 )
 
 // VersionedBeaconState contains a versioned beacon state.
@@ -31,6 +32,7 @@ type VersionedBeaconState struct {
 	Bellatrix *bellatrix.BeaconState
 	Capella   *capella.BeaconState
 	Deneb     *deneb.BeaconState
+	Verkle    *verkle.BeaconState
 }
 
 // IsEmpty returns true if there is no block.
@@ -66,6 +68,11 @@ func (v *VersionedBeaconState) Slot() (phase0.Slot, error) {
 			return 0, errors.New("no Deneb state")
 		}
 		return v.Deneb.Slot, nil
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return 0, errors.New("no Verkle state")
+		}
+		return v.Verkle.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -86,6 +93,11 @@ func (v *VersionedBeaconState) NextWithdrawalValidatorIndex() (phase0.ValidatorI
 			return 0, errors.New("no Deneb state")
 		}
 		return v.Deneb.NextWithdrawalValidatorIndex, nil
+	case DataVersionVerkle:
+		if v.Deneb == nil {
+			return 0, errors.New("no Verkle state")
+		}
+		return v.Verkle.NextWithdrawalValidatorIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -119,6 +131,11 @@ func (v *VersionedBeaconState) Validators() ([]*phase0.Validator, error) {
 			return nil, errors.New("no Deneb state")
 		}
 		return v.Deneb.Validators, nil
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return nil, errors.New("no Verkle state")
+		}
+		return v.Verkle.Validators, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -152,6 +169,11 @@ func (v *VersionedBeaconState) ValidatorBalances() ([]phase0.Gwei, error) {
 			return nil, errors.New("no Deneb state")
 		}
 		return v.Deneb.Balances, nil
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return nil, errors.New("no Verkle state")
+		}
+		return v.Verkle.Balances, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -185,6 +207,11 @@ func (v *VersionedBeaconState) String() string {
 			return ""
 		}
 		return v.Deneb.String()
+	case DataVersionVerkle:
+		if v.Verkle == nil {
+			return ""
+		}
+		return v.Verkle.String()
 	default:
 		return "unknown version"
 	}
