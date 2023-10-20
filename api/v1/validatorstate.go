@@ -15,7 +15,6 @@ package v1
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -97,7 +96,7 @@ func (v *ValidatorState) UnmarshalJSON(input []byte) error {
 
 func (v ValidatorState) String() (string, error) {
 	if int(v) < 0 || int(v) > len(validatorStateStrings) {
-		return "", errors.New("invalid validator state")
+		return "", fmt.Errorf("unrecognised validator state %d", v)
 	}
 
 	return validatorStateStrings[v], nil
