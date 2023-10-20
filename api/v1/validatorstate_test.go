@@ -266,16 +266,44 @@ func TestValidatorToState(t *testing.T) {
 }
 
 func TestString(t *testing.T) {
-	t.Run("valid state", func(t *testing.T) {
-		state := api.ValidatorStateActiveOngoing
-		resp, err := state.String()
-		require.NoError(t, err)
-		require.Equal(t, resp, "active_ongoing")
-	})
+	tests := []struct {
+		name     string
+		state    api.ValidatorState
+		expected string
+		valid    bool
+	}{
+		{
+			name:     "valid state",
+			state:    api.ValidatorStateActiveOngoing,
+			expected: "active_ongoing",
+			valid:    true,
+		},
+		{
+			name:  "negative index",
+			state: -1,
+			valid: false,
+		},
+		{
+			name:  "edge bound index",
+			state: 10,
+			valid: false,
+		},
+		{
+			name:  "high out of bound index",
+			state: 250,
+			valid: false,
+		},
+	}
 
-	t.Run("invalid state", func(t *testing.T) {
-		state := api.ValidatorState(25)
-		_, err := state.String()
-		require.Error(t, err)
-	})
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			resp, err := test.state.String()
+			if test.valid {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+			}
+			require.Equal(t, test.expected, resp)
+		})
+	}
 }
