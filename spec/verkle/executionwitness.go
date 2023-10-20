@@ -13,6 +13,13 @@
 
 package verkle
 
+import (
+	"encoding/hex"
+	"encoding/json"
+	"fmt"
+	"strings"
+)
+
 // import "github.com/attestantio/go-eth2-client/spec/phase0"
 
 const IPA_PROOF_DEPTH = 8
@@ -37,7 +44,54 @@ type SuffixStateDiff struct {
 	NewValue     []byte `ssz-max:"32"`
 }
 
+type SuffixStateDiffJSON struct {
+	Suffix       byte   `json:"suffix"`
+	CurrentValue string `json:"currentValue"`
+	NewValue     string `json:"newValue"`
+}
+
+func (s *SuffixStateDiff) UnmarshalJSON(input []byte) error {
+	var (
+		ssd SuffixStateDiff
+		err error
+	)
+
+	if err := json.Unmarshal(input, &ssd); err != nil {
+		return fmt.Errorf("error unmarshalling JSON SuffixStateDiff: %w", err)
+	}
+	s.CurrentValue, err = hex.DecodeString(strings.TrimPrefix(string(ssd.CurrentValue), "0x"))
+	if err != nil {
+		return fmt.Errorf("error decoding currentValue string: %w", err)
+	}
+	s.NewValue, err = hex.DecodeString(strings.TrimPrefix(string(ssd.NewValue), "0x"))
+	if err != nil {
+		return fmt.Errorf("error decoding newValue string: %w", err)
+	}
+
+	return nil
+}
+
 type StemStateDiff struct {
 	Stem        [31]byte           `ssz-size:"31"`
 	SuffixDiffs []*SuffixStateDiff `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
+}
+
+type stemStateDiffJSON struct {
+	Stem        string             `json:"stem"`
+	SuffixDiffs []*SuffixStateDiff `json:"suffixDiffs"`
+}
+
+func (s *StemStateDiff) UnmarshalJSON(input []byte) error {
+	var ssd stemStateDiffJSON
+	if err := json.Unmarshal(input, &ssd); err != nil {
+		return fmt.Errorf("error unmarshalling JSON StemStateDiff: %w", err)
+	}
+	stem, err := hex.DecodeString(strings.TrimPrefix(ssd.Stem, "0x"))
+	if err != nil {
+		return fmt.Errorf("error decoding stem string: %w", err)
+	}
+
+	copy(s.Stem[:], stem)
+	s.SuffixDiffs = ssd.SuffixDiffs
+	return nil
 }
