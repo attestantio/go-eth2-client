@@ -44,6 +44,7 @@ var dataVersionStrings = [...]string{
 	"bellatrix",
 	"capella",
 	"deneb",
+	"verge",
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -65,6 +66,8 @@ func (d *DataVersion) UnmarshalJSON(input []byte) error {
 		*d = DataVersionCapella
 	case `"deneb"`:
 		*d = DataVersionDeneb
+	case `"verge"`:
+		*d = DataVersionVerkle
 	default:
 		err = fmt.Errorf("unrecognised data version %s", string(input))
 	}
