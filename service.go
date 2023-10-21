@@ -224,6 +224,10 @@ type ProposalProvider interface {
 	Proposal(ctx context.Context, opts *api.ProposalOpts) (*api.Response[*api.VersionedProposal], error)
 }
 
+type ProposalSlashingSubmitter interface {
+	SubmitProposalSlashing(ctx context.Context, slashing *phase0.ProposerSlashing) error
+}
+
 // BeaconBlockRootProvider is the interface for providing beacon block roots.
 type BeaconBlockRootProvider interface {
 	// BeaconBlockRoot fetches a block's root given a set of options.
