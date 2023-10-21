@@ -169,6 +169,12 @@ type AttestationsSubmitter interface {
 	SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error
 }
 
+// AttesterSlashingSubmitter is the interface for submitting attester slashings.
+type AttesterSlashingSubmitter interface {
+	// SubmitAttesterSlashing submits an attester slashing
+	SubmitAttesterSlashing(ctx context.Context, slashing *phase0.AttesterSlashing) error
+}
+
 // AttesterDutiesProvider is the interface for providing attester duties.
 type AttesterDutiesProvider interface {
 	// AttesterDuties obtains attester duties.
@@ -222,6 +228,10 @@ type BeaconBlockHeadersProvider interface {
 type ProposalProvider interface {
 	// Proposal fetches a proposal for signing.
 	Proposal(ctx context.Context, opts *api.ProposalOpts) (*api.Response[*api.VersionedProposal], error)
+}
+
+type ProposalSlashingSubmitter interface {
+	SubmitProposalSlashing(ctx context.Context, slashing *phase0.ProposerSlashing) error
 }
 
 // BeaconBlockRootProvider is the interface for providing beacon block roots.
