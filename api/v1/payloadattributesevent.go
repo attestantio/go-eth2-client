@@ -295,7 +295,7 @@ func (e *PayloadAttributesEvent) MarshalJSON() ([]byte, error) {
 			return nil, errors.New("no payload attributes v1 data")
 		}
 		payloadAttributes, err = json.Marshal(&payloadAttributesV1JSON{
-			Timestamp:             fmt.Sprintf("%d", e.Data.V1.Timestamp),
+			Timestamp:             strconv.FormatUint(e.Data.V1.Timestamp, 10),
 			PrevRandao:            fmt.Sprintf("%#x", e.Data.V1.PrevRandao),
 			SuggestedFeeRecipient: e.Data.V1.SuggestedFeeRecipient.String(),
 		})
@@ -307,7 +307,7 @@ func (e *PayloadAttributesEvent) MarshalJSON() ([]byte, error) {
 			return nil, errors.New("no payload attributes v2 data")
 		}
 		payloadAttributes, err = json.Marshal(&payloadAttributesV2JSON{
-			Timestamp:             fmt.Sprintf("%d", e.Data.V2.Timestamp),
+			Timestamp:             strconv.FormatUint(e.Data.V2.Timestamp, 10),
 			PrevRandao:            fmt.Sprintf("%#x", e.Data.V2.PrevRandao),
 			SuggestedFeeRecipient: e.Data.V2.SuggestedFeeRecipient.String(),
 			Withdrawals:           e.Data.V2.Withdrawals,
@@ -320,7 +320,7 @@ func (e *PayloadAttributesEvent) MarshalJSON() ([]byte, error) {
 			return nil, errors.New("no payload attributes v3 data")
 		}
 		payloadAttributes, err = json.Marshal(&payloadAttributesV3JSON{
-			Timestamp:             fmt.Sprintf("%d", e.Data.V3.Timestamp),
+			Timestamp:             strconv.FormatUint(e.Data.V3.Timestamp, 10),
 			PrevRandao:            fmt.Sprintf("%#x", e.Data.V3.PrevRandao),
 			SuggestedFeeRecipient: e.Data.V3.SuggestedFeeRecipient.String(),
 			Withdrawals:           e.Data.V3.Withdrawals,
@@ -336,7 +336,7 @@ func (e *PayloadAttributesEvent) MarshalJSON() ([]byte, error) {
 	data := payloadAttributesDataJSON{
 		ProposerIndex:     fmt.Sprintf("%d", e.Data.ProposerIndex),
 		ProposalSlot:      fmt.Sprintf("%d", e.Data.ProposalSlot),
-		ParentBlockNumber: fmt.Sprintf("%d", e.Data.ParentBlockNumber),
+		ParentBlockNumber: strconv.FormatUint(e.Data.ParentBlockNumber, 10),
 		ParentBlockRoot:   fmt.Sprintf("%#x", e.Data.ParentBlockRoot),
 		ParentBlockHash:   fmt.Sprintf("%#x", e.Data.ParentBlockHash),
 		PayloadAttributes: payloadAttributes,

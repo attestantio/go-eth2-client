@@ -51,7 +51,7 @@ type indexedAttestationYAML struct {
 func (i *IndexedAttestation) MarshalJSON() ([]byte, error) {
 	attestingIndices := make([]string, len(i.AttestingIndices))
 	for j := range i.AttestingIndices {
-		attestingIndices[j] = fmt.Sprintf("%d", i.AttestingIndices[j])
+		attestingIndices[j] = strconv.FormatUint(i.AttestingIndices[j], 10)
 	}
 
 	return json.Marshal(&indexedAttestationJSON{

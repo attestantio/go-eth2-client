@@ -183,6 +183,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, blobSidecar)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse blob sidecar event")
+
 			return
 		}
 		event.Data = blobSidecar

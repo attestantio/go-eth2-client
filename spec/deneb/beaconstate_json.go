@@ -84,11 +84,11 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 	}
 	inactivityScores := make([]string, len(b.InactivityScores))
 	for i := range b.InactivityScores {
-		inactivityScores[i] = fmt.Sprintf("%d", b.InactivityScores[i])
+		inactivityScores[i] = strconv.FormatUint(b.InactivityScores[i], 10)
 	}
 
 	return json.Marshal(&beaconStateJSON{
-		GenesisTime:                  fmt.Sprintf("%d", b.GenesisTime),
+		GenesisTime:                  strconv.FormatUint(b.GenesisTime, 10),
 		GenesisValidatorsRoot:        b.GenesisValidatorsRoot,
 		Slot:                         b.Slot,
 		Fork:                         b.Fork,
@@ -98,7 +98,7 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 		HistoricalRoots:              b.HistoricalRoots,
 		ETH1Data:                     b.ETH1Data,
 		ETH1DataVotes:                b.ETH1DataVotes,
-		ETH1DepositIndex:             fmt.Sprintf("%d", b.ETH1DepositIndex),
+		ETH1DepositIndex:             strconv.FormatUint(b.ETH1DepositIndex, 10),
 		Validators:                   b.Validators,
 		Balances:                     balances,
 		RANDAOMixes:                  randaoMixes,

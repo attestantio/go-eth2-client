@@ -60,9 +60,9 @@ func (a *AttesterDuty) MarshalJSON() ([]byte, error) {
 		Slot:                    fmt.Sprintf("%d", a.Slot),
 		ValidatorIndex:          fmt.Sprintf("%d", a.ValidatorIndex),
 		CommitteeIndex:          fmt.Sprintf("%d", a.CommitteeIndex),
-		CommitteeLength:         fmt.Sprintf("%d", a.CommitteeLength),
-		CommitteesAtSlot:        fmt.Sprintf("%d", a.CommitteesAtSlot),
-		ValidatorCommitteeIndex: fmt.Sprintf("%d", a.ValidatorCommitteeIndex),
+		CommitteeLength:         strconv.FormatUint(a.CommitteeLength, 10),
+		CommitteesAtSlot:        strconv.FormatUint(a.CommitteesAtSlot, 10),
+		ValidatorCommitteeIndex: strconv.FormatUint(a.ValidatorCommitteeIndex, 10),
 	})
 }
 

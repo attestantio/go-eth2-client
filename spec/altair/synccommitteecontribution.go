@@ -60,7 +60,7 @@ func (s *SyncCommitteeContribution) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&syncCommitteeContributionJSON{
 		Slot:              fmt.Sprintf("%d", s.Slot),
 		BeaconBlockRoot:   fmt.Sprintf("%#x", s.BeaconBlockRoot),
-		SubcommitteeIndex: fmt.Sprintf("%d", s.SubcommitteeIndex),
+		SubcommitteeIndex: strconv.FormatUint(s.SubcommitteeIndex, 10),
 		AggregationBits:   fmt.Sprintf("%#x", []byte(s.AggregationBits)),
 		Signature:         fmt.Sprintf("%#x", s.Signature),
 	})

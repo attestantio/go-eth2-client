@@ -15,8 +15,8 @@ package http_test
 
 import (
 	"context"
-	"fmt"
 	"os"
+	"strconv"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -67,7 +67,7 @@ func TestFork(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			response, err := service.(client.ForkProvider).Fork(ctx, test.opts)
 			if test.expectedErrorCode != 0 {
-				require.Contains(t, err.Error(), fmt.Sprintf("%d", test.expectedErrorCode))
+				require.Contains(t, err.Error(), strconv.Itoa(test.expectedErrorCode))
 			} else {
 				require.NoError(t, err)
 				require.NotNil(t, response)

@@ -192,7 +192,7 @@ func (f *ForkChoiceNode) MarshalJSON() ([]byte, error) {
 		ParentRoot:         fmt.Sprintf("%#x", f.ParentRoot),
 		JustifiedEpoch:     fmt.Sprintf("%d", f.JustifiedEpoch),
 		FinalizedEpoch:     fmt.Sprintf("%d", f.FinalizedEpoch),
-		Weight:             fmt.Sprintf("%d", f.Weight),
+		Weight:             strconv.FormatUint(f.Weight, 10),
 		Validity:           f.Validity.String(),
 		ExecutionBlockHash: fmt.Sprintf("%#x", f.ExecutionBlockHash),
 		ExtraData:          f.ExtraData,

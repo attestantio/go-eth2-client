@@ -56,8 +56,8 @@ type validatorRegistrationYAML struct {
 func (v *ValidatorRegistration) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&validatorRegistrationJSON{
 		FeeRecipient: v.FeeRecipient.String(),
-		GasLimit:     fmt.Sprintf("%d", v.GasLimit),
-		Timestamp:    fmt.Sprintf("%d", v.Timestamp.Unix()),
+		GasLimit:     strconv.FormatUint(v.GasLimit, 10),
+		Timestamp:    strconv.FormatInt(v.Timestamp.Unix(), 10),
 		Pubkey:       fmt.Sprintf("%#x", v.Pubkey),
 	})
 }

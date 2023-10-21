@@ -51,7 +51,7 @@ type eth1DataYAML struct {
 func (e *ETH1Data) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&eth1DataJSON{
 		DepositRoot:  fmt.Sprintf("%#x", e.DepositRoot),
-		DepositCount: fmt.Sprintf("%d", e.DepositCount),
+		DepositCount: strconv.FormatUint(e.DepositCount, 10),
 		BlockHash:    fmt.Sprintf("%#x", e.BlockHash),
 	})
 }
