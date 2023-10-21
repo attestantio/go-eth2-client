@@ -15,18 +15,14 @@ package http
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strings"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
-
-type validatorsJSON struct {
-	Data []*api.Validator `json:"data"`
-}
 
 // indexChunkSizes defines the per-beacon-node size of an index chunk.
 // A request should be no more than 8,000 bytes to work with all currently-supported clients.
@@ -42,52 +38,116 @@ var indexChunkSizes = map[string]int{
 	"teku":       1000,
 }
 
+// pubKeyChunkSizes defines the per-beacon-node size of a public key chunk.
+// A request should be no more than 8,000 bytes to work with all currently-supported clients.
+// A public key, including 0x header and comma separator, takes up 99 bytes.
+// We also need to reserve space for the state ID and the endpoint itself, to be safe we go
+// with 500 bytes for this which results in us having space for 75 public keys.
+// That said, some nodes have their own built-in limits so use them where appropriate.
+var pubKeyChunkSizes = map[string]int{
+	"default":    75,
+	"lighthouse": 75,
+	"nimbus":     75,
+	"prysm":      75,
+	"teku":       75,
+}
+
 // indexChunkSize is the maximum number of validator indices to send in each request.
 func (s *Service) indexChunkSize(ctx context.Context) int {
 	if s.userIndexChunkSize > 0 {
 		return s.userIndexChunkSize
 	}
 
-	// If this errors it will use the default so not a concern.
-	nodeVersion, _ := s.NodeVersion(ctx)
-
-	nodeVersion = strings.ToLower(nodeVersion)
+	var nodeClient string
+	response, err := s.NodeClient(ctx)
+	if err == nil {
+		nodeClient = response.Data
+	} else {
+		// Use default.
+		nodeClient = "default"
+	}
 
 	switch {
-	case strings.Contains(nodeVersion, "lighthouse"):
+	case strings.Contains(nodeClient, "lighthouse"):
 		return indexChunkSizes["lighthouse"]
-	case strings.Contains(nodeVersion, "nimbus"):
+	case strings.Contains(nodeClient, "nimbus"):
 		return indexChunkSizes["nimbus"]
-	case strings.Contains(nodeVersion, "prysm"):
+	case strings.Contains(nodeClient, "prysm"):
 		return indexChunkSizes["prysm"]
-	case strings.Contains(nodeVersion, "teku"):
+	case strings.Contains(nodeClient, "teku"):
 		return indexChunkSizes["teku"]
 	default:
 		return indexChunkSizes["default"]
 	}
 }
 
-// Validators provides the validators, with their balance and status, for a given state.
-// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validatorIndices is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
-func (s *Service) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error) {
-	if stateID == "" {
-		return nil, errors.New("no state ID specified")
+// pubKeyChunkSize is the maximum number of validator public keys to send in each request.
+func (s *Service) pubKeyChunkSize(ctx context.Context) int {
+	if s.userPubKeyChunkSize > 0 {
+		return s.userPubKeyChunkSize
 	}
 
-	if len(validatorIndices) == 0 {
-		return s.validatorsFromState(ctx, stateID)
+	var nodeClient string
+	response, err := s.NodeClient(ctx)
+	if err == nil {
+		nodeClient = response.Data
+	} else {
+		// Use default.
+		nodeClient = "default"
 	}
 
-	if len(validatorIndices) > s.indexChunkSize(ctx) {
-		return s.chunkedValidators(ctx, stateID, validatorIndices)
+	switch {
+	case strings.Contains(nodeClient, "lighthouse"):
+		return pubKeyChunkSizes["lighthouse"]
+	case strings.Contains(nodeClient, "nimbus"):
+		return pubKeyChunkSizes["nimbus"]
+	case strings.Contains(nodeClient, "prysm"):
+		return pubKeyChunkSizes["prysm"]
+	case strings.Contains(nodeClient, "teku"):
+		return pubKeyChunkSizes["teku"]
+	default:
+		return pubKeyChunkSizes["default"]
+	}
+}
+
+// Validators provides the validators, with their balance and status, for the given options.
+func (s *Service) Validators(ctx context.Context,
+	opts *api.ValidatorsOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+	if opts.State == "" {
+		return nil, errors.New("no state specified")
+	}
+	if len(opts.Indices) > 0 && len(opts.PubKeys) > 0 {
+		return nil, errors.New("cannot specify both indices and public keys")
 	}
 
-	url := fmt.Sprintf("/eth/v1/beacon/states/%s/validators", stateID)
-	if len(validatorIndices) != 0 {
-		ids := make([]string, len(validatorIndices))
-		for i := range validatorIndices {
-			ids[i] = fmt.Sprintf("%d", validatorIndices[i])
+	if len(opts.Indices) == 0 && len(opts.PubKeys) == 0 {
+		// Request is for all validators; fetch from state.
+		return s.validatorsFromState(ctx, opts)
+	}
+
+	if len(opts.Indices) > s.indexChunkSize(ctx) || len(opts.PubKeys) > s.pubKeyChunkSize(ctx) {
+		return s.chunkedValidators(ctx, opts)
+	}
+
+	url := fmt.Sprintf("/eth/v1/beacon/states/%s/validators", opts.State)
+	switch {
+	case len(opts.Indices) > 0:
+		ids := make([]string, len(opts.Indices))
+		for i := range opts.Indices {
+			ids[i] = fmt.Sprintf("%d", opts.Indices[i])
+		}
+		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
+	case len(opts.PubKeys) > 0:
+		ids := make([]string, len(opts.PubKeys))
+		for i := range opts.PubKeys {
+			ids[i] = opts.PubKeys[i].String()
 		}
 		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
 	}
@@ -96,48 +156,52 @@ func (s *Service) Validators(ctx context.Context, stateID string, validatorIndic
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request validators")
 	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain validators")
+
+	data, metadata, err := decodeJSONResponse(respBodyReader, []*apiv1.Validator{})
+	if err != nil {
+		return nil, err
 	}
 
-	var validatorsJSON validatorsJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&validatorsJSON); err != nil {
-		return nil, errors.Wrap(err, "failed to parse validators")
-	}
-	if validatorsJSON.Data == nil {
-		return nil, errors.New("no validators returned")
+	// Data is returned as an array but we want it as a map.
+	mapData := make(map[phase0.ValidatorIndex]*apiv1.Validator)
+	for _, validator := range data {
+		mapData[validator.Index] = validator
 	}
 
-	res := make(map[phase0.ValidatorIndex]*api.Validator)
-	for _, validator := range validatorsJSON.Data {
-		res[validator.Index] = validator
-	}
-	return res, nil
+	return &api.Response[map[phase0.ValidatorIndex]*apiv1.Validator]{
+		Data:     mapData,
+		Metadata: metadata,
+	}, nil
 }
 
 // validatorsFromState fetches all validators from state.
 // This is more efficient than fetching the validators endpoint, as validators uses JSON only,
 // whereas state can be provided using SSZ.
-func (s *Service) validatorsFromState(ctx context.Context, stateID string) (map[phase0.ValidatorIndex]*api.Validator, error) {
-	state, err := s.BeaconState(ctx, stateID)
+func (s *Service) validatorsFromState(ctx context.Context,
+	opts *api.ValidatorsOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
+	error,
+) {
+	stateResponse, err := s.BeaconState(ctx, &api.BeaconStateOpts{State: opts.State})
 	if err != nil {
 		return nil, err
 	}
-	if state == nil {
+	if stateResponse == nil {
 		return nil, errors.New("no beacon state")
 	}
 
-	validators, err := state.Validators()
+	validators, err := stateResponse.Data.Validators()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain validators from state")
 	}
 
-	balances, err := state.ValidatorBalances()
+	balances, err := stateResponse.Data.ValidatorBalances()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain validator balances from state")
 	}
 
-	slot, err := state.Slot()
+	slot, err := stateResponse.Data.Slot()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain slot from state")
 	}
@@ -152,11 +216,11 @@ func (s *Service) validatorsFromState(ctx context.Context, stateID string) (map[
 		return nil, err
 	}
 
-	res := make(map[phase0.ValidatorIndex]*api.Validator, len(validators))
+	res := make(map[phase0.ValidatorIndex]*apiv1.Validator, len(validators))
 	for i, validator := range validators {
 		index := phase0.ValidatorIndex(i)
-		state := api.ValidatorToState(validator, &balances[i], epoch, farFutureEpoch)
-		res[index] = &api.Validator{
+		state := apiv1.ValidatorToState(validator, &balances[i], epoch, farFutureEpoch)
+		res[index] = &apiv1.Validator{
 			Index:     index,
 			Balance:   balances[i],
 			Status:    state,
@@ -164,27 +228,92 @@ func (s *Service) validatorsFromState(ctx context.Context, stateID string) (map[
 		}
 	}
 
-	return res, nil
+	return &api.Response[map[phase0.ValidatorIndex]*apiv1.Validator]{
+		Data:     res,
+		Metadata: stateResponse.Metadata,
+	}, nil
 }
 
 // chunkedValidators obtains the validators a chunk at a time.
-func (s *Service) chunkedValidators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error) {
-	res := make(map[phase0.ValidatorIndex]*api.Validator)
+func (s *Service) chunkedValidators(ctx context.Context,
+	opts *api.ValidatorsOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
+	error,
+) {
+	if len(opts.Indices) > 0 {
+		return s.chunkedValidatorsByIndex(ctx, opts)
+	}
+
+	return s.chunkedValidatorsByPubkey(ctx, opts)
+}
+
+// chunkedValidatorsByIndex obtains validators with index a chunk at a time.
+func (s *Service) chunkedValidatorsByIndex(ctx context.Context,
+	opts *api.ValidatorsOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
+	error,
+) {
+	data := make(map[phase0.ValidatorIndex]*apiv1.Validator)
+	metadata := make(map[string]any)
 	indexChunkSize := s.indexChunkSize(ctx)
-	for i := 0; i < len(validatorIndices); i += indexChunkSize {
+	for i := 0; i < len(opts.Indices); i += indexChunkSize {
 		chunkStart := i
 		chunkEnd := i + indexChunkSize
-		if len(validatorIndices) < chunkEnd {
-			chunkEnd = len(validatorIndices)
+		if len(opts.Indices) < chunkEnd {
+			chunkEnd = len(opts.Indices)
 		}
-		chunk := validatorIndices[chunkStart:chunkEnd]
-		chunkRes, err := s.Validators(ctx, stateID, chunk)
+		chunk := opts.Indices[chunkStart:chunkEnd]
+		chunkRes, err := s.Validators(ctx, &api.ValidatorsOpts{State: opts.State, Indices: chunk})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to obtain chunk")
 		}
-		for k, v := range chunkRes {
-			res[k] = v
+		for k, v := range chunkRes.Data {
+			data[k] = v
+		}
+		for k, v := range chunkRes.Metadata {
+			metadata[k] = v
 		}
 	}
-	return res, nil
+
+	return &api.Response[map[phase0.ValidatorIndex]*apiv1.Validator]{
+		Data:     data,
+		Metadata: metadata,
+	}, nil
+}
+
+// chunkedValidatorsByIndex obtains validators with public key a chunk at a time.
+func (s *Service) chunkedValidatorsByPubkey(ctx context.Context,
+	opts *api.ValidatorsOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
+	error,
+) {
+	data := make(map[phase0.ValidatorIndex]*apiv1.Validator)
+	metadata := make(map[string]any)
+	pubkeyChunkSize := s.pubKeyChunkSize(ctx)
+	for i := 0; i < len(opts.PubKeys); i += pubkeyChunkSize {
+		chunkStart := i
+		chunkEnd := i + pubkeyChunkSize
+		if len(opts.PubKeys) < chunkEnd {
+			chunkEnd = len(opts.PubKeys)
+		}
+		chunk := opts.PubKeys[chunkStart:chunkEnd]
+		chunkRes, err := s.Validators(ctx, &api.ValidatorsOpts{State: opts.State, PubKeys: chunk})
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to obtain chunk")
+		}
+		for k, v := range chunkRes.Data {
+			data[k] = v
+		}
+		for k, v := range chunkRes.Metadata {
+			metadata[k] = v
+		}
+	}
+
+	return &api.Response[map[phase0.ValidatorIndex]*apiv1.Validator]{
+		Data:     data,
+		Metadata: metadata,
+	}, nil
 }

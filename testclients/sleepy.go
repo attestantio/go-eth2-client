@@ -60,12 +60,14 @@ func NewSleepy(_ context.Context,
 // Name returns the name of the client implementation.
 func (s *Sleepy) Name() string {
 	nextName := s.next.Name()
+
 	return fmt.Sprintf("sleepy(%v,%v,%s)", s.minSleep, s.maxSleep, nextName)
 }
 
 // Address returns the address of the client.
 func (s *Sleepy) Address() string {
 	nextAddress := s.next.Address()
+
 	return fmt.Sprintf("sleepy:%v,%v,%s", s.minSleep, s.maxSleep, nextAddress)
 }
 
@@ -83,6 +85,7 @@ func (s *Sleepy) EpochFromStateID(ctx context.Context, stateID string) (phase0.E
 	if !isNext {
 		return 0, errors.New("next does not support this call")
 	}
+
 	return next.EpochFromStateID(ctx, stateID)
 }
 
@@ -93,16 +96,18 @@ func (s *Sleepy) SlotFromStateID(ctx context.Context, stateID string) (phase0.Sl
 	if !isNext {
 		return 0, errors.New("next does not support this call")
 	}
+
 	return next.SlotFromStateID(ctx, stateID)
 }
 
 // NodeVersion returns a free-text string with the node version.
-func (s *Sleepy) NodeVersion(ctx context.Context) (string, error) {
+func (s *Sleepy) NodeVersion(ctx context.Context) (*api.Response[string], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.NodeVersionProvider)
 	if !isNext {
-		return "", errors.New("next does not support this call")
+		return nil, errors.New("next does not support this call")
 	}
+
 	return next.NodeVersion(ctx)
 }
 
@@ -113,6 +118,7 @@ func (s *Sleepy) SlotDuration(ctx context.Context) (time.Duration, error) {
 	if !isNext {
 		return 0, errors.New("next does not support this call")
 	}
+
 	return next.SlotDuration(ctx)
 }
 
@@ -123,6 +129,7 @@ func (s *Sleepy) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 	if !isNext {
 		return 0, errors.New("next does not support this call")
 	}
+
 	return next.SlotsPerEpoch(ctx)
 }
 
@@ -133,6 +140,7 @@ func (s *Sleepy) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 	if !isNext {
 		return 0, errors.New("next does not support this call")
 	}
+
 	return next.FarFutureEpoch(ctx)
 }
 
@@ -143,6 +151,7 @@ func (s *Sleepy) GenesisValidatorsRoot(ctx context.Context) ([]byte, error) {
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
+
 	return next.GenesisValidatorsRoot(ctx)
 }
 
@@ -153,17 +162,24 @@ func (s *Sleepy) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, err
 	if !isNext {
 		return 0, errors.New("next does not support this call")
 	}
+
 	return next.TargetAggregatorsPerCommittee(ctx)
 }
 
 // AggregateAttestation fetches the aggregate attestation given an attestation.
-func (s *Sleepy) AggregateAttestation(ctx context.Context, slot phase0.Slot, attestationDataRoot phase0.Root) (*phase0.Attestation, error) {
+func (s *Sleepy) AggregateAttestation(ctx context.Context,
+	opts *api.AggregateAttestationOpts,
+) (
+	*api.Response[*phase0.Attestation],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.AggregateAttestationProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.AggregateAttestation(ctx, slot, attestationDataRoot)
+
+	return next.AggregateAttestation(ctx, opts)
 }
 
 // SubmitAggregateAttestations submits aggregate attestations.
@@ -173,27 +189,40 @@ func (s *Sleepy) SubmitAggregateAttestations(ctx context.Context, aggregateAndPr
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
+
 	return next.SubmitAggregateAttestations(ctx, aggregateAndProofs)
 }
 
 // AttestationData fetches the attestation data for the given slot and committee index.
-func (s *Sleepy) AttestationData(ctx context.Context, slot phase0.Slot, committeeIndex phase0.CommitteeIndex) (*phase0.AttestationData, error) {
+func (s *Sleepy) AttestationData(ctx context.Context,
+	opts *api.AttestationDataOpts,
+) (
+	*api.Response[*phase0.AttestationData],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.AttestationDataProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.AttestationData(ctx, slot, committeeIndex)
+
+	return next.AttestationData(ctx, opts)
 }
 
 // AttestationPool fetches the attestation pool for the given slot.
-func (s *Sleepy) AttestationPool(ctx context.Context, slot phase0.Slot) ([]*phase0.Attestation, error) {
+func (s *Sleepy) AttestationPool(ctx context.Context,
+	opts *api.AttestationPoolOpts,
+) (
+	*api.Response[[]*phase0.Attestation],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.AttestationPoolProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.AttestationPool(ctx, slot)
+
+	return next.AttestationPool(ctx, opts)
 }
 
 // SubmitAttestations submits attestations.
@@ -203,47 +232,69 @@ func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*phase0.
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
+
 	return next.SubmitAttestations(ctx, attestations)
 }
 
 // AttesterDuties obtains attester duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Sleepy) AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*apiv1.AttesterDuty, error) {
+func (s *Sleepy) AttesterDuties(ctx context.Context,
+	opts *api.AttesterDutiesOpts,
+) (
+	*api.Response[[]*apiv1.AttesterDuty],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.AttesterDutiesProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.AttesterDuties(ctx, epoch, validatorIndices)
+
+	return next.AttesterDuties(ctx, opts)
 }
 
 // BeaconBlockHeader provides the block header of a given block ID.
-func (s *Sleepy) BeaconBlockHeader(ctx context.Context, blockID string) (*apiv1.BeaconBlockHeader, error) {
+func (s *Sleepy) BeaconBlockHeader(ctx context.Context,
+	opts *api.BeaconBlockHeaderOpts,
+) (
+	*api.Response[*apiv1.BeaconBlockHeader],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.BeaconBlockHeadersProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.BeaconBlockHeader(ctx, blockID)
+
+	return next.BeaconBlockHeader(ctx, opts)
 }
 
-// BeaconBlockProposal fetches a proposed beacon block for signing.
-func (s *Sleepy) BeaconBlockProposal(ctx context.Context, slot phase0.Slot, randaoReveal phase0.BLSSignature, graffiti []byte) (*spec.VersionedBeaconBlock, error) {
+// Proposal fetches a proposal for signing.
+func (s *Sleepy) Proposal(ctx context.Context,
+	opts *api.ProposalOpts,
+) (
+	*api.Response[*api.VersionedProposal],
+	error,
+) {
 	s.sleep(ctx)
-	next, isNext := s.next.(consensusclient.BeaconBlockProposalProvider)
+	next, isNext := s.next.(consensusclient.ProposalProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.BeaconBlockProposal(ctx, slot, randaoReveal, graffiti)
+
+	return next.Proposal(ctx, opts)
 }
 
 // SubmitBeaconBlock submits a beacon block.
+//
+// Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitProposal() instead.
 func (s *Sleepy) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.BeaconBlockSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
+
 	return next.SubmitBeaconBlock(ctx, block)
 }
 
@@ -254,6 +305,7 @@ func (s *Sleepy) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscri
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
+
 	return next.SubmitBeaconCommitteeSubscriptions(ctx, subscriptions)
 }
 
@@ -264,16 +316,20 @@ func (s *Sleepy) SubmitProposalPreparations(ctx context.Context, preparations []
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
+
 	return next.SubmitProposalPreparations(ctx, preparations)
 }
 
 // SubmitBlindedBeaconBlock submits a beacon block.
+//
+// Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitBlindedProposal() instead.
 func (s *Sleepy) SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.BlindedBeaconBlockSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
+
 	return next.SubmitBlindedBeaconBlock(ctx, block)
 }
 
@@ -284,17 +340,19 @@ func (s *Sleepy) SubmitValidatorRegistrations(ctx context.Context, registrations
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
+
 	return next.SubmitValidatorRegistrations(ctx, registrations)
 }
 
 // BeaconState fetches a beacon state.
-func (s *Sleepy) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
+func (s *Sleepy) BeaconState(ctx context.Context, opts *api.BeaconStateOpts) (*api.Response[*spec.VersionedBeaconState], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.BeaconStateProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.BeaconState(ctx, stateID)
+
+	return next.BeaconState(ctx, opts)
 }
 
 // Events feeds requested events with the given topics to the supplied handler.
@@ -304,117 +362,127 @@ func (s *Sleepy) Events(ctx context.Context, topics []string, handler consensusc
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
+
 	return next.Events(ctx, topics, handler)
 }
 
 // Finality provides the finality given a state ID.
-func (s *Sleepy) Finality(ctx context.Context, stateID string) (*apiv1.Finality, error) {
+func (s *Sleepy) Finality(ctx context.Context, opts *api.FinalityOpts) (*api.Response[*apiv1.Finality], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.FinalityProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.Finality(ctx, stateID)
+
+	return next.Finality(ctx, opts)
 }
 
 // Fork fetches fork information for the given state.
-func (s *Sleepy) Fork(ctx context.Context, stateID string) (*phase0.Fork, error) {
+func (s *Sleepy) Fork(ctx context.Context,
+	opts *api.ForkOpts,
+) (
+	*api.Response[*phase0.Fork],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ForkProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.Fork(ctx, stateID)
+
+	return next.Fork(ctx, opts)
 }
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Sleepy) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
+func (s *Sleepy) ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.Fork], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ForkScheduleProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
+
 	return next.ForkSchedule(ctx)
 }
 
 // Genesis fetches genesis information for the chain.
-func (s *Sleepy) Genesis(ctx context.Context) (*apiv1.Genesis, error) {
+func (s *Sleepy) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.GenesisProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
+
 	return next.Genesis(ctx)
 }
 
 // NodeSyncing provides the state of the node's synchronization with the chain.
-func (s *Sleepy) NodeSyncing(ctx context.Context) (*apiv1.SyncState, error) {
+func (s *Sleepy) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncState], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.NodeSyncingProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
+
 	return next.NodeSyncing(ctx)
 }
 
 // ProposerDuties obtains proposer duties for the given epoch.
-// If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
-func (s *Sleepy) ProposerDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*apiv1.ProposerDuty, error) {
+func (s *Sleepy) ProposerDuties(ctx context.Context,
+	opts *api.ProposerDutiesOpts,
+) (
+	*api.Response[[]*apiv1.ProposerDuty],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ProposerDutiesProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.ProposerDuties(ctx, epoch, validatorIndices)
+
+	return next.ProposerDuties(ctx, opts)
 }
 
 // Spec provides the spec information of the chain.
-func (s *Sleepy) Spec(ctx context.Context) (map[string]interface{}, error) {
+func (s *Sleepy) Spec(ctx context.Context) (*api.Response[map[string]interface{}], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.SpecProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
+
 	return next.Spec(ctx)
 }
 
 // ValidatorBalances provides the validator balances for a given state.
-// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validatorIndices is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
-// will be applied.
-func (s *Sleepy) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
+func (s *Sleepy) ValidatorBalances(ctx context.Context,
+	opts *api.ValidatorBalancesOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]phase0.Gwei],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ValidatorBalancesProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.ValidatorBalances(ctx, stateID, validatorIndices)
+
+	return next.ValidatorBalances(ctx, opts)
 }
 
 // Validators provides the validators, with their balance and status, for a given state.
-// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
-// will be applied.
-func (s *Sleepy) Validators(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
+func (s *Sleepy) Validators(ctx context.Context,
+	opts *api.ValidatorsOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ValidatorsProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
-	return next.Validators(ctx, stateID, validatorIndices)
-}
 
-// ValidatorsByPubKey provides the validators, with their balance and status, for a given state.
-// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validatorPubKeys is a list of validator public keys to restrict the returned values.  If no validators public keys are
-// supplied no filter will be applied.
-func (s *Sleepy) ValidatorsByPubKey(ctx context.Context, stateID string, validatorPubKeys []phase0.BLSPubKey) (map[phase0.ValidatorIndex]*apiv1.Validator, error) {
-	s.sleep(ctx)
-	next, isNext := s.next.(consensusclient.ValidatorsProvider)
-	if !isNext {
-		return nil, errors.New("next does not support this call")
-	}
-	return next.ValidatorsByPubKey(ctx, stateID, validatorPubKeys)
+	return next.Validators(ctx, opts)
 }
 
 // SubmitVoluntaryExit submits a voluntary exit.
@@ -424,6 +492,7 @@ func (s *Sleepy) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
+
 	return next.SubmitVoluntaryExit(ctx, voluntaryExit)
 }
 
@@ -434,6 +503,7 @@ func (s *Sleepy) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVolunta
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
+
 	return next.VoluntaryExitPool(ctx)
 }
 
@@ -444,6 +514,7 @@ func (s *Sleepy) Domain(ctx context.Context, domainType phase0.DomainType, epoch
 	if !isNext {
 		return phase0.Domain{}, errors.New("next does not support this call")
 	}
+
 	return next.Domain(ctx, domainType, epoch)
 }
 
@@ -454,6 +525,7 @@ func (s *Sleepy) GenesisDomain(ctx context.Context, domainType phase0.DomainType
 	if !isNext {
 		return phase0.Domain{}, errors.New("next does not support this call")
 	}
+
 	return next.GenesisDomain(ctx, domainType)
 }
 
@@ -464,25 +536,28 @@ func (s *Sleepy) GenesisTime(ctx context.Context) (time.Time, error) {
 	if !isNext {
 		return time.Time{}, errors.New("next does not support this call")
 	}
+
 	return next.GenesisTime(ctx)
 }
 
 // ForkChoice fetches the node's current fork choice context.
-func (s *Sleepy) ForkChoice(ctx context.Context) (*apiv1.ForkChoice, error) {
+func (s *Sleepy) ForkChoice(ctx context.Context) (*api.Response[*apiv1.ForkChoice], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ForkChoiceProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
+
 	return next.ForkChoice(ctx)
 }
 
-// BeaconBlockBlobs fetches the blobs given a block ID.
-func (s *Sleepy) BeaconBlockBlobs(ctx context.Context, blockID string) ([]*deneb.BlobSidecar, error) {
+// BlobSidecars fetches the blobs sidecars given options.
+func (s *Sleepy) BlobSidecars(ctx context.Context, opts *api.BlobSidecarsOpts) (*api.Response[[]*deneb.BlobSidecar], error) {
 	s.sleep(ctx)
-	next, isNext := s.next.(consensusclient.BeaconBlockBlobsProvider)
+	next, isNext := s.next.(consensusclient.BlobSidecarsProvider)
 	if !isNext {
-		return []*deneb.BlobSidecar{}, errors.New("next does not support this call")
+		return nil, errors.New("next does not support this call")
 	}
-	return next.BeaconBlockBlobs(ctx, blockID)
+
+	return next.BlobSidecars(ctx, opts)
 }

@@ -62,6 +62,7 @@ func (a *ContributionAndProof) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &contributionAndProofJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return a.unpack(&contributionAndProofJSON)
 }
 
@@ -103,6 +104,7 @@ func (a *ContributionAndProof) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -113,6 +115,7 @@ func (a *ContributionAndProof) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &contributionAndProofJSON); err != nil {
 		return err
 	}
+
 	return a.unpack(&contributionAndProofJSON)
 }
 
@@ -122,5 +125,6 @@ func (a *ContributionAndProof) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

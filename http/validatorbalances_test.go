@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,8 +19,10 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,18 +31,52 @@ func TestValidatorBalances(t *testing.T) {
 	defer cancel()
 
 	tests := []struct {
-		name       string
-		stateID    string
-		validators []phase0.ValidatorIndex
+		name     string
+		opts     *api.ValidatorBalancesOpts
+		err      string
+		errCode  int
+		expected map[phase0.ValidatorIndex]phase0.Gwei
 	}{
 		{
-			name:       "Single",
-			stateID:    "head",
-			validators: []phase0.ValidatorIndex{1000},
+			name: "NoOpts",
+			err:  "no options specified",
 		},
 		{
-			name:    "All",
-			stateID: "head",
+			name: "StateInvalid",
+			opts: &api.ValidatorBalancesOpts{
+				State: "invalid",
+			},
+			errCode: 400,
+		},
+		{
+			name: "StateUnknown",
+			opts: &api.ValidatorBalancesOpts{
+				State: "0x0000000000000000000000000000000000000000000000000000000000000000",
+			},
+			errCode: 404,
+		},
+		{
+			name: "StateFuture",
+			opts: &api.ValidatorBalancesOpts{
+				State: "9999999999",
+			},
+			errCode: 404,
+		},
+		{
+			name: "SingleGenesisIndex",
+			opts: &api.ValidatorBalancesOpts{
+				State:   "0",
+				Indices: []phase0.ValidatorIndex{123},
+			},
+			expected: map[phase0.ValidatorIndex]phase0.Gwei{
+				123: 32000000000,
+			},
+		},
+		{
+			name: "AllGenesis",
+			opts: &api.ValidatorBalancesOpts{
+				State: "0",
+			},
 		},
 	}
 
@@ -52,9 +88,22 @@ func TestValidatorBalances(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			balances, err := service.(client.ValidatorBalancesProvider).ValidatorBalances(ctx, test.stateID, test.validators)
-			require.NoError(t, err)
-			require.NotNil(t, balances)
+			response, err := service.(client.ValidatorBalancesProvider).ValidatorBalances(ctx, test.opts)
+			switch {
+			case test.err != "":
+				require.ErrorContains(t, err, test.err)
+			case test.errCode != 0:
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) {
+					require.Equal(t, test.errCode, apiErr.StatusCode)
+				}
+			default:
+				require.NoError(t, err)
+				require.NotNil(t, response)
+				if test.expected != nil {
+					require.Equal(t, test.expected, response.Data)
+				}
+			}
 		})
 	}
 }

@@ -38,6 +38,7 @@ func registerMetrics(ctx context.Context, monitor metrics.Service) error {
 	if monitor.Presenter() == "prometheus" {
 		return registerPrometheusMetrics(ctx)
 	}
+
 	return nil
 }
 
@@ -45,7 +46,7 @@ func registerPrometheusMetrics(_ context.Context) error {
 	providersMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "consensusclient",
 		Subsystem: "multi",
-		Name:      "providers_total",
+		Name:      "providers",
 		Help:      "Number of providers",
 	}, []string{"state"})
 	if err := prometheus.Register(providersMetric); err != nil {

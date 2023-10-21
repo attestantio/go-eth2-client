@@ -29,7 +29,9 @@ func (s *Service) SubmitSyncCommitteeSubscriptions(ctx context.Context,
 		if err != nil {
 			return nil, err
 		}
+
 		return true, nil
 	}, nil)
+
 	return err
 }

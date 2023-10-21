@@ -88,6 +88,7 @@ func (v *Validator) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }
 

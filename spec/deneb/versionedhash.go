@@ -81,6 +81,7 @@ func (h *VersionedHash) MarshalJSON() ([]byte, error) {
 	if h == nil {
 		return nil, errors.New("value nil")
 	}
+
 	return []byte(fmt.Sprintf(`"%#x"`, h)), nil
 }
 
@@ -117,5 +118,6 @@ func (h *VersionedHash) MarshalYAML() ([]byte, error) {
 	if h == nil {
 		return nil, errors.New("value nil")
 	}
+
 	return []byte(fmt.Sprintf(`'%#x'`, h)), nil
 }

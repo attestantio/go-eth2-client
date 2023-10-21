@@ -51,7 +51,7 @@ func (b *BeaconCommitteeSubscription) MarshalJSON() ([]byte, error) {
 		ValidatorIndex:   fmt.Sprintf("%d", b.ValidatorIndex),
 		Slot:             fmt.Sprintf("%d", b.Slot),
 		CommitteeIndex:   fmt.Sprintf("%d", b.CommitteeIndex),
-		CommitteesAtSlot: fmt.Sprintf("%d", b.CommitteesAtSlot),
+		CommitteesAtSlot: strconv.FormatUint(b.CommitteesAtSlot, 10),
 		IsAggregator:     b.IsAggregator,
 	})
 }
@@ -108,5 +108,6 @@ func (b *BeaconCommitteeSubscription) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

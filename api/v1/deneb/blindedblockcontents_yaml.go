@@ -27,7 +27,7 @@ type blindedBlockContentsYAML struct {
 	BlindedBlobSidecars []*BlindedBlobSidecar `yaml:"blinded_blob_sidecars"`
 }
 
-// MarshalJSON implements json.Marshaler.
+// MarshalYAML implements yaml.Marshaler.
 func (b *BlindedBlockContents) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&blindedBlockContentsYAML{
 		BlindedBlock:        b.BlindedBlock,
@@ -36,10 +36,11 @@ func (b *BlindedBlockContents) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
-// UnmarshalJSON implements json.Unmarshaler.
+// UnmarshalYAML implements yaml.Unmarshaler.
 func (b *BlindedBlockContents) UnmarshalYAML(input []byte) error {
 	var data blindedBlockContentsJSON
 	if err := yaml.Unmarshal(input, &data); err != nil {

@@ -27,7 +27,9 @@ func (s *Service) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0
 		if err != nil {
 			return nil, err
 		}
+
 		return true, nil
 	}, nil)
+
 	return err
 }

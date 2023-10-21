@@ -64,6 +64,7 @@ func (f *Fork) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &forkJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return f.unpack(&forkJSON)
 }
 
@@ -112,6 +113,7 @@ func (f *Fork) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -122,6 +124,7 @@ func (f *Fork) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &forkJSON); err != nil {
 		return err
 	}
+
 	return f.unpack(&forkJSON)
 }
 
@@ -131,5 +134,6 @@ func (f *Fork) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

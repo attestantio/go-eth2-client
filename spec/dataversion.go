@@ -67,6 +67,7 @@ func (d *DataVersion) UnmarshalJSON(input []byte) error {
 	default:
 		err = fmt.Errorf("unrecognised data version %s", string(input))
 	}
+
 	return err
 }
 
@@ -75,5 +76,6 @@ func (d DataVersion) String() string {
 	if int(d) >= len(dataVersionStrings) {
 		return "unknown"
 	}
+
 	return dataVersionStrings[d]
 }

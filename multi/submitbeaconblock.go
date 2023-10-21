@@ -21,13 +21,17 @@ import (
 )
 
 // SubmitBeaconBlock submits a beacon block.
+//
+// Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitProposal() instead.
 func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
 	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		err := client.(consensusclient.BeaconBlockSubmitter).SubmitBeaconBlock(ctx, block)
 		if err != nil {
 			return nil, err
 		}
+
 		return true, nil
 	}, nil)
+
 	return err
 }

@@ -15,9 +15,14 @@ package mock
 
 import (
 	"context"
+
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // NodeVersion returns a free-text string with the node version.
-func (s *Service) NodeVersion(_ context.Context) (string, error) {
-	return s.nodeVersion, nil
+func (s *Service) NodeVersion(_ context.Context) (*api.Response[string], error) {
+	return &api.Response[string]{
+		Data:     s.nodeVersion,
+		Metadata: make(map[string]any),
+	}, nil
 }

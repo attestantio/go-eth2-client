@@ -62,17 +62,17 @@ func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
 		ReceiptsRoot:     e.ReceiptsRoot,
 		LogsBloom:        fmt.Sprintf("%#x", e.LogsBloom),
 		PrevRandao:       fmt.Sprintf("%#x", e.PrevRandao),
-		BlockNumber:      fmt.Sprintf("%d", e.BlockNumber),
-		GasLimit:         fmt.Sprintf("%d", e.GasLimit),
-		GasUsed:          fmt.Sprintf("%d", e.GasUsed),
-		Timestamp:        fmt.Sprintf("%d", e.Timestamp),
+		BlockNumber:      strconv.FormatUint(e.BlockNumber, 10),
+		GasLimit:         strconv.FormatUint(e.GasLimit, 10),
+		GasUsed:          strconv.FormatUint(e.GasUsed, 10),
+		Timestamp:        strconv.FormatUint(e.Timestamp, 10),
 		ExtraData:        extraData,
 		BaseFeePerGas:    e.BaseFeePerGas.Dec(),
 		BlockHash:        e.BlockHash,
 		TransactionsRoot: e.TransactionsRoot,
 		WithdrawalsRoot:  e.WithdrawalsRoot,
-		BlobGasUsed:      fmt.Sprintf("%d", e.BlobGasUsed),
-		ExcessBlobGas:    fmt.Sprintf("%d", e.ExcessBlobGas),
+		BlobGasUsed:      strconv.FormatUint(e.BlobGasUsed, 10),
+		ExcessBlobGas:    strconv.FormatUint(e.ExcessBlobGas, 10),
 	})
 }
 

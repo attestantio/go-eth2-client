@@ -27,7 +27,7 @@ type ExecutionAddress [20]byte
 
 // String returns an EIP-55 string version of the address.
 func (a ExecutionAddress) String() string {
-	bytes := []byte(fmt.Sprintf("%x", a[:]))
+	bytes := []byte(hex.EncodeToString(a[:]))
 
 	keccak := sha3.NewLegacyKeccak256()
 	keccak.Write(bytes)
