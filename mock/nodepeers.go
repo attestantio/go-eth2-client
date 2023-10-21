@@ -21,7 +21,7 @@ import (
 )
 
 // NodePeers provides the peers of the node.
-func (s *Service) NodePeers(_ context.Context) (*api.Response[*apiv1.Peers], error) {
+func (s *Service) NodePeers(_ context.Context, _ *api.PeerOpts) (*api.Response[*apiv1.Peers], error) {
 	return &api.Response[*apiv1.Peers]{
 		Data: &apiv1.Peers{Peers: []apiv1.Peer{{
 			PeerID:             "MOCK16Uiu2HAm7ukVy4XugqVShYbLih4H2jBJjYevevznBZaHsmd1FM96",
