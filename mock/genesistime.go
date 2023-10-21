@@ -20,9 +20,10 @@ import (
 
 // GenesisTime provides the genesis time of the chain.
 func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
-	genesis, err := s.Genesis(ctx)
+	genesisResponse, err := s.Genesis(ctx)
 	if err != nil {
 		return time.Time{}, err
 	}
-	return genesis.GenesisTime, nil
+
+	return genesisResponse.Data.GenesisTime, nil
 }

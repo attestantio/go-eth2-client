@@ -63,6 +63,7 @@ func (b *BlindedBeaconBlockBody) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return b.unpack(&data)
 }
 

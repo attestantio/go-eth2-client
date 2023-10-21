@@ -55,6 +55,7 @@ func (c *ContentType) UnmarshalJSON(input []byte) error {
 		*c = ContentTypeUnknown
 		err = fmt.Errorf("unrecognised content type %s", string(input))
 	}
+
 	return err
 }
 
@@ -63,6 +64,7 @@ func (c ContentType) String() string {
 	if int(c) >= len(contentTypeStrings) {
 		return contentTypeStrings[0]
 	}
+
 	return contentTypeStrings[c]
 }
 

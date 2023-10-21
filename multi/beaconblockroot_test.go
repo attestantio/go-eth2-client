@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
 	"github.com/attestantio/go-eth2-client/testclients"
@@ -50,7 +51,7 @@ func TestBeaconBlockRoot(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.(consensusclient.BeaconBlockRootProvider).BeaconBlockRoot(ctx, "1")
+		res, err := multiClient.(consensusclient.BeaconBlockRootProvider).BeaconBlockRoot(ctx, &api.BeaconBlockRootOpts{})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

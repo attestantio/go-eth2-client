@@ -17,23 +17,28 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // BeaconBlockHeader provides the block header of a given block ID.
-func (s *Service) BeaconBlockHeader(ctx context.Context, blockID string) (*api.BeaconBlockHeader, error) {
+func (s *Service) BeaconBlockHeader(ctx context.Context,
+	opts *api.BeaconBlockHeaderOpts,
+) (
+	*api.Response[*apiv1.BeaconBlockHeader],
+	error,
+) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		beaconBlockHeader, err := client.(consensusclient.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, blockID)
+		beaconBlockHeader, err := client.(consensusclient.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return beaconBlockHeader, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.(*api.BeaconBlockHeader), nil
+
+	return res.(*api.Response[*apiv1.BeaconBlockHeader]), nil
 }

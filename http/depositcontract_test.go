@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -43,11 +43,11 @@ func TestDepositContract(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			depositContract, err := service.(client.DepositContractProvider).DepositContract(ctx)
+			response, err := service.(client.DepositContractProvider).DepositContract(ctx)
 			require.NoError(t, err)
-			require.NotNil(t, depositContract)
-			require.NotNil(t, depositContract.ChainID)
-			require.NotNil(t, depositContract.Address)
+			require.NotNil(t, response)
+			require.NotNil(t, response.Data.ChainID)
+			require.NotNil(t, response.Data.Address)
 		})
 	}
 }

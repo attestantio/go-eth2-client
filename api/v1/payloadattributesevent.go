@@ -124,6 +124,7 @@ func (p *PayloadAttributesV1) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &payloadAttributes); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return p.unpack(&payloadAttributes)
 }
 
@@ -171,6 +172,7 @@ func (p *PayloadAttributesV2) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &payloadAttributes); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return p.unpack(&payloadAttributes)
 }
 
@@ -217,11 +219,13 @@ func (p *PayloadAttributesV2) unpack(data *payloadAttributesV2JSON) error {
 	return nil
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
 func (p *PayloadAttributesV3) UnmarshalJSON(input []byte) error {
 	var payloadAttributes payloadAttributesV3JSON
 	if err := json.Unmarshal(input, &payloadAttributes); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return p.unpack(&payloadAttributes)
 }
 
@@ -350,6 +354,7 @@ func (e *PayloadAttributesEvent) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &event); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return e.unpack(&event)
 }
 
@@ -452,5 +457,6 @@ func (e *PayloadAttributesEvent) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

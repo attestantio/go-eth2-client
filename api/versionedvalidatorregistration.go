@@ -41,6 +41,7 @@ func (v *VersionedValidatorRegistration) FeeRecipient() (bellatrix.ExecutionAddr
 		if v.V1 == nil {
 			return bellatrix.ExecutionAddress{}, errors.New("no validator registration")
 		}
+
 		return v.V1.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, errors.New("unsupported version")
@@ -54,6 +55,7 @@ func (v *VersionedValidatorRegistration) GasLimit() (uint64, error) {
 		if v.V1 == nil {
 			return 0, errors.New("no validator registration")
 		}
+
 		return v.V1.GasLimit, nil
 	default:
 		return 0, errors.New("unsupported version")
@@ -67,6 +69,7 @@ func (v *VersionedValidatorRegistration) Timestamp() (time.Time, error) {
 		if v.V1 == nil {
 			return time.Time{}, errors.New("no validator registration")
 		}
+
 		return v.V1.Timestamp, nil
 	default:
 		return time.Time{}, errors.New("unsupported version")
@@ -80,6 +83,7 @@ func (v *VersionedValidatorRegistration) PubKey() (phase0.BLSPubKey, error) {
 		if v.V1 == nil {
 			return phase0.BLSPubKey{}, errors.New("no validator registration")
 		}
+
 		return v.V1.Pubkey, nil
 	default:
 		return phase0.BLSPubKey{}, errors.New("unsupported version")
@@ -93,6 +97,7 @@ func (v *VersionedValidatorRegistration) Root() (phase0.Root, error) {
 		if v.V1 == nil {
 			return phase0.Root{}, errors.New("no V1 registration")
 		}
+
 		return v.V1.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")

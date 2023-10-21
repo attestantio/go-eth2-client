@@ -86,6 +86,7 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range b.InactivityScores {
 		inactivityScores[i] = fmt.Sprintf("%d", b.InactivityScores[i])
 	}
+
 	return json.Marshal(&beaconStateJSON{
 		GenesisTime:                  fmt.Sprintf("%d", b.GenesisTime),
 		GenesisValidatorsRoot:        b.GenesisValidatorsRoot,

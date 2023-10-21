@@ -91,6 +91,7 @@ func (v *ValidatorState) UnmarshalJSON(input []byte) error {
 	default:
 		err = fmt.Errorf("unrecognised validator state %s", string(input))
 	}
+
 	return err
 }
 
@@ -161,6 +162,7 @@ func ValidatorToState(validator *phase0.Validator,
 		if validator.ActivationEligibilityEpoch == farFutureEpoch {
 			return ValidatorStatePendingInitialized
 		}
+
 		return ValidatorStatePendingQueued
 	}
 
@@ -172,6 +174,7 @@ func ValidatorToState(validator *phase0.Validator,
 		if validator.Slashed {
 			return ValidatorStateActiveSlashed
 		}
+
 		return ValidatorStateActiveExiting
 	}
 
@@ -180,6 +183,7 @@ func ValidatorToState(validator *phase0.Validator,
 		if validator.Slashed {
 			return ValidatorStateExitedSlashed
 		}
+
 		return ValidatorStateExitedUnslashed
 	}
 
@@ -188,6 +192,7 @@ func ValidatorToState(validator *phase0.Validator,
 		// We have a definite balance of 0.
 		return ValidatorStateWithdrawalDone
 	}
+
 	// No balance information, or balance > 0.
 	return ValidatorStateWithdrawalPossible
 }

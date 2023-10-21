@@ -45,6 +45,7 @@ func (s *SyncCommitteeSubscription) MarshalJSON() ([]byte, error) {
 	for i, syncCommitteeIndex := range s.SyncCommitteeIndices {
 		syncCommitteeIndices[i] = fmt.Sprintf("%d", syncCommitteeIndex)
 	}
+
 	return json.Marshal(&syncCommitteeSubscriptionJSON{
 		ValidatorIndex:       fmt.Sprintf("%d", s.ValidatorIndex),
 		SyncCommitteeIndices: syncCommitteeIndices,
@@ -98,5 +99,6 @@ func (s *SyncCommitteeSubscription) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

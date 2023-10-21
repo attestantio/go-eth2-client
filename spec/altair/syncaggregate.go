@@ -58,6 +58,7 @@ func (s *SyncAggregate) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &syncAggregateJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&syncAggregateJSON)
 }
 
@@ -104,6 +105,7 @@ func (s *SyncAggregate) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -114,6 +116,7 @@ func (s *SyncAggregate) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &syncAggregateJSON); err != nil {
 		return err
 	}
+
 	return s.unpack(&syncAggregateJSON)
 }
 
@@ -123,5 +126,6 @@ func (s *SyncAggregate) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

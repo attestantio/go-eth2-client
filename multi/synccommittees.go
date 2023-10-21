@@ -17,42 +17,23 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // SyncCommittee fetches the sync committee for the given state.
-func (s *Service) SyncCommittee(ctx context.Context, stateID string) (*api.SyncCommittee, error) {
+func (s *Service) SyncCommittee(ctx context.Context, opts *api.SyncCommitteeOpts) (*api.Response[*apiv1.SyncCommittee], error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		block, err := client.(consensusclient.SyncCommitteesProvider).SyncCommittee(ctx, stateID)
+		block, err := client.(consensusclient.SyncCommitteesProvider).SyncCommittee(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
-		return block, nil
-	}, nil)
-	if err != nil {
-		return nil, err
-	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.(*api.SyncCommittee), nil
-}
 
-// SyncCommitteeAtEpoch fetches the sync committee for the given epoch at the given state.
-func (s *Service) SyncCommitteeAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) (*api.SyncCommittee, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		block, err := client.(consensusclient.SyncCommitteesProvider).SyncCommitteeAtEpoch(ctx, stateID, epoch)
-		if err != nil {
-			return nil, err
-		}
 		return block, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.(*api.SyncCommittee), nil
+
+	return res.(*api.Response[*apiv1.SyncCommittee]), nil
 }

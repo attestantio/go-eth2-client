@@ -153,6 +153,7 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range s.InactivityScores {
 		inactivityScores[i] = fmt.Sprintf("%d", s.InactivityScores[i])
 	}
+
 	return json.Marshal(&beaconStateJSON{
 		GenesisTime:                  fmt.Sprintf("%d", s.GenesisTime),
 		GenesisValidatorsRoot:        fmt.Sprintf("%#x", s.GenesisValidatorsRoot),
@@ -188,11 +189,13 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&data)
 }
 
 // unpack unpacks JSON data in to a spec representation.
-// nolint:gocyclo
+//
+//nolint:gocyclo
 func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	var err error
 
@@ -452,6 +455,7 @@ func (s *BeaconState) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -462,6 +466,7 @@ func (s *BeaconState) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return err
 	}
+
 	return s.unpack(&data)
 }
 
@@ -471,5 +476,6 @@ func (s *BeaconState) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

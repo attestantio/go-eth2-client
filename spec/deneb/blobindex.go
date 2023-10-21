@@ -51,5 +51,6 @@ func (b *BlobIndex) MarshalJSON() ([]byte, error) {
 	if b == nil {
 		return nil, errors.New("value nil")
 	}
+
 	return []byte(fmt.Sprintf(`"%d"`, *b)), nil
 }

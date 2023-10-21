@@ -71,10 +71,12 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 			http.WithLogLevel(parameters.logLevel),
 			http.WithTimeout(parameters.timeout),
 			http.WithAddress(address),
+			http.WithEnforceJSON(parameters.enforceJSON),
 			http.WithExtraHeaders(parameters.extraHeaders),
 		)
 		if err != nil {
 			log.Error().Str("provider", address).Msg("Provider not present; dropping from rotation")
+
 			continue
 		}
 		if ping(ctx, client) {
@@ -116,5 +118,6 @@ func (s *Service) Address() string {
 	if len(s.activeClients) > 0 {
 		return s.activeClients[0].Address()
 	}
+
 	return "none"
 }

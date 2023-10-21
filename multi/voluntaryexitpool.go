@@ -27,6 +27,7 @@ func (s *Service) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVolunt
 		if err != nil {
 			return nil, err
 		}
+
 		return voluntaryExitPool, nil
 	}, nil)
 	if err != nil {
@@ -35,5 +36,6 @@ func (s *Service) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVolunt
 	if res == nil {
 		return nil, nil
 	}
+
 	return res.([]*phase0.SignedVoluntaryExit), nil
 }

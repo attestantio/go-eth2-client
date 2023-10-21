@@ -17,23 +17,28 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AttestationPool obtains the attestation pool for a given slot.
-func (s *Service) AttestationPool(ctx context.Context, slot phase0.Slot) ([]*phase0.Attestation, error) {
+func (s *Service) AttestationPool(ctx context.Context,
+	opts *api.AttestationPoolOpts,
+) (
+	*api.Response[[]*phase0.Attestation],
+	error,
+) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		attestationPool, err := client.(consensusclient.AttestationPoolProvider).AttestationPool(ctx, slot)
+		attestationPool, err := client.(consensusclient.AttestationPoolProvider).AttestationPool(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return attestationPool, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.([]*phase0.Attestation), nil
+
+	return res.(*api.Response[[]*phase0.Attestation]), nil
 }
