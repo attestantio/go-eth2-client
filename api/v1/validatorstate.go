@@ -94,12 +94,12 @@ func (v *ValidatorState) UnmarshalJSON(input []byte) error {
 	return err
 }
 
-func (v ValidatorState) String() (string, error) {
-	if int(v) < 0 || int(v) >= len(validatorStateStrings) {
-		return "", fmt.Errorf("unrecognised validator state %d", v)
+func (v ValidatorState) String() string {
+	if v < 0 || int(v) >= len(validatorStateStrings) {
+		return validatorStateStrings[0] // unknown
 	}
 
-	return validatorStateStrings[v], nil
+	return validatorStateStrings[v]
 }
 
 // IsPending returns true if the validator is pending.

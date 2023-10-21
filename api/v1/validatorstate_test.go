@@ -131,10 +131,7 @@ func TestValidatorStateJSON(t *testing.T) {
 				assert.Equal(t, test.isExited, res.IsExited())
 				assert.Equal(t, test.hasExited, res.HasExited())
 				assert.Equal(t, test.hasBalance, res.HasBalance())
-
-				valState, err := res.String()
-				require.NoError(t, err)
-				assert.Equal(t, strings.Trim(string(rt), `"`), valState)
+				assert.Equal(t, strings.Trim(string(rt), `"`), res.String())
 			}
 		})
 	}
@@ -270,39 +267,32 @@ func TestString(t *testing.T) {
 		name     string
 		state    api.ValidatorState
 		expected string
-		valid    bool
 	}{
 		{
 			name:     "valid state",
 			state:    api.ValidatorStateActiveOngoing,
 			expected: "active_ongoing",
-			valid:    true,
 		},
 		{
-			name:  "negative index",
-			state: -1,
-			valid: false,
+			name:     "negative index",
+			state:    -1,
+			expected: "unknown",
 		},
 		{
-			name:  "edge bound index",
-			state: 10,
-			valid: false,
+			name:     "edge bound index",
+			state:    10,
+			expected: "unknown",
 		},
 		{
-			name:  "high out of bound index",
-			state: 250,
-			valid: false,
+			name:     "high out of bound index",
+			state:    250,
+			expected: "unknown",
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			resp, err := test.state.String()
-			if test.valid {
-				require.NoError(t, err)
-			} else {
-				require.Error(t, err)
-			}
+			resp := test.state.String()
 			require.Equal(t, test.expected, resp)
 		})
 	}
