@@ -15,8 +15,9 @@ package multi_test
 
 import (
 	"context"
-	"github.com/attestantio/go-eth2-client/api"
 	"testing"
+
+	"github.com/attestantio/go-eth2-client/api"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/mock"

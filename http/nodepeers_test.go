@@ -15,7 +15,6 @@ package http_test
 
 import (
 	"context"
-	"fmt"
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
@@ -27,7 +26,6 @@ import (
 func TestNodePeers(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	fmt.Println("Testing")
 
 	tests := []struct {
 		name string
