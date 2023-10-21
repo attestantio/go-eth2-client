@@ -15,6 +15,7 @@ package mock
 
 import (
 	"context"
+
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 

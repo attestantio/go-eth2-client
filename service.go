@@ -169,9 +169,9 @@ type AttestationsSubmitter interface {
 	SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error
 }
 
-// AttesterSlashingSubmitter is the interface for submitting attester slashings
+// AttesterSlashingSubmitter is the interface for submitting attester slashings.
 type AttesterSlashingSubmitter interface {
-	//SubmitAttesterSlashing submits an attester slashing
+	// SubmitAttesterSlashing submits an attester slashing
 	SubmitAttesterSlashing(ctx context.Context, slashing *phase0.AttesterSlashing) error
 }
 
