@@ -336,6 +336,11 @@ type NodeSyncingProvider interface {
 	NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncState], error)
 }
 
+type NodePeersProvider interface {
+	//NodePeers provides the peers of the node.
+	NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[*apiv1.Peers], error)
+}
+
 // ProposalPreparationsSubmitter is the interface for submitting proposal preparations.
 type ProposalPreparationsSubmitter interface {
 	// SubmitProposalPreparations provides the beacon node with information required if a proposal for the given validators
