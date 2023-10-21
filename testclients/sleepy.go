@@ -426,6 +426,17 @@ func (s *Sleepy) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncStat
 	return next.NodeSyncing(ctx)
 }
 
+// NodePeers provides the peers of the node
+func (s *Sleepy) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[*apiv1.Peers], error) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.NodePeersProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.NodePeers(ctx, opts)
+}
+
 // ProposerDuties obtains proposer duties for the given epoch.
 func (s *Sleepy) ProposerDuties(ctx context.Context,
 	opts *api.ProposerDutiesOpts,

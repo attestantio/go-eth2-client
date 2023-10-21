@@ -560,6 +560,19 @@ func (s *Erroring) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncSt
 	return next.NodeSyncing(ctx)
 }
 
+// NodePeers provides the peers of the node
+func (s *Erroring) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[*apiv1.Peers], error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.NodePeersProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.NodePeers(ctx, opts)
+}
+
 // ProposerDuties obtains proposer duties for the given epoch.
 func (s *Erroring) ProposerDuties(ctx context.Context,
 	opts *api.ProposerDutiesOpts,
