@@ -96,6 +96,10 @@ func (v *ValidatorState) UnmarshalJSON(input []byte) error {
 }
 
 func (v ValidatorState) String() string {
+	if v < 0 || int(v) >= len(validatorStateStrings) {
+		return validatorStateStrings[0] // unknown
+	}
+
 	return validatorStateStrings[v]
 }
 
