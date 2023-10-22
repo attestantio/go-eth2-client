@@ -24,13 +24,8 @@ func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Respo
 	}
 
 	if len(additionalFields) > 0 {
-		request += "?"
-		for _, field := range additionalFields {
-			request += fmt.Sprintf("%s&", field)
-		}
+		request = fmt.Sprintf("%s?%s", request, strings.Join(additionalFields, "&"))
 	}
-	// remove the trailing '&'
-	request = strings.TrimSuffix(request, "&")
 
 	httpResponse, err := s.get2(ctx, request)
 	if err != nil {
