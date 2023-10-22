@@ -3,7 +3,6 @@ package v1
 import (
 	"encoding/json"
 	"fmt"
-
 	"github.com/pkg/errors"
 )
 
@@ -27,7 +26,6 @@ type Peer struct {
 func (p *Peers) MarshalJSON() ([]byte, error) {
 	meta := make(map[string]interface{})
 	meta["count"] = len(p.Peers)
-
 	return json.Marshal(&peersJSON{
 		Data: p.Peers,
 		Meta: meta,
@@ -42,7 +40,6 @@ func (p *Peers) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "invalid JSON")
 	}
 	p.Peers = peersJSON.Data
-
 	return nil
 }
 
@@ -60,6 +57,5 @@ func (e *Peer) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
-
 	return string(data)
 }

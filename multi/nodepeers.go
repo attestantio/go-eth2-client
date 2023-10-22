@@ -21,7 +21,7 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-// NodePeers provides the peers of the node.
+// NodePeers provides the peers of the node
 func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[*apiv1.Peers], error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		nodePeers, err := client.(consensusclient.NodePeersProvider).NodePeers(ctx, opts)

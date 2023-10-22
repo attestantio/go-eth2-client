@@ -560,7 +560,7 @@ func (s *Erroring) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncSt
 	return next.NodeSyncing(ctx)
 }
 
-// NodePeers provides the peers of the node.
+// NodePeers provides the peers of the node
 func (s *Erroring) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[*apiv1.Peers], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err

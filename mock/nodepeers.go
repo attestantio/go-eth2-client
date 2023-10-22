@@ -23,13 +23,11 @@ import (
 // NodePeers provides the peers of the node.
 func (s *Service) NodePeers(_ context.Context, _ *api.PeerOpts) (*api.Response[*apiv1.Peers], error) {
 	return &api.Response[*apiv1.Peers]{
-		Data: &apiv1.Peers{
-			Peers: []apiv1.Peer{{
-				PeerID:             "MOCK16Uiu2HAm7ukVy4XugqVShYbLih4H2jBJjYevevznBZaHsmd1FM96",
-				LastSeenP2PAddress: "/ip4/10.0.20.8/tcp/43402",
-				State:              "connected",
-				Direction:          "outbound",
-			}},
-		},
-	}, nil
+		Data: &apiv1.Peers{Peers: []apiv1.Peer{{
+			PeerID:             "MOCK16Uiu2HAm7ukVy4XugqVShYbLih4H2jBJjYevevznBZaHsmd1FM96",
+			LastSeenP2PAddress: "/ip4/10.0.20.8/tcp/43402",
+			State:              "connected",
+			Direction:          "outbound",
+		}},
+		}}, nil
 }
