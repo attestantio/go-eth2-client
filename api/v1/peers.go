@@ -6,15 +6,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Peers struct {
-	Peers []Peer
-}
-
-type peersJSON struct {
-	Data []Peer                 `json:"data"`
-	Meta map[string]interface{} `json:"meta,omitempty"`
-}
-
+// Peer contains all the available information about a nodes peer
 type Peer struct {
 	PeerID             string `json:"peer_id"`
 	Enr                string `json:"enr,omitempty"`
@@ -23,33 +15,60 @@ type Peer struct {
 	Direction          string `json:"direction"`
 }
 
-func (p *Peers) MarshalJSON() ([]byte, error) {
-	meta := make(map[string]interface{})
-	meta["count"] = len(p.Peers)
-	return json.Marshal(&peersJSON{
-		Data: p.Peers,
-		Meta: meta,
+type peerJSON struct {
+	PeerID             string `json:"peer_id"`
+	Enr                string `json:"enr,omitempty"`
+	LastSeenP2PAddress string `json:"last_seen_p2p_address"`
+	State              string `json:"state"`
+	Direction          string `json:"direction"`
+}
+
+// validPeerDirections are all the accepted options for peer direction
+var validPeerDirections = map[string]int{"inbound": 1, "outbound": 1}
+
+// validPeerStates are all the accepted options for peer states
+var validPeerStates = map[string]int{"connected": 1, "connecting": 1, "disconnected": 1, "disconnecting": 1}
+
+func (p *Peer) MarshalJSON() ([]byte, error) {
+	// make sure we have valid peer states and directions
+	_, exists := validPeerDirections[fmt.Sprintf("%s", p.Direction)]
+	if exists == false {
+		return nil, errors.New(fmt.Sprintf("invalid value for peer direction: %s", p.Direction))
+	}
+	_, exists = validPeerStates[p.State]
+	if exists == false {
+		return nil, errors.New(fmt.Sprintf("invalid value for peer state: %s", p.State))
+	}
+
+	return json.Marshal(&peerJSON{
+		PeerID:             p.PeerID,
+		Enr:                p.Enr,
+		LastSeenP2PAddress: p.LastSeenP2PAddress,
+		State:              p.State,
+		Direction:          p.Direction,
 	})
 }
 
-func (p *Peers) UnmarshalJSON(input []byte) error {
-	var err error
-
-	var peersJSON peersJSON
-	if err = json.Unmarshal(input, &peersJSON); err != nil {
+func (p *Peer) UnmarshalJSON(input []byte) error {
+	var peerJSON peerJSON
+	err := json.Unmarshal(input, &peerJSON)
+	if err = json.Unmarshal(input, &peerJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
-	p.Peers = peersJSON.Data
-	return nil
-}
-
-func (p *Peers) String() string {
-	data, err := json.Marshal(p)
-	if err != nil {
-		return fmt.Sprintf("ERR: %v", err)
+	_, ok := validPeerStates[peerJSON.State]
+	if ok == false {
+		return errors.New(fmt.Sprintf("invalid value for peer state: %s", peerJSON.State))
 	}
-
-	return string(data)
+	p.State = peerJSON.State
+	_, ok = validPeerDirections[peerJSON.Direction]
+	if ok == false {
+		return errors.New(fmt.Sprintf("invalid value for peer direction: %s", peerJSON.Direction))
+	}
+	p.Direction = peerJSON.Direction
+	p.Enr = peerJSON.Enr
+	p.PeerID = peerJSON.PeerID
+	p.LastSeenP2PAddress = peerJSON.LastSeenP2PAddress
+	return nil
 }
 
 func (e *Peer) String() string {

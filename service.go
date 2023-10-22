@@ -338,7 +338,7 @@ type NodeSyncingProvider interface {
 
 type NodePeersProvider interface {
 	//NodePeers provides the peers of the node.
-	NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[*apiv1.Peers], error)
+	NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error)
 }
 
 // ProposalPreparationsSubmitter is the interface for submitting proposal preparations.

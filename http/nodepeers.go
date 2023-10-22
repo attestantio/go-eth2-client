@@ -1,21 +1,15 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"strings"
 )
 
-type peersResponseJSON struct {
-	Data []apiv1.Peer           `json:"data"`
-	Meta map[string]interface{} `json:"meta,omitempty"`
-}
-
-func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[*apiv1.Peers], error) {
-	var peerResonse peersResponseJSON
+func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error) {
 	// all options are considered optional
 	request := "/eth/v1/node/peers"
 	var additionalFields []string
@@ -45,15 +39,14 @@ func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Respo
 	if httpResponse.contentType != ContentTypeJSON {
 		return nil, fmt.Errorf("unexpected content type %v (expected JSON)", httpResponse.contentType)
 	}
-	//data, meta, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), apiv1.Peers{})
-	err = json.Unmarshal(httpResponse.body, &peerResonse)
+	data, meta, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*apiv1.Peer{})
 	if err != nil {
 		return nil, err
 	}
 
-	return &api.Response[*apiv1.Peers]{
-		Data:     &apiv1.Peers{Peers: peerResonse.Data},
-		Metadata: peerResonse.Meta,
+	return &api.Response[[]*apiv1.Peer]{
+		Data:     data,
+		Metadata: meta,
 	}, nil
 
 }
