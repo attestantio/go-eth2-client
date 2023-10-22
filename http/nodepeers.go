@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"strings"
 )
 
 func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error) {
@@ -28,7 +29,7 @@ func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Respo
 			request += fmt.Sprintf("%s&", field)
 		}
 	}
-	//remove the trailing '&'
+	// remove the trailing '&'
 	request = strings.TrimSuffix(request, "&")
 
 	httpResponse, err := s.get2(ctx, request)
@@ -48,5 +49,4 @@ func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Respo
 		Data:     data,
 		Metadata: meta,
 	}, nil
-
 }

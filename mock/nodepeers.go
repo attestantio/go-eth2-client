@@ -28,5 +28,6 @@ func (s *Service) NodePeers(_ context.Context, _ *api.PeerOpts) (*api.Response[[
 			LastSeenP2PAddress: "/ip4/10.0.20.8/tcp/43402",
 			State:              "connected",
 			Direction:          "outbound",
-		}}}, nil
+		}},
+	}, nil
 }

@@ -2,9 +2,10 @@ package v1
 
 import (
 	"encoding/json"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestNodePeerJSON(t *testing.T) {

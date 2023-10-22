@@ -336,8 +336,9 @@ type NodeSyncingProvider interface {
 	NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncState], error)
 }
 
+// NodePeersProvider is the interface for providing peer information.
 type NodePeersProvider interface {
-	//NodePeers provides the peers of the node.
+	// NodePeers provides the peers of the node.
 	NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error)
 }
 
