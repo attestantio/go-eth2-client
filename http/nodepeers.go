@@ -13,7 +13,7 @@ import (
 func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error) {
 	// all options are considered optional
 	request := "/eth/v1/node/peers"
-	var additionalFields []string
+	additionalFields := make([]string, 0, len(opts.State)+len(opts.Direction))
 
 	for _, stateFilter := range opts.State {
 		additionalFields = append(additionalFields, fmt.Sprintf("state=%s", stateFilter))

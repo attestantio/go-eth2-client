@@ -426,8 +426,8 @@ func (s *Sleepy) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncStat
 	return next.NodeSyncing(ctx)
 }
 
-// NodePeers provides the peers of the node
-func (s *Sleepy) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[*apiv1.Peers], error) {
+// NodePeers provides the peers of the node.
+func (s *Sleepy) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.NodePeersProvider)
 	if !isNext {
