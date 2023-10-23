@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Peer contains all the available information about a nodes peer
+// Peer contains all the available information about a nodes peer.
 type Peer struct {
 	PeerID             string `json:"peer_id"`
 	Enr                string `json:"enr,omitempty"`
@@ -24,20 +24,20 @@ type peerJSON struct {
 	Direction          string `json:"direction"`
 }
 
-// validPeerDirections are all the accepted options for peer direction
+// validPeerDirections are all the accepted options for peer direction.
 var validPeerDirections = map[string]int{"inbound": 1, "outbound": 1}
 
-// validPeerStates are all the accepted options for peer states
+// validPeerStates are all the accepted options for peer states.
 var validPeerStates = map[string]int{"connected": 1, "connecting": 1, "disconnected": 1, "disconnecting": 1}
 
 func (p *Peer) MarshalJSON() ([]byte, error) {
 	// make sure we have valid peer states and directions
-	_, exists := validPeerDirections[fmt.Sprintf("%s", p.Direction)]
-	if exists == false {
+	_, exists := validPeerDirections[p.Direction]
+	if !exists {
 		return nil, errors.New(fmt.Sprintf("invalid value for peer direction: %s", p.Direction))
 	}
 	_, exists = validPeerStates[p.State]
-	if exists == false {
+	if !exists {
 		return nil, errors.New(fmt.Sprintf("invalid value for peer state: %s", p.State))
 	}
 
@@ -52,30 +52,32 @@ func (p *Peer) MarshalJSON() ([]byte, error) {
 
 func (p *Peer) UnmarshalJSON(input []byte) error {
 	var peerJSON peerJSON
-	err := json.Unmarshal(input, &peerJSON)
-	if err = json.Unmarshal(input, &peerJSON); err != nil {
+
+	if err := json.Unmarshal(input, &peerJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
 	_, ok := validPeerStates[peerJSON.State]
-	if ok == false {
+	if !ok {
 		return errors.New(fmt.Sprintf("invalid value for peer state: %s", peerJSON.State))
 	}
 	p.State = peerJSON.State
 	_, ok = validPeerDirections[peerJSON.Direction]
-	if ok == false {
+	if !ok {
 		return errors.New(fmt.Sprintf("invalid value for peer direction: %s", peerJSON.Direction))
 	}
 	p.Direction = peerJSON.Direction
 	p.Enr = peerJSON.Enr
 	p.PeerID = peerJSON.PeerID
 	p.LastSeenP2PAddress = peerJSON.LastSeenP2PAddress
+
 	return nil
 }
 
-func (e *Peer) String() string {
-	data, err := json.Marshal(e)
+func (p *Peer) String() string {
+	data, err := json.Marshal(p)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }
