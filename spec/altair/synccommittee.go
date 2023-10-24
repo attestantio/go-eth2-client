@@ -25,8 +25,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Altair constants.
-var syncCommitteeSize = 512
+// SyncCommitteeSize from spec.
+var SyncCommitteeSize = 512
 
 // SyncCommittee is the Ethereum 2 sync committee structure.
 type SyncCommittee struct {
@@ -70,10 +70,10 @@ func (s *SyncCommittee) UnmarshalJSON(input []byte) error {
 }
 
 func (s *SyncCommittee) unpack(syncCommitteeJSON *syncCommitteeJSON) error {
-	if len(syncCommitteeJSON.Pubkeys) != syncCommitteeSize {
+	if len(syncCommitteeJSON.Pubkeys) != SyncCommitteeSize {
 		return errors.New("incorrect length for public keys")
 	}
-	s.Pubkeys = make([]phase0.BLSPubKey, syncCommitteeSize)
+	s.Pubkeys = make([]phase0.BLSPubKey, SyncCommitteeSize)
 	for i := range syncCommitteeJSON.Pubkeys {
 		pubKey, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeJSON.Pubkeys[i], "0x"))
 		if err != nil {

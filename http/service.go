@@ -23,6 +23,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/attestantio/go-eth2-client/spec/altair"
+
 	eth2client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -121,6 +123,11 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 		return nil, errors.Wrap(err, "failed to confirm node connection")
 	}
 
+	// Set static values from spec
+	if err := s.setSpecValues(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to set spec values")
+	}
+
 	// Periodially refetch static values in case of client update.
 	s.periodicClearStaticValues(ctx)
 
@@ -157,6 +164,22 @@ func (s *Service) fetchStaticValues(ctx context.Context) error {
 	if _, err := s.NodeVersion(ctx); err != nil {
 		return errors.Wrap(err, "failed to fetch node version")
 	}
+
+	return nil
+}
+
+// setSpecValues reads the spec and sets values needed by the api.
+func (s *Service) setSpecValues(ctx context.Context) error {
+	spec, err := s.Spec(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get spec")
+	}
+	syncCommitteeValue, ok := spec.Data["SYNC_COMMITTEE_SIZE"].(uint64)
+
+	if !ok {
+		return errors.Errorf("failed to fetch sync committee size from spec")
+	}
+	altair.SyncCommitteeSize = int(syncCommitteeValue)
 
 	return nil
 }
