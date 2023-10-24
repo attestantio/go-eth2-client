@@ -65,6 +65,8 @@ func Slot(p VersionedSignedProposal) (phase0.Slot, error) {
 	default:
 		return 0, errors.New("unsupported version")
 	}
+
+	return 0, errors.New("unsupported version")
 }
 
 // String returns a string version of the structure.
