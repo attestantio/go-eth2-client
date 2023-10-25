@@ -14,6 +14,8 @@
 package api
 
 import (
+	"errors"
+
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -30,6 +32,38 @@ type VersionedSignedProposal struct {
 	Bellatrix *bellatrix.SignedBeaconBlock
 	Capella   *capella.SignedBeaconBlock
 	Deneb     *apiv1deneb.SignedBlockContents
+}
+
+// Slot returns the slot of the signed proposal.
+func Slot(p VersionedSignedProposal) (phase0.Slot, error) {
+	switch p.Version {
+	case spec.DataVersionAltair:
+		if p.Altair == nil || p.Altair.Message == nil {
+			return 0, errors.New("no altair block")
+		}
+
+		return p.Altair.Message.Slot, nil
+	case spec.DataVersionBellatrix:
+		if p.Bellatrix == nil || p.Bellatrix.Message == nil {
+			return 0, errors.New("no bellatrix block")
+		}
+
+		return p.Bellatrix.Message.Slot, nil
+	case spec.DataVersionCapella:
+		if p.Capella == nil || p.Capella.Message == nil {
+			return 0, errors.New("no capella block")
+		}
+
+		return p.Capella.Message.Slot, nil
+	case spec.DataVersionDeneb:
+		if p.Deneb == nil || p.Deneb.SignedBlock == nil || p.Deneb.SignedBlock.Message == nil {
+			return 0, errors.New("no deneb block")
+		}
+
+		return p.Deneb.SignedBlock.Message.Slot, nil
+	default:
+		return 0, errors.New("unsupported version")
+	}
 }
 
 // String returns a string version of the structure.
