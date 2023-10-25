@@ -47,6 +47,18 @@ func (v *VersionedProposal) IsEmpty() bool {
 // Slot returns the slot of the proposal.
 func (v *VersionedProposal) Slot() (phase0.Slot, error) {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil {
+			return 0, errors.New("no phase0 block")
+		}
+
+		return v.Phase0.Slot, nil
+	case spec.DataVersionAltair:
+		if v.Altair == nil {
+			return 0, errors.New("no altair block")
+		}
+
+		return v.Altair.Slot, nil
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return 0, errors.New("no bellatrix block")
@@ -73,6 +85,18 @@ func (v *VersionedProposal) Slot() (phase0.Slot, error) {
 // ProposerIndex returns the proposer index of the proposal.
 func (v *VersionedProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil {
+			return 0, errors.New("no phase0 block")
+		}
+
+		return v.Phase0.ProposerIndex, nil
+	case spec.DataVersionAltair:
+		if v.Altair == nil {
+			return 0, errors.New("no altair block")
+		}
+
+		return v.Altair.ProposerIndex, nil
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return 0, errors.New("no bellatrix block")
@@ -99,6 +123,18 @@ func (v *VersionedProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
 // RandaoReveal returns the RANDAO reveal of the proposal.
 func (v *VersionedProposal) RandaoReveal() (phase0.BLSSignature, error) {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil || v.Phase0.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no phase0 block")
+		}
+
+		return v.Phase0.Body.RANDAOReveal, nil
+	case spec.DataVersionAltair:
+		if v.Altair == nil || v.Altair.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no altair block")
+		}
+
+		return v.Altair.Body.RANDAOReveal, nil
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no bellatrix block")
@@ -125,6 +161,18 @@ func (v *VersionedProposal) RandaoReveal() (phase0.BLSSignature, error) {
 // Graffiti returns the graffiti of the proposal.
 func (v *VersionedProposal) Graffiti() ([32]byte, error) {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil || v.Phase0.Body == nil {
+			return [32]byte{}, errors.New("no phase0 block")
+		}
+
+		return v.Phase0.Body.Graffiti, nil
+	case spec.DataVersionAltair:
+		if v.Altair == nil || v.Altair.Body == nil {
+			return [32]byte{}, errors.New("no altair block")
+		}
+
+		return v.Altair.Body.Graffiti, nil
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return [32]byte{}, errors.New("no bellatrix block")
@@ -151,6 +199,18 @@ func (v *VersionedProposal) Graffiti() ([32]byte, error) {
 // Attestations returns the attestations of the proposal.
 func (v *VersionedProposal) Attestations() ([]*phase0.Attestation, error) {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil || v.Phase0.Body == nil {
+			return nil, errors.New("no phase0 block")
+		}
+
+		return v.Phase0.Body.Attestations, nil
+	case spec.DataVersionAltair:
+		if v.Altair == nil || v.Altair.Body == nil {
+			return nil, errors.New("no altair block")
+		}
+
+		return v.Altair.Body.Attestations, nil
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return nil, errors.New("no bellatrix block")
@@ -177,6 +237,18 @@ func (v *VersionedProposal) Attestations() ([]*phase0.Attestation, error) {
 // Root returns the root of the proposal.
 func (v *VersionedProposal) Root() (phase0.Root, error) {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil {
+			return phase0.Root{}, errors.New("no phase0 block")
+		}
+
+		return v.Phase0.HashTreeRoot()
+	case spec.DataVersionAltair:
+		if v.Altair == nil {
+			return phase0.Root{}, errors.New("no altair block")
+		}
+
+		return v.Altair.HashTreeRoot()
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
@@ -203,6 +275,18 @@ func (v *VersionedProposal) Root() (phase0.Root, error) {
 // BodyRoot returns the body root of the proposal.
 func (v *VersionedProposal) BodyRoot() (phase0.Root, error) {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil {
+			return phase0.Root{}, errors.New("no phase0 block")
+		}
+
+		return v.Phase0.Body.HashTreeRoot()
+	case spec.DataVersionAltair:
+		if v.Altair == nil {
+			return phase0.Root{}, errors.New("no altair block")
+		}
+
+		return v.Altair.Body.HashTreeRoot()
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
@@ -229,6 +313,18 @@ func (v *VersionedProposal) BodyRoot() (phase0.Root, error) {
 // ParentRoot returns the parent root of the proposal.
 func (v *VersionedProposal) ParentRoot() (phase0.Root, error) {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil {
+			return phase0.Root{}, errors.New("no phase0 block")
+		}
+
+		return v.Phase0.ParentRoot, nil
+	case spec.DataVersionAltair:
+		if v.Altair == nil {
+			return phase0.Root{}, errors.New("no altair block")
+		}
+
+		return v.Altair.ParentRoot, nil
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
@@ -255,6 +351,18 @@ func (v *VersionedProposal) ParentRoot() (phase0.Root, error) {
 // StateRoot returns the state root of the proposal.
 func (v *VersionedProposal) StateRoot() (phase0.Root, error) {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil {
+			return phase0.Root{}, errors.New("no phase0 block")
+		}
+
+		return v.Phase0.StateRoot, nil
+	case spec.DataVersionAltair:
+		if v.Altair == nil {
+			return phase0.Root{}, errors.New("no altair block")
+		}
+
+		return v.Altair.StateRoot, nil
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
@@ -426,6 +534,18 @@ func (v *VersionedProposal) BlobSidecars() ([]*deneb.BlobSidecar, error) {
 // String returns a string version of the structure.
 func (v *VersionedProposal) String() string {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil {
+			return ""
+		}
+
+		return v.Phase0.String()
+	case spec.DataVersionAltair:
+		if v.Altair == nil {
+			return ""
+		}
+
+		return v.Altair.String()
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return ""
