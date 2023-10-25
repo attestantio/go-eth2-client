@@ -10,6 +10,7 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
+// NodePeers obtains the peers of a node.
 func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error) {
 	// all options are considered optional
 	request := "/eth/v1/node/peers"

@@ -30,6 +30,7 @@ var validPeerDirections = map[string]int{"inbound": 1, "outbound": 1}
 // validPeerStates are all the accepted options for peer states.
 var validPeerStates = map[string]int{"connected": 1, "connecting": 1, "disconnected": 1, "disconnecting": 1}
 
+// MarshalJSON implements json.Marshaler.
 func (p *Peer) MarshalJSON() ([]byte, error) {
 	// make sure we have valid peer states and directions
 	_, exists := validPeerDirections[p.Direction]
@@ -50,6 +51,7 @@ func (p *Peer) MarshalJSON() ([]byte, error) {
 	})
 }
 
+// UnmarshalJSON implements json.Unmarshaler.
 func (p *Peer) UnmarshalJSON(input []byte) error {
 	var peerJSON peerJSON
 
