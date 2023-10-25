@@ -35,7 +35,7 @@ type VersionedSignedProposal struct {
 }
 
 // Slot returns the slot of the signed proposal.
-func Slot(v *VersionedSignedProposal) (phase0.Slot, error) {
+func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
 	switch v.Version {
 	case spec.DataVersionAltair:
 		if v.Altair == nil || v.Altair.Message == nil {
