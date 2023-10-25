@@ -35,32 +35,32 @@ type VersionedSignedProposal struct {
 }
 
 // Slot returns the slot of the signed proposal.
-func Slot(p VersionedSignedProposal) (phase0.Slot, error) {
-	switch p.Version {
+func Slot(v *VersionedSignedProposal) (phase0.Slot, error) {
+	switch v.Version {
 	case spec.DataVersionAltair:
-		if p.Altair == nil || p.Altair.Message == nil {
+		if v.Altair == nil || v.Altair.Message == nil {
 			return 0, errors.New("no altair block")
 		}
 
-		return p.Altair.Message.Slot, nil
+		return v.Altair.Message.Slot, nil
 	case spec.DataVersionBellatrix:
-		if p.Bellatrix == nil || p.Bellatrix.Message == nil {
+		if v.Bellatrix == nil || v.Bellatrix.Message == nil {
 			return 0, errors.New("no bellatrix block")
 		}
 
-		return p.Bellatrix.Message.Slot, nil
+		return v.Bellatrix.Message.Slot, nil
 	case spec.DataVersionCapella:
-		if p.Capella == nil || p.Capella.Message == nil {
+		if v.Capella == nil || v.Capella.Message == nil {
 			return 0, errors.New("no capella block")
 		}
 
-		return p.Capella.Message.Slot, nil
+		return v.Capella.Message.Slot, nil
 	case spec.DataVersionDeneb:
-		if p.Deneb == nil || p.Deneb.SignedBlock == nil || p.Deneb.SignedBlock.Message == nil {
+		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil {
 			return 0, errors.New("no deneb block")
 		}
 
-		return p.Deneb.SignedBlock.Message.Slot, nil
+		return v.Deneb.SignedBlock.Message.Slot, nil
 	default:
 		return 0, errors.New("unsupported version")
 	}
