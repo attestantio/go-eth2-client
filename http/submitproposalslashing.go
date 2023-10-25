@@ -22,6 +22,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// SubmitProposalSlashing submits a proposal slashing.
 func (s *Service) SubmitProposalSlashing(ctx context.Context, slashing phase0.ProposerSlashing) error {
 	specJSON, err := json.Marshal(slashing)
 	if err != nil {

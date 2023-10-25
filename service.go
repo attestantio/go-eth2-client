@@ -230,6 +230,7 @@ type ProposalProvider interface {
 	Proposal(ctx context.Context, opts *api.ProposalOpts) (*api.Response[*api.VersionedProposal], error)
 }
 
+// ProposalSlashingSubmitter is the interface for submitting proposal slashings.
 type ProposalSlashingSubmitter interface {
 	SubmitProposalSlashing(ctx context.Context, slashing *phase0.ProposerSlashing) error
 }

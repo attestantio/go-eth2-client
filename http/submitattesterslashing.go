@@ -22,6 +22,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// SubmitAttesterSlashing submits an attester slashing.
 func (s *Service) SubmitAttesterSlashing(ctx context.Context, slashing *phase0.AttesterSlashing) error {
 	specJSON, err := json.Marshal(slashing)
 	if err != nil {
