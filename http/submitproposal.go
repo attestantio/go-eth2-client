@@ -53,7 +53,7 @@ func (s *Service) SubmitProposal(ctx context.Context, proposal *api.VersionedSig
 
 	headers := make(map[string]string)
 	headers["Eth-Consensus-Version"] = strings.ToLower(proposal.Version.String())
-	_, err = s.post2(ctx, "/eth/v2/beacon/blocks", bytes.NewBuffer(specJSON), ContentTypeJSON, headers)
+	_, err = s.post2(ctx, "/eth/v1/beacon/blocks", bytes.NewBuffer(specJSON), ContentTypeJSON, headers)
 	if err != nil {
 		return errors.Wrap(err, "failed to submit proposal")
 	}

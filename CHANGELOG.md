@@ -1,3 +1,6 @@
+0.19.4:
+  - revert SubmitProposal() to use v1 of the API
+
 0.19.0:
   - major rework of API; see docs/0.19-changes.md for details
 
