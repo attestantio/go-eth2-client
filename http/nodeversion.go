@@ -48,7 +48,8 @@ func (s *Service) NodeVersion(ctx context.Context) (*api.Response[string], error
 	}
 
 	// Up to us to fetch the information.
-	httpResponse, err := s.get2(ctx, "/eth/v1/node/version")
+	url := "/eth/v1/node/version"
+	httpResponse, err := s.get(ctx, url, &api.CommonOpts{})
 	if err != nil {
 		return nil, err
 	}

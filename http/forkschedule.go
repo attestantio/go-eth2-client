@@ -45,7 +45,8 @@ func (s *Service) ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.For
 	}
 
 	// Up to us to fetch the information.
-	httpResponse, err := s.get2(ctx, "/eth/v1/config/fork_schedule")
+	url := "/eth/v1/config/fork_schedule"
+	httpResponse, err := s.get(ctx, url, &api.CommonOpts{})
 	if err != nil {
 		return nil, err
 	}

@@ -23,7 +23,8 @@ import (
 
 // NodeSyncing provides the syncing information for the node.
 func (s *Service) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncState], error) {
-	httpResponse, err := s.get2(ctx, "/eth/v1/node/syncing")
+	url := "/eth/v1/node/syncing"
+	httpResponse, err := s.get(ctx, url, &api.CommonOpts{})
 	if err != nil {
 		return nil, err
 	}

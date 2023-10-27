@@ -13,10 +13,11 @@
 
 package api
 
-// PeerOpts are the options for client side peer filtering.
-type PeerOpts struct {
-	// State of the connection (disconnected, connecting, connected, disconnecting)
-	State []string
-	// Direction of the connection (inbound, outbound)
-	Direction []string
+import "time"
+
+// CommonOpts are options common for all calls.
+type CommonOpts struct {
+	// Timeout is a specific timeout for this call.
+	// If 0 then the default timeout is used.
+	Timeout time.Duration
 }

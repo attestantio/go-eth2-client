@@ -13,14 +13,12 @@
 
 package api
 
-import "github.com/attestantio/go-eth2-client/spec/phase0"
-
-// AttestationDataOpts are the options for obtaining attestation data.
-type AttestationDataOpts struct {
+// NodePeersOpts are the options for client side peer filtering.
+type NodePeersOpts struct {
 	Common CommonOpts
 
-	// Slot is the slot for which the data is obtained.
-	Slot phase0.Slot
-	// CommitteeIndex is the committee index for which the data is obtained.
-	CommitteeIndex phase0.CommitteeIndex
+	// State of the connection (disconnected, connecting, connected, disconnecting)
+	State []string
+	// Direction of the connection (inbound, outbound)
+	Direction []string
 }

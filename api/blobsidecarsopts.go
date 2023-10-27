@@ -15,6 +15,8 @@ package api
 
 // BlobSidecarsOpts are the options for obtaining blob sidecars.
 type BlobSidecarsOpts struct {
+	Common CommonOpts
+
 	// Block is the ID of the block for which the data is obtained.
 	Block string
 }

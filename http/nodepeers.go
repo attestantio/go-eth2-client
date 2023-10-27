@@ -11,9 +11,9 @@ import (
 )
 
 // NodePeers obtains the peers of a node.
-func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error) {
+func (s *Service) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error) {
 	// all options are considered optional
-	request := "/eth/v1/node/peers"
+	url := "/eth/v1/node/peers"
 	additionalFields := make([]string, 0, len(opts.State)+len(opts.Direction))
 
 	for _, stateFilter := range opts.State {
@@ -25,10 +25,12 @@ func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Respo
 	}
 
 	if len(additionalFields) > 0 {
-		request = fmt.Sprintf("%s?%s", request, strings.Join(additionalFields, "&"))
+		url = fmt.Sprintf("%s?%s", url, strings.Join(additionalFields, "&"))
 	}
 
-	httpResponse, err := s.get2(ctx, request)
+	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
+		Timeout: opts.Common.Timeout,
+	})
 	if err != nil {
 		return nil, err
 	}

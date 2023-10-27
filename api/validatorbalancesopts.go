@@ -17,6 +17,8 @@ import "github.com/attestantio/go-eth2-client/spec/phase0"
 
 // ValidatorBalancesOpts are the options for obtaining validator balances.
 type ValidatorBalancesOpts struct {
+	Common CommonOpts
+
 	// State is the state at which the data is obtained.
 	// It can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 	State string

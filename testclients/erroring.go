@@ -561,7 +561,7 @@ func (s *Erroring) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncSt
 }
 
 // NodePeers provides the peers of the node.
-func (s *Erroring) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error) {
+func (s *Erroring) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}

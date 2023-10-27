@@ -37,12 +37,15 @@ func (s *Service) Fork(ctx context.Context,
 		return nil, errors.New("no state specified")
 	}
 
-	res, err := s.get2(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/fork", opts.State))
+	url := fmt.Sprintf("/eth/v1/beacon/states/%s/fork", opts.State)
+	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
+		Timeout: opts.Common.Timeout,
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	data, metadata, err := decodeJSONResponse(bytes.NewReader(res.body), phase0.Fork{})
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), phase0.Fork{})
 	if err != nil {
 		return nil, err
 	}

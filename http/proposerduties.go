@@ -35,7 +35,10 @@ func (s *Service) ProposerDuties(ctx context.Context,
 		return nil, errors.New("no options specified")
 	}
 
-	httpResponse, err := s.get2(ctx, fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", opts.Epoch))
+	url := fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", opts.Epoch)
+	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
+		Timeout: opts.Common.Timeout,
+	})
 	if err != nil {
 		return nil, err
 	}

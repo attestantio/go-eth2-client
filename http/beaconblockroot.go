@@ -41,7 +41,10 @@ func (s *Service) BeaconBlockRoot(ctx context.Context,
 		return nil, errors.New("no block specified")
 	}
 
-	httpResponse, err := s.get2(ctx, fmt.Sprintf("/eth/v1/beacon/blocks/%s/root", opts.Block))
+	url := fmt.Sprintf("/eth/v1/beacon/blocks/%s/root", opts.Block)
+	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
+		Timeout: opts.Common.Timeout,
+	})
 	if err != nil {
 		return nil, err
 	}

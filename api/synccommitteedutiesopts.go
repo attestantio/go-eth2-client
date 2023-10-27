@@ -17,6 +17,8 @@ import "github.com/attestantio/go-eth2-client/spec/phase0"
 
 // SyncCommitteeDutiesOpts are the options for obtaining sync committee duties.
 type SyncCommitteeDutiesOpts struct {
+	Common CommonOpts
+
 	// Epoch is the epoch for which the data is obtained.
 	Epoch phase0.Epoch
 	// Indices is a list of validators for which to obtain the duties.

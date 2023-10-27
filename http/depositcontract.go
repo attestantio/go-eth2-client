@@ -45,7 +45,8 @@ func (s *Service) DepositContract(ctx context.Context) (*api.Response[*apiv1.Dep
 	}
 
 	// Up to us to fetch the information.
-	httpResponse, err := s.get2(ctx, "/eth/v1/config/deposit_contract")
+	url := "/eth/v1/config/deposit_contract"
+	httpResponse, err := s.get(ctx, url, &api.CommonOpts{})
 	if err != nil {
 		return nil, err
 	}

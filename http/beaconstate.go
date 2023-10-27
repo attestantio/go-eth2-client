@@ -42,7 +42,10 @@ func (s *Service) BeaconState(ctx context.Context,
 		return nil, errors.New("no state specified")
 	}
 
-	httpResponse, err := s.get2(ctx, fmt.Sprintf("/eth/v2/debug/beacon/states/%s", opts.State))
+	url := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", opts.State)
+	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
+		Timeout: opts.Common.Timeout,
+	})
 	if err != nil {
 		return nil, err
 	}

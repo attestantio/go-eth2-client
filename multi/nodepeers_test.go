@@ -52,7 +52,7 @@ func TestNodePeers(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.(consensusclient.NodePeersProvider).NodePeers(ctx, &api.PeerOpts{})
+		res, err := multiClient.(consensusclient.NodePeersProvider).NodePeers(ctx, &api.NodePeersOpts{})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

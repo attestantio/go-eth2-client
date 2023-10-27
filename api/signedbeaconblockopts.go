@@ -15,6 +15,8 @@ package api
 
 // SignedBeaconBlockOpts are the options for obtaining signed beacon blocks.
 type SignedBeaconBlockOpts struct {
+	Common CommonOpts
+
 	// Block is the ID of the block which the data is obtained.
 	Block string
 }
