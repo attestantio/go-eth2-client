@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
@@ -132,12 +133,12 @@ func TestRecheck(t *testing.T) {
 	require.NoError(t, err)
 	multi := s.(*Service)
 
-	_, err = s.(consensusclient.GenesisProvider).Genesis(ctx)
+	_, err = s.(consensusclient.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 	require.NoError(t, err)
 
 	multi.deactivateClient(ctx, consensusClient)
 
-	_, err = s.(consensusclient.GenesisProvider).Genesis(ctx)
+	_, err = s.(consensusclient.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 	// Should re-activate in recheck so not return an error.
 	require.NoError(t, err)
 }

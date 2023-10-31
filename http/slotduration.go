@@ -16,11 +16,13 @@ package http
 import (
 	"context"
 	"time"
+
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // SlotDuration provides the duration of a slot for the chain.
 func (s *Service) SlotDuration(ctx context.Context) (time.Duration, error) {
-	response, err := s.Spec(ctx)
+	response, err := s.Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return 0, err
 	}

@@ -38,9 +38,7 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 	}
 
 	url := fmt.Sprintf("/eth/v1/validator/aggregate_attestation?slot=%d&attestation_data_root=%#x", opts.Slot, opts.AttestationDataRoot)
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
-		Timeout: opts.Common.Timeout,
-	})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

@@ -55,9 +55,7 @@ func (s *Service) Proposal(ctx context.Context,
 		url = fmt.Sprintf("%s&skip_randao_verification", url)
 	}
 
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
-		Timeout: opts.Common.Timeout,
-	})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon block proposal")
 	}

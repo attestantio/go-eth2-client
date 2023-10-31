@@ -28,7 +28,16 @@ type genesisJSON struct {
 }
 
 // Genesis provides the genesis information of the chain.
-func (s *Service) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], error) {
+func (s *Service) Genesis(ctx context.Context,
+	opts *api.GenesisOpts,
+) (
+	*api.Response[*apiv1.Genesis],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
 	s.genesisMutex.RLock()
 	if s.genesis != nil {
 		defer s.genesisMutex.RUnlock()
@@ -52,7 +61,7 @@ func (s *Service) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], e
 
 	// Up to us to fetch the information.
 	url := "/eth/v1/beacon/genesis"
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request genesis")
 	}

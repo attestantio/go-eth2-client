@@ -28,9 +28,18 @@ type voluntaryExitPoolJSON struct {
 }
 
 // VoluntaryExitPool obtains the voluntary exit pool.
-func (s *Service) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVoluntaryExit, error) {
+func (s *Service) VoluntaryExitPool(ctx context.Context,
+	opts *api.VoluntaryExitPoolOpts,
+) (
+	*api.Response[[]*phase0.SignedVoluntaryExit],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
 	url := "/eth/v1/beacon/pool/voluntary_exits"
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request voluntary exit pool")
 	}
@@ -45,5 +54,8 @@ func (s *Service) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVolunt
 		return nil, errors.New("voluntary exit pool not returned")
 	}
 
-	return voluntaryExitPoolJSON.Data, nil
+	return &api.Response[[]*phase0.SignedVoluntaryExit]{
+		Data:     voluntaryExitPoolJSON.Data,
+		Metadata: make(map[string]any),
+	}, nil
 }

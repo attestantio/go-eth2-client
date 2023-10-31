@@ -22,6 +22,8 @@ import (
 )
 
 // GenesisTime provides the genesis time of the chain.
+//
+// Deprecated: use Genesis().
 func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		genesisTime, err := client.(consensusclient.GenesisTimeProvider).GenesisTime(ctx)

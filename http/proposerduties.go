@@ -36,9 +36,7 @@ func (s *Service) ProposerDuties(ctx context.Context,
 	}
 
 	url := fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", opts.Epoch)
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
-		Timeout: opts.Common.Timeout,
-	})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

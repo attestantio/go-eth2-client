@@ -22,6 +22,8 @@ import (
 )
 
 // SlotDuration provides the duration of a slot of the chain.
+//
+// Deprecated: use Spec().
 func (s *Service) SlotDuration(ctx context.Context) (time.Duration, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		duration, err := client.(consensusclient.SlotDurationProvider).SlotDuration(ctx)

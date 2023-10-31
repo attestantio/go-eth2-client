@@ -19,6 +19,7 @@ import (
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
@@ -127,7 +128,7 @@ func ping(ctx context.Context, client consensusclient.Service) bool {
 		return false
 	}
 
-	response, err := provider.NodeSyncing(ctx)
+	response, err := provider.NodeSyncing(ctx, &api.NodeSyncingOpts{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to obtain sync state from node")
 
@@ -208,7 +209,7 @@ func (s *Service) providerInfo(ctx context.Context, provider consensusclient.Ser
 	providerName := "<unknown>"
 	nodeVersionProvider, isNodeVersionProvider := provider.(consensusclient.NodeVersionProvider)
 	if isNodeVersionProvider {
-		response, err := nodeVersionProvider.NodeVersion(ctx)
+		response, err := nodeVersionProvider.NodeVersion(ctx, &api.NodeVersionOpts{})
 		if err == nil {
 			switch {
 			case strings.Contains(strings.ToLower(response.Data), "lighthouse"):

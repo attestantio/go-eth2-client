@@ -38,9 +38,7 @@ func (s *Service) SyncCommitteeContribution(ctx context.Context,
 	}
 
 	url := fmt.Sprintf("/eth/v1/validator/sync_committee_contribution?slot=%d&subcommittee_index=%d&beacon_block_root=%#x", opts.Slot, opts.SubcommitteeIndex, opts.BeaconBlockRoot)
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
-		Timeout: opts.Common.Timeout,
-	})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

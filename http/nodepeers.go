@@ -28,9 +28,7 @@ func (s *Service) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.
 		url = fmt.Sprintf("%s?%s", url, strings.Join(additionalFields, "&"))
 	}
 
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
-		Timeout: opts.Common.Timeout,
-	})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

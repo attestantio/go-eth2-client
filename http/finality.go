@@ -34,9 +34,7 @@ func (s *Service) Finality(ctx context.Context,
 		return nil, errors.New("no options specified")
 	}
 
-	httpResponse, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/finality_checkpoints", opts.State), &api.CommonOpts{
-		Timeout: opts.Common.Timeout,
-	})
+	httpResponse, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/finality_checkpoints", opts.State), &opts.Common)
 	if err != nil {
 		return nil, err
 	}

@@ -22,7 +22,7 @@ import (
 
 // NodeClient provides the client for the node.
 func (s *Service) NodeClient(ctx context.Context) (*api.Response[string], error) {
-	response, err := s.NodeVersion(ctx)
+	response, err := s.NodeVersion(ctx, &api.NodeVersionOpts{})
 	if err != nil {
 		return nil, err
 	}

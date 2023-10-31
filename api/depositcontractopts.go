@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,18 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package api
 
-import (
-	"context"
-
-	"github.com/attestantio/go-eth2-client/api"
-)
-
-// NodeVersion returns a free-text string with the node version.
-func (s *Service) NodeVersion(_ context.Context, _ *api.NodeVersionOpts) (*api.Response[string], error) {
-	return &api.Response[string]{
-		Data:     s.nodeVersion,
-		Metadata: make(map[string]any),
-	}, nil
+// DepositContractOpts are the options for obtaining the deposit contract.
+type DepositContractOpts struct {
+	Common CommonOpts
 }

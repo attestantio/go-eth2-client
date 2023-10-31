@@ -22,9 +22,14 @@ import (
 )
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Service) ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.Fork], error) {
+func (s *Service) ForkSchedule(ctx context.Context,
+	opts *api.ForkScheduleOpts,
+) (
+	*api.Response[[]*phase0.Fork],
+	error,
+) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		forkSchedule, err := client.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx)
+		forkSchedule, err := client.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx, opts)
 		if err != nil {
 			return nil, err
 		}

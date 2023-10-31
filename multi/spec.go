@@ -21,9 +21,14 @@ import (
 )
 
 // Spec provides the spec information of the chain.
-func (s *Service) Spec(ctx context.Context) (*api.Response[map[string]any], error) {
+func (s *Service) Spec(ctx context.Context,
+	opts *api.SpecOpts,
+) (
+	*api.Response[map[string]any],
+	error,
+) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		aggregate, err := client.(consensusclient.SpecProvider).Spec(ctx)
+		aggregate, err := client.(consensusclient.SpecProvider).Spec(ctx, opts)
 		if err != nil {
 			return nil, err
 		}

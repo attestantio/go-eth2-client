@@ -37,9 +37,7 @@ func (s *Service) BeaconStateRoot(ctx context.Context, opts *api.BeaconStateRoot
 	}
 
 	url := fmt.Sprintf("/eth/v1/beacon/states/%s/root", opts.State)
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
-		Timeout: opts.Common.Timeout,
-	})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

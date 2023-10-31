@@ -19,10 +19,20 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 )
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Service) ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.Fork], error) {
+func (s *Service) ForkSchedule(ctx context.Context,
+	opts *api.ForkScheduleOpts,
+) (
+	*api.Response[[]*phase0.Fork],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
 	s.forkScheduleMutex.RLock()
 	if s.forkSchedule != nil {
 		defer s.forkScheduleMutex.RUnlock()
@@ -46,7 +56,7 @@ func (s *Service) ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.For
 
 	// Up to us to fetch the information.
 	url := "/eth/v1/config/fork_schedule"
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

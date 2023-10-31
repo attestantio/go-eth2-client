@@ -153,9 +153,7 @@ func (s *Service) Validators(ctx context.Context,
 		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
 	}
 
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
-		Timeout: opts.Common.Timeout,
-	})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request validators")
 	}

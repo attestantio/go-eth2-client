@@ -21,6 +21,8 @@ import (
 )
 
 // SlotsPerEpoch provides the slots per epoch of the chain.
+//
+// Deprecated: use Spec().
 func (s *Service) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		slotsPerEpoch, err := client.(consensusclient.SlotsPerEpochProvider).SlotsPerEpoch(ctx)

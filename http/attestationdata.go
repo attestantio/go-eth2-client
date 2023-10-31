@@ -35,9 +35,7 @@ func (s *Service) AttestationData(ctx context.Context,
 	}
 
 	url := fmt.Sprintf("/eth/v1/validator/attestation_data?slot=%d&committee_index=%d", opts.Slot, opts.CommitteeIndex)
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
-		Timeout: opts.Common.Timeout,
-	})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

@@ -40,9 +40,7 @@ func (s *Service) SignedBeaconBlock(ctx context.Context,
 	}
 
 	url := fmt.Sprintf("/eth/v2/beacon/blocks/%s", opts.Block)
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
-		Timeout: opts.Common.Timeout,
-	})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

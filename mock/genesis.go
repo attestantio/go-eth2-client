@@ -22,7 +22,7 @@ import (
 )
 
 // Genesis provides the genesis information of the chain.
-func (s *Service) Genesis(_ context.Context) (*api.Response[*apiv1.Genesis], error) {
+func (s *Service) Genesis(_ context.Context, _ *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error) {
 	data := &apiv1.Genesis{
 		GenesisTime: s.genesisTime,
 		GenesisValidatorsRoot: phase0.Root([32]byte{

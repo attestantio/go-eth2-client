@@ -38,9 +38,7 @@ func (s *Service) Fork(ctx context.Context,
 	}
 
 	url := fmt.Sprintf("/eth/v1/beacon/states/%s/fork", opts.State)
-	httpResponse, err := s.get(ctx, url, &api.CommonOpts{
-		Timeout: opts.Common.Timeout,
-	})
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

@@ -38,7 +38,7 @@ func TestAttestationData(t *testing.T) {
 	require.NoError(t, err)
 
 	// Need to fetch current slot for attestation data.
-	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 	require.NoError(t, err)
 	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)

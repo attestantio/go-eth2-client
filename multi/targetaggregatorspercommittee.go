@@ -21,6 +21,8 @@ import (
 )
 
 // TargetAggregatorsPerCommittee provides the target number of aggregators for each attestation committee.
+//
+// Deprecated:  Use Spec().
 func (s *Service) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		aggregators, err := client.(consensusclient.TargetAggregatorsPerCommitteeProvider).TargetAggregatorsPerCommittee(ctx)
