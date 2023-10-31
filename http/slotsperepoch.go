@@ -15,11 +15,13 @@ package http
 
 import (
 	"context"
+
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // SlotsPerEpoch provides the number of slots per epoch for the chain.
 func (s *Service) SlotsPerEpoch(ctx context.Context) (uint64, error) {
-	response, err := s.Spec(ctx)
+	response, err := s.Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return 0, err
 	}

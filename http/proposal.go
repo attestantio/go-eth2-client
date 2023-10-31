@@ -55,19 +55,19 @@ func (s *Service) Proposal(ctx context.Context,
 		url = fmt.Sprintf("%s&skip_randao_verification", url)
 	}
 
-	res, err := s.get2(ctx, url)
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon block proposal")
 	}
 
 	var response *api.Response[*api.VersionedProposal]
-	switch res.contentType {
+	switch httpResponse.contentType {
 	case ContentTypeSSZ:
-		response, err = s.beaconBlockProposalFromSSZ(res)
+		response, err = s.beaconBlockProposalFromSSZ(httpResponse)
 	case ContentTypeJSON:
-		response, err = s.beaconBlockProposalFromJSON(res)
+		response, err = s.beaconBlockProposalFromJSON(httpResponse)
 	default:
-		return nil, fmt.Errorf("unhandled content type %v", res.contentType)
+		return nil, fmt.Errorf("unhandled content type %v", httpResponse.contentType)
 	}
 	if err != nil {
 		return nil, err

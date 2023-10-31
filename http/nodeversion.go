@@ -18,6 +18,7 @@ import (
 	"context"
 
 	"github.com/attestantio/go-eth2-client/api"
+	"github.com/pkg/errors"
 )
 
 type nodeVersionJSON struct {
@@ -25,7 +26,16 @@ type nodeVersionJSON struct {
 }
 
 // NodeVersion provides the version information of the node.
-func (s *Service) NodeVersion(ctx context.Context) (*api.Response[string], error) {
+func (s *Service) NodeVersion(ctx context.Context,
+	opts *api.NodeVersionOpts,
+) (
+	*api.Response[string],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
 	s.nodeVersionMutex.RLock()
 	if s.nodeVersion != "" {
 		defer s.nodeVersionMutex.RUnlock()
@@ -48,7 +58,8 @@ func (s *Service) NodeVersion(ctx context.Context) (*api.Response[string], error
 	}
 
 	// Up to us to fetch the information.
-	httpResponse, err := s.get2(ctx, "/eth/v1/node/version")
+	url := "/eth/v1/node/version"
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

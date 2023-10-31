@@ -15,6 +15,8 @@ package api
 
 // BeaconBlockRootOpts are the options for obtaining the beacon block root.
 type BeaconBlockRootOpts struct {
+	Common CommonOpts
+
 	// Block is the ID of the block which the data is obtained.
 	Block string
 }

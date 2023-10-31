@@ -22,7 +22,7 @@ import (
 )
 
 // NodePeers provides the peers of the node.
-func (s *Service) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error) {
+func (s *Service) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		nodePeers, err := client.(consensusclient.NodePeersProvider).NodePeers(ctx, opts)
 		if err != nil {

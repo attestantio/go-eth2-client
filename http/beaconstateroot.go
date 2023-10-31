@@ -36,7 +36,8 @@ func (s *Service) BeaconStateRoot(ctx context.Context, opts *api.BeaconStateRoot
 		return nil, errors.New("no state specified")
 	}
 
-	httpResponse, err := s.get2(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/root", opts.State))
+	url := fmt.Sprintf("/eth/v1/beacon/states/%s/root", opts.State)
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

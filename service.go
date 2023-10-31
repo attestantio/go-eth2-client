@@ -47,21 +47,19 @@ type SlotFromStateIDProvider interface {
 	SlotFromStateID(ctx context.Context, stateID string) (phase0.Slot, error)
 }
 
-// NodeVersionProvider is the interface for providing the node version.
-type NodeVersionProvider interface {
-	// NodeVersion returns a free-text string with the node version.
-	NodeVersion(ctx context.Context) (*api.Response[string], error)
-}
-
 // SlotDurationProvider is the interface for providing the duration of each slot of a chain.
 type SlotDurationProvider interface {
 	// SlotDuration provides the duration of a slot of the chain.
+	//
+	// Deprecated: use Spec()
 	SlotDuration(ctx context.Context) (time.Duration, error)
 }
 
 // SlotsPerEpochProvider is the interface for providing the number of slots in each epoch of a chain.
 type SlotsPerEpochProvider interface {
 	// SlotsPerEpoch provides the slots per epoch of the chain.
+	//
+	// Deprecated: use Spec()
 	SlotsPerEpoch(ctx context.Context) (uint64, error)
 }
 
@@ -71,16 +69,12 @@ type FarFutureEpochProvider interface {
 	FarFutureEpoch(ctx context.Context) (phase0.Epoch, error)
 }
 
-// GenesisValidatorsRootProvider is the interface for providing the genesis validators root of a chain.
-type GenesisValidatorsRootProvider interface {
-	// GenesisValidatorsRoot provides the genesis validators root of the chain.
-	GenesisValidatorsRoot(ctx context.Context) ([]byte, error)
-}
-
 // TargetAggregatorsPerCommitteeProvider is the interface for providing the target number of
 // aggregators in each attestation committee.
 type TargetAggregatorsPerCommitteeProvider interface {
 	// TargetAggregatorsPerCommittee provides the target number of aggregators for each attestation committee.
+	//
+	// Deprecated: use Spec()
 	TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error)
 }
 
@@ -100,12 +94,6 @@ type ValidatorPubKeyProvider interface {
 type ValidatorIDProvider interface {
 	ValidatorIndexProvider
 	ValidatorPubKeyProvider
-}
-
-// DepositContractProvider is the interface for providng details about the deposit contract.
-type DepositContractProvider interface {
-	// DepositContract provides details of the execution deposit contract for the chain.
-	DepositContract(ctx context.Context) (*api.Response[*apiv1.DepositContract], error)
 }
 
 // SignedBeaconBlockProvider is the interface for providing beacon blocks.
@@ -179,6 +167,12 @@ type AttesterSlashingSubmitter interface {
 type AttesterDutiesProvider interface {
 	// AttesterDuties obtains attester duties.
 	AttesterDuties(ctx context.Context, opts *api.AttesterDutiesOpts) (*api.Response[[]*apiv1.AttesterDuty], error)
+}
+
+// DepositContractProvider is the interface for providing details about the deposit contract.
+type DepositContractProvider interface {
+	// DepositContract provides details of the execution deposit contract for the chain.
+	DepositContract(ctx context.Context, opts *api.DepositContractOpts) (*api.Response[*apiv1.DepositContract], error)
 }
 
 // SyncCommitteeDutiesProvider is the interface for providing sync committee duties.
@@ -320,7 +314,7 @@ type FinalityProvider interface {
 // ForkChoiceProvider is the interface for providing fork choice information.
 type ForkChoiceProvider interface {
 	// Fork fetches all current fork choice context.
-	ForkChoice(ctx context.Context) (*api.Response[*apiv1.ForkChoice], error)
+	ForkChoice(ctx context.Context, opts *api.ForkChoiceOpts) (*api.Response[*apiv1.ForkChoice], error)
 }
 
 // ForkProvider is the interface for providing fork information.
@@ -332,25 +326,31 @@ type ForkProvider interface {
 // ForkScheduleProvider is the interface for providing fork schedule data.
 type ForkScheduleProvider interface {
 	// ForkSchedule provides details of past and future changes in the chain's fork version.
-	ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.Fork], error)
+	ForkSchedule(ctx context.Context, opts *api.ForkScheduleOpts) (*api.Response[[]*phase0.Fork], error)
 }
 
 // GenesisProvider is the interface for providing genesis information.
 type GenesisProvider interface {
 	// Genesis fetches genesis information for the chain.
-	Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], error)
-}
-
-// NodeSyncingProvider is the interface for providing synchronization state.
-type NodeSyncingProvider interface {
-	// NodeSyncing provides the state of the node's synchronization with the chain.
-	NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncState], error)
+	Genesis(ctx context.Context, opts *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error)
 }
 
 // NodePeersProvider is the interface for providing peer information.
 type NodePeersProvider interface {
 	// NodePeers provides the peers of the node.
-	NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error)
+	NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error)
+}
+
+// NodeSyncingProvider is the interface for providing synchronization state.
+type NodeSyncingProvider interface {
+	// NodeSyncing provides the state of the node's synchronization with the chain.
+	NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error)
+}
+
+// NodeVersionProvider is the interface for providing the node version.
+type NodeVersionProvider interface {
+	// NodeVersion returns a free-text string with the node version.
+	NodeVersion(ctx context.Context, opts *api.NodeVersionOpts) (*api.Response[string], error)
 }
 
 // ProposalPreparationsSubmitter is the interface for submitting proposal preparations.
@@ -369,12 +369,14 @@ type ProposerDutiesProvider interface {
 // SpecProvider is the interface for providing spec data.
 type SpecProvider interface {
 	// Spec provides the spec information of the chain.
-	Spec(ctx context.Context) (*api.Response[map[string]any], error)
+	Spec(ctx context.Context, opts *api.SpecOpts) (*api.Response[map[string]any], error)
 }
 
 // SyncStateProvider is the interface for providing synchronization state.
 type SyncStateProvider interface {
 	// SyncState provides the state of the node's synchronization with the chain.
+	//
+	// Deprecated: use NodeSyncing()
 	SyncState(ctx context.Context) (*apiv1.SyncState, error)
 }
 
@@ -399,7 +401,7 @@ type VoluntaryExitSubmitter interface {
 // VoluntaryExitPoolProvider is the interface for providing voluntary exit pools.
 type VoluntaryExitPoolProvider interface {
 	// VoluntaryExitPool fetches the voluntary exit pool.
-	VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVoluntaryExit, error)
+	VoluntaryExitPool(ctx context.Context, opts *api.VoluntaryExitPoolOpts) (*api.Response[[]*phase0.SignedVoluntaryExit], error)
 }
 
 //
@@ -419,6 +421,8 @@ type DomainProvider interface {
 }
 
 // GenesisTimeProvider is the interface for providing the genesis time of a chain.
+//
+// Deprecated: use Genesis().
 type GenesisTimeProvider interface {
 	// GenesisTime provides the genesis time of the chain.
 	GenesisTime(ctx context.Context) (time.Time, error)

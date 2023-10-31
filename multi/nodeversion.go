@@ -21,9 +21,9 @@ import (
 )
 
 // NodeVersion provides the version information of the node.
-func (s *Service) NodeVersion(ctx context.Context) (*api.Response[string], error) {
+func (s *Service) NodeVersion(ctx context.Context, opts *api.NodeVersionOpts) (*api.Response[string], error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		aggregate, err := client.(consensusclient.NodeVersionProvider).NodeVersion(ctx)
+		aggregate, err := client.(consensusclient.NodeVersionProvider).NodeVersion(ctx, opts)
 		if err != nil {
 			return nil, err
 		}

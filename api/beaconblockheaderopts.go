@@ -15,6 +15,8 @@ package api
 
 // BeaconBlockHeaderOpts are the options for obtaining beacon block headers.
 type BeaconBlockHeaderOpts struct {
+	Common CommonOpts
+
 	// Block is the ID of the block which the data is obtained.
 	Block string
 }

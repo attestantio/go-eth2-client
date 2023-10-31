@@ -14,6 +14,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -152,12 +153,12 @@ func (s *Service) Validators(ctx context.Context,
 		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
 	}
 
-	respBodyReader, err := s.get(ctx, url)
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request validators")
 	}
 
-	data, metadata, err := decodeJSONResponse(respBodyReader, []*apiv1.Validator{})
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*apiv1.Validator{})
 	if err != nil {
 		return nil, err
 	}

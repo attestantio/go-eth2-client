@@ -19,11 +19,17 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/pkg/errors"
 )
 
 // NodeSyncing provides the syncing information for the node.
-func (s *Service) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncState], error) {
-	httpResponse, err := s.get2(ctx, "/eth/v1/node/syncing")
+func (s *Service) NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
+	url := "/eth/v1/node/syncing"
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

@@ -24,8 +24,18 @@ import (
 )
 
 // ForkChoice fetches all current fork choice context.
-func (s *Service) ForkChoice(ctx context.Context) (*api.Response[*apiv1.ForkChoice], error) {
-	httpResponse, err := s.get2(ctx, "/eth/v1/debug/fork_choice")
+func (s *Service) ForkChoice(ctx context.Context,
+	opts *api.ForkChoiceOpts,
+) (
+	*api.Response[*apiv1.ForkChoice],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
+	url := "/eth/v1/debug/fork_choice"
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

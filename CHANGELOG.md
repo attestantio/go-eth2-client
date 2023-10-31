@@ -1,3 +1,7 @@
+dev:
+  - standardise names of options
+  - add common options (currently just timeout) to options structs
+
 0.19.4:
   - revert SubmitProposal() to use v1 of the API
 

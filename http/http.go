@@ -32,69 +32,6 @@ import (
 	"go.opentelemetry.io/otel/codes"
 )
 
-// get sends an HTTP get request and returns the body.
-// If the response from the server is a 404 this will return nil for both the reader and the error.
-func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
-	// #nosec G404
-	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Str("endpoint", endpoint).Logger()
-	log.Trace().Msg("GET request")
-
-	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
-	if err != nil {
-		return nil, errors.Wrap(err, "invalid endpoint")
-	}
-
-	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
-	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, url.String(), nil)
-	if err != nil {
-		cancel()
-
-		return nil, errors.Wrap(err, "failed to create GET request")
-	}
-	s.addExtraHeaders(req)
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		cancel()
-
-		return nil, errors.Wrap(err, "failed to call GET endpoint")
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == http.StatusNotFound {
-		// Nothing found.  This is not an error, so we return nil on both counts.
-		cancel()
-
-		return nil, nil
-	}
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		cancel()
-
-		return nil, errors.Wrap(err, "failed to read GET response")
-	}
-
-	statusFamily := resp.StatusCode / 100
-	if statusFamily != 2 {
-		cancel()
-		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("GET failed")
-
-		return nil, &api.Error{
-			Method:     http.MethodGet,
-			StatusCode: resp.StatusCode,
-			Endpoint:   endpoint,
-			Data:       data,
-		}
-	}
-	cancel()
-
-	log.Trace().Str("response", string(data)).Msg("GET response")
-
-	return bytes.NewReader(data), nil
-}
-
 // post sends an HTTP post request and returns the body.
 func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io.Reader, error) {
 	// #nosec G404
@@ -262,9 +199,9 @@ type httpResponse struct {
 	body             []byte
 }
 
-// get2 sends an HTTP get request and returns the body.
+// get sends an HTTP get request and returns the body.
 // If the response from the server is a 404 this will return nil for both the reader and the error.
-func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, error) {
+func (s *Service) get(ctx context.Context, endpoint string, opts *api.CommonOpts) (*httpResponse, error) {
 	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "get2")
 	defer span.End()
 
@@ -277,7 +214,12 @@ func (s *Service) get2(ctx context.Context, endpoint string) (*httpResponse, err
 		return nil, errors.Wrap(err, "invalid endpoint")
 	}
 
-	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	timeout := s.timeout
+	if opts.Timeout != 0 {
+		timeout = opts.Timeout
+	}
+
+	opCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, url.String(), nil)
 	if err != nil {

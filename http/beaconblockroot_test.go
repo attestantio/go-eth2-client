@@ -17,6 +17,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -86,4 +87,23 @@ func TestBeaconBlockRoot(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBeaconBlockRootTimeout(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	service, err := http.New(ctx,
+		http.WithTimeout(timeout),
+		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+	)
+	require.NoError(t, err)
+
+	_, err = service.(client.BeaconBlockRootProvider).BeaconBlockRoot(ctx, &api.BeaconBlockRootOpts{
+		Common: api.CommonOpts{
+			Timeout: time.Millisecond,
+		},
+		Block: "0",
+	})
+	require.True(t, errors.Is(err, context.DeadlineExceeded))
 }

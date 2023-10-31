@@ -15,12 +15,13 @@ package http_test
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func TestNodePeers(t *testing.T) {
@@ -29,23 +30,23 @@ func TestNodePeers(t *testing.T) {
 
 	tests := []struct {
 		name string
-		opts *api.PeerOpts
+		opts *api.NodePeersOpts
 	}{
 		{
 			name: "AllPeers",
-			opts: &api.PeerOpts{},
+			opts: &api.NodePeersOpts{},
 		},
 		{
 			name: "AllInboundPeers",
-			opts: &api.PeerOpts{Direction: []string{"inbound"}},
+			opts: &api.NodePeersOpts{Direction: []string{"inbound"}},
 		},
 		{
 			name: "AllConnectedPeers",
-			opts: &api.PeerOpts{State: []string{"connected"}},
+			opts: &api.NodePeersOpts{State: []string{"connected"}},
 		},
 		{
 			name: "AllConnectedOutboundPeers",
-			opts: &api.PeerOpts{
+			opts: &api.NodePeersOpts{
 				State:     []string{"connected"},
 				Direction: []string{"outbound"},
 			},

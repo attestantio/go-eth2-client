@@ -17,6 +17,8 @@ import "github.com/attestantio/go-eth2-client/spec/phase0"
 
 // ProposerDutiesOpts are the options for obtaining proposer duties.
 type ProposerDutiesOpts struct {
+	Common CommonOpts
+
 	// Epoch is the epoch for which the data is obtained.
 	Epoch phase0.Epoch
 	// Indices is a list of validators to restrict the returned values.  If no indices are supplied then no filter will be applied.

@@ -16,11 +16,12 @@ package mock
 import (
 	"context"
 
+	"github.com/attestantio/go-eth2-client/api"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // VoluntaryExitPool fetches the voluntary exit pool.
-func (s *Service) VoluntaryExitPool(_ context.Context) ([]*spec.SignedVoluntaryExit, error) {
+func (s *Service) VoluntaryExitPool(_ context.Context, _ *api.VoluntaryExitPoolOpts) (*api.Response[[]*spec.SignedVoluntaryExit], error) {
 	res := make([]*spec.SignedVoluntaryExit, 5)
 	for i := 0; i < 5; i++ {
 		res[i] = &spec.SignedVoluntaryExit{
@@ -39,5 +40,8 @@ func (s *Service) VoluntaryExitPool(_ context.Context) ([]*spec.SignedVoluntaryE
 		}
 	}
 
-	return res, nil
+	return &api.Response[[]*spec.SignedVoluntaryExit]{
+		Data:     res,
+		Metadata: make(map[string]any),
+	}, nil
 }

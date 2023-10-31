@@ -23,10 +23,20 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 )
 
 // Spec provides the spec information of the chain.
-func (s *Service) Spec(ctx context.Context) (*api.Response[map[string]any], error) {
+func (s *Service) Spec(ctx context.Context,
+	opts *api.SpecOpts,
+) (
+	*api.Response[map[string]any],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
 	s.specMutex.RLock()
 	if s.spec != nil {
 		defer s.specMutex.RUnlock()
@@ -49,7 +59,8 @@ func (s *Service) Spec(ctx context.Context) (*api.Response[map[string]any], erro
 	}
 
 	// Up to us to fetch the information.
-	httpResponse, err := s.get2(ctx, "/eth/v1/config/spec")
+	url := "/eth/v1/config/spec"
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

@@ -13,10 +13,7 @@
 
 package api
 
-// PeerOpts are the options for client side peer filtering.
-type PeerOpts struct {
-	// State of the connection (disconnected, connecting, connected, disconnecting)
-	State []string
-	// Direction of the connection (inbound, outbound)
-	Direction []string
+// VoluntaryExitPoolOpts are the options for obtaining the voluntary exit pool.
+type VoluntaryExitPoolOpts struct {
+	Common CommonOpts
 }

@@ -52,16 +52,16 @@ func (s *Service) ValidatorBalances(ctx context.Context,
 		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
 	}
 
-	response, err := s.get2(ctx, url)
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}
 
-	switch response.contentType {
+	switch httpResponse.contentType {
 	case ContentTypeJSON:
-		return s.validatorBalancesFromJSON(ctx, response)
+		return s.validatorBalancesFromJSON(ctx, httpResponse)
 	default:
-		return nil, fmt.Errorf("unhandled content type %v", response.contentType)
+		return nil, fmt.Errorf("unhandled content type %v", httpResponse.contentType)
 	}
 }
 

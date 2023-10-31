@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
 )
@@ -43,7 +44,7 @@ func TestNodeVersion(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			nodeVersion, err := service.(client.NodeVersionProvider).NodeVersion(ctx)
+			nodeVersion, err := service.(client.NodeVersionProvider).NodeVersion(ctx, &api.NodeVersionOpts{})
 			require.NoError(t, err)
 			require.NotNil(t, nodeVersion)
 		})

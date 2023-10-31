@@ -21,7 +21,7 @@ import (
 )
 
 // NodeSyncing provides the state of the node's synchronization with the chain.
-func (s *Service) NodeSyncing(_ context.Context) (*api.Response[*apiv1.SyncState], error) {
+func (s *Service) NodeSyncing(_ context.Context, _ *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error) {
 	return &api.Response[*apiv1.SyncState]{
 		Data: &apiv1.SyncState{
 			HeadSlot:     s.HeadSlot,

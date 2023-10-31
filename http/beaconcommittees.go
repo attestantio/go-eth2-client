@@ -42,7 +42,7 @@ func (s *Service) BeaconCommittees(ctx context.Context,
 		url = fmt.Sprintf("%s?epoch=%d", url, *opts.Epoch)
 	}
 
-	httpResponse, err := s.get2(ctx, url)
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

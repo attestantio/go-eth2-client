@@ -101,17 +101,19 @@ func (s *Sleepy) SlotFromStateID(ctx context.Context, stateID string) (phase0.Sl
 }
 
 // NodeVersion returns a free-text string with the node version.
-func (s *Sleepy) NodeVersion(ctx context.Context) (*api.Response[string], error) {
+func (s *Sleepy) NodeVersion(ctx context.Context, opts *api.NodeVersionOpts) (*api.Response[string], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.NodeVersionProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
 
-	return next.NodeVersion(ctx)
+	return next.NodeVersion(ctx, opts)
 }
 
 // SlotDuration provides the duration of a slot of the chain.
+//
+// Deprecated: use Spec().
 func (s *Sleepy) SlotDuration(ctx context.Context) (time.Duration, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.SlotDurationProvider)
@@ -123,6 +125,8 @@ func (s *Sleepy) SlotDuration(ctx context.Context) (time.Duration, error) {
 }
 
 // SlotsPerEpoch provides the slots per epoch of the chain.
+//
+// Deprecated: use Spec().
 func (s *Sleepy) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.SlotsPerEpochProvider)
@@ -144,18 +148,9 @@ func (s *Sleepy) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 	return next.FarFutureEpoch(ctx)
 }
 
-// GenesisValidatorsRoot provides the genesis validators root of the chain.
-func (s *Sleepy) GenesisValidatorsRoot(ctx context.Context) ([]byte, error) {
-	s.sleep(ctx)
-	next, isNext := s.next.(consensusclient.GenesisValidatorsRootProvider)
-	if !isNext {
-		return nil, errors.New("next does not support this call")
-	}
-
-	return next.GenesisValidatorsRoot(ctx)
-}
-
 // TargetAggregatorsPerCommittee provides the target number of aggregators for each attestation committee.
+//
+// Deprecated: use Spec().
 func (s *Sleepy) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.TargetAggregatorsPerCommitteeProvider)
@@ -394,40 +389,40 @@ func (s *Sleepy) Fork(ctx context.Context,
 }
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Sleepy) ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.Fork], error) {
+func (s *Sleepy) ForkSchedule(ctx context.Context, opts *api.ForkScheduleOpts) (*api.Response[[]*phase0.Fork], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ForkScheduleProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
 
-	return next.ForkSchedule(ctx)
+	return next.ForkSchedule(ctx, opts)
 }
 
 // Genesis fetches genesis information for the chain.
-func (s *Sleepy) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], error) {
+func (s *Sleepy) Genesis(ctx context.Context, opts *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.GenesisProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
 
-	return next.Genesis(ctx)
+	return next.Genesis(ctx, opts)
 }
 
 // NodeSyncing provides the state of the node's synchronization with the chain.
-func (s *Sleepy) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncState], error) {
+func (s *Sleepy) NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.NodeSyncingProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
 
-	return next.NodeSyncing(ctx)
+	return next.NodeSyncing(ctx, opts)
 }
 
 // NodePeers provides the peers of the node.
-func (s *Sleepy) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error) {
+func (s *Sleepy) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.NodePeersProvider)
 	if !isNext {
@@ -454,14 +449,14 @@ func (s *Sleepy) ProposerDuties(ctx context.Context,
 }
 
 // Spec provides the spec information of the chain.
-func (s *Sleepy) Spec(ctx context.Context) (*api.Response[map[string]interface{}], error) {
+func (s *Sleepy) Spec(ctx context.Context, opts *api.SpecOpts) (*api.Response[map[string]interface{}], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.SpecProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
 
-	return next.Spec(ctx)
+	return next.Spec(ctx, opts)
 }
 
 // ValidatorBalances provides the validator balances for a given state.
@@ -508,14 +503,14 @@ func (s *Sleepy) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.
 }
 
 // VoluntaryExitPool fetches the voluntary exit pool.
-func (s *Sleepy) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVoluntaryExit, error) {
+func (s *Sleepy) VoluntaryExitPool(ctx context.Context, opts *api.VoluntaryExitPoolOpts) (*api.Response[[]*phase0.SignedVoluntaryExit], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.VoluntaryExitPoolProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
 
-	return next.VoluntaryExitPool(ctx)
+	return next.VoluntaryExitPool(ctx, opts)
 }
 
 // Domain provides a domain for a given domain type at a given epoch.
@@ -541,6 +536,8 @@ func (s *Sleepy) GenesisDomain(ctx context.Context, domainType phase0.DomainType
 }
 
 // GenesisTime provides the genesis time of the chain.
+//
+// Deprecated: use Genesis().
 func (s *Sleepy) GenesisTime(ctx context.Context) (time.Time, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.GenesisTimeProvider)
@@ -552,14 +549,14 @@ func (s *Sleepy) GenesisTime(ctx context.Context) (time.Time, error) {
 }
 
 // ForkChoice fetches the node's current fork choice context.
-func (s *Sleepy) ForkChoice(ctx context.Context) (*api.Response[*apiv1.ForkChoice], error) {
+func (s *Sleepy) ForkChoice(ctx context.Context, opts *api.ForkChoiceOpts) (*api.Response[*apiv1.ForkChoice], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ForkChoiceProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
 
-	return next.ForkChoice(ctx)
+	return next.ForkChoice(ctx, opts)
 }
 
 // BlobSidecars fetches the blobs sidecars given options.

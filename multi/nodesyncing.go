@@ -22,9 +22,14 @@ import (
 )
 
 // NodeSyncing provides the syncing information for the node.
-func (s *Service) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncState], error) {
+func (s *Service) NodeSyncing(ctx context.Context,
+	opts *api.NodeSyncingOpts,
+) (
+	*api.Response[*apiv1.SyncState],
+	error,
+) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		nodeSyncing, err := client.(consensusclient.NodeSyncingProvider).NodeSyncing(ctx)
+		nodeSyncing, err := client.(consensusclient.NodeSyncingProvider).NodeSyncing(ctx, opts)
 		if err != nil {
 			return nil, err
 		}

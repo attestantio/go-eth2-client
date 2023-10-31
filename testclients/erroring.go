@@ -108,7 +108,7 @@ func (s *Erroring) SlotFromStateID(ctx context.Context, stateID string) (phase0.
 }
 
 // NodeVersion returns a free-text string with the node version.
-func (s *Erroring) NodeVersion(ctx context.Context) (*api.Response[string], error) {
+func (s *Erroring) NodeVersion(ctx context.Context, opts *api.NodeVersionOpts) (*api.Response[string], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -117,10 +117,12 @@ func (s *Erroring) NodeVersion(ctx context.Context) (*api.Response[string], erro
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.NodeVersion(ctx)
+	return next.NodeVersion(ctx, opts)
 }
 
 // SlotDuration provides the duration of a slot of the chain.
+//
+// Deprecated: use Spec().
 func (s *Erroring) SlotDuration(ctx context.Context) (time.Duration, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
@@ -134,6 +136,8 @@ func (s *Erroring) SlotDuration(ctx context.Context) (time.Duration, error) {
 }
 
 // SlotsPerEpoch provides the slots per epoch of the chain.
+//
+// Deprecated: use Spec().
 func (s *Erroring) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
@@ -159,20 +163,9 @@ func (s *Erroring) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 	return next.FarFutureEpoch(ctx)
 }
 
-// GenesisValidatorsRoot provides the genesis validators root of the chain.
-func (s *Erroring) GenesisValidatorsRoot(ctx context.Context) ([]byte, error) {
-	if err := s.maybeError(ctx); err != nil {
-		return nil, err
-	}
-	next, isNext := s.next.(consensusclient.GenesisValidatorsRootProvider)
-	if !isNext {
-		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
-	}
-
-	return next.GenesisValidatorsRoot(ctx)
-}
-
 // TargetAggregatorsPerCommittee provides the target number of aggregators for each attestation committee.
+//
+// Deprecated: use Spec().
 func (s *Erroring) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
@@ -522,7 +515,7 @@ func (s *Erroring) Fork(ctx context.Context,
 }
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Erroring) ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.Fork], error) {
+func (s *Erroring) ForkSchedule(ctx context.Context, opts *api.ForkScheduleOpts) (*api.Response[[]*phase0.Fork], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -531,11 +524,11 @@ func (s *Erroring) ForkSchedule(ctx context.Context) (*api.Response[[]*phase0.Fo
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.ForkSchedule(ctx)
+	return next.ForkSchedule(ctx, opts)
 }
 
 // Genesis fetches genesis information for the chain.
-func (s *Erroring) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], error) {
+func (s *Erroring) Genesis(ctx context.Context, opts *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -544,11 +537,11 @@ func (s *Erroring) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], 
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.Genesis(ctx)
+	return next.Genesis(ctx, opts)
 }
 
 // NodeSyncing provides the state of the node's synchronization with the chain.
-func (s *Erroring) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncState], error) {
+func (s *Erroring) NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -557,11 +550,11 @@ func (s *Erroring) NodeSyncing(ctx context.Context) (*api.Response[*apiv1.SyncSt
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.NodeSyncing(ctx)
+	return next.NodeSyncing(ctx, opts)
 }
 
 // NodePeers provides the peers of the node.
-func (s *Erroring) NodePeers(ctx context.Context, opts *api.PeerOpts) (*api.Response[[]*apiv1.Peer], error) {
+func (s *Erroring) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -632,7 +625,7 @@ func (s *Erroring) SyncCommitteeDuties(ctx context.Context, opts *api.SyncCommit
 }
 
 // Spec provides the spec information of the chain.
-func (s *Erroring) Spec(ctx context.Context) (*api.Response[map[string]interface{}], error) {
+func (s *Erroring) Spec(ctx context.Context, opts *api.SpecOpts) (*api.Response[map[string]interface{}], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -641,7 +634,7 @@ func (s *Erroring) Spec(ctx context.Context) (*api.Response[map[string]interface
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.Spec(ctx)
+	return next.Spec(ctx, opts)
 }
 
 // ValidatorBalances provides the validator balances for a given state.
@@ -694,7 +687,7 @@ func (s *Erroring) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase
 }
 
 // VoluntaryExitPool fetches the voluntary exit pool.
-func (s *Erroring) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVoluntaryExit, error) {
+func (s *Erroring) VoluntaryExitPool(ctx context.Context, opts *api.VoluntaryExitPoolOpts) (*api.Response[[]*phase0.SignedVoluntaryExit], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -703,7 +696,7 @@ func (s *Erroring) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVolun
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.VoluntaryExitPool(ctx)
+	return next.VoluntaryExitPool(ctx, opts)
 }
 
 // Domain provides a domain for a given domain type at a given epoch.
@@ -733,6 +726,8 @@ func (s *Erroring) GenesisDomain(ctx context.Context, domainType phase0.DomainTy
 }
 
 // GenesisTime provides the genesis time of the chain.
+//
+// Deprecated: use Genesis().
 func (s *Erroring) GenesisTime(ctx context.Context) (time.Time, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return time.Time{}, err
@@ -746,7 +741,7 @@ func (s *Erroring) GenesisTime(ctx context.Context) (time.Time, error) {
 }
 
 // DepositContract provides details of the Ethereum 1 deposit contract for the chain.
-func (s *Erroring) DepositContract(ctx context.Context) (*api.Response[*apiv1.DepositContract], error) {
+func (s *Erroring) DepositContract(ctx context.Context, opts *api.DepositContractOpts) (*api.Response[*apiv1.DepositContract], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -755,7 +750,7 @@ func (s *Erroring) DepositContract(ctx context.Context) (*api.Response[*apiv1.De
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.DepositContract(ctx)
+	return next.DepositContract(ctx, opts)
 }
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
@@ -803,7 +798,7 @@ func (s *Erroring) BeaconStateRoot(ctx context.Context,
 }
 
 // ForkChoice fetches the node's current fork choice context.
-func (s *Erroring) ForkChoice(ctx context.Context) (*api.Response[*apiv1.ForkChoice], error) {
+func (s *Erroring) ForkChoice(ctx context.Context, opts *api.ForkChoiceOpts) (*api.Response[*apiv1.ForkChoice], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -812,5 +807,5 @@ func (s *Erroring) ForkChoice(ctx context.Context) (*api.Response[*apiv1.ForkCho
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.ForkChoice(ctx)
+	return next.ForkChoice(ctx, opts)
 }

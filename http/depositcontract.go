@@ -19,10 +19,20 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/pkg/errors"
 )
 
 // DepositContract provides details of the execution deposit contract for the chain.
-func (s *Service) DepositContract(ctx context.Context) (*api.Response[*apiv1.DepositContract], error) {
+func (s *Service) DepositContract(ctx context.Context,
+	opts *api.DepositContractOpts,
+) (
+	*api.Response[*apiv1.DepositContract],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
 	s.depositContractMutex.RLock()
 	if s.depositContract != nil {
 		defer s.depositContractMutex.RUnlock()
@@ -45,7 +55,8 @@ func (s *Service) DepositContract(ctx context.Context) (*api.Response[*apiv1.Dep
 	}
 
 	// Up to us to fetch the information.
-	httpResponse, err := s.get2(ctx, "/eth/v1/config/deposit_contract")
+	url := "/eth/v1/config/deposit_contract"
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

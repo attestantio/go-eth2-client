@@ -14,6 +14,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 
@@ -27,7 +28,16 @@ type genesisJSON struct {
 }
 
 // Genesis provides the genesis information of the chain.
-func (s *Service) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], error) {
+func (s *Service) Genesis(ctx context.Context,
+	opts *api.GenesisOpts,
+) (
+	*api.Response[*apiv1.Genesis],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
 	s.genesisMutex.RLock()
 	if s.genesis != nil {
 		defer s.genesisMutex.RUnlock()
@@ -50,16 +60,14 @@ func (s *Service) Genesis(ctx context.Context) (*api.Response[*apiv1.Genesis], e
 	}
 
 	// Up to us to fetch the information.
-	respBodyReader, err := s.get(ctx, "/eth/v1/beacon/genesis")
+	url := "/eth/v1/beacon/genesis"
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request genesis")
 	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain genesis")
-	}
 
 	var resp genesisJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
+	if err := json.NewDecoder(bytes.NewReader(httpResponse.body)).Decode(&resp); err != nil {
 		return nil, errors.Wrap(err, "failed to parse genesis")
 	}
 	s.genesis = resp.Data

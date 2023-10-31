@@ -21,7 +21,7 @@ import (
 )
 
 // DepositContract provides details of the execution layer deposit contract for the chain.
-func (s *Service) DepositContract(_ context.Context) (*api.Response[*apiv1.DepositContract], error) {
+func (s *Service) DepositContract(_ context.Context, _ *api.DepositContractOpts) (*api.Response[*apiv1.DepositContract], error) {
 	return &api.Response[*apiv1.DepositContract]{
 		Data:     &apiv1.DepositContract{},
 		Metadata: make(map[string]any),

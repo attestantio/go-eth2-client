@@ -39,7 +39,8 @@ func (s *Service) SignedBeaconBlock(ctx context.Context,
 		return nil, errors.New("no options specified")
 	}
 
-	httpResponse, err := s.get2(ctx, fmt.Sprintf("/eth/v2/beacon/blocks/%s", opts.Block))
+	url := fmt.Sprintf("/eth/v2/beacon/blocks/%s", opts.Block)
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -44,7 +45,7 @@ func TestSpec(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			response, err := service.(client.SpecProvider).Spec(ctx)
+			response, err := service.(client.SpecProvider).Spec(ctx, &api.SpecOpts{})
 			require.NoError(t, err)
 			// Check an integer type.
 			require.IsType(t, response.Data["BASE_REWARD_FACTOR"], uint64(0))

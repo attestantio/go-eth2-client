@@ -24,7 +24,8 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -43,11 +44,11 @@ type Service struct {
 
 	// Various information from the node that does not change during the
 	// lifetime of a beacon node.
-	genesis              *api.Genesis
+	genesis              *apiv1.Genesis
 	genesisMutex         sync.RWMutex
 	spec                 map[string]interface{}
 	specMutex            sync.RWMutex
-	depositContract      *api.DepositContract
+	depositContract      *apiv1.DepositContract
 	depositContractMutex sync.RWMutex
 	forkSchedule         []*phase0.Fork
 	forkScheduleMutex    sync.RWMutex
@@ -142,19 +143,19 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 // fetchStaticValues fetches values that never change.
 // This caches the values, avoiding future API calls.
 func (s *Service) fetchStaticValues(ctx context.Context) error {
-	if _, err := s.Genesis(ctx); err != nil {
+	if _, err := s.Genesis(ctx, &api.GenesisOpts{}); err != nil {
 		return errors.Wrap(err, "failed to fetch genesis")
 	}
-	if _, err := s.Spec(ctx); err != nil {
+	if _, err := s.Spec(ctx, &api.SpecOpts{}); err != nil {
 		return errors.Wrap(err, "failed to fetch spec")
 	}
-	if _, err := s.DepositContract(ctx); err != nil {
+	if _, err := s.DepositContract(ctx, &api.DepositContractOpts{}); err != nil {
 		return errors.Wrap(err, "failed to fetch deposit contract")
 	}
-	if _, err := s.ForkSchedule(ctx); err != nil {
+	if _, err := s.ForkSchedule(ctx, &api.ForkScheduleOpts{}); err != nil {
 		return errors.Wrap(err, "failed to fetch fork schedule")
 	}
-	if _, err := s.NodeVersion(ctx); err != nil {
+	if _, err := s.NodeVersion(ctx, &api.NodeVersionOpts{}); err != nil {
 		return errors.Wrap(err, "failed to fetch node version")
 	}
 
@@ -196,7 +197,7 @@ func (s *Service) periodicClearStaticValues(ctx context.Context) {
 // checkDVT checks if connected to DVT middleware and sets
 // internal flags appropriately.
 func (s *Service) checkDVT(ctx context.Context) error {
-	response, err := s.NodeVersion(ctx)
+	response, err := s.NodeVersion(ctx, &api.NodeVersionOpts{})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain node version for DVT check")
 	}
