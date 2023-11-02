@@ -17,6 +17,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -45,27 +46,36 @@ type SuffixStateDiff struct {
 }
 
 type SuffixStateDiffJSON struct {
-	Suffix       byte   `json:"suffix"`
-	CurrentValue string `json:"currentValue"`
-	NewValue     string `json:"newValue"`
+	Suffix       string  `json:"suffix"`
+	CurrentValue *string `json:"currentValue"`
+	NewValue     *string `json:"newValue"`
 }
 
 func (s *SuffixStateDiff) UnmarshalJSON(input []byte) error {
 	var (
-		ssd SuffixStateDiff
+		ssd SuffixStateDiffJSON
 		err error
 	)
 
 	if err := json.Unmarshal(input, &ssd); err != nil {
 		return fmt.Errorf("error unmarshalling JSON SuffixStateDiff: %w", err)
 	}
-	s.CurrentValue, err = hex.DecodeString(strings.TrimPrefix(string(ssd.CurrentValue), "0x"))
+	suffix, err := strconv.ParseUint(ssd.Suffix, 10, 8)
 	if err != nil {
-		return fmt.Errorf("error decoding currentValue string: %w", err)
+		return fmt.Errorf("error decoding suffix string: %w", err)
 	}
-	s.NewValue, err = hex.DecodeString(strings.TrimPrefix(string(ssd.NewValue), "0x"))
-	if err != nil {
-		return fmt.Errorf("error decoding newValue string: %w", err)
+	s.Suffix = uint8(suffix)
+	if ssd.CurrentValue != nil {
+		s.CurrentValue, err = hex.DecodeString(strings.TrimPrefix(*ssd.CurrentValue, "0x"))
+		if err != nil {
+			return fmt.Errorf("error decoding currentValue string: %w", err)
+		}
+	}
+	if ssd.NewValue != nil {
+		s.NewValue, err = hex.DecodeString(strings.TrimPrefix(*ssd.NewValue, "0x"))
+		if err != nil {
+			return fmt.Errorf("error decoding newValue string: %w", err)
+		}
 	}
 
 	return nil
@@ -93,5 +103,11 @@ func (s *StemStateDiff) UnmarshalJSON(input []byte) error {
 
 	copy(s.Stem[:], stem)
 	s.SuffixDiffs = ssd.SuffixDiffs
+	return nil
+}
+
+func (s *VerkleProof) UnmarshalJSON(input []byte) error {
+	// TODO: parse VerkleProof
+
 	return nil
 }
