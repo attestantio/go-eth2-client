@@ -22,15 +22,17 @@ import (
 
 // blockContentsJSON is the spec representation of the struct.
 type blockContentsJSON struct {
-	Block        *deneb.BeaconBlock   `json:"block"`
-	BlobSidecars []*deneb.BlobSidecar `json:"blob_sidecars"`
+	Block     *deneb.BeaconBlock `json:"block"`
+	KZGProofs []deneb.KZGProof   `json:"kzg_proofs"`
+	Blobs     []deneb.Blob       `json:"blobs"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (b *BlockContents) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&blockContentsJSON{
-		Block:        b.Block,
-		BlobSidecars: b.BlobSidecars,
+		Block:     b.Block,
+		KZGProofs: b.KZGProofs,
+		Blobs:     b.Blobs,
 	})
 }
 
@@ -50,10 +52,15 @@ func (b *BlockContents) unpack(data *blockContentsJSON) error {
 	}
 	b.Block = data.Block
 
-	if data.BlobSidecars == nil {
-		return errors.New("blob sidecars missing")
+	if data.KZGProofs == nil {
+		return errors.New("kzg proofs missing")
 	}
-	b.BlobSidecars = data.BlobSidecars
+	b.KZGProofs = data.KZGProofs
+
+	if data.Blobs == nil {
+		return errors.New("blobs missing")
+	}
+	b.Blobs = data.Blobs
 
 	return nil
 }

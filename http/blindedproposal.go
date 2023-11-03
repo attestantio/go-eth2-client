@@ -123,7 +123,7 @@ func (s *Service) blindedProposalFromSSZ(res *httpResponse) (*api.Response[*api.
 			return nil, errors.Wrap(err, "failed to decode capella blinded beacon block proposal")
 		}
 	case spec.DataVersionDeneb:
-		response.Data.Deneb = &apiv1deneb.BlindedBlockContents{}
+		response.Data.Deneb = &apiv1deneb.BlindedBeaconBlock{}
 		if err := response.Data.Deneb.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Wrap(err, "failed to decode deneb blinded beacon block proposal")
 		}
@@ -148,7 +148,7 @@ func (s *Service) blindedProposalFromJSON(res *httpResponse) (*api.Response[*api
 	case spec.DataVersionCapella:
 		response.Data.Capella, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1capella.BlindedBeaconBlock{})
 	case spec.DataVersionDeneb:
-		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1deneb.BlindedBlockContents{})
+		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1deneb.BlindedBeaconBlock{})
 	default:
 		return nil, fmt.Errorf("unsupported version %s", res.consensusVersion)
 	}

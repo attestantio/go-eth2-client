@@ -21,19 +21,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-// KzgProof is an KZG proof.
-type KzgProof [48]byte
+// KZGProof is an KZG proof.
+type KZGProof [48]byte
 
-// KzgProofLength is the number of bytes in a KZG proof.
-const KzgProofLength = 48
+// KZGProofLength is the number of bytes in a KZG proof.
+const KZGProofLength = 48
 
 // String returns a string version of the structure.
-func (k KzgProof) String() string {
+func (k KZGProof) String() string {
 	return fmt.Sprintf("%#x", k)
 }
 
 // Format formats the KZG commitment.
-func (k KzgProof) Format(state fmt.State, v rune) {
+func (k KZGProof) Format(state fmt.State, v rune) {
 	format := string(v)
 	switch v {
 	case 's':
@@ -49,7 +49,7 @@ func (k KzgProof) Format(state fmt.State, v rune) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (k *KzgProof) UnmarshalJSON(input []byte) error {
+func (k *KZGProof) UnmarshalJSON(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
@@ -60,16 +60,16 @@ func (k *KzgProof) UnmarshalJSON(input []byte) error {
 	if !bytes.HasSuffix(input, []byte{'"'}) {
 		return errors.New("invalid suffix")
 	}
-	if len(input) != 1+2+KzgProofLength*2+1 {
+	if len(input) != 1+2+KZGProofLength*2+1 {
 		return errors.New("incorrect length")
 	}
 
-	length, err := hex.Decode(k[:], input[3:3+KzgProofLength*2])
+	length, err := hex.Decode(k[:], input[3:3+KZGProofLength*2])
 	if err != nil {
-		return errors.Wrapf(err, "invalid value %s", string(input[3:3+KzgProofLength*2]))
+		return errors.Wrapf(err, "invalid value %s", string(input[3:3+KZGProofLength*2]))
 	}
 
-	if length != KzgProofLength {
+	if length != KZGProofLength {
 		return errors.New("incorrect length")
 	}
 
@@ -77,12 +77,12 @@ func (k *KzgProof) UnmarshalJSON(input []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-func (k KzgProof) MarshalJSON() ([]byte, error) {
+func (k KZGProof) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%#x"`, k)), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (k *KzgProof) UnmarshalYAML(input []byte) error {
+func (k *KZGProof) UnmarshalYAML(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
@@ -93,16 +93,16 @@ func (k *KzgProof) UnmarshalYAML(input []byte) error {
 	if !bytes.HasSuffix(input, []byte{'\''}) {
 		return errors.New("invalid suffix")
 	}
-	if len(input) != 1+2+KzgProofLength*2+1 {
+	if len(input) != 1+2+KZGProofLength*2+1 {
 		return errors.New("incorrect length")
 	}
 
-	length, err := hex.Decode(k[:], input[3:3+KzgProofLength*2])
+	length, err := hex.Decode(k[:], input[3:3+KZGProofLength*2])
 	if err != nil {
-		return errors.Wrapf(err, "invalid value %s", string(input[3:3+KzgProofLength*2]))
+		return errors.Wrapf(err, "invalid value %s", string(input[3:3+KZGProofLength*2]))
 	}
 
-	if length != KzgProofLength {
+	if length != KZGProofLength {
 		return errors.New("incorrect length")
 	}
 
@@ -110,6 +110,6 @@ func (k *KzgProof) UnmarshalYAML(input []byte) error {
 }
 
 // MarshalYAML implements yaml.Marshaler.
-func (k KzgProof) MarshalYAML() ([]byte, error) {
+func (k KZGProof) MarshalYAML() ([]byte, error) {
 	return []byte(fmt.Sprintf(`'%#x'`, k)), nil
 }

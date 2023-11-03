@@ -509,23 +509,45 @@ func (v *VersionedProposal) Timestamp() (uint64, error) {
 	}
 }
 
-// BlobSidecars returns the blob sidecars of the proposal.
-func (v *VersionedProposal) BlobSidecars() ([]*deneb.BlobSidecar, error) {
+// Blobs returns the blobs of the proposal.
+func (v *VersionedProposal) Blobs() ([]deneb.Blob, error) {
 	switch v.Version {
 	case spec.DataVersionPhase0:
-		return make([]*deneb.BlobSidecar, 0), nil
+		return make([]deneb.Blob, 0), nil
 	case spec.DataVersionAltair:
-		return make([]*deneb.BlobSidecar, 0), nil
+		return make([]deneb.Blob, 0), nil
 	case spec.DataVersionBellatrix:
-		return make([]*deneb.BlobSidecar, 0), nil
+		return make([]deneb.Blob, 0), nil
 	case spec.DataVersionCapella:
-		return make([]*deneb.BlobSidecar, 0), nil
+		return make([]deneb.Blob, 0), nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil {
 			return nil, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlobSidecars, nil
+		return v.Deneb.Blobs, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// KZGProofs returns the KZG proofs of the proposal.
+func (v *VersionedProposal) KZGProofs() ([]deneb.KZGProof, error) {
+	switch v.Version {
+	case spec.DataVersionPhase0:
+		return make([]deneb.KZGProof, 0), nil
+	case spec.DataVersionAltair:
+		return make([]deneb.KZGProof, 0), nil
+	case spec.DataVersionBellatrix:
+		return make([]deneb.KZGProof, 0), nil
+	case spec.DataVersionCapella:
+		return make([]deneb.KZGProof, 0), nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return nil, errors.New("no deneb block")
+		}
+
+		return v.Deneb.KZGProofs, nil
 	default:
 		return nil, errors.New("unknown version")
 	}

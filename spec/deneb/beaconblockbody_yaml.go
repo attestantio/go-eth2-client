@@ -38,14 +38,14 @@ type beaconBlockBodyYAML struct {
 	SyncAggregate         *altair.SyncAggregate                 `yaml:"sync_aggregate"`
 	ExecutionPayload      *ExecutionPayload                     `yaml:"execution_payload"`
 	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `yaml:"bls_to_execution_changes"`
-	BlobKzgCommitments    []string                              `yaml:"blob_kzg_commitments"`
+	BlobKZGCommitments    []string                              `yaml:"blob_kzg_commitments"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
 func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
-	blobKzgCommitments := make([]string, len(b.BlobKzgCommitments))
-	for i := range b.BlobKzgCommitments {
-		blobKzgCommitments[i] = b.BlobKzgCommitments[i].String()
+	blobKZGCommitments := make([]string, len(b.BlobKZGCommitments))
+	for i := range b.BlobKZGCommitments {
+		blobKZGCommitments[i] = b.BlobKZGCommitments[i].String()
 	}
 
 	yamlBytes, err := yaml.MarshalWithOptions(&beaconBlockBodyYAML{
@@ -60,7 +60,7 @@ func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
 		SyncAggregate:         b.SyncAggregate,
 		ExecutionPayload:      b.ExecutionPayload,
 		BLSToExecutionChanges: b.BLSToExecutionChanges,
-		BlobKzgCommitments:    blobKzgCommitments,
+		BlobKZGCommitments:    blobKZGCommitments,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

@@ -18,33 +18,35 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // blobSidecarYAML is the spec representation of the struct.
 type blobSidecarYAML struct {
-	BlockRoot       string `yaml:"block_root"`
-	Index           uint64 `yaml:"index"`
-	Slot            uint64 `yaml:"slot"`
-	BlockParentRoot string `yaml:"block_parent_root"`
-	ProposerIndex   uint64 `yaml:"proposer_index"`
-	Blob            string `yaml:"blob"`
-	KzgCommitment   string `yaml:"kzg_commitment"`
-	KzgProof        string `yaml:"kzg_proof"`
+	Index                       uint64                          `yaml:"index"`
+	Blob                        string                          `yaml:"blob"`
+	KZGCommitment               string                          `yaml:"kzg_commitment"`
+	KZGProof                    string                          `yaml:"kzg_proof"`
+	SignedBlockHeader           *phase0.SignedBeaconBlockHeader `yaml:"signed_block_header"`
+	KZGCommitmentInclusionProof [17]string                      `yaml:"kzg_commitment_inclusion_proof"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
 func (b *BlobSidecar) MarshalYAML() ([]byte, error) {
+	var kzgCommitmentInclusionProof [17]string
+	for i := range b.KZGCommitmentInclusionProof {
+		kzgCommitmentInclusionProof[i] = fmt.Sprintf("%#x", b.KZGCommitmentInclusionProof[i])
+	}
+
 	yamlBytes, err := yaml.MarshalWithOptions(&blobSidecarYAML{
-		BlockRoot:       b.BlockRoot.String(),
-		Index:           uint64(b.Index),
-		Slot:            uint64(b.Slot),
-		BlockParentRoot: b.BlockParentRoot.String(),
-		ProposerIndex:   uint64(b.ProposerIndex),
-		Blob:            fmt.Sprintf("%#x", b.Blob),
-		KzgCommitment:   b.KzgCommitment.String(),
-		KzgProof:        b.KzgProof.String(),
+		Index:                       uint64(b.Index),
+		Blob:                        fmt.Sprintf("%#x", b.Blob),
+		KZGCommitment:               b.KZGCommitment.String(),
+		KZGProof:                    b.KZGProof.String(),
+		SignedBlockHeader:           b.SignedBlockHeader,
+		KZGCommitmentInclusionProof: kzgCommitmentInclusionProof,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

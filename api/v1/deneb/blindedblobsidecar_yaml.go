@@ -31,8 +31,8 @@ type blindedBlobSidecarYAML struct {
 	BlockParentRoot phase0.Root         `yaml:"block_parent_root"`
 	ProposerIndex   uint64              `yaml:"proposer_index"`
 	BlobRoot        phase0.Root         `yaml:"blob_root"`
-	KzgCommitment   deneb.KzgCommitment `yaml:"kzg_commitment"`
-	KzgProof        deneb.KzgProof      `yaml:"kzg_proof"`
+	KZGCommitment   deneb.KZGCommitment `yaml:"kzg_commitment"`
+	KZGProof        deneb.KZGProof      `yaml:"kzg_proof"`
 }
 
 // MarshalYAML implements json.Marshaler.
@@ -44,8 +44,8 @@ func (b *BlindedBlobSidecar) MarshalYAML() ([]byte, error) {
 		BlockParentRoot: b.BlockParentRoot,
 		ProposerIndex:   uint64(b.ProposerIndex),
 		BlobRoot:        b.BlobRoot,
-		KzgCommitment:   b.KzgCommitment,
-		KzgProof:        b.KzgProof,
+		KZGCommitment:   b.KZGCommitment,
+		KZGProof:        b.KZGProof,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

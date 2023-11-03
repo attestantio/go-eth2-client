@@ -16,11 +16,11 @@ package api
 import (
 	"errors"
 
-	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -29,7 +29,7 @@ type VersionedBlockRequest struct {
 	Version   spec.DataVersion
 	Bellatrix *bellatrix.SignedBeaconBlock
 	Capella   *capella.SignedBeaconBlock
-	Deneb     *apiv1deneb.SignedBlockContents
+	Deneb     *deneb.SignedBeaconBlock
 }
 
 // Slot returns the slot of the signed beacon block.
@@ -48,11 +48,11 @@ func (v *VersionedBlockRequest) Slot() (phase0.Slot, error) {
 
 		return v.Capella.Message.Slot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil {
 			return 0, errors.New("no denb block")
 		}
 
-		return v.Deneb.SignedBlock.Message.Slot, nil
+		return v.Deneb.Message.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -74,11 +74,11 @@ func (v *VersionedBlockRequest) ExecutionBlockHash() (phase0.Hash32, error) {
 
 		return v.Capella.Message.Body.ExecutionPayload.BlockHash, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil || v.Deneb.SignedBlock.Message.Body == nil || v.Deneb.SignedBlock.Message.Body.ExecutionPayload == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil || v.Deneb.Message.Body.ExecutionPayload == nil {
 			return phase0.Hash32{}, errors.New("no denb block")
 		}
 
-		return v.Deneb.SignedBlock.Message.Body.ExecutionPayload.BlockHash, nil
+		return v.Deneb.Message.Body.ExecutionPayload.BlockHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -100,11 +100,11 @@ func (v *VersionedBlockRequest) Attestations() ([]*phase0.Attestation, error) {
 
 		return v.Capella.Message.Body.Attestations, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil || v.Deneb.SignedBlock.Message.Body == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
 
-		return v.Deneb.SignedBlock.Message.Body.Attestations, nil
+		return v.Deneb.Message.Body.Attestations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -126,11 +126,11 @@ func (v *VersionedBlockRequest) Root() (phase0.Root, error) {
 
 		return v.Capella.Message.HashTreeRoot()
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 
-		return v.Deneb.SignedBlock.Message.HashTreeRoot()
+		return v.Deneb.Message.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -152,11 +152,11 @@ func (v *VersionedBlockRequest) BodyRoot() (phase0.Root, error) {
 
 		return v.Capella.Message.Body.HashTreeRoot()
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil || v.Deneb.SignedBlock.Message.Body == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 
-		return v.Deneb.SignedBlock.Message.Body.HashTreeRoot()
+		return v.Deneb.Message.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -178,11 +178,11 @@ func (v *VersionedBlockRequest) ParentRoot() (phase0.Root, error) {
 
 		return v.Capella.Message.ParentRoot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 
-		return v.Deneb.SignedBlock.Message.ParentRoot, nil
+		return v.Deneb.Message.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -204,11 +204,11 @@ func (v *VersionedBlockRequest) StateRoot() (phase0.Root, error) {
 
 		return v.Capella.Message.StateRoot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 
-		return v.Deneb.SignedBlock.Message.StateRoot, nil
+		return v.Deneb.Message.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -230,11 +230,11 @@ func (v *VersionedBlockRequest) AttesterSlashings() ([]*phase0.AttesterSlashing,
 
 		return v.Capella.Message.Body.AttesterSlashings, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil || v.Deneb.SignedBlock.Message.Body == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
 
-		return v.Deneb.SignedBlock.Message.Body.AttesterSlashings, nil
+		return v.Deneb.Message.Body.AttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -256,11 +256,11 @@ func (v *VersionedBlockRequest) ProposerSlashings() ([]*phase0.ProposerSlashing,
 
 		return v.Capella.Message.Body.ProposerSlashings, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil || v.Deneb.SignedBlock.Message.Body == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
 
-		return v.Deneb.SignedBlock.Message.Body.ProposerSlashings, nil
+		return v.Deneb.Message.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -282,11 +282,11 @@ func (v *VersionedBlockRequest) SyncAggregate() (*altair.SyncAggregate, error) {
 
 		return v.Capella.Message.Body.SyncAggregate, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil || v.Deneb.SignedBlock.Message.Body == nil {
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
 
-		return v.Deneb.SignedBlock.Message.Body.SyncAggregate, nil
+		return v.Deneb.Message.Body.SyncAggregate, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
