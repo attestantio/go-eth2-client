@@ -17,7 +17,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -46,7 +45,7 @@ type SuffixStateDiff struct {
 }
 
 type SuffixStateDiffJSON struct {
-	Suffix       string  `json:"suffix"`
+	Suffix       uint8   `json:"suffix"`
 	CurrentValue *string `json:"currentValue"`
 	NewValue     *string `json:"newValue"`
 }
@@ -60,11 +59,7 @@ func (s *SuffixStateDiff) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &ssd); err != nil {
 		return fmt.Errorf("error unmarshalling JSON SuffixStateDiff: %w", err)
 	}
-	suffix, err := strconv.ParseUint(ssd.Suffix, 10, 8)
-	if err != nil {
-		return fmt.Errorf("error decoding suffix string: %w", err)
-	}
-	s.Suffix = uint8(suffix)
+	s.Suffix = ssd.Suffix
 	if ssd.CurrentValue != nil {
 		s.CurrentValue, err = hex.DecodeString(strings.TrimPrefix(*ssd.CurrentValue, "0x"))
 		if err != nil {
@@ -109,5 +104,27 @@ func (s *StemStateDiff) UnmarshalJSON(input []byte) error {
 func (s *VerkleProof) UnmarshalJSON(input []byte) error {
 	// TODO: parse VerkleProof
 
+	return nil
+}
+
+type ExecutionWitness struct {
+	StateDiff   []*StemStateDiff `ssz-max:"1048576,1073741824" ssz-size:"?,?" json:"stateDiff"`
+	VerkleProof *VerkleProof     `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
+}
+
+type executionWitnessJSON struct {
+	StateDiff []*StemStateDiff `json"stateDiff""`
+}
+
+func (ew *ExecutionWitness) UnmarshalJSON(input []byte) error {
+	var res executionWitnessJSON
+	err := json.Unmarshal(input, &res)
+	if err != nil {
+		return err
+	}
+	ew.StateDiff = make([]*StemStateDiff, len(res.StateDiff))
+	for i, sd := range res.StateDiff {
+		ew.StateDiff[i] = sd
+	}
 	return nil
 }

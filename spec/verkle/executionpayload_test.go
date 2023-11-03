@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/verkle"
 	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
@@ -38,7 +38,7 @@ func TestExecutionPayloadJSON(t *testing.T) {
 		{
 			name:  "JSONBad",
 			input: []byte("[]"),
-			err:   "invalid JSON: json: cannot unmarshal array into Go value of type capella.executionPayloadJSON",
+			err:   "invalid JSON: json: cannot unmarshal array into Go value of type verkle.executionPayloadJSON",
 		},
 		{
 			name:  "ParentHashMissing",
@@ -336,7 +336,7 @@ func TestExecutionPayloadJSON(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res capella.ExecutionPayload
+			var res verkle.ExecutionPayload
 			err := json.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
@@ -351,6 +351,480 @@ func TestExecutionPayloadJSON(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
+	input := `{
+      "parent_hash": "0x8c4375e8d1975fccaba14347d3502568016de0eb70ffbf7946161f48952e3768",
+      "fee_recipient": "0xf97e180c050e5ab072211ad2c213eb5aee4df134",
+      "state_root": "0x5d3fe7e6af15616f2f69a92513cc7a93c951f67703324384c0158b24bced23c6",
+      "receipts_root": "0xc57385f9122a8d1c38904a96c8354938b2d8d9a264f854696db27808c8bda65a",
+      "logs_bloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "prev_randao": "0x943ea75b9ca7c930ec687b2d52ae8acc5c14ac10ce3bcf51ea73f4a5f53c90b4",
+      "block_number": "22ea0",
+      "gas_limit": "1c9c380",
+      "gas_used": "53bd8",
+      "timestamp": "65450cdc",
+      "extra_data": "0xd983010c01846765746889676f312e32302e3130856c696e7578",
+      "base_fee_per_gas": "0x7",
+      "block_hash": "0xbdaf077eda58da81a071490720dc038e302e2fa9896b987285316db6213a53af",
+      "transactions": [
+        "0xf871829e1d850ba43b7400831e848094b54dd56dd5e54aea84c46e053295d0c2b608e3d387038d7ea4c680008083021e7ca008c51d95eb9d5434ba10f7afedb1a55baadf7046bedfd9cea49b5056c0911aeaa00e7314c8171475e8bf38712504a21e93d97f44e4d9c01f574199e8ce32e6e240",
+        "0xf871829e1e850ba43b7400831e848094672ca39100757e3aa5dc8b56391360a8af609bed87038d7ea4c680008083021e7ba0b11350173a47747c93cb8ca9a9b7c698e0cce0096d771cb5b26a42519e3c5a96a0289ac8fa2a2fcb6503548e5d9312b0223ebbee2d582a9a75cbbe54bb65dfadf5",
+        "0xf871829e1f850ba43b7400831e84809464f134d4a957839b80f613a4ee66704232ae40f687038d7ea4c680008083021e7ba04af76593cc221f2ebc99d9065c83e6ee8c2f3394960bfe080ab6fbd05b64d9b4a07b1391aacaaec16ff2f2f108c43577def982926ec255e8008ad5bc32b2ddb928",
+        "0xf871829e20850ba43b7400831e8480941d0a03f667c47660d864dfced77d8bbfda7d93b987038d7ea4c680008083021e7ba036430a7dabf191a40b684c8e233269aa2653aa18334d96ff567f9d776fa7eb53a07488d91fae0e775bdbdb4da8f09e68edb40179d258faef69e34ba7029a6aa93a",
+        "0xf871829e21850ba43b7400831e84809400b08dca5900949bbe39286d4de5476df6f5912387038d7ea4c680008083021e7ca07ab92a5bb67f07ef19bb08f25b7ee2756e85fc3d6716e746d98438fbcf7a2747a052df0aac3dbb94c7299aba51df8a285980d1b54d125f9cc729eacd394862f0a7",
+        "0xf871829e22850ba43b7400831e848094f2b1e318b08a57d4046474a7cdae1b6730969dd187038d7ea4c680008083021e7ba02295680c6f941ffe63a430e833b2bb98ddadc3d4ab5807993eb1aea26e547150a0146aa684584df45e77b1c8a406174c0aca0b357b921c95aa91a675d9b95de519",
+        "0xf871829e23850ba43b7400831e848094fe8209c1e62f9d81b63f412fb299aa02dfc19c9587038d7ea4c680008083021e7ca0fbe0cc725caf7c673aaa8981884aa509afd628f83057ffcab0368faff611acfaa03091ff55153c28df17a1221c35d2e2768f4424efc4f27beae49b71dab84530f4",
+        "0xf871829e24850ba43b7400831e8480948f51fd9add3af34addbc5e6fd93222076ffe158f87038d7ea4c680008083021e7ca00e661c560ed3ed0b8df78048253a04e832180eae35f0c463f759edec286a1538a072d501189cc1f9980558c11014ed3edc7631972ab4a924e738d20c8dab168d11",
+        "0xf871829e25850ba43b7400831e84809403c77f993959a1f6ba27959203992ae878cc02c787038d7ea4c680008083021e7ba0f244cffb443e0143f10969546b84477360089c6de710755cffdc5688560707a3a060371ab75d7a53354b7153f4fea86b29de496ff9e9360ffede1421627baf1018",
+        "0xf871829e26850ba43b7400831e848094746a86544e4aa4b877c0b0c9f4492e4e8398400387038d7ea4c680008083021e7ca00df4364773124edd5fda792674525b563ce74408a377770fd5bbce9d8a7ee43da00a2b247125661afb5f81445516e997d22ccd2653c4d6a1fdff606b8daa9804d7"
+      ],
+      "withdrawals": [],
+      "execution_witness": {
+        "stateDiff": [
+          {
+            "stem": "0x195a5230289d35cb02e93b2211a535c99833cab15ca039e871f292eea0fae8",
+            "suffixDiffs": [
+              {
+                "suffix": 0,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 1,
+                "currentValue": null,
+                "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 2,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 3,
+                "currentValue": null,
+                "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+              },
+              {
+                "suffix": 4,
+                "currentValue": null,
+                "newValue": null
+              }
+            ]
+          },
+          {
+            "stem": "0x33517354a13720c0bff54402639a056cdfab1a75a1cbe6a2bb0a27d7cfcc4e",
+            "suffixDiffs": [
+              {
+                "suffix": 0,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 1,
+                "currentValue": null,
+                "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 2,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 3,
+                "currentValue": null,
+                "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+              },
+              {
+                "suffix": 4,
+                "currentValue": null,
+                "newValue": null
+              }
+            ]
+          },
+          {
+            "stem": "0x3d305c2b5c346cbad8add424f4829e7d5536f4802dff5186c5affd9bb3f7b7",
+            "suffixDiffs": [
+              {
+                "suffix": 0,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 1,
+                "currentValue": null,
+                "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 2,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 3,
+                "currentValue": null,
+                "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+              },
+              {
+                "suffix": 4,
+                "currentValue": null,
+                "newValue": null
+              }
+            ]
+          },
+          {
+            "stem": "0x4174e656feb5bc6bb59b1f20685dbd8a79fdf046d221a212f5a95ef244133d",
+            "suffixDiffs": [
+              {
+                "suffix": 0,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 1,
+                "currentValue": null,
+                "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 2,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 3,
+                "currentValue": null,
+                "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+              },
+              {
+                "suffix": 4,
+                "currentValue": null,
+                "newValue": null
+              }
+            ]
+          },
+          {
+            "stem": "0x639c9807989d0c881e47355e3a7bc2bc551869ff6011a5990cb868a9b09ceb",
+            "suffixDiffs": [
+              {
+                "suffix": 0,
+                "currentValue": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "newValue": null
+              },
+              {
+                "suffix": 1,
+                "currentValue": "0x00102cbb3b81ade4040000000000000000000000000000000000000000000000",
+                "newValue": "0x003085c1730c4de4040000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 2,
+                "currentValue": "0x1d9e000000000000000000000000000000000000000000000000000000000000",
+                "newValue": "0x279e000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 3,
+                "currentValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+                "newValue": null
+              },
+              {
+                "suffix": 4,
+                "currentValue": null,
+                "newValue": null
+              }
+            ]
+          },
+          {
+            "stem": "0x7386e3c035fefc860993010c2a6768b848d96f06aa59e1a37d81d2e07328b8",
+            "suffixDiffs": [
+              {
+                "suffix": 0,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 1,
+                "currentValue": null,
+                "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 2,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 3,
+                "currentValue": null,
+                "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+              },
+              {
+                "suffix": 4,
+                "currentValue": null,
+                "newValue": null
+              }
+            ]
+          },
+          {
+            "stem": "0x8dc286880de0cc507d96583b7c4c2b2b25239e58f8e67509b32edb5bbf293c",
+            "suffixDiffs": [
+              {
+                "suffix": 0,
+                "currentValue": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "newValue": null
+              },
+              {
+                "suffix": 1,
+                "currentValue": "0x9cd59a37d7653fab290000000000000000000000000000000000000000000000",
+                "newValue": "0xb4ca96ac70577cab290000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 2,
+                "currentValue": "0x0000000000000000000000000000000000000000000000000000000000000000",
+                "newValue": null
+              },
+              {
+                "suffix": 3,
+                "currentValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
+                "newValue": null
+              },
+              {
+                "suffix": 4,
+                "currentValue": null,
+                "newValue": null
+              }
+            ]
+          },
+          {
+            "stem": "0x9235bf96c3d0af0c5bac00a692a050f6e64813503bf0eefe4df32ff08895e0",
+            "suffixDiffs": [
+              {
+                "suffix": 0,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 1,
+                "currentValue": null,
+                "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 2,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 3,
+                "currentValue": null,
+                "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+              },
+              {
+                "suffix": 4,
+                "currentValue": null,
+                "newValue": null
+              }
+            ]
+          },
+          {
+            "stem": "0x96751ae378c07a37482832a8d576d47a86150db4f21bb28ec1ead322d5a03f",
+            "suffixDiffs": [
+              {
+                "suffix": 0,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 1,
+                "currentValue": null,
+                "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 2,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 3,
+                "currentValue": null,
+                "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+              },
+              {
+                "suffix": 4,
+                "currentValue": null,
+                "newValue": null
+              }
+            ]
+          },
+          {
+            "stem": "0xabe0cf8505f985d6f207663459eb00f5864a99c5c125709d88a444248e37a9",
+            "suffixDiffs": [
+              {
+                "suffix": 0,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 1,
+                "currentValue": null,
+                "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 2,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 3,
+                "currentValue": null,
+                "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+              },
+              {
+                "suffix": 4,
+                "currentValue": null,
+                "newValue": null
+              }
+            ]
+          },
+          {
+            "stem": "0xb44b3d3441141db60262d0da1f0c4fa2e2dd7f3cfc355337c35e71fc6d2369",
+            "suffixDiffs": [
+              {
+                "suffix": 0,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 1,
+                "currentValue": null,
+                "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 2,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 3,
+                "currentValue": null,
+                "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+              },
+              {
+                "suffix": 4,
+                "currentValue": null,
+                "newValue": null
+              }
+            ]
+          },
+          {
+            "stem": "0xbeabfb270d10f9c2e15d7d6823c305acbe018d2b9dbf3112d801b17ac4e070",
+            "suffixDiffs": [
+              {
+                "suffix": 0,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 1,
+                "currentValue": null,
+                "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 2,
+                "currentValue": null,
+                "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              {
+                "suffix": 3,
+                "currentValue": null,
+                "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
+              },
+              {
+                "suffix": 4,
+                "currentValue": null,
+                "newValue": null
+              }
+            ]
+          }
+        ],
+        "verkleProof": {
+          "otherStems": [
+            "0x195ac8988e07d1d042cd2cb188a2b9f3cafe4e496efc32c8b8f1b7be1bf7cb"
+          ],
+          "depthExtensionPresent": "0x111818181a181a1818181818",
+          "commitmentsByPath": [
+            "0x35df946bf8d59b150f5b3db45cfc538a6231b6ea533e3dfda2b8349593bd0819",
+            "0x73c70bbab95845200e36097ab1c8953546232269e3430b5d964285095f327ef1",
+            "0x25a0104c6e23ae39a11f6e84712aa69008931f3d1bc96419a59dc02b3b194bc5",
+            "0x6fc328748f4315e086f349fd9e987007ec87ade330a5a74c7cc5c59c19d8127e",
+            "0x04fcf44a9686512fc43927fb945fd9ae9dfd93820f3081a781acdc61ed0ff5fc",
+            "0x221656b980e90602fd1837449a547d7a5576fc121009a64ed5c5629f501ba110",
+            "0x5a190916f4c3c14848590956d82e105894dc4f8023a8293ac31a599227d87f0e",
+            "0x4ee06b239d53b3a5f8c90490c73a1aa87ec53590b58e94ca81232560eed1bbb5",
+            "0x02f9e4e729b26dd1271fd30be838da2d00fbaac9263ce091424565540911c937",
+            "0x49ff897c96e1b4f756f5351c3523f6d72486e31aa812314f64c211ed9e69b137",
+            "0x373d3d3f661d075cd04aec5f5601a0a46948174ccda9e99cb3e197ae5bb368b4",
+            "0x0e027a0d55dc00975887125f156fea1abd916d6bcb8ee131290d64208c44628b",
+            "0x2d48cce5708608eb6561881ce33dffc91497034081a2503f89fc2d715a61bba2",
+            "0x2b00fede6000152cb1e799c3ca834173fa5f29904093d6545fd3097648e0d36b",
+            "0x310c3c7ad21bff3bf475baf74c6c946c70ee80a86e8fe6528b2200d4d9cd847e",
+            "0x376787fe2f3206bfe208ce6ebc2c2e041a0bcc12d6acfa3b9f321a4f60045b62",
+            "0x0d391f9ee77aba304d10bbef4f47b577b6d53c05cb6f9d58099161257fca749b",
+            "0x2aa6c94786a66152d64a50950835e6565e1056acbd54617230e371fd26ed5716",
+            "0x3d75dd75da84e4b8c7adcb0948497377ce65358a965c3c8d5645796d9510d67d",
+            "0x3be047d70405aa172cdd082a4b164abd5cb5b5973eaf4c71e651cb6c49898308",
+            "0x3aefb8945a0a87bed2b536bd6dc57de9400acab5ea5e313dbdea76c1d7ee9eea",
+            "0x0050ec39f90c1605f426c2a50f3c33dfcc58c1ee3b4595a99dcddf068a6d4c98",
+            "0x53d40bf7f36391b84f185449feaed1fd95f5306cbb92ac790f426d670875efc7",
+            "0x31ee5bfa90839a847cfabcf35ee2bf0fe2844cdde69f553bc575965064cc8a97",
+            "0x32cd63340783823e5a5ec3f10a62599ba98777b49cf0895a77ebcfbf0c64faf6",
+            "0x5da449b0d2dbce9cdc9710c83194a317626b704eeccdf7c84eb5bcada82f8775",
+            "0x16b613e7ad71ee3e94f4c3527d47db156e38f6a2cadffbda65b00396ced9dcc0",
+            "0x28cebb356b28b2f6870b972fd0cc68446776497300dad6066b3ea7d69cf40398"
+          ],
+          "d": "0x0e510d83a3e963938d861d5658c3f6a3b49d80f14b4cc90c6c6b2f81963c61e3",
+          "ipaProof": {
+            "cl": [
+              "0x18a4d6b428e3e4153d90a7e17993613b6e873ef6090a21d2387cd1c79a664538",
+              "0x279d8b347365f425580e9dd83b415fe19f6ff5bb72bcca8f90e0a7bddb96ce6a",
+              "0x377fc70c122cfdc3b3cf8986ccc001c4ce2823ddd3bc7e62141caa6522fb2c89",
+              "0x6dc8fa61184dc458ff408a43d06eb1ee46d0c4c34088f07797704695de6da5fc",
+              "0x25cd90986ac665d6d11f8691a65e532f7146bb9326e4c03b495ecb4745cdabe4",
+              "0x2e855bc0bb6d907f186995a215675603d748d036fe3c53a18b211ed40bff6571",
+              "0x4af0e24c46470f14bbb6e796c565da228c37a68cd996d0f92316cc9c84436ee2",
+              "0x27753ca1e614a5429bbf9bf9b06f40a2cc10657b96320b78ee12d073a138e5e6"
+            ],
+            "cr": [
+              "0x13a8929e3c119b4d4959a46e0852b253a9e526af5f695d2db4a48ad67a98b721",
+              "0x3ed022cc4442adb0c6b13d310d7fd98ae668c08628ed0579351b893ac761f0c1",
+              "0x7399987d473f56a1297fbbbc25bf1d3646724d7ab3de69cd1e18ef5c735a4ceb",
+              "0x1f81cf125ef1ace8bbfc130b1db9d107f6d119ba043c2e4121f04656c1ff0128",
+              "0x3965cdd86e3c34eb007f71e4ef86ab1fe2e7b3ade8e6f6bcb72c5fab67f578e6",
+              "0x4226e576a30619b1e78914125b67ce4e4a52f41d2752e9456e7ab518b436de8a",
+              "0x46d1ebedec8a2a1ab2db71ad684ff2c725fb20ebb4ffdc0d8f466d1ddc0c22f1",
+              "0x2e99f250f02cd931b8cc260a6b809876d5ca6a025690c9828e12538ac5a64adb"
+            ],
+            "finalEvaluation": "0x012eeb63954c5c54e79f7331cc3307ca4c79b95560edcfdbbd4f34a5d5d38253"
+          }
+        }
+      }
+    }`
+
+	var res verkle.ExecutionPayload
+	err := json.Unmarshal([]byte(input), &res)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("state diff: %v", res.ExecutionWitness)
+	if res.ExecutionWitness == nil {
+		t.Fatal("nil execution witness")
+	}
+	if len(res.ExecutionWitness.StateDiff) != 12 {
+		t.Fatalf("Invalid number of decoded state diffs, expected 12, got %d", len(res.ExecutionWitness.StateDiff))
+	}
+	if res.ExecutionWitness.StateDiff[4].SuffixDiffs == nil {
+		t.Fatal("nil suffix diff")
+	}
+	if len(res.ExecutionWitness.StateDiff[4].SuffixDiffs) != 5 {
+		t.Fatalf("Invalid number of decoded state diffs, expected 5, got %d", len(res.ExecutionWitness.StateDiff[4].SuffixDiffs))
 	}
 }
 
@@ -369,7 +843,7 @@ func TestExecutionPayloadYAML(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res capella.ExecutionPayload
+			var res verkle.ExecutionPayload
 			err := yaml.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)

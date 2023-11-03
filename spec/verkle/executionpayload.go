@@ -29,11 +29,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-type ExecutionWitness struct {
-	StateDiff   []*StemStateDiff `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
-	VerkleProof *VerkleProof     `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
-}
-
 // ExecutionPayload represents an execution layer payload.
 type ExecutionPayload struct {
 	ParentHash       phase0.Hash32              `ssz-size:"32"`
@@ -220,7 +215,7 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	if data.BlockNumber == "" {
 		return errors.New("block number missing")
 	}
-	blockNumber, err := strconv.ParseUint(data.BlockNumber, 10, 64)
+	blockNumber, err := strconv.ParseUint(data.BlockNumber, 16, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for block number")
 	}
@@ -229,7 +224,7 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	if data.GasLimit == "" {
 		return errors.New("gas limit missing")
 	}
-	gasLimit, err := strconv.ParseUint(data.GasLimit, 10, 64)
+	gasLimit, err := strconv.ParseUint(data.GasLimit, 16, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for gas limit")
 	}
@@ -238,7 +233,7 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	if data.GasUsed == "" {
 		return errors.New("gas used missing")
 	}
-	gasUsed, err := strconv.ParseUint(data.GasUsed, 10, 64)
+	gasUsed, err := strconv.ParseUint(data.GasUsed, 16, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for gas used")
 	}
@@ -247,7 +242,7 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	if data.Timestamp == "" {
 		return errors.New("timestamp missing")
 	}
-	e.Timestamp, err = strconv.ParseUint(data.Timestamp, 10, 64)
+	e.Timestamp, err = strconv.ParseUint(data.Timestamp, 16, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for timestamp")
 	}
@@ -336,6 +331,7 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 		return errors.New("withdrawals missing")
 	}
 	e.Withdrawals = data.Withdrawals
+	e.ExecutionWitness = data.ExecutionWitness
 
 	return nil
 }
