@@ -29,23 +29,18 @@ type blobSidecarJSON struct {
 	KZGCommitment               KZGCommitment                   `json:"kzg_commitment"`
 	KZGProof                    KZGProof                        `json:"kzg_proof"`
 	SignedBlockHeader           *phase0.SignedBeaconBlockHeader `json:"signed_block_header"`
-	KZGCommitmentInclusionProof [17]string                      `json:"kzg_commitment_inclusion_proof"`
+	KZGCommitmentInclusionProof KZGCommitmentInclusionProof     `json:"kzg_commitment_inclusion_proof"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (b *BlobSidecar) MarshalJSON() ([]byte, error) {
-	var kzgCommitmentInclusionProof [17]string
-	for i := range b.KZGCommitmentInclusionProof {
-		kzgCommitmentInclusionProof[i] = fmt.Sprintf("%#x", b.KZGCommitmentInclusionProof[i])
-	}
-
 	return json.Marshal(&blobSidecarJSON{
 		Index:                       fmt.Sprintf("%d", b.Index),
 		Blob:                        b.Blob,
 		KZGCommitment:               b.KZGCommitment,
 		KZGProof:                    b.KZGProof,
 		SignedBlockHeader:           b.SignedBlockHeader,
-		KZGCommitmentInclusionProof: kzgCommitmentInclusionProof,
+		KZGCommitmentInclusionProof: b.KZGCommitmentInclusionProof,
 	})
 }
 

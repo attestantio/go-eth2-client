@@ -46,7 +46,7 @@ func (k *KZGCommitmentInclusionProof) UnmarshalJSON(input []byte) error {
 	}
 
 	for i := range values {
-		if err := k.unmarshalElement(i, values[i]); err != nil {
+		if err := k.unmarshalElementJSON(i, bytes.TrimSpace(values[i])); err != nil {
 			return err
 		}
 	}
@@ -54,7 +54,7 @@ func (k *KZGCommitmentInclusionProof) UnmarshalJSON(input []byte) error {
 	return nil
 }
 
-func (k *KZGCommitmentInclusionProof) unmarshalElement(element int, input []byte) error {
+func (k *KZGCommitmentInclusionProof) unmarshalElementJSON(element int, input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
@@ -80,6 +80,73 @@ func (k *KZGCommitmentInclusionProof) MarshalJSON() ([]byte, error) {
 		return nil, errors.New("value nil")
 	}
 
+	return []byte(fmt.Sprintf(`["%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x"]`,
+		k[0],
+		k[1],
+		k[2],
+		k[3],
+		k[4],
+		k[5],
+		k[6],
+		k[7],
+		k[8],
+		k[9],
+		k[10],
+		k[11],
+		k[12],
+		k[13],
+		k[14],
+		k[15],
+		k[16],
+	)), nil
+}
+
+// UnmarshalYAML implements yaml.Unmarshaler.
+func (k *KZGCommitmentInclusionProof) UnmarshalYAML(input []byte) error {
+	if len(input) == 0 {
+		return errors.New("input missing")
+	}
+
+	if input[0] != '[' {
+		return errors.New("invalid prefix")
+	}
+
+	values := bytes.Split(input[1:len(input)-1], []byte(","))
+	if len(values) != kzgCommitmentProofElements {
+		return errors.New("incorrect number of elements")
+	}
+
+	for i := range values {
+		if err := k.unmarshalElementYAML(i, bytes.TrimSpace(values[i])); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (k *KZGCommitmentInclusionProof) unmarshalElementYAML(element int, input []byte) error {
+	if len(input) == 0 {
+		return errors.New("input missing")
+	}
+
+	if !bytes.HasPrefix(input, []byte{'\'', '0', 'x'}) {
+		return errors.New("invalid element prefix")
+	}
+	if len(input) != 1+2+kzgCommitmentProofElementLength*2+1 {
+		return errors.New("incorrect element length")
+	}
+
+	_, err := hex.Decode(k[element][:], input[3:3+kzgCommitmentProofElementLength*2])
+	if err != nil {
+		return errors.Wrapf(err, "invalid value %s", string(input[3:3+kzgCommitmentProofElementLength*2]))
+	}
+
+	return nil
+}
+
+// MarshalYAML implements yaml.Marshaler.
+func (k KZGCommitmentInclusionProof) MarshalYAML() ([]byte, error) {
 	return []byte(fmt.Sprintf(`["%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x"]`,
 		k[0],
 		k[1],
