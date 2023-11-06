@@ -17,6 +17,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"index/suffixarray"
 	"strings"
 )
 
@@ -45,7 +46,7 @@ type SuffixStateDiff struct {
 }
 
 type SuffixStateDiffJSON struct {
-	Suffix       uint8   `json:"suffix"`
+	Suffix       string  `json:"suffix"`
 	CurrentValue *string `json:"currentValue"`
 	NewValue     *string `json:"newValue"`
 }
@@ -59,7 +60,11 @@ func (s *SuffixStateDiff) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &ssd); err != nil {
 		return fmt.Errorf("error unmarshalling JSON SuffixStateDiff: %w", err)
 	}
-	s.Suffix = ssd.Suffix
+	suffixbytes, err := hex.DecodeString(strings.TrimPrefix(ssd.Suffix, "0x"))
+	if err != nil {
+		return fmt.Errorf("error decoding suffix", err)
+	}
+	s.Suffix = suffixbytes[0]
 	if ssd.CurrentValue != nil {
 		s.CurrentValue, err = hex.DecodeString(strings.TrimPrefix(*ssd.CurrentValue, "0x"))
 		if err != nil {
