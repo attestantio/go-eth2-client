@@ -17,7 +17,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"index/suffixarray"
 	"strings"
 )
 
@@ -60,9 +59,13 @@ func (s *SuffixStateDiff) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &ssd); err != nil {
 		return fmt.Errorf("error unmarshalling JSON SuffixStateDiff: %w", err)
 	}
-	suffixbytes, err := hex.DecodeString(strings.TrimPrefix(ssd.Suffix, "0x"))
+	var cleanstring = strings.TrimPrefix(ssd.Suffix, "0x")
+	if len(cleanstring)%2 == 1 {
+		cleanstring = "0" + cleanstring
+	}
+	suffixbytes, err := hex.DecodeString(cleanstring)
 	if err != nil {
-		return fmt.Errorf("error decoding suffix", err)
+		return fmt.Errorf("error decoding suffix: %w", err)
 	}
 	s.Suffix = suffixbytes[0]
 	if ssd.CurrentValue != nil {

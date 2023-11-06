@@ -388,27 +388,27 @@ func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
             "stem": "0x195a5230289d35cb02e93b2211a535c99833cab15ca039e871f292eea0fae8",
             "suffixDiffs": [
               {
-                "suffix": 0,
+                "suffix": "0x0",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 1,
+                "suffix": "0x1",
                 "currentValue": null,
                 "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 2,
+                "suffix": "0x2",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 3,
+                "suffix": "0x3",
                 "currentValue": null,
                 "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
               },
               {
-                "suffix": 4,
+                "suffix": "0x4",
                 "currentValue": null,
                 "newValue": null
               }
@@ -418,27 +418,27 @@ func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
             "stem": "0x33517354a13720c0bff54402639a056cdfab1a75a1cbe6a2bb0a27d7cfcc4e",
             "suffixDiffs": [
               {
-                "suffix": 0,
+                "suffix": "0x0",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 1,
+                "suffix": "0x1",
                 "currentValue": null,
                 "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 2,
+                "suffix": "0x2",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 3,
+                "suffix": "0x3",
                 "currentValue": null,
                 "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
               },
               {
-                "suffix": 4,
+                "suffix": "0x4",
                 "currentValue": null,
                 "newValue": null
               }
@@ -448,27 +448,27 @@ func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
             "stem": "0x3d305c2b5c346cbad8add424f4829e7d5536f4802dff5186c5affd9bb3f7b7",
             "suffixDiffs": [
               {
-                "suffix": 0,
+                "suffix": "0x0",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 1,
+                "suffix": "0x1",
                 "currentValue": null,
                 "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 2,
+                "suffix": "0x2",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 3,
+                "suffix": "0x3",
                 "currentValue": null,
                 "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
               },
               {
-                "suffix": 4,
+                "suffix": "0x4",
                 "currentValue": null,
                 "newValue": null
               }
@@ -478,27 +478,27 @@ func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
             "stem": "0x4174e656feb5bc6bb59b1f20685dbd8a79fdf046d221a212f5a95ef244133d",
             "suffixDiffs": [
               {
-                "suffix": 0,
+                "suffix": "0x0",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 1,
+                "suffix": "0x1",
                 "currentValue": null,
                 "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 2,
+                "suffix": "0x2",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 3,
+                "suffix": "0x3",
                 "currentValue": null,
                 "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
               },
               {
-                "suffix": 4,
+                "suffix": "0x4",
                 "currentValue": null,
                 "newValue": null
               }
@@ -508,27 +508,27 @@ func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
             "stem": "0x639c9807989d0c881e47355e3a7bc2bc551869ff6011a5990cb868a9b09ceb",
             "suffixDiffs": [
               {
-                "suffix": 0,
+                "suffix": "0x0",
                 "currentValue": "0x0000000000000000000000000000000000000000000000000000000000000000",
                 "newValue": null
               },
               {
-                "suffix": 1,
+                "suffix": "0x1",
                 "currentValue": "0x00102cbb3b81ade4040000000000000000000000000000000000000000000000",
                 "newValue": "0x003085c1730c4de4040000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 2,
+                "suffix": "0x2",
                 "currentValue": "0x1d9e000000000000000000000000000000000000000000000000000000000000",
                 "newValue": "0x279e000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 3,
+                "suffix": "0x3",
                 "currentValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
                 "newValue": null
               },
               {
-                "suffix": 4,
+                "suffix": "0x4",
                 "currentValue": null,
                 "newValue": null
               }
@@ -538,27 +538,27 @@ func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
             "stem": "0x7386e3c035fefc860993010c2a6768b848d96f06aa59e1a37d81d2e07328b8",
             "suffixDiffs": [
               {
-                "suffix": 0,
+                "suffix": "0x0",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 1,
+                "suffix": "0x1",
                 "currentValue": null,
                 "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 2,
+                "suffix": "0x2",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 3,
+                "suffix": "0x3",
                 "currentValue": null,
                 "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
               },
               {
-                "suffix": 4,
+                "suffix": "0x4",
                 "currentValue": null,
                 "newValue": null
               }
@@ -568,27 +568,27 @@ func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
             "stem": "0x8dc286880de0cc507d96583b7c4c2b2b25239e58f8e67509b32edb5bbf293c",
             "suffixDiffs": [
               {
-                "suffix": 0,
+                "suffix": "0x0",
                 "currentValue": "0x0000000000000000000000000000000000000000000000000000000000000000",
                 "newValue": null
               },
               {
-                "suffix": 1,
+                "suffix": "0x1",
                 "currentValue": "0x9cd59a37d7653fab290000000000000000000000000000000000000000000000",
                 "newValue": "0xb4ca96ac70577cab290000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 2,
+                "suffix": "0x2",
                 "currentValue": "0x0000000000000000000000000000000000000000000000000000000000000000",
                 "newValue": null
               },
               {
-                "suffix": 3,
+                "suffix": "0x3",
                 "currentValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470",
                 "newValue": null
               },
               {
-                "suffix": 4,
+                "suffix": "0x4",
                 "currentValue": null,
                 "newValue": null
               }
@@ -598,27 +598,27 @@ func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
             "stem": "0x9235bf96c3d0af0c5bac00a692a050f6e64813503bf0eefe4df32ff08895e0",
             "suffixDiffs": [
               {
-                "suffix": 0,
+                "suffix": "0x0",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 1,
+                "suffix": "0x1",
                 "currentValue": null,
                 "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 2,
+                "suffix": "0x2",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 3,
+                "suffix": "0x3",
                 "currentValue": null,
                 "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
               },
               {
-                "suffix": 4,
+                "suffix": "0x4",
                 "currentValue": null,
                 "newValue": null
               }
@@ -628,27 +628,27 @@ func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
             "stem": "0x96751ae378c07a37482832a8d576d47a86150db4f21bb28ec1ead322d5a03f",
             "suffixDiffs": [
               {
-                "suffix": 0,
+                "suffix": "0x0",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 1,
+                "suffix": "0x1",
                 "currentValue": null,
                 "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 2,
+                "suffix": "0x2",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 3,
+                "suffix": "0x3",
                 "currentValue": null,
                 "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
               },
               {
-                "suffix": 4,
+                "suffix": "0x4",
                 "currentValue": null,
                 "newValue": null
               }
@@ -658,27 +658,27 @@ func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
             "stem": "0xabe0cf8505f985d6f207663459eb00f5864a99c5c125709d88a444248e37a9",
             "suffixDiffs": [
               {
-                "suffix": 0,
+                "suffix": "0x0",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 1,
+                "suffix": "0x1",
                 "currentValue": null,
                 "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 2,
+                "suffix": "0x2",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 3,
+                "suffix": "0x3",
                 "currentValue": null,
                 "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
               },
               {
-                "suffix": 4,
+                "suffix": "0x4",
                 "currentValue": null,
                 "newValue": null
               }
@@ -688,27 +688,27 @@ func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
             "stem": "0xb44b3d3441141db60262d0da1f0c4fa2e2dd7f3cfc355337c35e71fc6d2369",
             "suffixDiffs": [
               {
-                "suffix": 0,
+                "suffix": "0x0",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 1,
+                "suffix": "0x1",
                 "currentValue": null,
                 "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 2,
+                "suffix": "0x2",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 3,
+                "suffix": "0x3",
                 "currentValue": null,
                 "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
               },
               {
-                "suffix": 4,
+                "suffix": "0x4",
                 "currentValue": null,
                 "newValue": null
               }
@@ -718,27 +718,27 @@ func TestExecutionPayloadWithExecutionWitnessJSON(t *testing.T) {
             "stem": "0xbeabfb270d10f9c2e15d7d6823c305acbe018d2b9dbf3112d801b17ac4e070",
             "suffixDiffs": [
               {
-                "suffix": 0,
+                "suffix": "0x0",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 1,
+                "suffix": "0x1",
                 "currentValue": null,
                 "newValue": "0x0080c6a47e8d0300000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 2,
+                "suffix": "0x2",
                 "currentValue": null,
                 "newValue": "0x0000000000000000000000000000000000000000000000000000000000000000"
               },
               {
-                "suffix": 3,
+                "suffix": "0x3",
                 "currentValue": null,
                 "newValue": "0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470"
               },
               {
-                "suffix": 4,
+                "suffix": "0x4",
                 "currentValue": null,
                 "newValue": null
               }
