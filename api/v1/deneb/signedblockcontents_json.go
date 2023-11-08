@@ -25,7 +25,7 @@ import (
 type signedBlockContentsJSON struct {
 	SignedBlock *deneb.SignedBeaconBlock `json:"signed_block"`
 	KZGProofs   []deneb.KZGProof         `json:"kzg_proofs"`
-	Blobs       []*deneb.Blob            `json:"blobs"`
+	Blobs       []deneb.Blob             `json:"blobs"`
 }
 
 // MarshalJSON implements json.Marshaler.
