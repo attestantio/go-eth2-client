@@ -25,8 +25,8 @@ import (
 
 // VersionedSignedValidatorRegistration contains a versioned SignedValidatorRegistrationV1.
 type VersionedSignedValidatorRegistration struct {
-	Version spec.BuilderVersion
-	V1      *apiv1.SignedValidatorRegistration
+	Version spec.BuilderVersion                `json:"version"`
+	V1      *apiv1.SignedValidatorRegistration `json:"v1"`
 }
 
 // FeeRecipient returns the fee recipient of the signed validator registration.
