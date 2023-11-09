@@ -48,17 +48,17 @@ func (b *BlockContents) UnmarshalJSON(input []byte) error {
 
 func (b *BlockContents) unpack(data *blockContentsJSON) error {
 	if data.Block == nil {
-		return errors.New("block missing")
+		return errors.New("block: missing")
 	}
 	b.Block = data.Block
 
 	if data.KZGProofs == nil {
-		return errors.New("kzg proofs missing")
+		return errors.New("kzg_proofs: missing")
 	}
 	b.KZGProofs = data.KZGProofs
 
 	if data.Blobs == nil {
-		return errors.New("blobs missing")
+		return errors.New("blobs: missing")
 	}
 	b.Blobs = data.Blobs
 
