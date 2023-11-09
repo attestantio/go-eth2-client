@@ -80,9 +80,9 @@ func (b *BeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = ssz.WriteOffset(dst, offset)
 	offset += len(b.BLSToExecutionChanges) * 172
 
-	// Offset (11) 'BlobKzgCommitments'
+	// Offset (11) 'BlobKZGCommitments'
 	dst = ssz.WriteOffset(dst, offset)
-	offset += len(b.BlobKzgCommitments) * 48
+	offset += len(b.BlobKZGCommitments) * 48
 
 	// Field (3) 'ProposerSlashings'
 	if size := len(b.ProposerSlashings); size > 16 {
@@ -169,13 +169,13 @@ func (b *BeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 
-	// Field (11) 'BlobKzgCommitments'
-	if size := len(b.BlobKzgCommitments); size > 4096 {
-		err = ssz.ErrListTooBigFn("BeaconBlockBody.BlobKzgCommitments", size, 4096)
+	// Field (11) 'BlobKZGCommitments'
+	if size := len(b.BlobKZGCommitments); size > 4096 {
+		err = ssz.ErrListTooBigFn("BeaconBlockBody.BlobKZGCommitments", size, 4096)
 		return
 	}
-	for ii := 0; ii < len(b.BlobKzgCommitments); ii++ {
-		dst = append(dst, b.BlobKzgCommitments[ii][:]...)
+	for ii := 0; ii < len(b.BlobKZGCommitments); ii++ {
+		dst = append(dst, b.BlobKZGCommitments[ii][:]...)
 	}
 
 	return
@@ -253,7 +253,7 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 		return ssz.ErrOffset
 	}
 
-	// Offset (11) 'BlobKzgCommitments'
+	// Offset (11) 'BlobKZGCommitments'
 	if o11 = ssz.ReadOffset(buf[388:392]); o11 > size || o10 > o11 {
 		return ssz.ErrOffset
 	}
@@ -385,16 +385,16 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 		}
 	}
 
-	// Field (11) 'BlobKzgCommitments'
+	// Field (11) 'BlobKZGCommitments'
 	{
 		buf = tail[o11:]
 		num, err := ssz.DivideInt2(len(buf), 48, 4096)
 		if err != nil {
 			return errors.Wrapf(err, "invalid size %d for blob kzg commitments", len(buf))
 		}
-		b.BlobKzgCommitments = make([]KzgCommitment, num)
+		b.BlobKZGCommitments = make([]KZGCommitment, num)
 		for ii := 0; ii < num; ii++ {
-			copy(b.BlobKzgCommitments[ii][:], buf[ii*48:(ii+1)*48])
+			copy(b.BlobKZGCommitments[ii][:], buf[ii*48:(ii+1)*48])
 		}
 	}
 	return err
@@ -434,8 +434,8 @@ func (b *BeaconBlockBody) SizeSSZ() (size int) {
 	// Field (10) 'BLSToExecutionChanges'
 	size += len(b.BLSToExecutionChanges) * 172
 
-	// Field (11) 'BlobKzgCommitments'
-	size += len(b.BlobKzgCommitments) * 48
+	// Field (11) 'BlobKZGCommitments'
+	size += len(b.BlobKZGCommitments) * 48
 
 	return
 }
@@ -572,17 +572,17 @@ func (b *BeaconBlockBody) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 		hh.MerkleizeWithMixin(subIndx, num, 16)
 	}
 
-	// Field (11) 'BlobKzgCommitments'
+	// Field (11) 'BlobKZGCommitments'
 	{
-		if size := len(b.BlobKzgCommitments); size > 4096 {
-			err = ssz.ErrListTooBigFn("BeaconBlockBody.BlobKzgCommitments", size, 4096)
+		if size := len(b.BlobKZGCommitments); size > 4096 {
+			err = ssz.ErrListTooBigFn("BeaconBlockBody.BlobKZGCommitments", size, 4096)
 			return
 		}
 		subIndx := hh.Index()
-		for _, i := range b.BlobKzgCommitments {
+		for _, i := range b.BlobKZGCommitments {
 			hh.PutBytes(i[:])
 		}
-		numItems := uint64(len(b.BlobKzgCommitments))
+		numItems := uint64(len(b.BlobKZGCommitments))
 		hh.MerkleizeWithMixin(subIndx, numItems, 4096)
 	}
 

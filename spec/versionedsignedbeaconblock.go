@@ -733,8 +733,8 @@ func (v *VersionedSignedBeaconBlock) Withdrawals() ([]*capella.Withdrawal, error
 	}
 }
 
-// BlobKzgCommitments returns the blob kzg commitments of the beacon block.
-func (v *VersionedSignedBeaconBlock) BlobKzgCommitments() ([]deneb.KzgCommitment, error) {
+// BlobKZGCommitments returns the blob KZG commitments of the beacon block.
+func (v *VersionedSignedBeaconBlock) BlobKZGCommitments() ([]deneb.KZGCommitment, error) {
 	switch v.Version {
 	case DataVersionPhase0:
 		return nil, errors.New("phase0 block does not have kzg commitments")
@@ -747,7 +747,7 @@ func (v *VersionedSignedBeaconBlock) BlobKzgCommitments() ([]deneb.KzgCommitment
 			return nil, errors.New("no deneb block")
 		}
 
-		return v.Deneb.Message.Body.BlobKzgCommitments, nil
+		return v.Deneb.Message.Body.BlobKZGCommitments, nil
 	default:
 		return nil, errors.New("unknown version")
 	}

@@ -45,7 +45,6 @@ func TestSpecConformance(t *testing.T) {
 		"DOMAIN_AGGREGATE_AND_PROOF":            phase0.DomainType{},
 		"DOMAIN_BEACON_ATTESTER":                phase0.DomainType{},
 		"DOMAIN_BEACON_PROPOSER":                phase0.DomainType{},
-		"DOMAIN_BLOB_SIDECAR":                   phase0.DomainType{},
 		"DOMAIN_DEPOSIT":                        phase0.DomainType{},
 		"DOMAIN_RANDAO":                         phase0.DomainType{},
 		"DOMAIN_SELECTION_PROOF":                phase0.DomainType{},

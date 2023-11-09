@@ -22,14 +22,12 @@ import (
 
 // BlobSidecar represents a data blob sidecar.
 type BlobSidecar struct {
-	BlockRoot       phase0.Root `ssz-size:"32"`
-	Index           BlobIndex
-	Slot            phase0.Slot
-	BlockParentRoot phase0.Root `ssz-size:"32"`
-	ProposerIndex   phase0.ValidatorIndex
-	Blob            Blob          `ssz-size:"131072"`
-	KzgCommitment   KzgCommitment `ssz-size:"48"`
-	KzgProof        KzgProof      `ssz-size:"48"`
+	Index                       BlobIndex
+	Blob                        Blob          `ssz-size:"131072"`
+	KZGCommitment               KZGCommitment `ssz-size:"48"`
+	KZGProof                    KZGProof      `ssz-size:"48"`
+	SignedBlockHeader           *phase0.SignedBeaconBlockHeader
+	KZGCommitmentInclusionProof KZGCommitmentInclusionProof `ssz-size:"544"`
 }
 
 // String returns a string version of the structure.

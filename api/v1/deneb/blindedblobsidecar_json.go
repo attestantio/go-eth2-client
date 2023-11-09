@@ -31,8 +31,8 @@ type blindedBlobSidecarJSON struct {
 	BlockParentRoot phase0.Root         `json:"block_parent_root"`
 	ProposerIndex   string              `json:"proposer_index"`
 	BlobRoot        phase0.Root         `json:"blob_root"`
-	KzgCommitment   deneb.KzgCommitment `json:"kzg_commitment"`
-	KzgProof        deneb.KzgProof      `json:"kzg_proof"`
+	KZGCommitment   deneb.KZGCommitment `json:"kzg_commitment"`
+	KZGProof        deneb.KZGProof      `json:"kzg_proof"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -44,8 +44,8 @@ func (b *BlindedBlobSidecar) MarshalJSON() ([]byte, error) {
 		BlockParentRoot: b.BlockParentRoot,
 		ProposerIndex:   fmt.Sprintf("%d", b.ProposerIndex),
 		BlobRoot:        b.BlobRoot,
-		KzgCommitment:   b.KzgCommitment,
-		KzgProof:        b.KzgProof,
+		KZGCommitment:   b.KZGCommitment,
+		KZGProof:        b.KZGProof,
 	})
 }
 
@@ -80,11 +80,11 @@ func (b *BlindedBlobSidecar) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "blob_root")
 	}
 
-	if err := b.KzgCommitment.UnmarshalJSON(raw["kzg_commitment"]); err != nil {
+	if err := b.KZGCommitment.UnmarshalJSON(raw["kzg_commitment"]); err != nil {
 		return errors.Wrap(err, "kzg_commitment")
 	}
 
-	if err := b.KzgProof.UnmarshalJSON(raw["kzg_proof"]); err != nil {
+	if err := b.KZGProof.UnmarshalJSON(raw["kzg_proof"]); err != nil {
 		return errors.Wrap(err, "kzg_proof")
 	}
 

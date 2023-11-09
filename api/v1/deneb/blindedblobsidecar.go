@@ -29,8 +29,8 @@ type BlindedBlobSidecar struct {
 	BlockParentRoot phase0.Root `ssz-size:"32"`
 	ProposerIndex   phase0.ValidatorIndex
 	BlobRoot        phase0.Root         `ssz-size:"32"`
-	KzgCommitment   deneb.KzgCommitment `ssz-size:"48"`
-	KzgProof        deneb.KzgProof      `ssz-size:"48"`
+	KZGCommitment   deneb.KZGCommitment `ssz-size:"48"`
+	KZGProof        deneb.KZGProof      `ssz-size:"48"`
 }
 
 // String returns a string version of the structure.

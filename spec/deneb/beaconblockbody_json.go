@@ -39,14 +39,14 @@ type beaconBlockBodyJSON struct {
 	SyncAggregate         *altair.SyncAggregate                 `json:"sync_aggregate"`
 	ExecutionPayload      *ExecutionPayload                     `json:"execution_payload"`
 	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `json:"bls_to_execution_changes"`
-	BlobKzgCommitments    []string                              `json:"blob_kzg_commitments"`
+	BlobKZGCommitments    []string                              `json:"blob_kzg_commitments"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (b *BeaconBlockBody) MarshalJSON() ([]byte, error) {
-	blobKzgCommitments := make([]string, len(b.BlobKzgCommitments))
-	for i := range b.BlobKzgCommitments {
-		blobKzgCommitments[i] = b.BlobKzgCommitments[i].String()
+	blobKZGCommitments := make([]string, len(b.BlobKZGCommitments))
+	for i := range b.BlobKZGCommitments {
+		blobKZGCommitments[i] = b.BlobKZGCommitments[i].String()
 	}
 
 	return json.Marshal(&beaconBlockBodyJSON{
@@ -61,7 +61,7 @@ func (b *BeaconBlockBody) MarshalJSON() ([]byte, error) {
 		SyncAggregate:         b.SyncAggregate,
 		ExecutionPayload:      b.ExecutionPayload,
 		BLSToExecutionChanges: b.BLSToExecutionChanges,
-		BlobKzgCommitments:    blobKzgCommitments,
+		BlobKZGCommitments:    blobKZGCommitments,
 	})
 }
 
@@ -130,7 +130,7 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "bls_to_execution_changes")
 	}
 
-	if err := json.Unmarshal(raw["blob_kzg_commitments"], &b.BlobKzgCommitments); err != nil {
+	if err := json.Unmarshal(raw["blob_kzg_commitments"], &b.BlobKZGCommitments); err != nil {
 		return errors.Wrap(err, "blob_kzg_commitments")
 	}
 

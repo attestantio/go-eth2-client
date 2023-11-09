@@ -15,22 +15,26 @@ package deneb
 
 import (
 	"bytes"
+	"encoding/json"
 
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/goccy/go-yaml"
+	"github.com/pkg/errors"
 )
 
 // blockContentsYAML is the spec representation of the struct.
 type blockContentsYAML struct {
-	Block        *deneb.BeaconBlock   `yaml:"block"`
-	BlobSidecars []*deneb.BlobSidecar `yaml:"blob_sidecars"`
+	Block     *deneb.BeaconBlock `yaml:"block"`
+	KZGProofs []deneb.KZGProof   `yaml:"kzg_proofs"`
+	Blobs     []deneb.Blob       `yaml:"blobs"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
 func (b *BlockContents) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&blockContentsYAML{
-		Block:        b.Block,
-		BlobSidecars: b.BlobSidecars,
+		Block:     b.Block,
+		KZGProofs: b.KZGProofs,
+		Blobs:     b.Blobs,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
@@ -44,8 +48,13 @@ func (b *BlockContents) UnmarshalYAML(input []byte) error {
 	// We unmarshal to the JSON struct to save on duplicate code.
 	var data blockContentsJSON
 	if err := yaml.Unmarshal(input, &data); err != nil {
-		return err
+		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
 
-	return b.unpack(&data)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal JSON")
+	}
+
+	return b.UnmarshalJSON(bytes)
 }

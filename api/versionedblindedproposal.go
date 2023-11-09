@@ -29,7 +29,7 @@ type VersionedBlindedProposal struct {
 	Version   spec.DataVersion
 	Bellatrix *apiv1bellatrix.BlindedBeaconBlock
 	Capella   *apiv1capella.BlindedBeaconBlock
-	Deneb     *apiv1deneb.BlindedBlockContents
+	Deneb     *apiv1deneb.BlindedBeaconBlock
 }
 
 // IsEmpty returns true if there is no proposal.
@@ -53,11 +53,11 @@ func (v *VersionedBlindedProposal) Slot() (phase0.Slot, error) {
 
 		return v.Capella.Slot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.BlindedBlock == nil {
+		if v.Deneb == nil {
 			return 0, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlindedBlock.Slot, nil
+		return v.Deneb.Slot, nil
 	default:
 		return 0, errors.New("unsupported version")
 	}
@@ -79,11 +79,11 @@ func (v *VersionedBlindedProposal) ProposerIndex() (phase0.ValidatorIndex, error
 
 		return v.Capella.ProposerIndex, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.BlindedBlock == nil {
+		if v.Deneb == nil {
 			return 0, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlindedBlock.ProposerIndex, nil
+		return v.Deneb.ProposerIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -105,11 +105,11 @@ func (v *VersionedBlindedProposal) RandaoReveal() (phase0.BLSSignature, error) {
 
 		return v.Capella.Body.RANDAOReveal, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.BlindedBlock == nil || v.Deneb.BlindedBlock.Body == nil {
+		if v.Deneb == nil || v.Deneb.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlindedBlock.Body.RANDAOReveal, nil
+		return v.Deneb.Body.RANDAOReveal, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unsupported version")
 	}
@@ -131,11 +131,11 @@ func (v *VersionedBlindedProposal) Graffiti() ([32]byte, error) {
 
 		return v.Capella.Body.Graffiti, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.BlindedBlock == nil || v.Deneb.BlindedBlock.Body == nil {
+		if v.Deneb == nil || v.Deneb.Body == nil {
 			return [32]byte{}, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlindedBlock.Body.Graffiti, nil
+		return v.Deneb.Body.Graffiti, nil
 	default:
 		return [32]byte{}, errors.New("unsupported version")
 	}
@@ -157,11 +157,11 @@ func (v *VersionedBlindedProposal) Attestations() ([]*phase0.Attestation, error)
 
 		return v.Capella.Body.Attestations, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.BlindedBlock == nil || v.Deneb.BlindedBlock.Body == nil {
+		if v.Deneb == nil || v.Deneb.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlindedBlock.Body.Attestations, nil
+		return v.Deneb.Body.Attestations, nil
 	default:
 		return nil, errors.New("unsupported version")
 	}
@@ -183,11 +183,11 @@ func (v *VersionedBlindedProposal) Root() (phase0.Root, error) {
 
 		return v.Capella.HashTreeRoot()
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.BlindedBlock == nil {
+		if v.Deneb == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlindedBlock.HashTreeRoot()
+		return v.Deneb.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -209,11 +209,11 @@ func (v *VersionedBlindedProposal) BodyRoot() (phase0.Root, error) {
 
 		return v.Capella.Body.HashTreeRoot()
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.BlindedBlock == nil || v.Deneb.BlindedBlock.Body == nil {
+		if v.Deneb == nil || v.Deneb.Body == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlindedBlock.Body.HashTreeRoot()
+		return v.Deneb.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -235,11 +235,11 @@ func (v *VersionedBlindedProposal) ParentRoot() (phase0.Root, error) {
 
 		return v.Capella.ParentRoot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.BlindedBlock == nil {
+		if v.Deneb == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlindedBlock.ParentRoot, nil
+		return v.Deneb.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -261,11 +261,11 @@ func (v *VersionedBlindedProposal) StateRoot() (phase0.Root, error) {
 
 		return v.Capella.StateRoot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.BlindedBlock == nil {
+		if v.Deneb == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlindedBlock.StateRoot, nil
+		return v.Deneb.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -299,14 +299,11 @@ func (v *VersionedBlindedProposal) TransactionsRoot() (phase0.Root, error) {
 
 		return v.Capella.Body.ExecutionPayloadHeader.TransactionsRoot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.BlindedBlock == nil ||
-			v.Deneb.BlindedBlock.Body == nil ||
-			v.Deneb.BlindedBlock.Body.ExecutionPayloadHeader == nil {
+		if v.Deneb == nil || v.Deneb.Body == nil || v.Deneb.Body.ExecutionPayloadHeader == nil {
 			return phase0.Root{}, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlindedBlock.Body.ExecutionPayloadHeader.TransactionsRoot, nil
+		return v.Deneb.Body.ExecutionPayloadHeader.TransactionsRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unsupported version")
 	}
@@ -340,14 +337,11 @@ func (v *VersionedBlindedProposal) FeeRecipient() (bellatrix.ExecutionAddress, e
 
 		return v.Capella.Body.ExecutionPayloadHeader.FeeRecipient, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.BlindedBlock == nil ||
-			v.Deneb.BlindedBlock.Body == nil ||
-			v.Deneb.BlindedBlock.Body.ExecutionPayloadHeader == nil {
+		if v.Deneb == nil || v.Deneb.Body == nil || v.Deneb.Body.ExecutionPayloadHeader == nil {
 			return bellatrix.ExecutionAddress{}, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlindedBlock.Body.ExecutionPayloadHeader.FeeRecipient, nil
+		return v.Deneb.Body.ExecutionPayloadHeader.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, errors.New("unsupported version")
 	}
@@ -381,14 +375,11 @@ func (v *VersionedBlindedProposal) Timestamp() (uint64, error) {
 
 		return v.Capella.Body.ExecutionPayloadHeader.Timestamp, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.BlindedBlock == nil ||
-			v.Deneb.BlindedBlock.Body == nil ||
-			v.Deneb.BlindedBlock.Body.ExecutionPayloadHeader == nil {
+		if v.Deneb == nil || v.Deneb.Body == nil || v.Deneb.Body.ExecutionPayloadHeader == nil {
 			return 0, errors.New("no deneb block")
 		}
 
-		return v.Deneb.BlindedBlock.Body.ExecutionPayloadHeader.Timestamp, nil
+		return v.Deneb.Body.ExecutionPayloadHeader.Timestamp, nil
 	default:
 		return 0, errors.New("unsupported version")
 	}

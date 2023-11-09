@@ -154,10 +154,6 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &phase0.SignedBeaconBlockHeader{},
 		},
 		{
-			name: "SignedBlobSidecar",
-			s:    &deneb.SignedBlobSidecar{},
-		},
-		{
 			name: "SignedBLSToExecutionChange",
 			s:    &capella.SignedBLSToExecutionChange{},
 		},

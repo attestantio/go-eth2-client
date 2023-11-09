@@ -39,14 +39,14 @@ type blindedBeaconBlockBodyJSON struct {
 	SyncAggregate          *altair.SyncAggregate                 `json:"sync_aggregate"`
 	ExecutionPayloadHeader *deneb.ExecutionPayloadHeader         `json:"execution_payload_header"`
 	BLSToExecutionChanges  []*capella.SignedBLSToExecutionChange `json:"bls_to_execution_changes"`
-	BlobKzgCommitments     []string                              `json:"blob_kzg_commitments"`
+	BlobKZGCommitments     []string                              `json:"blob_kzg_commitments"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (b *BlindedBeaconBlockBody) MarshalJSON() ([]byte, error) {
-	blobKzgCommitments := make([]string, len(b.BlobKzgCommitments))
-	for i := range b.BlobKzgCommitments {
-		blobKzgCommitments[i] = b.BlobKzgCommitments[i].String()
+	blobKZGCommitments := make([]string, len(b.BlobKZGCommitments))
+	for i := range b.BlobKZGCommitments {
+		blobKZGCommitments[i] = b.BlobKZGCommitments[i].String()
 	}
 
 	return json.Marshal(&blindedBeaconBlockBodyJSON{
@@ -61,7 +61,7 @@ func (b *BlindedBeaconBlockBody) MarshalJSON() ([]byte, error) {
 		SyncAggregate:          b.SyncAggregate,
 		ExecutionPayloadHeader: b.ExecutionPayloadHeader,
 		BLSToExecutionChanges:  b.BLSToExecutionChanges,
-		BlobKzgCommitments:     blobKzgCommitments,
+		BlobKZGCommitments:     blobKZGCommitments,
 	})
 }
 
@@ -135,19 +135,19 @@ func (b *BlindedBeaconBlockBody) unpack(data *blindedBeaconBlockBodyJSON) error 
 	} else {
 		b.BLSToExecutionChanges = data.BLSToExecutionChanges
 	}
-	if data.BlobKzgCommitments == nil {
+	if data.BlobKZGCommitments == nil {
 		return errors.New("blob KZG commitments missing")
 	}
-	b.BlobKzgCommitments = make([]deneb.KzgCommitment, len(data.BlobKzgCommitments))
-	for i := range data.BlobKzgCommitments {
-		data, err := hex.DecodeString(strings.TrimPrefix(data.BlobKzgCommitments[i], "0x"))
+	b.BlobKZGCommitments = make([]deneb.KZGCommitment, len(data.BlobKZGCommitments))
+	for i := range data.BlobKZGCommitments {
+		data, err := hex.DecodeString(strings.TrimPrefix(data.BlobKZGCommitments[i], "0x"))
 		if err != nil {
 			return errors.Wrap(err, "failed to parse blob KZG commitment")
 		}
-		if len(data) != deneb.KzgCommitmentLength {
+		if len(data) != deneb.KZGCommitmentLength {
 			return errors.New("incorrect length for blob KZG commitment")
 		}
-		copy(b.BlobKzgCommitments[i][:], data)
+		copy(b.BlobKZGCommitments[i][:], data)
 	}
 
 	return nil

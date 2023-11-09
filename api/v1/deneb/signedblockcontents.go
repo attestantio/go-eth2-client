@@ -22,8 +22,9 @@ import (
 
 // SignedBlockContents represents the contents of a block, both block and blob.
 type SignedBlockContents struct {
-	SignedBlock        *deneb.SignedBeaconBlock
-	SignedBlobSidecars []*deneb.SignedBlobSidecar `ssz-max:"6"`
+	SignedBlock *deneb.SignedBeaconBlock
+	KZGProofs   []deneb.KZGProof `ssz-max:"6" ssz-size:"?,48"`
+	Blobs       []deneb.Blob     `ssz-max:"6" ssz-size:"?,131072"`
 }
 
 // String returns a string version of the structure.
