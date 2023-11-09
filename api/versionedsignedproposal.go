@@ -14,8 +14,6 @@
 package api
 
 import (
-	"errors"
-
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -38,37 +36,43 @@ type VersionedSignedProposal struct {
 func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
 	switch v.Version {
 	case spec.DataVersionPhase0:
-		if v.Phase0 == nil || v.Phase0.Message == nil {
-			return 0, errors.New("no phase0 block")
+		if v.Phase0 == nil ||
+			v.Phase0.Message == nil {
+			return 0, ErrDataMissing
 		}
 
 		return v.Phase0.Message.Slot, nil
 	case spec.DataVersionAltair:
-		if v.Altair == nil || v.Altair.Message == nil {
-			return 0, errors.New("no altair block")
+		if v.Altair == nil ||
+			v.Altair.Message == nil {
+			return 0, ErrDataMissing
 		}
 
 		return v.Altair.Message.Slot, nil
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil || v.Bellatrix.Message == nil {
-			return 0, errors.New("no bellatrix block")
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil {
+			return 0, ErrDataMissing
 		}
 
 		return v.Bellatrix.Message.Slot, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil || v.Capella.Message == nil {
-			return 0, errors.New("no capella block")
+		if v.Capella == nil ||
+			v.Capella.Message == nil {
+			return 0, ErrDataMissing
 		}
 
 		return v.Capella.Message.Slot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil || v.Deneb.SignedBlock == nil || v.Deneb.SignedBlock.Message == nil {
-			return 0, errors.New("no deneb block")
+		if v.Deneb == nil ||
+			v.Deneb.SignedBlock == nil ||
+			v.Deneb.SignedBlock.Message == nil {
+			return 0, ErrDataMissing
 		}
 
 		return v.Deneb.SignedBlock.Message.Slot, nil
 	default:
-		return 0, errors.New("unsupported version")
+		return 0, ErrUnsupportedVersion
 	}
 }
 
