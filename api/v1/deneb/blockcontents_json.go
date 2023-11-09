@@ -16,6 +16,7 @@ package deneb
 import (
 	"encoding/json"
 
+	"github.com/attestantio/go-eth2-client/codecs"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/pkg/errors"
 )
@@ -38,29 +39,22 @@ func (b *BlockContents) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *BlockContents) UnmarshalJSON(input []byte) error {
-	var data blockContentsJSON
-	if err := json.Unmarshal(input, &data); err != nil {
-		return errors.Wrap(err, "invalid JSON")
+	raw, err := codecs.RawJSON(&blockContentsJSON{}, input)
+	if err != nil {
+		return err
 	}
 
-	return b.unpack(&data)
-}
-
-func (b *BlockContents) unpack(data *blockContentsJSON) error {
-	if data.Block == nil {
-		return errors.New("block: missing")
+	if err := json.Unmarshal(raw["block"], &b.Block); err != nil {
+		return errors.Wrap(err, "block")
 	}
-	b.Block = data.Block
 
-	if data.KZGProofs == nil {
-		return errors.New("kzg_proofs: missing")
+	if err := json.Unmarshal(raw["kzg_proofs"], &b.KZGProofs); err != nil {
+		return errors.Wrap(err, "kzg_proofs")
 	}
-	b.KZGProofs = data.KZGProofs
 
-	if data.Blobs == nil {
-		return errors.New("blobs: missing")
+	if err := json.Unmarshal(raw["blobs"], &b.Blobs); err != nil {
+		return errors.Wrap(err, "blobs")
 	}
-	b.Blobs = data.Blobs
 
 	return nil
 }
