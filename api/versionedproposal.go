@@ -512,14 +512,6 @@ func (v *VersionedProposal) Timestamp() (uint64, error) {
 // Blobs returns the blobs of the proposal.
 func (v *VersionedProposal) Blobs() ([]deneb.Blob, error) {
 	switch v.Version {
-	case spec.DataVersionPhase0:
-		return make([]deneb.Blob, 0), nil
-	case spec.DataVersionAltair:
-		return make([]deneb.Blob, 0), nil
-	case spec.DataVersionBellatrix:
-		return make([]deneb.Blob, 0), nil
-	case spec.DataVersionCapella:
-		return make([]deneb.Blob, 0), nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil {
 			return nil, errors.New("no deneb block")
@@ -527,21 +519,13 @@ func (v *VersionedProposal) Blobs() ([]deneb.Blob, error) {
 
 		return v.Deneb.Blobs, nil
 	default:
-		return nil, errors.New("unknown version")
+		return nil, errors.New("unsupported version")
 	}
 }
 
 // KZGProofs returns the KZG proofs of the proposal.
 func (v *VersionedProposal) KZGProofs() ([]deneb.KZGProof, error) {
 	switch v.Version {
-	case spec.DataVersionPhase0:
-		return make([]deneb.KZGProof, 0), nil
-	case spec.DataVersionAltair:
-		return make([]deneb.KZGProof, 0), nil
-	case spec.DataVersionBellatrix:
-		return make([]deneb.KZGProof, 0), nil
-	case spec.DataVersionCapella:
-		return make([]deneb.KZGProof, 0), nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil {
 			return nil, errors.New("no deneb block")
