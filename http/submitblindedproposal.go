@@ -25,7 +25,7 @@ import (
 )
 
 // SubmitBlindedProposal submits a blinded proposal.
-func (s *Service) SubmitBlindedProposal(ctx context.Context, proposal *api.VersionedSignedBlindedProposal) error {
+func (s *Service) SubmitBlindedProposal(ctx context.Context, proposal *api.VersionedSignedBlindedBeaconBlock) error {
 	var specJSON []byte
 	var err error
 

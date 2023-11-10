@@ -290,7 +290,7 @@ type BlindedBeaconBlockSubmitter interface {
 // BlindedProposalSubmitter is the interface for submitting blinded proposals.
 type BlindedProposalSubmitter interface {
 	// SubmitBlindedProposal submits a beacon block.
-	SubmitBlindedProposal(ctx context.Context, block *api.VersionedSignedBlindedProposal) error
+	SubmitBlindedProposal(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error
 }
 
 // ValidatorRegistrationsSubmitter is the interface for submitting validator registrations.
