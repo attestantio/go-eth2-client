@@ -26,7 +26,7 @@ type VersionedSignedBlindedProposal struct {
 	Version   spec.DataVersion
 	Bellatrix *apiv1bellatrix.SignedBlindedBeaconBlock
 	Capella   *apiv1capella.SignedBlindedBeaconBlock
-	Deneb     *apiv1deneb.SignedBlindedBlockContents
+	Deneb     *apiv1deneb.SignedBlindedBeaconBlock
 }
 
 // Slot returns the slot of the signed blinded proposal.
@@ -48,12 +48,11 @@ func (v *VersionedSignedBlindedProposal) Slot() (phase0.Slot, error) {
 		return v.Capella.Message.Slot, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
-			v.Deneb.SignedBlindedBlock == nil ||
-			v.Deneb.SignedBlindedBlock.Message == nil {
+			v.Deneb.Message == nil {
 			return 0, ErrDataMissing
 		}
 
-		return v.Deneb.SignedBlindedBlock.Message.Slot, nil
+		return v.Deneb.Message.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -80,13 +79,12 @@ func (v *VersionedSignedBlindedProposal) Attestations() ([]*phase0.Attestation, 
 		return v.Capella.Message.Body.Attestations, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
-			v.Deneb.SignedBlindedBlock == nil ||
-			v.Deneb.SignedBlindedBlock.Message == nil ||
-			v.Deneb.SignedBlindedBlock.Message.Body == nil {
+			v.Deneb.Message == nil ||
+			v.Deneb.Message.Body == nil {
 			return nil, ErrDataMissing
 		}
 
-		return v.Deneb.SignedBlindedBlock.Message.Body.Attestations, nil
+		return v.Deneb.Message.Body.Attestations, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -108,12 +106,11 @@ func (v *VersionedSignedBlindedProposal) Root() (phase0.Root, error) {
 
 		return v.Capella.Message.HashTreeRoot()
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.SignedBlindedBlock == nil {
+		if v.Deneb == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
-		return v.Deneb.SignedBlindedBlock.Message.HashTreeRoot()
+		return v.Deneb.Message.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -136,13 +133,12 @@ func (v *VersionedSignedBlindedProposal) BodyRoot() (phase0.Root, error) {
 		return v.Capella.Message.Body.HashTreeRoot()
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
-			v.Deneb.SignedBlindedBlock == nil ||
-			v.Deneb.SignedBlindedBlock.Message == nil ||
-			v.Deneb.SignedBlindedBlock.Message.Body == nil {
+			v.Deneb.Message == nil ||
+			v.Deneb.Message.Body == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
-		return v.Deneb.SignedBlindedBlock.Message.Body.HashTreeRoot()
+		return v.Deneb.Message.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -165,12 +161,11 @@ func (v *VersionedSignedBlindedProposal) ParentRoot() (phase0.Root, error) {
 		return v.Capella.Message.ParentRoot, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
-			v.Deneb.SignedBlindedBlock == nil ||
-			v.Deneb.SignedBlindedBlock.Message == nil {
+			v.Deneb.Message == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
-		return v.Deneb.SignedBlindedBlock.Message.ParentRoot, nil
+		return v.Deneb.Message.ParentRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -193,12 +188,11 @@ func (v *VersionedSignedBlindedProposal) StateRoot() (phase0.Root, error) {
 		return v.Capella.Message.StateRoot, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
-			v.Deneb.SignedBlindedBlock == nil ||
-			v.Deneb.SignedBlindedBlock.Message == nil {
+			v.Deneb.Message == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
-		return v.Deneb.SignedBlindedBlock.Message.StateRoot, nil
+		return v.Deneb.Message.StateRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -221,13 +215,12 @@ func (v *VersionedSignedBlindedProposal) AttesterSlashings() ([]*phase0.Attester
 		return v.Capella.Message.Body.AttesterSlashings, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
-			v.Deneb.SignedBlindedBlock == nil ||
-			v.Deneb.SignedBlindedBlock.Message == nil ||
-			v.Deneb.SignedBlindedBlock.Message.Body == nil {
+			v.Deneb.Message == nil ||
+			v.Deneb.Message.Body == nil {
 			return nil, ErrDataMissing
 		}
 
-		return v.Deneb.SignedBlindedBlock.Message.Body.AttesterSlashings, nil
+		return v.Deneb.Message.Body.AttesterSlashings, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -250,13 +243,12 @@ func (v *VersionedSignedBlindedProposal) ProposerSlashings() ([]*phase0.Proposer
 		return v.Capella.Message.Body.ProposerSlashings, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
-			v.Deneb.SignedBlindedBlock == nil ||
-			v.Deneb.SignedBlindedBlock.Message == nil ||
-			v.Deneb.SignedBlindedBlock.Message.Body == nil {
+			v.Deneb.Message == nil ||
+			v.Deneb.Message.Body == nil {
 			return nil, ErrDataMissing
 		}
 
-		return v.Deneb.SignedBlindedBlock.Message.Body.ProposerSlashings, nil
+		return v.Deneb.Message.Body.ProposerSlashings, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -281,12 +273,11 @@ func (v *VersionedSignedBlindedProposal) ProposerIndex() (phase0.ValidatorIndex,
 		return v.Capella.Message.ProposerIndex, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
-			v.Deneb.SignedBlindedBlock == nil ||
-			v.Deneb.SignedBlindedBlock.Message == nil {
+			v.Deneb.Message == nil {
 			return 0, ErrDataMissing
 		}
 
-		return v.Deneb.SignedBlindedBlock.Message.ProposerIndex, nil
+		return v.Deneb.Message.ProposerIndex, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -315,14 +306,13 @@ func (v *VersionedSignedBlindedProposal) ExecutionBlockHash() (phase0.Hash32, er
 		return v.Capella.Message.Body.ExecutionPayloadHeader.BlockHash, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
-			v.Deneb.SignedBlindedBlock == nil ||
-			v.Deneb.SignedBlindedBlock.Message == nil ||
-			v.Deneb.SignedBlindedBlock.Message.Body == nil ||
-			v.Deneb.SignedBlindedBlock.Message.Body.ExecutionPayloadHeader == nil {
+			v.Deneb.Message == nil ||
+			v.Deneb.Message.Body == nil ||
+			v.Deneb.Message.Body.ExecutionPayloadHeader == nil {
 			return phase0.Hash32{}, ErrDataMissing
 		}
 
-		return v.Deneb.SignedBlindedBlock.Message.Body.ExecutionPayloadHeader.BlockHash, nil
+		return v.Deneb.Message.Body.ExecutionPayloadHeader.BlockHash, nil
 	default:
 		return phase0.Hash32{}, ErrUnsupportedVersion
 	}
@@ -351,14 +341,13 @@ func (v *VersionedSignedBlindedProposal) ExecutionBlockNumber() (uint64, error) 
 		return v.Capella.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
-			v.Deneb.SignedBlindedBlock == nil ||
-			v.Deneb.SignedBlindedBlock.Message == nil ||
-			v.Deneb.SignedBlindedBlock.Message.Body == nil ||
-			v.Deneb.SignedBlindedBlock.Message.Body.ExecutionPayloadHeader == nil {
+			v.Deneb.Message == nil ||
+			v.Deneb.Message.Body == nil ||
+			v.Deneb.Message.Body.ExecutionPayloadHeader == nil {
 			return 0, ErrDataMissing
 		}
 
-		return v.Deneb.SignedBlindedBlock.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
+		return v.Deneb.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -380,12 +369,11 @@ func (v *VersionedSignedBlindedProposal) Signature() (phase0.BLSSignature, error
 
 		return v.Capella.Signature, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.SignedBlindedBlock == nil {
+		if v.Deneb == nil {
 			return phase0.BLSSignature{}, ErrDataMissing
 		}
 
-		return v.Deneb.SignedBlindedBlock.Signature, nil
+		return v.Deneb.Signature, nil
 	default:
 		return phase0.BLSSignature{}, ErrUnsupportedVersion
 	}
