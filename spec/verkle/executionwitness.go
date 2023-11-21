@@ -17,6 +17,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -59,15 +60,26 @@ func (s *SuffixStateDiff) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &ssd); err != nil {
 		return fmt.Errorf("error unmarshalling JSON SuffixStateDiff: %w", err)
 	}
-	var cleanstring = strings.TrimPrefix(ssd.Suffix, "0x")
-	if len(cleanstring)%2 == 1 {
-		cleanstring = "0" + cleanstring
+	if strings.HasPrefix("0x", ssd.Suffix) {
+		var cleanstring = strings.TrimPrefix(ssd.Suffix, "0x")
+		if len(cleanstring)%2 == 1 {
+			cleanstring = "0" + cleanstring
+		}
+		suffixbytes, err := hex.DecodeString(cleanstring)
+		if err != nil {
+			return fmt.Errorf("error decoding hexadecimal suffix: %w", err)
+		}
+		s.Suffix = suffixbytes[0]
+	} else {
+		suffix, err := strconv.Atoi(ssd.Suffix)
+		if err != nil {
+			return fmt.Errorf("error decoding decimal suffix: %w", err)
+		}
+		if suffix >= 256 {
+			return fmt.Errorf("suffix greater than a byte: %d", suffix)
+		}
+		s.Suffix = byte(suffix)
 	}
-	suffixbytes, err := hex.DecodeString(cleanstring)
-	if err != nil {
-		return fmt.Errorf("error decoding suffix: %w", err)
-	}
-	s.Suffix = suffixbytes[0]
 	if ssd.CurrentValue != nil {
 		s.CurrentValue, err = hex.DecodeString(strings.TrimPrefix(*ssd.CurrentValue, "0x"))
 		if err != nil {
