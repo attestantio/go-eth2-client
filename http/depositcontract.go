@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,23 +14,33 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/pkg/errors"
 )
 
-type depositContractJSON struct {
-	Data *api.DepositContract `json:"data"`
-}
+// DepositContract provides details of the execution deposit contract for the chain.
+func (s *Service) DepositContract(ctx context.Context,
+	opts *api.DepositContractOpts,
+) (
+	*api.Response[*apiv1.DepositContract],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
 
-// DepositContract provides details of the Ethereum 1 deposit contract for the chain.
-func (s *Service) DepositContract(ctx context.Context) (*api.DepositContract, error) {
 	s.depositContractMutex.RLock()
 	if s.depositContract != nil {
 		defer s.depositContractMutex.RUnlock()
-		return s.depositContract, nil
+
+		return &api.Response[*apiv1.DepositContract]{
+			Data:     s.depositContract,
+			Metadata: map[string]any{},
+		}, nil
 	}
 	s.depositContractMutex.RUnlock()
 
@@ -38,22 +48,28 @@ func (s *Service) DepositContract(ctx context.Context) (*api.DepositContract, er
 	defer s.depositContractMutex.Unlock()
 	if s.depositContract != nil {
 		// Someone else fetched this whilst we were waiting for the lock.
-		return s.depositContract, nil
+		return &api.Response[*apiv1.DepositContract]{
+			Data:     s.depositContract,
+			Metadata: map[string]any{},
+		}, nil
 	}
 
 	// Up to us to fetch the information.
-	respBodyReader, err := s.get(ctx, "/eth/v1/config/deposit_contract")
+	url := "/eth/v1/config/deposit_contract"
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request deposit contract")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain deposit contract")
+		return nil, err
 	}
 
-	var resp depositContractJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse deposit contract")
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), apiv1.DepositContract{})
+	if err != nil {
+		return nil, err
 	}
-	s.depositContract = resp.Data
-	return s.depositContract, nil
+
+	s.depositContract = &data
+
+	return &api.Response[*apiv1.DepositContract]{
+		Data:     s.depositContract,
+		Metadata: metadata,
+	}, nil
 }

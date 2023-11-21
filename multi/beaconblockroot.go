@@ -17,23 +17,28 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // BeaconBlockRoot fetches a block's root given a block ID.
-func (s *Service) BeaconBlockRoot(ctx context.Context, blockID string) (*phase0.Root, error) {
+func (s *Service) BeaconBlockRoot(ctx context.Context,
+	opts *api.BeaconBlockRootOpts,
+) (
+	*api.Response[*phase0.Root],
+	error,
+) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		root, err := client.(consensusclient.BeaconBlockRootProvider).BeaconBlockRoot(ctx, blockID)
+		root, err := client.(consensusclient.BeaconBlockRootProvider).BeaconBlockRoot(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return root, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.(*phase0.Root), nil
+
+	return res.(*api.Response[*phase0.Root]), nil
 }

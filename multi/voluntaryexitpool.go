@@ -17,23 +17,28 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // VoluntaryExitPool obtains the voluntary exit pool.
-func (s *Service) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVoluntaryExit, error) {
+func (s *Service) VoluntaryExitPool(ctx context.Context,
+	opts *api.VoluntaryExitPoolOpts,
+) (
+	*api.Response[[]*phase0.SignedVoluntaryExit],
+	error,
+) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		voluntaryExitPool, err := client.(consensusclient.VoluntaryExitPoolProvider).VoluntaryExitPool(ctx)
+		voluntaryExitPool, err := client.(consensusclient.VoluntaryExitPoolProvider).VoluntaryExitPool(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return voluntaryExitPool, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.([]*phase0.SignedVoluntaryExit), nil
+
+	return res.(*api.Response[[]*phase0.SignedVoluntaryExit]), nil
 }

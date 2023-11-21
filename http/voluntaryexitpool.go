@@ -14,9 +14,11 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -26,17 +28,24 @@ type voluntaryExitPoolJSON struct {
 }
 
 // VoluntaryExitPool obtains the voluntary exit pool.
-func (s *Service) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVoluntaryExit, error) {
-	respBodyReader, err := s.get(ctx, "/eth/v1/beacon/pool/voluntary_exits")
+func (s *Service) VoluntaryExitPool(ctx context.Context,
+	opts *api.VoluntaryExitPoolOpts,
+) (
+	*api.Response[[]*phase0.SignedVoluntaryExit],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
+	url := "/eth/v1/beacon/pool/voluntary_exits"
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request voluntary exit pool")
 	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain voluntary exit pool")
-	}
 
 	var voluntaryExitPoolJSON voluntaryExitPoolJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&voluntaryExitPoolJSON); err != nil {
+	if err := json.NewDecoder(bytes.NewReader(httpResponse.body)).Decode(&voluntaryExitPoolJSON); err != nil {
 		return nil, errors.Wrap(err, "failed to parse voluntary exit pool")
 	}
 
@@ -45,5 +54,8 @@ func (s *Service) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVolunt
 		return nil, errors.New("voluntary exit pool not returned")
 	}
 
-	return voluntaryExitPoolJSON.Data, nil
+	return &api.Response[[]*phase0.SignedVoluntaryExit]{
+		Data:     voluntaryExitPoolJSON.Data,
+		Metadata: make(map[string]any),
+	}, nil
 }

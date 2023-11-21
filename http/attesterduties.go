@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,29 +16,37 @@ package http
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
-type attesterDutiesJSON struct {
-	Data []*api.AttesterDuty `json:"data"`
-}
-
 // AttesterDuties obtains attester duties.
-func (s *Service) AttesterDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.AttesterDuty, error) {
+func (s *Service) AttesterDuties(ctx context.Context,
+	opts *api.AttesterDutiesOpts,
+) (
+	*api.Response[[]*apiv1.AttesterDuty],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+	if len(opts.Indices) == 0 {
+		return nil, errors.New("no validator indices specified")
+	}
+
 	var reqBodyReader bytes.Buffer
 	if _, err := reqBodyReader.WriteString(`[`); err != nil {
 		return nil, errors.Wrap(err, "failed to write validator index array start")
 	}
-	for i := range validatorIndices {
-		if _, err := reqBodyReader.WriteString(fmt.Sprintf(`"%d"`, validatorIndices[i])); err != nil {
+	for i := range opts.Indices {
+		if _, err := reqBodyReader.WriteString(fmt.Sprintf(`"%d"`, opts.Indices[i])); err != nil {
 			return nil, errors.Wrap(err, "failed to write index")
 		}
-		if i != len(validatorIndices)-1 {
+		if i != len(opts.Indices)-1 {
 			if _, err := reqBodyReader.WriteString(`,`); err != nil {
 				return nil, errors.Wrap(err, "failed to write separator")
 			}
@@ -47,19 +55,33 @@ func (s *Service) AttesterDuties(ctx context.Context, epoch phase0.Epoch, valida
 	if _, err := reqBodyReader.WriteString(`]`); err != nil {
 		return nil, errors.Wrap(err, "failed to write end of validator index array")
 	}
-	url := fmt.Sprintf("/eth/v1/validator/duties/attester/%d", epoch)
+
+	url := fmt.Sprintf("/eth/v1/validator/duties/attester/%d", opts.Epoch)
 	respBodyReader, err := s.post(ctx, url, &reqBodyReader)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request attester duties")
 	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain attester duties")
+
+	data, metadata, err := decodeJSONResponse(respBodyReader, []*apiv1.AttesterDuty{})
+	if err != nil {
+		return nil, err
 	}
 
-	var resp attesterDutiesJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse attester duties response")
+	// Confirm that duties are for the requested epoch.
+	slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to obtain slots per epoch")
+	}
+	startSlot := phase0.Slot(uint64(opts.Epoch) * slotsPerEpoch)
+	endSlot := phase0.Slot(uint64(opts.Epoch)*slotsPerEpoch + slotsPerEpoch - 1)
+	for _, duty := range data {
+		if duty.Slot < startSlot || duty.Slot > endSlot {
+			return nil, fmt.Errorf("received attester duty for slot %d outside of range [%d,%d]", duty.Slot, startSlot, endSlot)
+		}
 	}
 
-	return resp.Data, nil
+	return &api.Response[[]*apiv1.AttesterDuty]{
+		Metadata: metadata,
+		Data:     data,
+	}, nil
 }

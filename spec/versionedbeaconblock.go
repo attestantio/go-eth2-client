@@ -47,26 +47,31 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 		if v.Phase0 == nil {
 			return 0, errors.New("no phase0 block")
 		}
+
 		return v.Phase0.Slot, nil
 	case DataVersionAltair:
 		if v.Altair == nil {
 			return 0, errors.New("no altair block")
 		}
+
 		return v.Altair.Slot, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return 0, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.Slot, nil
 	case DataVersionCapella:
 		if v.Capella == nil {
 			return 0, errors.New("no capella block")
 		}
+
 		return v.Capella.Slot, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return 0, errors.New("no deneb block")
+			return 0, errors.New("no deneb block contents")
 		}
+
 		return v.Deneb.Slot, nil
 	case DataVersionVerkle:
 		if v.Verkle == nil {
@@ -88,6 +93,7 @@ func (v *VersionedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
 		if v.Phase0.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no phase0 block body")
 		}
+
 		return v.Phase0.Body.RANDAOReveal, nil
 	case DataVersionAltair:
 		if v.Altair == nil {
@@ -96,6 +102,7 @@ func (v *VersionedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
 		if v.Altair.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no altair block body")
 		}
+
 		return v.Altair.Body.RANDAOReveal, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
@@ -104,6 +111,7 @@ func (v *VersionedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
 		if v.Bellatrix.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no bellatrix block body")
 		}
+
 		return v.Bellatrix.Body.RANDAOReveal, nil
 	case DataVersionCapella:
 		if v.Capella == nil {
@@ -112,14 +120,16 @@ func (v *VersionedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
 		if v.Capella.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no capella block body")
 		}
+
 		return v.Capella.Body.RANDAOReveal, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return phase0.BLSSignature{}, errors.New("no deneb block")
+			return phase0.BLSSignature{}, errors.New("no deneb block contents")
 		}
 		if v.Deneb.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no deneb block body")
 		}
+
 		return v.Deneb.Body.RANDAOReveal, nil
 	case DataVersionVerkle:
 		if v.Verkle == nil {
@@ -144,6 +154,7 @@ func (v *VersionedBeaconBlock) Graffiti() ([32]byte, error) {
 		if v.Phase0.Body == nil {
 			return [32]byte{}, errors.New("no phase0 block body")
 		}
+
 		return v.Phase0.Body.Graffiti, nil
 	case DataVersionAltair:
 		if v.Altair == nil {
@@ -152,6 +163,7 @@ func (v *VersionedBeaconBlock) Graffiti() ([32]byte, error) {
 		if v.Altair.Body == nil {
 			return [32]byte{}, errors.New("no altair block body")
 		}
+
 		return v.Altair.Body.Graffiti, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
@@ -160,6 +172,7 @@ func (v *VersionedBeaconBlock) Graffiti() ([32]byte, error) {
 		if v.Bellatrix.Body == nil {
 			return [32]byte{}, errors.New("no bellatrix block body")
 		}
+
 		return v.Bellatrix.Body.Graffiti, nil
 	case DataVersionCapella:
 		if v.Capella == nil {
@@ -168,14 +181,16 @@ func (v *VersionedBeaconBlock) Graffiti() ([32]byte, error) {
 		if v.Capella.Body == nil {
 			return [32]byte{}, errors.New("no capella block body")
 		}
+
 		return v.Capella.Body.Graffiti, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return [32]byte{}, errors.New("no deneb block")
+			return [32]byte{}, errors.New("no deneb block contents")
 		}
 		if v.Deneb.Body == nil {
 			return [32]byte{}, errors.New("no deneb block body")
 		}
+
 		return v.Deneb.Body.Graffiti, nil
 	case DataVersionVerkle:
 		if v.Verkle == nil {
@@ -197,26 +212,31 @@ func (v *VersionedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
 		if v.Phase0 == nil {
 			return 0, errors.New("no phase0 block")
 		}
+
 		return v.Phase0.ProposerIndex, nil
 	case DataVersionAltair:
 		if v.Altair == nil {
 			return 0, errors.New("no altair block")
 		}
+
 		return v.Altair.ProposerIndex, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return 0, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.ProposerIndex, nil
 	case DataVersionCapella:
 		if v.Capella == nil {
 			return 0, errors.New("no capella block")
 		}
+
 		return v.Capella.ProposerIndex, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return 0, errors.New("no deneb block")
+			return 0, errors.New("no deneb block contents")
 		}
+
 		return v.Deneb.ProposerIndex, nil
 	case DataVersionVerkle:
 		if v.Verkle == nil {
@@ -235,26 +255,31 @@ func (v *VersionedBeaconBlock) Root() (phase0.Root, error) {
 		if v.Phase0 == nil {
 			return phase0.Root{}, errors.New("no phase0 block")
 		}
+
 		return v.Phase0.HashTreeRoot()
 	case DataVersionAltair:
 		if v.Altair == nil {
 			return phase0.Root{}, errors.New("no altair block")
 		}
+
 		return v.Altair.HashTreeRoot()
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.HashTreeRoot()
 	case DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
+
 		return v.Capella.HashTreeRoot()
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return phase0.Root{}, errors.New("no deneb block")
+			return phase0.Root{}, errors.New("no deneb block contents")
 		}
+
 		return v.Deneb.HashTreeRoot()
 	case DataVersionVerkle:
 		if v.Verkle == nil {
@@ -273,26 +298,31 @@ func (v *VersionedBeaconBlock) BodyRoot() (phase0.Root, error) {
 		if v.Phase0 == nil {
 			return phase0.Root{}, errors.New("no phase0 block")
 		}
+
 		return v.Phase0.Body.HashTreeRoot()
 	case DataVersionAltair:
 		if v.Altair == nil {
 			return phase0.Root{}, errors.New("no altair block")
 		}
+
 		return v.Altair.Body.HashTreeRoot()
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.Body.HashTreeRoot()
 	case DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
+
 		return v.Capella.Body.HashTreeRoot()
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return phase0.Root{}, errors.New("no deneb block")
+			return phase0.Root{}, errors.New("no deneb block contents")
 		}
+
 		return v.Deneb.Body.HashTreeRoot()
 	case DataVersionVerkle:
 		if v.Verkle == nil {
@@ -311,26 +341,31 @@ func (v *VersionedBeaconBlock) ParentRoot() (phase0.Root, error) {
 		if v.Phase0 == nil {
 			return phase0.Root{}, errors.New("no phase0 block")
 		}
+
 		return v.Phase0.ParentRoot, nil
 	case DataVersionAltair:
 		if v.Altair == nil {
 			return phase0.Root{}, errors.New("no altair block")
 		}
+
 		return v.Altair.ParentRoot, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.ParentRoot, nil
 	case DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
+
 		return v.Capella.ParentRoot, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return phase0.Root{}, errors.New("no deneb block")
+			return phase0.Root{}, errors.New("no deneb block contents")
 		}
+
 		return v.Deneb.ParentRoot, nil
 	case DataVersionVerkle:
 		if v.Verkle == nil {
@@ -349,26 +384,31 @@ func (v *VersionedBeaconBlock) StateRoot() (phase0.Root, error) {
 		if v.Phase0 == nil {
 			return phase0.Root{}, errors.New("no phase0 block")
 		}
+
 		return v.Phase0.StateRoot, nil
 	case DataVersionAltair:
 		if v.Altair == nil {
 			return phase0.Root{}, errors.New("no altair block")
 		}
+
 		return v.Altair.StateRoot, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.StateRoot, nil
 	case DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
+
 		return v.Capella.StateRoot, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return phase0.Root{}, errors.New("no deneb block")
+			return phase0.Root{}, errors.New("no deneb block contents")
 		}
+
 		return v.Deneb.StateRoot, nil
 	case DataVersionVerkle:
 		if v.Verkle == nil {
@@ -387,26 +427,31 @@ func (v *VersionedBeaconBlock) Attestations() ([]*phase0.Attestation, error) {
 		if v.Phase0 == nil || v.Phase0.Body == nil {
 			return nil, errors.New("no phase0 block")
 		}
+
 		return v.Phase0.Body.Attestations, nil
 	case DataVersionAltair:
 		if v.Altair == nil || v.Altair.Body == nil {
 			return nil, errors.New("no altair block")
 		}
+
 		return v.Altair.Body.Attestations, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return nil, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.Body.Attestations, nil
 	case DataVersionCapella:
 		if v.Capella == nil || v.Capella.Body == nil {
 			return nil, errors.New("no capella block")
 		}
+
 		return v.Capella.Body.Attestations, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Body.Attestations, nil
 	case DataVersionVerkle:
 		if v.Verkle == nil || v.Verkle.Body == nil {
@@ -425,26 +470,31 @@ func (v *VersionedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlashing, 
 		if v.Phase0 == nil || v.Phase0.Body == nil {
 			return nil, errors.New("no phase0 block")
 		}
+
 		return v.Phase0.Body.AttesterSlashings, nil
 	case DataVersionAltair:
 		if v.Altair == nil || v.Altair.Body == nil {
 			return nil, errors.New("no altair block")
 		}
+
 		return v.Altair.Body.AttesterSlashings, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return nil, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.Body.AttesterSlashings, nil
 	case DataVersionCapella:
 		if v.Capella == nil || v.Capella.Body == nil {
 			return nil, errors.New("no capella block")
 		}
+
 		return v.Capella.Body.AttesterSlashings, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Body.AttesterSlashings, nil
 	case DataVersionVerkle:
 		if v.Verkle == nil || v.Verkle.Body == nil {
@@ -463,26 +513,31 @@ func (v *VersionedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlashing, 
 		if v.Phase0 == nil || v.Phase0.Body == nil {
 			return nil, errors.New("no phase0 block")
 		}
+
 		return v.Phase0.Body.ProposerSlashings, nil
 	case DataVersionAltair:
 		if v.Altair == nil || v.Altair.Body == nil {
 			return nil, errors.New("no altair block")
 		}
+
 		return v.Altair.Body.ProposerSlashings, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return nil, errors.New("no bellatrix block")
 		}
+
 		return v.Bellatrix.Body.ProposerSlashings, nil
 	case DataVersionCapella:
 		if v.Capella == nil || v.Capella.Body == nil {
 			return nil, errors.New("no capella block")
 		}
+
 		return v.Capella.Body.ProposerSlashings, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
+
 		return v.Deneb.Body.ProposerSlashings, nil
 	case DataVersionVerkle:
 		if v.Verkle == nil || v.Verkle.Body == nil {
@@ -501,26 +556,31 @@ func (v *VersionedBeaconBlock) String() string {
 		if v.Phase0 == nil {
 			return ""
 		}
+
 		return v.Phase0.String()
 	case DataVersionAltair:
 		if v.Altair == nil {
 			return ""
 		}
+
 		return v.Altair.String()
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return ""
 		}
+
 		return v.Bellatrix.String()
 	case DataVersionCapella:
 		if v.Capella == nil {
 			return ""
 		}
+
 		return v.Capella.String()
 	case DataVersionDeneb:
 		if v.Deneb == nil {
 			return ""
 		}
+
 		return v.Deneb.String()
 	case DataVersionVerkle:
 		if v.Verkle == nil {

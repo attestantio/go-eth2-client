@@ -14,7 +14,6 @@
 package api
 
 import (
-	"errors"
 	"time"
 
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
@@ -39,11 +38,12 @@ func (v *VersionedValidatorRegistration) FeeRecipient() (bellatrix.ExecutionAddr
 	switch v.Version {
 	case spec.BuilderVersionV1:
 		if v.V1 == nil {
-			return bellatrix.ExecutionAddress{}, errors.New("no validator registration")
+			return bellatrix.ExecutionAddress{}, ErrDataMissing
 		}
+
 		return v.V1.FeeRecipient, nil
 	default:
-		return bellatrix.ExecutionAddress{}, errors.New("unsupported version")
+		return bellatrix.ExecutionAddress{}, ErrUnsupportedVersion
 	}
 }
 
@@ -52,11 +52,12 @@ func (v *VersionedValidatorRegistration) GasLimit() (uint64, error) {
 	switch v.Version {
 	case spec.BuilderVersionV1:
 		if v.V1 == nil {
-			return 0, errors.New("no validator registration")
+			return 0, ErrDataMissing
 		}
+
 		return v.V1.GasLimit, nil
 	default:
-		return 0, errors.New("unsupported version")
+		return 0, ErrUnsupportedVersion
 	}
 }
 
@@ -65,11 +66,12 @@ func (v *VersionedValidatorRegistration) Timestamp() (time.Time, error) {
 	switch v.Version {
 	case spec.BuilderVersionV1:
 		if v.V1 == nil {
-			return time.Time{}, errors.New("no validator registration")
+			return time.Time{}, ErrDataMissing
 		}
+
 		return v.V1.Timestamp, nil
 	default:
-		return time.Time{}, errors.New("unsupported version")
+		return time.Time{}, ErrUnsupportedVersion
 	}
 }
 
@@ -78,11 +80,12 @@ func (v *VersionedValidatorRegistration) PubKey() (phase0.BLSPubKey, error) {
 	switch v.Version {
 	case spec.BuilderVersionV1:
 		if v.V1 == nil {
-			return phase0.BLSPubKey{}, errors.New("no validator registration")
+			return phase0.BLSPubKey{}, ErrDataMissing
 		}
+
 		return v.V1.Pubkey, nil
 	default:
-		return phase0.BLSPubKey{}, errors.New("unsupported version")
+		return phase0.BLSPubKey{}, ErrUnsupportedVersion
 	}
 }
 
@@ -91,10 +94,11 @@ func (v *VersionedValidatorRegistration) Root() (phase0.Root, error) {
 	switch v.Version {
 	case spec.BuilderVersionV1:
 		if v.V1 == nil {
-			return phase0.Root{}, errors.New("no V1 registration")
+			return phase0.Root{}, ErrDataMissing
 		}
+
 		return v.V1.HashTreeRoot()
 	default:
-		return phase0.Root{}, errors.New("unsupported version")
+		return phase0.Root{}, ErrUnsupportedVersion
 	}
 }

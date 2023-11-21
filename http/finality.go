@@ -14,39 +14,38 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/pkg/errors"
 )
 
-type finalityJSON struct {
-	Data *api.Finality `json:"data"`
-}
-
 // Finality provides the finality given a state ID.
-func (s *Service) Finality(ctx context.Context, stateID string) (*api.Finality, error) {
-	if stateID == "" {
-		return nil, errors.New("no state ID specified")
+func (s *Service) Finality(ctx context.Context,
+	opts *api.FinalityOpts,
+) (
+	*api.Response[*apiv1.Finality],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
 	}
 
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/finality_checkpoints", stateID))
+	httpResponse, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/finality_checkpoints", opts.State), &opts.Common)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request finality checkpoints")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain finality checkpoints")
+		return nil, err
 	}
 
-	var finalityJSON finalityJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&finalityJSON); err != nil {
-		return nil, errors.Wrap(err, "failed to parse finality")
-	}
-	if finalityJSON.Data == nil {
-		return nil, errors.New("no finality returned")
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), &apiv1.Finality{})
+	if err != nil {
+		return nil, err
 	}
 
-	return finalityJSON.Data, nil
+	return &api.Response[*apiv1.Finality]{
+		Metadata: metadata,
+		Data:     data,
+	}, nil
 }

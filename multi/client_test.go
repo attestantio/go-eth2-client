@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
 	"github.com/attestantio/go-eth2-client/testclients"
@@ -49,7 +50,7 @@ func TestClient(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 1024; i++ {
-		_, err := s.(consensusclient.GenesisProvider).Genesis(ctx)
+		_, err := s.(consensusclient.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 		require.NoError(t, err)
 	}
 }

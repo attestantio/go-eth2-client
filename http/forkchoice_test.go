@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
 )
@@ -43,12 +44,13 @@ func TestForkChoice(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			fc, err := service.(client.ForkChoiceProvider).ForkChoice(ctx)
+			response, err := service.(client.ForkChoiceProvider).ForkChoice(ctx, &api.ForkChoiceOpts{})
 			require.NoError(t, err)
-			require.NotNil(t, fc)
-			require.NotNil(t, fc.FinalizedCheckpoint)
-			require.NotNil(t, fc.JustifiedCheckpoint)
-			require.NotNil(t, fc.ForkChoiceNodes)
+			require.NotNil(t, response)
+			require.NotNil(t, response.Data)
+			require.NotNil(t, response.Data.FinalizedCheckpoint)
+			require.NotNil(t, response.Data.JustifiedCheckpoint)
+			require.NotNil(t, response.Data.ForkChoiceNodes)
 		})
 	}
 }

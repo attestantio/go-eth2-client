@@ -108,10 +108,10 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 		ReceiptsRoot:  fmt.Sprintf("%#x", e.ReceiptsRoot),
 		LogsBloom:     fmt.Sprintf("%#x", e.LogsBloom),
 		PrevRandao:    fmt.Sprintf("%#x", e.PrevRandao),
-		BlockNumber:   fmt.Sprintf("%d", e.BlockNumber),
-		GasLimit:      fmt.Sprintf("%d", e.GasLimit),
-		GasUsed:       fmt.Sprintf("%d", e.GasUsed),
-		Timestamp:     fmt.Sprintf("%d", e.Timestamp),
+		BlockNumber:   strconv.FormatUint(e.BlockNumber, 10),
+		GasLimit:      strconv.FormatUint(e.GasLimit, 10),
+		GasUsed:       strconv.FormatUint(e.GasUsed, 10),
+		Timestamp:     strconv.FormatUint(e.Timestamp, 10),
 		ExtraData:     extraData,
 		BaseFeePerGas: baseFeePerGas.String(),
 		BlockHash:     fmt.Sprintf("%#x", e.BlockHash),
@@ -125,10 +125,11 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return e.unpack(&data)
 }
 
-// nolint:gocyclo
+//nolint:gocyclo
 func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	if data.ParentHash == "" {
 		return errors.New("parent hash missing")
@@ -359,6 +360,7 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -369,6 +371,7 @@ func (e *ExecutionPayload) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return err
 	}
+
 	return e.unpack(&data)
 }
 
@@ -378,5 +381,6 @@ func (e *ExecutionPayload) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,6 +21,7 @@ import (
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/prysmaticlabs/go-bitfield"
@@ -31,14 +32,6 @@ func TestSubmitAttestations(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "Good",
-		},
-	}
-
 	service, err := http.New(ctx,
 		http.WithTimeout(timeout),
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
@@ -46,24 +39,36 @@ func TestSubmitAttestations(t *testing.T) {
 	require.NoError(t, err)
 
 	// Need to fetch current slot for attestation.
-	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 	require.NoError(t, err)
 	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
 
+	tests := []struct {
+		name    string
+		opts    *api.AttestationDataOpts
+		err     string
+		errCode int
+	}{
+		{
+			name: "Good",
+			opts: &api.AttestationDataOpts{
+				Slot: phase0.Slot(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / uint64(slotDuration.Seconds())),
+			},
+		},
+	}
+
 	for _, test := range tests {
-		thisSlot := phase0.Slot(uint64(time.Since(genesis.GenesisTime).Seconds()) / uint64(slotDuration.Seconds()))
 		t.Run(test.name, func(t *testing.T) {
 			// Fetch attestation data.
-			attestationData, err := service.(client.AttestationDataProvider).AttestationData(ctx, thisSlot, 0)
+			attestationDataResponse, err := service.(client.AttestationDataProvider).AttestationData(ctx, test.opts)
 			require.NoError(t, err)
-			require.NotNil(t, attestationData)
 
-			aggregationBits := bitfield.NewBitlist(128)
+			aggregationBits := bitfield.NewBitlist(160)
 			aggregationBits.SetBitAt(1, true)
 			attestation := &phase0.Attestation{
 				AggregationBits: aggregationBits,
-				Data:            attestationData,
+				Data:            attestationDataResponse.Data,
 				Signature: phase0.BLSSignature([96]byte{
 					0xb1, 0x3c, 0xa7, 0x7f, 0xda, 0xb9, 0x0f, 0xce, 0xdf, 0x0c, 0xda, 0x74, 0xe9, 0xe9, 0xda, 0x1e,
 					0xdb, 0xe4, 0x32, 0x91, 0x09, 0x48, 0xca, 0xad, 0xca, 0x64, 0xbb, 0xfb, 0x93, 0x34, 0x26, 0x44,
@@ -75,10 +80,14 @@ func TestSubmitAttestations(t *testing.T) {
 			}
 
 			err = service.(client.AttestationsSubmitter).SubmitAttestations(ctx, []*phase0.Attestation{attestation})
-			// We will get an error as the bitlist is the incorrect size (on purpose, to stop our test being broadcast).
-			if err != nil {
-				require.True(t, strings.Contains(err.Error(), "Aggregation bitlist size (128) does not match committee size") ||
-					strings.Contains(err.Error(), "Aggregation bit size 128 is greater than committee size"))
+			switch {
+			case test.err != "":
+				require.ErrorContains(t, err, test.err)
+			case err != nil:
+				// We will get an error as the bitlist is the incorrect size (on purpose, to stop our test being broadcast).
+				require.True(t, strings.Contains(err.Error(), "Aggregation bitlist size (160) does not match committee size") ||
+					strings.Contains(err.Error(), "Aggregation bit size 160 is greater than committee size") ||
+					strings.Contains(err.Error(), "Invalid(BeaconStateError(InvalidBitfield))"))
 			}
 		})
 	}

@@ -30,6 +30,7 @@ func (s *Service) SubmitAttestations(ctx context.Context,
 		if err != nil {
 			return nil, err
 		}
+
 		return true, nil
 	}, func(ctx context.Context, client consensusclient.Service, err error) (bool, error) {
 		// We have received an error, decide if it requires us to fail over or not.
@@ -41,17 +42,21 @@ func (s *Service) SubmitAttestations(ctx context.Context,
 			// an existing attestation, but either way it is not a failover-worthy error.
 			log := s.log.With().Logger()
 			log.Trace().Msg("Lighthouse rejected submission as it already knew about it")
+
 			return false /* failover */, err
 		case provider == "lighthouse" && strings.Contains(err.Error(), "UnknownHeadBlock"):
 			// Lighthouse rejects an attestation for a block  that is not its current head.  We assume that
 			// the request is valid and it is the node that it is somehow out of sync, so failover.
 			log := s.log.With().Logger()
 			log.Trace().Err(err).Msg("Lighthouse rejected submission as it did not know about the relevant head block")
+
 			return true /* failover */, err
 		default:
 			// Any other error should result in a failover.
+
 			return true /* failover */, err
 		}
 	})
+
 	return err
 }

@@ -81,6 +81,7 @@ func (v *Validator) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &validatorJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return v.unpack(&validatorJSON)
 }
 
@@ -166,6 +167,7 @@ func (v *Validator) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -176,6 +178,7 @@ func (v *Validator) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &validatorJSON); err != nil {
 		return err
 	}
+
 	return v.unpack(&validatorJSON)
 }
 
@@ -185,5 +188,6 @@ func (v *Validator) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

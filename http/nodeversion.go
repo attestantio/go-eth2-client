@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,26 +14,36 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/pkg/errors"
 )
 
 type nodeVersionJSON struct {
-	Data *nodeVersionDataJSON `json:"data"`
-}
-
-type nodeVersionDataJSON struct {
 	Version string `json:"version"`
 }
 
 // NodeVersion provides the version information of the node.
-func (s *Service) NodeVersion(ctx context.Context) (string, error) {
+func (s *Service) NodeVersion(ctx context.Context,
+	opts *api.NodeVersionOpts,
+) (
+	*api.Response[string],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
 	s.nodeVersionMutex.RLock()
 	if s.nodeVersion != "" {
 		defer s.nodeVersionMutex.RUnlock()
-		return s.nodeVersion, nil
+
+		return &api.Response[string]{
+			Data:     s.nodeVersion,
+			Metadata: make(map[string]any),
+		}, nil
 	}
 	s.nodeVersionMutex.RUnlock()
 
@@ -41,22 +51,26 @@ func (s *Service) NodeVersion(ctx context.Context) (string, error) {
 	defer s.nodeVersionMutex.Unlock()
 	if s.nodeVersion != "" {
 		// Someone else fetched this whilst we were waiting for the lock.
-		return s.nodeVersion, nil
+		return &api.Response[string]{
+			Data:     s.nodeVersion,
+			Metadata: make(map[string]any),
+		}, nil
 	}
 
 	// Up to us to fetch the information.
-	respBodyReader, err := s.get(ctx, "/eth/v1/node/version")
+	url := "/eth/v1/node/version"
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to request node version")
-	}
-	if respBodyReader == nil {
-		return "", errors.New("failed to obtain node version")
+		return nil, err
 	}
 
-	var resp nodeVersionJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return "", errors.Wrap(err, "failed to parse node version")
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), nodeVersionJSON{})
+	if err != nil {
+		return nil, err
 	}
-	s.nodeVersion = resp.Data.Version
-	return s.nodeVersion, nil
+
+	return &api.Response[string]{
+		Metadata: metadata,
+		Data:     data.Version,
+	}, nil
 }

@@ -20,6 +20,7 @@ import (
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/rs/zerolog"
@@ -38,7 +39,7 @@ func TestProposerDuties(t *testing.T) {
 	require.NoError(t, err)
 
 	// Needed to fetch current epoch.
-	genesis, err := service.(client.GenesisProvider).Genesis(ctx)
+	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 	require.NoError(t, err)
 	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
 	require.NoError(t, err)
@@ -47,39 +48,40 @@ func TestProposerDuties(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		epoch            int64 // -1 for current
+		opts             *api.ProposerDutiesOpts
 		validatorIndices []phase0.ValidatorIndex
 		expected         int
+		err              string
 	}{
 		{
 			name:     "Epoch",
-			epoch:    0,
+			opts:     &api.ProposerDutiesOpts{Epoch: 0},
 			expected: int(slotsPerEpoch - 1),
 		},
 		{
 			name:     "Old",
-			epoch:    1,
+			opts:     &api.ProposerDutiesOpts{Epoch: 1},
 			expected: int(slotsPerEpoch),
+			err:      "GET failed with status 404",
 		},
 		{
 			name:     "Current",
-			epoch:    -1,
+			opts:     &api.ProposerDutiesOpts{Epoch: phase0.Epoch(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / (uint64(slotDuration.Seconds()) * slotsPerEpoch))},
 			expected: int(slotsPerEpoch),
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var epoch phase0.Epoch
-			if test.epoch == -1 {
-				epoch = phase0.Epoch(uint64(time.Since(genesis.GenesisTime).Seconds()) / (uint64(slotDuration.Seconds()) * slotsPerEpoch))
+			response, err := service.(client.ProposerDutiesProvider).ProposerDuties(ctx, test.opts)
+			if test.err != "" {
+				require.ErrorContains(t, err, test.err)
 			} else {
-				epoch = phase0.Epoch(test.epoch)
+				require.NoError(t, err)
+				require.NotNil(t, response)
+				require.NotNil(t, response.Data)
+				require.NotNil(t, response.Metadata)
 			}
-			duties, err := service.(client.ProposerDutiesProvider).ProposerDuties(ctx, epoch, test.validatorIndices)
-			require.NoError(t, err)
-			require.NotNil(t, duties)
-			require.Equal(t, test.expected, len(duties))
 		})
 	}
 }

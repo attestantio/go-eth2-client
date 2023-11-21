@@ -16,39 +16,36 @@ package deneb
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
 // blobSidecarYAML is the spec representation of the struct.
 type blobSidecarYAML struct {
-	BlockRoot       string `yaml:"block_root"`
-	Index           uint64 `yaml:"index"`
-	Slot            uint64 `yaml:"slot"`
-	BlockParentRoot string `yaml:"block_parent_root"`
-	ProposerIndex   uint64 `yaml:"proposer_index"`
-	Blob            string `yaml:"blob"`
-	KzgCommitment   string `yaml:"kzg_commitment"`
-	KzgProof        string `yaml:"kzg_proof"`
+	Index                       uint64                          `yaml:"index"`
+	Blob                        Blob                            `yaml:"blob"`
+	KZGCommitment               KZGCommitment                   `yaml:"kzg_commitment"`
+	KZGProof                    KZGProof                        `yaml:"kzg_proof"`
+	SignedBlockHeader           *phase0.SignedBeaconBlockHeader `yaml:"signed_block_header"`
+	KZGCommitmentInclusionProof KZGCommitmentInclusionProof     `yaml:"kzg_commitment_inclusion_proof"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
 func (b *BlobSidecar) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&blobSidecarYAML{
-		BlockRoot:       b.BlockRoot.String(),
-		Index:           uint64(b.Index),
-		Slot:            uint64(b.Slot),
-		BlockParentRoot: b.BlockParentRoot.String(),
-		ProposerIndex:   uint64(b.ProposerIndex),
-		Blob:            fmt.Sprintf("%#x", b.Blob),
-		KzgCommitment:   b.KzgCommitment.String(),
-		KzgProof:        b.KzgProof.String(),
+		Index:                       uint64(b.Index),
+		Blob:                        b.Blob,
+		KZGCommitment:               b.KZGCommitment,
+		KZGProof:                    b.KZGProof,
+		SignedBlockHeader:           b.SignedBlockHeader,
+		KZGCommitmentInclusionProof: b.KZGCommitmentInclusionProof,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -60,7 +57,7 @@ func (b *BlobSidecar) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
-	bytes, err := json.Marshal(data)
+	bytes, err := json.Marshal(&data)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}

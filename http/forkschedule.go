@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,23 +14,33 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
-type forkScheduleJSON struct {
-	Data []*phase0.Fork `json:"data"`
-}
-
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Service) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
+func (s *Service) ForkSchedule(ctx context.Context,
+	opts *api.ForkScheduleOpts,
+) (
+	*api.Response[[]*phase0.Fork],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+
 	s.forkScheduleMutex.RLock()
 	if s.forkSchedule != nil {
 		defer s.forkScheduleMutex.RUnlock()
-		return s.forkSchedule, nil
+
+		return &api.Response[[]*phase0.Fork]{
+			Data:     s.forkSchedule,
+			Metadata: make(map[string]any),
+		}, nil
 	}
 	s.forkScheduleMutex.RUnlock()
 
@@ -38,22 +48,27 @@ func (s *Service) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
 	defer s.forkScheduleMutex.Unlock()
 	if s.forkSchedule != nil {
 		// Someone else fetched this whilst we were waiting for the lock.
-		return s.forkSchedule, nil
+		return &api.Response[[]*phase0.Fork]{
+			Data:     s.forkSchedule,
+			Metadata: make(map[string]any),
+		}, nil
 	}
 
 	// Up to us to fetch the information.
-	respBodyReader, err := s.get(ctx, "/eth/v1/config/fork_schedule")
+	url := "/eth/v1/config/fork_schedule"
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request fork schedule")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain fork schedule")
+		return nil, err
 	}
 
-	var resp forkScheduleJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse fork schedule")
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*phase0.Fork{})
+	if err != nil {
+		return nil, err
 	}
-	s.forkSchedule = resp.Data
-	return s.forkSchedule, nil
+	s.forkSchedule = data
+
+	return &api.Response[[]*phase0.Fork]{
+		Data:     s.forkSchedule,
+		Metadata: metadata,
+	}, nil
 }

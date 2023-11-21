@@ -64,6 +64,7 @@ func (b *BLSToExecutionChange) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return b.unpack(&data)
 }
 
@@ -114,6 +115,7 @@ func (b *BLSToExecutionChange) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -124,6 +126,7 @@ func (b *BLSToExecutionChange) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return err
 	}
+
 	return b.unpack(&data)
 }
 
@@ -133,5 +136,6 @@ func (b *BLSToExecutionChange) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

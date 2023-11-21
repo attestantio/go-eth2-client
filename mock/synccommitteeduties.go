@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,19 +16,21 @@ package mock
 import (
 	"context"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // SyncCommitteeDuties obtains sync committee duties.
-// If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Service) SyncCommitteeDuties(_ context.Context, _ phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.SyncCommitteeDuty, error) {
-	res := make([]*api.SyncCommitteeDuty, len(validatorIndices))
-	for i := range validatorIndices {
-		res[i] = &api.SyncCommitteeDuty{
-			ValidatorIndex: validatorIndices[i],
+func (s *Service) SyncCommitteeDuties(_ context.Context, opts *api.SyncCommitteeDutiesOpts) (*api.Response[[]*apiv1.SyncCommitteeDuty], error) {
+	data := make([]*apiv1.SyncCommitteeDuty, len(opts.Indices))
+	for i := range opts.Indices {
+		data[i] = &apiv1.SyncCommitteeDuty{
+			ValidatorIndex: opts.Indices[i],
 		}
 	}
 
-	return res, nil
+	return &api.Response[[]*apiv1.SyncCommitteeDuty]{
+		Data:     data,
+		Metadata: make(map[string]any),
+	}, nil
 }

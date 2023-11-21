@@ -50,7 +50,7 @@ type chainReorgEventJSON struct {
 func (e *ChainReorgEvent) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&chainReorgEventJSON{
 		Slot:         fmt.Sprintf("%d", e.Slot),
-		Depth:        fmt.Sprintf("%d", e.Depth),
+		Depth:        strconv.FormatUint(e.Depth, 10),
 		OldHeadBlock: fmt.Sprintf("%#x", e.OldHeadBlock),
 		NewHeadBlock: fmt.Sprintf("%#x", e.NewHeadBlock),
 		OldHeadState: fmt.Sprintf("%#x", e.OldHeadState),
@@ -143,5 +143,6 @@ func (e *ChainReorgEvent) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

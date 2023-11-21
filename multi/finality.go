@@ -17,23 +17,23 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // Finality provides the finality given a state ID.
-func (s *Service) Finality(ctx context.Context, stateID string) (*api.Finality, error) {
+func (s *Service) Finality(ctx context.Context, opts *api.FinalityOpts) (*api.Response[*apiv1.Finality], error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		finality, err := client.(consensusclient.FinalityProvider).Finality(ctx, stateID)
+		finality, err := client.(consensusclient.FinalityProvider).Finality(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return finality, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.(*api.Finality), nil
+
+	return res.(*api.Response[*apiv1.Finality]), nil
 }

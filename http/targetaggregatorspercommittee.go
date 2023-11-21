@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,14 +16,15 @@ package http
 import (
 	"context"
 
-	"github.com/pkg/errors"
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // TargetAggregatorsPerCommittee provides the target aggregators per committee of the chain.
 func (s *Service) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error) {
-	spec, err := s.Spec(ctx)
+	response, err := s.Spec(ctx, &api.SpecOpts{})
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to obtain spec")
+		return 0, err
 	}
-	return spec["TARGET_AGGREGATORS_PER_COMMITTEE"].(uint64), nil
+
+	return response.Data["TARGET_AGGREGATORS_PER_COMMITTEE"].(uint64), nil
 }

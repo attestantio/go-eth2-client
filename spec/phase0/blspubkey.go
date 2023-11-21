@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,29 +24,47 @@ import (
 // BLSPubKey is a BLS12-381 public key.
 type BLSPubKey [48]byte
 
+// IsZero returns true if the public key is zero.
+func (p BLSPubKey) IsZero() bool {
+	return bytes.Equal(p[:], []byte{
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	})
+}
+
+// IsInfinity returns true if the public key is infinity.
+func (p BLSPubKey) IsInfinity() bool {
+	return bytes.Equal(p[:], []byte{
+		0xc0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	})
+}
+
 // String returns a string version of the structure.
-func (pk BLSPubKey) String() string {
-	return fmt.Sprintf("%#x", pk)
+func (p BLSPubKey) String() string {
+	return fmt.Sprintf("%#x", p)
 }
 
 // Format formats the public key.
-func (pk BLSPubKey) Format(state fmt.State, v rune) {
+func (p BLSPubKey) Format(state fmt.State, v rune) {
 	format := string(v)
 	switch v {
 	case 's':
-		fmt.Fprint(state, pk.String())
+		fmt.Fprint(state, p.String())
 	case 'x', 'X':
 		if state.Flag('#') {
 			format = "#" + format
 		}
-		fmt.Fprintf(state, "%"+format, pk[:])
+		fmt.Fprintf(state, "%"+format, p[:])
 	default:
-		fmt.Fprintf(state, "%"+format, pk[:])
+		fmt.Fprintf(state, "%"+format, p[:])
 	}
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (pk *BLSPubKey) UnmarshalJSON(input []byte) error {
+func (p *BLSPubKey) UnmarshalJSON(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
@@ -61,7 +79,7 @@ func (pk *BLSPubKey) UnmarshalJSON(input []byte) error {
 		return errors.New("incorrect length")
 	}
 
-	length, err := hex.Decode(pk[:], input[3:3+PublicKeyLength*2])
+	length, err := hex.Decode(p[:], input[3:3+PublicKeyLength*2])
 	if err != nil {
 		return errors.Wrapf(err, "invalid value %s", string(input[3:3+PublicKeyLength*2]))
 	}
@@ -74,12 +92,12 @@ func (pk *BLSPubKey) UnmarshalJSON(input []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-func (pk BLSPubKey) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%#x"`, pk)), nil
+func (p BLSPubKey) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%#x"`, p)), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (pk *BLSPubKey) UnmarshalYAML(input []byte) error {
+func (p *BLSPubKey) UnmarshalYAML(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
@@ -94,7 +112,7 @@ func (pk *BLSPubKey) UnmarshalYAML(input []byte) error {
 		return errors.New("incorrect length")
 	}
 
-	length, err := hex.Decode(pk[:], input[3:3+PublicKeyLength*2])
+	length, err := hex.Decode(p[:], input[3:3+PublicKeyLength*2])
 	if err != nil {
 		return errors.Wrapf(err, "invalid value %s", string(input[3:3+PublicKeyLength*2]))
 	}
@@ -107,6 +125,6 @@ func (pk *BLSPubKey) UnmarshalYAML(input []byte) error {
 }
 
 // MarshalYAML implements yaml.Marshaler.
-func (pk BLSPubKey) MarshalYAML() ([]byte, error) {
-	return []byte(fmt.Sprintf(`'%#x'`, pk)), nil
+func (p BLSPubKey) MarshalYAML() ([]byte, error) {
+	return []byte(fmt.Sprintf(`'%#x'`, p)), nil
 }

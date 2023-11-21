@@ -36,7 +36,7 @@ type BlindedBeaconBlockBody struct {
 	SyncAggregate          *altair.SyncAggregate
 	ExecutionPayloadHeader *deneb.ExecutionPayloadHeader
 	BLSToExecutionChanges  []*capella.SignedBLSToExecutionChange `ssz-max:"16"`
-	BlobKzgCommitments     []deneb.KzgCommitment                 `ssz-max:"4096" ssz-size:"?,48"`
+	BlobKZGCommitments     []deneb.KZGCommitment                 `ssz-max:"4096" ssz-size:"?,48"`
 }
 
 // String returns a string version of the structure.
@@ -45,5 +45,6 @@ func (b *BlindedBeaconBlockBody) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

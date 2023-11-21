@@ -1,4 +1,4 @@
-// Copyright © 2020, 2022 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,32 +14,39 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/pkg/errors"
 )
 
-type beaconBlockHeaderJSON struct {
-	Data *api.BeaconBlockHeader `json:"data"`
-}
+// BeaconBlockHeader provides the block header given the opts.
+func (s *Service) BeaconBlockHeader(ctx context.Context,
+	opts *api.BeaconBlockHeaderOpts,
+) (
+	*api.Response[*apiv1.BeaconBlockHeader],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
 
-// BeaconBlockHeader provides the block header of a given block ID.
-func (s *Service) BeaconBlockHeader(ctx context.Context, blockID string) (*api.BeaconBlockHeader, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/headers/%s", blockID))
+	url := fmt.Sprintf("/eth/v1/beacon/headers/%s", opts.Block)
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request beacon block header")
-	}
-	if respBodyReader == nil {
-		return nil, nil
+		return nil, err
 	}
 
-	var resp beaconBlockHeaderJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse beacon block header")
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), apiv1.BeaconBlockHeader{})
+	if err != nil {
+		return nil, err
 	}
 
-	return resp.Data, nil
+	return &api.Response[*apiv1.BeaconBlockHeader]{
+		Metadata: metadata,
+		Data:     &data,
+	}, nil
 }

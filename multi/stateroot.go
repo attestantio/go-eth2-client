@@ -17,23 +17,28 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // BeaconStateRoot fetches a beacon state root given a state ID.
-func (s *Service) BeaconStateRoot(ctx context.Context, stateID string) (*phase0.Root, error) {
+func (s *Service) BeaconStateRoot(ctx context.Context,
+	opts *api.BeaconStateRootOpts,
+) (
+	*api.Response[*phase0.Root],
+	error,
+) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		stateRoot, err := client.(consensusclient.BeaconStateRootProvider).BeaconStateRoot(ctx, stateID)
+		stateRoot, err := client.(consensusclient.BeaconStateRootProvider).BeaconStateRoot(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return stateRoot, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.(*phase0.Root), nil
+
+	return res.(*api.Response[*phase0.Root]), nil
 }

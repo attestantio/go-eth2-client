@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,53 +14,46 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	api "github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/pkg/errors"
 )
 
-type beaconCommitteesJSON struct {
-	Data []*api.BeaconCommittee `json:"data"`
-}
-
 // BeaconCommittees fetches all beacon committees for the epoch at the given state.
-func (s *Service) BeaconCommittees(ctx context.Context, stateID string) ([]*api.BeaconCommittee, error) {
-	url := fmt.Sprintf("/eth/v1/beacon/states/%s/committees", stateID)
-	respBodyReader, err := s.get(ctx, url)
+func (s *Service) BeaconCommittees(ctx context.Context,
+	opts *api.BeaconCommitteesOpts,
+) (
+	*api.Response[[]*apiv1.BeaconCommittee],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+	if opts.State == "" {
+		return nil, errors.New("no state specified")
+	}
+
+	url := fmt.Sprintf("/eth/v1/beacon/states/%s/committees", opts.State)
+	if opts.Epoch != nil {
+		url = fmt.Sprintf("%s?epoch=%d", url, *opts.Epoch)
+	}
+
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request beacon committees")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain beacon committees")
+		return nil, err
 	}
 
-	var resp beaconCommitteesJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse beacon committees")
-	}
-
-	return resp.Data, nil
-}
-
-// BeaconCommitteesAtEpoch fetches all beacon committees for the given epoch at the given state.
-func (s *Service) BeaconCommitteesAtEpoch(ctx context.Context, stateID string, epoch phase0.Epoch) ([]*api.BeaconCommittee, error) {
-	url := fmt.Sprintf("/eth/v1/beacon/states/%s/committees?epoch=%d", stateID, epoch)
-	respBodyReader, err := s.get(ctx, url)
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*apiv1.BeaconCommittee{})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request beacon committees")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain beacon committees")
+		return nil, err
 	}
 
-	var resp beaconCommitteesJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse beacon committees")
-	}
-
-	return resp.Data, nil
+	return &api.Response[[]*apiv1.BeaconCommittee]{
+		Metadata: metadata,
+		Data:     data,
+	}, nil
 }

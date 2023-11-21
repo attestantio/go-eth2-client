@@ -17,32 +17,29 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // Validators provides the validators, with their balance and status, for a given state.
-// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validatorIndices is a list of validators to restrict the returned values.  If no validators are supplied no filter will be applied.
 func (s *Service) Validators(ctx context.Context,
-	stateID string,
-	validatorIndices []phase0.ValidatorIndex,
+	opts *api.ValidatorsOpts,
 ) (
-	map[phase0.ValidatorIndex]*api.Validator,
+	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		block, err := client.(consensusclient.ValidatorsProvider).Validators(ctx, stateID, validatorIndices)
+		block, err := client.(consensusclient.ValidatorsProvider).Validators(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return block, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.(map[phase0.ValidatorIndex]*api.Validator), nil
+
+	return res.(*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator]), nil
 }

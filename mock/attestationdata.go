@@ -16,13 +16,22 @@ package mock
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AttestationData fetches the attestation data for the given slot and committee index.
-func (s *Service) AttestationData(_ context.Context, _ spec.Slot, _ spec.CommitteeIndex) (*spec.AttestationData, error) {
-	return &spec.AttestationData{
-		Source: &spec.Checkpoint{},
-		Target: &spec.Checkpoint{},
+func (s *Service) AttestationData(_ context.Context,
+	_ *api.AttestationDataOpts,
+) (
+	*api.Response[*phase0.AttestationData],
+	error,
+) {
+	return &api.Response[*phase0.AttestationData]{
+		Data: &phase0.AttestationData{
+			Source: &phase0.Checkpoint{},
+			Target: &phase0.Checkpoint{},
+		},
+		Metadata: make(map[string]any),
 	}, nil
 }

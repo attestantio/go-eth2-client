@@ -42,7 +42,7 @@ type genesisJSON struct {
 // MarshalJSON implements json.Marshaler.
 func (g *Genesis) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&genesisJSON{
-		GenesisTime:           fmt.Sprintf("%d", g.GenesisTime.Unix()),
+		GenesisTime:           strconv.FormatInt(g.GenesisTime.Unix(), 10),
 		GenesisValidatorsRoot: fmt.Sprintf("%#x", g.GenesisValidatorsRoot),
 		GenesisForkVersion:    fmt.Sprintf("%#x", g.GenesisForkVersion),
 	})
@@ -99,5 +99,6 @@ func (g *Genesis) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
 )
@@ -28,16 +29,16 @@ func TestSignedBeaconBlock(t *testing.T) {
 	defer cancel()
 
 	tests := []struct {
-		name    string
-		stateID string
+		name string
+		opts *api.SignedBeaconBlockOpts
 	}{
 		{
-			name:    "Good",
-			stateID: "head",
+			name: "Good",
+			opts: &api.SignedBeaconBlockOpts{Block: "head"},
 		},
 		{
-			name:    "WithProposerSlashing",
-			stateID: "139",
+			name: "WithProposerSlashing",
+			opts: &api.SignedBeaconBlockOpts{Block: "139"},
 		},
 	}
 
@@ -49,9 +50,9 @@ func TestSignedBeaconBlock(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			res, err := service.(client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, test.stateID)
+			response, err := service.(client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, test.opts)
 			require.NoError(t, err)
-			require.NotNil(t, res)
+			require.NotNil(t, response)
 		})
 	}
 }
