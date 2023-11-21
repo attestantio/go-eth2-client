@@ -52,7 +52,7 @@ type BeaconState struct {
 	LatestExecutionPayloadHeader *ExecutionPayloadHeader
 	NextWithdrawalIndex          capella.WithdrawalIndex
 	NextWithdrawalValidatorIndex phase0.ValidatorIndex
-	HistoricalSummaries          []*HistoricalSummary `ssz-max:"16777216"`
+	HistoricalSummaries          []*capella.HistoricalSummary `ssz-max:"16777216"`
 }
 
 // String returns a string version of the structure.
