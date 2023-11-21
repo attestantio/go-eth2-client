@@ -5,6 +5,7 @@ package verkle
 
 import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	ssz "github.com/ferranbt/fastssz"
 )
@@ -447,7 +448,7 @@ func (b *BeaconState) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (25) 'NextWithdrawalIndex'
-	b.NextWithdrawalIndex = WithdrawalIndex(ssz.UnmarshallUint64(buf[2736633:2736641]))
+	b.NextWithdrawalIndex = capella.WithdrawalIndex(ssz.UnmarshallUint64(buf[2736633:2736641]))
 
 	// Field (26) 'NextWithdrawalValidatorIndex'
 	b.NextWithdrawalValidatorIndex = phase0.ValidatorIndex(ssz.UnmarshallUint64(buf[2736641:2736649]))

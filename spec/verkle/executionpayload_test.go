@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/verkle"
 	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
@@ -38,7 +39,7 @@ func TestExecutionPayloadJSON(t *testing.T) {
 		{
 			name:  "JSONBad",
 			input: []byte("[]"),
-			err:   "invalid JSON: json: cannot unmarshal array into Go value of type verkle.executionPayloadJSON",
+			err:   "invalid JSON: json: cannot unmarshal array into Go value of type capella.executionPayloadJSON",
 		},
 		{
 			name:  "ParentHashMissing",
@@ -336,7 +337,7 @@ func TestExecutionPayloadJSON(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res verkle.ExecutionPayload
+			var res capella.ExecutionPayload
 			err := json.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
@@ -843,7 +844,7 @@ func TestExecutionPayloadYAML(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res verkle.ExecutionPayload
+			var res capella.ExecutionPayload
 			err := yaml.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
