@@ -18,9 +18,9 @@ import (
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
@@ -51,7 +51,7 @@ func TestAttesterDuties(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.(consensusclient.AttesterDutiesProvider).AttesterDuties(ctx, 1, []phase0.ValidatorIndex{1, 2, 3})
+		res, err := multiClient.(consensusclient.AttesterDutiesProvider).AttesterDuties(ctx, &api.AttesterDutiesOpts{})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

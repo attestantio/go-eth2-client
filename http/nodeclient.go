@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,27 +16,35 @@ package http
 import (
 	"context"
 	"strings"
+
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // NodeClient provides the client for the node.
-func (s *Service) NodeClient(ctx context.Context) (string, error) {
-	nodeVersion, err := s.NodeVersion(ctx)
+func (s *Service) NodeClient(ctx context.Context) (*api.Response[string], error) {
+	response, err := s.NodeVersion(ctx, &api.NodeVersionOpts{})
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	nodeVersion = strings.ToLower(nodeVersion)
+	nodeVersion := strings.ToLower(response.Data)
 
+	var client string
 	switch {
 	case strings.HasPrefix(nodeVersion, "lighthouse"):
-		return "lighthouse", nil
+		client = "lighthouse"
 	case strings.HasPrefix(nodeVersion, "nimbus"):
-		return "nimbus", nil
+		client = "nimbus"
 	case strings.HasPrefix(nodeVersion, "prysm"):
-		return "prysm", nil
+		client = "prysm"
 	case strings.HasPrefix(nodeVersion, "teku"):
-		return "teku", nil
+		client = "teku"
 	default:
-		return nodeVersion, nil
+		client = nodeVersion
 	}
+
+	return &api.Response[string]{
+		Data:     client,
+		Metadata: make(map[string]any),
+	}, nil
 }

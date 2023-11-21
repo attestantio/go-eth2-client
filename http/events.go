@@ -78,6 +78,7 @@ func (s *Service) Events(ctx context.Context, topics []string, handler client.Ev
 				log.Trace().Msg("Events stream disconnected")
 			case <-ctx.Done():
 				log.Debug().Msg("Context done")
+
 				return
 			}
 		}
@@ -92,10 +93,12 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 
 	if handler == nil {
 		log.Debug().Msg("No handler supplied; ignoring")
+
 		return
 	}
 	if msg == nil {
 		log.Debug().Msg("No message supplied; ignoring")
+
 		return
 	}
 
@@ -108,6 +111,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, headEvent)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse head event")
+
 			return
 		}
 		event.Data = headEvent
@@ -116,6 +120,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, blockEvent)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse block event")
+
 			return
 		}
 		event.Data = blockEvent
@@ -124,6 +129,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, attestation)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse attestation")
+
 			return
 		}
 		event.Data = attestation
@@ -132,6 +138,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, voluntaryExit)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse voluntary exit")
+
 			return
 		}
 		event.Data = voluntaryExit
@@ -140,6 +147,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, finalizedCheckpointEvent)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse finalized checkpoint event")
+
 			return
 		}
 		event.Data = finalizedCheckpointEvent
@@ -148,6 +156,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, chainReorgEvent)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse chain reorg event")
+
 			return
 		}
 		event.Data = chainReorgEvent
@@ -156,6 +165,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, contributionAndProofEvent)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse contribution and proof event")
+
 			return
 		}
 		event.Data = contributionAndProofEvent
@@ -164,6 +174,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, payloadAttributesEvent)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse payload attributes event")
+
 			return
 		}
 		event.Data = payloadAttributesEvent
@@ -172,6 +183,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, blobSidecar)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse blob sidecar event")
+
 			return
 		}
 		event.Data = blobSidecar
@@ -180,6 +192,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		return
 	default:
 		log.Warn().Str("topic", string(msg.Event)).Msg("Received message with unhandled topic; ignoring")
+
 		return
 	}
 	handler(event)

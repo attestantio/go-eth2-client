@@ -45,6 +45,7 @@ func RawJSON(b any, input []byte) (map[string]json.RawMessage, error) {
 			if tags[i] == "allowempty" {
 				// This can be omitted.
 				emptyAllowed = true
+
 				break
 			}
 		}

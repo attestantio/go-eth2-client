@@ -19,6 +19,7 @@ import (
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
@@ -94,7 +95,7 @@ func TestSleep(t *testing.T) {
 
 	for i := 0; i < 16; i++ {
 		started := time.Now()
-		_, err := s.(consensusclient.GenesisProvider).Genesis(ctx)
+		_, err := s.(consensusclient.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 		require.NoError(t, err)
 		duration := time.Since(started)
 		require.GreaterOrEqual(t, duration.Milliseconds(), minSleep.Milliseconds())

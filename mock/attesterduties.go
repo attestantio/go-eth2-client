@@ -16,19 +16,22 @@ package mock
 import (
 	"context"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // AttesterDuties obtains attester duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Service) AttesterDuties(_ context.Context, _ spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.AttesterDuty, error) {
-	res := make([]*api.AttesterDuty, len(validatorIndices))
-	for i := range validatorIndices {
-		res[i] = &api.AttesterDuty{
-			ValidatorIndex: validatorIndices[i],
+func (s *Service) AttesterDuties(_ context.Context, opts *api.AttesterDutiesOpts) (*api.Response[[]*apiv1.AttesterDuty], error) {
+	data := make([]*apiv1.AttesterDuty, len(opts.Indices))
+	for i := range opts.Indices {
+		data[i] = &apiv1.AttesterDuty{
+			ValidatorIndex: opts.Indices[i],
 		}
 	}
 
-	return res, nil
+	return &api.Response[[]*apiv1.AttesterDuty]{
+		Data:     data,
+		Metadata: make(map[string]any),
+	}, nil
 }

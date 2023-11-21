@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,12 +15,14 @@ package http_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,30 +31,41 @@ func TestBeaconStateRoot(t *testing.T) {
 	defer cancel()
 
 	tests := []struct {
-		name              string
-		stateID           string
-		expectedErrorCode int
+		name     string
+		opts     *api.BeaconStateRootOpts
+		expected *phase0.BLSSignature
+		err      string
+		errCode  int
 	}{
 		{
-			name:              "Invalid",
-			stateID:           "current",
-			expectedErrorCode: 400,
+			name: "NilOpts",
+			err:  "no options specified",
 		},
 		{
-			name:    "Zero",
-			stateID: "0",
+			name: "NilState",
+			opts: &api.BeaconStateRootOpts{},
+			err:  "no state specified",
 		},
 		{
-			name:    "Head",
-			stateID: "head",
+			name:    "Invalid",
+			opts:    &api.BeaconStateRootOpts{State: "current"},
+			errCode: 400,
 		},
 		{
-			name:    "Finalized",
-			stateID: "finalized",
+			name: "Zero",
+			opts: &api.BeaconStateRootOpts{State: "0"},
 		},
 		{
-			name:    "Justified",
-			stateID: "justified",
+			name: "Head",
+			opts: &api.BeaconStateRootOpts{State: "head"},
+		},
+		{
+			name: "Finalized",
+			opts: &api.BeaconStateRootOpts{State: "finalized"},
+		},
+		{
+			name: "Justified",
+			opts: &api.BeaconStateRootOpts{State: "justified"},
 		},
 	}
 
@@ -64,12 +77,33 @@ func TestBeaconStateRoot(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			stateRoot, err := service.(client.BeaconStateRootProvider).BeaconStateRoot(ctx, test.stateID)
-			if test.expectedErrorCode != 0 {
-				require.Contains(t, err.Error(), fmt.Sprintf("%d", test.expectedErrorCode))
-			} else {
+			response, err := service.(client.BeaconStateRootProvider).BeaconStateRoot(ctx, test.opts)
+			if err != nil {
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) {
+					switch apiErr.StatusCode {
+					case 404:
+						// No block found.
+					case 503:
+						// Node is syncing.
+					}
+				}
+			}
+
+			switch {
+			case test.err != "":
+				require.ErrorContains(t, err, test.err)
+			case test.errCode != 0:
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) {
+					require.Equal(t, test.errCode, apiErr.StatusCode)
+				}
+			default:
 				require.NoError(t, err)
-				require.NotNil(t, stateRoot)
+				require.NotNil(t, response)
+				if test.expected != nil {
+					require.Equal(t, test.expected, response.Data)
+				}
 			}
 		})
 	}

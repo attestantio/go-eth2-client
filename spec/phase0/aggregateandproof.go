@@ -61,6 +61,7 @@ func (a *AggregateAndProof) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &aggregateAndProofJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return a.unpack(&aggregateAndProofJSON)
 }
 
@@ -102,6 +103,7 @@ func (a *AggregateAndProof) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -112,6 +114,7 @@ func (a *AggregateAndProof) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &aggregateAndProofJSON); err != nil {
 		return err
 	}
+
 	return a.unpack(&aggregateAndProofJSON)
 }
 
@@ -121,5 +124,6 @@ func (a *AggregateAndProof) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

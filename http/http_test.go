@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
@@ -27,12 +28,12 @@ func TestError(t *testing.T) {
 	require.NotNil(t, err)
 	require.Equal(t, "failed to confirm node connection: failed to fetch genesis: failed to request genesis: GET failed with status 418: data", err.Error())
 
-	var httpError http.Error
-	require.True(t, errors.As(err, &httpError))
-	require.Equal(t, status, httpError.StatusCode)
-	require.Equal(t, data, httpError.Data)
-	require.Equal(t, nethttp.MethodGet, httpError.Method)
-	require.Equal(t, "/eth/v1/beacon/genesis", httpError.Endpoint)
+	var apiError *api.Error
+	require.True(t, errors.As(err, &apiError))
+	require.Equal(t, status, apiError.StatusCode)
+	require.Equal(t, data, apiError.Data)
+	require.Equal(t, nethttp.MethodGet, apiError.Method)
+	require.Equal(t, "/eth/v1/beacon/genesis", apiError.Endpoint)
 }
 
 func TestClientShouldSendExtraHeadersWhenProvided(t *testing.T) {
@@ -58,7 +59,7 @@ func TestClientShouldSendExtraHeadersWhenProvided(t *testing.T) {
 	)
 
 	require.Error(t, err)
-	var httpError http.Error
-	require.True(t, errors.As(err, &httpError))
-	require.Equal(t, nethttp.StatusTeapot, httpError.StatusCode)
+	var apiError *api.Error
+	require.True(t, errors.As(err, &apiError))
+	require.Equal(t, nethttp.StatusTeapot, apiError.StatusCode)
 }

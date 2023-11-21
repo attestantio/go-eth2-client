@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
 )
@@ -43,11 +44,12 @@ func TestNodeSyncing(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			syncing, err := service.(client.NodeSyncingProvider).NodeSyncing(ctx)
+			response, err := service.(client.NodeSyncingProvider).NodeSyncing(ctx, &api.NodeSyncingOpts{})
 			require.NoError(t, err)
-			require.NotNil(t, syncing)
-			require.NotNil(t, syncing.HeadSlot)
-			require.NotNil(t, syncing.SyncDistance)
+			require.NotNil(t, response)
+			require.NotNil(t, response.Data)
+			require.NotNil(t, response.Data.HeadSlot)
+			require.NotNil(t, response.Data.SyncDistance)
 		})
 	}
 }

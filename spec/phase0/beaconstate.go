@@ -127,8 +127,9 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range s.Slashings {
 		slashings[i] = fmt.Sprintf("%d", s.Slashings[i])
 	}
+
 	return json.Marshal(&beaconStateJSON{
-		GenesisTime:                 fmt.Sprintf("%d", s.GenesisTime),
+		GenesisTime:                 strconv.FormatUint(s.GenesisTime, 10),
 		GenesisValidatorsRoot:       fmt.Sprintf("%#x", s.GenesisValidatorsRoot),
 		Slot:                        fmt.Sprintf("%d", s.Slot),
 		Fork:                        s.Fork,
@@ -138,7 +139,7 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 		HistoricalRoots:             historicalRoots,
 		ETH1Data:                    s.ETH1Data,
 		ETH1DataVotes:               s.ETH1DataVotes,
-		ETH1DepositIndex:            fmt.Sprintf("%d", s.ETH1DepositIndex),
+		ETH1DepositIndex:            strconv.FormatUint(s.ETH1DepositIndex, 10),
 		Validators:                  s.Validators,
 		Balances:                    balances,
 		RANDAOMixes:                 randaoMixes,
@@ -164,7 +165,7 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	return s.unpack(&data)
 }
 
-// nolint:gocyclo
+//nolint:gocyclo
 func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	var err error
 
@@ -350,6 +351,7 @@ func (s *BeaconState) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -360,6 +362,7 @@ func (s *BeaconState) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return err
 	}
+
 	return s.unpack(&data)
 }
 
@@ -369,5 +372,6 @@ func (s *BeaconState) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

@@ -1,3 +1,13 @@
+dev:
+  - standardise names of options
+  - add common options (currently just timeout) to options structs
+
+0.19.4:
+  - revert SubmitProposal() to use v1 of the API
+
+0.19.0:
+  - major rework of API; see docs/0.19-changes.md for details
+
 0.18.3:
   - do not crash if beacon state is unavailable
 

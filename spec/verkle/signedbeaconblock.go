@@ -57,6 +57,7 @@ func (s *SignedBeaconBlock) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&data)
 }
 
@@ -89,6 +90,7 @@ func (s *SignedBeaconBlock) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -99,6 +101,7 @@ func (s *SignedBeaconBlock) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return err
 	}
+
 	return s.unpack(&data)
 }
 
@@ -108,5 +111,6 @@ func (s *SignedBeaconBlock) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

@@ -51,8 +51,9 @@ type indexedAttestationYAML struct {
 func (i *IndexedAttestation) MarshalJSON() ([]byte, error) {
 	attestingIndices := make([]string, len(i.AttestingIndices))
 	for j := range i.AttestingIndices {
-		attestingIndices[j] = fmt.Sprintf("%d", i.AttestingIndices[j])
+		attestingIndices[j] = strconv.FormatUint(i.AttestingIndices[j], 10)
 	}
+
 	return json.Marshal(&indexedAttestationJSON{
 		AttestingIndices: attestingIndices,
 		Data:             i.Data,
@@ -66,6 +67,7 @@ func (i *IndexedAttestation) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &indexedAttestationJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return i.unpack(&indexedAttestationJSON)
 }
 
@@ -113,6 +115,7 @@ func (i *IndexedAttestation) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -123,6 +126,7 @@ func (i *IndexedAttestation) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &indexedAttestationJSON); err != nil {
 		return err
 	}
+
 	return i.unpack(&indexedAttestationJSON)
 }
 
@@ -132,5 +136,6 @@ func (i *IndexedAttestation) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

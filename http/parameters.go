@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -27,11 +27,12 @@ type parameters struct {
 	indexChunkSize  int
 	pubKeyChunkSize int
 	extraHeaders    map[string]string
+	enforceJSON     bool
 }
 
 // Parameter is the interface for service parameters.
 type Parameter interface {
-	apply(*parameters)
+	apply(p *parameters)
 }
 
 type parameterFunc func(*parameters)
@@ -79,6 +80,13 @@ func WithPubKeyChunkSize(pubKeyChunkSize int) Parameter {
 func WithExtraHeaders(headers map[string]string) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.extraHeaders = headers
+	})
+}
+
+// WithEnforceJSON forces all requests and responses to be in JSON, not sending or requesting SSZ.
+func WithEnforceJSON(enforceJSON bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.enforceJSON = enforceJSON
 	})
 }
 

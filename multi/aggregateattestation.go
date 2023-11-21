@@ -17,29 +17,28 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AggregateAttestation fetches the aggregate attestation given an attestation.
 func (s *Service) AggregateAttestation(ctx context.Context,
-	slot phase0.Slot,
-	attestationDataRoot phase0.Root,
+	opts *api.AggregateAttestationOpts,
 ) (
-	*phase0.Attestation,
+	*api.Response[*phase0.Attestation],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		aggregate, err := client.(consensusclient.AggregateAttestationProvider).AggregateAttestation(ctx, slot, attestationDataRoot)
+		aggregate, err := client.(consensusclient.AggregateAttestationProvider).AggregateAttestation(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return aggregate, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.(*phase0.Attestation), nil
+
+	return res.(*api.Response[*phase0.Attestation]), nil
 }

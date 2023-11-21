@@ -38,7 +38,7 @@ type depositContractJSON struct {
 // MarshalJSON implements json.Marshaler.
 func (d *DepositContract) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&depositContractJSON{
-		ChainID: fmt.Sprintf("%d", d.ChainID),
+		ChainID: strconv.FormatUint(d.ChainID, 10),
 		Address: fmt.Sprintf("%#x", d.Address),
 	})
 }
@@ -76,5 +76,6 @@ func (d *DepositContract) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

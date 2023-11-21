@@ -15,12 +15,13 @@ package http_test
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,30 +30,51 @@ func TestFinality(t *testing.T) {
 	defer cancel()
 
 	tests := []struct {
-		name              string
-		stateID           string
-		expectedErrorCode int
+		name    string
+		opts    *api.FinalityOpts
+		err     string
+		errCode int
 	}{
 		{
-			name:              "Invalid",
-			stateID:           "current",
-			expectedErrorCode: 400,
+			name: "NilOpts",
+			err:  "no options specified",
 		},
 		{
-			name:    "Zero",
-			stateID: "0",
+			name: "Invalid",
+			opts: &api.FinalityOpts{
+				State: "current",
+			},
+			errCode: 400,
 		},
 		{
-			name:    "Head",
-			stateID: "head",
+			name: "Genesis",
+			opts: &api.FinalityOpts{
+				State: "genesis",
+			},
 		},
 		{
-			name:    "Finalized",
-			stateID: "finalized",
+			name: "Zero",
+			opts: &api.FinalityOpts{
+				State: "0",
+			},
 		},
 		{
-			name:    "Justified",
-			stateID: "justified",
+			name: "Head",
+			opts: &api.FinalityOpts{
+				State: "head",
+			},
+		},
+		{
+			name: "Finalized",
+			opts: &api.FinalityOpts{
+				State: "finalized",
+			},
+		},
+		{
+			name: "Justified",
+			opts: &api.FinalityOpts{
+				State: "justified",
+			},
 		},
 	}
 
@@ -64,12 +86,18 @@ func TestFinality(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			stateFinality, err := service.(client.FinalityProvider).Finality(ctx, test.stateID)
-			if test.expectedErrorCode != 0 {
-				require.Contains(t, err.Error(), fmt.Sprintf("%d", test.expectedErrorCode))
-			} else {
+			response, err := service.(client.FinalityProvider).Finality(ctx, test.opts)
+			switch {
+			case test.err != "":
+				require.ErrorContains(t, err, test.err)
+			case test.errCode != 0:
+				var apiErr *api.Error
+				if errors.As(err, &apiErr) {
+					require.Equal(t, test.errCode, apiErr.StatusCode)
+				}
+			default:
 				require.NoError(t, err)
-				require.NotNil(t, stateFinality)
+				require.NotNil(t, response)
 			}
 		})
 	}

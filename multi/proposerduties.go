@@ -17,31 +17,29 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // ProposerDuties obtains proposer duties for the given epoch.
 // If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
 func (s *Service) ProposerDuties(ctx context.Context,
-	epoch phase0.Epoch,
-	validatorIndices []phase0.ValidatorIndex,
+	opts *api.ProposerDutiesOpts,
 ) (
-	[]*api.ProposerDuty,
+	*api.Response[[]*apiv1.ProposerDuty],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		block, err := client.(consensusclient.ProposerDutiesProvider).ProposerDuties(ctx, epoch, validatorIndices)
+		block, err := client.(consensusclient.ProposerDutiesProvider).ProposerDuties(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return block, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.([]*api.ProposerDuty), nil
+
+	return res.(*api.Response[[]*apiv1.ProposerDuty]), nil
 }

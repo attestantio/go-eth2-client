@@ -14,7 +14,7 @@ type BlobSidecarEvent struct {
 	BlockRoot     phase0.Root
 	Slot          phase0.Slot
 	Index         deneb.BlobIndex
-	KzgCommitment deneb.KzgCommitment
+	KZGCommitment deneb.KZGCommitment
 	VersionedHash deneb.VersionedHash
 }
 
@@ -23,7 +23,7 @@ type blobSidecarEventJSON struct {
 	BlockRoot     string `json:"block_root"`
 	Slot          string `json:"slot"`
 	Index         string `json:"index"`
-	KzgCommitment string `json:"kzg_commitment"`
+	KZGCommitment string `json:"kzg_commitment"`
 	VersionedHash string `json:"versioned_hash"`
 }
 
@@ -33,7 +33,7 @@ func (e *BlobSidecarEvent) MarshalJSON() ([]byte, error) {
 		BlockRoot:     fmt.Sprintf("%#x", e.BlockRoot),
 		Slot:          fmt.Sprintf("%d", e.Slot),
 		Index:         fmt.Sprintf("%d", e.Index),
-		KzgCommitment: fmt.Sprintf("%#x", e.KzgCommitment),
+		KZGCommitment: fmt.Sprintf("%#x", e.KZGCommitment),
 		VersionedHash: fmt.Sprintf("%#x", e.VersionedHash),
 	})
 }
@@ -68,10 +68,10 @@ func (e *BlobSidecarEvent) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for index")
 	}
-	if blobSidecarEventJSON.KzgCommitment == "" {
+	if blobSidecarEventJSON.KZGCommitment == "" {
 		return errors.New("kzg_commitment missing")
 	}
-	err = e.KzgCommitment.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, blobSidecarEventJSON.KzgCommitment)))
+	err = e.KZGCommitment.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, blobSidecarEventJSON.KZGCommitment)))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for kzg_commitment")
 	}
@@ -92,5 +92,6 @@ func (e *BlobSidecarEvent) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

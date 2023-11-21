@@ -16,19 +16,22 @@ package mock
 import (
 	"context"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // ProposerDuties obtains proposer duties for the given epoch.
 // If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
-func (s *Service) ProposerDuties(_ context.Context, _ spec.Epoch, validatorIndices []spec.ValidatorIndex) ([]*api.ProposerDuty, error) {
-	res := make([]*api.ProposerDuty, len(validatorIndices))
-	for i := range validatorIndices {
-		res[i] = &api.ProposerDuty{
-			ValidatorIndex: validatorIndices[i],
+func (s *Service) ProposerDuties(_ context.Context, opts *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error) {
+	data := make([]*apiv1.ProposerDuty, len(opts.Indices))
+	for i := range opts.Indices {
+		data[i] = &apiv1.ProposerDuty{
+			ValidatorIndex: opts.Indices[i],
 		}
 	}
 
-	return res, nil
+	return &api.Response[[]*apiv1.ProposerDuty]{
+		Data:     data,
+		Metadata: make(map[string]any),
+	}, nil
 }

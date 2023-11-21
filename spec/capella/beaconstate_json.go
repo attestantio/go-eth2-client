@@ -93,10 +93,11 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	}
 	inactivityScores := make([]string, len(s.InactivityScores))
 	for i := range s.InactivityScores {
-		inactivityScores[i] = fmt.Sprintf("%d", s.InactivityScores[i])
+		inactivityScores[i] = strconv.FormatUint(s.InactivityScores[i], 10)
 	}
+
 	return json.Marshal(&beaconStateJSON{
-		GenesisTime:                  fmt.Sprintf("%d", s.GenesisTime),
+		GenesisTime:                  strconv.FormatUint(s.GenesisTime, 10),
 		GenesisValidatorsRoot:        fmt.Sprintf("%#x", s.GenesisValidatorsRoot),
 		Slot:                         fmt.Sprintf("%d", s.Slot),
 		Fork:                         s.Fork,
@@ -106,7 +107,7 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 		HistoricalRoots:              historicalRoots,
 		ETH1Data:                     s.ETH1Data,
 		ETH1DataVotes:                s.ETH1DataVotes,
-		ETH1DepositIndex:             fmt.Sprintf("%d", s.ETH1DepositIndex),
+		ETH1DepositIndex:             strconv.FormatUint(s.ETH1DepositIndex, 10),
 		Validators:                   s.Validators,
 		Balances:                     balances,
 		RANDAOMixes:                  randaoMixes,
@@ -133,11 +134,13 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&data)
 }
 
 // unpack unpacks JSON data in to a spec representation.
-// nolint:gocyclo
+//
+//nolint:gocyclo
 func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	var err error
 
@@ -338,7 +341,7 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	}
 	s.NextWithdrawalIndex = WithdrawalIndex(nextWithdrawalIndex)
 	if data.NextWithdrawalValidatorIndex == "" {
-		return errors.New("next validator validator index missing")
+		return errors.New("next withdrawal validator index missing")
 	}
 	nextWithdrawalValidatorIndex, err := strconv.ParseUint(data.NextWithdrawalValidatorIndex, 10, 64)
 	if err != nil {

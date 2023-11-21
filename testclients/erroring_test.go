@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
@@ -88,7 +89,7 @@ func TestMaybeError(t *testing.T) {
 
 	errors := 0
 	for i := 0; i < 100000; i++ {
-		_, err := s.(consensusclient.GenesisProvider).Genesis(ctx)
+		_, err := s.(consensusclient.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 		if err != nil {
 			errors++
 		}

@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,30 +14,33 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/pkg/errors"
 )
 
-type syncingJSON struct {
-	Data *api.SyncState `json:"data"`
-}
-
 // NodeSyncing provides the syncing information for the node.
-func (s *Service) NodeSyncing(ctx context.Context) (*api.SyncState, error) {
-	respBodyReader, err := s.get(ctx, "/eth/v1/node/syncing")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to request syncing")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain syncing")
+func (s *Service) NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
 	}
 
-	var resp syncingJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse syncing")
+	url := "/eth/v1/node/syncing"
+	httpResponse, err := s.get(ctx, url, &opts.Common)
+	if err != nil {
+		return nil, err
 	}
-	return resp.Data, nil
+
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), &apiv1.SyncState{})
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.Response[*apiv1.SyncState]{
+		Data:     data,
+		Metadata: metadata,
+	}, nil
 }

@@ -21,40 +21,41 @@ import (
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 // beaconStateJSON is the spec representation of the struct.
 type beaconStateJSON struct {
-	GenesisTime                  string                    `json:"genesis_time"`
-	GenesisValidatorsRoot        string                    `json:"genesis_validators_root"`
-	Slot                         string                    `json:"slot"`
-	Fork                         *phase0.Fork              `json:"fork"`
-	LatestBlockHeader            *phase0.BeaconBlockHeader `json:"latest_block_header"`
-	BlockRoots                   []string                  `json:"block_roots"`
-	StateRoots                   []string                  `json:"state_roots"`
-	HistoricalRoots              []string                  `json:"historical_roots"`
-	ETH1Data                     *phase0.ETH1Data          `json:"eth1_data"`
-	ETH1DataVotes                []*phase0.ETH1Data        `json:"eth1_data_votes"`
-	ETH1DepositIndex             string                    `json:"eth1_deposit_index"`
-	Validators                   []*phase0.Validator       `json:"validators"`
-	Balances                     []string                  `json:"balances"`
-	RANDAOMixes                  []string                  `json:"randao_mixes"`
-	Slashings                    []string                  `json:"slashings"`
-	PreviousEpochParticipation   []string                  `json:"previous_epoch_participation"`
-	CurrentEpochParticipation    []string                  `json:"current_epoch_participation"`
-	JustificationBits            string                    `json:"justification_bits"`
-	PreviousJustifiedCheckpoint  *phase0.Checkpoint        `json:"previous_justified_checkpoint"`
-	CurrentJustifiedCheckpoint   *phase0.Checkpoint        `json:"current_justified_checkpoint"`
-	FinalizedCheckpoint          *phase0.Checkpoint        `json:"finalized_checkpoint"`
-	InactivityScores             []string                  `json:"inactivity_scores"`
-	CurrentSyncCommittee         *altair.SyncCommittee     `json:"current_sync_committee"`
-	NextSyncCommittee            *altair.SyncCommittee     `json:"next_sync_committee"`
-	LatestExecutionPayloadHeader *ExecutionPayloadHeader   `json:"latest_execution_payload_header"`
-	NextWithdrawalIndex          string                    `json:"next_withdrawal_index"`
-	NextWithdrawalValidatorIndex string                    `json:"next_withdrawal_validator_index"`
-	HistoricalSummaries          []*HistoricalSummary      `json:"historical_summaries"`
+	GenesisTime                  string                       `json:"genesis_time"`
+	GenesisValidatorsRoot        string                       `json:"genesis_validators_root"`
+	Slot                         string                       `json:"slot"`
+	Fork                         *phase0.Fork                 `json:"fork"`
+	LatestBlockHeader            *phase0.BeaconBlockHeader    `json:"latest_block_header"`
+	BlockRoots                   []string                     `json:"block_roots"`
+	StateRoots                   []string                     `json:"state_roots"`
+	HistoricalRoots              []string                     `json:"historical_roots"`
+	ETH1Data                     *phase0.ETH1Data             `json:"eth1_data"`
+	ETH1DataVotes                []*phase0.ETH1Data           `json:"eth1_data_votes"`
+	ETH1DepositIndex             string                       `json:"eth1_deposit_index"`
+	Validators                   []*phase0.Validator          `json:"validators"`
+	Balances                     []string                     `json:"balances"`
+	RANDAOMixes                  []string                     `json:"randao_mixes"`
+	Slashings                    []string                     `json:"slashings"`
+	PreviousEpochParticipation   []string                     `json:"previous_epoch_participation"`
+	CurrentEpochParticipation    []string                     `json:"current_epoch_participation"`
+	JustificationBits            string                       `json:"justification_bits"`
+	PreviousJustifiedCheckpoint  *phase0.Checkpoint           `json:"previous_justified_checkpoint"`
+	CurrentJustifiedCheckpoint   *phase0.Checkpoint           `json:"current_justified_checkpoint"`
+	FinalizedCheckpoint          *phase0.Checkpoint           `json:"finalized_checkpoint"`
+	InactivityScores             []string                     `json:"inactivity_scores"`
+	CurrentSyncCommittee         *altair.SyncCommittee        `json:"current_sync_committee"`
+	NextSyncCommittee            *altair.SyncCommittee        `json:"next_sync_committee"`
+	LatestExecutionPayloadHeader *ExecutionPayloadHeader      `json:"latest_execution_payload_header"`
+	NextWithdrawalIndex          string                       `json:"next_withdrawal_index"`
+	NextWithdrawalValidatorIndex string                       `json:"next_withdrawal_validator_index"`
+	HistoricalSummaries          []*capella.HistoricalSummary `json:"historical_summaries"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -93,10 +94,11 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	}
 	inactivityScores := make([]string, len(s.InactivityScores))
 	for i := range s.InactivityScores {
-		inactivityScores[i] = fmt.Sprintf("%d", s.InactivityScores[i])
+		inactivityScores[i] = strconv.FormatUint(s.InactivityScores[i], 10)
 	}
+
 	return json.Marshal(&beaconStateJSON{
-		GenesisTime:                  fmt.Sprintf("%d", s.GenesisTime),
+		GenesisTime:                  strconv.FormatUint(s.GenesisTime, 10),
 		GenesisValidatorsRoot:        fmt.Sprintf("%#x", s.GenesisValidatorsRoot),
 		Slot:                         fmt.Sprintf("%d", s.Slot),
 		Fork:                         s.Fork,
@@ -106,7 +108,7 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 		HistoricalRoots:              historicalRoots,
 		ETH1Data:                     s.ETH1Data,
 		ETH1DataVotes:                s.ETH1DataVotes,
-		ETH1DepositIndex:             fmt.Sprintf("%d", s.ETH1DepositIndex),
+		ETH1DepositIndex:             strconv.FormatUint(s.ETH1DepositIndex, 10),
 		Validators:                   s.Validators,
 		Balances:                     balances,
 		RANDAOMixes:                  randaoMixes,
@@ -133,11 +135,13 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&data)
 }
 
 // unpack unpacks JSON data in to a spec representation.
-// nolint:gocyclo
+//
+//nolint:gocyclo
 func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	var err error
 
@@ -336,9 +340,9 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for next withdrawal index")
 	}
-	s.NextWithdrawalIndex = WithdrawalIndex(nextWithdrawalIndex)
+	s.NextWithdrawalIndex = capella.WithdrawalIndex(nextWithdrawalIndex)
 	if data.NextWithdrawalValidatorIndex == "" {
-		return errors.New("next validator validator index missing")
+		return errors.New("next withdrawal validator index missing")
 	}
 	nextWithdrawalValidatorIndex, err := strconv.ParseUint(data.NextWithdrawalValidatorIndex, 10, 64)
 	if err != nil {

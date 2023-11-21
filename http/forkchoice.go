@@ -14,27 +14,39 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/pkg/errors"
 )
 
 // ForkChoice fetches all current fork choice context.
-func (s *Service) ForkChoice(ctx context.Context) (*api.ForkChoice, error) {
-	respBodyReader, err := s.get(ctx, "/eth/v1/debug/fork_choice")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to request fork choice")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain fork choice")
+func (s *Service) ForkChoice(ctx context.Context,
+	opts *api.ForkChoiceOpts,
+) (
+	*api.Response[*apiv1.ForkChoice],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
 	}
 
-	var forkChoice *api.ForkChoice
-	if err := json.NewDecoder(respBodyReader).Decode(&forkChoice); err != nil {
+	url := "/eth/v1/debug/fork_choice"
+	httpResponse, err := s.get(ctx, url, &opts.Common)
+	if err != nil {
+		return nil, err
+	}
+
+	var data apiv1.ForkChoice
+	if err := json.NewDecoder(bytes.NewReader(httpResponse.body)).Decode(&data); err != nil {
 		return nil, errors.Wrap(err, "failed to parse fork choice")
 	}
 
-	return forkChoice, nil
+	return &api.Response[*apiv1.ForkChoice]{
+		Data:     &data,
+		Metadata: make(map[string]any),
+	}, nil
 }

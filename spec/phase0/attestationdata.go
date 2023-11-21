@@ -69,6 +69,7 @@ func (a *AttestationData) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &attestationDataJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return a.unpack(&attestationDataJSON)
 }
 
@@ -124,6 +125,7 @@ func (a *AttestationData) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -134,6 +136,7 @@ func (a *AttestationData) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &attestationDataJSON); err != nil {
 		return err
 	}
+
 	return a.unpack(&attestationDataJSON)
 }
 
@@ -143,5 +146,6 @@ func (a *AttestationData) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

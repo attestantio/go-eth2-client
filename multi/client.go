@@ -19,6 +19,7 @@ import (
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
@@ -34,6 +35,7 @@ func (s *Service) monitor(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			log.Trace().Msg("Context done; monitor stopping")
+
 			return
 		case <-time.After(30 * time.Second):
 			s.recheck(ctx)
@@ -122,16 +124,18 @@ func ping(ctx context.Context, client consensusclient.Service) bool {
 	provider, isProvider := client.(consensusclient.NodeSyncingProvider)
 	if !isProvider {
 		log.Debug().Str("provider", client.Address()).Msg("Client does not provide sync state")
+
 		return false
 	}
 
-	syncState, err := provider.NodeSyncing(ctx)
+	response, err := provider.NodeSyncing(ctx, &api.NodeSyncingOpts{})
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to obtain sync state from node")
+
 		return false
 	}
 
-	return (!syncState.IsSyncing) || (syncState.HeadSlot == 0 && syncState.SyncDistance == 0)
+	return (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance == 0)
 }
 
 // callFunc is the definition for a call function.  It provides a generic return interface
@@ -179,6 +183,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 				log.Debug().Str("client", client.Name()).Str("address", client.Address()).Err(err).Msg("Deactivating client on error")
 				// Failed with this client; try the next.
 				s.deactivateClient(ctx, client)
+
 				continue
 			}
 
@@ -188,10 +193,13 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		if res == nil {
 			// No response from this client; try the next.
 			err = errors.New("empty response")
+
 			continue
 		}
+
 		return res, nil
 	}
+
 	return nil, err
 }
 
@@ -201,15 +209,17 @@ func (s *Service) providerInfo(ctx context.Context, provider consensusclient.Ser
 	providerName := "<unknown>"
 	nodeVersionProvider, isNodeVersionProvider := provider.(consensusclient.NodeVersionProvider)
 	if isNodeVersionProvider {
-		nodeVersion, err := nodeVersionProvider.NodeVersion(ctx)
+		response, err := nodeVersionProvider.NodeVersion(ctx, &api.NodeVersionOpts{})
 		if err == nil {
 			switch {
-			case strings.Contains(strings.ToLower(nodeVersion), "lighthouse"):
+			case strings.Contains(strings.ToLower(response.Data), "lighthouse"):
 				providerName = "lighthouse"
-			case strings.Contains(strings.ToLower(nodeVersion), "prysm"):
+			case strings.Contains(strings.ToLower(response.Data), "prysm"):
 				providerName = "prysm"
-			case strings.Contains(strings.ToLower(nodeVersion), "teku"):
+			case strings.Contains(strings.ToLower(response.Data), "teku"):
 				providerName = "teku"
+			case strings.Contains(strings.ToLower(response.Data), "nimbus"):
+				providerName = "nimbus"
 			}
 		}
 	}

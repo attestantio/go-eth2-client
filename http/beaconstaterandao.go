@@ -14,49 +14,41 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"strings"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
-type stateRandaoJSON struct {
-	Data *stateRandaoDataJSON `json:"data"`
+type beaconStateRandaoJSON struct {
+	Randao phase0.Root `json:"randao"`
 }
 
-type stateRandaoDataJSON struct {
-	Randao string `json:"randao"`
-}
-
-// BeaconStateRandao fetches a beacon state RANDAO given a state ID.
-func (s *Service) BeaconStateRandao(ctx context.Context, stateID string) (*phase0.Root, error) {
-	if stateID == "" {
-		return nil, errors.New("no state ID specified")
+// BeaconStateRandao fetches the beacon state RANDAO given a set of options.
+func (s *Service) BeaconStateRandao(ctx context.Context, opts *api.BeaconStateRandaoOpts) (*api.Response[*phase0.Root], error) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+	if opts.State == "" {
+		return nil, errors.New("no state specified")
 	}
 
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/randao", stateID))
+	url := fmt.Sprintf("/eth/v1/beacon/states/%s/randao", opts.State)
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request state RANDAO")
-	}
-	if respBodyReader == nil {
-		return nil, nil
+		return nil, err
 	}
 
-	var data stateRandaoJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&data); err != nil {
-		return nil, errors.Wrap(err, "failed to parse state RANDAO")
-	}
-
-	bytes, err := hex.DecodeString(strings.TrimPrefix(data.Data.Randao, "0x"))
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), beaconStateRandaoJSON{})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse state RANDAO value")
+		return nil, err
 	}
-	var stateRandao phase0.Root
-	copy(stateRandao[:], bytes)
 
-	return &stateRandao, nil
+	return &api.Response[*phase0.Root]{
+		Data:     &data.Randao,
+		Metadata: metadata,
+	}, nil
 }

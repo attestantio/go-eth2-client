@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,54 +14,46 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
-	"strings"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
 type beaconBlockRootJSON struct {
-	Data *beaconBlockRootDataJSON `json:"data"`
+	Root phase0.Root `json:"root"`
 }
 
-type beaconBlockRootDataJSON struct {
-	Root string `json:"root"`
-}
+// BeaconBlockRoot fetches a block's root given a set of options.
+func (s *Service) BeaconBlockRoot(ctx context.Context,
+	opts *api.BeaconBlockRootOpts,
+) (
+	*api.Response[*phase0.Root],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+	if opts.Block == "" {
+		return nil, errors.New("no block specified")
+	}
 
-// BeaconBlockRoot fetches a block's root given a block ID.
-// N.B if a signed beacon block for the block ID is not available this will return nil without an error.
-func (s *Service) BeaconBlockRoot(ctx context.Context, blockID string) (*phase0.Root, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/blocks/%s/root", blockID))
+	url := fmt.Sprintf("/eth/v1/beacon/blocks/%s/root", opts.Block)
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request beacon block root")
-	}
-	if respBodyReader == nil {
-		return nil, nil
+		return nil, err
 	}
 
-	var beaconBlockRootJSON beaconBlockRootJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&beaconBlockRootJSON); err != nil {
-		return nil, errors.Wrap(err, "failed to parse beacon block root")
-	}
-
-	if beaconBlockRootJSON.Data == nil {
-		return nil, errors.New("no data returned")
-	}
-	if beaconBlockRootJSON.Data.Root == "" {
-		return nil, errors.New("no root returned")
-	}
-
-	bytes, err := hex.DecodeString(strings.TrimPrefix(beaconBlockRootJSON.Data.Root, "0x"))
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), beaconBlockRootJSON{})
 	if err != nil {
-		return nil, errors.Wrap(err, "invalid root returned")
+		return nil, err
 	}
 
-	var res phase0.Root
-	copy(res[:], bytes)
-
-	return &res, nil
+	return &api.Response[*phase0.Root]{
+		Data:     &data.Root,
+		Metadata: metadata,
+	}, nil
 }

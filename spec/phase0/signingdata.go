@@ -56,6 +56,7 @@ func (s *SigningData) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &signingDataJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&signingDataJSON)
 }
 
@@ -95,6 +96,7 @@ func (s *SigningData) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -105,6 +107,7 @@ func (s *SigningData) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &signingDataJSON); err != nil {
 		return err
 	}
+
 	return s.unpack(&signingDataJSON)
 }
 
@@ -114,5 +117,6 @@ func (s *SigningData) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

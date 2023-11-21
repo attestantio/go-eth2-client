@@ -16,12 +16,13 @@ package mock
 import (
 	"context"
 
+	"github.com/attestantio/go-eth2-client/api"
 	spec "github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Service) ForkSchedule(_ context.Context) ([]*spec.Fork, error) {
-	return []*spec.Fork{
+func (s *Service) ForkSchedule(_ context.Context, _ *api.ForkScheduleOpts) (*api.Response[[]*spec.Fork], error) {
+	data := []*spec.Fork{
 		{
 			PreviousVersion: spec.Version{0x01, 0x02, 0x03, 0x04},
 			CurrentVersion:  spec.Version{0x01, 0x02, 0x03, 0x04},
@@ -32,5 +33,10 @@ func (s *Service) ForkSchedule(_ context.Context) ([]*spec.Fork, error) {
 			CurrentVersion:  spec.Version{0x11, 0x12, 0x13, 0x14},
 			Epoch:           1024,
 		},
+	}
+
+	return &api.Response[[]*spec.Fork]{
+		Data:     data,
+		Metadata: make(map[string]any),
 	}, nil
 }
