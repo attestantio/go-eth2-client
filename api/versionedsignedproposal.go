@@ -76,6 +76,42 @@ func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
 	}
 }
 
+// ExecutionBlockHash returns the hash of the execution payload.
+func (v *VersionedSignedProposal) ExecutionBlockHash() (phase0.Hash32, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil ||
+			v.Bellatrix.Message.Body == nil ||
+			v.Bellatrix.Message.Body.ExecutionPayload == nil {
+			return phase0.Hash32{}, ErrDataMissing
+		}
+
+		return v.Bellatrix.Message.Body.ExecutionPayload.BlockHash, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil ||
+			v.Capella.Message == nil ||
+			v.Capella.Message.Body == nil ||
+			v.Capella.Message.Body.ExecutionPayload == nil {
+			return phase0.Hash32{}, ErrDataMissing
+		}
+
+		return v.Capella.Message.Body.ExecutionPayload.BlockHash, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil ||
+			v.Deneb.SignedBlock == nil ||
+			v.Deneb.SignedBlock.Message == nil ||
+			v.Deneb.SignedBlock.Message.Body == nil ||
+			v.Deneb.SignedBlock.Message.Body.ExecutionPayload == nil {
+			return phase0.Hash32{}, ErrDataMissing
+		}
+
+		return v.Deneb.SignedBlock.Message.Body.ExecutionPayload.BlockHash, nil
+	default:
+		return phase0.Hash32{}, ErrUnsupportedVersion
+	}
+}
+
 // String returns a string version of the structure.
 func (v *VersionedSignedProposal) String() string {
 	switch v.Version {
