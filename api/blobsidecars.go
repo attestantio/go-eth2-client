@@ -26,7 +26,7 @@ type BlobSidecars struct {
 // UnmarshalSSZ ssz unmarshals the BlobSidecars object.
 // This is a hand-crafted function, as automatic generation does not support immediate arrays.
 func (b *BlobSidecars) UnmarshalSSZ(buf []byte) error {
-	num, err := ssz.DivideInt2(len(buf), 131256, 6)
+	num, err := ssz.DivideInt2(len(buf), 131928, 6)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (b *BlobSidecars) UnmarshalSSZ(buf []byte) error {
 		if b.Sidecars[ii] == nil {
 			b.Sidecars[ii] = new(deneb.BlobSidecar)
 		}
-		if err = b.Sidecars[ii].UnmarshalSSZ(buf[ii*131256 : (ii+1)*131256]); err != nil {
+		if err = b.Sidecars[ii].UnmarshalSSZ(buf[ii*131928 : (ii+1)*131928]); err != nil {
 			return err
 		}
 	}
