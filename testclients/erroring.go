@@ -82,6 +82,8 @@ func (s *Erroring) maybeError(_ context.Context) error {
 }
 
 // EpochFromStateID converts a state ID to its epoch.
+//
+// Deprecated: use chaintime.
 func (s *Erroring) EpochFromStateID(ctx context.Context, stateID string) (phase0.Epoch, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
@@ -95,6 +97,8 @@ func (s *Erroring) EpochFromStateID(ctx context.Context, stateID string) (phase0
 }
 
 // SlotFromStateID converts a state ID to its slot.
+//
+// Deprecated: use chaintime.
 func (s *Erroring) SlotFromStateID(ctx context.Context, stateID string) (phase0.Slot, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err

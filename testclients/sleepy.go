@@ -79,6 +79,8 @@ func (s *Sleepy) sleep(_ context.Context) {
 }
 
 // EpochFromStateID converts a state ID to its epoch.
+//
+// Deprecated: use chaintime.
 func (s *Sleepy) EpochFromStateID(ctx context.Context, stateID string) (phase0.Epoch, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.EpochFromStateIDProvider)
@@ -90,6 +92,8 @@ func (s *Sleepy) EpochFromStateID(ctx context.Context, stateID string) (phase0.E
 }
 
 // SlotFromStateID converts a state ID to its slot.
+//
+// Deprecated: use chaintime.
 func (s *Sleepy) SlotFromStateID(ctx context.Context, stateID string) (phase0.Slot, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.SlotFromStateIDProvider)
