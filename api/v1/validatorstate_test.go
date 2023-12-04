@@ -185,6 +185,26 @@ func TestValidatorToState(t *testing.T) {
 			state: api.ValidatorStatePendingQueued,
 		},
 		{
+			name: "ActiveOngoingNext",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch + 1,
+				ExitEpoch:                  farFutureEpoch,
+				WithdrawableEpoch:          farFutureEpoch,
+			},
+			state: api.ValidatorStatePendingQueued,
+		},
+		{
+			name: "ActiveOngoingThis",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch,
+				ExitEpoch:                  farFutureEpoch,
+				WithdrawableEpoch:          farFutureEpoch,
+			},
+			state: api.ValidatorStateActiveOngoing,
+		},
+		{
 			name: "ActiveOngoing",
 			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
@@ -216,6 +236,26 @@ func TestValidatorToState(t *testing.T) {
 			state: api.ValidatorStateActiveSlashed,
 		},
 		{
+			name: "ExitedNext",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch + 1,
+				WithdrawableEpoch:          farFutureEpoch,
+			},
+			state: api.ValidatorStateActiveExiting,
+		},
+		{
+			name: "ExitedThis",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch,
+				WithdrawableEpoch:          farFutureEpoch,
+			},
+			state: api.ValidatorStateExitedUnslashed,
+		},
+		{
 			name: "ExitedUnslashed",
 			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
@@ -226,7 +266,29 @@ func TestValidatorToState(t *testing.T) {
 			state: api.ValidatorStateExitedUnslashed,
 		},
 		{
-			name: "ExitedUnslashed",
+			name: "ExitedSlashedNext",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch + 1,
+				WithdrawableEpoch:          farFutureEpoch,
+				Slashed:                    true,
+			},
+			state: api.ValidatorStateActiveSlashed,
+		},
+		{
+			name: "ExitedSlashedThis",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch,
+				WithdrawableEpoch:          farFutureEpoch,
+				Slashed:                    true,
+			},
+			state: api.ValidatorStateExitedSlashed,
+		},
+		{
+			name: "ExitedSlashed",
 			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
 				ActivationEpoch:            currentEpoch - 40,

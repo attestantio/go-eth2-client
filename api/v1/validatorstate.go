@@ -161,42 +161,34 @@ func ValidatorToState(validator *phase0.Validator,
 		return ValidatorStateUnknown
 	}
 
-	if validator.ActivationEpoch > currentEpoch {
+	switch {
+	case validator.ActivationEpoch > currentEpoch:
 		// Pending.
 		if validator.ActivationEligibilityEpoch == farFutureEpoch {
 			return ValidatorStatePendingInitialized
 		}
 
 		return ValidatorStatePendingQueued
-	}
-
-	if validator.ActivationEpoch <= currentEpoch && currentEpoch < validator.ExitEpoch {
-		// Active.
-		if validator.ExitEpoch == farFutureEpoch {
-			return ValidatorStateActiveOngoing
-		}
+	case validator.ExitEpoch == farFutureEpoch:
+		// Active ongoing.
+		return ValidatorStateActiveOngoing
+	case validator.ExitEpoch > currentEpoch:
+		// Active exiting.
 		if validator.Slashed {
 			return ValidatorStateActiveSlashed
 		}
 
 		return ValidatorStateActiveExiting
-	}
-
-	if validator.ExitEpoch <= currentEpoch && currentEpoch < validator.WithdrawableEpoch {
+	case validator.WithdrawableEpoch > currentEpoch:
 		// Exited.
 		if validator.Slashed {
 			return ValidatorStateExitedSlashed
 		}
 
 		return ValidatorStateExitedUnslashed
-	}
-
-	// Withdrawable.
-	if balance != nil && *balance == 0 {
-		// We have a definite balance of 0.
+	case balance != nil && *balance == 0:
 		return ValidatorStateWithdrawalDone
+	default:
+		return ValidatorStateWithdrawalPossible
 	}
-
-	// No balance information, or balance > 0.
-	return ValidatorStateWithdrawalPossible
 }
