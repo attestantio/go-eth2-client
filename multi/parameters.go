@@ -105,7 +105,7 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 		}
 	}
 
-	if parameters.timeout == 0 {
+	if len(parameters.addresses) > 0 && parameters.timeout == 0 {
 		return nil, errors.New("no timeout specified")
 	}
 	if len(parameters.clients)+len(parameters.addresses) == 0 {
