@@ -69,6 +69,8 @@ func (s *Service) NodeVersion(ctx context.Context,
 		return nil, err
 	}
 
+	s.nodeVersion = data.Version
+
 	return &api.Response[string]{
 		Metadata: metadata,
 		Data:     data.Version,
