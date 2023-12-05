@@ -38,12 +38,16 @@ type Service interface {
 // EpochFromStateIDProvider is the interface for providing epochs from state IDs.
 type EpochFromStateIDProvider interface {
 	// EpochFromStateID converts a state ID to its epoch.
+	//
+	// Deprecated: will be removed in a future release.
 	EpochFromStateID(ctx context.Context, stateID string) (phase0.Epoch, error)
 }
 
 // SlotFromStateIDProvider is the interface for providing slots from state IDs.
 type SlotFromStateIDProvider interface {
 	// SlotFromStateID converts a state ID to its slot.
+	//
+	// Deprecated: will be removed in a future release.
 	SlotFromStateID(ctx context.Context, stateID string) (phase0.Slot, error)
 }
 
