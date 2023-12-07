@@ -16,12 +16,14 @@ package http
 import (
 	"time"
 
+	"github.com/attestantio/go-eth2-client/metrics"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
 
 type parameters struct {
 	logLevel        zerolog.Level
+	monitor         metrics.Service
 	address         string
 	timeout         time.Duration
 	indexChunkSize  int
@@ -45,6 +47,13 @@ func (f parameterFunc) apply(p *parameters) {
 func WithLogLevel(logLevel zerolog.Level) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.logLevel = logLevel
+	})
+}
+
+// WithMonitor sets the monitor for the service.
+func WithMonitor(monitor metrics.Service) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.monitor = monitor
 	})
 }
 

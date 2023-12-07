@@ -77,7 +77,7 @@ func main() {
     // supported by all clients, so checks should be made for each function when
     // casting the service to the relevant interface.
     if provider, isProvider := client.(eth2client.GenesisProvider); isProvider {
-        genesisResponse, err := provider.Genesis(ctx)
+        genesisResponse, err := provider.Genesis(ctx, &api.GenesisOpts{})
         if err != nil {
             // Errors may be API errors, in which case they will have more detail
             // about the failure.
@@ -97,7 +97,7 @@ func main() {
 
     // You can also access the struct directly if required.
     httpClient := client.(*http.Service)
-    genesisResponse, err := httpClient.Genesis(ctx)
+    genesisResponse, err := httpClient.Genesis(ctx, &api.GenesisOpts{})
     if err != nil {
         panic(err)
     }

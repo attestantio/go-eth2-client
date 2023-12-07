@@ -1,4 +1,7 @@
-dev:
+0.19.7:
+  - add endpoint metrics for prometheus
+
+0.19.5:
   - standardise names of options
   - add common options (currently just timeout) to options structs
 

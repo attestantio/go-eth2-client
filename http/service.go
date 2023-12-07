@@ -78,6 +78,12 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 		log = log.Level(parameters.logLevel)
 	}
 
+	if parameters.monitor != nil {
+		if err := registerMetrics(ctx, parameters.monitor); err != nil {
+			return nil, errors.Wrap(err, "failed to register metrics")
+		}
+	}
+
 	client := &http.Client{
 		Timeout: parameters.timeout,
 		Transport: &http.Transport{
