@@ -25,6 +25,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/verkle"
 	"github.com/pkg/errors"
 )
 
@@ -95,6 +96,11 @@ func (s *Service) signedBeaconBlockFromSSZ(res *httpResponse) (*api.Response[*sp
 		if err := response.Data.Deneb.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Wrap(err, "failed to decode deneb signed block contents")
 		}
+	case spec.DataVersionVerkle:
+		response.Data.Verkle = &verkle.SignedBeaconBlock{}
+		if err := response.Data.Verkle.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode verkle signed beacon block")
+		}
 	default:
 		return nil, fmt.Errorf("unhandled block version %s", res.consensusVersion)
 	}
@@ -121,6 +127,8 @@ func (s *Service) signedBeaconBlockFromJSON(res *httpResponse) (*api.Response[*s
 		response.Data.Capella, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &capella.SignedBeaconBlock{})
 	case spec.DataVersionDeneb:
 		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &deneb.SignedBeaconBlock{})
+	case spec.DataVersionVerkle:
+		response.Data.Verkle, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &verkle.SignedBeaconBlock{})
 	default:
 		return nil, fmt.Errorf("unhandled version %s", res.consensusVersion)
 	}
