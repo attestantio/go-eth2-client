@@ -27,6 +27,7 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/r3labs/sse/v2"
@@ -196,6 +197,15 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 			return
 		}
 		event.Data = attesterSlashingEvent
+	case "bls_to_execution_change":
+		blsToExecutionChangeEvent := &capella.BLSToExecutionChange{}
+		err := json.Unmarshal(msg.Data, blsToExecutionChangeEvent)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse bls to execution change event")
+
+			return
+		}
+		event.Data = blsToExecutionChangeEvent
 	case "blob_sidecar":
 		blobSidecar := &api.BlobSidecarEvent{}
 		err := json.Unmarshal(msg.Data, blobSidecar)

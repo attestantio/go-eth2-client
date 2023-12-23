@@ -144,6 +144,15 @@ func TestEventHandler(t *testing.T) {
 			handled: true,
 		},
 		{
+			name: "BLSToExecutionChangeGood",
+			message: &sse.Event{
+				Event: []byte("bls_to_execution_change"),
+				Data:  []byte(`{"validator_index":"63401","from_bls_pubkey":"0xa46ed2574770ec1942d577ef89e0bf7b0d601349dab791740dead3fb5a6e2624cf62b9e58de1074c49f44b986eb39002","to_execution_address":"0xd641D2Cc74C7b6A641861260d07D67eB67bc7403"}`),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
 			name: "ContributionAndProofGood",
 			message: &sse.Event{
 				Event: []byte("contribution_and_proof"),
