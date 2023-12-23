@@ -133,6 +133,11 @@ func (s *Service) Validators(ctx context.Context,
 		return s.validatorsFromState(ctx, opts)
 	}
 
+	if len(opts.Indices) > indexChunkSizes["default"]*2 || len(opts.PubKeys) > pubKeyChunkSizes["default"]*2 {
+		// Request is for multiple pages of validators; fetch from state.
+		return s.validatorsFromState(ctx, opts)
+	}
+
 	if len(opts.Indices) > s.indexChunkSize(ctx) || len(opts.PubKeys) > s.pubKeyChunkSize(ctx) {
 		return s.chunkedValidators(ctx, opts)
 	}
@@ -217,9 +222,33 @@ func (s *Service) validatorsFromState(ctx context.Context,
 		return nil, err
 	}
 
+	// Provide map of required pubkeys or indices.
+	indices := make(map[phase0.ValidatorIndex]struct{})
+	for _, index := range opts.Indices {
+		indices[index] = struct{}{}
+	}
+	pubkeys := make(map[phase0.BLSPubKey]struct{})
+	for _, pubkey := range opts.PubKeys {
+		pubkeys[pubkey] = struct{}{}
+	}
+
 	res := make(map[phase0.ValidatorIndex]*apiv1.Validator, len(validators))
 	for i, validator := range validators {
+		if len(pubkeys) > 0 {
+			if _, exists := pubkeys[validator.PublicKey]; !exists {
+				// We want specific public keys, and this isn't one of them.  Ignore.
+				continue
+			}
+		}
+
 		index := phase0.ValidatorIndex(i)
+		if len(indices) > 0 {
+			if _, exists := indices[index]; !exists {
+				// We want specific indices, and this isn't one of them.  Ignore.
+				continue
+			}
+		}
+
 		state := apiv1.ValidatorToState(validator, &balances[i], epoch, farFutureEpoch)
 		res[index] = &apiv1.Validator{
 			Index:     index,

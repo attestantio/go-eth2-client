@@ -1,3 +1,6 @@
+0.19.8
+  - more efficient fetching for large numbers of validators
+
 0.19.7:
   - add endpoint metrics for prometheus
 
