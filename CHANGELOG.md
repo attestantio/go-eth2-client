@@ -1,3 +1,6 @@
+dev:
+  - add proposer_slashing and attester_slashing events
+
 0.19.8
   - more efficient fetching for large numbers of validators
 

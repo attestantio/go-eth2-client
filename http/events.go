@@ -178,6 +178,24 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 			return
 		}
 		event.Data = payloadAttributesEvent
+	case "proposer_slashing":
+		proposerSlashingEvent := &phase0.ProposerSlashing{}
+		err := json.Unmarshal(msg.Data, proposerSlashingEvent)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse proposer slashing event")
+
+			return
+		}
+		event.Data = proposerSlashingEvent
+	case "attester_slashing":
+		attesterSlashingEvent := &phase0.AttesterSlashing{}
+		err := json.Unmarshal(msg.Data, attesterSlashingEvent)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse attester slashing event")
+
+			return
+		}
+		event.Data = attesterSlashingEvent
 	case "blob_sidecar":
 		blobSidecar := &api.BlobSidecarEvent{}
 		err := json.Unmarshal(msg.Data, blobSidecar)
