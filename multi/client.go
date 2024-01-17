@@ -174,6 +174,19 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 	for _, client := range activeClients {
 		res, err = call(ctx, client)
 		if err != nil {
+			log.Trace().Err(err).Msg("Potentially deactivating client due to error")
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) && apiErr.StatusCode/100 == 4 {
+				log.Trace().Str("client", client.Name()).Str("address", client.Address()).Err(err).Msg("Not deactivating client on user error")
+
+				return res, err
+			}
+			if errors.Is(err, context.Canceled) {
+				log.Trace().Str("client", client.Name()).Str("address", client.Address()).Msg("Not deactivating client on canceled context")
+
+				return res, err
+			}
+
 			failover := true
 			if errHandler != nil {
 				failover, err = errHandler(ctx, client, err)
