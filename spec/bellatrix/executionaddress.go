@@ -1,4 +1,4 @@
-// Copyright © 2022, 2023 Attestant Limited.
+// Copyright © 2022 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,6 +24,13 @@ import (
 
 // ExecutionAddress is a execution address.
 type ExecutionAddress [20]byte
+
+var emptyExecutionAddress = ExecutionAddress{}
+
+// IsZero returns true if the execution address is zero.
+func (a ExecutionAddress) IsZero() bool {
+	return bytes.Equal(a[:], emptyExecutionAddress[:])
+}
 
 // String returns an EIP-55 string version of the address.
 func (a ExecutionAddress) String() string {

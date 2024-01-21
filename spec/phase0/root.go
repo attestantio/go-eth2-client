@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,12 +24,11 @@ import (
 // Root is a merkle root.
 type Root [32]byte
 
+var zeroRoot = Root{}
+
 // IsZero returns true if the root is zero.
 func (r Root) IsZero() bool {
-	return bytes.Equal(r[:], []byte{
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	})
+	return bytes.Equal(r[:], zeroRoot[:])
 }
 
 // String returns a string version of the structure.
