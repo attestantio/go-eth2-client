@@ -85,7 +85,6 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	}
 
 	client := &http.Client{
-		Timeout: parameters.timeout,
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
 				Timeout:   parameters.timeout,
