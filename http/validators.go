@@ -189,7 +189,7 @@ func (s *Service) validatorsFromState(ctx context.Context,
 	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
 	error,
 ) {
-	stateResponse, err := s.BeaconState(ctx, &api.BeaconStateOpts{State: opts.State})
+	stateResponse, err := s.BeaconState(ctx, &api.BeaconStateOpts{State: opts.State, Common: opts.Common})
 	if err != nil {
 		return nil, err
 	}
