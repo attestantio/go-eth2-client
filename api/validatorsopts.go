@@ -26,7 +26,6 @@ type ValidatorsOpts struct {
 	Indices []phase0.ValidatorIndex
 	// PubKeys is a list of validator public keys to restrict the returned values.  If no public keys are supplied then no filter will be applied.
 	PubKeys []phase0.BLSPubKey
-	// WithBeaconState enables the use of the BeaconState endpoint for faster retrieval of large validator sets.
-	// This might increase memory usage during the request.
-	WithBeaconState bool
+	// WithoutBeaconState prevents the retrieval of BeaconState for large validator sets, which is often much faster but allocates much more memory.
+	WithoutBeaconState bool
 }

@@ -128,7 +128,7 @@ func (s *Service) Validators(ctx context.Context,
 		return nil, errors.New("cannot specify both indices and public keys")
 	}
 
-	if opts.WithBeaconState {
+	if !opts.WithoutBeaconState {
 		if len(opts.Indices) == 0 && len(opts.PubKeys) == 0 {
 			// Request is for all validators; fetch from state.
 			return s.validatorsFromState(ctx, opts)
