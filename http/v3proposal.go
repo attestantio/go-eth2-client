@@ -119,7 +119,12 @@ func (s *Service) v3ProposalFromSSZ(res *httpResponse) (*api.Response[*api.Versi
 	if !ok {
 		return nil, errors.New("missing Eth-Execution-Payload-Blinded header")
 	}
-	blinded := blindedHeader.(bool)
+	var blinded bool
+	blinded, ok = blindedHeader.(bool)
+	if !ok {
+		blindedStr := blindedHeader.(string)
+		blinded = blindedStr == "true"
+	}
 	response.Data.ExecutionPayloadBlinded = blinded
 
 	executionPayloadValueHeader, ok := response.Metadata["Eth-Execution-Payload-Value"]
