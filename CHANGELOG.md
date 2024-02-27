@@ -1,6 +1,7 @@
 dev:
   - add proposer_slashing and attester_slashing events
   - add bls_to_execution_change event
+  - add `UniversalProposal` implementing [produceBlockV3](https://ethereum.github.io/beacon-APIs/?urls.primaryName=dev#/ValidatorRequiredApi/produceBlockV3)
 
 0.19.8
   - more efficient fetching for large numbers of validators

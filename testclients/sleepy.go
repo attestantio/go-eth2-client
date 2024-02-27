@@ -284,6 +284,22 @@ func (s *Sleepy) Proposal(ctx context.Context,
 	return next.Proposal(ctx, opts)
 }
 
+// UniversalProposal fetches a universal proposal for signing.
+func (s *Sleepy) UniversalProposal(ctx context.Context,
+	opts *api.UniversalProposalOpts,
+) (
+	*api.Response[*api.VersionedUniversalProposal],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.UniversalProposalProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.UniversalProposal(ctx, opts)
+}
+
 // SubmitBeaconBlock submits a beacon block.
 //
 // Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitProposal() instead.
