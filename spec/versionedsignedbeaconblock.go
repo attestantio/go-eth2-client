@@ -742,6 +742,8 @@ func (v *VersionedSignedBeaconBlock) BlobKZGCommitments() ([]deneb.KZGCommitment
 		return nil, errors.New("altair block does not have kzg commitments")
 	case DataVersionBellatrix:
 		return nil, errors.New("bellatrix block does not have kzg commitments")
+	case DataVersionCapella:
+		return nil, errors.New("capella block does not have kzg commitments")
 	case DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
 			return nil, errors.New("no deneb block")
