@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,41 +16,36 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // indexChunkSizes defines the per-beacon-node size of an index chunk.
-// A request should be no more than 8,000 bytes to work with all currently-supported clients.
-// An index has variable size, but assuming 7 characters, including the comma separator, is safe.
-// We also need to reserve space for the state ID and the endpoint itself, to be safe we go
-// with 500 bytes for this which results in us having comfortable space for 1,000 indices.
-// That said, some nodes have their own built-in limits so use them where appropriate.
+// Sizes are derived empirically.
 var indexChunkSizes = map[string]int{
-	"default":    1000,
-	"lighthouse": 1000,
-	"nimbus":     1000,
-	"prysm":      1000,
-	"teku":       1000,
+	"default":    1024,
+	"lighthouse": 8192,
+	"lodestar":   1024,
+	"nimbus":     8192,
+	"prysm":      8192,
+	"teku":       8192,
 }
 
 // pubKeyChunkSizes defines the per-beacon-node size of a public key chunk.
-// A request should be no more than 8,000 bytes to work with all currently-supported clients.
-// A public key, including 0x header and comma separator, takes up 99 bytes.
-// We also need to reserve space for the state ID and the endpoint itself, to be safe we go
-// with 500 bytes for this which results in us having space for 75 public keys.
-// That said, some nodes have their own built-in limits so use them where appropriate.
+// Sizes are derived empirically.
 var pubKeyChunkSizes = map[string]int{
-	"default":    75,
-	"lighthouse": 75,
-	"nimbus":     75,
-	"prysm":      75,
-	"teku":       75,
+	"default":    128,
+	"lighthouse": 512,
+	"lodestar":   128,
+	"nimbus":     1024,
+	"prysm":      1024,
+	"teku":       512,
 }
 
 // indexChunkSize is the maximum number of validator indices to send in each request.
@@ -68,18 +63,11 @@ func (s *Service) indexChunkSize(ctx context.Context) int {
 		nodeClient = "default"
 	}
 
-	switch {
-	case strings.Contains(nodeClient, "lighthouse"):
-		return indexChunkSizes["lighthouse"]
-	case strings.Contains(nodeClient, "nimbus"):
-		return indexChunkSizes["nimbus"]
-	case strings.Contains(nodeClient, "prysm"):
-		return indexChunkSizes["prysm"]
-	case strings.Contains(nodeClient, "teku"):
-		return indexChunkSizes["teku"]
-	default:
-		return indexChunkSizes["default"]
+	if _, exists := indexChunkSizes[nodeClient]; exists {
+		return indexChunkSizes[nodeClient]
 	}
+
+	return indexChunkSizes["default"]
 }
 
 // pubKeyChunkSize is the maximum number of validator public keys to send in each request.
@@ -97,18 +85,11 @@ func (s *Service) pubKeyChunkSize(ctx context.Context) int {
 		nodeClient = "default"
 	}
 
-	switch {
-	case strings.Contains(nodeClient, "lighthouse"):
-		return pubKeyChunkSizes["lighthouse"]
-	case strings.Contains(nodeClient, "nimbus"):
-		return pubKeyChunkSizes["nimbus"]
-	case strings.Contains(nodeClient, "prysm"):
-		return pubKeyChunkSizes["prysm"]
-	case strings.Contains(nodeClient, "teku"):
-		return pubKeyChunkSizes["teku"]
-	default:
-		return pubKeyChunkSizes["default"]
+	if _, exists := pubKeyChunkSizes[nodeClient]; exists {
+		return pubKeyChunkSizes[nodeClient]
 	}
+
+	return pubKeyChunkSizes["default"]
 }
 
 // Validators provides the validators, with their balance and status, for the given options.
@@ -133,7 +114,7 @@ func (s *Service) Validators(ctx context.Context,
 		return s.validatorsFromState(ctx, opts)
 	}
 
-	if len(opts.Indices) > indexChunkSizes["default"]*2 || len(opts.PubKeys) > pubKeyChunkSizes["default"]*2 {
+	if len(opts.Indices) > s.indexChunkSize(ctx)*16 || len(opts.PubKeys) > s.indexChunkSize(ctx)*16 {
 		// Request is for multiple pages of validators; fetch from state.
 		return s.validatorsFromState(ctx, opts)
 	}
