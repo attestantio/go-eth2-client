@@ -378,3 +378,29 @@ func (v *VersionedSignedBlindedProposal) Signature() (phase0.BLSSignature, error
 		return phase0.BLSSignature{}, ErrUnsupportedVersion
 	}
 }
+
+// String returns a string version of the structure.
+func (v *VersionedSignedBlindedProposal) String() string {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return ""
+		}
+
+		return v.Bellatrix.String()
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return ""
+		}
+
+		return v.Capella.String()
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return ""
+		}
+
+		return v.Deneb.String()
+	default:
+		return "unsupported version"
+	}
+}
