@@ -126,7 +126,7 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error)
 		return v.Capella.Message.Body.ExecutionPayload.BlockHash, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil || v.Deneb.Message.Body.ExecutionPayload == nil {
-			return phase0.Hash32{}, errors.New("no denb block")
+			return phase0.Hash32{}, errors.New("no deneb block")
 		}
 
 		return v.Deneb.Message.Body.ExecutionPayload.BlockHash, nil
