@@ -67,7 +67,7 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 		return v.Capella.Slot, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return 0, errors.New("no deneb block contents")
+			return 0, errors.New("no deneb block")
 		}
 
 		return v.Deneb.Slot, nil
@@ -117,7 +117,7 @@ func (v *VersionedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
 		return v.Capella.Body.RANDAOReveal, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return phase0.BLSSignature{}, errors.New("no deneb block contents")
+			return phase0.BLSSignature{}, errors.New("no deneb block")
 		}
 		if v.Deneb.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no deneb block body")
@@ -170,7 +170,7 @@ func (v *VersionedBeaconBlock) Graffiti() ([32]byte, error) {
 		return v.Capella.Body.Graffiti, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return [32]byte{}, errors.New("no deneb block contents")
+			return [32]byte{}, errors.New("no deneb block")
 		}
 		if v.Deneb.Body == nil {
 			return [32]byte{}, errors.New("no deneb block body")
@@ -211,7 +211,7 @@ func (v *VersionedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
 		return v.Capella.ProposerIndex, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return 0, errors.New("no deneb block contents")
+			return 0, errors.New("no deneb block")
 		}
 
 		return v.Deneb.ProposerIndex, nil
@@ -249,7 +249,7 @@ func (v *VersionedBeaconBlock) Root() (phase0.Root, error) {
 		return v.Capella.HashTreeRoot()
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return phase0.Root{}, errors.New("no deneb block contents")
+			return phase0.Root{}, errors.New("no deneb block")
 		}
 
 		return v.Deneb.HashTreeRoot()
@@ -265,11 +265,17 @@ func (v *VersionedBeaconBlock) BodyRoot() (phase0.Root, error) {
 		if v.Phase0 == nil {
 			return phase0.Root{}, errors.New("no phase0 block")
 		}
+		if v.Phase0.Body == nil {
+			return phase0.Root{}, errors.New("no phase0 block body")
+		}
 
 		return v.Phase0.Body.HashTreeRoot()
 	case DataVersionAltair:
 		if v.Altair == nil {
 			return phase0.Root{}, errors.New("no altair block")
+		}
+		if v.Altair.Body == nil {
+			return phase0.Root{}, errors.New("no altair block body")
 		}
 
 		return v.Altair.Body.HashTreeRoot()
@@ -277,17 +283,26 @@ func (v *VersionedBeaconBlock) BodyRoot() (phase0.Root, error) {
 		if v.Bellatrix == nil {
 			return phase0.Root{}, errors.New("no bellatrix block")
 		}
+		if v.Bellatrix.Body == nil {
+			return phase0.Root{}, errors.New("no bellatrix block body")
+		}
 
 		return v.Bellatrix.Body.HashTreeRoot()
 	case DataVersionCapella:
 		if v.Capella == nil {
 			return phase0.Root{}, errors.New("no capella block")
 		}
+		if v.Capella.Body == nil {
+			return phase0.Root{}, errors.New("no capella block body")
+		}
 
 		return v.Capella.Body.HashTreeRoot()
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return phase0.Root{}, errors.New("no deneb block contents")
+			return phase0.Root{}, errors.New("no deneb block")
+		}
+		if v.Deneb.Body == nil {
+			return phase0.Root{}, errors.New("no deneb block body")
 		}
 
 		return v.Deneb.Body.HashTreeRoot()
@@ -325,7 +340,7 @@ func (v *VersionedBeaconBlock) ParentRoot() (phase0.Root, error) {
 		return v.Capella.ParentRoot, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return phase0.Root{}, errors.New("no deneb block contents")
+			return phase0.Root{}, errors.New("no deneb block")
 		}
 
 		return v.Deneb.ParentRoot, nil
@@ -363,7 +378,7 @@ func (v *VersionedBeaconBlock) StateRoot() (phase0.Root, error) {
 		return v.Capella.StateRoot, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return phase0.Root{}, errors.New("no deneb block contents")
+			return phase0.Root{}, errors.New("no deneb block")
 		}
 
 		return v.Deneb.StateRoot, nil
