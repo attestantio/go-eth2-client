@@ -120,7 +120,7 @@ func (s *Service) universalBeaconBlockProposalFromSSZ(res *httpResponse) (*api.R
 			return nil, err
 		}
 		universalProposal = &api.VersionedUniversalProposal{
-			Blinded: blindedProposalResponse.Data,
+			BlindedProposal: blindedProposalResponse.Data,
 		}
 		metadata = blindedProposalResponse.Metadata
 	} else {
@@ -129,7 +129,7 @@ func (s *Service) universalBeaconBlockProposalFromSSZ(res *httpResponse) (*api.R
 			return nil, err
 		}
 		universalProposal = &api.VersionedUniversalProposal{
-			Full: proposalResponse.Data,
+			Proposal: proposalResponse.Data,
 		}
 		metadata = proposalResponse.Metadata
 	}
@@ -151,7 +151,7 @@ func (s *Service) universalBeaconBlockProposalFromJSON(res *httpResponse) (*api.
 			return nil, err
 		}
 		universalProposal = &api.VersionedUniversalProposal{
-			Blinded: blindedProposalResponse.Data,
+			BlindedProposal: blindedProposalResponse.Data,
 		}
 		metadata = blindedProposalResponse.Metadata
 	} else {
@@ -160,7 +160,7 @@ func (s *Service) universalBeaconBlockProposalFromJSON(res *httpResponse) (*api.
 			return nil, err
 		}
 		universalProposal = &api.VersionedUniversalProposal{
-			Full: proposalResponse.Data,
+			Proposal: proposalResponse.Data,
 		}
 		metadata = proposalResponse.Metadata
 	}

@@ -19,39 +19,39 @@ import (
 
 // VersionedSignedUniversalProposal contains a full or blinded signed proposal.
 type VersionedSignedUniversalProposal struct {
-	Full    *VersionedSignedProposal
-	Blinded *VersionedSignedBlindedProposal
+	Proposal        *VersionedSignedProposal
+	BlindedProposal *VersionedSignedBlindedProposal
 }
 
 // Slot returns the slot of the signed proposal.
 func (v *VersionedSignedUniversalProposal) Slot() (phase0.Slot, error) {
-	if v.Full != nil {
-		return v.Full.Slot()
+	if v.Proposal != nil {
+		return v.Proposal.Slot()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.Slot()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.Slot()
 	}
 	return 0, ErrDataMissing
 }
 
 // ExecutionBlockHash returns the hash of the execution payload.
 func (v *VersionedSignedUniversalProposal) ExecutionBlockHash() (phase0.Hash32, error) {
-	if v.Full != nil {
-		return v.Full.ExecutionBlockHash()
+	if v.Proposal != nil {
+		return v.Proposal.ExecutionBlockHash()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.ExecutionBlockHash()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.ExecutionBlockHash()
 	}
 	return phase0.Hash32{}, ErrDataMissing
 }
 
 // String returns a string version of the structure.
 func (v *VersionedSignedUniversalProposal) String() string {
-	if v.Full != nil {
-		return v.Full.String()
+	if v.Proposal != nil {
+		return v.Proposal.String()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.String()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.String()
 	}
 	return "unsupported version"
 }

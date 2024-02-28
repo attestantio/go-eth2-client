@@ -38,7 +38,7 @@ func (s *Service) UniversalProposal(ctx context.Context,
 
 		return &api.Response[*api.VersionedUniversalProposal]{
 			Data: &api.VersionedUniversalProposal{
-				Blinded: blindedBlock.Data,
+				BlindedProposal: blindedBlock.Data,
 			},
 			Metadata: blindedBlock.Metadata,
 		}, nil
@@ -56,7 +56,7 @@ func (s *Service) UniversalProposal(ctx context.Context,
 
 		return &api.Response[*api.VersionedUniversalProposal]{
 			Data: &api.VersionedUniversalProposal{
-				Full: beaconBlock.Data,
+				Proposal: beaconBlock.Data,
 			},
 			Metadata: beaconBlock.Metadata,
 		}, nil

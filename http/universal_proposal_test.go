@@ -137,9 +137,9 @@ func TestUniversalProposal(t *testing.T) {
 				if test.expected != nil {
 					require.Equal(t, test.expected, response.Data)
 					if test.opts.BuilderBoostFactor != "" {
-						require.NotNil(t, response.Data.Blinded)
+						require.NotNil(t, response.Data.BlindedProposal)
 					} else {
-						require.NotNil(t, response.Data.Full)
+						require.NotNil(t, response.Data.Proposal)
 					}
 				}
 			}

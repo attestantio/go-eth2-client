@@ -21,169 +21,169 @@ import (
 
 // VersionedUniversalProposal contains a versioned universal proposal.
 type VersionedUniversalProposal struct {
-	Full    *VersionedProposal
-	Blinded *VersionedBlindedProposal
+	Proposal        *VersionedProposal
+	BlindedProposal *VersionedBlindedProposal
 }
 
 // IsEmpty returns true if there is no proposal.
 func (v VersionedUniversalProposal) IsEmpty() bool {
-	noFull := v.Full == nil || v.Full.IsEmpty()
-	noBlinded := v.Blinded == nil || v.Blinded.IsEmpty()
+	noFull := v.Proposal == nil || v.Proposal.IsEmpty()
+	noBlinded := v.BlindedProposal == nil || v.BlindedProposal.IsEmpty()
 	return noFull && noBlinded
 }
 
 // Slot returns the slot of the proposal.
 func (v *VersionedUniversalProposal) Slot() (phase0.Slot, error) {
-	if v.Full != nil {
-		return v.Full.Slot()
+	if v.Proposal != nil {
+		return v.Proposal.Slot()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.Slot()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.Slot()
 	}
 	return 0, ErrDataMissing
 }
 
 // ProposerIndex returns the proposer index of the proposal.
 func (v *VersionedUniversalProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
-	if v.Full != nil {
-		return v.Full.ProposerIndex()
+	if v.Proposal != nil {
+		return v.Proposal.ProposerIndex()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.ProposerIndex()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.ProposerIndex()
 	}
 	return 0, ErrDataMissing
 }
 
 // RandaoReveal returns the RANDAO reveal of the proposal.
 func (v *VersionedUniversalProposal) RandaoReveal() (phase0.BLSSignature, error) {
-	if v.Full != nil {
-		return v.Full.RandaoReveal()
+	if v.Proposal != nil {
+		return v.Proposal.RandaoReveal()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.RandaoReveal()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.RandaoReveal()
 	}
 	return phase0.BLSSignature{}, ErrDataMissing
 }
 
 // Graffiti returns the graffiti of the proposal.
 func (v *VersionedUniversalProposal) Graffiti() ([32]byte, error) {
-	if v.Full != nil {
-		return v.Full.Graffiti()
+	if v.Proposal != nil {
+		return v.Proposal.Graffiti()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.Graffiti()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.Graffiti()
 	}
 	return [32]byte{}, ErrDataMissing
 }
 
 // Attestations returns the attestations of the proposal.
 func (v *VersionedUniversalProposal) Attestations() ([]*phase0.Attestation, error) {
-	if v.Full != nil {
-		return v.Full.Attestations()
+	if v.Proposal != nil {
+		return v.Proposal.Attestations()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.Attestations()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.Attestations()
 	}
 	return nil, ErrDataMissing
 }
 
 // Root returns the root of the proposal.
 func (v *VersionedUniversalProposal) Root() (phase0.Root, error) {
-	if v.Full != nil {
-		return v.Full.Root()
+	if v.Proposal != nil {
+		return v.Proposal.Root()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.Root()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.Root()
 	}
 	return phase0.Root{}, ErrDataMissing
 }
 
 // BodyRoot returns the body root of the proposal.
 func (v *VersionedUniversalProposal) BodyRoot() (phase0.Root, error) {
-	if v.Full != nil {
-		return v.Full.BodyRoot()
+	if v.Proposal != nil {
+		return v.Proposal.BodyRoot()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.BodyRoot()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.BodyRoot()
 	}
 	return phase0.Root{}, ErrDataMissing
 }
 
 // ParentRoot returns the parent root of the proposal.
 func (v *VersionedUniversalProposal) ParentRoot() (phase0.Root, error) {
-	if v.Full != nil {
-		return v.Full.ParentRoot()
+	if v.Proposal != nil {
+		return v.Proposal.ParentRoot()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.ParentRoot()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.ParentRoot()
 	}
 	return phase0.Root{}, ErrDataMissing
 }
 
 // StateRoot returns the state root of the proposal.
 func (v *VersionedUniversalProposal) StateRoot() (phase0.Root, error) {
-	if v.Full != nil {
-		return v.Full.StateRoot()
+	if v.Proposal != nil {
+		return v.Proposal.StateRoot()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.StateRoot()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.StateRoot()
 	}
 	return phase0.Root{}, ErrDataMissing
 }
 
 // Transactions returns the transactions of the proposal.
 func (v *VersionedUniversalProposal) Transactions() ([]bellatrix.Transaction, error) {
-	if v.Full != nil {
-		return v.Full.Transactions()
+	if v.Proposal != nil {
+		return v.Proposal.Transactions()
 	}
 	return nil, ErrDataMissing
 }
 
 // FeeRecipient returns the fee recipient of the proposal.
 func (v *VersionedUniversalProposal) FeeRecipient() (bellatrix.ExecutionAddress, error) {
-	if v.Full != nil {
-		return v.Full.FeeRecipient()
+	if v.Proposal != nil {
+		return v.Proposal.FeeRecipient()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.FeeRecipient()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.FeeRecipient()
 	}
 	return bellatrix.ExecutionAddress{}, ErrDataMissing
 }
 
 // Timestamp returns the timestamp of the proposal.
 func (v *VersionedUniversalProposal) Timestamp() (uint64, error) {
-	if v.Full != nil {
-		return v.Full.Timestamp()
+	if v.Proposal != nil {
+		return v.Proposal.Timestamp()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.Timestamp()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.Timestamp()
 	}
 	return 0, ErrDataMissing
 }
 
 // Blobs returns the blobs of the proposal.
 func (v *VersionedUniversalProposal) Blobs() ([]deneb.Blob, error) {
-	if v.Full != nil {
-		return v.Full.Blobs()
+	if v.Proposal != nil {
+		return v.Proposal.Blobs()
 	}
 	return nil, ErrDataMissing
 }
 
 // KZGProofs returns the KZG proofs of the proposal.
 func (v *VersionedUniversalProposal) KZGProofs() ([]deneb.KZGProof, error) {
-	if v.Full != nil {
-		return v.Full.KZGProofs()
+	if v.Proposal != nil {
+		return v.Proposal.KZGProofs()
 	}
 	return nil, ErrDataMissing
 }
 
 // String returns a string version of the structure.
 func (v *VersionedUniversalProposal) String() string {
-	if v.Full != nil {
-		return v.Full.String()
+	if v.Proposal != nil {
+		return v.Proposal.String()
 	}
-	if v.Blinded != nil {
-		return v.Blinded.String()
+	if v.BlindedProposal != nil {
+		return v.BlindedProposal.String()
 	}
 	return ""
 }
