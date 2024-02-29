@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2023, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,7 +13,10 @@
 
 package api
 
-import "github.com/attestantio/go-eth2-client/spec/phase0"
+import (
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
+)
 
 // ValidatorsOpts are the options for obtaining validators.
 type ValidatorsOpts struct {
@@ -26,4 +29,6 @@ type ValidatorsOpts struct {
 	Indices []phase0.ValidatorIndex
 	// PubKeys is a list of validator public keys to restrict the returned values.  If no public keys are supplied then no filter will be applied.
 	PubKeys []phase0.BLSPubKey
+	// ValidatorStates is a list of validator states to restric the returned values.  If no validator states are supplied then no filter will be applied.
+	ValidatorStates []apiv1.ValidatorState
 }

@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,6 +21,7 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -80,6 +81,13 @@ func TestValidators(t *testing.T) {
 					*mustParsePubKey("0xb2ff4716ed345b05dd1dfc6a5a9fa70856d8c75dcc9e881dd2f766d5f891326f0d10e96f3a444ce6c912b69c22c6754d"),
 					*mustParsePubKey("0x8e323fd501233cd4d1b9d63d74076a38de50f2f584b001a5ac2412e4e46adb26d2fb2a6041e7e8c57cd4df0916729219"),
 				},
+			},
+		},
+		{
+			name: "ExitedValidators",
+			opts: &api.ValidatorsOpts{
+				State:           "head",
+				ValidatorStates: []apiv1.ValidatorState{apiv1.ValidatorStateExitedSlashed, apiv1.ValidatorStateExitedUnslashed},
 			},
 		},
 	}

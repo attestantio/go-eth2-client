@@ -142,6 +142,17 @@ func (s *Service) Validators(ctx context.Context,
 		}
 		query = "id=" + strings.Join(ids, ",")
 	}
+	if len(opts.ValidatorStates) > 0 {
+		states := make([]string, len(opts.ValidatorStates))
+		for i := range opts.ValidatorStates {
+			states[i] = opts.ValidatorStates[i].String()
+		}
+		if query == "" {
+			query = "states=" + strings.Join(states, ",")
+		} else {
+			query = fmt.Sprintf("%s&states=%s", query, strings.Join(states, ","))
+		}
+	}
 
 	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
 	if err != nil {
@@ -216,6 +227,10 @@ func (s *Service) validatorsFromState(ctx context.Context,
 	for _, pubkey := range opts.PubKeys {
 		pubkeys[pubkey] = struct{}{}
 	}
+	validatorStates := make(map[apiv1.ValidatorState]struct{})
+	for _, validatorState := range opts.ValidatorStates {
+		validatorStates[validatorState] = struct{}{}
+	}
 
 	res := make(map[phase0.ValidatorIndex]*apiv1.Validator, len(validators))
 	for i, validator := range validators {
@@ -235,6 +250,13 @@ func (s *Service) validatorsFromState(ctx context.Context,
 		}
 
 		state := apiv1.ValidatorToState(validator, &balances[i], epoch, farFutureEpoch)
+		if len(validatorStates) > 0 {
+			if _, exists := validatorStates[state]; !exists {
+				// We want specific states, and this isn't one of them.  Ignore.
+				continue
+			}
+		}
+
 		res[index] = &apiv1.Validator{
 			Index:     index,
 			Balance:   balances[i],
