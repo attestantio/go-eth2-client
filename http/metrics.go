@@ -79,15 +79,19 @@ func registerPrometheusMetrics(_ context.Context) error {
 }
 
 func (s *Service) monitorGetComplete(_ context.Context, endpoint string, result string) {
-	if requestsMetric != nil {
-		requestsMetric.WithLabelValues(s.address, "GET", reduceEndpoint(endpoint), result).Inc()
+	if requestsMetric == nil {
+		return
 	}
+
+	requestsMetric.WithLabelValues(s.address, "GET", reduceEndpoint(endpoint), result).Inc()
 }
 
 func (s *Service) monitorPostComplete(_ context.Context, endpoint string, result string) {
-	if requestsMetric != nil {
-		requestsMetric.WithLabelValues(s.address, "POST", reduceEndpoint(endpoint), result).Inc()
+	if requestsMetric == nil {
+		return
 	}
+
+	requestsMetric.WithLabelValues(s.address, "POST", reduceEndpoint(endpoint), result).Inc()
 }
 
 type templateReplacement struct {
@@ -137,6 +141,10 @@ func reduceEndpoint(in string) string {
 }
 
 func (s *Service) monitorActive(active bool) {
+	if activeMetric == nil {
+		return
+	}
+
 	if active {
 		activeMetric.WithLabelValues(s.address).Set(1)
 	} else {
@@ -145,6 +153,10 @@ func (s *Service) monitorActive(active bool) {
 }
 
 func (s *Service) monitorSynced(synced bool) {
+	if syncedMetric == nil {
+		return
+	}
+
 	if synced {
 		syncedMetric.WithLabelValues(s.address).Set(1)
 	} else {
