@@ -245,11 +245,6 @@ func (s *Service) close() {
 // its activation and sync states.
 // This will call hooks supplied when creating the client if the state changes.
 func (s *Service) CheckConnectionState(ctx context.Context) {
-	// TODO can we use the parent context?
-	//// We ignore the context passed in, and create a separate context to ensure that
-	//// the check isn't cancelled by a failed request that then subsequently calls here.
-	//ctx := context.Background()
-
 	log := zerolog.Ctx(ctx)
 
 	s.connectionMu.Lock()
@@ -295,13 +290,13 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 		s.clearStaticValues()
 	}
 
-	if !wasSynced && synced {
-		// Switched from not synced to synced.
-	}
+	// if !wasSynced && synced {
+	// 	// Switched from not synced to synced.
+	// }
 
-	if wasSynced && !synced {
-		// Switched from synced to not synced.
-	}
+	// if wasSynced && !synced {
+	// 	// Switched from synced to not synced.
+	// }
 
 	log.Trace().Bool("was_active", wasActive).Bool("active", active).Bool("was_synced", wasSynced).Bool("synced", synced).Msg("Updated connection state")
 
