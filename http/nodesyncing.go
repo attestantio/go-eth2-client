@@ -29,8 +29,8 @@ func (s *Service) NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (*
 		return nil, client.ErrNoOptions
 	}
 
-	url := "/eth/v1/node/syncing"
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	endpoint := "/eth/v1/node/syncing"
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
 	if err != nil {
 		return nil, err
 	}

@@ -41,8 +41,8 @@ func (s *Service) BlobSidecars(ctx context.Context,
 		return nil, errors.Join(errors.New("no block specified"), client.ErrInvalidOptions)
 	}
 
-	url := fmt.Sprintf("/eth/v1/beacon/blob_sidecars/%s", opts.Block)
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	endpoint := fmt.Sprintf("/eth/v1/beacon/blob_sidecars/%s", opts.Block)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
 	if err != nil {
 		return nil, err
 	}

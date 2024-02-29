@@ -41,8 +41,9 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 		return nil, errors.Join(errors.New("no attestation data root specified"), client.ErrInvalidOptions)
 	}
 
-	url := fmt.Sprintf("/eth/v1/validator/aggregate_attestation?slot=%d&attestation_data_root=%#x", opts.Slot, opts.AttestationDataRoot)
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	endpoint := "/eth/v1/validator/aggregate_attestation"
+	query := fmt.Sprintf("slot=%d&attestation_data_root=%#x", opts.Slot, opts.AttestationDataRoot)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

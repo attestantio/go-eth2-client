@@ -48,16 +48,17 @@ func (s *Service) BlindedProposal(ctx context.Context,
 		return nil, errors.Join(errors.New("no slot specified"), client.ErrInvalidOptions)
 	}
 
-	url := fmt.Sprintf("/eth/v1/validator/blinded_blocks/%d?randao_reveal=%#x&graffiti=%#x", opts.Slot, opts.RandaoReveal, opts.Graffiti)
+	endpoint := fmt.Sprintf("/eth/v1/validator/blinded_blocks/%d", opts.Slot)
+	query := fmt.Sprintf("randao_reveal=%#x&graffiti=%#x", opts.RandaoReveal, opts.Graffiti)
 
 	if opts.SkipRandaoVerification {
 		if !opts.RandaoReveal.IsInfinity() {
 			return nil, errors.Join(errors.New("randao reveal must be point at infinity if skip randao verification is set"), client.ErrInvalidOptions)
 		}
-		url = fmt.Sprintf("%s&skip_randao_verification", url)
+		query = fmt.Sprintf("%s&skip_randao_verification", query)
 	}
 
-	res, err := s.get(ctx, url, &opts.Common)
+	res, err := s.get(ctx, endpoint, query, &opts.Common)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request blinded beacon block proposal"), err)
 	}

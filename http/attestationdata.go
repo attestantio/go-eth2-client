@@ -38,8 +38,9 @@ func (s *Service) AttestationData(ctx context.Context,
 		return nil, client.ErrNoOptions
 	}
 
-	url := fmt.Sprintf("/eth/v1/validator/attestation_data?slot=%d&committee_index=%d", opts.Slot, opts.CommitteeIndex)
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	endpoint := "/eth/v1/validator/attestation_data"
+	query := fmt.Sprintf("slot=%d&committee_index=%d", opts.Slot, opts.CommitteeIndex)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

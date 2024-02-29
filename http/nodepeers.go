@@ -30,7 +30,8 @@ func (s *Service) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.
 	}
 
 	// all options are considered optional
-	url := "/eth/v1/node/peers"
+	endpoint := "/eth/v1/node/peers"
+	query := ""
 	additionalFields := make([]string, 0, len(opts.State)+len(opts.Direction))
 
 	for _, stateFilter := range opts.State {
@@ -42,10 +43,10 @@ func (s *Service) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.
 	}
 
 	if len(additionalFields) > 0 {
-		url = fmt.Sprintf("%s?%s", url, strings.Join(additionalFields, "&"))
+		query = strings.Join(additionalFields, "&")
 	}
 
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

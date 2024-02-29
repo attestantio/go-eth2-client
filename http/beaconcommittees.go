@@ -41,12 +41,13 @@ func (s *Service) BeaconCommittees(ctx context.Context,
 		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 
-	url := fmt.Sprintf("/eth/v1/beacon/states/%s/committees", opts.State)
+	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/committees", opts.State)
+	query := ""
 	if opts.Epoch != nil {
-		url = fmt.Sprintf("%s?epoch=%d", url, *opts.Epoch)
+		query = fmt.Sprintf("epoch=%d", *opts.Epoch)
 	}
 
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

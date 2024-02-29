@@ -40,8 +40,8 @@ func (s *Service) BeaconStateRandao(ctx context.Context, opts *api.BeaconStateRa
 		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 
-	url := fmt.Sprintf("/eth/v1/beacon/states/%s/randao", opts.State)
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/randao", opts.State)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
 	if err != nil {
 		return nil, err
 	}

@@ -42,8 +42,8 @@ func (s *Service) VoluntaryExitPool(ctx context.Context,
 		return nil, client.ErrNoOptions
 	}
 
-	url := "/eth/v1/beacon/pool/voluntary_exits"
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	endpoint := "/eth/v1/beacon/pool/voluntary_exits"
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request voluntary exit pool"), err)
 	}

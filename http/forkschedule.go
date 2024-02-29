@@ -58,8 +58,8 @@ func (s *Service) ForkSchedule(ctx context.Context,
 	}
 
 	// Up to us to fetch the information.
-	url := "/eth/v1/config/fork_schedule"
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	endpoint := "/eth/v1/config/fork_schedule"
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
 	if err != nil {
 		return nil, err
 	}

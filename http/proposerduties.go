@@ -39,8 +39,8 @@ func (s *Service) ProposerDuties(ctx context.Context,
 		return nil, client.ErrNoOptions
 	}
 
-	url := fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", opts.Epoch)
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	endpoint := fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", opts.Epoch)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
 	if err != nil {
 		return nil, err
 	}

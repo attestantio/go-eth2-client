@@ -62,8 +62,8 @@ func (s *Service) Spec(ctx context.Context,
 	}
 
 	// Up to us to fetch the information.
-	url := "/eth/v1/config/spec"
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	endpoint := "/eth/v1/config/spec"
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
 	if err != nil {
 		return nil, err
 	}

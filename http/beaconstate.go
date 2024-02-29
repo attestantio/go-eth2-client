@@ -46,8 +46,8 @@ func (s *Service) BeaconState(ctx context.Context,
 		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 
-	url := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", opts.State)
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	endpoint := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", opts.State)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
 	if err != nil {
 		return nil, err
 	}

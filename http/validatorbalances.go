@@ -47,16 +47,17 @@ func (s *Service) ValidatorBalances(ctx context.Context,
 		return s.chunkedValidatorBalances(ctx, opts)
 	}
 
-	url := fmt.Sprintf("/eth/v1/beacon/states/%s/validator_balances", opts.State)
+	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/validator_balances", opts.State)
+	query := ""
 	if len(opts.Indices) > 0 {
 		ids := make([]string, len(opts.Indices))
 		for i := range opts.Indices {
 			ids[i] = fmt.Sprintf("%d", opts.Indices[i])
 		}
-		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
+		query = "id=" + strings.Join(ids, ",")
 	}
 
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
 	if err != nil {
 		return nil, err
 	}

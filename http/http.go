@@ -22,7 +22,6 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/api"
@@ -46,10 +45,8 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 		e.Str("body", string(bodyBytes)).Msg("POST request")
 	}
 
-	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
-	if err != nil {
-		return nil, errors.Join(errors.New("invalid endpoint"), err)
-	}
+	url := *s.base
+	url.Path = endpoint
 
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
@@ -121,10 +118,8 @@ func (s *Service) post2(ctx context.Context,
 		e.Str("body", string(bodyBytes)).Msg("POST request")
 	}
 
-	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
-	if err != nil {
-		return nil, errors.Join(errors.New("invalid endpoint"), err)
-	}
+	url := *s.base
+	url.Path = endpoint
 
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
@@ -197,7 +192,7 @@ type httpResponse struct {
 
 // get sends an HTTP get request and returns the body.
 // If the response from the server is a 404 this will return nil for both the reader and the error.
-func (s *Service) get(ctx context.Context, endpoint string, opts *api.CommonOpts) (*httpResponse, error) {
+func (s *Service) get(ctx context.Context, endpoint string, query string, opts *api.CommonOpts) (*httpResponse, error) {
 	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "get2")
 	defer span.End()
 
@@ -205,10 +200,9 @@ func (s *Service) get(ctx context.Context, endpoint string, opts *api.CommonOpts
 	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Str("endpoint", endpoint).Logger()
 	log.Trace().Msg("GET request")
 
-	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
-	if err != nil {
-		return nil, errors.Join(errors.New("invalid endpoint"), err)
-	}
+	url := *s.base
+	url.Path = endpoint
+	url.RawQuery = query
 
 	timeout := s.timeout
 	if opts.Timeout != 0 {

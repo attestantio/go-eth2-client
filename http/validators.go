@@ -126,23 +126,24 @@ func (s *Service) Validators(ctx context.Context,
 		return s.chunkedValidators(ctx, opts)
 	}
 
-	url := fmt.Sprintf("/eth/v1/beacon/states/%s/validators", opts.State)
+	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/validators", opts.State)
+	query := ""
 	switch {
 	case len(opts.Indices) > 0:
 		ids := make([]string, len(opts.Indices))
 		for i := range opts.Indices {
 			ids[i] = fmt.Sprintf("%d", opts.Indices[i])
 		}
-		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
+		query = "id=" + strings.Join(ids, ",")
 	case len(opts.PubKeys) > 0:
 		ids := make([]string, len(opts.PubKeys))
 		for i := range opts.PubKeys {
 			ids[i] = opts.PubKeys[i].String()
 		}
-		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
+		query = "id=" + strings.Join(ids, ",")
 	}
 
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request validators"), err)
 	}

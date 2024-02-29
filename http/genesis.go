@@ -64,8 +64,8 @@ func (s *Service) Genesis(ctx context.Context,
 	}
 
 	// Up to us to fetch the information.
-	url := "/eth/v1/beacon/genesis"
-	httpResponse, err := s.get(ctx, url, &opts.Common)
+	endpoint := "/eth/v1/beacon/genesis"
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request genesis"), err)
 	}
