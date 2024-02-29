@@ -62,6 +62,9 @@ type Service struct {
 	userPubKeyChunkSize int
 	extraHeaders        map[string]string
 
+	// Connection support.
+	hooks *Hooks
+
 	// Endpoint support.
 	pingSem                  *semaphore.Weighted
 	connectionMu             sync.RWMutex
@@ -120,21 +123,27 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		extraHeaders:        parameters.extraHeaders,
 		enforceJSON:         parameters.enforceJSON,
 		pingSem:             semaphore.NewWeighted(1),
+		hooks:               parameters.hooks,
 	}
 
 	// Ping the client to see if it is ready to serve requests.
-	s.ping(ctx)
-	active := s.IsActive(ctx)
+	s.CheckConnectionState(ctx)
+	active := s.IsActive()
 
 	if !active && !parameters.allowDelayedStart {
 		return nil, client.ErrNotActive
 	}
 
 	// Periodically refetch static values in case of client update.
+	// We do this because it's possible for a client to be updated
+	// and so go from active->inactive->active within a ping period,
+	// meaning that we could retain values that are no longer accurate.
 	s.periodicClearStaticValues(ctx)
 
-	// Periodically ping the client for state updates.
-	s.periodicPing(ctx)
+	// Periodically ping the client for state updates.  We do this so that
+	// even if we aren't actively using the connection its state will be
+	// roughly up-to-date.
+	s.periodicUpdateConnectionState(ctx)
 
 	// Close the service on context done.
 	go func(s *Service) {
@@ -146,8 +155,8 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 	return s, nil
 }
 
-// periodicPing periodically pings the client to update its active and synced status.
-func (s *Service) periodicPing(ctx context.Context) {
+// periodicUpdateConnectionState periodically pings the client to update its active and synced status.
+func (s *Service) periodicUpdateConnectionState(ctx context.Context) {
 	go func(s *Service, ctx context.Context) {
 		// Refresh every 30 seconds.
 		refreshTicker := time.NewTicker(30 * time.Second)
@@ -155,7 +164,7 @@ func (s *Service) periodicPing(ctx context.Context) {
 		for {
 			select {
 			case <-refreshTicker.C:
-				s.ping(ctx)
+				s.CheckConnectionState(ctx)
 			case <-ctx.Done():
 				return
 			}
@@ -232,13 +241,15 @@ func (s *Service) Address() string {
 func (s *Service) close() {
 }
 
-// ping pings a client, potentially updating its activation and sync states.
-func (s *Service) ping(_ context.Context) {
-	// We ignore the context passed in, and create a separate context to ensure that
-	// the ping isn't cancelled by a failed request that then subsequently calls here.
-	ctx := context.Background()
+// CheckConnectionState checks the connection state for the client, potentially updating
+// its activation and sync states.
+// This will call hooks supplied when creating the client if the state changes.
+func (s *Service) CheckConnectionState(ctx context.Context) {
+	// TODO can we use the parent context?
+	//// We ignore the context passed in, and create a separate context to ensure that
+	//// the check isn't cancelled by a failed request that then subsequently calls here.
+	//ctx := context.Background()
 
-	//nolint:contextcheck
 	log := zerolog.Ctx(ctx)
 
 	s.connectionMu.Lock()
@@ -255,7 +266,6 @@ func (s *Service) ping(_ context.Context) {
 		active = wasActive
 		synced = wasSynced
 	} else {
-		//nolint:contextcheck
 		response, err := s.NodeSyncing(ctx, &api.NodeSyncingOpts{})
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to obtain sync state from node")
@@ -268,24 +278,28 @@ func (s *Service) ping(_ context.Context) {
 		s.pingSem.Release(1)
 	}
 
-	switch {
-	case !wasActive && active:
+	if !wasActive && active {
 		// Switched from not active to active.
 
 		// Check connection to DVT middleware.
-		//nolint:contextcheck
 		if err := s.checkDVT(ctx); err != nil {
 			log.Error().Err(err).Msg("Failed to check DVT connection on client activation; returning to inactive")
 			active = false
 		}
-	case wasActive && !active:
+	}
+
+	if wasActive && !active {
 		// Switched from active to not active.
 
 		// Clear static values.
 		s.clearStaticValues()
-	case !wasSynced && synced:
+	}
+
+	if !wasSynced && synced {
 		// Switched from not synced to synced.
-	case wasSynced && !synced:
+	}
+
+	if wasSynced && !synced {
 		// Switched from synced to not synced.
 	}
 
@@ -298,10 +312,24 @@ func (s *Service) ping(_ context.Context) {
 
 	s.monitorActive(active)
 	s.monitorSynced(synced)
+
+	// Call hooks if present.
+	if (!wasActive && active) && s.hooks.OnActive != nil {
+		go s.hooks.OnActive(ctx, s)
+	}
+	if (wasActive && !active) && s.hooks.OnInactive != nil {
+		go s.hooks.OnInactive(ctx, s)
+	}
+	if (!wasSynced && synced) && s.hooks.OnSynced != nil {
+		go s.hooks.OnSynced(ctx, s)
+	}
+	if (wasSynced && !synced) && s.hooks.OnDesynced != nil {
+		go s.hooks.OnDesynced(ctx, s)
+	}
 }
 
 // IsActive returns true if the client is active.
-func (s *Service) IsActive(_ context.Context) bool {
+func (s *Service) IsActive() bool {
 	s.connectionMu.RLock()
 	active := s.connectionActive
 	s.connectionMu.RUnlock()
@@ -310,7 +338,7 @@ func (s *Service) IsActive(_ context.Context) bool {
 }
 
 // IsSynced returns true if the client is synced.
-func (s *Service) IsSynced(_ context.Context) bool {
+func (s *Service) IsSynced() bool {
 	s.connectionMu.RLock()
 	synced := s.connectionSynced
 	s.connectionMu.RUnlock()
@@ -319,13 +347,13 @@ func (s *Service) IsSynced(_ context.Context) bool {
 }
 
 func (s *Service) assertIsActive(ctx context.Context) error {
-	active := s.IsActive(ctx)
+	active := s.IsActive()
 	if active {
 		return nil
 	}
 
-	s.ping(ctx)
-	active = s.IsActive(ctx)
+	s.CheckConnectionState(ctx)
+	active = s.IsActive()
 	if !active {
 		return client.ErrNotActive
 	}
@@ -334,18 +362,18 @@ func (s *Service) assertIsActive(ctx context.Context) error {
 }
 
 func (s *Service) assertIsSynced(ctx context.Context) error {
-	synced := s.IsSynced(ctx)
+	synced := s.IsSynced()
 	if synced {
 		return nil
 	}
 
-	s.ping(ctx)
-	active := s.IsActive(ctx)
+	s.CheckConnectionState(ctx)
+	active := s.IsActive()
 	if !active {
 		return client.ErrNotActive
 	}
 
-	synced = s.IsSynced(ctx)
+	synced = s.IsSynced()
 	if !synced {
 		return client.ErrNotSynced
 	}

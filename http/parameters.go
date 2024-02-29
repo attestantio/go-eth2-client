@@ -31,6 +31,7 @@ type parameters struct {
 	extraHeaders      map[string]string
 	enforceJSON       bool
 	allowDelayedStart bool
+	hooks             *Hooks
 }
 
 // Parameter is the interface for service parameters.
@@ -107,6 +108,13 @@ func WithAllowDelayedStart(allowDelayedStart bool) Parameter {
 	})
 }
 
+// WithHooks sets the hooks for client activation and sync events.
+func WithHooks(hooks *Hooks) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.hooks = hooks
+	})
+}
+
 // parseAndCheckParameters parses and checks parameters to ensure that mandatory parameters are present and correct.
 func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	parameters := parameters{
@@ -116,6 +124,7 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 		pubKeyChunkSize:   -1,
 		extraHeaders:      make(map[string]string),
 		allowDelayedStart: false,
+		hooks:             &Hooks{},
 	}
 	for _, p := range params {
 		if params != nil {
@@ -134,6 +143,9 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	}
 	if parameters.pubKeyChunkSize == 0 {
 		return nil, errors.New("no public key chunk size specified")
+	}
+	if parameters.hooks == nil {
+		return nil, errors.New("no hooks specified")
 	}
 
 	return &parameters, nil

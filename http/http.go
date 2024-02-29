@@ -63,7 +63,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		go s.ping(ctx)
+		go s.CheckConnectionState(ctx)
 		s.monitorPostComplete(ctx, url.Path, "failed")
 
 		return nil, errors.Join(errors.New("failed to call POST endpoint"), err)
@@ -139,7 +139,7 @@ func (s *Service) post2(ctx context.Context,
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		go s.ping(ctx)
+		go s.CheckConnectionState(ctx)
 		s.monitorPostComplete(ctx, url.Path, "failed")
 
 		return nil, errors.Join(errors.New("failed to call POST endpoint"), err)
@@ -192,7 +192,7 @@ type httpResponse struct {
 // get sends an HTTP get request and returns the body.
 // If the response from the server is a 404 this will return nil for both the reader and the error.
 func (s *Service) get(ctx context.Context, endpoint string, query string, opts *api.CommonOpts) (*httpResponse, error) {
-	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "get2")
+	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "get")
 	defer span.End()
 
 	// #nosec G404
@@ -227,9 +227,9 @@ func (s *Service) get(ctx context.Context, endpoint string, query string, opts *
 	if err != nil {
 		// Special case; if we have called the syncing endpoint and it failed then we
 		// don't ping the server to see if it has failed, as the ping calls syncing itself
-		// and so we end up in an endless loop.
+		// and so we find ourselves in an endless loop.
 		if !strings.HasSuffix(url.String(), "/node/syncing") {
-			go s.ping(ctx)
+			go s.CheckConnectionState(ctx)
 		}
 		span.RecordError(errors.New("request failed"))
 		s.monitorGetComplete(ctx, url.Path, "failed")

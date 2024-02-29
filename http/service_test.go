@@ -81,10 +81,20 @@ func TestService(t *testing.T) {
 			err: "problem with parameters\nno public key chunk size specified",
 		},
 		{
+			name: "HooksMissing",
+			parameters: []v1.Parameter{
+				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),
+				v1.WithTimeout(5 * time.Second),
+				v1.WithHooks(nil),
+			},
+			err: "problem with parameters\nno hooks specified",
+		},
+		{
 			name: "Good",
 			parameters: []v1.Parameter{
 				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),
 				v1.WithTimeout(5 * time.Second),
+				v1.WithAllowDelayedStart(true),
 			},
 		},
 	}

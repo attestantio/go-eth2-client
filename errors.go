@@ -18,7 +18,7 @@ import "errors"
 var (
 	// ErrNotActive is returned when a client is not active.
 	ErrNotActive = errors.New("client is not active")
-	// ErrorNotSynced is returned when a client is not synced.
+	// ErrNotSynced is returned when a client is not synced.
 	ErrNotSynced = errors.New("client is not synced")
 	// ErrNoOptions is returned when a request is made without options.
 	ErrNoOptions = errors.New("no options specified")
