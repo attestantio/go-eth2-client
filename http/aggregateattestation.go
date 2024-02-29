@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,11 +16,12 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // AggregateAttestation fetches the aggregate attestation for the given options.
@@ -30,11 +31,14 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 	*api.Response[*phase0.Attestation],
 	error,
 ) {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 	if opts.AttestationDataRoot.IsZero() {
-		return nil, errors.New("no attestation data root specified")
+		return nil, errors.Join(errors.New("no attestation data root specified"), client.ErrInvalidOptions)
 	}
 
 	url := fmt.Sprintf("/eth/v1/validator/aggregate_attestation?slot=%d&attestation_data_root=%#x", opts.Slot, opts.AttestationDataRoot)
@@ -50,16 +54,16 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 
 	// Confirm the attestation is for the requested slot.
 	if data.Data.Slot != opts.Slot {
-		return nil, fmt.Errorf("received aggregate attesttion for slot %d; expected %d", data.Data.Slot, opts.Slot)
+		return nil, errors.Join(fmt.Errorf("aggregate attestation for slot %d; expected %d", data.Data.Slot, opts.Slot), client.ErrInconsistentResult)
 	}
 
 	// Confirm the attestation data is correct.
 	dataRoot, err := data.Data.HashTreeRoot()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain hash tree root of aggregate attestation data")
+		return nil, errors.Join(errors.New("failed to obtain hash tree root of aggregate attestation data"), err)
 	}
 	if !bytes.Equal(dataRoot[:], opts.AttestationDataRoot[:]) {
-		return nil, errors.New("aggregate attestation not for requested data root")
+		return nil, errors.Join(fmt.Errorf("aggregate attestation has data root %#x; expected %#x", dataRoot[:], opts.AttestationDataRoot[:]), client.ErrInconsistentResult)
 	}
 
 	return &api.Response[*phase0.Attestation]{

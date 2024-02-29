@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,22 +14,23 @@
 package http
 
 import (
+	"errors"
 	"time"
 
 	"github.com/attestantio/go-eth2-client/metrics"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
 
 type parameters struct {
-	logLevel        zerolog.Level
-	monitor         metrics.Service
-	address         string
-	timeout         time.Duration
-	indexChunkSize  int
-	pubKeyChunkSize int
-	extraHeaders    map[string]string
-	enforceJSON     bool
+	logLevel          zerolog.Level
+	monitor           metrics.Service
+	address           string
+	timeout           time.Duration
+	indexChunkSize    int
+	pubKeyChunkSize   int
+	extraHeaders      map[string]string
+	enforceJSON       bool
+	allowDelayedStart bool
 }
 
 // Parameter is the interface for service parameters.
@@ -99,14 +100,22 @@ func WithEnforceJSON(enforceJSON bool) Parameter {
 	})
 }
 
+// WithAllowDelayedStart allows the service to start even if the client is unavailable.
+func WithAllowDelayedStart(allowDelayedStart bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.allowDelayedStart = allowDelayedStart
+	})
+}
+
 // parseAndCheckParameters parses and checks parameters to ensure that mandatory parameters are present and correct.
 func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	parameters := parameters{
-		logLevel:        zerolog.GlobalLevel(),
-		timeout:         2 * time.Second,
-		indexChunkSize:  -1,
-		pubKeyChunkSize: -1,
-		extraHeaders:    make(map[string]string),
+		logLevel:          zerolog.GlobalLevel(),
+		timeout:           2 * time.Second,
+		indexChunkSize:    -1,
+		pubKeyChunkSize:   -1,
+		extraHeaders:      make(map[string]string),
+		allowDelayedStart: false,
 	}
 	for _, p := range params {
 		if params != nil {

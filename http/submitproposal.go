@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2023, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,21 +17,25 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/pkg/errors"
 )
 
 // SubmitProposal submits a proposal.
 func (s *Service) SubmitProposal(ctx context.Context, proposal *api.VersionedSignedProposal) error {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return err
+	}
+	if proposal == nil {
+		return errors.Join(errors.New("no proposal supplied"), client.ErrInvalidOptions)
+	}
+
 	var specJSON []byte
 	var err error
-
-	if proposal == nil {
-		return errors.New("no proposal supplied")
-	}
 
 	switch proposal.Version {
 	case spec.DataVersionPhase0:
@@ -48,14 +52,14 @@ func (s *Service) SubmitProposal(ctx context.Context, proposal *api.VersionedSig
 		err = errors.New("unknown proposal version")
 	}
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal JSON")
+		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
 	headers := make(map[string]string)
 	headers["Eth-Consensus-Version"] = strings.ToLower(proposal.Version.String())
 	_, err = s.post2(ctx, "/eth/v1/beacon/blocks", bytes.NewBuffer(specJSON), ContentTypeJSON, headers)
 	if err != nil {
-		return errors.Wrap(err, "failed to submit proposal")
+		return errors.Join(errors.New("failed to submit proposal"), err)
 	}
 
 	return nil

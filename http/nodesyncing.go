@@ -1,4 +1,4 @@
-// Copyright © 2020, 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,15 +17,16 @@ import (
 	"bytes"
 	"context"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/pkg/errors"
 )
 
 // NodeSyncing provides the syncing information for the node.
 func (s *Service) NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error) {
+	// We do not run checkIsActive here as it calls this function, so that would cause a loop.
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 
 	url := "/eth/v1/node/syncing"

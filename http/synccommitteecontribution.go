@@ -1,4 +1,4 @@
-// Copyright © 2021, 2023 Attestant Limited.
+// Copyright © 2021 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,11 +16,12 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/altair"
-	"github.com/pkg/errors"
 )
 
 // SyncCommitteeContribution provides a sync committee contribution.
@@ -30,11 +31,14 @@ func (s *Service) SyncCommitteeContribution(ctx context.Context,
 	*api.Response[*altair.SyncCommitteeContribution],
 	error,
 ) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 	if opts.BeaconBlockRoot.IsZero() {
-		return nil, errors.New("no beacon block root specified")
+		return nil, errors.Join(errors.New("no beacon block root specified"), client.ErrInvalidOptions)
 	}
 
 	url := fmt.Sprintf("/eth/v1/validator/sync_committee_contribution?slot=%d&subcommittee_index=%d&beacon_block_root=%#x", opts.Slot, opts.SubcommitteeIndex, opts.BeaconBlockRoot)
@@ -50,12 +54,12 @@ func (s *Service) SyncCommitteeContribution(ctx context.Context,
 
 	// Confirm the contribution is for the requested slot.
 	if data.Slot != opts.Slot {
-		return nil, fmt.Errorf("received sync committee contribution for slot %d; expected %d", data.Slot, opts.Slot)
+		return nil, errors.Join(fmt.Errorf("sync committee contiribution for slot %d; expected %d", data.Slot, opts.Slot), client.ErrInconsistentResult)
 	}
 
 	// Confirm the beacon block root is correct.
 	if !bytes.Equal(data.BeaconBlockRoot[:], opts.BeaconBlockRoot[:]) {
-		return nil, errors.New("sync committee contribution not for requested beacon block root")
+		return nil, errors.Join(fmt.Errorf("sync committee proposal has beacon bock root %#x; expected %#x", data.BeaconBlockRoot[:], opts.BeaconBlockRoot[:]), client.ErrInconsistentResult)
 	}
 
 	return &api.Response[*altair.SyncCommitteeContribution]{

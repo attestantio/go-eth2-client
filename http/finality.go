@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,9 +18,9 @@ import (
 	"context"
 	"fmt"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/pkg/errors"
 )
 
 // Finality provides the finality given a state ID.
@@ -30,8 +30,11 @@ func (s *Service) Finality(ctx context.Context,
 	*api.Response[*apiv1.Finality],
 	error,
 ) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 
 	httpResponse, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/finality_checkpoints", opts.State), &opts.Common)

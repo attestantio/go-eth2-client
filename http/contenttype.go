@@ -14,10 +14,9 @@
 package http
 
 import (
+	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // ContentType defines the builder spec version.

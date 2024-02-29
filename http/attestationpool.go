@@ -1,4 +1,4 @@
-// Copyright © 2021, 2023 Attestant Limited.
+// Copyright © 2021 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,11 +16,12 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // AttestationPool obtains the attestation pool for the given options.
@@ -30,8 +31,11 @@ func (s *Service) AttestationPool(ctx context.Context,
 	*api.Response[[]*phase0.Attestation],
 	error,
 ) {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 
 	url := fmt.Sprintf("/eth/v1/beacon/pool/attestations?slot=%d", opts.Slot)

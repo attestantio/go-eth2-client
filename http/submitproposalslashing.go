@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2022, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,21 +17,25 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // SubmitProposalSlashing submits a proposal slashing.
 func (s *Service) SubmitProposalSlashing(ctx context.Context, slashing *phase0.ProposerSlashing) error {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return err
+	}
+
 	specJSON, err := json.Marshal(slashing)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal JSON")
+		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
 	_, err = s.post(ctx, "/eth/v1/beacon/pool/proposer_slashings", bytes.NewBuffer(specJSON))
 	if err != nil {
-		return errors.Wrap(err, "failed to submit proposal slashing")
+		return errors.Join(errors.New("failed to submit proposal slashing"), err)
 	}
 
 	return nil

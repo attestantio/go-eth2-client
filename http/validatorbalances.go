@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,13 +16,14 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // ValidatorBalances provides the validator balances for the given options.
@@ -32,11 +33,14 @@ func (s *Service) ValidatorBalances(ctx context.Context,
 	*api.Response[map[phase0.ValidatorIndex]phase0.Gwei],
 	error,
 ) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 	if opts.State == "" {
-		return nil, errors.New("no state specified")
+		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 
 	if len(opts.Indices) > s.indexChunkSize(ctx) {
@@ -72,8 +76,8 @@ func (s *Service) chunkedValidatorBalances(ctx context.Context,
 	*api.Response[map[phase0.ValidatorIndex]phase0.Gwei],
 	error,
 ) {
-	response := &api.Response[map[phase0.ValidatorIndex]phase0.Gwei]{}
-
+	data := make(map[phase0.ValidatorIndex]phase0.Gwei)
+	metadata := make(map[string]any)
 	chunkSize := s.indexChunkSize(ctx)
 	for i := 0; i < len(opts.Indices); i += chunkSize {
 		chunkStart := i
@@ -87,15 +91,20 @@ func (s *Service) chunkedValidatorBalances(ctx context.Context,
 		}
 		chunkResponse, err := s.ValidatorBalances(ctx, chunkOpts)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain chunk")
+			return nil, errors.Join(errors.New("failed to obtain chunk"), err)
 		}
-		response.Metadata = chunkResponse.Metadata
 		for k, v := range chunkResponse.Data {
-			response.Data[k] = v
+			data[k] = v
+		}
+		for k, v := range chunkResponse.Metadata {
+			metadata[k] = v
 		}
 	}
 
-	return response, nil
+	return &api.Response[map[phase0.ValidatorIndex]phase0.Gwei]{
+		Data:     data,
+		Metadata: metadata,
+	}, nil
 }
 
 func (s *Service) validatorBalancesFromJSON(_ context.Context,

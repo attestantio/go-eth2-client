@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,10 +17,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/pkg/errors"
 )
 
 type genesisJSON struct {
@@ -34,8 +35,11 @@ func (s *Service) Genesis(ctx context.Context,
 	*api.Response[*apiv1.Genesis],
 	error,
 ) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 
 	s.genesisMutex.RLock()
@@ -63,12 +67,12 @@ func (s *Service) Genesis(ctx context.Context,
 	url := "/eth/v1/beacon/genesis"
 	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request genesis")
+		return nil, errors.Join(errors.New("failed to request genesis"), err)
 	}
 
 	var resp genesisJSON
 	if err := json.NewDecoder(bytes.NewReader(httpResponse.body)).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse genesis")
+		return nil, errors.Join(errors.New("failed to parse genesis"), err)
 	}
 	s.genesis = resp.Data
 

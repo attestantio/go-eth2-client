@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,11 +16,12 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // AttestationData obtains attestation data given the options.
@@ -30,8 +31,11 @@ func (s *Service) AttestationData(ctx context.Context,
 	*api.Response[*phase0.AttestationData],
 	error,
 ) {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 
 	url := fmt.Sprintf("/eth/v1/validator/attestation_data?slot=%d&committee_index=%d", opts.Slot, opts.CommitteeIndex)
@@ -72,10 +76,10 @@ func (s *Service) attestationDataFromJSON(_ context.Context,
 
 func verifyAttestationData(opts *api.AttestationDataOpts, data *phase0.AttestationData) error {
 	if data.Slot != opts.Slot {
-		return errors.New("attestation data not for requested slot")
+		return errors.Join(fmt.Errorf("attestation data for slot %d; expected %d", data.Slot, opts.Slot), client.ErrInconsistentResult)
 	}
 	if data.Index != opts.CommitteeIndex {
-		return errors.New("attestation data not for requested committee index")
+		return errors.Join(fmt.Errorf("attestation data for committee index %d; expected %d", data.Index, opts.CommitteeIndex), client.ErrInconsistentResult)
 	}
 
 	return nil

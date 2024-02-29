@@ -15,6 +15,7 @@ package http_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -23,7 +24,6 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 

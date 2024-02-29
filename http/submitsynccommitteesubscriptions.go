@@ -17,21 +17,25 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/pkg/errors"
 )
 
 // SubmitSyncCommitteeSubscriptions subscribes to sync committees.
 func (s *Service) SubmitSyncCommitteeSubscriptions(ctx context.Context, subscriptions []*api.SyncCommitteeSubscription) error {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return err
+	}
+
 	var reqBodyReader bytes.Buffer
 	if err := json.NewEncoder(&reqBodyReader).Encode(subscriptions); err != nil {
-		return errors.Wrap(err, "failed to encode sync committee subscriptions")
+		return errors.Join(errors.New("failed to encode sync committee subscriptions"), err)
 	}
 
 	_, err := s.post(ctx, "/eth/v1/validator/sync_committee_subscriptions", &reqBodyReader)
 	if err != nil {
-		return errors.Wrap(err, "failed to request sync committee subscriptions")
+		return errors.Join(errors.New("failed to request sync committee subscriptions"), err)
 	}
 
 	return nil

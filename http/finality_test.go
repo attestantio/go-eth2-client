@@ -15,13 +15,13 @@ package http_test
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 

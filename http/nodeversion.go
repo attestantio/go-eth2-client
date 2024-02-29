@@ -1,4 +1,4 @@
-// Copyright © 2020, 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,8 +17,8 @@ import (
 	"bytes"
 	"context"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/pkg/errors"
 )
 
 type nodeVersionJSON struct {
@@ -32,8 +32,9 @@ func (s *Service) NodeVersion(ctx context.Context,
 	*api.Response[string],
 	error,
 ) {
+	// Carry this out without a connection check, as it is called when activating a client.
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 
 	s.nodeVersionMutex.RLock()

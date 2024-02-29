@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,10 +17,11 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/pkg/errors"
 )
 
 // ForkChoice fetches all current fork choice context.
@@ -30,8 +31,11 @@ func (s *Service) ForkChoice(ctx context.Context,
 	*api.Response[*apiv1.ForkChoice],
 	error,
 ) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 
 	url := "/eth/v1/debug/fork_choice"
@@ -42,7 +46,7 @@ func (s *Service) ForkChoice(ctx context.Context,
 
 	var data apiv1.ForkChoice
 	if err := json.NewDecoder(bytes.NewReader(httpResponse.body)).Decode(&data); err != nil {
-		return nil, errors.Wrap(err, "failed to parse fork choice")
+		return nil, errors.Join(errors.New("failed to parse fork choice"), err)
 	}
 
 	return &api.Response[*apiv1.ForkChoice]{

@@ -1,4 +1,4 @@
-// Copyright © 2020, 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -26,7 +27,6 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -48,15 +48,14 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 
 	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
 	if err != nil {
-		return nil, errors.Wrap(err, "invalid endpoint")
+		return nil, errors.Join(errors.New("invalid endpoint"), err)
 	}
 
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
 	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, url.String(), body)
 	if err != nil {
-		cancel()
-
-		return nil, errors.Wrap(err, "failed to create POST request")
+		return nil, errors.Join(errors.New("failed to create POST request"), err)
 	}
 	s.addExtraHeaders(req)
 	req.Header.Set("Content-Type", "application/json")
@@ -67,23 +66,20 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		cancel()
+		go s.ping(ctx)
 		s.monitorPostComplete(ctx, url.Path, "failed")
 
-		return nil, errors.Wrap(err, "failed to call POST endpoint")
+		return nil, errors.Join(errors.New("failed to call POST endpoint"), err)
 	}
 	defer resp.Body.Close()
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		cancel()
-
-		return nil, errors.Wrap(err, "failed to read POST response")
+		return nil, errors.Join(errors.New("failed to read POST response"), err)
 	}
 
 	statusFamily := resp.StatusCode / 100
 	if statusFamily != 2 {
-		cancel()
 		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("POST failed")
 		s.monitorPostComplete(ctx, url.Path, "failed")
 
@@ -94,7 +90,6 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 			Data:       data,
 		}
 	}
-	cancel()
 
 	log.Trace().Str("response", string(data)).Msg("POST response")
 	s.monitorPostComplete(ctx, url.Path, "succeeded")
@@ -128,15 +123,14 @@ func (s *Service) post2(ctx context.Context,
 
 	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
 	if err != nil {
-		return nil, errors.Wrap(err, "invalid endpoint")
+		return nil, errors.Join(errors.New("invalid endpoint"), err)
 	}
 
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
 	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, url.String(), body)
 	if err != nil {
-		cancel()
-
-		return nil, errors.Wrap(err, "failed to create POST request")
+		return nil, errors.Join(errors.New("failed to create POST request"), err)
 	}
 	s.addExtraHeaders(req)
 	req.Header.Set("Content-Type", contentType.MediaType())
@@ -151,23 +145,20 @@ func (s *Service) post2(ctx context.Context,
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		cancel()
+		go s.ping(ctx)
 		s.monitorPostComplete(ctx, url.Path, "failed")
 
-		return nil, errors.Wrap(err, "failed to call POST endpoint")
+		return nil, errors.Join(errors.New("failed to call POST endpoint"), err)
 	}
 	defer resp.Body.Close()
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		cancel()
-
-		return nil, errors.Wrap(err, "failed to read POST response")
+		return nil, errors.Join(errors.New("failed to read POST response"), err)
 	}
 
 	statusFamily := resp.StatusCode / 100
 	if statusFamily != 2 {
-		cancel()
 		log.Trace().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("POST failed")
 		s.monitorPostComplete(ctx, url.Path, "failed")
 
@@ -178,7 +169,6 @@ func (s *Service) post2(ctx context.Context,
 			Data:       data,
 		}
 	}
-	cancel()
 
 	log.Trace().Str("response", string(data)).Msg("POST response")
 	s.monitorPostComplete(ctx, url.Path, "succeeded")
@@ -217,7 +207,7 @@ func (s *Service) get(ctx context.Context, endpoint string, opts *api.CommonOpts
 
 	url, err := url.Parse(fmt.Sprintf("%s%s", strings.TrimSuffix(s.base.String(), "/"), endpoint))
 	if err != nil {
-		return nil, errors.Wrap(err, "invalid endpoint")
+		return nil, errors.Join(errors.New("invalid endpoint"), err)
 	}
 
 	timeout := s.timeout
@@ -229,10 +219,9 @@ func (s *Service) get(ctx context.Context, endpoint string, opts *api.CommonOpts
 	defer cancel()
 	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, url.String(), nil)
 	if err != nil {
-		cancel()
-
-		return nil, errors.Wrap(err, "failed to create GET request")
+		return nil, errors.Join(errors.New("failed to create GET request"), err)
 	}
+
 	s.addExtraHeaders(req)
 	if s.enforceJSON {
 		// JSON only.
@@ -245,10 +234,16 @@ func (s *Service) get(ctx context.Context, endpoint string, opts *api.CommonOpts
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		span.RecordError(errors.New("Request failed"))
+		// Special case; if we have called the syncing endpoint and it failed then we
+		// don't ping the server to see if it has failed, as the ping calls syncing itself
+		// and so we end up in an endless loop.
+		if !strings.HasSuffix(url.String(), "/node/syncing") {
+			go s.ping(ctx)
+		}
+		span.RecordError(errors.New("request failed"))
 		s.monitorGetComplete(ctx, url.Path, "failed")
 
-		return nil, errors.Wrap(err, "failed to call GET endpoint")
+		return nil, errors.Join(errors.New("failed to call GET endpoint"), err)
 	}
 	defer resp.Body.Close()
 	log = log.With().Int("status_code", resp.StatusCode).Logger()
@@ -276,7 +271,7 @@ func (s *Service) get(ctx context.Context, endpoint string, opts *api.CommonOpts
 		span.RecordError(err)
 		log.Warn().Err(err).Msg("Failed to read body")
 
-		return nil, errors.Wrap(err, "failed to read body")
+		return nil, errors.Join(errors.New("failed to read body"), err)
 	}
 
 	statusFamily := resp.StatusCode / 100
@@ -302,7 +297,7 @@ func (s *Service) get(ctx context.Context, endpoint string, opts *api.CommonOpts
 	span.SetAttributes(attribute.String("content-type", res.contentType.String()))
 
 	if err := populateConsensusVersion(res, resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse consensus version")
+		return nil, errors.Join(errors.New("failed to parse consensus version"), err)
 	}
 
 	s.monitorGetComplete(ctx, url.Path, "succeeded")
@@ -322,7 +317,7 @@ func populateConsensusVersion(res *httpResponse, resp *http.Response) error {
 		}
 		var metadata responseMetadata
 		if err := json.Unmarshal(res.body, &metadata); err != nil {
-			return errors.Wrap(err, "no consensus version header and failed to parse response")
+			return errors.Join(errors.New("no consensus version header and failed to parse response"), err)
 		}
 		res.consensusVersion = metadata.Version
 
@@ -332,7 +327,7 @@ func populateConsensusVersion(res *httpResponse, resp *http.Response) error {
 		return fmt.Errorf("malformed consensus version (%d entries)", len(respConsensusVersions))
 	}
 	if err := res.consensusVersion.UnmarshalJSON([]byte(fmt.Sprintf("%q", respConsensusVersions[0]))); err != nil {
-		return errors.Wrap(err, "failed to parse consensus version")
+		return errors.Join(errors.New("failed to parse consensus version"), err)
 	}
 
 	return nil

@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2022, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,11 +16,12 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 type beaconStateRandaoJSON struct {
@@ -29,11 +30,14 @@ type beaconStateRandaoJSON struct {
 
 // BeaconStateRandao fetches the beacon state RANDAO given a set of options.
 func (s *Service) BeaconStateRandao(ctx context.Context, opts *api.BeaconStateRandaoOpts) (*api.Response[*phase0.Root], error) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 	if opts.State == "" {
-		return nil, errors.New("no state specified")
+		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 
 	url := fmt.Sprintf("/eth/v1/beacon/states/%s/randao", opts.State)

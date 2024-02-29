@@ -16,13 +16,14 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // indexChunkSizes defines the per-beacon-node size of an index chunk.
@@ -98,14 +99,17 @@ func (s *Service) Validators(ctx context.Context,
 	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
 	error,
 ) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 	if opts.State == "" {
-		return nil, errors.New("no state specified")
+		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 	if len(opts.Indices) > 0 && len(opts.PubKeys) > 0 {
-		return nil, errors.New("cannot specify both indices and public keys")
+		return nil, errors.Join(errors.New("cannot specify both indices and public keys"), client.ErrInvalidOptions)
 	}
 
 	if len(opts.Indices) == 0 && len(opts.PubKeys) == 0 {
@@ -140,7 +144,7 @@ func (s *Service) Validators(ctx context.Context,
 
 	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request validators")
+		return nil, errors.Join(errors.New("failed to request validators"), err)
 	}
 
 	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*apiv1.Validator{})
@@ -179,17 +183,17 @@ func (s *Service) validatorsFromState(ctx context.Context,
 
 	validators, err := stateResponse.Data.Validators()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain validators from state")
+		return nil, errors.Join(errors.New("failed to obtain validators from state"), err)
 	}
 
 	balances, err := stateResponse.Data.ValidatorBalances()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain validator balances from state")
+		return nil, errors.Join(errors.New("failed to obtain validator balances from state"), err)
 	}
 
 	slot, err := stateResponse.Data.Slot()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain slot from state")
+		return nil, errors.Join(errors.New("failed to obtain slot from state"), err)
 	}
 	slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
 	if err != nil {
@@ -277,7 +281,7 @@ func (s *Service) chunkedValidatorsByIndex(ctx context.Context,
 		chunk := opts.Indices[chunkStart:chunkEnd]
 		chunkRes, err := s.Validators(ctx, &api.ValidatorsOpts{State: opts.State, Indices: chunk})
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain chunk")
+			return nil, errors.Join(errors.New("failed to obtain chunk"), err)
 		}
 		for k, v := range chunkRes.Data {
 			data[k] = v
@@ -312,7 +316,7 @@ func (s *Service) chunkedValidatorsByPubkey(ctx context.Context,
 		chunk := opts.PubKeys[chunkStart:chunkEnd]
 		chunkRes, err := s.Validators(ctx, &api.ValidatorsOpts{State: opts.State, PubKeys: chunk})
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain chunk")
+			return nil, errors.Join(errors.New("failed to obtain chunk"), err)
 		}
 		for k, v := range chunkRes.Data {
 			data[k] = v

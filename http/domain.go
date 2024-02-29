@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,18 +16,22 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // Domain provides a domain for a given domain type at a given epoch.
 func (s *Service) Domain(ctx context.Context, domainType phase0.DomainType, epoch phase0.Epoch) (phase0.Domain, error) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return phase0.Domain{}, err
+	}
+
 	// Obtain the fork for the epoch.
 	fork, err := s.forkAtEpoch(ctx, epoch)
 	if err != nil {
-		return phase0.Domain{}, errors.Wrap(err, "failed to obtain fork")
+		return phase0.Domain{}, errors.Join(errors.New("failed to obtain fork"), err)
 	}
 
 	return s.domain(ctx, domainType, epoch, fork)
@@ -41,7 +45,7 @@ func (s *Service) GenesisDomain(ctx context.Context, domainType phase0.DomainTyp
 	// Obtain the fork for genesis .
 	fork, err := s.forkAtGenesis(ctx)
 	if err != nil {
-		return phase0.Domain{}, errors.Wrap(err, "failed to obtain fork")
+		return phase0.Domain{}, errors.Join(errors.New("failed to obtain fork"), err)
 	}
 
 	return s.domain(ctx, domainType, 0, fork)
@@ -71,7 +75,7 @@ func (s *Service) domain(ctx context.Context,
 		// Use the chain's genesis validators root for non-application domain types.
 		response, err := s.Genesis(ctx, &api.GenesisOpts{})
 		if err != nil {
-			return phase0.Domain{}, errors.Wrap(err, "failed to obtain genesis")
+			return phase0.Domain{}, errors.Join(errors.New("failed to obtain genesis"), err)
 		}
 
 		forkData.GenesisValidatorsRoot = response.Data.GenesisValidatorsRoot
@@ -79,7 +83,7 @@ func (s *Service) domain(ctx context.Context,
 
 	root, err := forkData.HashTreeRoot()
 	if err != nil {
-		return phase0.Domain{}, errors.Wrap(err, "failed to calculate signature domain")
+		return phase0.Domain{}, errors.Join(errors.New("failed to calculate signature domain"), err)
 	}
 
 	var domain phase0.Domain
@@ -93,7 +97,7 @@ func (s *Service) domain(ctx context.Context,
 func (s *Service) forkAtEpoch(ctx context.Context, epoch phase0.Epoch) (*phase0.Fork, error) {
 	response, err := s.ForkSchedule(ctx, &api.ForkScheduleOpts{})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain fork schedule")
+		return nil, errors.Join(errors.New("failed to obtain fork schedule"), err)
 	}
 
 	if len(response.Data) == 0 {
@@ -115,7 +119,7 @@ func (s *Service) forkAtEpoch(ctx context.Context, epoch phase0.Epoch) (*phase0.
 func (s *Service) forkAtGenesis(ctx context.Context) (*phase0.Fork, error) {
 	response, err := s.ForkSchedule(ctx, &api.ForkScheduleOpts{})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain fork schedule")
+		return nil, errors.Join(errors.New("failed to obtain fork schedule"), err)
 	}
 
 	if len(response.Data) == 0 {

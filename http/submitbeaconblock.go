@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,20 +17,25 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/pkg/errors"
 )
 
 // SubmitBeaconBlock submits a beacon block.
 //
 // Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitProposal() instead.
 func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return err
+	}
+
 	var specJSON []byte
 	var err error
 
 	if block == nil {
-		return errors.New("no block supplied")
+		return errors.Join(errors.New("no block supplied"), client.ErrInvalidOptions)
 	}
 
 	switch block.Version {
@@ -48,12 +53,12 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSi
 		err = errors.New("unknown block version")
 	}
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal JSON")
+		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
 	_, err = s.post(ctx, "/eth/v1/beacon/blocks", bytes.NewBuffer(specJSON))
 	if err != nil {
-		return errors.Wrap(err, "failed to submit beacon block")
+		return errors.Join(errors.New("failed to submit beacon block"), err)
 	}
 
 	return nil

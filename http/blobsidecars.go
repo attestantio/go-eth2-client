@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2023, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,11 +16,12 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
-	"github.com/pkg/errors"
 )
 
 // BlobSidecars fetches the blobs sidecars given options.
@@ -30,11 +31,14 @@ func (s *Service) BlobSidecars(ctx context.Context,
 	*api.Response[[]*deneb.BlobSidecar],
 	error,
 ) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 	if opts.Block == "" {
-		return nil, errors.New("no block specified")
+		return nil, errors.Join(errors.New("no block specified"), client.ErrInvalidOptions)
 	}
 
 	url := fmt.Sprintf("/eth/v1/beacon/blob_sidecars/%s", opts.Block)
@@ -64,7 +68,7 @@ func (s *Service) blobSidecarsFromSSZ(res *httpResponse) (*api.Response[[]*deneb
 
 	data := &api.BlobSidecars{}
 	if err := data.UnmarshalSSZ(res.body); err != nil {
-		return nil, errors.Wrap(err, "failed to decode blob sidecars")
+		return nil, errors.Join(errors.New("failed to decode blob sidecars"), err)
 	}
 
 	response.Data = data.Sidecars

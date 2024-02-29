@@ -1,4 +1,4 @@
-// Copyright © 2020, 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,6 +21,10 @@ import (
 
 // TargetAggregatorsPerCommittee provides the target aggregators per committee of the chain.
 func (s *Service) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return 0, err
+	}
+
 	response, err := s.Spec(ctx, &api.SpecOpts{})
 	if err != nil {
 		return 0, err

@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,12 +16,13 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // AttesterDuties obtains attester duties.
@@ -31,35 +32,38 @@ func (s *Service) AttesterDuties(ctx context.Context,
 	*api.Response[[]*apiv1.AttesterDuty],
 	error,
 ) {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 	if len(opts.Indices) == 0 {
-		return nil, errors.New("no validator indices specified")
+		return nil, errors.Join(errors.New("no validator indices specified"), client.ErrInvalidOptions)
 	}
 
 	var reqBodyReader bytes.Buffer
 	if _, err := reqBodyReader.WriteString(`[`); err != nil {
-		return nil, errors.Wrap(err, "failed to write validator index array start")
+		return nil, errors.Join(errors.New("failed to write validator index array start"), err)
 	}
 	for i := range opts.Indices {
 		if _, err := reqBodyReader.WriteString(fmt.Sprintf(`"%d"`, opts.Indices[i])); err != nil {
-			return nil, errors.Wrap(err, "failed to write index")
+			return nil, errors.Join(errors.New("failed to write index"), err)
 		}
 		if i != len(opts.Indices)-1 {
 			if _, err := reqBodyReader.WriteString(`,`); err != nil {
-				return nil, errors.Wrap(err, "failed to write separator")
+				return nil, errors.Join(errors.New("failed to write separator"), err)
 			}
 		}
 	}
 	if _, err := reqBodyReader.WriteString(`]`); err != nil {
-		return nil, errors.Wrap(err, "failed to write end of validator index array")
+		return nil, errors.Join(errors.New("failed to write end of validator index array"), err)
 	}
 
 	url := fmt.Sprintf("/eth/v1/validator/duties/attester/%d", opts.Epoch)
 	respBodyReader, err := s.post(ctx, url, &reqBodyReader)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request attester duties")
+		return nil, errors.Join(errors.New("failed to request attester duties"), err)
 	}
 
 	data, metadata, err := decodeJSONResponse(respBodyReader, []*apiv1.AttesterDuty{})
@@ -70,7 +74,7 @@ func (s *Service) AttesterDuties(ctx context.Context,
 	// Confirm that duties are for the requested epoch.
 	slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain slots per epoch")
+		return nil, errors.Join(errors.New("failed to obtain slots per epoch"), err)
 	}
 	startSlot := phase0.Slot(uint64(opts.Epoch) * slotsPerEpoch)
 	endSlot := phase0.Slot(uint64(opts.Epoch)*slotsPerEpoch + slotsPerEpoch - 1)

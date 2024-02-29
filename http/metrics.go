@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2023, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,14 +15,18 @@ package http
 
 import (
 	"context"
+	"errors"
 	"regexp"
 
 	"github.com/attestantio/go-eth2-client/metrics"
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-var requestsMetric *prometheus.CounterVec
+var (
+	requestsMetric *prometheus.CounterVec
+	activeMetric   *prometheus.GaugeVec
+	syncedMetric   *prometheus.GaugeVec
+)
 
 func registerMetrics(ctx context.Context, monitor metrics.Service) error {
 	if requestsMetric != nil {
@@ -48,7 +52,27 @@ func registerPrometheusMetrics(_ context.Context) error {
 		Help:      "Number of requests",
 	}, []string{"server", "method", "endpoint", "result"})
 	if err := prometheus.Register(requestsMetric); err != nil {
-		return errors.Wrap(err, "failed to register requests_total")
+		return errors.Join(errors.New("failed to register requests_total"), err)
+	}
+
+	activeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "consensusclient",
+		Subsystem: "http",
+		Name:      "active",
+		Help:      "1 if the server is active, 0 if not",
+	}, []string{"server"})
+	if err := prometheus.Register(activeMetric); err != nil {
+		return errors.Join(errors.New("failed to register active"), err)
+	}
+
+	syncedMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Namespace: "consensusclient",
+		Subsystem: "http",
+		Name:      "synced",
+		Help:      "1 if the server is synced, 0 if not",
+	}, []string{"server"})
+	if err := prometheus.Register(syncedMetric); err != nil {
+		return errors.Join(errors.New("failed to register synced"), err)
 	}
 
 	return nil
@@ -110,4 +134,20 @@ func reduceEndpoint(in string) string {
 	}
 
 	return string(out)
+}
+
+func (s *Service) monitorActive(active bool) {
+	if active {
+		activeMetric.WithLabelValues(s.address).Set(1)
+	} else {
+		activeMetric.WithLabelValues(s.address).Set(0)
+	}
+}
+
+func (s *Service) monitorSynced(synced bool) {
+	if synced {
+		syncedMetric.WithLabelValues(s.address).Set(1)
+	} else {
+		syncedMetric.WithLabelValues(s.address).Set(0)
+	}
 }

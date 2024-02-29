@@ -22,6 +22,10 @@ import (
 
 // NodeClient provides the client for the node.
 func (s *Service) NodeClient(ctx context.Context) (*api.Response[string], error) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
+
 	response, err := s.NodeVersion(ctx, &api.NodeVersionOpts{})
 	if err != nil {
 		return nil, err

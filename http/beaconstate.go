@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,8 +16,10 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -25,7 +27,6 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // BeaconState fetches a beacon state.
@@ -35,11 +36,14 @@ func (s *Service) BeaconState(ctx context.Context,
 	*api.Response[*spec.VersionedBeaconState],
 	error,
 ) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
 	if opts == nil {
-		return nil, errors.New("no options specified")
+		return nil, client.ErrNoOptions
 	}
 	if opts.State == "" {
-		return nil, errors.New("no state specified")
+		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 
 	url := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", opts.State)
@@ -70,27 +74,27 @@ func (s *Service) beaconStateFromSSZ(res *httpResponse) (*api.Response[*spec.Ver
 	case spec.DataVersionPhase0:
 		response.Data.Phase0 = &phase0.BeaconState{}
 		if err := response.Data.Phase0.UnmarshalSSZ(res.body); err != nil {
-			return nil, errors.Wrap(err, "failed to decode phase0 beacon state")
+			return nil, errors.Join(errors.New("failed to decode phase0 beacon state"), err)
 		}
 	case spec.DataVersionAltair:
 		response.Data.Altair = &altair.BeaconState{}
 		if err := response.Data.Altair.UnmarshalSSZ(res.body); err != nil {
-			return nil, errors.Wrap(err, "failed to decode altair beacon state")
+			return nil, errors.Join(errors.New("failed to decode altair beacon state"), err)
 		}
 	case spec.DataVersionBellatrix:
 		response.Data.Bellatrix = &bellatrix.BeaconState{}
 		if err := response.Data.Bellatrix.UnmarshalSSZ(res.body); err != nil {
-			return nil, errors.Wrap(err, "failed to decode bellatrix beacon state")
+			return nil, errors.Join(errors.New("failed to decode bellatrix beacon state"), err)
 		}
 	case spec.DataVersionCapella:
 		response.Data.Capella = &capella.BeaconState{}
 		if err := response.Data.Capella.UnmarshalSSZ(res.body); err != nil {
-			return nil, errors.Wrap(err, "failed to decode capella beacon state")
+			return nil, errors.Join(errors.New("failed to decode capella beacon state"), err)
 		}
 	case spec.DataVersionDeneb:
 		response.Data.Deneb = &deneb.BeaconState{}
 		if err := response.Data.Deneb.UnmarshalSSZ(res.body); err != nil {
-			return nil, errors.Wrap(err, "failed to decode deneb beacon state")
+			return nil, errors.Join(errors.New("failed to decode deneb beacon state"), err)
 		}
 	default:
 		return nil, fmt.Errorf("unhandled state version %s", res.consensusVersion)

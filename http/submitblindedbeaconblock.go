@@ -1,4 +1,4 @@
-// Copyright © 2022, 2023 Attestant Limited.
+// Copyright © 2022 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,21 +17,26 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/pkg/errors"
 )
 
 // SubmitBlindedBeaconBlock submits a blinded beacon block.
 //
 // Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitBlindedProposal() instead.
 func (s *Service) SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return err
+	}
+
 	var specJSON []byte
 	var err error
 
 	if block == nil {
-		return errors.New("no blinded block supplied")
+		return errors.Join(errors.New("no blinded block supplied"), client.ErrInvalidOptions)
 	}
 
 	switch block.Version {
@@ -49,12 +54,12 @@ func (s *Service) SubmitBlindedBeaconBlock(ctx context.Context, block *api.Versi
 		err = errors.New("unknown block version")
 	}
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal JSON")
+		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
 	_, err = s.post(ctx, "/eth/v1/beacon/blinded_blocks", bytes.NewBuffer(specJSON))
 	if err != nil {
-		return errors.Wrap(err, "failed to submit blinded beacon block")
+		return errors.Join(errors.New("failed to submit blinded beacon block"), err)
 	}
 
 	return nil

@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,6 +15,7 @@ package http
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -23,13 +24,13 @@ import (
 	"sync"
 	"time"
 
-	eth2client "github.com/attestantio/go-eth2-client"
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	zerologger "github.com/rs/zerolog/log"
+	"golang.org/x/sync/semaphore"
 )
 
 // Service is an Ethereum 2 client service.
@@ -61,15 +62,19 @@ type Service struct {
 	extraHeaders        map[string]string
 
 	// Endpoint support.
+	pingSem                  *semaphore.Weighted
+	connectionMu             sync.RWMutex
+	connectionActive         bool
+	connectionSynced         bool
 	enforceJSON              bool
 	connectedToDVTMiddleware bool
 }
 
 // New creates a new Ethereum 2 client service, connecting with a standard HTTP.
-func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
+func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 	parameters, err := parseAndCheckParameters(params...)
 	if err != nil {
-		return nil, errors.Wrap(err, "problem with parameters")
+		return nil, errors.Join(errors.New("problem with parameters"), err)
 	}
 
 	// Set logging.
@@ -80,11 +85,11 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 
 	if parameters.monitor != nil {
 		if err := registerMetrics(ctx, parameters.monitor); err != nil {
-			return nil, errors.Wrap(err, "failed to register metrics")
+			return nil, errors.Join(errors.New("failed to register metrics"), err)
 		}
 	}
 
-	client := &http.Client{
+	httpClient := &http.Client{
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
 				Timeout:   parameters.timeout,
@@ -107,33 +112,35 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	}
 	base, err := url.Parse(address)
 	if err != nil {
-		return nil, errors.Wrap(err, "invalid URL")
+		return nil, errors.Join(errors.New("invalid URL"), err)
 	}
 
 	s := &Service{
 		log:                 log,
 		base:                base,
 		address:             parameters.address,
-		client:              client,
+		client:              httpClient,
 		timeout:             parameters.timeout,
 		userIndexChunkSize:  parameters.indexChunkSize,
 		userPubKeyChunkSize: parameters.pubKeyChunkSize,
 		extraHeaders:        parameters.extraHeaders,
 		enforceJSON:         parameters.enforceJSON,
+		pingSem:             semaphore.NewWeighted(1),
 	}
 
-	// Fetch static values to confirm the connection is good.
-	if err := s.fetchStaticValues(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to confirm node connection")
+	// Ping the client to see if it is ready to serve requests.
+	s.ping(ctx)
+	active := s.IsActive(ctx)
+
+	if !active && !parameters.allowDelayedStart {
+		return nil, client.ErrNotActive
 	}
 
-	// Periodially refetch static values in case of client update.
+	// Periodically refetch static values in case of client update.
 	s.periodicClearStaticValues(ctx)
 
-	// Handle connection to DVT middleware.
-	if err := s.checkDVT(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to check DVT connection")
-	}
+	// Periodically ping the client for state updates.
+	s.periodicPing(ctx)
 
 	// Close the service on context done.
 	go func(s *Service) {
@@ -145,53 +152,16 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	return s, nil
 }
 
-// fetchStaticValues fetches values that never change.
-// This caches the values, avoiding future API calls.
-func (s *Service) fetchStaticValues(ctx context.Context) error {
-	if _, err := s.Genesis(ctx, &api.GenesisOpts{}); err != nil {
-		return errors.Wrap(err, "failed to fetch genesis")
-	}
-	if _, err := s.Spec(ctx, &api.SpecOpts{}); err != nil {
-		return errors.Wrap(err, "failed to fetch spec")
-	}
-	if _, err := s.DepositContract(ctx, &api.DepositContractOpts{}); err != nil {
-		return errors.Wrap(err, "failed to fetch deposit contract")
-	}
-	if _, err := s.ForkSchedule(ctx, &api.ForkScheduleOpts{}); err != nil {
-		return errors.Wrap(err, "failed to fetch fork schedule")
-	}
-	if _, err := s.NodeVersion(ctx, &api.NodeVersionOpts{}); err != nil {
-		return errors.Wrap(err, "failed to fetch node version")
-	}
-
-	return nil
-}
-
-// periodicClearStaticValues periodically sets static values to nil so they are
-// refetched the next time they are required.
-func (s *Service) periodicClearStaticValues(ctx context.Context) {
+// periodicPing periodically pings the client to update its active and synced status.
+func (s *Service) periodicPing(ctx context.Context) {
 	go func(s *Service, ctx context.Context) {
-		// Refreah every 5 minutes.
-		refreshTicker := time.NewTicker(5 * time.Minute)
+		// Refresh every 30 seconds.
+		refreshTicker := time.NewTicker(30 * time.Second)
 		defer refreshTicker.Stop()
 		for {
 			select {
 			case <-refreshTicker.C:
-				s.genesisMutex.Lock()
-				s.genesis = nil
-				s.genesisMutex.Unlock()
-				s.specMutex.Lock()
-				s.spec = nil
-				s.specMutex.Unlock()
-				s.depositContractMutex.Lock()
-				s.depositContract = nil
-				s.depositContractMutex.Unlock()
-				s.forkScheduleMutex.Lock()
-				s.forkSchedule = nil
-				s.forkScheduleMutex.Unlock()
-				s.nodeVersionMutex.Lock()
-				s.nodeVersion = ""
-				s.nodeVersionMutex.Unlock()
+				s.ping(ctx)
 			case <-ctx.Done():
 				return
 			}
@@ -199,12 +169,50 @@ func (s *Service) periodicClearStaticValues(ctx context.Context) {
 	}(s, ctx)
 }
 
+// periodicClearStaticValues periodically sets static values to nil so they are
+// refetched the next time they are required.
+func (s *Service) periodicClearStaticValues(ctx context.Context) {
+	go func(s *Service, ctx context.Context) {
+		// Refresh every 5 minutes.
+		refreshTicker := time.NewTicker(5 * time.Minute)
+		defer refreshTicker.Stop()
+		for {
+			select {
+			case <-refreshTicker.C:
+				s.clearStaticValues()
+			case <-ctx.Done():
+				return
+			}
+		}
+	}(s, ctx)
+}
+
+// clearStaticValues periodically sets static values to nil so they are
+// refetched the next time they are required.
+func (s *Service) clearStaticValues() {
+	s.genesisMutex.Lock()
+	s.genesis = nil
+	s.genesisMutex.Unlock()
+	s.specMutex.Lock()
+	s.spec = nil
+	s.specMutex.Unlock()
+	s.depositContractMutex.Lock()
+	s.depositContract = nil
+	s.depositContractMutex.Unlock()
+	s.forkScheduleMutex.Lock()
+	s.forkSchedule = nil
+	s.forkScheduleMutex.Unlock()
+	s.nodeVersionMutex.Lock()
+	s.nodeVersion = ""
+	s.nodeVersionMutex.Unlock()
+}
+
 // checkDVT checks if connected to DVT middleware and sets
 // internal flags appropriately.
 func (s *Service) checkDVT(ctx context.Context) error {
 	response, err := s.NodeVersion(ctx, &api.NodeVersionOpts{})
 	if err != nil {
-		return errors.Wrap(err, "failed to obtain node version for DVT check")
+		return errors.Join(errors.New("failed to obtain node version for DVT check"), err)
 	}
 
 	version := strings.ToLower(response.Data)
@@ -228,4 +236,125 @@ func (s *Service) Address() string {
 
 // close closes the service, freeing up resources.
 func (s *Service) close() {
+}
+
+// ping pings a client, potentially updating its activation and sync states.
+func (s *Service) ping(_ context.Context) {
+	// We ignore the context passed in, and create a separate context to ensure that
+	// the ping isn't cancelled by a failed request that then subsequently calls here.
+	ctx := context.Background()
+
+	//nolint:contextcheck
+	log := zerolog.Ctx(ctx)
+
+	s.connectionMu.Lock()
+	wasActive := s.connectionActive
+	wasSynced := s.connectionSynced
+	s.connectionMu.Unlock()
+
+	var active bool
+	var synced bool
+
+	acquired := s.pingSem.TryAcquire(1)
+	if !acquired {
+		// Means there is another ping running, just use current info.
+		active = wasActive
+		synced = wasSynced
+	} else {
+		//nolint:contextcheck
+		response, err := s.NodeSyncing(ctx, &api.NodeSyncingOpts{})
+		if err != nil {
+			log.Debug().Err(err).Msg("Failed to obtain sync state from node")
+			active = false
+			synced = false
+		} else {
+			active = true
+			synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
+		}
+		s.pingSem.Release(1)
+	}
+
+	switch {
+	case !wasActive && active:
+		// Switched from not active to active.
+
+		// Check connection to DVT middleware.
+		//nolint:contextcheck
+		if err := s.checkDVT(ctx); err != nil {
+			log.Error().Err(err).Msg("Failed to check DVT connection on client activation; returning to inactive")
+			active = false
+		}
+	case wasActive && !active:
+		// Switched from active to not active.
+
+		// Clear static values.
+		s.clearStaticValues()
+	case !wasSynced && synced:
+		// Switched from not synced to synced.
+	case wasSynced && !synced:
+		// Switched from synced to not synced.
+	}
+
+	log.Trace().Bool("was_active", wasActive).Bool("active", active).Bool("was_synced", wasSynced).Bool("synced", synced).Msg("Updated connection state")
+
+	s.connectionMu.Lock()
+	s.connectionActive = active
+	s.connectionSynced = synced
+	s.connectionMu.Unlock()
+
+	s.monitorActive(active)
+	s.monitorSynced(synced)
+}
+
+// IsActive returns true if the client is active.
+func (s *Service) IsActive(_ context.Context) bool {
+	s.connectionMu.RLock()
+	active := s.connectionActive
+	s.connectionMu.RUnlock()
+
+	return active
+}
+
+// IsSynced returns true if the client is synced.
+func (s *Service) IsSynced(_ context.Context) bool {
+	s.connectionMu.RLock()
+	synced := s.connectionSynced
+	s.connectionMu.RUnlock()
+
+	return synced
+}
+
+func (s *Service) assertIsActive(ctx context.Context) error {
+	active := s.IsActive(ctx)
+	if active {
+		return nil
+	}
+
+	s.ping(ctx)
+	active = s.IsActive(ctx)
+	if !active {
+		return client.ErrNotActive
+	}
+
+	return nil
+}
+
+func (s *Service) assertIsSynced(ctx context.Context) error {
+	synced := s.IsSynced(ctx)
+	if synced {
+		return nil
+	}
+
+	s.ping(ctx)
+	active := s.IsActive(ctx)
+	if !active {
+		return client.ErrNotActive
+	}
+
+	synced = s.IsSynced(ctx)
+	if !synced {
+		return client.ErrNotSynced
+	}
+
+	return nil
 }
