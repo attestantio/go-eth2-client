@@ -20,6 +20,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -103,22 +104,15 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		},
 	}
 
-	address := parameters.address
-	if !strings.HasPrefix(address, "http") {
-		address = fmt.Sprintf("http://%s", address)
-	}
-	if !strings.HasSuffix(address, "/") {
-		address = fmt.Sprintf("%s/", address)
-	}
-	base, err := url.Parse(address)
+	base, address, err := parseAddress(parameters.address)
 	if err != nil {
-		return nil, errors.Join(errors.New("invalid URL"), err)
+		return nil, err
 	}
 
 	s := &Service{
 		log:                 log,
 		base:                base,
-		address:             parameters.address,
+		address:             address.String(),
 		client:              httpClient,
 		timeout:             parameters.timeout,
 		userIndexChunkSize:  parameters.indexChunkSize,
@@ -357,4 +351,26 @@ func (s *Service) assertIsSynced(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func parseAddress(address string) (*url.URL, *url.URL, error) {
+	if !strings.HasPrefix(address, "http") {
+		address = fmt.Sprintf("http://%s", address)
+	}
+	base, err := url.Parse(address)
+	if err != nil {
+		return nil, nil, errors.Join(errors.New("invalid URL"), err)
+	}
+	base.Path = ""
+	baseAddress := *base
+	if _, pwExists := baseAddress.User.Password(); pwExists {
+		user := baseAddress.User.Username()
+		baseAddress.User = url.UserPassword(user, "***")
+	}
+	if baseAddress.RawQuery != "" {
+		sensitiveRegex := regexp.MustCompile("=([^&]*)(&)?")
+		baseAddress.RawQuery = sensitiveRegex.ReplaceAllString(baseAddress.RawQuery, "=***$2")
+	}
+
+	return base, &baseAddress, nil
 }

@@ -22,6 +22,7 @@ import (
 	"io"
 	"math/rand"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/api"
@@ -45,8 +46,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 		e.Str("body", string(bodyBytes)).Msg("POST request")
 	}
 
-	url := *s.base
-	url.Path = endpoint
+	url := urlForCall(s.base, endpoint, "")
 
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
@@ -118,8 +118,7 @@ func (s *Service) post2(ctx context.Context,
 		e.Str("body", string(bodyBytes)).Msg("POST request")
 	}
 
-	url := *s.base
-	url.Path = endpoint
+	url := urlForCall(s.base, endpoint, "")
 
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
@@ -200,9 +199,7 @@ func (s *Service) get(ctx context.Context, endpoint string, query string, opts *
 	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Str("endpoint", endpoint).Logger()
 	log.Trace().Msg("GET request")
 
-	url := *s.base
-	url.Path = endpoint
-	url.RawQuery = query
+	url := urlForCall(s.base, endpoint, query)
 
 	timeout := s.timeout
 	if opts.Timeout != 0 {
@@ -268,6 +265,19 @@ func (s *Service) get(ctx context.Context, endpoint string, query string, opts *
 		return nil, errors.Join(errors.New("failed to read body"), err)
 	}
 
+	if err := populateContentType(res, resp); err != nil {
+		// For now, assume that unknown type is JSON.
+		log.Debug().Err(err).Msg("Failed to obtain content type; assuming JSON")
+		res.contentType = ContentTypeJSON
+	}
+	span.SetAttributes(attribute.String("content-type", res.contentType.String()))
+
+	if res.contentType == ContentTypeJSON {
+		if e := log.Trace(); e.Enabled() {
+			e.RawJSON("body", res.body).Msg("Response")
+		}
+	}
+
 	statusFamily := resp.StatusCode / 100
 	if statusFamily != 2 {
 		span.SetStatus(codes.Error, fmt.Sprintf("Status code %d", resp.StatusCode))
@@ -282,13 +292,6 @@ func (s *Service) get(ctx context.Context, endpoint string, query string, opts *
 			Data:       res.body,
 		}
 	}
-
-	if err := populateContentType(res, resp); err != nil {
-		// For now, assume that unknown type is JSON.
-		log.Debug().Err(err).Msg("Failed to obtain content type; assuming JSON")
-		res.contentType = ContentTypeJSON
-	}
-	span.SetAttributes(attribute.String("content-type", res.contentType.String()))
 
 	if err := populateConsensusVersion(res, resp); err != nil {
 		return nil, errors.Join(errors.New("failed to parse consensus version"), err)
@@ -359,4 +362,17 @@ func metadataFromHeaders(headers map[string]string) map[string]any {
 	}
 
 	return metadata
+}
+
+// urlForCall patches together a URL for a call.
+func urlForCall(base *url.URL, endpoint string, query string) *url.URL {
+	callURL := *base
+	callURL.Path = endpoint
+	if callURL.RawQuery == "" {
+		callURL.RawQuery = query
+	} else if query != "" {
+		callURL.RawQuery = fmt.Sprintf("%s&%s", callURL.RawQuery, query)
+	}
+
+	return &callURL
 }
