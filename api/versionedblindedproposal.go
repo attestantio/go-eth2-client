@@ -204,13 +204,15 @@ func (v *VersionedBlindedProposal) Root() (phase0.Root, error) {
 func (v *VersionedBlindedProposal) BodyRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Body == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
 		return v.Bellatrix.Body.HashTreeRoot()
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
+		if v.Capella == nil ||
+			v.Capella.Body == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
