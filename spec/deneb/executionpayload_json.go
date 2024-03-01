@@ -205,6 +205,9 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["transactions"], &transactions); err != nil {
 		return errors.Wrap(err, "transactions")
 	}
+	if len(transactions) > bellatrix.MaxTransactionsPerPayload {
+		return errors.Wrap(err, "incorrect length for transactions")
+	}
 	e.Transactions = make([]bellatrix.Transaction, len(transactions))
 	for i := range transactions {
 		if len(transactions[i]) == 0 ||
@@ -215,6 +218,9 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 		e.Transactions[i] = make([]byte, (len(transactions[i])-4)/2)
 		if err := json.Unmarshal(transactions[i], &e.Transactions[i]); err != nil {
 			return errors.Wrapf(err, "transaction %d", i)
+		}
+		if len(e.Transactions[i]) > bellatrix.MaxBytesPerTransaction {
+			return errors.Wrapf(err, "incorrect length for transaction %d", i)
 		}
 	}
 
