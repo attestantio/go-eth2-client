@@ -310,16 +310,21 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	if data.Transactions == nil {
 		return errors.New("transactions missing")
 	}
+	if len(data.Transactions) > bellatrix.MaxTransactionsPerPayload {
+		return errors.Wrap(err, "incorrect length for transactions")
+	}
 	transactions := make([]bellatrix.Transaction, len(data.Transactions))
 	for i := range data.Transactions {
 		if data.Transactions[i] == "" {
 			return errors.New("transaction missing")
 		}
-		tmp, err := hex.DecodeString(strings.TrimPrefix(data.Transactions[i], "0x"))
+		transactions[i], err = hex.DecodeString(strings.TrimPrefix(data.Transactions[i], "0x"))
 		if err != nil {
 			return errors.Wrap(err, "invalid value for transaction")
 		}
-		transactions[i] = bellatrix.Transaction(tmp)
+		if len(transactions[i]) > bellatrix.MaxBytesPerTransaction {
+			return errors.Wrap(err, "incorrect length for transaction")
+		}
 	}
 	e.Transactions = transactions
 
