@@ -113,7 +113,9 @@ func TestSubmitProposal(t *testing.T) {
 				t.Fatalf("unknown block version %s", res.Data.Version.String())
 			}
 			// Some implementations return an error and some don't, so do not check.
-			service.(client.ProposalSubmitter).SubmitProposal(ctx, signedBeaconBlock) // nolint:errcheck
+			service.(client.ProposalSubmitter).SubmitProposal(ctx, &api.SubmitProposalOpts{
+				Proposal: signedBeaconBlock,
+			}) // nolint:errcheck
 		})
 	}
 }
