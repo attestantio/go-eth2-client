@@ -277,6 +277,9 @@ func (e *ExecutionPayloadHeader) unpack(data *executionPayloadHeaderJSON) error 
 	if !ok {
 		return errors.New("invalid value for base fee per gas")
 	}
+	if baseFeePerGas.Sign() == -1 {
+		return errors.New("base fee per gas cannot be negative")
+	}
 	if baseFeePerGas.Cmp(maxBaseFeePerGas) > 0 {
 		return errors.New("overflow for base fee per gas")
 	}
