@@ -65,6 +65,11 @@ func (f *ForkChoice) UnmarshalJSON(input []byte) error {
 	if forkChoiceJSON.ForkChoiceNodes == nil {
 		return errors.New("fork choice nodes missing")
 	}
+	for i := range forkChoiceJSON.ForkChoiceNodes {
+		if forkChoiceJSON.ForkChoiceNodes[i] == nil {
+			return fmt.Errorf("fork choice node entry %d missing", i)
+		}
+	}
 	f.ForkChoiceNodes = forkChoiceJSON.ForkChoiceNodes
 
 	return nil

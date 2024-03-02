@@ -227,6 +227,11 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["withdrawals"], &e.Withdrawals); err != nil {
 		return errors.Wrap(err, "withdrawals")
 	}
+	for i := range e.Withdrawals {
+		if e.Withdrawals[i] == nil {
+			return fmt.Errorf("withdrawals entry %d missing", i)
+		}
+	}
 
 	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["blob_gas_used"], `"`)), 10, 64)
 	if err != nil {

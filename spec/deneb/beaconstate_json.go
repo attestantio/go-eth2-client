@@ -171,6 +171,11 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["eth1_data_votes"], &b.ETH1DataVotes); err != nil {
 		return errors.Wrap(err, "eth1_data_votes")
 	}
+	for i := range b.ETH1DataVotes {
+		if b.ETH1DataVotes[i] == nil {
+			return fmt.Errorf("eth1 data votes entry %d missing", i)
+		}
+	}
 
 	eth1DepositIndex := string(bytes.Trim(raw["eth1_deposit_index"], `"`))
 	if b.ETH1DepositIndex, err = strconv.ParseUint(eth1DepositIndex, 10, 64); err != nil {
@@ -179,6 +184,11 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 
 	if err := json.Unmarshal(raw["validators"], &b.Validators); err != nil {
 		return errors.Wrap(err, "validators")
+	}
+	for i := range b.Validators {
+		if b.Validators[i] == nil {
+			return fmt.Errorf("validators entry %d missing", i)
+		}
 	}
 
 	if err := json.Unmarshal(raw["balances"], &b.Balances); err != nil {
@@ -260,6 +270,11 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 
 	if err := json.Unmarshal(raw["historical_summaries"], &b.HistoricalSummaries); err != nil {
 		return errors.Wrap(err, "historical_summaries")
+	}
+	for i := range b.HistoricalSummaries {
+		if b.HistoricalSummaries[i] == nil {
+			return fmt.Errorf("historical summaries entry %d missing", i)
+		}
 	}
 
 	return nil

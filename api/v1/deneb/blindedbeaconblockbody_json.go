@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2023, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -75,6 +75,7 @@ func (b *BlindedBeaconBlockBody) UnmarshalJSON(input []byte) error {
 	return b.unpack(&data)
 }
 
+//nolint:gocyclo
 func (b *BlindedBeaconBlockBody) unpack(data *blindedBeaconBlockBodyJSON) error {
 	if data.RANDAOReveal == "" {
 		return errors.New("RANDAO reveal missing")
@@ -105,21 +106,46 @@ func (b *BlindedBeaconBlockBody) unpack(data *blindedBeaconBlockBodyJSON) error 
 	if data.ProposerSlashings == nil {
 		return errors.New("proposer slashings missing")
 	}
+	for i := range data.ProposerSlashings {
+		if data.ProposerSlashings[i] == nil {
+			return fmt.Errorf("proposer slashings entry %d missing", i)
+		}
+	}
 	b.ProposerSlashings = data.ProposerSlashings
 	if data.AttesterSlashings == nil {
 		return errors.New("attester slashings missing")
+	}
+	for i := range data.AttesterSlashings {
+		if data.AttesterSlashings[i] == nil {
+			return fmt.Errorf("attester slashings entry %d missing", i)
+		}
 	}
 	b.AttesterSlashings = data.AttesterSlashings
 	if data.Attestations == nil {
 		return errors.New("attestations missing")
 	}
+	for i := range data.Attestations {
+		if data.Attestations[i] == nil {
+			return fmt.Errorf("attestations entry %d missing", i)
+		}
+	}
 	b.Attestations = data.Attestations
 	if data.Deposits == nil {
 		return errors.New("deposits missing")
 	}
+	for i := range data.Deposits {
+		if data.Deposits[i] == nil {
+			return fmt.Errorf("deposits entry %d missing", i)
+		}
+	}
 	b.Deposits = data.Deposits
 	if data.VoluntaryExits == nil {
 		return errors.New("voluntary exits missing")
+	}
+	for i := range data.VoluntaryExits {
+		if data.VoluntaryExits[i] == nil {
+			return fmt.Errorf("voluntary exits entry %d missing", i)
+		}
 	}
 	b.VoluntaryExits = data.VoluntaryExits
 	if data.SyncAggregate == nil {
@@ -133,10 +159,20 @@ func (b *BlindedBeaconBlockBody) unpack(data *blindedBeaconBlockBodyJSON) error 
 	if data.BLSToExecutionChanges == nil {
 		b.BLSToExecutionChanges = make([]*capella.SignedBLSToExecutionChange, 0)
 	} else {
+		for i := range data.BLSToExecutionChanges {
+			if data.BLSToExecutionChanges[i] == nil {
+				return fmt.Errorf("bls to execution changes entry %d missing", i)
+			}
+		}
 		b.BLSToExecutionChanges = data.BLSToExecutionChanges
 	}
 	if data.BlobKZGCommitments == nil {
 		return errors.New("blob KZG commitments missing")
+	}
+	for i := range data.BlobKZGCommitments {
+		if data.BlobKZGCommitments[i] == "" {
+			return fmt.Errorf("blob KZG commitments entry %d missing", i)
+		}
 	}
 	b.BlobKZGCommitments = make([]deneb.KZGCommitment, len(data.BlobKZGCommitments))
 	for i := range data.BlobKZGCommitments {

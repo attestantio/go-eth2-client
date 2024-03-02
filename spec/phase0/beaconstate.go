@@ -1,4 +1,4 @@
-// Copyright © 2020, 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -251,18 +251,30 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 		return errors.New("eth1 data missing")
 	}
 	s.ETH1Data = data.ETH1Data
-	// ETH1DataVotes can be empty.
+	// ETH1DataVotes can be empty, but if present the individual votes must not be null.
+	if data.ETH1DataVotes != nil {
+		for i := range data.Validators {
+			if data.Validators[i] == nil {
+				return fmt.Errorf("validators entry %d missing", i)
+			}
+		}
+	}
 	s.ETH1DataVotes = data.ETH1DataVotes
 	if data.Validators == nil {
 		return errors.New("validators missing")
 	}
+	for i := range data.Validators {
+		if data.Validators[i] == nil {
+			return fmt.Errorf("validators entry %d missing", i)
+		}
+	}
+	s.Validators = data.Validators
 	if data.ETH1DepositIndex == "" {
 		return errors.New("eth1 deposit index missing")
 	}
 	if s.ETH1DepositIndex, err = strconv.ParseUint(data.ETH1DepositIndex, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for eth1 deposit index")
 	}
-	s.Validators = data.Validators
 	s.Balances = make([]Gwei, len(data.Balances))
 	for i := range data.Balances {
 		if data.Balances[i] == "" {
@@ -299,7 +311,17 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 		}
 		s.Slashings[i] = Gwei(slashings)
 	}
+	for i := range data.PreviousEpochAttestations {
+		if data.PreviousEpochAttestations[i] == nil {
+			return fmt.Errorf("previous epoch attestations entry %d missing", i)
+		}
+	}
 	s.PreviousEpochAttestations = data.PreviousEpochAttestations
+	for i := range data.CurrentEpochAttestations {
+		if data.CurrentEpochAttestations[i] == nil {
+			return fmt.Errorf("current epoch attestations entry %d missing", i)
+		}
+	}
 	s.CurrentEpochAttestations = data.CurrentEpochAttestations
 	if data.JustificationBits == "" {
 		return errors.New("justification bits missing")

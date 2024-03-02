@@ -214,6 +214,11 @@ func (p *PayloadAttributesV2) unpack(data *payloadAttributesV2JSON) error {
 	if data.Withdrawals == nil {
 		return errors.New("payload attributes withdrawals missing")
 	}
+	for i := range data.Withdrawals {
+		if data.Withdrawals[i] == nil {
+			return fmt.Errorf("withdrawals entry %d missing", i)
+		}
+	}
 	p.Withdrawals = data.Withdrawals
 
 	return nil
@@ -266,6 +271,11 @@ func (p *PayloadAttributesV3) unpack(data *payloadAttributesV3JSON) error {
 
 	if data.Withdrawals == nil {
 		return errors.New("payload attributes withdrawals missing")
+	}
+	for i := range data.Withdrawals {
+		if data.Withdrawals[i] == nil {
+			return fmt.Errorf("withdrawals entry %d missing", i)
+		}
 	}
 	p.Withdrawals = data.Withdrawals
 

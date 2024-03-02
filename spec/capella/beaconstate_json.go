@@ -226,18 +226,30 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 		return errors.New("eth1 data missing")
 	}
 	s.ETH1Data = data.ETH1Data
-	// ETH1DataVotes can be empty.
+	// ETH1DataVotes can be empty, but if present the individual votes must not be null.
+	if data.ETH1DataVotes != nil {
+		for i := range data.Validators {
+			if data.Validators[i] == nil {
+				return fmt.Errorf("validators entry %d missing", i)
+			}
+		}
+	}
 	s.ETH1DataVotes = data.ETH1DataVotes
 	if data.Validators == nil {
 		return errors.New("validators missing")
 	}
+	for i := range data.Validators {
+		if data.Validators[i] == nil {
+			return fmt.Errorf("validators entry %d missing", i)
+		}
+	}
+	s.Validators = data.Validators
 	if data.ETH1DepositIndex == "" {
 		return errors.New("eth1 deposit index missing")
 	}
 	if s.ETH1DepositIndex, err = strconv.ParseUint(data.ETH1DepositIndex, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for eth1 deposit index")
 	}
-	s.Validators = data.Validators
 	s.Balances = make([]phase0.Gwei, len(data.Balances))
 	for i := range data.Balances {
 		if data.Balances[i] == "" {
@@ -350,6 +362,11 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	s.NextWithdrawalValidatorIndex = phase0.ValidatorIndex(nextWithdrawalValidatorIndex)
 	if data.HistoricalSummaries == nil {
 		return errors.New("historical summaries missing")
+	}
+	for i := range data.HistoricalSummaries {
+		if data.HistoricalSummaries[i] == nil {
+			return fmt.Errorf("historical summaries entry %d missing", i)
+		}
 	}
 	s.HistoricalSummaries = data.HistoricalSummaries
 
