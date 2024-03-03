@@ -24,6 +24,8 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 // indexChunkSizes defines the per-beacon-node size of an index chunk.
@@ -99,12 +101,17 @@ func (s *Service) Validators(ctx context.Context,
 	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
 	error,
 ) {
+	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "Validators")
+	defer span.End()
+
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+	span.SetAttributes(attribute.Int("validators", len(opts.Indices)+len(opts.PubKeys)))
+
 	if opts.State == "" {
 		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
@@ -117,7 +124,7 @@ func (s *Service) Validators(ctx context.Context,
 		return s.validatorsFromState(ctx, opts)
 	}
 
-	if len(opts.Indices) > s.indexChunkSize(ctx)*16 || len(opts.PubKeys) > s.indexChunkSize(ctx)*16 {
+	if len(opts.Indices) > s.indexChunkSize(ctx)*16 || len(opts.PubKeys) > s.pubKeyChunkSize(ctx)*16 {
 		// Request is for multiple pages of validators; fetch from state.
 		return s.validatorsFromState(ctx, opts)
 	}
@@ -185,6 +192,9 @@ func (s *Service) validatorsFromState(ctx context.Context,
 	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
 	error,
 ) {
+	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "validatorsFromState")
+	defer span.End()
+
 	stateResponse, err := s.BeaconState(ctx, &api.BeaconStateOpts{State: opts.State, Common: opts.Common})
 	if err != nil {
 		return nil, err

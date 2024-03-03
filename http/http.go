@@ -221,7 +221,6 @@ func (s *Service) get(ctx context.Context, endpoint string, query string, opts *
 		// Prefer SSZ, JSON if not.
 		req.Header.Set("Accept", "application/octet-stream;q=1,application/json;q=0.9")
 	}
-	span.AddEvent("Sending request")
 
 	resp, err := s.client.Do(req)
 	if err != nil {
