@@ -61,7 +61,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 	inactiveClients := make([]consensusclient.Service, 0, len(parameters.clients))
 	for _, client := range parameters.clients {
 		switch {
-		case client.IsActive():
+		case client.IsSynced():
 			activeClients = append(activeClients, client)
 			setProviderStateMetric(ctx, client.Address(), "active")
 		default:
@@ -84,7 +84,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 			continue
 		}
 		switch {
-		case client.IsActive():
+		case client.IsSynced():
 			activeClients = append(activeClients, client)
 			setProviderStateMetric(ctx, client.Address(), "active")
 		default:

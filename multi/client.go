@@ -61,7 +61,7 @@ func (s *Service) recheck(ctx context.Context, forceUpdate bool) {
 			}
 		}
 		switch {
-		case client.IsActive():
+		case client.IsSynced():
 			s.activateClient(ctx, client)
 		default:
 			s.deactivateClient(ctx, client)
