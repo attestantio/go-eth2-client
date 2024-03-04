@@ -34,9 +34,9 @@ func TestService(t *testing.T) {
 	require.NoError(t, err)
 	consensusclient3, err := mock.New(ctx)
 	require.NoError(t, err)
-	inactiveconsensusclient1, err := mock.New(ctx)
+	inactiveconsensusclient, err := mock.New(ctx)
 	require.NoError(t, err)
-	inactiveconsensusclient1.SyncDistance = 10
+	inactiveconsensusclient.SyncDistance = 10
 	tests := []struct {
 		name   string
 		params []multi.Parameter
@@ -54,10 +54,10 @@ func TestService(t *testing.T) {
 			params: []multi.Parameter{
 				multi.WithLogLevel(zerolog.Disabled),
 				multi.WithClients([]client.Service{
-					inactiveconsensusclient1,
+					inactiveconsensusclient,
 				}),
 			},
-			err: "No providers active, cannot proceed",
+			err: "no providers active, cannot proceed",
 		},
 		{
 			name: "Good",

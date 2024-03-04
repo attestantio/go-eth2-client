@@ -24,8 +24,7 @@ import (
 
 var (
 	requestsMetric *prometheus.CounterVec
-	activeMetric   *prometheus.GaugeVec
-	syncedMetric   *prometheus.GaugeVec
+	stateMetric    *prometheus.GaugeVec
 )
 
 func registerMetrics(ctx context.Context, monitor metrics.Service) error {
@@ -55,24 +54,14 @@ func registerPrometheusMetrics(_ context.Context) error {
 		return errors.Join(errors.New("failed to register requests_total"), err)
 	}
 
-	activeMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	stateMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "consensusclient",
 		Subsystem: "http",
-		Name:      "active",
-		Help:      "1 if the server is active, 0 if not",
-	}, []string{"server"})
-	if err := prometheus.Register(activeMetric); err != nil {
-		return errors.Join(errors.New("failed to register active"), err)
-	}
-
-	syncedMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: "consensusclient",
-		Subsystem: "http",
-		Name:      "synced",
-		Help:      "1 if the server is synced, 0 if not",
-	}, []string{"server"})
-	if err := prometheus.Register(syncedMetric); err != nil {
-		return errors.Join(errors.New("failed to register synced"), err)
+		Name:      "connection_state",
+		Help:      "The state of the client connection (active/synced/inactive)",
+	}, []string{"server", "state"})
+	if err := prometheus.Register(stateMetric); err != nil {
+		return errors.Join(errors.New("failed to register state"), err)
 	}
 
 	return nil
@@ -140,26 +129,23 @@ func reduceEndpoint(in string) string {
 	return string(out)
 }
 
-func (s *Service) monitorActive(active bool) {
-	if activeMetric == nil {
+func (s *Service) monitorState(state string) {
+	if stateMetric == nil {
 		return
 	}
 
-	if active {
-		activeMetric.WithLabelValues(s.address).Set(1)
-	} else {
-		activeMetric.WithLabelValues(s.address).Set(0)
-	}
-}
-
-func (s *Service) monitorSynced(synced bool) {
-	if syncedMetric == nil {
-		return
-	}
-
-	if synced {
-		syncedMetric.WithLabelValues(s.address).Set(1)
-	} else {
-		syncedMetric.WithLabelValues(s.address).Set(0)
+	switch state {
+	case "synced":
+		stateMetric.WithLabelValues(s.address, "synced").Set(1)
+		stateMetric.WithLabelValues(s.address, "active").Set(0)
+		stateMetric.WithLabelValues(s.address, "inactive").Set(0)
+	case "active":
+		stateMetric.WithLabelValues(s.address, "synced").Set(0)
+		stateMetric.WithLabelValues(s.address, "active").Set(1)
+		stateMetric.WithLabelValues(s.address, "inactive").Set(0)
+	case "inactive":
+		stateMetric.WithLabelValues(s.address, "synced").Set(0)
+		stateMetric.WithLabelValues(s.address, "active").Set(0)
+		stateMetric.WithLabelValues(s.address, "inactive").Set(1)
 	}
 }

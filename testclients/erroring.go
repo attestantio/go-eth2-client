@@ -70,6 +70,16 @@ func (s *Erroring) Address() string {
 	return fmt.Sprintf("erroring:%v,%s", s.errorRate, nextAddress)
 }
 
+// IsActive returns true if the client is active.
+func (s *Erroring) IsActive() bool {
+	return true
+}
+
+// IsSynced returns true if the client is synced.
+func (s *Erroring) IsSynced() bool {
+	return true
+}
+
 // maybeError may return an error depending on the error arte.
 func (s *Erroring) maybeError(_ context.Context) error {
 	// #nosec G404

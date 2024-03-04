@@ -24,7 +24,8 @@ import (
 
 // NodeSyncing provides the syncing information for the node.
 func (s *Service) NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error) {
-	// We do not run checkIsActive here as it calls this function, so that would cause a loop.
+	// We do not run checkIsActive here as it calls this function, as checkIsActive can call this function
+	// and so it would cause a loop.
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}

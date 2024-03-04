@@ -71,6 +71,16 @@ func (s *Sleepy) Address() string {
 	return fmt.Sprintf("sleepy:%v,%v,%s", s.minSleep, s.maxSleep, nextAddress)
 }
 
+// IsActive returns true if the client is active.
+func (s *Sleepy) IsActive() bool {
+	return true
+}
+
+// IsSynced returns true if the client is synced.
+func (s *Sleepy) IsSynced() bool {
+	return true
+}
+
 // sleep sleeps for a bounded amount of time.
 func (s *Sleepy) sleep(_ context.Context) {
 	// #nosec G404

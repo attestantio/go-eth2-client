@@ -305,8 +305,14 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 	s.connectionSynced = synced
 	s.connectionMu.Unlock()
 
-	s.monitorActive(active)
-	s.monitorSynced(synced)
+	switch {
+	case synced:
+		s.monitorState("synced")
+	case active:
+		s.monitorState("active")
+	default:
+		s.monitorState("inactive")
+	}
 
 	// Call hooks if present.
 	if (!wasActive && active) && s.hooks.OnActive != nil {

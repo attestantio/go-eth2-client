@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,12 +22,12 @@ import (
 )
 
 var (
-	providersMetric      *prometheus.GaugeVec
-	providerActiveMetric *prometheus.GaugeVec
+	connectionsMetric *prometheus.GaugeVec
+	stateMetric       *prometheus.GaugeVec
 )
 
 func registerMetrics(ctx context.Context, monitor metrics.Service) error {
-	if providersMetric != nil {
+	if connectionsMetric != nil {
 		// Already registered.
 		return nil
 	}
@@ -43,40 +43,48 @@ func registerMetrics(ctx context.Context, monitor metrics.Service) error {
 }
 
 func registerPrometheusMetrics(_ context.Context) error {
-	providersMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	connectionsMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "consensusclient",
 		Subsystem: "multi",
-		Name:      "providers",
-		Help:      "Number of providers",
+		Name:      "connections",
+		Help:      "Number of connections",
 	}, []string{"state"})
-	if err := prometheus.Register(providersMetric); err != nil {
-		return errors.Wrap(err, "failed to register providers_total")
+	if err := prometheus.Register(connectionsMetric); err != nil {
+		return errors.Wrap(err, "failed to register connections")
 	}
-	providerActiveMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+	stateMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "consensusclient",
 		Subsystem: "multi",
-		Name:      "provider_state",
-		Help:      "State of provider",
-	}, []string{"provider"})
-	if err := prometheus.Register(providerActiveMetric); err != nil {
-		return errors.Wrap(err, "failed to register provider_state")
+		Name:      "connection_state",
+		Help:      "The state of the client connection (active/inactive)",
+	}, []string{"server", "state"})
+	if err := prometheus.Register(stateMetric); err != nil {
+		return errors.Wrap(err, "failed to register connection_state")
 	}
 
 	return nil
 }
 
-func setProviderActiveMetric(_ context.Context, provider string, state string) {
-	if providerActiveMetric != nil {
-		if state == "active" {
-			providerActiveMetric.WithLabelValues(provider).Set(1)
-		} else {
-			providerActiveMetric.WithLabelValues(provider).Set(0)
-		}
+func setProviderStateMetric(_ context.Context, server string, state string) {
+	if stateMetric == nil {
+		return
+	}
+
+	switch state {
+	case "active":
+		stateMetric.WithLabelValues(server, "active").Set(1)
+		stateMetric.WithLabelValues(server, "inactive").Set(0)
+	case "inactive":
+		stateMetric.WithLabelValues(server, "active").Set(0)
+		stateMetric.WithLabelValues(server, "inactive").Set(1)
 	}
 }
 
-func setProvidersMetric(_ context.Context, state string, count int) {
-	if providersMetric != nil {
-		providersMetric.WithLabelValues(state).Set(float64(count))
+func setConnectionsMetric(_ context.Context, active int, inactive int) {
+	if connectionsMetric == nil {
+		return
 	}
+
+	connectionsMetric.WithLabelValues("active").Set(float64(active))
+	connectionsMetric.WithLabelValues("inactive").Set(float64(inactive))
 }

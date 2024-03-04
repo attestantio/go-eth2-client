@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -56,14 +56,17 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 		}
 	}
 
-	// Check the state of each client and put it in an active or inactive list, accordingly.
+	// Check the state of each client and put it in the active or inactive list, accordingly.
 	activeClients := make([]consensusclient.Service, 0, len(parameters.clients))
 	inactiveClients := make([]consensusclient.Service, 0, len(parameters.clients))
 	for _, client := range parameters.clients {
-		if ping(ctx, client) {
+		switch {
+		case client.IsActive():
 			activeClients = append(activeClients, client)
-		} else {
+			setProviderStateMetric(ctx, client.Address(), "active")
+		default:
 			inactiveClients = append(inactiveClients, client)
+			setProviderStateMetric(ctx, client.Address(), "inactive")
 		}
 	}
 	for _, address := range parameters.addresses {
@@ -73,26 +76,27 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 			http.WithAddress(address),
 			http.WithEnforceJSON(parameters.enforceJSON),
 			http.WithExtraHeaders(parameters.extraHeaders),
+			http.WithAllowDelayedStart(true),
 		)
 		if err != nil {
 			log.Error().Str("provider", address).Msg("Provider not present; dropping from rotation")
 
 			continue
 		}
-		if ping(ctx, client) {
+		switch {
+		case client.IsActive():
 			activeClients = append(activeClients, client)
-			setProviderActiveMetric(ctx, client.Address(), "active")
-		} else {
+			setProviderStateMetric(ctx, client.Address(), "active")
+		default:
 			inactiveClients = append(inactiveClients, client)
-			setProviderActiveMetric(ctx, client.Address(), "inactive")
+			setProviderStateMetric(ctx, client.Address(), "inactive")
 		}
 	}
 	if len(activeClients) == 0 {
-		return nil, errors.New("No providers active, cannot proceed")
+		return nil, errors.New("no providers active, cannot proceed")
 	}
 	log.Trace().Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Initial providers")
-	setProvidersMetric(ctx, "active", len(activeClients))
-	setProvidersMetric(ctx, "inactive", len(inactiveClients))
+	setConnectionsMetric(ctx, len(activeClients), len(inactiveClients))
 
 	s := &Service{
 		log:             log,
@@ -120,4 +124,22 @@ func (s *Service) Address() string {
 	}
 
 	return "none"
+}
+
+// IsActive returns true if the client is active.
+// The service is considered active if at least one client is synced.
+func (s *Service) IsActive() bool {
+	s.clientsMu.RLock()
+	defer s.clientsMu.RUnlock()
+
+	return len(s.activeClients) > 0
+}
+
+// IsSynced returns true if the client is synced.
+// The service is considered synced if at least one client is synced.
+func (s *Service) IsSynced() bool {
+	s.clientsMu.RLock()
+	defer s.clientsMu.RUnlock()
+
+	return len(s.activeClients) > 0
 }

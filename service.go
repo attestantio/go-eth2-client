@@ -33,6 +33,12 @@ type Service interface {
 
 	// Address returns the address of the client.
 	Address() string
+
+	// IsActive returns true if the client is active.
+	IsActive() bool
+
+	// IsSynced returns true if the client is synced.
+	IsSynced() bool
 }
 
 // EpochFromStateIDProvider is the interface for providing epochs from state IDs.

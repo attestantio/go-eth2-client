@@ -24,10 +24,6 @@ import (
 
 // Domain provides a domain for a given domain type at a given epoch.
 func (s *Service) Domain(ctx context.Context, domainType phase0.DomainType, epoch phase0.Epoch) (phase0.Domain, error) {
-	if err := s.assertIsActive(ctx); err != nil {
-		return phase0.Domain{}, err
-	}
-
 	// Obtain the fork for the epoch.
 	fork, err := s.forkAtEpoch(ctx, epoch)
 	if err != nil {

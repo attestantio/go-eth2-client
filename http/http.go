@@ -224,12 +224,19 @@ func (s *Service) get(ctx context.Context, endpoint string, query string, opts *
 
 	resp, err := s.client.Do(req)
 	if err != nil {
-		// Special case; if we have called the syncing endpoint and it failed then we
-		// don't ping the server to see if it has failed, as the ping calls syncing itself
-		// and so we find ourselves in an endless loop.
-		if !strings.HasSuffix(url.String(), "/node/syncing") {
+		switch {
+		case errors.Is(err, context.Canceled):
+			// We don't consider context canceled to be a potential connection issue, as the user canceled the context.
+		case errors.Is(err, context.DeadlineExceeded):
+		// We don't consider context deadline exceeded to be a potential connection issue, as the user selected the deadline.
+		case strings.HasSuffix(url.String(), "/node/syncing"):
+			// Special case; if we have called the syncing endpoint and it failed then we don't check the connectino status, as
+			// that calls the syncing endpoint itself and so we find ourselves in an endless loop.
+		default:
+			// We consider other errors to be potential connection issues.
 			go s.CheckConnectionState(ctx)
 		}
+
 		span.RecordError(errors.New("request failed"))
 		s.monitorGetComplete(ctx, url.Path, "failed")
 

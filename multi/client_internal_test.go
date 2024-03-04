@@ -27,7 +27,7 @@ import (
 )
 
 // TestDeactivateMulti ensures that multiple concurrent calls to deactivateClient
-// do not result in a bad list of active and inactive clients.
+// do not result in a bad list of synced and unsynced clients.
 func TestDeactivateMulti(t *testing.T) {
 	ctx := context.Background()
 

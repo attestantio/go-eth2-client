@@ -1,4 +1,8 @@
 dev:
+  - update http and multi clients to be aware of delayed-start
+  - use standard errors for common function issues
+
+0.19.10:
   - add proposer_slashing and attester_slashing events
   - add bls_to_execution_change event
 

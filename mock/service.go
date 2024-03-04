@@ -114,6 +114,16 @@ func (s *Service) Address() string {
 	return s.name
 }
 
+// IsActive returns true if the client is active.
+func (s *Service) IsActive() bool {
+	return true
+}
+
+// IsSynced returns true if the client is synced.
+func (s *Service) IsSynced() bool {
+	return s.SyncDistance == 0
+}
+
 // close closes the service, freeing up resources.
 func (s *Service) close() {
 }
