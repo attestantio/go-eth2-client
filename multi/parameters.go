@@ -31,6 +31,7 @@ type parameters struct {
 	extraHeaders      map[string]string
 	enforceJSON       bool
 	allowDelayedStart bool
+	name              string
 }
 
 // Parameter is the interface for service parameters.
@@ -97,6 +98,13 @@ func WithAllowDelayedStart(allowDelayedStart bool) Parameter {
 func WithExtraHeaders(headers map[string]string) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.extraHeaders = headers
+	})
+}
+
+// WithName sets the name for the multiclient.
+func WithName(name string) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.name = name
 	})
 }
 

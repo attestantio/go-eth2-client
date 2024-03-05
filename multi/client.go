@@ -81,7 +81,7 @@ func (s *Service) deactivateClient(ctx context.Context, client consensusclient.S
 	for _, activeClient := range s.activeClients {
 		if activeClient == client {
 			inactiveClients = append(inactiveClients, activeClient)
-			setProviderStateMetric(ctx, client.Address(), "inactive")
+			s.setProviderStateMetric(ctx, client.Address(), "inactive")
 		} else {
 			activeClients = append(activeClients, activeClient)
 		}
@@ -95,7 +95,7 @@ func (s *Service) deactivateClient(ctx context.Context, client consensusclient.S
 
 	s.activeClients = activeClients
 	s.inactiveClients = inactiveClients
-	setConnectionsMetric(ctx, len(s.activeClients), len(s.inactiveClients))
+	s.setConnectionsMetric(ctx, len(s.activeClients), len(s.inactiveClients))
 }
 
 // activateClient activates a client, moving it to the active list if not currently on it.
@@ -110,7 +110,7 @@ func (s *Service) activateClient(ctx context.Context, client consensusclient.Ser
 	for _, inactiveClient := range s.inactiveClients {
 		if inactiveClient == client {
 			activeClients = append(activeClients, inactiveClient)
-			setProviderStateMetric(ctx, client.Address(), "active")
+			s.setProviderStateMetric(ctx, client.Address(), "active")
 		} else {
 			inactiveClients = append(inactiveClients, inactiveClient)
 		}
@@ -124,7 +124,7 @@ func (s *Service) activateClient(ctx context.Context, client consensusclient.Ser
 
 	s.activeClients = activeClients
 	s.inactiveClients = inactiveClients
-	setConnectionsMetric(ctx, len(s.activeClients), len(s.inactiveClients))
+	s.setConnectionsMetric(ctx, len(s.activeClients), len(s.inactiveClients))
 }
 
 // callFunc is the definition for a call function.  It provides a generic return interface

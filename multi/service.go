@@ -28,6 +28,8 @@ import (
 type Service struct {
 	log zerolog.Logger
 
+	name string
+
 	clientsMu       sync.RWMutex
 	activeClients   []consensusclient.Service
 	inactiveClients []consensusclient.Service
@@ -63,10 +65,8 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 		switch {
 		case client.IsSynced():
 			activeClients = append(activeClients, client)
-			setProviderStateMetric(ctx, client.Address(), "active")
 		default:
 			inactiveClients = append(inactiveClients, client)
-			setProviderStateMetric(ctx, client.Address(), "inactive")
 		}
 	}
 	for _, address := range parameters.addresses {
@@ -86,23 +86,30 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 		switch {
 		case client.IsSynced():
 			activeClients = append(activeClients, client)
-			setProviderStateMetric(ctx, client.Address(), "active")
 		default:
 			inactiveClients = append(inactiveClients, client)
-			setProviderStateMetric(ctx, client.Address(), "inactive")
 		}
 	}
 	if len(activeClients) == 0 && !parameters.allowDelayedStart {
 		return nil, consensusclient.ErrNotActive
 	}
 	log.Trace().Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Initial providers")
-	setConnectionsMetric(ctx, len(activeClients), len(inactiveClients))
 
 	s := &Service{
 		log:             log,
+		name:            parameters.name,
 		activeClients:   activeClients,
 		inactiveClients: inactiveClients,
 	}
+
+	// Set initial metrics.
+	for _, client := range s.activeClients {
+		s.setProviderStateMetric(ctx, client.Address(), "active")
+	}
+	for _, client := range s.inactiveClients {
+		s.setProviderStateMetric(ctx, client.Address(), "inactive")
+	}
+	s.setConnectionsMetric(ctx, len(activeClients), len(inactiveClients))
 
 	// Kick off monitor.
 	go s.monitor(ctx)

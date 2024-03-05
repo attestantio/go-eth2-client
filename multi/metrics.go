@@ -48,7 +48,7 @@ func registerPrometheusMetrics(_ context.Context) error {
 		Subsystem: "multi",
 		Name:      "connections",
 		Help:      "Number of connections",
-	}, []string{"state"})
+	}, []string{"name", "state"})
 	if err := prometheus.Register(connectionsMetric); err != nil {
 		return errors.Wrap(err, "failed to register connections")
 	}
@@ -57,7 +57,7 @@ func registerPrometheusMetrics(_ context.Context) error {
 		Subsystem: "multi",
 		Name:      "connection_state",
 		Help:      "The state of the client connection (active/inactive)",
-	}, []string{"server", "state"})
+	}, []string{"name", "server", "state"})
 	if err := prometheus.Register(stateMetric); err != nil {
 		return errors.Wrap(err, "failed to register connection_state")
 	}
@@ -65,26 +65,26 @@ func registerPrometheusMetrics(_ context.Context) error {
 	return nil
 }
 
-func setProviderStateMetric(_ context.Context, server string, state string) {
+func (s *Service) setProviderStateMetric(_ context.Context, server string, state string) {
 	if stateMetric == nil {
 		return
 	}
 
 	switch state {
 	case "active":
-		stateMetric.WithLabelValues(server, "active").Set(1)
-		stateMetric.WithLabelValues(server, "inactive").Set(0)
+		stateMetric.WithLabelValues(s.name, server, "active").Set(1)
+		stateMetric.WithLabelValues(s.name, server, "inactive").Set(0)
 	case "inactive":
-		stateMetric.WithLabelValues(server, "active").Set(0)
-		stateMetric.WithLabelValues(server, "inactive").Set(1)
+		stateMetric.WithLabelValues(s.name, server, "active").Set(0)
+		stateMetric.WithLabelValues(s.name, server, "inactive").Set(1)
 	}
 }
 
-func setConnectionsMetric(_ context.Context, active int, inactive int) {
+func (s *Service) setConnectionsMetric(_ context.Context, active int, inactive int) {
 	if connectionsMetric == nil {
 		return
 	}
 
-	connectionsMetric.WithLabelValues("active").Set(float64(active))
-	connectionsMetric.WithLabelValues("inactive").Set(float64(inactive))
+	connectionsMetric.WithLabelValues(s.name, "active").Set(float64(active))
+	connectionsMetric.WithLabelValues(s.name, "inactive").Set(float64(inactive))
 }
