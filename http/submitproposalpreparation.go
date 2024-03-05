@@ -25,7 +25,7 @@ import (
 // SubmitProposalPreparations provides the beacon node with information required if a proposal for the given validators
 // shows up in the next epoch.
 func (s *Service) SubmitProposalPreparations(ctx context.Context, preparations []*apiv1.ProposalPreparation) error {
-	if err := s.assertIsSynced(ctx); err != nil {
+	if err := s.assertIsActive(ctx); err != nil {
 		return err
 	}
 

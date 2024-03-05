@@ -26,7 +26,7 @@ import (
 
 // SubmitValidatorRegistrations submits a validator registration.
 func (s *Service) SubmitValidatorRegistrations(ctx context.Context, registrations []*api.VersionedSignedValidatorRegistration) error {
-	if err := s.assertIsSynced(ctx); err != nil {
+	if err := s.assertIsActive(ctx); err != nil {
 		return err
 	}
 	if len(registrations) == 0 {
