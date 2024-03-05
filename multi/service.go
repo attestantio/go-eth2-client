@@ -92,8 +92,8 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 			setProviderStateMetric(ctx, client.Address(), "inactive")
 		}
 	}
-	if len(activeClients) == 0 {
-		return nil, errors.New("no providers active, cannot proceed")
+	if len(activeClients) == 0 && !parameters.allowDelayedStart {
+		return nil, consensusclient.ErrNotActive
 	}
 	log.Trace().Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Initial providers")
 	setConnectionsMetric(ctx, len(activeClients), len(inactiveClients))

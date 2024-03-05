@@ -23,13 +23,14 @@ import (
 )
 
 type parameters struct {
-	logLevel     zerolog.Level
-	monitor      metrics.Service
-	clients      []consensusclient.Service
-	addresses    []string
-	timeout      time.Duration
-	extraHeaders map[string]string
-	enforceJSON  bool
+	logLevel          zerolog.Level
+	monitor           metrics.Service
+	clients           []consensusclient.Service
+	addresses         []string
+	timeout           time.Duration
+	extraHeaders      map[string]string
+	enforceJSON       bool
+	allowDelayedStart bool
 }
 
 // Parameter is the interface for service parameters.
@@ -82,6 +83,13 @@ func WithAddresses(addresses []string) Parameter {
 func WithEnforceJSON(enforceJSON bool) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.enforceJSON = enforceJSON
+	})
+}
+
+// WithAllowDelayedStart allows the service to start even if the client is unavailable.
+func WithAllowDelayedStart(allowDelayedStart bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.allowDelayedStart = allowDelayedStart
 	})
 }
 

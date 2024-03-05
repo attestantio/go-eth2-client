@@ -57,7 +57,7 @@ func TestService(t *testing.T) {
 					inactiveconsensusclient,
 				}),
 			},
-			err: "no providers active, cannot proceed",
+			err: "client is not active",
 		},
 		{
 			name: "Good",
