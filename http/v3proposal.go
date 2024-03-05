@@ -197,6 +197,7 @@ func (s *Service) v3ProposalFromJSON(res *httpResponse) (*api.Response[*api.Vers
 		Data: &api.VersionedV3Proposal{
 			Version: res.consensusVersion,
 		},
+		Metadata: metadataFromHeaders(res.headers),
 	}
 
 	blindedHeader, ok := response.Metadata["Eth-Execution-Payload-Blinded"]
