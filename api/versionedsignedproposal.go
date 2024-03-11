@@ -119,40 +119,30 @@ func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
 
 // ProposerIndex returns the proposer index of the signed proposal.
 func (v *VersionedSignedProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
+	if err := v.assertMessagePresent(); err != nil {
+		return 0, err
+	}
+
 	switch v.Version {
 	case spec.DataVersionPhase0:
-		if v.Phase0 == nil ||
-			v.Phase0.Message == nil {
-			return 0, ErrDataMissing
-		}
-
 		return v.Phase0.Message.ProposerIndex, nil
 	case spec.DataVersionAltair:
-		if v.Altair == nil ||
-			v.Altair.Message == nil {
-			return 0, ErrDataMissing
-		}
-
 		return v.Altair.Message.ProposerIndex, nil
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil ||
-			v.Bellatrix.Message == nil {
-			return 0, ErrDataMissing
+		if v.Blinded {
+			return v.BellatrixBlinded.Message.ProposerIndex, nil
 		}
 
 		return v.Bellatrix.Message.ProposerIndex, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil ||
-			v.Capella.Message == nil {
-			return 0, ErrDataMissing
+		if v.Blinded {
+			return v.CapellaBlinded.Message.ProposerIndex, nil
 		}
 
 		return v.Capella.Message.ProposerIndex, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.SignedBlock == nil ||
-			v.Deneb.SignedBlock.Message == nil {
-			return 0, ErrDataMissing
+		if v.Blinded {
+			return v.DenebBlinded.Message.ProposerIndex, nil
 		}
 
 		return v.Deneb.SignedBlock.Message.ProposerIndex, nil
