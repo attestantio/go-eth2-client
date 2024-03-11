@@ -76,6 +76,50 @@ func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
 	}
 }
 
+// ProposerIndex returns the proposer index of the signed proposal.
+func (v *VersionedSignedProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
+	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil ||
+			v.Phase0.Message == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Phase0.Message.ProposerIndex, nil
+	case spec.DataVersionAltair:
+		if v.Altair == nil ||
+			v.Altair.Message == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Altair.Message.ProposerIndex, nil
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Bellatrix.Message.ProposerIndex, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil ||
+			v.Capella.Message == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Capella.Message.ProposerIndex, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil ||
+			v.Deneb.SignedBlock == nil ||
+			v.Deneb.SignedBlock.Message == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Deneb.SignedBlock.Message.ProposerIndex, nil
+	default:
+		return 0, ErrUnsupportedVersion
+	}
+}
+
 // ExecutionBlockHash returns the hash of the execution payload.
 func (v *VersionedSignedProposal) ExecutionBlockHash() (phase0.Hash32, error) {
 	switch v.Version {
