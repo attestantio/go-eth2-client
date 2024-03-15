@@ -1,6 +1,11 @@
-dev:
-  - update http and multi clients to be aware of delayed-start
+0.20.0:
+  - allow delayed start of client, enabling the service even if the underlying beacon node is not ready
+  - add IsActive() and IsSynced() methods to understand the status of the service
+  - update multi clients to be aware of delayed start, only using clients that are synced
   - use standard errors for common function issues
+  - add ProposerIndex() to VersionedSignedProposal
+  - add name to multi clients to differentiate multiple instances
+  - fully parse provided client URLs, allowing pass through of username, password, etc.
 
 0.19.10:
   - add proposer_slashing and attester_slashing events
