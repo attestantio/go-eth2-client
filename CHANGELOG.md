@@ -1,3 +1,7 @@
+0.21.0:
+  - use v3 of the endpoint to obtain proposals
+  - add bounds checking for ValidatorState
+
 0.20.0:
   - allow delayed start of client, enabling the service even if the underlying beacon node is not ready
   - add IsActive() and IsSynced() methods to understand the status of the service
