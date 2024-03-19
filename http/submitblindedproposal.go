@@ -26,28 +26,33 @@ import (
 )
 
 // SubmitBlindedProposal submits a blinded proposal.
-func (s *Service) SubmitBlindedProposal(ctx context.Context, proposal *api.VersionedSignedBlindedProposal) error {
+func (s *Service) SubmitBlindedProposal(ctx context.Context,
+	opts *api.SubmitBlindedProposalOpts,
+) error {
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
 	}
-	if proposal == nil {
-		return errors.Join(errors.New("no blinded proposal supplied"), client.ErrInvalidOptions)
+	if opts == nil {
+		return client.ErrNoOptions
+	}
+	if opts.Proposal == nil {
+		return errors.Join(errors.New("no proposal supplied"), client.ErrInvalidOptions)
 	}
 
 	var specJSON []byte
 	var err error
 
-	switch proposal.Version {
+	switch opts.Proposal.Version {
 	case spec.DataVersionPhase0:
 		err = errors.New("blinded phase0 proposals not supported")
 	case spec.DataVersionAltair:
 		err = errors.New("blinded altair proposals not supported")
 	case spec.DataVersionBellatrix:
-		specJSON, err = json.Marshal(proposal.Bellatrix)
+		specJSON, err = json.Marshal(opts.Proposal.Bellatrix)
 	case spec.DataVersionCapella:
-		specJSON, err = json.Marshal(proposal.Capella)
+		specJSON, err = json.Marshal(opts.Proposal.Capella)
 	case spec.DataVersionDeneb:
-		specJSON, err = json.Marshal(proposal.Deneb)
+		specJSON, err = json.Marshal(opts.Proposal.Deneb)
 	default:
 		err = errors.New("unknown proposal version")
 	}
@@ -55,9 +60,15 @@ func (s *Service) SubmitBlindedProposal(ctx context.Context, proposal *api.Versi
 		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
+	endpoint := "/eth/v2/beacon/blocks"
+	query := ""
+	if opts.BroadcastValidation != nil {
+		query = "broadcast_validation=" + opts.BroadcastValidation.String()
+	}
+
 	headers := make(map[string]string)
-	headers["Eth-Consensus-Version"] = strings.ToLower(proposal.Version.String())
-	_, err = s.post2(ctx, "/eth/v2/beacon/blinded_blocks", bytes.NewBuffer(specJSON), ContentTypeJSON, headers)
+	headers["Eth-Consensus-Version"] = strings.ToLower(opts.Proposal.Version.String())
+	_, err = s.post2(ctx, endpoint, query, &opts.Common, bytes.NewBuffer(specJSON), ContentTypeJSON, headers)
 	if err != nil {
 		return errors.Join(errors.New("failed to submit blinded proposal"), err)
 	}

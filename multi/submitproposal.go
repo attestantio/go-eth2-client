@@ -21,9 +21,11 @@ import (
 )
 
 // SubmitProposal submits a beacon block.
-func (s *Service) SubmitProposal(ctx context.Context, proposal *api.VersionedSignedProposal) error {
+func (s *Service) SubmitProposal(ctx context.Context,
+	opts *api.SubmitProposalOpts,
+) error {
 	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		err := client.(consensusclient.ProposalSubmitter).SubmitProposal(ctx, proposal)
+		err := client.(consensusclient.ProposalSubmitter).SubmitProposal(ctx, opts)
 		if err != nil {
 			return nil, err
 		}

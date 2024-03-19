@@ -99,6 +99,8 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 //nolint:unparam
 func (s *Service) post2(ctx context.Context,
 	endpoint string,
+	query string,
+	_ *api.CommonOpts,
 	body io.Reader,
 	contentType ContentType,
 	headers map[string]string,
@@ -109,16 +111,22 @@ func (s *Service) post2(ctx context.Context,
 	// #nosec G404
 	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Str("endpoint", endpoint).Logger()
 	if e := log.Trace(); e.Enabled() {
-		bodyBytes, err := io.ReadAll(body)
-		if err != nil {
-			return nil, errors.New("failed to read request body")
-		}
-		body = bytes.NewReader(bodyBytes)
+		switch contentType {
+		case ContentTypeJSON:
+			bodyBytes, err := io.ReadAll(body)
+			if err != nil {
+				return nil, errors.New("failed to read request body")
+			}
+			body = bytes.NewReader(bodyBytes)
 
-		e.Str("body", string(bodyBytes)).Msg("POST request")
+			e.Str("body", string(bodyBytes)).Msg("POST request")
+		default:
+			e.Str("content_type", contentType.String()).Msg("POST request")
+		}
 	}
 
-	url := urlForCall(s.base, endpoint, "")
+	url := urlForCall(s.base, endpoint, query)
+	log.Trace().Str("url", url.String()).Msg("URL to POST")
 
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
@@ -200,6 +208,7 @@ func (s *Service) get(ctx context.Context, endpoint string, query string, opts *
 	log.Trace().Msg("GET request")
 
 	url := urlForCall(s.base, endpoint, query)
+	log.Trace().Str("url", url.String()).Msg("URL to GET")
 
 	timeout := s.timeout
 	if opts.Timeout != 0 {

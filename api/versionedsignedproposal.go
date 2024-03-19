@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2023, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,6 +14,11 @@
 package api
 
 import (
+	"errors"
+	"math/big"
+
+	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
+	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -24,50 +29,86 @@ import (
 
 // VersionedSignedProposal contains a versioned signed beacon node proposal.
 type VersionedSignedProposal struct {
-	Version   spec.DataVersion
-	Phase0    *phase0.SignedBeaconBlock
-	Altair    *altair.SignedBeaconBlock
-	Bellatrix *bellatrix.SignedBeaconBlock
-	Capella   *capella.SignedBeaconBlock
-	Deneb     *apiv1deneb.SignedBlockContents
+	Version          spec.DataVersion
+	Blinded          bool
+	ConsensusValue   *big.Int
+	ExecutionValue   *big.Int
+	Phase0           *phase0.SignedBeaconBlock
+	Altair           *altair.SignedBeaconBlock
+	Bellatrix        *bellatrix.SignedBeaconBlock
+	BellatrixBlinded *apiv1bellatrix.SignedBlindedBeaconBlock
+	Capella          *capella.SignedBeaconBlock
+	CapellaBlinded   *apiv1capella.SignedBlindedBeaconBlock
+	Deneb            *apiv1deneb.SignedBlockContents
+	DenebBlinded     *apiv1deneb.SignedBlindedBeaconBlock
+}
+
+// AssertPresnet throws an error if the expected proposal
+// given the version and blinded fields is not present.
+func (v *VersionedSignedProposal) AssertPresent() error {
+	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil {
+			return errors.New("phase0 proposal not present")
+		}
+	case spec.DataVersionAltair:
+		if v.Altair == nil {
+			return errors.New("altair proposal not present")
+		}
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil && !v.Blinded {
+			return errors.New("bellatrix proposal not present")
+		}
+		if v.BellatrixBlinded == nil && v.Blinded {
+			return errors.New("blinded bellatrix proposal not present")
+		}
+	case spec.DataVersionCapella:
+		if v.Capella == nil && !v.Blinded {
+			return errors.New("capella proposal not present")
+		}
+		if v.CapellaBlinded == nil && v.Blinded {
+			return errors.New("blinded capella proposal not present")
+		}
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil && !v.Blinded {
+			return errors.New("deneb proposal not present")
+		}
+		if v.DenebBlinded == nil && v.Blinded {
+			return errors.New("blinded deneb proposal not present")
+		}
+	default:
+		return errors.New("unsupported version")
+	}
+
+	return nil
 }
 
 // Slot returns the slot of the signed proposal.
 func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
+	if err := v.assertMessagePresent(); err != nil {
+		return 0, err
+	}
+
 	switch v.Version {
 	case spec.DataVersionPhase0:
-		if v.Phase0 == nil ||
-			v.Phase0.Message == nil {
-			return 0, ErrDataMissing
-		}
-
 		return v.Phase0.Message.Slot, nil
 	case spec.DataVersionAltair:
-		if v.Altair == nil ||
-			v.Altair.Message == nil {
-			return 0, ErrDataMissing
-		}
-
 		return v.Altair.Message.Slot, nil
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil ||
-			v.Bellatrix.Message == nil {
-			return 0, ErrDataMissing
+		if v.Blinded {
+			return v.BellatrixBlinded.Message.Slot, nil
 		}
 
 		return v.Bellatrix.Message.Slot, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil ||
-			v.Capella.Message == nil {
-			return 0, ErrDataMissing
+		if v.Blinded {
+			return v.CapellaBlinded.Message.Slot, nil
 		}
 
 		return v.Capella.Message.Slot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.SignedBlock == nil ||
-			v.Deneb.SignedBlock.Message == nil {
-			return 0, ErrDataMissing
+		if v.Blinded {
+			return v.DenebBlinded.Message.Slot, nil
 		}
 
 		return v.Deneb.SignedBlock.Message.Slot, nil
@@ -78,40 +119,30 @@ func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
 
 // ProposerIndex returns the proposer index of the signed proposal.
 func (v *VersionedSignedProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
+	if err := v.assertMessagePresent(); err != nil {
+		return 0, err
+	}
+
 	switch v.Version {
 	case spec.DataVersionPhase0:
-		if v.Phase0 == nil ||
-			v.Phase0.Message == nil {
-			return 0, ErrDataMissing
-		}
-
 		return v.Phase0.Message.ProposerIndex, nil
 	case spec.DataVersionAltair:
-		if v.Altair == nil ||
-			v.Altair.Message == nil {
-			return 0, ErrDataMissing
-		}
-
 		return v.Altair.Message.ProposerIndex, nil
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil ||
-			v.Bellatrix.Message == nil {
-			return 0, ErrDataMissing
+		if v.Blinded {
+			return v.BellatrixBlinded.Message.ProposerIndex, nil
 		}
 
 		return v.Bellatrix.Message.ProposerIndex, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil ||
-			v.Capella.Message == nil {
-			return 0, ErrDataMissing
+		if v.Blinded {
+			return v.CapellaBlinded.Message.ProposerIndex, nil
 		}
 
 		return v.Capella.Message.ProposerIndex, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.SignedBlock == nil ||
-			v.Deneb.SignedBlock.Message == nil {
-			return 0, ErrDataMissing
+		if v.Blinded {
+			return v.DenebBlinded.Message.ProposerIndex, nil
 		}
 
 		return v.Deneb.SignedBlock.Message.ProposerIndex, nil
@@ -122,32 +153,26 @@ func (v *VersionedSignedProposal) ProposerIndex() (phase0.ValidatorIndex, error)
 
 // ExecutionBlockHash returns the hash of the execution payload.
 func (v *VersionedSignedProposal) ExecutionBlockHash() (phase0.Hash32, error) {
+	if err := v.assertExecutionPayloadPresent(); err != nil {
+		return phase0.Hash32{}, err
+	}
+
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil ||
-			v.Bellatrix.Message == nil ||
-			v.Bellatrix.Message.Body == nil ||
-			v.Bellatrix.Message.Body.ExecutionPayload == nil {
-			return phase0.Hash32{}, ErrDataMissing
+		if v.Blinded {
+			return v.BellatrixBlinded.Message.Body.ExecutionPayloadHeader.BlockHash, nil
 		}
 
 		return v.Bellatrix.Message.Body.ExecutionPayload.BlockHash, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil ||
-			v.Capella.Message == nil ||
-			v.Capella.Message.Body == nil ||
-			v.Capella.Message.Body.ExecutionPayload == nil {
-			return phase0.Hash32{}, ErrDataMissing
+		if v.Blinded {
+			return v.CapellaBlinded.Message.Body.ExecutionPayloadHeader.BlockHash, nil
 		}
 
 		return v.Capella.Message.Body.ExecutionPayload.BlockHash, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.SignedBlock == nil ||
-			v.Deneb.SignedBlock.Message == nil ||
-			v.Deneb.SignedBlock.Message.Body == nil ||
-			v.Deneb.SignedBlock.Message.Body.ExecutionPayload == nil {
-			return phase0.Hash32{}, ErrDataMissing
+		if v.Blinded {
+			return v.DenebBlinded.Message.Body.ExecutionPayloadHeader.BlockHash, nil
 		}
 
 		return v.Deneb.SignedBlock.Message.Body.ExecutionPayload.BlockHash, nil
@@ -172,18 +197,42 @@ func (v *VersionedSignedProposal) String() string {
 
 		return v.Altair.String()
 	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			if v.BellatrixBlinded == nil {
+				return ""
+			}
+
+			return v.BellatrixBlinded.String()
+		}
+
 		if v.Bellatrix == nil {
 			return ""
 		}
 
 		return v.Bellatrix.String()
 	case spec.DataVersionCapella:
+		if v.Blinded {
+			if v.CapellaBlinded == nil {
+				return ""
+			}
+
+			return v.CapellaBlinded.String()
+		}
+
 		if v.Capella == nil {
 			return ""
 		}
 
 		return v.Capella.String()
 	case spec.DataVersionDeneb:
+		if v.Blinded {
+			if v.DenebBlinded == nil {
+				return ""
+			}
+
+			return v.DenebBlinded.String()
+		}
+
 		if v.Deneb == nil {
 			return ""
 		}
@@ -192,4 +241,114 @@ func (v *VersionedSignedProposal) String() string {
 	default:
 		return "unsupported version"
 	}
+}
+
+// assertMessagePresent throws an error if the expected message
+// given the version and blinded fields is not present.
+func (v *VersionedSignedProposal) assertMessagePresent() error {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			if v.BellatrixBlinded == nil ||
+				v.BellatrixBlinded.Message == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.Bellatrix == nil ||
+				v.Bellatrix.Message == nil {
+				return ErrDataMissing
+			}
+		}
+	case spec.DataVersionCapella:
+		if v.Blinded {
+			if v.CapellaBlinded == nil ||
+				v.CapellaBlinded.Message == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.Capella == nil ||
+				v.Capella.Message == nil {
+				return ErrDataMissing
+			}
+		}
+	case spec.DataVersionDeneb:
+		if v.Blinded {
+			if v.DenebBlinded == nil ||
+				v.DenebBlinded.Message == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.Deneb == nil ||
+				v.Deneb.SignedBlock == nil ||
+				v.Deneb.SignedBlock.Message == nil {
+				return ErrDataMissing
+			}
+		}
+	default:
+		return ErrUnsupportedVersion
+	}
+
+	return nil
+}
+
+// assertExecutionPayloadPresent throws an error if the expected execution payload or payload header
+// given the version and blinded fields is not present.
+//
+//nolint:gocyclo
+func (v *VersionedSignedProposal) assertExecutionPayloadPresent() error {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			if v.BellatrixBlinded == nil ||
+				v.BellatrixBlinded.Message == nil ||
+				v.BellatrixBlinded.Message.Body == nil ||
+				v.BellatrixBlinded.Message.Body.ExecutionPayloadHeader == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.Bellatrix == nil ||
+				v.Bellatrix.Message == nil ||
+				v.Bellatrix.Message.Body == nil ||
+				v.Bellatrix.Message.Body.ExecutionPayload == nil {
+				return ErrDataMissing
+			}
+		}
+	case spec.DataVersionCapella:
+		if v.Blinded {
+			if v.CapellaBlinded == nil ||
+				v.CapellaBlinded.Message == nil ||
+				v.CapellaBlinded.Message.Body == nil ||
+				v.CapellaBlinded.Message.Body.ExecutionPayloadHeader == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.Capella == nil ||
+				v.Capella.Message == nil ||
+				v.Capella.Message.Body == nil ||
+				v.Capella.Message.Body.ExecutionPayload == nil {
+				return ErrDataMissing
+			}
+		}
+	case spec.DataVersionDeneb:
+		if v.Blinded {
+			if v.DenebBlinded == nil ||
+				v.DenebBlinded.Message == nil ||
+				v.DenebBlinded.Message.Body == nil ||
+				v.DenebBlinded.Message.Body.ExecutionPayloadHeader == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.Deneb == nil ||
+				v.Deneb.SignedBlock == nil ||
+				v.Deneb.SignedBlock.Message == nil ||
+				v.Deneb.SignedBlock.Message.Body == nil ||
+				v.Deneb.SignedBlock.Message.Body.ExecutionPayload == nil {
+				return ErrDataMissing
+			}
+		}
+	default:
+		return ErrUnsupportedVersion
+	}
+
+	return nil
 }

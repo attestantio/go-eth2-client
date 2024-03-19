@@ -26,16 +26,84 @@ import (
 )
 
 // SubmitProposal submits a proposal.
-func (s *Service) SubmitProposal(ctx context.Context, proposal *api.VersionedSignedProposal) error {
+func (s *Service) SubmitProposal(ctx context.Context,
+	opts *api.SubmitProposalOpts,
+) error {
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
 	}
-	if proposal == nil {
+	if opts == nil {
+		return client.ErrNoOptions
+	}
+	if opts.Proposal == nil {
 		return errors.Join(errors.New("no proposal supplied"), client.ErrInvalidOptions)
 	}
 
+	body, contentType, err := s.submitProposalData(ctx, opts.Proposal)
+	if err != nil {
+		return err
+	}
+
+	endpoint := "/eth/v2/beacon/blocks"
+	query := ""
+	if opts.BroadcastValidation != nil {
+		query = "broadcast_validation=" + opts.BroadcastValidation.String()
+	}
+
+	headers := make(map[string]string)
+	headers["Eth-Consensus-Version"] = strings.ToLower(opts.Proposal.Version.String())
+	_, err = s.post2(ctx, endpoint, query, &opts.Common, bytes.NewBuffer(body), contentType, headers)
+	if err != nil {
+		return errors.Join(errors.New("failed to submit proposal"), err)
+	}
+
+	return nil
+}
+
+func (s *Service) submitProposalData(ctx context.Context,
+	proposal *api.VersionedSignedProposal,
+) (
+	[]byte,
+	ContentType,
+	error,
+) {
+	var body []byte
+	var contentType ContentType
+	var err error
+
+	nodeClientResponse, err := s.NodeClient(ctx)
+	nodeClient := "unknown"
+	if err == nil {
+		nodeClient = nodeClientResponse.Data
+	}
+
+	if s.enforceJSON || nodeClient == "lodestar" {
+		contentType = ContentTypeJSON
+		body, err = s.submitProposalJSON(ctx, proposal)
+	} else {
+		contentType = ContentTypeSSZ
+		body, err = s.submitProposalSSZ(ctx, proposal)
+	}
+
+	if err != nil {
+		return nil, ContentTypeUnknown, err
+	}
+
+	return body, contentType, nil
+}
+
+func (s *Service) submitProposalJSON(_ context.Context,
+	proposal *api.VersionedSignedProposal,
+) (
+	[]byte,
+	error,
+) {
 	var specJSON []byte
 	var err error
+
+	if err := proposal.AssertPresent(); err != nil {
+		return nil, err
+	}
 
 	switch proposal.Version {
 	case spec.DataVersionPhase0:
@@ -52,15 +120,42 @@ func (s *Service) SubmitProposal(ctx context.Context, proposal *api.VersionedSig
 		err = errors.New("unknown proposal version")
 	}
 	if err != nil {
-		return errors.Join(errors.New("failed to marshal JSON"), err)
+		return nil, errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
-	headers := make(map[string]string)
-	headers["Eth-Consensus-Version"] = strings.ToLower(proposal.Version.String())
-	_, err = s.post2(ctx, "/eth/v1/beacon/blocks", bytes.NewBuffer(specJSON), ContentTypeJSON, headers)
+	return specJSON, nil
+}
+
+func (s *Service) submitProposalSSZ(_ context.Context,
+	proposal *api.VersionedSignedProposal,
+) (
+	[]byte,
+	error,
+) {
+	var specSSZ []byte
+	var err error
+
+	if err := proposal.AssertPresent(); err != nil {
+		return nil, err
+	}
+
+	switch proposal.Version {
+	case spec.DataVersionPhase0:
+		specSSZ, err = proposal.Phase0.MarshalSSZ()
+	case spec.DataVersionAltair:
+		specSSZ, err = proposal.Altair.MarshalSSZ()
+	case spec.DataVersionBellatrix:
+		specSSZ, err = proposal.Bellatrix.MarshalSSZ()
+	case spec.DataVersionCapella:
+		specSSZ, err = proposal.Capella.MarshalSSZ()
+	case spec.DataVersionDeneb:
+		specSSZ, err = proposal.Deneb.MarshalSSZ()
+	default:
+		err = errors.New("unknown proposal version")
+	}
 	if err != nil {
-		return errors.Join(errors.New("failed to submit proposal"), err)
+		return nil, errors.Join(errors.New("failed to marshal SSZ"), err)
 	}
 
-	return nil
+	return specSSZ, nil
 }

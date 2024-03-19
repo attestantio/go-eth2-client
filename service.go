@@ -256,7 +256,7 @@ type BeaconBlockSubmitter interface {
 // ProposalSubmitter is the interface for submitting proposals.
 type ProposalSubmitter interface {
 	// SubmitProposal submits a proposal.
-	SubmitProposal(ctx context.Context, block *api.VersionedSignedProposal) error
+	SubmitProposal(ctx context.Context, opts *api.SubmitProposalOpts) error
 }
 
 // BeaconCommitteeSubscriptionsSubmitter is the interface for submitting beacon committee subnet subscription requests.
@@ -283,12 +283,6 @@ type BeaconStateRootProvider interface {
 	BeaconStateRoot(ctx context.Context, opts *api.BeaconStateRootOpts) (*api.Response[*phase0.Root], error)
 }
 
-// BlindedProposalProvider is the interface for providing blinded beacon block proposals.
-type BlindedProposalProvider interface {
-	// BlindedProposal fetches a blinded proposed beacon block for signing.
-	BlindedProposal(ctx context.Context, opts *api.BlindedProposalOpts) (*api.Response[*api.VersionedBlindedProposal], error)
-}
-
 // BlindedBeaconBlockSubmitter is the interface for submitting blinded beacon blocks.
 type BlindedBeaconBlockSubmitter interface {
 	// SubmitBlindedBeaconBlock submits a beacon block.
@@ -300,7 +294,7 @@ type BlindedBeaconBlockSubmitter interface {
 // BlindedProposalSubmitter is the interface for submitting blinded proposals.
 type BlindedProposalSubmitter interface {
 	// SubmitBlindedProposal submits a beacon block.
-	SubmitBlindedProposal(ctx context.Context, block *api.VersionedSignedBlindedProposal) error
+	SubmitBlindedProposal(ctx context.Context, opts *api.SubmitBlindedProposalOpts) error
 }
 
 // ValidatorRegistrationsSubmitter is the interface for submitting validator registrations.

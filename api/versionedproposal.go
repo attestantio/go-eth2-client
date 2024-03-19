@@ -14,6 +14,10 @@
 package api
 
 import (
+	"math/big"
+
+	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
+	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -25,12 +29,18 @@ import (
 
 // VersionedProposal contains a versioned proposal.
 type VersionedProposal struct {
-	Version   spec.DataVersion
-	Phase0    *phase0.BeaconBlock
-	Altair    *altair.BeaconBlock
-	Bellatrix *bellatrix.BeaconBlock
-	Capella   *capella.BeaconBlock
-	Deneb     *apiv1deneb.BlockContents
+	Version          spec.DataVersion
+	Blinded          bool
+	ConsensusValue   *big.Int
+	ExecutionValue   *big.Int
+	Phase0           *phase0.BeaconBlock
+	Altair           *altair.BeaconBlock
+	Bellatrix        *bellatrix.BeaconBlock
+	BellatrixBlinded *apiv1bellatrix.BlindedBeaconBlock
+	Capella          *capella.BeaconBlock
+	CapellaBlinded   *apiv1capella.BlindedBeaconBlock
+	Deneb            *apiv1deneb.BlockContents
+	DenebBlinded     *apiv1deneb.BlindedBeaconBlock
 }
 
 // IsEmpty returns true if there is no proposal.
@@ -38,291 +48,39 @@ func (v *VersionedProposal) IsEmpty() bool {
 	return v.Phase0 == nil &&
 		v.Altair == nil &&
 		v.Bellatrix == nil &&
+		v.BellatrixBlinded == nil &&
 		v.Capella == nil &&
-		v.Deneb == nil
-}
-
-// Slot returns the slot of the proposal.
-func (v *VersionedProposal) Slot() (phase0.Slot, error) {
-	switch v.Version {
-	case spec.DataVersionPhase0:
-		if v.Phase0 == nil {
-			return 0, ErrDataMissing
-		}
-
-		return v.Phase0.Slot, nil
-	case spec.DataVersionAltair:
-		if v.Altair == nil {
-			return 0, ErrDataMissing
-		}
-
-		return v.Altair.Slot, nil
-	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
-			return 0, ErrDataMissing
-		}
-
-		return v.Bellatrix.Slot, nil
-	case spec.DataVersionCapella:
-		if v.Capella == nil {
-			return 0, ErrDataMissing
-		}
-
-		return v.Capella.Slot, nil
-	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.Block == nil {
-			return 0, ErrDataMissing
-		}
-
-		return v.Deneb.Block.Slot, nil
-	default:
-		return 0, ErrUnsupportedVersion
-	}
-}
-
-// ProposerIndex returns the proposer index of the proposal.
-func (v *VersionedProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
-	switch v.Version {
-	case spec.DataVersionPhase0:
-		if v.Phase0 == nil {
-			return 0, ErrDataMissing
-		}
-
-		return v.Phase0.ProposerIndex, nil
-	case spec.DataVersionAltair:
-		if v.Altair == nil {
-			return 0, ErrDataMissing
-		}
-
-		return v.Altair.ProposerIndex, nil
-	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
-			return 0, ErrDataMissing
-		}
-
-		return v.Bellatrix.ProposerIndex, nil
-	case spec.DataVersionCapella:
-		if v.Capella == nil {
-			return 0, ErrDataMissing
-		}
-
-		return v.Capella.ProposerIndex, nil
-	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.Block == nil {
-			return 0, ErrDataMissing
-		}
-
-		return v.Deneb.Block.ProposerIndex, nil
-	default:
-		return 0, ErrUnsupportedVersion
-	}
-}
-
-// RandaoReveal returns the RANDAO reveal of the proposal.
-func (v *VersionedProposal) RandaoReveal() (phase0.BLSSignature, error) {
-	switch v.Version {
-	case spec.DataVersionPhase0:
-		if v.Phase0 == nil ||
-			v.Phase0.Body == nil {
-			return phase0.BLSSignature{}, ErrDataMissing
-		}
-
-		return v.Phase0.Body.RANDAOReveal, nil
-	case spec.DataVersionAltair:
-		if v.Altair == nil ||
-			v.Altair.Body == nil {
-			return phase0.BLSSignature{}, ErrDataMissing
-		}
-
-		return v.Altair.Body.RANDAOReveal, nil
-	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil ||
-			v.Bellatrix.Body == nil {
-			return phase0.BLSSignature{}, ErrDataMissing
-		}
-
-		return v.Bellatrix.Body.RANDAOReveal, nil
-	case spec.DataVersionCapella:
-		if v.Capella == nil ||
-			v.Capella.Body == nil {
-			return phase0.BLSSignature{}, ErrDataMissing
-		}
-
-		return v.Capella.Body.RANDAOReveal, nil
-	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.Block == nil ||
-			v.Deneb.Block.Body == nil {
-			return phase0.BLSSignature{}, ErrDataMissing
-		}
-
-		return v.Deneb.Block.Body.RANDAOReveal, nil
-	default:
-		return phase0.BLSSignature{}, ErrUnsupportedVersion
-	}
-}
-
-// Graffiti returns the graffiti of the proposal.
-func (v *VersionedProposal) Graffiti() ([32]byte, error) {
-	switch v.Version {
-	case spec.DataVersionPhase0:
-		if v.Phase0 == nil ||
-			v.Phase0.Body == nil {
-			return [32]byte{}, ErrDataMissing
-		}
-
-		return v.Phase0.Body.Graffiti, nil
-	case spec.DataVersionAltair:
-		if v.Altair == nil ||
-			v.Altair.Body == nil {
-			return [32]byte{}, ErrDataMissing
-		}
-
-		return v.Altair.Body.Graffiti, nil
-	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil ||
-			v.Bellatrix.Body == nil {
-			return [32]byte{}, ErrDataMissing
-		}
-
-		return v.Bellatrix.Body.Graffiti, nil
-	case spec.DataVersionCapella:
-		if v.Capella == nil ||
-			v.Capella.Body == nil {
-			return [32]byte{}, ErrDataMissing
-		}
-
-		return v.Capella.Body.Graffiti, nil
-	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.Block == nil ||
-			v.Deneb.Block.Body == nil {
-			return [32]byte{}, ErrDataMissing
-		}
-
-		return v.Deneb.Block.Body.Graffiti, nil
-	default:
-		return [32]byte{}, ErrUnsupportedVersion
-	}
-}
-
-// Attestations returns the attestations of the proposal.
-func (v *VersionedProposal) Attestations() ([]*phase0.Attestation, error) {
-	switch v.Version {
-	case spec.DataVersionPhase0:
-		if v.Phase0 == nil ||
-			v.Phase0.Body == nil {
-			return nil, ErrDataMissing
-		}
-
-		return v.Phase0.Body.Attestations, nil
-	case spec.DataVersionAltair:
-		if v.Altair == nil ||
-			v.Altair.Body == nil {
-			return nil, ErrDataMissing
-		}
-
-		return v.Altair.Body.Attestations, nil
-	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil ||
-			v.Bellatrix.Body == nil {
-			return nil, ErrDataMissing
-		}
-
-		return v.Bellatrix.Body.Attestations, nil
-	case spec.DataVersionCapella:
-		if v.Capella == nil ||
-			v.Capella.Body == nil {
-			return nil, ErrDataMissing
-		}
-
-		return v.Capella.Body.Attestations, nil
-	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.Block == nil ||
-			v.Deneb.Block.Body == nil {
-			return nil, ErrDataMissing
-		}
-
-		return v.Deneb.Block.Body.Attestations, nil
-	default:
-		return nil, ErrUnsupportedVersion
-	}
-}
-
-// Root returns the root of the proposal.
-func (v *VersionedProposal) Root() (phase0.Root, error) {
-	switch v.Version {
-	case spec.DataVersionPhase0:
-		if v.Phase0 == nil {
-			return phase0.Root{}, ErrDataMissing
-		}
-
-		return v.Phase0.HashTreeRoot()
-	case spec.DataVersionAltair:
-		if v.Altair == nil {
-			return phase0.Root{}, ErrDataMissing
-		}
-
-		return v.Altair.HashTreeRoot()
-	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
-			return phase0.Root{}, ErrDataMissing
-		}
-
-		return v.Bellatrix.HashTreeRoot()
-	case spec.DataVersionCapella:
-		if v.Capella == nil {
-			return phase0.Root{}, ErrDataMissing
-		}
-
-		return v.Capella.HashTreeRoot()
-	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.Block == nil {
-			return phase0.Root{}, ErrDataMissing
-		}
-
-		return v.Deneb.Block.HashTreeRoot()
-	default:
-		return phase0.Root{}, ErrUnsupportedVersion
-	}
+		v.CapellaBlinded == nil &&
+		v.Deneb == nil &&
+		v.DenebBlinded == nil
 }
 
 // BodyRoot returns the body root of the proposal.
 func (v *VersionedProposal) BodyRoot() (phase0.Root, error) {
+	if !v.bodyPresent() {
+		return phase0.Root{}, ErrDataMissing
+	}
+
 	switch v.Version {
 	case spec.DataVersionPhase0:
-		if v.Phase0 == nil {
-			return phase0.Root{}, ErrDataMissing
-		}
-
 		return v.Phase0.Body.HashTreeRoot()
 	case spec.DataVersionAltair:
-		if v.Altair == nil {
-			return phase0.Root{}, ErrDataMissing
-		}
-
 		return v.Altair.Body.HashTreeRoot()
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
-			return phase0.Root{}, ErrDataMissing
+		if v.Blinded {
+			return v.BellatrixBlinded.Body.HashTreeRoot()
 		}
 
 		return v.Bellatrix.Body.HashTreeRoot()
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
-			return phase0.Root{}, ErrDataMissing
+		if v.Blinded {
+			return v.CapellaBlinded.Body.HashTreeRoot()
 		}
 
 		return v.Capella.Body.HashTreeRoot()
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.Block == nil ||
-			v.Deneb.Block.Body == nil {
-			return phase0.Root{}, ErrDataMissing
+		if v.Blinded {
+			return v.DenebBlinded.Body.HashTreeRoot()
 		}
 
 		return v.Deneb.Block.Body.HashTreeRoot()
@@ -333,35 +91,30 @@ func (v *VersionedProposal) BodyRoot() (phase0.Root, error) {
 
 // ParentRoot returns the parent root of the proposal.
 func (v *VersionedProposal) ParentRoot() (phase0.Root, error) {
+	if !v.proposalPresent() {
+		return phase0.Root{}, ErrDataMissing
+	}
+
 	switch v.Version {
 	case spec.DataVersionPhase0:
-		if v.Phase0 == nil {
-			return phase0.Root{}, ErrDataMissing
-		}
-
 		return v.Phase0.ParentRoot, nil
 	case spec.DataVersionAltair:
-		if v.Altair == nil {
-			return phase0.Root{}, ErrDataMissing
-		}
-
 		return v.Altair.ParentRoot, nil
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
-			return phase0.Root{}, ErrDataMissing
+		if v.Blinded {
+			return v.BellatrixBlinded.ParentRoot, nil
 		}
 
 		return v.Bellatrix.ParentRoot, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
-			return phase0.Root{}, ErrDataMissing
+		if v.Blinded {
+			return v.CapellaBlinded.ParentRoot, nil
 		}
 
 		return v.Capella.ParentRoot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.Block == nil {
-			return phase0.Root{}, ErrDataMissing
+		if v.Blinded {
+			return v.DenebBlinded.ParentRoot, nil
 		}
 
 		return v.Deneb.Block.ParentRoot, nil
@@ -370,37 +123,134 @@ func (v *VersionedProposal) ParentRoot() (phase0.Root, error) {
 	}
 }
 
-// StateRoot returns the state root of the proposal.
-func (v *VersionedProposal) StateRoot() (phase0.Root, error) {
+// ProposerIndex returns the proposer index of the proposal.
+func (v *VersionedProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
+	if !v.proposalPresent() {
+		return 0, ErrDataMissing
+	}
+
 	switch v.Version {
 	case spec.DataVersionPhase0:
-		if v.Phase0 == nil {
-			return phase0.Root{}, ErrDataMissing
+		return v.Phase0.ProposerIndex, nil
+	case spec.DataVersionAltair:
+		return v.Altair.ProposerIndex, nil
+	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			return v.BellatrixBlinded.ProposerIndex, nil
 		}
 
+		return v.Bellatrix.ProposerIndex, nil
+	case spec.DataVersionCapella:
+		if v.Blinded {
+			return v.CapellaBlinded.ProposerIndex, nil
+		}
+
+		return v.Capella.ProposerIndex, nil
+	case spec.DataVersionDeneb:
+		if v.Blinded {
+			return v.DenebBlinded.ProposerIndex, nil
+		}
+
+		return v.Deneb.Block.ProposerIndex, nil
+	default:
+		return 0, ErrUnsupportedVersion
+	}
+}
+
+// Root returns the root of the proposal.
+func (v *VersionedProposal) Root() (phase0.Root, error) {
+	if !v.proposalPresent() {
+		return phase0.Root{}, ErrDataMissing
+	}
+
+	switch v.Version {
+	case spec.DataVersionPhase0:
+		return v.Phase0.HashTreeRoot()
+	case spec.DataVersionAltair:
+		return v.Altair.HashTreeRoot()
+	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			return v.BellatrixBlinded.HashTreeRoot()
+		}
+
+		return v.Bellatrix.HashTreeRoot()
+	case spec.DataVersionCapella:
+		if v.Blinded {
+			return v.CapellaBlinded.HashTreeRoot()
+		}
+
+		return v.Capella.HashTreeRoot()
+	case spec.DataVersionDeneb:
+		if v.Blinded {
+			return v.DenebBlinded.HashTreeRoot()
+		}
+
+		return v.Deneb.Block.HashTreeRoot()
+	default:
+		return phase0.Root{}, ErrUnsupportedVersion
+	}
+}
+
+// Slot returns the slot of the proposal.
+func (v *VersionedProposal) Slot() (phase0.Slot, error) {
+	if !v.proposalPresent() {
+		return 0, ErrDataMissing
+	}
+
+	switch v.Version {
+	case spec.DataVersionPhase0:
+		return v.Phase0.Slot, nil
+	case spec.DataVersionAltair:
+		return v.Altair.Slot, nil
+	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			return v.BellatrixBlinded.Slot, nil
+		}
+
+		return v.Bellatrix.Slot, nil
+	case spec.DataVersionCapella:
+		if v.Blinded {
+			return v.CapellaBlinded.Slot, nil
+		}
+
+		return v.Capella.Slot, nil
+	case spec.DataVersionDeneb:
+		if v.Blinded {
+			return v.DenebBlinded.Slot, nil
+		}
+
+		return v.Deneb.Block.Slot, nil
+	default:
+		return 0, ErrUnsupportedVersion
+	}
+}
+
+// StateRoot returns the state root of the proposal.
+func (v *VersionedProposal) StateRoot() (phase0.Root, error) {
+	if !v.proposalPresent() {
+		return phase0.Root{}, ErrDataMissing
+	}
+
+	switch v.Version {
+	case spec.DataVersionPhase0:
 		return v.Phase0.StateRoot, nil
 	case spec.DataVersionAltair:
-		if v.Altair == nil {
-			return phase0.Root{}, ErrDataMissing
-		}
-
 		return v.Altair.StateRoot, nil
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
-			return phase0.Root{}, ErrDataMissing
+		if v.Blinded {
+			return v.BellatrixBlinded.StateRoot, nil
 		}
 
 		return v.Bellatrix.StateRoot, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
-			return phase0.Root{}, ErrDataMissing
+		if v.Blinded {
+			return v.CapellaBlinded.StateRoot, nil
 		}
 
 		return v.Capella.StateRoot, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.Block == nil {
-			return phase0.Root{}, ErrDataMissing
+		if v.Blinded {
+			return v.DenebBlinded.StateRoot, nil
 		}
 
 		return v.Deneb.Block.StateRoot, nil
@@ -409,30 +259,129 @@ func (v *VersionedProposal) StateRoot() (phase0.Root, error) {
 	}
 }
 
+// Attestations returns the attestations of the proposal.
+func (v *VersionedProposal) Attestations() ([]*phase0.Attestation, error) {
+	if !v.bodyPresent() {
+		return nil, ErrDataMissing
+	}
+
+	switch v.Version {
+	case spec.DataVersionPhase0:
+		return v.Phase0.Body.Attestations, nil
+	case spec.DataVersionAltair:
+		return v.Altair.Body.Attestations, nil
+	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			return v.BellatrixBlinded.Body.Attestations, nil
+		}
+
+		return v.Bellatrix.Body.Attestations, nil
+	case spec.DataVersionCapella:
+		if v.Blinded {
+			return v.CapellaBlinded.Body.Attestations, nil
+		}
+
+		return v.Capella.Body.Attestations, nil
+	case spec.DataVersionDeneb:
+		if v.Blinded {
+			return v.DenebBlinded.Body.Attestations, nil
+		}
+
+		return v.Deneb.Block.Body.Attestations, nil
+	default:
+		return nil, ErrUnsupportedVersion
+	}
+}
+
+// Graffiti returns the graffiti of the proposal.
+func (v *VersionedProposal) Graffiti() ([32]byte, error) {
+	if !v.bodyPresent() {
+		return [32]byte{}, ErrDataMissing
+	}
+
+	switch v.Version {
+	case spec.DataVersionPhase0:
+		return v.Phase0.Body.Graffiti, nil
+	case spec.DataVersionAltair:
+		return v.Altair.Body.Graffiti, nil
+	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			return v.BellatrixBlinded.Body.Graffiti, nil
+		}
+
+		return v.Bellatrix.Body.Graffiti, nil
+	case spec.DataVersionCapella:
+		if v.Blinded {
+			return v.CapellaBlinded.Body.Graffiti, nil
+		}
+
+		return v.Capella.Body.Graffiti, nil
+	case spec.DataVersionDeneb:
+		if v.Blinded {
+			return v.DenebBlinded.Body.Graffiti, nil
+		}
+
+		return v.Deneb.Block.Body.Graffiti, nil
+	default:
+		return [32]byte{}, ErrUnsupportedVersion
+	}
+}
+
+// RandaoReveal returns the RANDAO reveal of the proposal.
+func (v *VersionedProposal) RandaoReveal() (phase0.BLSSignature, error) {
+	if !v.bodyPresent() {
+		return phase0.BLSSignature{}, ErrDataMissing
+	}
+
+	switch v.Version {
+	case spec.DataVersionPhase0:
+		return v.Phase0.Body.RANDAOReveal, nil
+	case spec.DataVersionAltair:
+		return v.Altair.Body.RANDAOReveal, nil
+	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			return v.BellatrixBlinded.Body.RANDAOReveal, nil
+		}
+
+		return v.Bellatrix.Body.RANDAOReveal, nil
+	case spec.DataVersionCapella:
+		if v.Blinded {
+			return v.CapellaBlinded.Body.RANDAOReveal, nil
+		}
+
+		return v.Capella.Body.RANDAOReveal, nil
+	case spec.DataVersionDeneb:
+		if v.Blinded {
+			return v.DenebBlinded.Body.RANDAOReveal, nil
+		}
+
+		return v.Deneb.Block.Body.RANDAOReveal, nil
+	default:
+		return phase0.BLSSignature{}, ErrUnsupportedVersion
+	}
+}
+
 // Transactions returns the transactions of the proposal.
 func (v *VersionedProposal) Transactions() ([]bellatrix.Transaction, error) {
+	if v.Version >= spec.DataVersionBellatrix && !v.payloadPresent() {
+		return nil, ErrDataMissing
+	}
+
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil ||
-			v.Bellatrix.Body == nil ||
-			v.Bellatrix.Body.ExecutionPayload == nil {
+		if v.Blinded {
 			return nil, ErrDataMissing
 		}
 
 		return v.Bellatrix.Body.ExecutionPayload.Transactions, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil ||
-			v.Capella.Body == nil ||
-			v.Capella.Body.ExecutionPayload == nil {
+		if v.Blinded {
 			return nil, ErrDataMissing
 		}
 
 		return v.Capella.Body.ExecutionPayload.Transactions, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.Block == nil ||
-			v.Deneb.Block.Body == nil ||
-			v.Deneb.Block.Body.ExecutionPayload == nil {
+		if v.Blinded {
 			return nil, ErrDataMissing
 		}
 
@@ -444,29 +393,26 @@ func (v *VersionedProposal) Transactions() ([]bellatrix.Transaction, error) {
 
 // FeeRecipient returns the fee recipient of the proposal.
 func (v *VersionedProposal) FeeRecipient() (bellatrix.ExecutionAddress, error) {
+	if v.Version >= spec.DataVersionBellatrix && !v.payloadPresent() {
+		return bellatrix.ExecutionAddress{}, ErrDataMissing
+	}
+
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil ||
-			v.Bellatrix.Body == nil ||
-			v.Bellatrix.Body.ExecutionPayload == nil {
-			return bellatrix.ExecutionAddress{}, ErrDataMissing
+		if v.Blinded {
+			return v.BellatrixBlinded.Body.ExecutionPayloadHeader.FeeRecipient, nil
 		}
 
 		return v.Bellatrix.Body.ExecutionPayload.FeeRecipient, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil ||
-			v.Capella.Body == nil ||
-			v.Capella.Body.ExecutionPayload == nil {
-			return bellatrix.ExecutionAddress{}, ErrDataMissing
+		if v.Blinded {
+			return v.CapellaBlinded.Body.ExecutionPayloadHeader.FeeRecipient, nil
 		}
 
 		return v.Capella.Body.ExecutionPayload.FeeRecipient, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.Block == nil ||
-			v.Deneb.Block.Body == nil ||
-			v.Deneb.Block.Body.ExecutionPayload == nil {
-			return bellatrix.ExecutionAddress{}, ErrDataMissing
+		if v.Blinded {
+			return v.DenebBlinded.Body.ExecutionPayloadHeader.FeeRecipient, nil
 		}
 
 		return v.Deneb.Block.Body.ExecutionPayload.FeeRecipient, nil
@@ -477,29 +423,26 @@ func (v *VersionedProposal) FeeRecipient() (bellatrix.ExecutionAddress, error) {
 
 // Timestamp returns the timestamp of the proposal.
 func (v *VersionedProposal) Timestamp() (uint64, error) {
+	if v.Version >= spec.DataVersionBellatrix && !v.payloadPresent() {
+		return 0, ErrDataMissing
+	}
+
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil ||
-			v.Bellatrix.Body == nil ||
-			v.Bellatrix.Body.ExecutionPayload == nil {
-			return 0, ErrDataMissing
+		if v.Blinded {
+			return v.BellatrixBlinded.Body.ExecutionPayloadHeader.Timestamp, nil
 		}
 
 		return v.Bellatrix.Body.ExecutionPayload.Timestamp, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil ||
-			v.Capella.Body == nil ||
-			v.Capella.Body.ExecutionPayload == nil {
-			return 0, ErrDataMissing
+		if v.Blinded {
+			return v.CapellaBlinded.Body.ExecutionPayloadHeader.Timestamp, nil
 		}
 
 		return v.Capella.Body.ExecutionPayload.Timestamp, nil
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil ||
-			v.Deneb.Block == nil ||
-			v.Deneb.Block.Body == nil ||
-			v.Deneb.Block.Body.ExecutionPayload == nil {
-			return 0, ErrDataMissing
+		if v.Blinded {
+			return v.DenebBlinded.Body.ExecutionPayloadHeader.Timestamp, nil
 		}
 
 		return v.Deneb.Block.Body.ExecutionPayload.Timestamp, nil
@@ -510,9 +453,13 @@ func (v *VersionedProposal) Timestamp() (uint64, error) {
 
 // Blobs returns the blobs of the proposal.
 func (v *VersionedProposal) Blobs() ([]deneb.Blob, error) {
+	if v.Version >= spec.DataVersionDeneb && !v.payloadPresent() {
+		return nil, ErrDataMissing
+	}
+
 	switch v.Version {
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil {
+		if v.Blinded {
 			return nil, ErrDataMissing
 		}
 
@@ -524,9 +471,13 @@ func (v *VersionedProposal) Blobs() ([]deneb.Blob, error) {
 
 // KZGProofs returns the KZG proofs of the proposal.
 func (v *VersionedProposal) KZGProofs() ([]deneb.KZGProof, error) {
+	if v.Version >= spec.DataVersionDeneb && !v.payloadPresent() {
+		return nil, ErrDataMissing
+	}
+
 	switch v.Version {
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil {
+		if v.Blinded {
 			return nil, ErrDataMissing
 		}
 
@@ -534,6 +485,19 @@ func (v *VersionedProposal) KZGProofs() ([]deneb.KZGProof, error) {
 	default:
 		return nil, ErrUnsupportedVersion
 	}
+}
+
+// Value returns the value of the proposal, in Wei.
+func (v *VersionedProposal) Value() *big.Int {
+	value := big.NewInt(0)
+	if v.ConsensusValue != nil {
+		value = value.Add(value, v.ConsensusValue)
+	}
+	if v.ExecutionValue != nil {
+		value = value.Add(value, v.ExecutionValue)
+	}
+
+	return value
 }
 
 // String returns a string version of the structure.
@@ -572,4 +536,91 @@ func (v *VersionedProposal) String() string {
 	default:
 		return "unknown version"
 	}
+}
+
+func (v *VersionedProposal) proposalPresent() bool {
+	switch v.Version {
+	case spec.DataVersionPhase0:
+		return v.Phase0 != nil
+	case spec.DataVersionAltair:
+		return v.Altair != nil
+	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			return v.BellatrixBlinded != nil
+		}
+
+		return v.Bellatrix != nil
+	case spec.DataVersionCapella:
+		if v.Blinded {
+			return v.CapellaBlinded != nil
+		}
+
+		return v.Capella != nil
+	case spec.DataVersionDeneb:
+		if v.Blinded {
+			return v.DenebBlinded != nil
+		}
+
+		return v.Deneb.Block != nil
+	}
+
+	return false
+}
+
+func (v *VersionedProposal) bodyPresent() bool {
+	switch v.Version {
+	case spec.DataVersionPhase0:
+		return v.Phase0 != nil && v.Phase0.Body != nil
+	case spec.DataVersionAltair:
+		return v.Altair != nil && v.Altair.Body != nil
+	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			return v.BellatrixBlinded != nil && v.BellatrixBlinded.Body != nil
+		}
+
+		return v.Bellatrix != nil && v.Bellatrix.Body != nil
+	case spec.DataVersionCapella:
+		if v.Blinded {
+			return v.CapellaBlinded != nil && v.CapellaBlinded.Body != nil
+		}
+
+		return v.Capella != nil && v.Capella.Body != nil
+	case spec.DataVersionDeneb:
+		if v.Blinded {
+			return v.DenebBlinded != nil && v.DenebBlinded.Body != nil
+		}
+
+		return v.Deneb != nil && v.Deneb.Block != nil && v.Deneb.Block.Body != nil
+	}
+
+	return false
+}
+
+func (v *VersionedProposal) payloadPresent() bool {
+	switch v.Version {
+	case spec.DataVersionPhase0:
+		return false
+	case spec.DataVersionAltair:
+		return false
+	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			return v.BellatrixBlinded != nil && v.BellatrixBlinded.Body != nil && v.BellatrixBlinded.Body.ExecutionPayloadHeader != nil
+		}
+
+		return v.Bellatrix != nil && v.Bellatrix.Body != nil && v.Bellatrix.Body.ExecutionPayload != nil
+	case spec.DataVersionCapella:
+		if v.Blinded {
+			return v.CapellaBlinded != nil && v.CapellaBlinded.Body != nil && v.CapellaBlinded.Body.ExecutionPayloadHeader != nil
+		}
+
+		return v.Capella != nil && v.Capella.Body != nil && v.Capella.Body.ExecutionPayload != nil
+	case spec.DataVersionDeneb:
+		if v.Blinded {
+			return v.DenebBlinded != nil && v.DenebBlinded.Body != nil && v.DenebBlinded.Body.ExecutionPayloadHeader != nil
+		}
+
+		return v.Deneb != nil && v.Deneb.Block != nil && v.Deneb.Block.Body != nil && v.Deneb.Block.Body.ExecutionPayload != nil
+	}
+
+	return false
 }
