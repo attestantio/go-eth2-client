@@ -15,6 +15,7 @@ package v1_test
 
 import (
 	"encoding/json"
+	"math"
 	"strings"
 	"testing"
 
@@ -383,6 +384,62 @@ func TestString(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			resp := test.state.String()
 			require.Equal(t, test.expected, resp)
+		})
+	}
+}
+
+func TestMarshalJSON(t *testing.T) {
+	tests := []struct {
+		name     string
+		state    api.ValidatorState
+		expected []byte
+		errFunc  require.ErrorAssertionFunc
+	}{
+		{
+			"ok validator state",
+			api.ValidatorStateActiveOngoing,
+			[]byte(`"active_ongoing"`),
+			require.NoError,
+		},
+		{
+			"very high invalid validator state",
+			math.MaxInt,
+			[]byte(`"unknown"`),
+			require.NoError,
+		},
+		{
+			"very low invalid validator state",
+			math.MinInt,
+			[]byte(`"unknown"`),
+			require.NoError,
+		},
+		{
+			"overflowing integer validator state",
+			math.MaxInt64,
+			[]byte(`"unknown"`),
+			require.NoError,
+		},
+		{
+			"underflowing integer validator state",
+			math.MinInt64,
+			[]byte(`"unknown"`),
+			require.NoError,
+		},
+		{
+			"zero is unknown",
+			0,
+			[]byte(`"unknown"`),
+			require.NoError,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			require.NotPanics(t, func() {
+				res, err := json.Marshal(&test.state) //test.state.MarshalJSON()
+				test.errFunc(t, err)
+				require.Equal(t, test.expected, res)
+			})
 		})
 	}
 }

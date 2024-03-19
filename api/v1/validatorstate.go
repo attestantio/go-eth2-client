@@ -59,9 +59,20 @@ var validatorStateStrings = [...]string{
 	"withdrawal_done",
 }
 
+// valid returns true if v integer value can be represented as one of the validator state strings.
+func (v ValidatorState) valid() bool {
+	return v >= 0 && int(v) < len(validatorStateStrings)
+}
+
 // MarshalJSON implements json.Marshaler.
 func (v *ValidatorState) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", validatorStateStrings[*v])), nil
+	vs := validatorStateStrings[0]
+
+	if v.valid() {
+		vs = validatorStateStrings[*v]
+	}
+
+	return []byte(fmt.Sprintf("%q", vs)), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -96,7 +107,7 @@ func (v *ValidatorState) UnmarshalJSON(input []byte) error {
 }
 
 func (v ValidatorState) String() string {
-	if v < 0 || int(v) >= len(validatorStateStrings) {
+	if !v.valid() {
 		return validatorStateStrings[0] // unknown
 	}
 
