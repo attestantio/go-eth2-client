@@ -118,9 +118,9 @@ func WithHooks(hooks *Hooks) Parameter {
 
 // WithReducedMemoryUsage reduces memory usage by disabling certain actions that may take significant amount of memory.
 // Enabling this may result in longer response times.
-func WithReducedMemoryUsage(reduceMemUsage bool) Parameter {
+func WithReducedMemoryUsage(reducedMemoryUsage bool) Parameter {
 	return parameterFunc(func(p *parameters) {
-		p.reducedMemoryUsage = reduceMemUsage
+		p.reducedMemoryUsage = reducedMemoryUsage
 	})
 }
 
