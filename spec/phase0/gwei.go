@@ -30,6 +30,10 @@ func (g *Gwei) UnmarshalJSON(input []byte) error {
 		return errors.New("input missing")
 	}
 
+	if len(input) < 3 {
+		return errors.New("input malformed")
+	}
+
 	if !bytes.HasPrefix(input, []byte{'"'}) {
 		return errors.New("invalid prefix")
 	}
