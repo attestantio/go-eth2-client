@@ -119,12 +119,12 @@ func (s *Service) Validators(ctx context.Context,
 		return nil, errors.Join(errors.New("cannot specify both indices and public keys"), client.ErrInvalidOptions)
 	}
 
-	if !s.reducedMemoryUsage {
-		if len(opts.Indices) == 0 && len(opts.PubKeys) == 0 {
-			// Request is for all validators; fetch from state.
-			return s.validatorsFromState(ctx, opts)
-		}
+	if len(opts.Indices) == 0 && len(opts.PubKeys) == 0 {
+		// Request is for all validators; fetch from state.
+		return s.validatorsFromState(ctx, opts)
+	}
 
+	if !s.reducedMemoryUsage {
 		if len(opts.Indices) > s.indexChunkSize(ctx)*16 || len(opts.PubKeys) > s.pubKeyChunkSize(ctx)*16 {
 			// Request is for multiple pages of validators; fetch from state.
 			return s.validatorsFromState(ctx, opts)
