@@ -22,16 +22,17 @@ import (
 )
 
 type parameters struct {
-	logLevel          zerolog.Level
-	monitor           metrics.Service
-	address           string
-	timeout           time.Duration
-	indexChunkSize    int
-	pubKeyChunkSize   int
-	extraHeaders      map[string]string
-	enforceJSON       bool
-	allowDelayedStart bool
-	hooks             *Hooks
+	logLevel           zerolog.Level
+	monitor            metrics.Service
+	address            string
+	timeout            time.Duration
+	indexChunkSize     int
+	pubKeyChunkSize    int
+	extraHeaders       map[string]string
+	enforceJSON        bool
+	allowDelayedStart  bool
+	hooks              *Hooks
+	reducedMemoryUsage bool
 }
 
 // Parameter is the interface for service parameters.
@@ -112,6 +113,14 @@ func WithAllowDelayedStart(allowDelayedStart bool) Parameter {
 func WithHooks(hooks *Hooks) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.hooks = hooks
+	})
+}
+
+// WithReducedMemoryUsage reduces memory usage by disabling certain actions that may take significant amount of memory.
+// Enabling this may result in longer response times.
+func WithReducedMemoryUsage(reducedMemoryUsage bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.reducedMemoryUsage = reducedMemoryUsage
 	})
 }
 
