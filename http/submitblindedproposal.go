@@ -60,7 +60,7 @@ func (s *Service) SubmitBlindedProposal(ctx context.Context,
 		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
-	endpoint := "/eth/v2/beacon/blocks"
+	endpoint := "/eth/v2/beacon/blinded_blocks"
 	query := ""
 	if opts.BroadcastValidation != nil {
 		query = "broadcast_validation=" + opts.BroadcastValidation.String()
