@@ -59,7 +59,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	if req.Header.Get("User-Agent") == "" {
-		req.Header.Set("User-Agent", "go-eth2-client/0.21.0")
+		req.Header.Set("User-Agent", "go-eth2-client/0.21.1")
 	}
 
 	resp, err := s.client.Do(req)
@@ -149,7 +149,7 @@ func (s *Service) post2(ctx context.Context,
 		req.Header.Set(k, v)
 	}
 	if req.Header.Get("User-Agent") == "" {
-		req.Header.Set("User-Agent", "go-eth2-client/0.21.0")
+		req.Header.Set("User-Agent", "go-eth2-client/0.21.1")
 	}
 
 	resp, err := s.client.Do(req)
