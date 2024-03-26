@@ -1,3 +1,8 @@
+0.21.1:
+  - fix potential crash when unmarshaling Gwei values
+  - add `WithReducedMemoryUsage()` option for http service
+  - more consistent tracing attributes and codes
+
 0.21.0:
   - use v3 of the endpoint to obtain proposals
   - add bounds checking for ValidatorState
