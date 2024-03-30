@@ -7,9 +7,6 @@ import (
 	fastssz "github.com/ferranbt/fastssz"
 )
 
-var byteType = reflect.TypeOf(byte(0))
-var sszUnmarshallerType = reflect.TypeOf((*fastssz.Unmarshaler)(nil)).Elem()
-
 func UnmarshalSSZ(target any, ssz []byte) error {
 	d := NewDynSsz()
 
@@ -48,26 +45,25 @@ func (d *DynSsz) unmarshalType(targetType reflect.Type, targetValue reflect.Valu
 		usedFastSsz := false
 
 		hasSpecVals := d.typesWithSpecVals[targetType]
-		if hasSpecVals == 0 {
-			// shortcut for performance: use fastssz unmarshaller if available
+		if hasSpecVals == unknownSpecValued {
+			hasSpecVals = noSpecValues
 			if targetValue.Addr().Type().Implements(sszUnmarshallerType) {
-				_, hasSpecValues, err := d.getSszSize(targetType, sizeHints)
+				_, hasSpecVals2, err := d.getSszSize(targetType, sizeHints)
 				if err != nil {
 					return 0, err
 				}
 
-				if hasSpecValues {
-					hasSpecVals = 2
-				} else {
-					hasSpecVals = 1
+				if hasSpecVals2 {
+					hasSpecVals = hasSpecValues
 				}
-				d.typesWithSpecVals[targetType] = hasSpecVals
 			}
+
+			//fmt.Printf("%s fastssz for type %s: %v\n", indent(idt), targetType.Name(), hasSpecVals)
+			d.typesWithSpecVals[targetType] = hasSpecVals
 		}
-		if hasSpecVals == 1 {
+		if hasSpecVals == noSpecValues {
 			unmarshaller, ok := targetValue.Addr().Interface().(fastssz.Unmarshaler)
 			if ok {
-				//fmt.Printf("%s use fastssz for type: %s\n", indent(idt), targetType.Name())
 				err := unmarshaller.UnmarshalSSZ(ssz)
 				if err != nil {
 					return 0, err

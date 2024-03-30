@@ -26,7 +26,7 @@ import (
 
 // Deposit provides information about a deposit.
 type Deposit struct {
-	Proof [][]byte `ssz-size:"33,32"`
+	Proof [][]byte `ssz-size:"33,32" dynssz-size:"DEPOSIT_CONTRACT_TREE_DEPTH+1,32"`
 	Data  *DepositData
 }
 

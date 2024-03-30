@@ -61,6 +61,12 @@ func test1(body []byte) {
 	//root, _ := t.HashTreeRoot()
 	//fmt.Printf("state root: 0x%x\n", root)
 	fmt.Printf("gvr: 0x%x\n", t.GenesisValidatorsRoot)
+
+	_, err = t.MarshalSSZ()
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+		return
+	}
 }
 
 func test2(body []byte) {
@@ -85,4 +91,22 @@ func test2(body []byte) {
 	//root, _ := t.HashTreeRoot()
 	//fmt.Printf("state root: 0x%x\n", root)
 	fmt.Printf("gvr: 0x%x\n", t.GenesisValidatorsRoot)
+
+	_, err = ssz.MarshalSSZ(t, nil)
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+		return
+	}
+
+	/*
+		if len(buf) != len(body) {
+			fmt.Printf("size mismatch: %v / %v\n", len(buf), len(body))
+		}
+		for i := 0; i < len(body); i++ {
+			if body[i] != buf[i] {
+				fmt.Printf("ssz mismatch: %v : %v / %v\n", i, buf[i], body[i])
+				break
+			}
+		}
+	*/
 }

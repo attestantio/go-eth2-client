@@ -33,16 +33,16 @@ type BeaconState struct {
 	Slot                        Slot
 	Fork                        *Fork
 	LatestBlockHeader           *BeaconBlockHeader
-	BlockRoots                  []Root `ssz-size:"8192,32"`
-	StateRoots                  []Root `ssz-size:"8192,32"`
-	HistoricalRoots             []Root `ssz-max:"16777216" ssz-size:"?,32"`
+	BlockRoots                  []Root `ssz-size:"8192,32" dynssz-size:"SLOTS_PER_HISTORICAL_ROOT,32"`
+	StateRoots                  []Root `ssz-size:"8192,32" dynssz-size:"SLOTS_PER_HISTORICAL_ROOT,32"`
+	HistoricalRoots             []Root `ssz-max:"16777216" ssz-size:"?,32" dynssz-size:"?,HISTORICAL_ROOTS_LIMIT"`
 	ETH1Data                    *ETH1Data
 	ETH1DataVotes               []*ETH1Data `ssz-max:"2048"`
 	ETH1DepositIndex            uint64
 	Validators                  []*Validator          `ssz-max:"1099511627776"`
 	Balances                    []Gwei                `ssz-max:"1099511627776"`
-	RANDAOMixes                 []Root                `ssz-size:"65536,32"`
-	Slashings                   []Gwei                `ssz-size:"8192"`
+	RANDAOMixes                 []Root                `ssz-size:"65536,32" dynssz-size:"EPOCHS_PER_HISTORICAL_VECTOR,32"`
+	Slashings                   []Gwei                `ssz-size:"8192" dynssz-size:"EPOCHS_PER_SLASHINGS_VECTOR"`
 	PreviousEpochAttestations   []*PendingAttestation `ssz-max:"4096"`
 	CurrentEpochAttestations    []*PendingAttestation `ssz-max:"4096"`
 	JustificationBits           bitfield.Bitvector4   `ssz-size:"1"`

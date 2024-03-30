@@ -33,7 +33,7 @@ type SyncCommitteeContribution struct {
 	BeaconBlockRoot   phase0.Root `ssz-size:"32"`
 	SubcommitteeIndex uint64
 	// AggregationBits size is SYNC_COMMITTEE_SIZE // SYNC_COMMITTEE_SUBNET_COUNT
-	AggregationBits bitfield.Bitvector128 `ssz-size:"16"`
+	AggregationBits bitfield.Bitvector128 `ssz-size:"16" dynssz-size:"SYNC_COMMITTEE_SIZE/SYNC_COMMITTEE_SUBNET_COUNT"`
 	Signature       phase0.BLSSignature   `ssz-size:"96"`
 }
 
