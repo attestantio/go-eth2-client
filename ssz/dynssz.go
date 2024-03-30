@@ -17,17 +17,17 @@ const (
 	hasSpecValues
 )
 
-func NewDynSsz() *DynSsz {
+func NewDynSsz(specs map[string]any) *DynSsz {
+	if specs == nil {
+		specs = map[string]any{}
+	}
 	return &DynSsz{
 		typesWithSpecVals: map[reflect.Type]uint8{},
-		SpecValues:        map[string]any{
-			//"SLOTS_PER_HISTORICAL_ROOT": uint64(8192),
-		},
+		SpecValues:        specs,
 	}
 }
 
-func MarshalSSZ(source any) ([]byte, error) {
-	d := NewDynSsz()
+func (d *DynSsz) MarshalSSZ(source any) ([]byte, error) {
 	sourceType := reflect.TypeOf(source)
 	sourceValue := reflect.ValueOf(source)
 
@@ -49,9 +49,7 @@ func MarshalSSZ(source any) ([]byte, error) {
 	return newBuf, nil
 }
 
-func MarshalSSZTo(source any, buf []byte) ([]byte, error) {
-	d := NewDynSsz()
-
+func (d *DynSsz) MarshalSSZTo(source any, buf []byte) ([]byte, error) {
 	sourceType := reflect.TypeOf(source)
 	sourceValue := reflect.ValueOf(source)
 
@@ -63,17 +61,14 @@ func MarshalSSZTo(source any, buf []byte) ([]byte, error) {
 	return newBuf, nil
 }
 
-func SizeSSZ(source any) (int, error) {
-	d := NewDynSsz()
+func (d *DynSsz) SizeSSZ(source any) (int, error) {
 	sourceType := reflect.TypeOf(source)
 	sourceValue := reflect.ValueOf(source)
 
 	return d.getSszValueSize(sourceType, sourceValue)
 }
 
-func UnmarshalSSZ(target any, ssz []byte) error {
-	d := NewDynSsz()
-
+func (d *DynSsz) UnmarshalSSZ(target any, ssz []byte) error {
 	targetType := reflect.TypeOf(target)
 	targetValue := reflect.ValueOf(target)
 

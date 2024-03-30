@@ -16,49 +16,50 @@ type sszSizeHint struct {
 func (d *DynSsz) getSszSizeTag(field *reflect.StructField) ([]sszSizeHint, error) {
 	sszSizes := []sszSizeHint{}
 
-	fieldDynSszSizeStr, fieldHasDynSszSize := field.Tag.Lookup("dynssz-size")
-	if fieldHasDynSszSize {
-		for _, sszSizeStr := range strings.Split(fieldDynSszSizeStr, ",") {
+	if fieldSszSizeStr, fieldHasSszSize := field.Tag.Lookup("ssz-size"); fieldHasSszSize {
+		for _, sszSizeStr := range strings.Split(fieldSszSizeStr, ",") {
 			sszSize := sszSizeHint{}
 
 			if sszSizeStr == "?" {
 				sszSize.dynamic = true
-			} else if sszSizeInt, err := strconv.ParseUint(sszSizeStr, 10, 32); err == nil {
-				sszSize.size = sszSizeInt
-			} else if specVal := d.SpecValues[sszSizeStr]; specVal != nil {
-				// dynamic value from spec
-				specInt, ok := specVal.(uint64)
-				if !ok {
-					return sszSizes, fmt.Errorf("error parsing dynssz-size tag for '%v' field: %v spec value is not uint64", field.Name, sszSizeStr)
-				}
-				sszSize.size = specInt
-				sszSize.specval = true
 			} else {
-				// unknown spec value? fallback to fastssz
-				fieldHasDynSszSize = false
-				break
+				sszSizeInt, err := strconv.ParseUint(sszSizeStr, 10, 32)
+				if err != nil {
+					return sszSizes, fmt.Errorf("error parsing ssz-size tag for '%v' field: %v", field.Name, err)
+				}
+				sszSize.size = sszSizeInt
 			}
 
 			sszSizes = append(sszSizes, sszSize)
 		}
 	}
 
-	if !fieldHasDynSszSize {
-		if fieldSszSizeStr, fieldHasSszSize := field.Tag.Lookup("ssz-size"); fieldHasSszSize {
-			for _, sszSizeStr := range strings.Split(fieldSszSizeStr, ",") {
-				sszSize := sszSizeHint{}
+	fieldDynSszSizeStr, fieldHasDynSszSize := field.Tag.Lookup("dynssz-size")
+	if fieldHasDynSszSize {
+		for i, sszSizeStr := range strings.Split(fieldDynSszSizeStr, ",") {
+			sszSize := sszSizeHint{}
 
-				if sszSizeStr == "?" {
-					sszSize.dynamic = true
-				} else {
-					sszSizeInt, err := strconv.ParseUint(sszSizeStr, 10, 32)
-					if err != nil {
-						return sszSizes, fmt.Errorf("error parsing ssz-size tag for '%v' field: %v", field.Name, err)
-					}
-					sszSize.size = sszSizeInt
+			if sszSizeStr == "?" {
+				sszSize.dynamic = true
+			} else if sszSizeInt, err := strconv.ParseUint(sszSizeStr, 10, 32); err == nil {
+				sszSize.size = sszSizeInt
+			} else {
+				ok, specVal, err := d.getSpecValue(sszSizeStr)
+				if err != nil {
+					return sszSizes, fmt.Errorf("error parsing dynssz-size tag for '%v' field (%v): %v", field.Name, sszSizeStr, err)
 				}
+				if ok {
+					// dynamic value from spec
+					sszSize.size = specVal
+					sszSize.specval = true
+				} else {
+					// unknown spec value? fallback to fastssz
+					break
+				}
+			}
 
-				sszSizes = append(sszSizes, sszSize)
+			if sszSizes[i].size != sszSize.size {
+				sszSizes[i] = sszSize
 			}
 		}
 	}

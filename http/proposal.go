@@ -31,6 +31,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/ssz"
 	"go.opentelemetry.io/otel"
 )
 
@@ -134,37 +135,74 @@ func (s *Service) beaconBlockProposalFromSSZ(res *httpResponse) (*api.Response[*
 		return nil, err
 	}
 
+	var dynSSZ *ssz.DynSsz
+	if s.useDynamicSSZ {
+		dynSSZ = ssz.NewDynSsz(s.spec)
+	}
+
 	var err error
 	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
 		response.Data.Phase0 = &phase0.BeaconBlock{}
-		err = response.Data.Phase0.UnmarshalSSZ(res.body)
+		if s.useDynamicSSZ {
+			err = dynSSZ.UnmarshalSSZ(response.Data.Phase0, res.body)
+		} else {
+			err = response.Data.Phase0.UnmarshalSSZ(res.body)
+		}
 	case spec.DataVersionAltair:
 		response.Data.Altair = &altair.BeaconBlock{}
-		err = response.Data.Altair.UnmarshalSSZ(res.body)
+		if s.useDynamicSSZ {
+			err = dynSSZ.UnmarshalSSZ(response.Data.Altair, res.body)
+		} else {
+			err = response.Data.Altair.UnmarshalSSZ(res.body)
+		}
 	case spec.DataVersionBellatrix:
 		if response.Data.Blinded {
 			response.Data.BellatrixBlinded = &apiv1bellatrix.BlindedBeaconBlock{}
-			err = response.Data.BellatrixBlinded.UnmarshalSSZ(res.body)
+			if s.useDynamicSSZ {
+				err = dynSSZ.UnmarshalSSZ(response.Data.BellatrixBlinded, res.body)
+			} else {
+				err = response.Data.BellatrixBlinded.UnmarshalSSZ(res.body)
+			}
 		} else {
 			response.Data.Bellatrix = &bellatrix.BeaconBlock{}
-			err = response.Data.Bellatrix.UnmarshalSSZ(res.body)
+			if s.useDynamicSSZ {
+				err = dynSSZ.UnmarshalSSZ(response.Data.Bellatrix, res.body)
+			} else {
+				err = response.Data.Bellatrix.UnmarshalSSZ(res.body)
+			}
 		}
 	case spec.DataVersionCapella:
 		if response.Data.Blinded {
 			response.Data.CapellaBlinded = &apiv1capella.BlindedBeaconBlock{}
-			err = response.Data.CapellaBlinded.UnmarshalSSZ(res.body)
+			if s.useDynamicSSZ {
+				err = dynSSZ.UnmarshalSSZ(response.Data.CapellaBlinded, res.body)
+			} else {
+				err = response.Data.CapellaBlinded.UnmarshalSSZ(res.body)
+			}
 		} else {
 			response.Data.Capella = &capella.BeaconBlock{}
-			err = response.Data.Capella.UnmarshalSSZ(res.body)
+			if s.useDynamicSSZ {
+				err = dynSSZ.UnmarshalSSZ(response.Data.Capella, res.body)
+			} else {
+				err = response.Data.Capella.UnmarshalSSZ(res.body)
+			}
 		}
 	case spec.DataVersionDeneb:
 		if response.Data.Blinded {
 			response.Data.DenebBlinded = &apiv1deneb.BlindedBeaconBlock{}
-			err = response.Data.DenebBlinded.UnmarshalSSZ(res.body)
+			if s.useDynamicSSZ {
+				err = dynSSZ.UnmarshalSSZ(response.Data.DenebBlinded, res.body)
+			} else {
+				err = response.Data.DenebBlinded.UnmarshalSSZ(res.body)
+			}
 		} else {
 			response.Data.Deneb = &apiv1deneb.BlockContents{}
-			err = response.Data.Deneb.UnmarshalSSZ(res.body)
+			if s.useDynamicSSZ {
+				err = dynSSZ.UnmarshalSSZ(response.Data.Deneb, res.body)
+			} else {
+				err = response.Data.Deneb.UnmarshalSSZ(res.body)
+			}
 		}
 	default:
 		return nil, fmt.Errorf("unhandled block proposal version %s", res.consensusVersion)

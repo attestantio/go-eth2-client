@@ -78,8 +78,10 @@ func test2(body []byte) {
 
 	fmt.Printf("\npk's dynamic ssz\n")
 
+	d := ssz.NewDynSsz(map[string]any{})
+
 	t := new(deneb.BeaconState)
-	err := ssz.UnmarshalSSZ(t, body)
+	err := d.UnmarshalSSZ(t, body)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 		return
@@ -92,7 +94,7 @@ func test2(body []byte) {
 	//fmt.Printf("state root: 0x%x\n", root)
 	fmt.Printf("gvr: 0x%x\n", t.GenesisValidatorsRoot)
 
-	_, err = ssz.MarshalSSZ(t)
+	_, err = d.MarshalSSZ(t)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 		return
