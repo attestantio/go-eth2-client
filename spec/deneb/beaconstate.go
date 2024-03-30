@@ -38,8 +38,8 @@ type BeaconState struct {
 	ETH1DepositIndex             uint64
 	Validators                   []*phase0.Validator         `ssz-max:"1099511627776"`
 	Balances                     []phase0.Gwei               `ssz-max:"1099511627776"`
-	RANDAOMixes                  []phase0.Root               `ssz-size:"65536,32"`
-	Slashings                    []phase0.Gwei               `ssz-size:"8192"`
+	RANDAOMixes                  []phase0.Root               `ssz-size:"65536,32" dynssz-size:"EPOCHS_PER_HISTORICAL_VECTOR,32"`
+	Slashings                    []phase0.Gwei               `ssz-size:"8192" dynssz-size:"EPOCHS_PER_SLASHINGS_VECTOR"`
 	PreviousEpochParticipation   []altair.ParticipationFlags `ssz-max:"1099511627776"`
 	CurrentEpochParticipation    []altair.ParticipationFlags `ssz-max:"1099511627776"`
 	JustificationBits            bitfield.Bitvector4         `ssz-size:"1"`
