@@ -17,23 +17,28 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // BeaconCommittees fetches all beacon committees for the epoch at the given state.
-func (s *Service) BeaconCommittees(ctx context.Context, stateID string) ([]*api.BeaconCommittee, error) {
+func (s *Service) BeaconCommittees(ctx context.Context,
+	opts *api.BeaconCommitteesOpts,
+) (
+	*api.Response[[]*apiv1.BeaconCommittee],
+	error,
+) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		beaconCommittees, err := client.(consensusclient.BeaconCommitteesProvider).BeaconCommittees(ctx, stateID)
+		beaconCommittees, err := client.(consensusclient.BeaconCommitteesProvider).BeaconCommittees(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return beaconCommittees, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.([]*api.BeaconCommittee), nil
+
+	return res.(*api.Response[[]*apiv1.BeaconCommittee]), nil
 }

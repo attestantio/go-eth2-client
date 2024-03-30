@@ -15,6 +15,7 @@ package v1_test
 
 import (
 	"encoding/json"
+	"math"
 	"strings"
 	"testing"
 
@@ -185,6 +186,26 @@ func TestValidatorToState(t *testing.T) {
 			state: api.ValidatorStatePendingQueued,
 		},
 		{
+			name: "ActiveOngoingNext",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch + 1,
+				ExitEpoch:                  farFutureEpoch,
+				WithdrawableEpoch:          farFutureEpoch,
+			},
+			state: api.ValidatorStatePendingQueued,
+		},
+		{
+			name: "ActiveOngoingThis",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch,
+				ExitEpoch:                  farFutureEpoch,
+				WithdrawableEpoch:          farFutureEpoch,
+			},
+			state: api.ValidatorStateActiveOngoing,
+		},
+		{
 			name: "ActiveOngoing",
 			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
@@ -216,6 +237,26 @@ func TestValidatorToState(t *testing.T) {
 			state: api.ValidatorStateActiveSlashed,
 		},
 		{
+			name: "ExitedNext",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch + 1,
+				WithdrawableEpoch:          farFutureEpoch,
+			},
+			state: api.ValidatorStateActiveExiting,
+		},
+		{
+			name: "ExitedThis",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch,
+				WithdrawableEpoch:          farFutureEpoch,
+			},
+			state: api.ValidatorStateExitedUnslashed,
+		},
+		{
 			name: "ExitedUnslashed",
 			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
@@ -226,7 +267,29 @@ func TestValidatorToState(t *testing.T) {
 			state: api.ValidatorStateExitedUnslashed,
 		},
 		{
-			name: "ExitedUnslashed",
+			name: "ExitedSlashedNext",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch + 1,
+				WithdrawableEpoch:          farFutureEpoch,
+				Slashed:                    true,
+			},
+			state: api.ValidatorStateActiveSlashed,
+		},
+		{
+			name: "ExitedSlashedThis",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch,
+				WithdrawableEpoch:          farFutureEpoch,
+				Slashed:                    true,
+			},
+			state: api.ValidatorStateExitedSlashed,
+		},
+		{
+			name: "ExitedSlashed",
 			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
 				ActivationEpoch:            currentEpoch - 40,
@@ -285,6 +348,98 @@ func TestValidatorToState(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			state := api.ValidatorToState(test.validator, test.balance, currentEpoch, farFutureEpoch)
 			assert.Equal(t, test.state, state)
+		})
+	}
+}
+
+func TestString(t *testing.T) {
+	tests := []struct {
+		name     string
+		state    api.ValidatorState
+		expected string
+	}{
+		{
+			name:     "valid state",
+			state:    api.ValidatorStateActiveOngoing,
+			expected: "active_ongoing",
+		},
+		{
+			name:     "negative index",
+			state:    -1,
+			expected: "unknown",
+		},
+		{
+			name:     "edge bound index",
+			state:    10,
+			expected: "unknown",
+		},
+		{
+			name:     "high out of bound index",
+			state:    250,
+			expected: "unknown",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			resp := test.state.String()
+			require.Equal(t, test.expected, resp)
+		})
+	}
+}
+
+func TestMarshalJSON(t *testing.T) {
+	tests := []struct {
+		name     string
+		state    api.ValidatorState
+		expected []byte
+		errFunc  require.ErrorAssertionFunc
+	}{
+		{
+			"ok validator state",
+			api.ValidatorStateActiveOngoing,
+			[]byte(`"active_ongoing"`),
+			require.NoError,
+		},
+		{
+			"very high invalid validator state",
+			math.MaxInt,
+			[]byte(`"unknown"`),
+			require.NoError,
+		},
+		{
+			"very low invalid validator state",
+			math.MinInt,
+			[]byte(`"unknown"`),
+			require.NoError,
+		},
+		{
+			"overflowing integer validator state",
+			math.MaxInt64,
+			[]byte(`"unknown"`),
+			require.NoError,
+		},
+		{
+			"underflowing integer validator state",
+			math.MinInt64,
+			[]byte(`"unknown"`),
+			require.NoError,
+		},
+		{
+			"zero is unknown",
+			0,
+			[]byte(`"unknown"`),
+			require.NoError,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			require.NotPanics(t, func() {
+				res, err := json.Marshal(&test.state) //test.state.MarshalJSON()
+				test.errFunc(t, err)
+				require.Equal(t, test.expected, res)
+			})
 		})
 	}
 }

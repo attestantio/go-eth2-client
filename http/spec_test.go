@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
@@ -44,13 +45,12 @@ func TestSpec(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			config, err := service.(client.SpecProvider).Spec(ctx)
+			response, err := service.(client.SpecProvider).Spec(ctx, &api.SpecOpts{})
 			require.NoError(t, err)
-			require.NotNil(t, config)
 			// Check an integer type.
-			require.IsType(t, config["BASE_REWARD_FACTOR"], uint64(0))
+			require.IsType(t, response.Data["BASE_REWARD_FACTOR"], uint64(0))
 			// Check a byte array type.
-			require.IsType(t, config["DOMAIN_DEPOSIT"], phase0.DomainType{})
+			require.IsType(t, response.Data["DOMAIN_DEPOSIT"], phase0.DomainType{})
 		})
 	}
 }

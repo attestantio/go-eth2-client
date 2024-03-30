@@ -17,31 +17,28 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/altair"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // SyncCommitteeContribution provides a sync committee contribution.
 func (s *Service) SyncCommitteeContribution(ctx context.Context,
-	slot phase0.Slot,
-	subcommitteeIndex uint64,
-	beaconBlockRoot phase0.Root,
+	opts *api.SyncCommitteeContributionOpts,
 ) (
-	*altair.SyncCommitteeContribution,
+	*api.Response[*altair.SyncCommitteeContribution],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		block, err := client.(consensusclient.SyncCommitteeContributionProvider).SyncCommitteeContribution(ctx, slot, subcommitteeIndex, beaconBlockRoot)
+		block, err := client.(consensusclient.SyncCommitteeContributionProvider).SyncCommitteeContribution(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return block, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.(*altair.SyncCommitteeContribution), nil
+
+	return res.(*api.Response[*altair.SyncCommitteeContribution]), nil
 }

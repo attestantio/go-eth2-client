@@ -24,19 +24,22 @@ import (
 
 // signedBlockContentsYAML is the spec representation of the struct.
 type signedBlockContentsYAML struct {
-	SignedBlock        *deneb.SignedBeaconBlock   `yaml:"signed_block"`
-	SignedBlobSidecars []*deneb.SignedBlobSidecar `yaml:"signed_blob_sidecars"`
+	SignedBlock *deneb.SignedBeaconBlock `yaml:"signed_block"`
+	KZGProofs   []deneb.KZGProof         `yaml:"kzg_proofs"`
+	Blobs       []deneb.Blob             `yaml:"blobs"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
 func (s *SignedBlockContents) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&signedBlockContentsYAML{
-		SignedBlock:        s.SignedBlock,
-		SignedBlobSidecars: s.SignedBlobSidecars,
+		SignedBlock: s.SignedBlock,
+		KZGProofs:   s.KZGProofs,
+		Blobs:       s.Blobs,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 

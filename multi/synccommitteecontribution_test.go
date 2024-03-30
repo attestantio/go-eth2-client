@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -51,7 +52,11 @@ func TestSyncCommitteeContribution(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.(consensusclient.SyncCommitteeContributionProvider).SyncCommitteeContribution(ctx, 1, 2, phase0.Root{})
+		res, err := multiClient.(consensusclient.SyncCommitteeContributionProvider).SyncCommitteeContribution(ctx, &api.SyncCommitteeContributionOpts{
+			Slot:              1,
+			SubcommitteeIndex: 2,
+			BeaconBlockRoot:   phase0.Root{},
+		})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

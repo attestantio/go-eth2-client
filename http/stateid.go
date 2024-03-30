@@ -15,12 +15,13 @@ package http
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // SlotFromStateID parses the state ID and returns the relevant slot.
@@ -41,7 +42,7 @@ func (s *Service) SlotFromStateID(_ context.Context, stateID string) (phase0.Slo
 		// State ID should be a slot.
 		tmp, err := strconv.ParseUint(stateID, 10, 64)
 		if err != nil {
-			return 0, errors.Wrap(err, fmt.Sprintf("failed to parse state ID %s as a slot", stateID))
+			return 0, errors.Join(fmt.Errorf("failed to parse state %s as a slot", stateID), err)
 		}
 		slot = phase0.Slot(tmp)
 	}
@@ -56,17 +57,17 @@ func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (phase0.
 	case stateID == "genesis":
 		epoch = 0
 	case stateID == "justified":
-		finality, err := s.Finality(ctx, stateID)
+		response, err := s.Finality(ctx, &api.FinalityOpts{State: stateID})
 		if err != nil {
-			return 0, errors.Wrap(err, "failed to obtain finality for justified epoch")
+			return 0, errors.Join(errors.New("failed to obtain finality for justified epoch"), err)
 		}
-		epoch = finality.Justified.Epoch
+		epoch = response.Data.Justified.Epoch
 	case stateID == "finalized":
-		finality, err := s.Finality(ctx, stateID)
+		response, err := s.Finality(ctx, &api.FinalityOpts{State: stateID})
 		if err != nil {
-			return 0, errors.Wrap(err, "failed to obtain finality for finalized epoch")
+			return 0, errors.Join(errors.New("failed to obtain finality for finalized epoch"), err)
 		}
-		epoch = finality.Finalized.Epoch
+		epoch = response.Data.Justified.Epoch
 	case stateID == "head":
 		return 0, errors.New("epoch from head not implemented")
 	case strings.HasPrefix(stateID, "0x"):
@@ -75,11 +76,11 @@ func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (phase0.
 		// State ID should be a slot.
 		tmp, err := strconv.ParseUint(stateID, 10, 64)
 		if err != nil {
-			return 0, errors.Wrap(err, fmt.Sprintf("failed to parse state ID %s as a slot", stateID))
+			return 0, errors.Join(fmt.Errorf("failed to parse state %s as a slot", stateID), err)
 		}
 		slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
 		if err != nil {
-			return 0, errors.Wrap(err, "failed to obtain slots per epoch")
+			return 0, errors.Join(errors.New("failed to obtain slots per epoch"), err)
 		}
 		epoch = phase0.Epoch(tmp / slotsPerEpoch)
 	}

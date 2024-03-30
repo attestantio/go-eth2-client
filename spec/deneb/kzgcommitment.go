@@ -21,19 +21,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-// KzgCommitment is an KZG commitment.
-type KzgCommitment [48]byte
+// KZGCommitment is an KZG commitment.
+type KZGCommitment [48]byte
 
-// KzgCommitmentLength is the number of bytes in a KZG commitment.
-const KzgCommitmentLength = 48
+// KZGCommitmentLength is the number of bytes in a KZG commitment.
+const KZGCommitmentLength = 48
 
 // String returns a string version of the structure.
-func (k KzgCommitment) String() string {
+func (k KZGCommitment) String() string {
 	return fmt.Sprintf("%#x", k)
 }
 
 // Format formats the KZG commitment.
-func (k KzgCommitment) Format(state fmt.State, v rune) {
+func (k KZGCommitment) Format(state fmt.State, v rune) {
 	format := string(v)
 	switch v {
 	case 's':
@@ -49,7 +49,7 @@ func (k KzgCommitment) Format(state fmt.State, v rune) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (k *KzgCommitment) UnmarshalJSON(input []byte) error {
+func (k *KZGCommitment) UnmarshalJSON(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
@@ -60,16 +60,16 @@ func (k *KzgCommitment) UnmarshalJSON(input []byte) error {
 	if !bytes.HasSuffix(input, []byte{'"'}) {
 		return errors.New("invalid suffix")
 	}
-	if len(input) != 1+2+KzgCommitmentLength*2+1 {
+	if len(input) != 1+2+KZGCommitmentLength*2+1 {
 		return errors.New("incorrect length")
 	}
 
-	length, err := hex.Decode(k[:], input[3:3+KzgCommitmentLength*2])
+	length, err := hex.Decode(k[:], input[3:3+KZGCommitmentLength*2])
 	if err != nil {
-		return errors.Wrapf(err, "invalid value %s", string(input[3:3+KzgCommitmentLength*2]))
+		return errors.Wrapf(err, "invalid value %s", string(input[3:3+KZGCommitmentLength*2]))
 	}
 
-	if length != KzgCommitmentLength {
+	if length != KZGCommitmentLength {
 		return errors.New("incorrect length")
 	}
 
@@ -77,12 +77,12 @@ func (k *KzgCommitment) UnmarshalJSON(input []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-func (k KzgCommitment) MarshalJSON() ([]byte, error) {
+func (k KZGCommitment) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%#x"`, k)), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (k *KzgCommitment) UnmarshalYAML(input []byte) error {
+func (k *KZGCommitment) UnmarshalYAML(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
@@ -93,16 +93,16 @@ func (k *KzgCommitment) UnmarshalYAML(input []byte) error {
 	if !bytes.HasSuffix(input, []byte{'\''}) {
 		return errors.New("invalid suffix")
 	}
-	if len(input) != 1+2+KzgCommitmentLength*2+1 {
+	if len(input) != 1+2+KZGCommitmentLength*2+1 {
 		return errors.New("incorrect length")
 	}
 
-	length, err := hex.Decode(k[:], input[3:3+KzgCommitmentLength*2])
+	length, err := hex.Decode(k[:], input[3:3+KZGCommitmentLength*2])
 	if err != nil {
-		return errors.Wrapf(err, "invalid value %s", string(input[3:3+KzgCommitmentLength*2]))
+		return errors.Wrapf(err, "invalid value %s", string(input[3:3+KZGCommitmentLength*2]))
 	}
 
-	if length != KzgCommitmentLength {
+	if length != KZGCommitmentLength {
 		return errors.New("incorrect length")
 	}
 
@@ -110,6 +110,6 @@ func (k *KzgCommitment) UnmarshalYAML(input []byte) error {
 }
 
 // MarshalYAML implements yaml.Marshaler.
-func (k KzgCommitment) MarshalYAML() ([]byte, error) {
+func (k KZGCommitment) MarshalYAML() ([]byte, error) {
 	return []byte(fmt.Sprintf(`'%#x'`, k)), nil
 }

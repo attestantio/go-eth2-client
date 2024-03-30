@@ -1,4 +1,4 @@
-// Copyright © 2021, 2022 Attestant Limited.
+// Copyright © 2021 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,11 +19,13 @@ import (
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/http"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
 
-// monitor monitors active and inactive connections, and moves them between
+// monitor monitors active and inactive clients, and moves them between
 // lists accordingly.
 func (s *Service) monitor(ctx context.Context) {
 	log := s.log.With().Logger()
@@ -34,15 +36,16 @@ func (s *Service) monitor(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			log.Trace().Msg("Context done; monitor stopping")
+
 			return
 		case <-time.After(30 * time.Second):
-			s.recheck(ctx)
+			s.recheck(ctx, false)
 		}
 	}
 }
 
 // recheck checks clients to update their state.
-func (s *Service) recheck(ctx context.Context) {
+func (s *Service) recheck(ctx context.Context, forceUpdate bool) {
 	// Fetch all clients.
 	clients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
 	s.clientsMu.RLock()
@@ -52,15 +55,21 @@ func (s *Service) recheck(ctx context.Context) {
 
 	// Ping each client to update its state.
 	for _, client := range clients {
-		if ping(ctx, client) {
+		if forceUpdate {
+			if httpClient, isHTTPClient := client.(*http.Service); isHTTPClient {
+				httpClient.CheckConnectionState(ctx)
+			}
+		}
+		switch {
+		case client.IsSynced():
 			s.activateClient(ctx, client)
-		} else {
+		default:
 			s.deactivateClient(ctx, client)
 		}
 	}
 }
 
-// deactivateClient deactivates a client, moving it to the inactive list if not currently on it.
+// deactivateClient marks a client as deactivated, moving it to the inactive list if not currently on it.
 func (s *Service) deactivateClient(ctx context.Context, client consensusclient.Service) {
 	log := zerolog.Ctx(ctx)
 
@@ -72,19 +81,21 @@ func (s *Service) deactivateClient(ctx context.Context, client consensusclient.S
 	for _, activeClient := range s.activeClients {
 		if activeClient == client {
 			inactiveClients = append(inactiveClients, activeClient)
-			setProviderActiveMetric(ctx, client.Address(), "inactive")
+			s.setProviderStateMetric(ctx, client.Address(), "inactive")
 		} else {
 			activeClients = append(activeClients, activeClient)
 		}
 	}
 	if len(inactiveClients) != len(s.inactiveClients) {
-		log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client deactivated")
+		log.Trace().Str("client", client.Address()).
+			Int("active", len(activeClients)).
+			Int("inactive", len(inactiveClients)).
+			Msg("Client deactivated")
 	}
 
 	s.activeClients = activeClients
-	setProvidersMetric(ctx, "active", len(s.activeClients))
 	s.inactiveClients = inactiveClients
-	setProvidersMetric(ctx, "inactive", len(s.inactiveClients))
+	s.setConnectionsMetric(ctx, len(s.activeClients), len(s.inactiveClients))
 }
 
 // activateClient activates a client, moving it to the active list if not currently on it.
@@ -99,39 +110,21 @@ func (s *Service) activateClient(ctx context.Context, client consensusclient.Ser
 	for _, inactiveClient := range s.inactiveClients {
 		if inactiveClient == client {
 			activeClients = append(activeClients, inactiveClient)
-			setProviderActiveMetric(ctx, client.Address(), "active")
+			s.setProviderStateMetric(ctx, client.Address(), "active")
 		} else {
 			inactiveClients = append(inactiveClients, inactiveClient)
 		}
 	}
 	if len(inactiveClients) != len(s.inactiveClients) {
-		log.Trace().Str("client", client.Address()).Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Client activated")
+		log.Trace().Str("client", client.Address()).
+			Int("active", len(activeClients)).
+			Int("inactive", len(inactiveClients)).
+			Msg("Client activated")
 	}
 
 	s.activeClients = activeClients
-	setProvidersMetric(ctx, "active", len(s.activeClients))
 	s.inactiveClients = inactiveClients
-	setProvidersMetric(ctx, "inactive", len(s.inactiveClients))
-}
-
-// ping pings a client, returning true if it is ready to serve requests and
-// false otherwise.
-func ping(ctx context.Context, client consensusclient.Service) bool {
-	log := zerolog.Ctx(ctx)
-
-	provider, isProvider := client.(consensusclient.NodeSyncingProvider)
-	if !isProvider {
-		log.Debug().Str("provider", client.Address()).Msg("Client does not provide sync state")
-		return false
-	}
-
-	syncState, err := provider.NodeSyncing(ctx)
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to obtain sync state from node")
-		return false
-	}
-
-	return (!syncState.IsSyncing) || (syncState.HeadSlot == 0 && syncState.SyncDistance == 0)
+	s.setConnectionsMetric(ctx, len(s.activeClients), len(s.inactiveClients))
 }
 
 // callFunc is the definition for a call function.  It provides a generic return interface
@@ -155,14 +148,14 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 
 	if len(activeClients) == 0 {
 		// There are no active clients; attempt to re-enable the inactive clients.
-		s.recheck(ctx)
+		s.recheck(ctx, true)
 		s.clientsMu.RLock()
 		activeClients = s.activeClients
 		s.clientsMu.RUnlock()
 	}
 
 	if len(activeClients) == 0 {
-		return nil, errors.New("no active clients to which to make call")
+		return nil, errors.New("no clients to which to make call")
 	}
 
 	var err error
@@ -170,15 +163,31 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 	for _, client := range activeClients {
 		res, err = call(ctx, client)
 		if err != nil {
+			log.Trace().Str("client", client.Name()).Str("address", client.Address()).Err(err).Msg("Potentially deactivating client due to error")
+			var apiErr *api.Error
+			switch {
+			case errors.As(err, &apiErr) && apiErr.StatusCode/100 == 4:
+				log.Trace().Str("client", client.Name()).Str("address", client.Address()).Err(err).Msg("Not deactivating client on user error")
+
+				return res, err
+			case errors.Is(err, context.Canceled):
+				log.Trace().Str("client", client.Name()).Str("address", client.Address()).Msg("Not deactivating client on canceled context")
+
+				return res, err
+			case errors.Is(err, context.DeadlineExceeded):
+				log.Trace().Str("client", client.Name()).Str("address", client.Address()).Msg("Not deactivating client on context deadline exceeded")
+
+				return res, err
+			}
+
 			failover := true
 			if errHandler != nil {
 				failover, err = errHandler(ctx, client, err)
 			}
-
 			if failover {
 				log.Debug().Str("client", client.Name()).Str("address", client.Address()).Err(err).Msg("Deactivating client on error")
-				// Failed with this client; try the next.
 				s.deactivateClient(ctx, client)
+
 				continue
 			}
 
@@ -188,10 +197,13 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		if res == nil {
 			// No response from this client; try the next.
 			err = errors.New("empty response")
+
 			continue
 		}
+
 		return res, nil
 	}
+
 	return nil, err
 }
 
@@ -201,15 +213,19 @@ func (s *Service) providerInfo(ctx context.Context, provider consensusclient.Ser
 	providerName := "<unknown>"
 	nodeVersionProvider, isNodeVersionProvider := provider.(consensusclient.NodeVersionProvider)
 	if isNodeVersionProvider {
-		nodeVersion, err := nodeVersionProvider.NodeVersion(ctx)
+		response, err := nodeVersionProvider.NodeVersion(ctx, &api.NodeVersionOpts{})
 		if err == nil {
 			switch {
-			case strings.Contains(strings.ToLower(nodeVersion), "lighthouse"):
+			case strings.Contains(strings.ToLower(response.Data), "lighthouse"):
 				providerName = "lighthouse"
-			case strings.Contains(strings.ToLower(nodeVersion), "prysm"):
+			case strings.Contains(strings.ToLower(response.Data), "lodestar"):
+				providerName = "lodestar"
+			case strings.Contains(strings.ToLower(response.Data), "prysm"):
 				providerName = "prysm"
-			case strings.Contains(strings.ToLower(nodeVersion), "teku"):
+			case strings.Contains(strings.ToLower(response.Data), "teku"):
 				providerName = "teku"
+			case strings.Contains(strings.ToLower(response.Data), "nimbus"):
+				providerName = "nimbus"
 			}
 		}
 	}

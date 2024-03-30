@@ -23,15 +23,17 @@ import (
 
 // signedBlockContentsJSON is the spec representation of the struct.
 type signedBlockContentsJSON struct {
-	SignedBlock        *deneb.SignedBeaconBlock   `json:"signed_block"`
-	SignedBlobSidecars []*deneb.SignedBlobSidecar `json:"signed_blob_sidecars"`
+	SignedBlock *deneb.SignedBeaconBlock `json:"signed_block"`
+	KZGProofs   []deneb.KZGProof         `json:"kzg_proofs"`
+	Blobs       []deneb.Blob             `json:"blobs"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (s *SignedBlockContents) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&signedBlockContentsJSON{
-		SignedBlock:        s.SignedBlock,
-		SignedBlobSidecars: s.SignedBlobSidecars,
+		SignedBlock: s.SignedBlock,
+		KZGProofs:   s.KZGProofs,
+		Blobs:       s.Blobs,
 	})
 }
 
@@ -46,8 +48,12 @@ func (s *SignedBlockContents) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "signed_block")
 	}
 
-	if err := json.Unmarshal(raw["signed_blob_sidecars"], &s.SignedBlobSidecars); err != nil {
-		return errors.Wrap(err, "signed_blob_sidecars")
+	if err := json.Unmarshal(raw["kzg_proofs"], &s.KZGProofs); err != nil {
+		return errors.Wrap(err, "kzg_proofs")
+	}
+
+	if err := json.Unmarshal(raw["blobs"], &s.Blobs); err != nil {
+		return errors.Wrap(err, "blobs")
 	}
 
 	return nil

@@ -65,6 +65,11 @@ func (f *ForkChoice) UnmarshalJSON(input []byte) error {
 	if forkChoiceJSON.ForkChoiceNodes == nil {
 		return errors.New("fork choice nodes missing")
 	}
+	for i := range forkChoiceJSON.ForkChoiceNodes {
+		if forkChoiceJSON.ForkChoiceNodes[i] == nil {
+			return fmt.Errorf("fork choice node entry %d missing", i)
+		}
+	}
 	f.ForkChoiceNodes = forkChoiceJSON.ForkChoiceNodes
 
 	return nil
@@ -76,6 +81,7 @@ func (f *ForkChoice) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }
 
@@ -100,6 +106,7 @@ const (
 	ForkChoiceNodeValidityOptimistic
 )
 
+// ForkChoiceNodeValidityStrings are the strings for fork choice validity names.
 var ForkChoiceNodeValidityStrings = [...]string{
 	"unknown",
 	"invalid",
@@ -107,6 +114,7 @@ var ForkChoiceNodeValidityStrings = [...]string{
 	"optimistic",
 }
 
+// ForkChoiceNodeValidityFromString converts a string input to a fork choice.
 func ForkChoiceNodeValidityFromString(input string) (ForkChoiceNodeValidity, error) {
 	switch strings.ToLower(input) {
 	case "invalid":
@@ -142,9 +150,11 @@ func (d ForkChoiceNodeValidity) String() string {
 	if int(d) >= len(ForkChoiceNodeValidityStrings) {
 		return "unknown"
 	}
+
 	return ForkChoiceNodeValidityStrings[d]
 }
 
+// ForkChoiceNode is a node in the fork choice tree.
 type ForkChoiceNode struct {
 	// Slot is the slot of the node.
 	Slot phase0.Slot
@@ -187,7 +197,7 @@ func (f *ForkChoiceNode) MarshalJSON() ([]byte, error) {
 		ParentRoot:         fmt.Sprintf("%#x", f.ParentRoot),
 		JustifiedEpoch:     fmt.Sprintf("%d", f.JustifiedEpoch),
 		FinalizedEpoch:     fmt.Sprintf("%d", f.FinalizedEpoch),
-		Weight:             fmt.Sprintf("%d", f.Weight),
+		Weight:             strconv.FormatUint(f.Weight, 10),
 		Validity:           f.Validity.String(),
 		ExecutionBlockHash: fmt.Sprintf("%#x", f.ExecutionBlockHash),
 		ExtraData:          f.ExtraData,
@@ -268,5 +278,6 @@ func (f *ForkChoiceNode) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

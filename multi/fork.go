@@ -17,23 +17,28 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // Fork fetches fork information for the given state.
-func (s *Service) Fork(ctx context.Context, stateID string) (*phase0.Fork, error) {
+func (s *Service) Fork(ctx context.Context,
+	opts *api.ForkOpts,
+) (
+	*api.Response[*phase0.Fork],
+	error,
+) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		fork, err := client.(consensusclient.ForkProvider).Fork(ctx, stateID)
+		fork, err := client.(consensusclient.ForkProvider).Fork(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return fork, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
-	}
-	return res.(*phase0.Fork), nil
+
+	return res.(*api.Response[*phase0.Fork]), nil
 }

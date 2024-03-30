@@ -34,9 +34,9 @@ func TestService(t *testing.T) {
 	require.NoError(t, err)
 	consensusclient3, err := mock.New(ctx)
 	require.NoError(t, err)
-	inactiveconsensusclient1, err := mock.New(ctx)
+	inactiveconsensusclient, err := mock.New(ctx)
 	require.NoError(t, err)
-	inactiveconsensusclient1.SyncDistance = 10
+	inactiveconsensusclient.SyncDistance = 10
 	tests := []struct {
 		name   string
 		params []multi.Parameter
@@ -54,10 +54,10 @@ func TestService(t *testing.T) {
 			params: []multi.Parameter{
 				multi.WithLogLevel(zerolog.Disabled),
 				multi.WithClients([]client.Service{
-					inactiveconsensusclient1,
+					inactiveconsensusclient,
 				}),
 			},
-			err: "No providers active, cannot proceed",
+			err: "client is not active",
 		},
 		{
 			name: "Good",
@@ -108,7 +108,6 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.AttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttesterDutiesProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockHeadersProvider)(nil), s)
-	assert.Implements(t, (*client.BeaconBlockProposalProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockRootProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockSubmitter)(nil), s)
 	assert.Implements(t, (*client.BeaconCommitteeSubscriptionsSubmitter)(nil), s)
@@ -122,8 +121,9 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.ForkScheduleProvider)(nil), s)
 	assert.Implements(t, (*client.GenesisProvider)(nil), s)
 	assert.Implements(t, (*client.NodeSyncingProvider)(nil), s)
-	assert.Implements(t, (*client.ProposerDutiesProvider)(nil), s)
 	assert.Implements(t, (*client.ProposalPreparationsSubmitter)(nil), s)
+	assert.Implements(t, (*client.ProposalProvider)(nil), s)
+	assert.Implements(t, (*client.ProposerDutiesProvider)(nil), s)
 	assert.Implements(t, (*client.SpecProvider)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteeContributionProvider)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteeContributionsSubmitter)(nil), s)

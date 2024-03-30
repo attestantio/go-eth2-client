@@ -20,6 +20,7 @@ import (
 	"time"
 
 	eth2client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/auto"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
@@ -64,7 +65,7 @@ func TestService(t *testing.T) {
 				require.EqualError(t, err, test.err)
 			} else {
 				require.NoError(t, err)
-				version, err := service.(eth2client.NodeVersionProvider).NodeVersion(context.Background())
+				version, err := service.(eth2client.NodeVersionProvider).NodeVersion(context.Background(), &api.NodeVersionOpts{})
 				require.NoError(t, err)
 				require.Contains(t, version, test.version)
 			}

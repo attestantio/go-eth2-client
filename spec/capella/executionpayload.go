@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2022, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -112,10 +112,10 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 		ReceiptsRoot:  fmt.Sprintf("%#x", e.ReceiptsRoot),
 		LogsBloom:     fmt.Sprintf("%#x", e.LogsBloom),
 		PrevRandao:    fmt.Sprintf("%#x", e.PrevRandao),
-		BlockNumber:   fmt.Sprintf("%d", e.BlockNumber),
-		GasLimit:      fmt.Sprintf("%d", e.GasLimit),
-		GasUsed:       fmt.Sprintf("%d", e.GasUsed),
-		Timestamp:     fmt.Sprintf("%d", e.Timestamp),
+		BlockNumber:   strconv.FormatUint(e.BlockNumber, 10),
+		GasLimit:      strconv.FormatUint(e.GasLimit, 10),
+		GasUsed:       strconv.FormatUint(e.GasUsed, 10),
+		Timestamp:     strconv.FormatUint(e.Timestamp, 10),
 		ExtraData:     extraData,
 		BaseFeePerGas: baseFeePerGas.String(),
 		BlockHash:     fmt.Sprintf("%#x", e.BlockHash),
@@ -130,10 +130,11 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return e.unpack(&data)
 }
 
-// nolint:gocyclo
+//nolint:gocyclo
 func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	if data.ParentHash == "" {
 		return errors.New("parent hash missing")
@@ -281,6 +282,9 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	if !ok {
 		return errors.New("invalid value for base fee per gas")
 	}
+	if baseFeePerGas.Sign() == -1 {
+		return errors.New("base fee per gas cannot be negative")
+	}
 	if baseFeePerGas.Cmp(maxBaseFeePerGas) > 0 {
 		return errors.New("overflow for base fee per gas")
 	}
@@ -309,21 +313,31 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	if data.Transactions == nil {
 		return errors.New("transactions missing")
 	}
+	if len(data.Transactions) > bellatrix.MaxTransactionsPerPayload {
+		return errors.Wrap(err, "incorrect length for transactions")
+	}
 	transactions := make([]bellatrix.Transaction, len(data.Transactions))
 	for i := range data.Transactions {
 		if data.Transactions[i] == "" {
 			return errors.New("transaction missing")
 		}
-		tmp, err := hex.DecodeString(strings.TrimPrefix(data.Transactions[i], "0x"))
+		transactions[i], err = hex.DecodeString(strings.TrimPrefix(data.Transactions[i], "0x"))
 		if err != nil {
 			return errors.Wrap(err, "invalid value for transaction")
 		}
-		transactions[i] = bellatrix.Transaction(tmp)
+		if len(transactions[i]) > bellatrix.MaxBytesPerTransaction {
+			return errors.Wrap(err, "incorrect length for transaction")
+		}
 	}
 	e.Transactions = transactions
 
 	if data.Withdrawals == nil {
 		return errors.New("withdrawals missing")
+	}
+	for i := range data.Withdrawals {
+		if data.Withdrawals[i] == nil {
+			return fmt.Errorf("withdrawals entry %d missing", i)
+		}
 	}
 	e.Withdrawals = data.Withdrawals
 
@@ -370,6 +384,7 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -380,6 +395,7 @@ func (e *ExecutionPayload) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return err
 	}
+
 	return e.unpack(&data)
 }
 
@@ -389,5 +405,6 @@ func (e *ExecutionPayload) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

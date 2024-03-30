@@ -17,6 +17,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -87,7 +88,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 // fetchStaticValues fetches values that never change.
 // This caches the values, avoiding future API calls.
 func (s *Service) fetchStaticValues(ctx context.Context) error {
-	if _, err := s.Genesis(ctx); err != nil {
+	if _, err := s.Genesis(ctx, &api.GenesisOpts{}); err != nil {
 		return errors.Wrap(err, "failed to fetch genesis")
 	}
 	//	if _, err := s.Spec(ctx); err != nil {
@@ -111,6 +112,16 @@ func (s *Service) Name() string {
 // Address provides the address of the service.
 func (s *Service) Address() string {
 	return s.name
+}
+
+// IsActive returns true if the client is active.
+func (s *Service) IsActive() bool {
+	return true
+}
+
+// IsSynced returns true if the client is synced.
+func (s *Service) IsSynced() bool {
+	return s.SyncDistance == 0
 }
 
 // close closes the service, freeing up resources.

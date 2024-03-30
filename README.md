@@ -10,6 +10,8 @@ Go library providing an abstraction to multiple Ethereum 2 beacon nodes.  Its ex
 
 This library is under development; expect APIs and data structures to change until it reaches version 1.0.  In addition, clients' implementations of both their own and the standard API are themselves under development so implementation of the the full API can be incomplete.
 
+> Between versions 0.18.0 and 0.19.0 the API has undergone a number of changes.  Please see [the detailed documentation](docs/0.19.0-changes.md) regarding these changes.
+
 ## Table of Contents
 
 - [Install](#install)
@@ -51,6 +53,7 @@ import (
     "fmt"
     
     eth2client "github.com/attestantio/go-eth2-client"
+    "github.com/attestantio/go-eth2-client/api"
     "github.com/attestantio/go-eth2-client/http"
     "github.com/rs/zerolog"
 )
@@ -74,20 +77,31 @@ func main() {
     // supported by all clients, so checks should be made for each function when
     // casting the service to the relevant interface.
     if provider, isProvider := client.(eth2client.GenesisProvider); isProvider {
-        genesis, err := provider.Genesis(ctx)
+        genesisResponse, err := provider.Genesis(ctx, &api.GenesisOpts{})
         if err != nil {
+            // Errors may be API errors, in which case they will have more detail
+            // about the failure.
+            var apiErr *api.Error
+            if errors.As(err, &apiErr) {
+                switch apiErr.StatusCode {
+                  case 404:
+                    panic("genesis not found")
+                  case 503:
+                    panic("node is syncing")
+                }
+            }
             panic(err)
         }
-        fmt.Printf("Genesis time is %v\n", genesis.GenesisTime)
+        fmt.Printf("Genesis time is %v\n", genesisResponse.Data.GenesisTime)
     }
 
     // You can also access the struct directly if required.
     httpClient := client.(*http.Service)
-    genesis, err := httpClient.Genesis(ctx)
+    genesisResponse, err := httpClient.Genesis(ctx, &api.GenesisOpts{})
     if err != nil {
         panic(err)
     }
-    fmt.Printf("Genesis validators root is %#x\n", genesis.GenesisValidatorsRoot)
+    fmt.Printf("Genesis validators root is %s\n", genesisResponse.Data.GenesisValidatorsRoot)
 
     // Cancelling the context passed to New() frees up resources held by the
     // client, closes connections, clears handlers, etc.

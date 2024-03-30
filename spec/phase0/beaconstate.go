@@ -1,4 +1,4 @@
-// Copyright © 2020, 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -127,8 +127,9 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range s.Slashings {
 		slashings[i] = fmt.Sprintf("%d", s.Slashings[i])
 	}
+
 	return json.Marshal(&beaconStateJSON{
-		GenesisTime:                 fmt.Sprintf("%d", s.GenesisTime),
+		GenesisTime:                 strconv.FormatUint(s.GenesisTime, 10),
 		GenesisValidatorsRoot:       fmt.Sprintf("%#x", s.GenesisValidatorsRoot),
 		Slot:                        fmt.Sprintf("%d", s.Slot),
 		Fork:                        s.Fork,
@@ -138,7 +139,7 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 		HistoricalRoots:             historicalRoots,
 		ETH1Data:                    s.ETH1Data,
 		ETH1DataVotes:               s.ETH1DataVotes,
-		ETH1DepositIndex:            fmt.Sprintf("%d", s.ETH1DepositIndex),
+		ETH1DepositIndex:            strconv.FormatUint(s.ETH1DepositIndex, 10),
 		Validators:                  s.Validators,
 		Balances:                    balances,
 		RANDAOMixes:                 randaoMixes,
@@ -164,7 +165,7 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	return s.unpack(&data)
 }
 
-// nolint:gocyclo
+//nolint:gocyclo
 func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	var err error
 
@@ -250,18 +251,30 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 		return errors.New("eth1 data missing")
 	}
 	s.ETH1Data = data.ETH1Data
-	// ETH1DataVotes can be empty.
+	// ETH1DataVotes can be empty, but if present the individual votes must not be null.
+	if data.ETH1DataVotes != nil {
+		for i := range data.Validators {
+			if data.Validators[i] == nil {
+				return fmt.Errorf("validators entry %d missing", i)
+			}
+		}
+	}
 	s.ETH1DataVotes = data.ETH1DataVotes
 	if data.Validators == nil {
 		return errors.New("validators missing")
 	}
+	for i := range data.Validators {
+		if data.Validators[i] == nil {
+			return fmt.Errorf("validators entry %d missing", i)
+		}
+	}
+	s.Validators = data.Validators
 	if data.ETH1DepositIndex == "" {
 		return errors.New("eth1 deposit index missing")
 	}
 	if s.ETH1DepositIndex, err = strconv.ParseUint(data.ETH1DepositIndex, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for eth1 deposit index")
 	}
-	s.Validators = data.Validators
 	s.Balances = make([]Gwei, len(data.Balances))
 	for i := range data.Balances {
 		if data.Balances[i] == "" {
@@ -298,7 +311,17 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 		}
 		s.Slashings[i] = Gwei(slashings)
 	}
+	for i := range data.PreviousEpochAttestations {
+		if data.PreviousEpochAttestations[i] == nil {
+			return fmt.Errorf("previous epoch attestations entry %d missing", i)
+		}
+	}
 	s.PreviousEpochAttestations = data.PreviousEpochAttestations
+	for i := range data.CurrentEpochAttestations {
+		if data.CurrentEpochAttestations[i] == nil {
+			return fmt.Errorf("current epoch attestations entry %d missing", i)
+		}
+	}
 	s.CurrentEpochAttestations = data.CurrentEpochAttestations
 	if data.JustificationBits == "" {
 		return errors.New("justification bits missing")
@@ -350,6 +373,7 @@ func (s *BeaconState) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -360,6 +384,7 @@ func (s *BeaconState) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return err
 	}
+
 	return s.unpack(&data)
 }
 
@@ -369,5 +394,6 @@ func (s *BeaconState) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

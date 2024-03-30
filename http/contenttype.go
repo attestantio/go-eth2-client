@@ -14,10 +14,9 @@
 package http
 
 import (
+	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // ContentType defines the builder spec version.
@@ -55,6 +54,7 @@ func (c *ContentType) UnmarshalJSON(input []byte) error {
 		*c = ContentTypeUnknown
 		err = fmt.Errorf("unrecognised content type %s", string(input))
 	}
+
 	return err
 }
 
@@ -63,6 +63,7 @@ func (c ContentType) String() string {
 	if int(c) >= len(contentTypeStrings) {
 		return contentTypeStrings[0]
 	}
+
 	return contentTypeStrings[c]
 }
 

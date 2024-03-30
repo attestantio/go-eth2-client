@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,11 +14,14 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 
+	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 type voluntaryExitPoolJSON struct {
@@ -26,18 +29,28 @@ type voluntaryExitPoolJSON struct {
 }
 
 // VoluntaryExitPool obtains the voluntary exit pool.
-func (s *Service) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVoluntaryExit, error) {
-	respBodyReader, err := s.get(ctx, "/eth/v1/beacon/pool/voluntary_exits")
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to request voluntary exit pool")
+func (s *Service) VoluntaryExitPool(ctx context.Context,
+	opts *api.VoluntaryExitPoolOpts,
+) (
+	*api.Response[[]*phase0.SignedVoluntaryExit],
+	error,
+) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
 	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain voluntary exit pool")
+	if opts == nil {
+		return nil, client.ErrNoOptions
+	}
+
+	endpoint := "/eth/v1/beacon/pool/voluntary_exits"
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to request voluntary exit pool"), err)
 	}
 
 	var voluntaryExitPoolJSON voluntaryExitPoolJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&voluntaryExitPoolJSON); err != nil {
-		return nil, errors.Wrap(err, "failed to parse voluntary exit pool")
+	if err := json.NewDecoder(bytes.NewReader(httpResponse.body)).Decode(&voluntaryExitPoolJSON); err != nil {
+		return nil, errors.Join(errors.New("failed to parse voluntary exit pool"), err)
 	}
 
 	// Ensure the data returned to us is as expected given our input.
@@ -45,5 +58,8 @@ func (s *Service) VoluntaryExitPool(ctx context.Context) ([]*phase0.SignedVolunt
 		return nil, errors.New("voluntary exit pool not returned")
 	}
 
-	return voluntaryExitPoolJSON.Data, nil
+	return &api.Response[[]*phase0.SignedVoluntaryExit]{
+		Data:     voluntaryExitPoolJSON.Data,
+		Metadata: make(map[string]any),
+	}, nil
 }

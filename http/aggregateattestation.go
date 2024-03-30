@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,48 +16,59 @@ package http
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 
+	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
-type aggregateAttestationDataJSON struct {
-	Data *phase0.Attestation `json:"data"`
-}
+// AggregateAttestation fetches the aggregate attestation for the given options.
+func (s *Service) AggregateAttestation(ctx context.Context,
+	opts *api.AggregateAttestationOpts,
+) (
+	*api.Response[*phase0.Attestation],
+	error,
+) {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return nil, err
+	}
+	if opts == nil {
+		return nil, client.ErrNoOptions
+	}
+	if opts.AttestationDataRoot.IsZero() {
+		return nil, errors.Join(errors.New("no attestation data root specified"), client.ErrInvalidOptions)
+	}
 
-// AggregateAttestation fetches the aggregate attestation given an attestation.
-// N.B if an aggregate attestation for the attestation is not available this will return nil without an error.
-func (s *Service) AggregateAttestation(ctx context.Context, slot phase0.Slot, attestationDataRoot phase0.Root) (*phase0.Attestation, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/validator/aggregate_attestation?slot=%d&attestation_data_root=%#x", slot, attestationDataRoot))
+	endpoint := "/eth/v1/validator/aggregate_attestation"
+	query := fmt.Sprintf("slot=%d&attestation_data_root=%#x", opts.Slot, opts.AttestationDataRoot)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request aggregate attestation")
-	}
-	if respBodyReader == nil {
-		return nil, nil
+		return nil, err
 	}
 
-	var aggregateAttestationDataJSON aggregateAttestationDataJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&aggregateAttestationDataJSON); err != nil {
-		return nil, errors.Wrap(err, "failed to parse aggregate attestation")
-	}
-	if aggregateAttestationDataJSON.Data == nil {
-		// Empty response is returned by some nodes if there is no matching aggregate.
-		return nil, nil
-	}
-
-	// Ensure the data returned to us is as expected given our input.
-	if aggregateAttestationDataJSON.Data.Data.Slot != slot {
-		return nil, errors.New("aggregate attestation not for requested slot")
-	}
-	dataRoot, err := aggregateAttestationDataJSON.Data.Data.HashTreeRoot()
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), phase0.Attestation{})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to obtain hash tree root of aggregate attestation data")
-	}
-	if !bytes.Equal(dataRoot[:], attestationDataRoot[:]) {
-		return nil, errors.New("aggregate attestation not for requested data root")
+		return nil, err
 	}
 
-	return aggregateAttestationDataJSON.Data, nil
+	// Confirm the attestation is for the requested slot.
+	if data.Data.Slot != opts.Slot {
+		return nil, errors.Join(fmt.Errorf("aggregate attestation for slot %d; expected %d", data.Data.Slot, opts.Slot), client.ErrInconsistentResult)
+	}
+
+	// Confirm the attestation data is correct.
+	dataRoot, err := data.Data.HashTreeRoot()
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to obtain hash tree root of aggregate attestation data"), err)
+	}
+	if !bytes.Equal(dataRoot[:], opts.AttestationDataRoot[:]) {
+		return nil, errors.Join(fmt.Errorf("aggregate attestation has data root %#x; expected %#x", dataRoot[:], opts.AttestationDataRoot[:]), client.ErrInconsistentResult)
+	}
+
+	return &api.Response[*phase0.Attestation]{
+		Metadata: metadata,
+		Data:     &data,
+	}, nil
 }

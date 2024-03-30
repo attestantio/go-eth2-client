@@ -22,6 +22,8 @@ import (
 )
 
 // GenesisTime provides the genesis time of the chain.
+//
+// Deprecated: use Genesis().
 func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		genesisTime, err := client.(consensusclient.GenesisTimeProvider).GenesisTime(ctx)
@@ -31,10 +33,12 @@ func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
 		if genesisTime.IsZero() {
 			return nil, errors.New("zero genesis time not a valid response")
 		}
+
 		return genesisTime, nil
 	}, nil)
 	if err != nil {
 		return time.Time{}, err
 	}
+
 	return res.(time.Time), nil
 }

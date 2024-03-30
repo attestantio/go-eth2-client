@@ -1,4 +1,4 @@
-// Copyright © 2020, 2022 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,14 +17,19 @@ import (
 	"context"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // GenesisTime provides the genesis time of the chain.
 func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
-	genesis, err := s.Genesis(ctx)
-	if err != nil {
-		return time.Time{}, errors.Wrap(err, "failed to obtain genesis")
+	if err := s.assertIsActive(ctx); err != nil {
+		return time.Time{}, err
 	}
-	return genesis.GenesisTime, nil
+
+	response, err := s.Genesis(ctx, &api.GenesisOpts{})
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	return response.Data.GenesisTime, nil
 }

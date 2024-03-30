@@ -1,4 +1,4 @@
-// Copyright © 2021, 2022 Attestant Limited.
+// Copyright © 2021 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -27,7 +27,7 @@ const (
 )
 
 var responseBuilderVersionStrings = [...]string{
-	"V1",
+	"v1",
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -38,12 +38,13 @@ func (d *BuilderVersion) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (d *BuilderVersion) UnmarshalJSON(input []byte) error {
 	var err error
-	switch strings.ToUpper(string(input)) {
-	case `"V1"`:
+	switch strings.ToLower(string(input)) {
+	case `"v1"`:
 		*d = BuilderVersionV1
 	default:
 		err = fmt.Errorf("unrecognised response version %s", string(input))
 	}
+
 	return err
 }
 
@@ -52,5 +53,6 @@ func (d BuilderVersion) String() string {
 	if int(d) >= len(responseBuilderVersionStrings) {
 		return "unknown"
 	}
+
 	return responseBuilderVersionStrings[d]
 }

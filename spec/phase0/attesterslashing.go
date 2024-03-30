@@ -54,6 +54,7 @@ func (a *AttesterSlashing) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &attesterSlashingJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return a.unpack(&attesterSlashingJSON)
 }
 
@@ -79,6 +80,7 @@ func (a *AttesterSlashing) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -89,6 +91,7 @@ func (a *AttesterSlashing) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &attesterSlashingJSON); err != nil {
 		return err
 	}
+
 	return a.unpack(&attesterSlashingJSON)
 }
 
@@ -97,5 +100,6 @@ func (a *AttesterSlashing) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

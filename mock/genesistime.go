@@ -16,13 +16,16 @@ package mock
 import (
 	"context"
 	"time"
+
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // GenesisTime provides the genesis time of the chain.
 func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
-	genesis, err := s.Genesis(ctx)
+	genesisResponse, err := s.Genesis(ctx, &api.GenesisOpts{})
 	if err != nil {
 		return time.Time{}, err
 	}
-	return genesis.GenesisTime, nil
+
+	return genesisResponse.Data.GenesisTime, nil
 }

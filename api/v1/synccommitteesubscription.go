@@ -24,7 +24,7 @@ import (
 
 // SyncCommitteeSubscription is the data required for a sync committee subscription.
 type SyncCommitteeSubscription struct {
-	// ValidatorIdex is the index of the validator making the subscription request.
+	// ValidatorIndex is the index of the validator making the subscription request.
 	ValidatorIndex phase0.ValidatorIndex
 	// SyncCommitteeIndices are the indices of the sync committees of which the validator is a member.
 	SyncCommitteeIndices []phase0.CommitteeIndex
@@ -45,6 +45,7 @@ func (s *SyncCommitteeSubscription) MarshalJSON() ([]byte, error) {
 	for i, syncCommitteeIndex := range s.SyncCommitteeIndices {
 		syncCommitteeIndices[i] = fmt.Sprintf("%d", syncCommitteeIndex)
 	}
+
 	return json.Marshal(&syncCommitteeSubscriptionJSON{
 		ValidatorIndex:       fmt.Sprintf("%d", s.ValidatorIndex),
 		SyncCommitteeIndices: syncCommitteeIndices,
@@ -98,5 +99,6 @@ func (s *SyncCommitteeSubscription) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

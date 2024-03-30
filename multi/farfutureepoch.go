@@ -31,10 +31,12 @@ func (s *Service) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 		if epoch == 0 {
 			return nil, errors.New("zero epoch not a valid response")
 		}
+
 		return epoch, nil
 	}, nil)
 	if err != nil {
 		return 0, err
 	}
+
 	return res.(phase0.Epoch), nil
 }

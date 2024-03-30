@@ -1,4 +1,4 @@
-// Copyright © 2020, 2022 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,49 +14,45 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/hex"
-	"encoding/json"
+	"errors"
 	"fmt"
-	"strings"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
+	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-type stateRootJSON struct {
-	Data *stateRootDataJSON `json:"data"`
+type beaconStateRootJSON struct {
+	Root phase0.Root `json:"root"`
 }
 
-type stateRootDataJSON struct {
-	Root string `json:"root"`
-}
-
-// BeaconStateRoot fetches a beacon state root given a state ID.
-func (s *Service) BeaconStateRoot(ctx context.Context, stateID string) (*spec.Root, error) {
-	if stateID == "" {
-		return nil, errors.New("no state ID specified")
+// BeaconStateRoot fetches the beacon state root given a set of options.
+func (s *Service) BeaconStateRoot(ctx context.Context, opts *api.BeaconStateRootOpts) (*api.Response[*phase0.Root], error) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
+	if opts == nil {
+		return nil, client.ErrNoOptions
+	}
+	if opts.State == "" {
+		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/root", stateID))
+	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/root", opts.State)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request state root")
-	}
-	if respBodyReader == nil {
-		return nil, nil
+		return nil, err
 	}
 
-	var stateRootJSON stateRootJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&stateRootJSON); err != nil {
-		return nil, errors.Wrap(err, "failed to parse state root")
-	}
-
-	bytes, err := hex.DecodeString(strings.TrimPrefix(stateRootJSON.Data.Root, "0x"))
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), beaconStateRootJSON{})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse state root value")
+		return nil, err
 	}
-	var stateRoot spec.Root
-	copy(stateRoot[:], bytes)
 
-	return &stateRoot, nil
+	return &api.Response[*phase0.Root]{
+		Data:     &data.Root,
+		Metadata: metadata,
+	}, nil
 }

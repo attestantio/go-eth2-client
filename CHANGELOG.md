@@ -1,3 +1,41 @@
+0.21.1:
+  - fix potential crash when unmarshaling Gwei values
+  - add `WithReducedMemoryUsage()` option for http service
+  - more consistent tracing attributes and codes
+
+0.21.0:
+  - use v3 of the endpoint to obtain proposals
+  - add bounds checking for ValidatorState
+
+0.20.0:
+  - allow delayed start of client, enabling the service even if the underlying beacon node is not ready
+  - add IsActive() and IsSynced() methods to understand the status of the service
+  - update multi clients to be aware of delayed start, only using clients that are synced
+  - use standard errors for common function issues
+  - add ProposerIndex() to VersionedSignedProposal
+  - add name to multi clients to differentiate multiple instances
+  - fully parse provided client URLs, allowing pass through of username, password, etc.
+
+0.19.10:
+  - add proposer_slashing and attester_slashing events
+  - add bls_to_execution_change event
+
+0.19.8
+  - more efficient fetching for large numbers of validators
+
+0.19.7:
+  - add endpoint metrics for prometheus
+
+0.19.5:
+  - standardise names of options
+  - add common options (currently just timeout) to options structs
+
+0.19.4:
+  - revert SubmitProposal() to use v1 of the API
+
+0.19.0:
+  - major rework of API; see docs/0.19-changes.md for details
+
 0.18.3:
   - do not crash if beacon state is unavailable
 

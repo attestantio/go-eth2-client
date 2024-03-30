@@ -60,7 +60,7 @@ func (s *SyncCommitteeContribution) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&syncCommitteeContributionJSON{
 		Slot:              fmt.Sprintf("%d", s.Slot),
 		BeaconBlockRoot:   fmt.Sprintf("%#x", s.BeaconBlockRoot),
-		SubcommitteeIndex: fmt.Sprintf("%d", s.SubcommitteeIndex),
+		SubcommitteeIndex: strconv.FormatUint(s.SubcommitteeIndex, 10),
 		AggregationBits:   fmt.Sprintf("%#x", []byte(s.AggregationBits)),
 		Signature:         fmt.Sprintf("%#x", s.Signature),
 	})
@@ -72,6 +72,7 @@ func (s *SyncCommitteeContribution) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &syncCommitteeContributionJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&syncCommitteeContributionJSON)
 }
 
@@ -136,6 +137,7 @@ func (s *SyncCommitteeContribution) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -146,6 +148,7 @@ func (s *SyncCommitteeContribution) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &syncCommitteeContributionJSON); err != nil {
 		return err
 	}
+
 	return s.unpack(&syncCommitteeContributionJSON)
 }
 
@@ -155,5 +158,6 @@ func (s *SyncCommitteeContribution) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

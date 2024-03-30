@@ -125,11 +125,6 @@ func TestConsensusSpec(t *testing.T) {
 			name: "ForkData",
 			s:    &phase0.ForkData{},
 		},
-		// TODO
-		// {
-		// 	name: "HistoricalBatch",
-		// 	s:    &phase0.HistoricalBatch{},
-		// },
 		{
 			name: "HistoricalSummary",
 			s:    &capella.HistoricalSummary{},
@@ -138,12 +133,10 @@ func TestConsensusSpec(t *testing.T) {
 			name: "IndexedAttestation",
 			s:    &phase0.IndexedAttestation{},
 		},
-		// TODO lightclient*, sync*, others?
 		{
 			name: "PendingAttestation",
 			s:    &phase0.PendingAttestation{},
 		},
-		// TODO Powblock
 		{
 			name: "ProposerSlashing",
 			s:    &phase0.ProposerSlashing{},
@@ -159,10 +152,6 @@ func TestConsensusSpec(t *testing.T) {
 		{
 			name: "SignedBeaconBlockHeader",
 			s:    &phase0.SignedBeaconBlockHeader{},
-		},
-		{
-			name: "SignedBlobSidecar",
-			s:    &deneb.SignedBlobSidecar{},
 		},
 		{
 			name: "SignedBLSToExecutionChange",
