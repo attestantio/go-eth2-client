@@ -8,21 +8,6 @@ import (
 	fastssz "github.com/ferranbt/fastssz"
 )
 
-func MarshalSSZ(source any, buf []byte) ([]byte, error) {
-	d := NewDynSsz()
-	d.NoFastSsz = true
-
-	sourceType := reflect.TypeOf(source)
-	sourceValue := reflect.ValueOf(source)
-
-	newBuf, err := d.marshalType(sourceType, sourceValue, buf, []sszSizeHint{}, 0)
-	if err != nil {
-		return nil, err
-	}
-
-	return newBuf, nil
-}
-
 func (d *DynSsz) marshalType(sourceType reflect.Type, sourceValue reflect.Value, buf []byte, sizeHints []sszSizeHint, idt int) ([]byte, error) {
 	if sourceType.Kind() == reflect.Ptr {
 		sourceType = sourceType.Elem()
@@ -49,7 +34,7 @@ func (d *DynSsz) marshalType(sourceType reflect.Type, sourceValue reflect.Value,
 				}
 			}
 
-			fmt.Printf("%s fastssz for type %s: %v\n", indent(idt), sourceType.Name(), hasSpecVals)
+			//fmt.Printf("%s fastssz for type %s: %v\n", indent(idt), sourceType.Name(), hasSpecVals)
 			d.typesWithSpecVals[sourceType] = hasSpecVals
 		}
 		if hasSpecVals == noSpecValues && !d.NoFastSsz {

@@ -7,24 +7,6 @@ import (
 	fastssz "github.com/ferranbt/fastssz"
 )
 
-func UnmarshalSSZ(target any, ssz []byte) error {
-	d := NewDynSsz()
-
-	targetType := reflect.TypeOf(target)
-	targetValue := reflect.ValueOf(target)
-
-	consumedBytes, err := d.unmarshalType(targetType, targetValue, ssz, []sszSizeHint{}, 0)
-	if err != nil {
-		return err
-	}
-
-	if consumedBytes != len(ssz) {
-		return fmt.Errorf("did not consume full ssz range (consumed: %v, ssz size: %v)", consumedBytes, len(ssz))
-	}
-
-	return nil
-}
-
 func (d *DynSsz) unmarshalType(targetType reflect.Type, targetValue reflect.Value, ssz []byte, sizeHints []sszSizeHint, idt int) (int, error) {
 	consumedBytes := 0
 

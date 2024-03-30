@@ -158,3 +158,72 @@ func (d *DynSsz) getSszFieldSize(targetField *reflect.StructField) (int, bool, [
 	size, hasSpecVal, err := d.getSszSize(targetField.Type, sszSizes)
 	return size, hasSpecVal, sszSizes, err
 }
+
+func (d *DynSsz) getSszValueSize(targetType reflect.Type, targetValue reflect.Value) (int, error) {
+	staticSize := 0
+
+	if targetType.Kind() == reflect.Ptr {
+		targetType = targetType.Elem()
+		targetValue = targetValue.Elem()
+	}
+
+	switch targetType.Kind() {
+	case reflect.Struct:
+		for i := 0; i < targetType.NumField(); i++ {
+			field := targetType.Field(i)
+			fieldValue := targetValue.Field(i)
+
+			fieldTypeSize, _, _, err := d.getSszFieldSize(&field)
+			if err != nil {
+				return 0, err
+			}
+
+			if fieldTypeSize < 0 {
+				// dynamic field, add 4 bytes for offset
+				staticSize += 4
+			}
+
+			size, err := d.getSszValueSize(field.Type, fieldValue)
+			if err != nil {
+				return 0, err
+			}
+
+			staticSize += size
+		}
+	case reflect.Array:
+		arrLen := targetType.Len()
+		if arrLen > 0 {
+			fieldType := targetType.Elem()
+			size, err := d.getSszValueSize(fieldType, targetValue.Index(0))
+			if err != nil {
+				return 0, err
+			}
+			staticSize = size * arrLen
+		}
+	case reflect.Slice:
+		fieldType := targetType.Elem()
+		sliceLen := targetValue.Len()
+
+		if sliceLen > 0 {
+			size, err := d.getSszValueSize(fieldType, targetValue.Index(0))
+			if err != nil {
+				return 0, err
+			}
+			staticSize = size * sliceLen
+		}
+	case reflect.Bool:
+		staticSize = 1
+	case reflect.Uint8:
+		staticSize = 1
+	case reflect.Uint16:
+		staticSize = 2
+	case reflect.Uint32:
+		staticSize = 4
+	case reflect.Uint64:
+		staticSize = 8
+	default:
+		return 0, fmt.Errorf("unhandled reflection kind in size check: %v", targetType.Kind())
+	}
+
+	return staticSize, nil
+}
