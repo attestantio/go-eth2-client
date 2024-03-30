@@ -1,6 +1,6 @@
 module github.com/attestantio/go-eth2-client
 
-go 1.21.1
+go 1.20
 
 require (
 	github.com/ferranbt/fastssz v0.1.3
