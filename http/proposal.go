@@ -31,7 +31,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/attestantio/go-eth2-client/ssz"
+	dynssz "github.com/pk910/dynamic-ssz"
 	"go.opentelemetry.io/otel"
 )
 
@@ -135,9 +135,9 @@ func (s *Service) beaconBlockProposalFromSSZ(res *httpResponse) (*api.Response[*
 		return nil, err
 	}
 
-	var dynSSZ *ssz.DynSsz
+	var dynSSZ *dynssz.DynSsz
 	if s.useDynamicSSZ {
-		dynSSZ = ssz.NewDynSsz(s.spec)
+		dynSSZ = dynssz.NewDynSsz(s.spec)
 	}
 
 	var err error

@@ -1,6 +1,6 @@
 module github.com/attestantio/go-eth2-client
 
-go 1.20
+go 1.21.1
 
 require (
 	github.com/ferranbt/fastssz v0.1.3
@@ -35,6 +35,7 @@ require (
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/pk910/dynamic-ssz v0.0.0-20240330223230-eced6836d885 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect

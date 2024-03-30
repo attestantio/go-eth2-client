@@ -27,7 +27,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/attestantio/go-eth2-client/ssz"
+	dynssz "github.com/pk910/dynamic-ssz"
 )
 
 // BeaconState fetches a beacon state.
@@ -71,9 +71,9 @@ func (s *Service) beaconStateFromSSZ(res *httpResponse) (*api.Response[*spec.Ver
 		Metadata: metadataFromHeaders(res.headers),
 	}
 
-	var dynSSZ *ssz.DynSsz
+	var dynSSZ *dynssz.DynSsz
 	if s.useDynamicSSZ {
-		dynSSZ = ssz.NewDynSsz(s.spec)
+		dynSSZ = dynssz.NewDynSsz(s.spec)
 	}
 
 	switch res.consensusVersion {

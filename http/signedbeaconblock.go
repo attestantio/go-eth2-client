@@ -27,7 +27,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/attestantio/go-eth2-client/ssz"
+	dynssz "github.com/pk910/dynamic-ssz"
 )
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
@@ -74,9 +74,9 @@ func (s *Service) signedBeaconBlockFromSSZ(res *httpResponse) (*api.Response[*sp
 		Metadata: metadataFromHeaders(res.headers),
 	}
 
-	var dynSSZ *ssz.DynSsz
+	var dynSSZ *dynssz.DynSsz
 	if s.useDynamicSSZ {
-		dynSSZ = ssz.NewDynSsz(s.spec)
+		dynSSZ = dynssz.NewDynSsz(s.spec)
 	}
 
 	switch res.consensusVersion {
