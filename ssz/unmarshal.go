@@ -260,7 +260,8 @@ func (d *DynSsz) unmarshalSlice(targetType reflect.Type, targetValue reflect.Val
 	}
 
 	if sliceLen == 0 && len(ssz) > 0 {
-		return 0, fmt.Errorf("cannot deteriminate length of dynamic slice")
+		// dynamic size slice
+		return d.unmarshalDynamicSlice(targetType, targetValue, ssz, childSizeHints, idt)
 	}
 
 	//fmt.Printf("new slice %v  %v\n", fieldType.Name(), sliceLen)
@@ -304,4 +305,67 @@ func (d *DynSsz) unmarshalSlice(targetType reflect.Type, targetValue reflect.Val
 	}
 
 	return consumedBytes, nil
+}
+
+func (d *DynSsz) unmarshalDynamicSlice(targetType reflect.Type, targetValue reflect.Value, ssz []byte, sizeHints []sszSizeHint, idt int) (int, error) {
+	firstOffset := fastssz.ReadOffset(ssz[0:4])
+	sliceLen := int(firstOffset / 4)
+
+	sliceOffsets := make([]int, sliceLen)
+	sliceOffsets[0] = int(firstOffset)
+	for i := 1; i < sliceLen; i++ {
+		sliceOffsets[i] = int(fastssz.ReadOffset(ssz[i*4 : (i+1)*4]))
+	}
+
+	fieldType := targetType.Elem()
+	fieldIsPtr := fieldType.Kind() == reflect.Ptr
+	if fieldIsPtr {
+		fieldType = fieldType.Elem()
+	}
+
+	for i := 0; i < sliceLen; i++ {
+
+	}
+
+	//fmt.Printf("new dynamic slice %v  %v\n", fieldType.Name(), sliceLen)
+	newValue := reflect.MakeSlice(targetType, sliceLen, sliceLen)
+	targetValue.Set(newValue)
+
+	offset := int(firstOffset)
+	if sliceLen > 0 {
+		for i := 0; i < sliceLen; i++ {
+			var itemVal reflect.Value
+			if fieldIsPtr {
+				//fmt.Printf("new slice item %v\n", fieldType.Name())
+				itemVal = reflect.New(fieldType).Elem()
+				newValue.Index(i).Set(itemVal.Addr())
+			} else {
+				itemVal = newValue.Index(i)
+			}
+
+			startOffset := sliceOffsets[i]
+			endOffset := 0
+			if i == sliceLen-1 {
+				endOffset = len(ssz)
+			} else {
+				endOffset = sliceOffsets[i+1]
+			}
+			itemSize := endOffset - startOffset
+
+			itemSsz := ssz[startOffset:endOffset]
+
+			consumed, err := d.unmarshalType(fieldType, itemVal, itemSsz, sizeHints, idt+2)
+			if err != nil {
+				return 0, err
+			}
+			if consumed != itemSize {
+				return 0, fmt.Errorf("dynamic slice item did not consume expected ssz range (consumed: %v, expected: %v)", consumed, itemSize)
+			}
+
+			offset += itemSize
+		}
+	}
+
+	return offset, nil
+
 }

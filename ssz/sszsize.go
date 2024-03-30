@@ -206,11 +206,27 @@ func (d *DynSsz) getSszValueSize(targetType reflect.Type, targetValue reflect.Va
 		sliceLen := targetValue.Len()
 
 		if sliceLen > 0 {
-			size, err := d.getSszValueSize(fieldType, targetValue.Index(0))
+			fieldTypeSize, _, err := d.getSszSize(fieldType, nil)
 			if err != nil {
 				return 0, err
 			}
-			staticSize = size * sliceLen
+
+			if fieldTypeSize < 0 {
+				// dyn size slice
+				for i := 0; i < sliceLen; i++ {
+					size, err := d.getSszValueSize(fieldType, targetValue.Index(i))
+					if err != nil {
+						return 0, err
+					}
+					staticSize += size + 4
+				}
+			} else {
+				size, err := d.getSszValueSize(fieldType, targetValue.Index(0))
+				if err != nil {
+					return 0, err
+				}
+				staticSize = size * sliceLen
+			}
 		}
 	case reflect.Bool:
 		staticSize = 1

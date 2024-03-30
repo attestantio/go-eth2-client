@@ -15,10 +15,18 @@ import (
 )
 
 func main() {
-	body, _ := ioutil.ReadFile("state2.ssz")
+	body, _ := ioutil.ReadFile("block-min.ssz")
+
+	d := ssz.NewDynSsz(map[string]any{
+		"SYNC_COMMITTEE_SIZE":          uint64(32),
+		"SYNC_COMMITTEE_SUBNET_COUNT":  uint64(4),
+		"EPOCHS_PER_HISTORICAL_VECTOR": uint64(64),
+		"SLOTS_PER_HISTORICAL_ROOT":    uint64(64),
+	})
+	d.NoFastSsz = true
 
 	test1(body)
-	test2(body)
+	test2(d, body)
 
 	f, _ := os.Create("mem.pprof")
 	pprof.WriteHeapProfile(f)
@@ -48,7 +56,7 @@ func test1(body []byte) {
 
 	fmt.Printf("\nfastssz / go-eth2-client\n")
 
-	t := new(deneb.BeaconState)
+	t := new(deneb.SignedBeaconBlock)
 	err := t.UnmarshalSSZ(body)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
@@ -60,7 +68,7 @@ func test1(body []byte) {
 
 	//root, _ := t.HashTreeRoot()
 	//fmt.Printf("state root: 0x%x\n", root)
-	fmt.Printf("gvr: 0x%x\n", t.GenesisValidatorsRoot)
+	//fmt.Printf("gvr: 0x%x\n", t.GenesisValidatorsRoot)
 
 	_, err = t.MarshalSSZ()
 	if err != nil {
@@ -69,7 +77,7 @@ func test1(body []byte) {
 	}
 }
 
-func test2(body []byte) {
+func test2(d *ssz.DynSsz, body []byte) {
 	start := time.Now()
 	defer func() {
 		elapsed := time.Since(start)
@@ -78,9 +86,7 @@ func test2(body []byte) {
 
 	fmt.Printf("\npk's dynamic ssz\n")
 
-	d := ssz.NewDynSsz(map[string]any{})
-
-	t := new(deneb.BeaconState)
+	t := new(deneb.SignedBeaconBlock)
 	err := d.UnmarshalSSZ(t, body)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
@@ -92,23 +98,22 @@ func test2(body []byte) {
 
 	//root, _ := t.HashTreeRoot()
 	//fmt.Printf("state root: 0x%x\n", root)
-	fmt.Printf("gvr: 0x%x\n", t.GenesisValidatorsRoot)
+	//fmt.Printf("gvr: 0x%x\n", t.GenesisValidatorsRoot)
 
-	_, err = d.MarshalSSZ(t)
+	buf, err := d.MarshalSSZ(t)
 	if err != nil {
 		fmt.Printf("error: %v\n", err)
 		return
 	}
 
-	/*
-		if len(buf) != len(body) {
-			fmt.Printf("size mismatch: %v / %v\n", len(buf), len(body))
+	if len(buf) != len(body) {
+		fmt.Printf("size mismatch: %v / %v\n", len(buf), len(body))
+	}
+	for i := 0; i < len(body); i++ {
+		if body[i] != buf[i] {
+			fmt.Printf("ssz mismatch: %v : %v / %v\n", i, buf[i], body[i])
+			break
 		}
-		for i := 0; i < len(body); i++ {
-			if body[i] != buf[i] {
-				fmt.Printf("ssz mismatch: %v : %v / %v\n", i, buf[i], body[i])
-				break
-			}
-		}
-	*/
+	}
+
 }

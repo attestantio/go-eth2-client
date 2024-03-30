@@ -191,11 +191,28 @@ func (d *DynSsz) marshalSlice(sourceType reflect.Type, sourceValue reflect.Value
 		fieldType = fieldType.Elem()
 	}
 
-	sliceLen := sourceValue.Len()
+	isDynSlice := false
+	if len(sizeHints) > 1 && sizeHints[1].dynamic {
+		isDynSlice = true
+	} else {
+		size, _, err := d.getSszSize(fieldType, childSizeHints)
+		if err != nil {
+			return nil, err
+		}
+		if size < 0 {
+			isDynSlice = true
+		}
+	}
+
+	if isDynSlice {
+		return d.marshalDynamicSlice(sourceType, sourceValue, buf, childSizeHints, idt)
+	}
+
 	if fieldType == byteType {
 		// shortcut for performance: use append on []byte arrays
 		buf = append(buf, sourceValue.Bytes()...)
 	} else {
+		sliceLen := sourceValue.Len()
 		for i := 0; i < sliceLen; i++ {
 			itemVal := sourceValue.Index(i)
 			if fieldIsPtr {
@@ -208,6 +225,45 @@ func (d *DynSsz) marshalSlice(sourceType reflect.Type, sourceValue reflect.Value
 			}
 			buf = newBuf
 		}
+	}
+
+	return buf, nil
+}
+
+func (d *DynSsz) marshalDynamicSlice(sourceType reflect.Type, sourceValue reflect.Value, buf []byte, sizeHints []sszSizeHint, idt int) ([]byte, error) {
+	sliceLen := sourceValue.Len()
+	startOffset := len(buf)
+	offsetBuf := make([]byte, 4*sliceLen)
+	buf = append(buf, offsetBuf...)
+
+	fieldType := sourceType.Elem()
+	fieldIsPtr := fieldType.Kind() == reflect.Ptr
+	if fieldIsPtr {
+		fieldType = fieldType.Elem()
+	}
+
+	offset := 4 * sliceLen
+	bufLen := len(buf)
+
+	for i := 0; i < sliceLen; i++ {
+		itemVal := sourceValue.Index(i)
+		if fieldIsPtr {
+			itemVal = itemVal.Elem()
+		}
+
+		newBuf, err := d.marshalType(fieldType, itemVal, buf, sizeHints, idt+2)
+		if err != nil {
+			return nil, err
+		}
+		newBufLen := len(newBuf)
+		buf = newBuf
+
+		offsetBuf := make([]byte, 4)
+		binary.LittleEndian.PutUint32(offsetBuf, uint32(offset))
+		copy(buf[startOffset+(i*4):startOffset+((i+1)*4)], offsetBuf)
+
+		offset += newBufLen - bufLen
+		bufLen = newBufLen
 	}
 
 	return buf, nil
