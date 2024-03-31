@@ -121,6 +121,7 @@ func (s *Service) Proposal(ctx context.Context,
 	return response, nil
 }
 
+//nolint:nestif
 func (s *Service) beaconBlockProposalFromSSZ(res *httpResponse) (*api.Response[*api.VersionedProposal], error) {
 	response := &api.Response[*api.VersionedProposal]{
 		Data: &api.VersionedProposal{

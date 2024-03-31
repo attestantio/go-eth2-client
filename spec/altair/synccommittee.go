@@ -27,7 +27,7 @@ import (
 
 // SyncCommittee is the Ethereum 2 sync committee structure.
 type SyncCommittee struct {
-	Pubkeys         []phase0.BLSPubKey `ssz-size:"512,48" dynssz-size:"SYNC_COMMITTEE_SIZE,48"`
+	Pubkeys         []phase0.BLSPubKey `dynssz-size:"SYNC_COMMITTEE_SIZE,48" ssz-size:"512,48"`
 	AggregatePubkey phase0.BLSPubKey   `ssz-size:"48"`
 }
 
