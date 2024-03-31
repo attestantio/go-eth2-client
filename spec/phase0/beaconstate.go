@@ -35,7 +35,7 @@ type BeaconState struct {
 	LatestBlockHeader           *BeaconBlockHeader
 	BlockRoots                  []Root `dynssz-size:"SLOTS_PER_HISTORICAL_ROOT,32" ssz-size:"8192,32"`
 	StateRoots                  []Root `dynssz-size:"SLOTS_PER_HISTORICAL_ROOT,32" ssz-size:"8192,32"`
-	HistoricalRoots             []Root `ssz-max:"16777216" ssz-size:"?,32"`
+	HistoricalRoots             []Root `ssz-max:"16777216"                         ssz-size:"?,32"`
 	ETH1Data                    *ETH1Data
 	ETH1DataVotes               []*ETH1Data `ssz-max:"2048"`
 	ETH1DepositIndex            uint64
