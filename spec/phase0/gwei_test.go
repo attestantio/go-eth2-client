@@ -20,6 +20,58 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
+func TestValidatorIndexUnmarshalJSON(t *testing.T) {
+	// Test cases
+	tests := []struct {
+		name     string
+		input    []byte
+		expected phase0.ValidatorIndex
+		wantErr  bool
+	}{
+		{
+			name:     "Valid input 100000",
+			input:    []byte("\"100000\""),
+			expected: phase0.ValidatorIndex(100000),
+			wantErr:  false,
+		},
+
+		{
+			name:     "Valid input",
+			input:    []byte("\"1\""),
+			expected: phase0.ValidatorIndex(1),
+			wantErr:  false,
+		},
+
+		{
+			name:     "Invalid input text",
+			input:    []byte("not-a-number"),
+			expected: 0,
+			wantErr:  true,
+		},
+		{
+			name:     "Invalid input single quote",
+			input:    []byte("\""),
+			expected: 0,
+			wantErr:  true,
+		},
+	}
+
+	// Run tests
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var v phase0.ValidatorIndex
+			err := v.UnmarshalJSON(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if v != tt.expected {
+				t.Errorf("UnmarshalJSON() got = %v, expected %v", v, tt.expected)
+			}
+		})
+	}
+}
+
 func TestGweiUnmarshalJSON(t *testing.T) {
 	// Test cases
 	tests := []struct {
