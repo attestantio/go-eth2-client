@@ -21,7 +21,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api/v1/capella"
 	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
-	require "github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSignedBlindedBeaconBlockJSON(t *testing.T) {

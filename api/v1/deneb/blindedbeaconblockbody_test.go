@@ -21,7 +21,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api/v1/deneb"
 	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
-	require "github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBlindedBeaconBlockBodyJSON(t *testing.T) {

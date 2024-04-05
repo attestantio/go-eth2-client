@@ -27,7 +27,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/golang/snappy"
 	clone "github.com/huandu/go-clone/generic"
-	require "github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require"
 )
 
 // TestConsensusSpec tests the types against the Ethereum consensus spec tests.

@@ -19,7 +19,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/stretchr/testify/assert"
-	require "github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHistoricalSummaryJSON(t *testing.T) {

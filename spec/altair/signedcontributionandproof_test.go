@@ -21,7 +21,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/assert"
-	require "github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSignedContributionAndProofJSON(t *testing.T) {
