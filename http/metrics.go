@@ -67,7 +67,7 @@ func registerPrometheusMetrics(_ context.Context) error {
 	return nil
 }
 
-func (s *Service) monitorGetComplete(_ context.Context, endpoint string, result string) {
+func (s *Service) monitorGetComplete(_ context.Context, endpoint, result string) {
 	if requestsMetric == nil {
 		return
 	}
@@ -75,7 +75,7 @@ func (s *Service) monitorGetComplete(_ context.Context, endpoint string, result 
 	requestsMetric.WithLabelValues(s.address, "GET", reduceEndpoint(endpoint), result).Inc()
 }
 
-func (s *Service) monitorPostComplete(_ context.Context, endpoint string, result string) {
+func (s *Service) monitorPostComplete(_ context.Context, endpoint, result string) {
 	if requestsMetric == nil {
 		return
 	}

@@ -65,7 +65,7 @@ func registerPrometheusMetrics(_ context.Context) error {
 	return nil
 }
 
-func (s *Service) setProviderStateMetric(_ context.Context, server string, state string) {
+func (s *Service) setProviderStateMetric(_ context.Context, server, state string) {
 	if stateMetric == nil {
 		return
 	}
@@ -80,7 +80,7 @@ func (s *Service) setProviderStateMetric(_ context.Context, server string, state
 	}
 }
 
-func (s *Service) setConnectionsMetric(_ context.Context, active int, inactive int) {
+func (s *Service) setConnectionsMetric(_ context.Context, active, inactive int) {
 	if connectionsMetric == nil {
 		return
 	}

@@ -466,7 +466,7 @@ func metadataFromHeaders(headers map[string]string) map[string]any {
 }
 
 // urlForCall patches together a URL for a call.
-func urlForCall(base *url.URL, endpoint string, query string) *url.URL {
+func urlForCall(base *url.URL, endpoint, query string) *url.URL {
 	callURL := *base
 	callURL.Path = endpoint
 	if callURL.RawQuery == "" {
