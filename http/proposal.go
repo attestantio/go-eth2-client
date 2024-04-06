@@ -79,7 +79,7 @@ func (s *Service) Proposal(ctx context.Context,
 	var response *api.Response[*api.VersionedProposal]
 	switch httpResponse.contentType {
 	case ContentTypeSSZ:
-		response, err = s.beaconBlockProposalFromSSZ(httpResponse)
+		response, err = s.beaconBlockProposalFromSSZ(ctx, httpResponse)
 	case ContentTypeJSON:
 		response, err = s.beaconBlockProposalFromJSON(httpResponse)
 	default:
@@ -122,7 +122,7 @@ func (s *Service) Proposal(ctx context.Context,
 }
 
 //nolint:nestif
-func (s *Service) beaconBlockProposalFromSSZ(res *httpResponse) (*api.Response[*api.VersionedProposal], error) {
+func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context, res *httpResponse) (*api.Response[*api.VersionedProposal], error) {
 	response := &api.Response[*api.VersionedProposal]{
 		Data: &api.VersionedProposal{
 			Version:        res.consensusVersion,
@@ -138,7 +138,12 @@ func (s *Service) beaconBlockProposalFromSSZ(res *httpResponse) (*api.Response[*
 
 	var dynSSZ *dynssz.DynSsz
 	if s.useDynamicSSZ {
-		dynSSZ = dynssz.NewDynSsz(s.spec)
+		spec, err := s.Spec(ctx, &api.SpecOpts{})
+		if err != nil {
+			return nil, errors.Join(errors.New("failed to request specs"), err)
+		}
+
+		dynSSZ = dynssz.NewDynSsz(spec.Data)
 	}
 
 	var err error
