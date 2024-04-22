@@ -72,12 +72,12 @@ func (s *Sleepy) Address() string {
 }
 
 // IsActive returns true if the client is active.
-func (s *Sleepy) IsActive() bool {
+func (*Sleepy) IsActive() bool {
 	return true
 }
 
 // IsSynced returns true if the client is synced.
-func (s *Sleepy) IsSynced() bool {
+func (*Sleepy) IsSynced() bool {
 	return true
 }
 
@@ -463,7 +463,7 @@ func (s *Sleepy) ProposerDuties(ctx context.Context,
 }
 
 // Spec provides the spec information of the chain.
-func (s *Sleepy) Spec(ctx context.Context, opts *api.SpecOpts) (*api.Response[map[string]interface{}], error) {
+func (s *Sleepy) Spec(ctx context.Context, opts *api.SpecOpts) (*api.Response[map[string]any], error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.SpecProvider)
 	if !isNext {

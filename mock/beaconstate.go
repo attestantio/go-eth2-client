@@ -22,7 +22,7 @@ import (
 )
 
 // BeaconState fetches a beacon state given a state ID.
-func (s *Service) BeaconState(_ context.Context, _ *api.BeaconStateOpts) (*api.Response[*spec.VersionedBeaconState], error) {
+func (*Service) BeaconState(_ context.Context, _ *api.BeaconStateOpts) (*api.Response[*spec.VersionedBeaconState], error) {
 	data := &spec.VersionedBeaconState{
 		Version: spec.DataVersionPhase0,
 		Phase0: &phase0.BeaconState{

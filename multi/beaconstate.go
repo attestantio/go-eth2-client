@@ -23,7 +23,7 @@ import (
 
 // BeaconState fetches a beacon state.
 func (s *Service) BeaconState(ctx context.Context, opts *api.BeaconStateOpts) (*api.Response[*spec.VersionedBeaconState], error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		beaconState, err := client.(consensusclient.BeaconStateProvider).BeaconState(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -35,5 +35,10 @@ func (s *Service) BeaconState(ctx context.Context, opts *api.BeaconStateOpts) (*
 		return nil, err
 	}
 
-	return res.(*api.Response[*spec.VersionedBeaconState]), nil
+	response, isResponse := res.(*api.Response[*spec.VersionedBeaconState])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

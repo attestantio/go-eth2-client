@@ -20,6 +20,6 @@ import (
 )
 
 // RANDAODomain provides the RANDAO domain.
-func (s *Service) RANDAODomain(_ context.Context) (spec.DomainType, error) {
+func (*Service) RANDAODomain(_ context.Context) (spec.DomainType, error) {
 	return spec.DomainType{0x02, 0x00, 0x00, 0x00}, nil
 }

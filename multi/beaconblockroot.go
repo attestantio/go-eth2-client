@@ -28,7 +28,7 @@ func (s *Service) BeaconBlockRoot(ctx context.Context,
 	*api.Response[*phase0.Root],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		root, err := client.(consensusclient.BeaconBlockRootProvider).BeaconBlockRoot(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -40,5 +40,10 @@ func (s *Service) BeaconBlockRoot(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[*phase0.Root]), nil
+	response, isResponse := res.(*api.Response[*phase0.Root])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

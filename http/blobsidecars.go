@@ -63,7 +63,7 @@ func (s *Service) BlobSidecars(ctx context.Context,
 	return response, nil
 }
 
-func (s *Service) blobSidecarsFromSSZ(res *httpResponse) (*api.Response[[]*deneb.BlobSidecar], error) {
+func (*Service) blobSidecarsFromSSZ(res *httpResponse) (*api.Response[[]*deneb.BlobSidecar], error) {
 	response := &api.Response[[]*deneb.BlobSidecar]{}
 
 	data := &api.BlobSidecars{}
@@ -76,7 +76,7 @@ func (s *Service) blobSidecarsFromSSZ(res *httpResponse) (*api.Response[[]*deneb
 	return response, nil
 }
 
-func (s *Service) blobSidecarsFromJSON(res *httpResponse) (*api.Response[[]*deneb.BlobSidecar], error) {
+func (*Service) blobSidecarsFromJSON(res *httpResponse) (*api.Response[[]*deneb.BlobSidecar], error) {
 	response := &api.Response[[]*deneb.BlobSidecar]{}
 
 	var err error

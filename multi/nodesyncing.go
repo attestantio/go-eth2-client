@@ -28,7 +28,7 @@ func (s *Service) NodeSyncing(ctx context.Context,
 	*api.Response[*apiv1.SyncState],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		nodeSyncing, err := client.(consensusclient.NodeSyncingProvider).NodeSyncing(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -40,5 +40,10 @@ func (s *Service) NodeSyncing(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[*apiv1.SyncState]), nil
+	response, isResponse := res.(*api.Response[*apiv1.SyncState])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

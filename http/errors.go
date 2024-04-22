@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2024 Attestant Limited.
+// Copyright © 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,27 +13,7 @@
 
 package http
 
-import (
-	"context"
+import "errors"
 
-	"github.com/attestantio/go-eth2-client/api"
-)
-
-// SlotsPerEpoch provides the number of slots per epoch for the chain.
-func (s *Service) SlotsPerEpoch(ctx context.Context) (uint64, error) {
-	if err := s.assertIsActive(ctx); err != nil {
-		return 0, err
-	}
-
-	response, err := s.Spec(ctx, &api.SpecOpts{})
-	if err != nil {
-		return 0, err
-	}
-
-	res, isCorrectType := response.Data["SLOTS_PER_EPOCH"].(uint64)
-	if !isCorrectType {
-		return 0, ErrIncorrectType
-	}
-
-	return res, nil
-}
+// ErrIncorrectType is returned when the multi client obtain a response type it is not expecting.
+var ErrIncorrectType = errors.New("incorrect response type")

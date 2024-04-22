@@ -243,7 +243,7 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	}
 	switch {
 	case data.ExtraData == "0x", data.ExtraData == "0":
-		e.ExtraData = []byte{}
+		e.ExtraData = make([]byte, 0)
 	default:
 		data.ExtraData = strings.TrimPrefix(data.ExtraData, "0x")
 		if len(data.ExtraData)%2 == 1 {

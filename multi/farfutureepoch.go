@@ -23,7 +23,7 @@ import (
 
 // FarFutureEpoch provides the far future epoch of the chain.
 func (s *Service) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		epoch, err := client.(consensusclient.FarFutureEpochProvider).FarFutureEpoch(ctx)
 		if err != nil {
 			return nil, err
@@ -38,5 +38,10 @@ func (s *Service) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 		return 0, err
 	}
 
-	return res.(phase0.Epoch), nil
+	response, isResponse := res.(phase0.Epoch)
+	if !isResponse {
+		return 0, ErrIncorrectType
+	}
+
+	return response, nil
 }

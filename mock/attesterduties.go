@@ -22,7 +22,7 @@ import (
 
 // AttesterDuties obtains attester duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Service) AttesterDuties(_ context.Context, opts *api.AttesterDutiesOpts) (*api.Response[[]*apiv1.AttesterDuty], error) {
+func (*Service) AttesterDuties(_ context.Context, opts *api.AttesterDutiesOpts) (*api.Response[[]*apiv1.AttesterDuty], error) {
 	data := make([]*apiv1.AttesterDuty, len(opts.Indices))
 	for i := range opts.Indices {
 		data[i] = &apiv1.AttesterDuty{

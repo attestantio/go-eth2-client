@@ -20,6 +20,6 @@ import (
 )
 
 // SubmitProposal submits a proposal.
-func (s *Service) SubmitProposal(_ context.Context, _ *api.VersionedSignedProposal) error {
+func (*Service) SubmitProposal(_ context.Context, _ *api.VersionedSignedProposal) error {
 	return nil
 }

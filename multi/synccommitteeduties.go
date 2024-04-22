@@ -29,7 +29,7 @@ func (s *Service) SyncCommitteeDuties(ctx context.Context,
 	*api.Response[[]*apiv1.SyncCommitteeDuty],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		response, err := client.(consensusclient.SyncCommitteeDutiesProvider).SyncCommitteeDuties(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -41,5 +41,10 @@ func (s *Service) SyncCommitteeDuties(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[[]*apiv1.SyncCommitteeDuty]), nil
+	response, isResponse := res.(*api.Response[[]*apiv1.SyncCommitteeDuty])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

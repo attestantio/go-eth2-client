@@ -16,10 +16,10 @@ package mock
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec"
 )
 
 // SubmitBeaconBlock submits a beacon block.
-func (s *Service) SubmitBeaconBlock(_ context.Context, _ *spec.VersionedSignedBeaconBlock) error {
+func (*Service) SubmitBeaconBlock(_ context.Context, _ *spec.VersionedSignedBeaconBlock) error {
 	return nil
 }

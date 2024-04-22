@@ -28,7 +28,7 @@ func (s *Service) Genesis(ctx context.Context,
 	*api.Response[*apiv1.Genesis],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		genesis, err := client.(consensusclient.GenesisProvider).Genesis(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -40,5 +40,10 @@ func (s *Service) Genesis(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[*apiv1.Genesis]), nil
+	response, isResponse := res.(*api.Response[*apiv1.Genesis])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

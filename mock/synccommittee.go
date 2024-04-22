@@ -21,7 +21,7 @@ import (
 )
 
 // SyncCommittee fetches the sync committee for the given state.
-func (s *Service) SyncCommittee(_ context.Context, _ *api.SyncCommitteeOpts) (*api.Response[*apiv1.SyncCommittee], error) {
+func (*Service) SyncCommittee(_ context.Context, _ *api.SyncCommitteeOpts) (*api.Response[*apiv1.SyncCommittee], error) {
 	return &api.Response[*apiv1.SyncCommittee]{
 		Data:     &apiv1.SyncCommittee{},
 		Metadata: make(map[string]any),

@@ -224,7 +224,7 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[
 	return response, nil
 }
 
-func (s *Service) populateProposalDataFromHeaders(response *api.Response[*api.VersionedProposal],
+func (*Service) populateProposalDataFromHeaders(response *api.Response[*api.VersionedProposal],
 	headers map[string]string,
 ) error {
 	for k, v := range headers {

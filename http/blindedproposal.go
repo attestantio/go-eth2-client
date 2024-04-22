@@ -108,7 +108,7 @@ func (s *Service) BlindedProposal(ctx context.Context,
 	return response, nil
 }
 
-func (s *Service) blindedProposalFromSSZ(res *httpResponse) (*api.Response[*api.VersionedBlindedProposal], error) {
+func (*Service) blindedProposalFromSSZ(res *httpResponse) (*api.Response[*api.VersionedBlindedProposal], error) {
 	response := &api.Response[*api.VersionedBlindedProposal]{
 		Data: &api.VersionedBlindedProposal{
 			Version: res.consensusVersion,
@@ -139,7 +139,7 @@ func (s *Service) blindedProposalFromSSZ(res *httpResponse) (*api.Response[*api.
 	return response, nil
 }
 
-func (s *Service) blindedProposalFromJSON(res *httpResponse) (*api.Response[*api.VersionedBlindedProposal], error) {
+func (*Service) blindedProposalFromJSON(res *httpResponse) (*api.Response[*api.VersionedBlindedProposal], error) {
 	response := &api.Response[*api.VersionedBlindedProposal]{
 		Data: &api.VersionedBlindedProposal{
 			Version: res.consensusVersion,

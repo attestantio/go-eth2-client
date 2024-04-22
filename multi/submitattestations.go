@@ -25,7 +25,7 @@ import (
 func (s *Service) SubmitAttestations(ctx context.Context,
 	attestations []*phase0.Attestation,
 ) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		err := client.(consensusclient.AttestationsSubmitter).SubmitAttestations(ctx, attestations)
 		if err != nil {
 			return nil, err

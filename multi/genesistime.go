@@ -25,7 +25,7 @@ import (
 //
 // Deprecated: use Genesis().
 func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		genesisTime, err := client.(consensusclient.GenesisTimeProvider).GenesisTime(ctx)
 		if err != nil {
 			return nil, err
@@ -40,5 +40,10 @@ func (s *Service) GenesisTime(ctx context.Context) (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	return res.(time.Time), nil
+	response, isResponse := res.(time.Time)
+	if !isResponse {
+		return time.Time{}, ErrIncorrectType
+	}
+
+	return response, nil
 }

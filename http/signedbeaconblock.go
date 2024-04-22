@@ -65,7 +65,7 @@ func (s *Service) SignedBeaconBlock(ctx context.Context,
 	return response, nil
 }
 
-func (s *Service) signedBeaconBlockFromSSZ(res *httpResponse) (*api.Response[*spec.VersionedSignedBeaconBlock], error) {
+func (*Service) signedBeaconBlockFromSSZ(res *httpResponse) (*api.Response[*spec.VersionedSignedBeaconBlock], error) {
 	response := &api.Response[*spec.VersionedSignedBeaconBlock]{
 		Data: &spec.VersionedSignedBeaconBlock{
 			Version: res.consensusVersion,
@@ -106,7 +106,7 @@ func (s *Service) signedBeaconBlockFromSSZ(res *httpResponse) (*api.Response[*sp
 	return response, nil
 }
 
-func (s *Service) signedBeaconBlockFromJSON(res *httpResponse) (*api.Response[*spec.VersionedSignedBeaconBlock], error) {
+func (*Service) signedBeaconBlockFromJSON(res *httpResponse) (*api.Response[*spec.VersionedSignedBeaconBlock], error) {
 	response := &api.Response[*spec.VersionedSignedBeaconBlock]{
 		Data: &spec.VersionedSignedBeaconBlock{
 			Version: res.consensusVersion,

@@ -21,7 +21,7 @@ import (
 )
 
 // AttestationData fetches the attestation data for the given slot and committee index.
-func (s *Service) AttestationData(_ context.Context,
+func (*Service) AttestationData(_ context.Context,
 	_ *api.AttestationDataOpts,
 ) (
 	*api.Response[*phase0.AttestationData],

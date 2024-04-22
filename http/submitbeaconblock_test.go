@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -82,6 +82,13 @@ func TestSubmitBeaconBlock(t *testing.T) {
 			})
 			require.NoError(t, err)
 			require.NotNil(t, res)
+
+			if res.Data.Version != spec.DataVersionPhase0 &&
+				res.Data.Version != spec.DataVersionAltair &&
+				res.Data.Version != spec.DataVersionBellatrix &&
+				res.Data.Version != spec.DataVersionCapella {
+				t.Skip("proposal version not supported by endpoint, skipping test")
+			}
 
 			signedBeaconBlock := &spec.VersionedSignedBeaconBlock{}
 			switch {

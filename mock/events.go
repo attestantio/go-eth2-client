@@ -20,6 +20,6 @@ import (
 )
 
 // Events feeds requested events with the given topics to the supplied handler.
-func (s *Service) Events(_ context.Context, _ []string, _ client.EventHandlerFunc) error {
+func (*Service) Events(_ context.Context, _ []string, _ client.EventHandlerFunc) error {
 	return nil
 }

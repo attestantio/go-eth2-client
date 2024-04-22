@@ -20,6 +20,6 @@ import (
 )
 
 // SubmitVoluntaryExit submits a voluntary exit.
-func (s *Service) SubmitVoluntaryExit(_ context.Context, _ *spec.SignedVoluntaryExit) error {
+func (*Service) SubmitVoluntaryExit(_ context.Context, _ *spec.SignedVoluntaryExit) error {
 	return nil
 }

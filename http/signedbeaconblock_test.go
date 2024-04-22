@@ -15,6 +15,7 @@ package http_test
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 
@@ -51,8 +52,15 @@ func TestSignedBeaconBlock(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			response, err := service.(client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx, test.opts)
-			require.NoError(t, err)
-			require.NotNil(t, response)
+			if err != nil {
+				// The beacon node we are talking to may not have the block.
+				var apiError *api.Error
+				require.True(t, errors.As(err, &apiError))
+				require.Equal(t, 404, apiError.StatusCode)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, response)
+			}
 		})
 	}
 }

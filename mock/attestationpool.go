@@ -21,7 +21,7 @@ import (
 )
 
 // AttestationPool fetches the attestation pool for the given slot.
-func (s *Service) AttestationPool(_ context.Context,
+func (*Service) AttestationPool(_ context.Context,
 	_ *api.AttestationPoolOpts,
 ) (
 	*api.Response[[]*phase0.Attestation],

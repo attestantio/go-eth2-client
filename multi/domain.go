@@ -33,7 +33,7 @@ func (s *Service) Domain(ctx context.Context,
 	phase0.Domain,
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		domain, err := client.(consensusclient.DomainProvider).Domain(ctx, domainType, epoch)
 		if err != nil {
 			return nil, err
@@ -48,7 +48,12 @@ func (s *Service) Domain(ctx context.Context,
 		return phase0.Domain{}, err
 	}
 
-	return res.(phase0.Domain), nil
+	response, isResponse := res.(phase0.Domain)
+	if !isResponse {
+		return phase0.Domain{}, ErrIncorrectType
+	}
+
+	return response, nil
 }
 
 // GenesisDomain provides a domain for a given domain type.
@@ -58,7 +63,7 @@ func (s *Service) GenesisDomain(ctx context.Context,
 	phase0.Domain,
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		domain, err := client.(consensusclient.DomainProvider).GenesisDomain(ctx, domainType)
 		if err != nil {
 			return nil, err
@@ -73,5 +78,10 @@ func (s *Service) GenesisDomain(ctx context.Context,
 		return phase0.Domain{}, err
 	}
 
-	return res.(phase0.Domain), nil
+	response, isResponse := res.(phase0.Domain)
+	if !isResponse {
+		return phase0.Domain{}, ErrIncorrectType
+	}
+
+	return response, nil
 }

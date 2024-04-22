@@ -28,7 +28,7 @@ func (s *Service) VoluntaryExitPool(ctx context.Context,
 	*api.Response[[]*phase0.SignedVoluntaryExit],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		voluntaryExitPool, err := client.(consensusclient.VoluntaryExitPoolProvider).VoluntaryExitPool(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -40,5 +40,10 @@ func (s *Service) VoluntaryExitPool(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[[]*phase0.SignedVoluntaryExit]), nil
+	response, isResponse := res.(*api.Response[[]*phase0.SignedVoluntaryExit])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

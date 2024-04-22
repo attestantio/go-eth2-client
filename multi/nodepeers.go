@@ -23,7 +23,7 @@ import (
 
 // NodePeers provides the peers of the node.
 func (s *Service) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		nodePeers, err := client.(consensusclient.NodePeersProvider).NodePeers(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -35,5 +35,10 @@ func (s *Service) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.
 		return nil, err
 	}
 
-	return res.(*api.Response[[]*apiv1.Peer]), nil
+	response, isResponse := res.(*api.Response[[]*apiv1.Peer])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

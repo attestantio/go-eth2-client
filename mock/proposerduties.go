@@ -22,7 +22,7 @@ import (
 
 // ProposerDuties obtains proposer duties for the given epoch.
 // If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
-func (s *Service) ProposerDuties(_ context.Context, opts *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error) {
+func (*Service) ProposerDuties(_ context.Context, opts *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error) {
 	data := make([]*apiv1.ProposerDuty, len(opts.Indices))
 	for i := range opts.Indices {
 		data[i] = &apiv1.ProposerDuty{
