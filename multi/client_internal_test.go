@@ -53,7 +53,7 @@ func TestDeactivateMulti(t *testing.T) {
 	multi := s.(*Service)
 
 	var wg sync.WaitGroup
-	starter := make(chan interface{})
+	starter := make(chan any)
 	for i := 0; i < 256; i++ {
 		wg.Add(1)
 		go func() {
@@ -100,7 +100,7 @@ func TestActivateMulti(t *testing.T) {
 	multi.deactivateClient(ctx, erroringClient2)
 
 	var wg sync.WaitGroup
-	starter := make(chan interface{})
+	starter := make(chan any)
 	for i := 0; i < 256; i++ {
 		wg.Add(1)
 		go func() {

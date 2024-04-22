@@ -28,7 +28,7 @@ func (s *Service) DepositContract(ctx context.Context,
 	*api.Response[*apiv1.DepositContract],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		aggregate, err := client.(consensusclient.DepositContractProvider).DepositContract(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -40,5 +40,10 @@ func (s *Service) DepositContract(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[*apiv1.DepositContract]), nil
+	response, isResponse := res.(*api.Response[*apiv1.DepositContract])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

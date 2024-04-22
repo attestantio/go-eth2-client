@@ -21,7 +21,10 @@ func decodeJSONResponse[T any](body io.Reader, res T) (T, map[string]any, error)
 		return res, nil, errors.Join(errors.New("failed to parse JSON"), err)
 	}
 
-	data := clone.Clone(res).(T)
+	data, isCorrectType := clone.Clone(res).(T)
+	if !isCorrectType {
+		return res, nil, ErrIncorrectType
+	}
 	metadata := make(map[string]any)
 	for k, v := range decoded {
 		switch k {

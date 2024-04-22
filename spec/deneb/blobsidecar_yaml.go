@@ -53,14 +53,14 @@ func (b *BlobSidecar) MarshalYAML() ([]byte, error) {
 func (b *BlobSidecar) UnmarshalYAML(input []byte) error {
 	// This is very inefficient, but YAML is only used for spec tests so we do this
 	// rather than maintain a custom YAML unmarshaller.
-	var data blobSidecarJSON
-	if err := yaml.Unmarshal(input, &data); err != nil {
+	var unmarshaled blobSidecarJSON
+	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
-	bytes, err := json.Marshal(&data)
+	marshaled, err := json.Marshal(&unmarshaled)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	return b.UnmarshalJSON(bytes)
+	return b.UnmarshalJSON(marshaled)
 }

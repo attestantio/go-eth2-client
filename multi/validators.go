@@ -29,7 +29,7 @@ func (s *Service) Validators(ctx context.Context,
 	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		block, err := client.(consensusclient.ValidatorsProvider).Validators(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -41,5 +41,10 @@ func (s *Service) Validators(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator]), nil
+	response, isResponse := res.(*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

@@ -24,7 +24,7 @@ import (
 )
 
 // BlindedProposal fetches a blinded proposal for signing.
-func (s *Service) BlindedProposal(_ context.Context,
+func (*Service) BlindedProposal(_ context.Context,
 	opts *api.BlindedProposalOpts,
 ) (
 	*api.Response[*api.VersionedBlindedProposal],
@@ -97,11 +97,11 @@ func (s *Service) BlindedProposal(_ context.Context,
 				},
 			},
 			Graffiti:          opts.Graffiti,
-			ProposerSlashings: []*phase0.ProposerSlashing{},
-			AttesterSlashings: []*phase0.AttesterSlashing{},
+			ProposerSlashings: make([]*phase0.ProposerSlashing, 0),
+			AttesterSlashings: make([]*phase0.AttesterSlashing, 0),
 			Attestations:      attestations,
-			Deposits:          []*phase0.Deposit{},
-			VoluntaryExits:    []*phase0.SignedVoluntaryExit{},
+			Deposits:          make([]*phase0.Deposit, 0),
+			VoluntaryExits:    make([]*phase0.SignedVoluntaryExit, 0),
 		},
 	}
 

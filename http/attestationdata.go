@@ -53,7 +53,7 @@ func (s *Service) AttestationData(ctx context.Context,
 	}
 }
 
-func (s *Service) attestationDataFromJSON(_ context.Context,
+func (*Service) attestationDataFromJSON(_ context.Context,
 	opts *api.AttestationDataOpts,
 	httpResponse *httpResponse,
 ) (

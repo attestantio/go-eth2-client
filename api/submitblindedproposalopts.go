@@ -13,7 +13,7 @@
 
 package api
 
-import v2 "github.com/attestantio/go-eth2-client/api/v2"
+import apiv2 "github.com/attestantio/go-eth2-client/api/v2"
 
 // SubmitBlindedProposalOpts are the options for submitting proposals.
 type SubmitBlindedProposalOpts struct {
@@ -23,5 +23,5 @@ type SubmitBlindedProposalOpts struct {
 	Proposal *VersionedSignedBlindedProposal
 
 	// BroadcastValidation is the validation required of the consensus node before broadcasting the proposal.
-	BroadcastValidation *v2.BroadcastValidation
+	BroadcastValidation *apiv2.BroadcastValidation
 }

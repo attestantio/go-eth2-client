@@ -29,7 +29,7 @@ func (s *Service) ProposerDuties(ctx context.Context,
 	*api.Response[[]*apiv1.ProposerDuty],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		block, err := client.(consensusclient.ProposerDutiesProvider).ProposerDuties(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -41,5 +41,10 @@ func (s *Service) ProposerDuties(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[[]*apiv1.ProposerDuty]), nil
+	response, isResponse := res.(*api.Response[[]*apiv1.ProposerDuty])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

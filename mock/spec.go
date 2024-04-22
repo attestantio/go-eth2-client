@@ -22,7 +22,7 @@ import (
 
 // Spec provides the spec information of the chain.
 // This returns various useful values.
-func (s *Service) Spec(_ context.Context, _ *api.SpecOpts) (*api.Response[map[string]any], error) {
+func (*Service) Spec(_ context.Context, _ *api.SpecOpts) (*api.Response[map[string]any], error) {
 	data := map[string]any{
 		"SECONDS_PER_SLOT": 12 * time.Second,
 		"SLOTS_PER_EPOCH":  uint64(32),

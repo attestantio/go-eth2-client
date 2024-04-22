@@ -23,7 +23,7 @@ import (
 
 // SyncCommittee fetches the sync committee for the given state.
 func (s *Service) SyncCommittee(ctx context.Context, opts *api.SyncCommitteeOpts) (*api.Response[*apiv1.SyncCommittee], error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		block, err := client.(consensusclient.SyncCommitteesProvider).SyncCommittee(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -35,5 +35,10 @@ func (s *Service) SyncCommittee(ctx context.Context, opts *api.SyncCommitteeOpts
 		return nil, err
 	}
 
-	return res.(*api.Response[*apiv1.SyncCommittee]), nil
+	response, isResponse := res.(*api.Response[*apiv1.SyncCommittee])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

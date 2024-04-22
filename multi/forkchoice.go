@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,29 +18,29 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-// AttestationPool obtains the attestation pool for a given slot.
-func (s *Service) AttestationPool(ctx context.Context,
-	opts *api.AttestationPoolOpts,
+// ForkChoice fetches all current fork choice context.
+func (s *Service) ForkChoice(ctx context.Context,
+	opts *api.ForkChoiceOpts,
 ) (
-	*api.Response[[]*phase0.Attestation],
+	*api.Response[*apiv1.ForkChoice],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		attestationPool, err := client.(consensusclient.AttestationPoolProvider).AttestationPool(ctx, opts)
+		aggregate, err := client.(consensusclient.ForkChoiceProvider).ForkChoice(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
 
-		return attestationPool, nil
+		return aggregate, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	response, isResponse := res.(*api.Response[[]*phase0.Attestation])
+	response, isResponse := res.(*api.Response[*apiv1.ForkChoice])
 	if !isResponse {
 		return nil, ErrIncorrectType
 	}

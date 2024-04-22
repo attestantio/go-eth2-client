@@ -109,6 +109,56 @@ linters-settings:
   lll:
     line-length: 132
 
+  revive:
+    ignore-generated-header: true
+    severity: error
+    confidence: 0.1
+    errorCode: 0
+    warningCode: 0
+    rules:
+      - name: atomic
+      - name: blank-imports
+      - name: comment-spacings
+      - name: confusing-results
+      - name: constant-logical-expr
+      - name: context-as-argument
+      - name: context-keys-type
+      - name: datarace
+      - name: defer
+      - name: dot-imports
+      - name: duplicated-imports
+      - name: early-return
+      - name: error-strings
+      - name: errorf
+      - name: exported
+      - name: file-header
+      - name: identical-branches
+      - name: import-alias-naming
+      - name: import-shadowing
+      - name: increment-decrement
+      - name: indent-error-flow
+      - name: modifies-value-receiver
+      - name: range-val-address
+      - name: range-val-in-closure
+      - name: range
+      - name: receiver-naming
+      - name: string-of-int
+      - name: superfluous-else
+      - name: time-equal
+      - name: time-naming
+      - name: unchecked-type-assertion
+      - name: unhandled-error
+        arguments:
+          - "fmt.Fprint"
+          - "fmt.Fprintf"
+      - name: unnecessary-stmt
+      - name: unused-parameter
+      - name: unused-receiver
+      - name: use-any
+      - name: useless-break
+      - name: var-naming
+      - name: waitgroup-by-value
+
   stylecheck:
     checks: [ "all", "-ST1000" ]
 

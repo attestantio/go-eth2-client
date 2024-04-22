@@ -35,7 +35,7 @@ func (s *Service) SubmitValidatorRegistrations(ctx context.Context, registration
 
 	// Unwrap versioned registrations.
 	var version *spec.BuilderVersion
-	var unversionedRegistrations []interface{}
+	var unversionedRegistrations []any
 
 	for i := range registrations {
 		if registrations[i] == nil {

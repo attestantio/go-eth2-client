@@ -71,12 +71,12 @@ func (s *Erroring) Address() string {
 }
 
 // IsActive returns true if the client is active.
-func (s *Erroring) IsActive() bool {
+func (*Erroring) IsActive() bool {
 	return true
 }
 
 // IsSynced returns true if the client is synced.
-func (s *Erroring) IsSynced() bool {
+func (*Erroring) IsSynced() bool {
 	return true
 }
 
@@ -639,7 +639,7 @@ func (s *Erroring) SyncCommitteeDuties(ctx context.Context, opts *api.SyncCommit
 }
 
 // Spec provides the spec information of the chain.
-func (s *Erroring) Spec(ctx context.Context, opts *api.SpecOpts) (*api.Response[map[string]interface{}], error) {
+func (s *Erroring) Spec(ctx context.Context, opts *api.SpecOpts) (*api.Response[map[string]any], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}

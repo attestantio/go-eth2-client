@@ -20,6 +20,6 @@ import (
 )
 
 // SubmitProposalSlashing submits a proposal slashing.
-func (s *Service) SubmitProposalSlashing(_ context.Context, _ *phase0.ProposerSlashing) error {
+func (*Service) SubmitProposalSlashing(_ context.Context, _ *phase0.ProposerSlashing) error {
 	return nil
 }

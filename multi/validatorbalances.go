@@ -28,7 +28,7 @@ func (s *Service) ValidatorBalances(ctx context.Context,
 	*api.Response[map[phase0.ValidatorIndex]phase0.Gwei],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		block, err := client.(consensusclient.ValidatorBalancesProvider).ValidatorBalances(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -40,5 +40,10 @@ func (s *Service) ValidatorBalances(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[map[phase0.ValidatorIndex]phase0.Gwei]), nil
+	response, isResponse := res.(*api.Response[map[phase0.ValidatorIndex]phase0.Gwei])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

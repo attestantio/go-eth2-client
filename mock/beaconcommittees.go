@@ -21,7 +21,7 @@ import (
 )
 
 // BeaconCommittees fetches all beacon committees for the epoch at the given state.
-func (s *Service) BeaconCommittees(_ context.Context,
+func (*Service) BeaconCommittees(_ context.Context,
 	_ *api.BeaconCommitteesOpts,
 ) (
 	*api.Response[[]*apiv1.BeaconCommittee],

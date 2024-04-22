@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,16 +11,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package multi
 
-import (
-	"context"
+import "errors"
 
-	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-)
-
-// SubmitProposalPreparations provides the beacon node with information required if a proposal for the given validators
-// shows up in the next epoch.
-func (*Service) SubmitProposalPreparations(_ context.Context, _ []*apiv1.ProposalPreparation) error {
-	return nil
-}
+// ErrIncorrectType is returned when the multi client obtain a response type it is not expecting.
+var ErrIncorrectType = errors.New("incorrect response type")

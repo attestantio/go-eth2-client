@@ -22,8 +22,12 @@ import (
 )
 
 // BlobSidecars fetches the blob sidecars given options.
-func (s *Service) BlobSidecars(ctx context.Context, opts *api.BlobSidecarsOpts) ([]*deneb.BlobSidecar, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+func (s *Service) BlobSidecars(ctx context.Context,
+	opts *api.BlobSidecarsOpts,
+) (*api.Response[[]*deneb.BlobSidecar],
+	error,
+) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		blobSidecars, err := client.(consensusclient.BlobSidecarsProvider).BlobSidecars(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -34,9 +38,11 @@ func (s *Service) BlobSidecars(ctx context.Context, opts *api.BlobSidecarsOpts) 
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
+
+	response, isResponse := res.(*api.Response[[]*deneb.BlobSidecar])
+	if !isResponse {
+		return nil, ErrIncorrectType
 	}
 
-	return res.([]*deneb.BlobSidecar), nil
+	return response, nil
 }

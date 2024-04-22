@@ -43,7 +43,7 @@ type VersionedSignedProposal struct {
 	DenebBlinded     *apiv1deneb.SignedBlindedBeaconBlock
 }
 
-// AssertPresnet throws an error if the expected proposal
+// AssertPresent throws an error if the expected proposal
 // given the version and blinded fields is not present.
 func (v *VersionedSignedProposal) AssertPresent() error {
 	switch v.Version {

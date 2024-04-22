@@ -24,7 +24,7 @@ import (
 func (s *Service) SubmitSyncCommitteeSubscriptions(ctx context.Context,
 	subscriptions []*api.SyncCommitteeSubscription,
 ) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		err := client.(consensusclient.SyncCommitteeSubscriptionsSubmitter).SubmitSyncCommitteeSubscriptions(ctx, subscriptions)
 		if err != nil {
 			return nil, err

@@ -23,7 +23,7 @@ import (
 
 // Finality provides the finality given a state ID.
 func (s *Service) Finality(ctx context.Context, opts *api.FinalityOpts) (*api.Response[*apiv1.Finality], error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		finality, err := client.(consensusclient.FinalityProvider).Finality(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -35,5 +35,10 @@ func (s *Service) Finality(ctx context.Context, opts *api.FinalityOpts) (*api.Re
 		return nil, err
 	}
 
-	return res.(*api.Response[*apiv1.Finality]), nil
+	response, isResponse := res.(*api.Response[*apiv1.Finality])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }
