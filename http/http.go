@@ -33,6 +33,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// defaultUserAgent is sent with requests if no other user agent has been supplied.
+const defaultUserAgent = "go-eth2-client/0.21.2"
+
 // post sends an HTTP post request and returns the body.
 func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io.Reader, error) {
 	// #nosec G404
@@ -59,7 +62,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	if req.Header.Get("User-Agent") == "" {
-		req.Header.Set("User-Agent", "go-eth2-client/0.21.1")
+		req.Header.Set("User-Agent", defaultUserAgent)
 	}
 
 	resp, err := s.client.Do(req)
@@ -149,7 +152,7 @@ func (s *Service) post2(ctx context.Context,
 		req.Header.Set(k, v)
 	}
 	if req.Header.Get("User-Agent") == "" {
-		req.Header.Set("User-Agent", "go-eth2-client/0.21.1")
+		req.Header.Set("User-Agent", defaultUserAgent)
 	}
 
 	resp, err := s.client.Do(req)
