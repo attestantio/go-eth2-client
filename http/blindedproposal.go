@@ -29,6 +29,8 @@ import (
 )
 
 // BlindedProposal fetches a proposal for signing.
+//
+// Deprecated: use `Proposal` instead.
 func (s *Service) BlindedProposal(ctx context.Context,
 	opts *api.BlindedProposalOpts,
 ) (
@@ -85,7 +87,7 @@ func (s *Service) BlindedProposal(ctx context.Context,
 		return nil, errors.Join(fmt.Errorf("blinded beacon block proposal for slot %d; expected %d", blockSlot, opts.Slot), client.ErrInconsistentResult)
 	}
 
-	// Only check the RANDAO reveal and graffiti if we are not connected to DVT middleware,
+	// Only check the RANDAO reveal if we are not connected to DVT middleware,
 	// as the returned values will be decided by the middleware.
 	if !s.connectedToDVTMiddleware {
 		blockRandaoReveal, err := response.Data.RandaoReveal()
@@ -94,14 +96,6 @@ func (s *Service) BlindedProposal(ctx context.Context,
 		}
 		if !bytes.Equal(blockRandaoReveal[:], opts.RandaoReveal[:]) {
 			return nil, errors.Join(fmt.Errorf("blinded beacon block proposal has RANDAO reveal %#x; expected %#x", blockRandaoReveal[:], opts.RandaoReveal[:]), client.ErrInconsistentResult)
-		}
-
-		blockGraffiti, err := response.Data.Graffiti()
-		if err != nil {
-			return nil, err
-		}
-		if !bytes.Equal(blockGraffiti[:], opts.Graffiti[:]) {
-			return nil, errors.Join(fmt.Errorf("blinded beacon block proposal has graffiti %#x; expected %#x", blockGraffiti[:], opts.Graffiti[:]), client.ErrInconsistentResult)
 		}
 	}
 
