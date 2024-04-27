@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
 	"math/big"
 	"strings"
 
@@ -216,6 +217,14 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context,
 				err = response.Data.Deneb.UnmarshalSSZ(res.body)
 			}
 		}
+	case spec.DataVersionElectra:
+		if response.Data.Blinded {
+			response.Data.ElectraBlinded = &apiv1electra.BlindedBeaconBlock{}
+			err = response.Data.ElectraBlinded.UnmarshalSSZ(res.body)
+		} else {
+			response.Data.Electra = &apiv1electra.BlockContents{}
+			err = response.Data.Electra.UnmarshalSSZ(res.body)
+		}
 	default:
 		return nil, fmt.Errorf("unhandled block proposal version %s", res.consensusVersion)
 	}
@@ -290,6 +299,12 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[
 				bytes.NewReader(res.body),
 				&apiv1deneb.BlockContents{},
 			)
+		}
+	case spec.DataVersionElectra:
+		if response.Data.Blinded {
+			response.Data.ElectraBlinded, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1electra.BlindedBeaconBlock{})
+		} else {
+			response.Data.Electra, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1electra.BlockContents{})
 		}
 	default:
 		err = fmt.Errorf("unsupported version %s", res.consensusVersion)

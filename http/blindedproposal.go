@@ -19,6 +19,8 @@ import (
 	"errors"
 	"fmt"
 
+	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
+
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
@@ -139,6 +141,11 @@ func (*Service) blindedProposalFromSSZ(res *httpResponse) (*api.Response[*api.Ve
 		if err := response.Data.Deneb.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Join(errors.New("failed to decode deneb blinded beacon block proposal"), err)
 		}
+	case spec.DataVersionElectra:
+		response.Data.Electra = &apiv1electra.BlindedBeaconBlock{}
+		if err := response.Data.Electra.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Join(errors.New("failed to decode electra blinded beacon block proposal"), err)
+		}
 	default:
 		return nil, fmt.Errorf("unhandled block proposal version %s", res.consensusVersion)
 	}
@@ -169,6 +176,11 @@ func (*Service) blindedProposalFromJSON(res *httpResponse) (*api.Response[*api.V
 		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(
 			bytes.NewReader(res.body),
 			&apiv1deneb.BlindedBeaconBlock{},
+		)
+	case spec.DataVersionElectra:
+		response.Data.Electra, response.Metadata, err = decodeJSONResponse(
+			bytes.NewReader(res.body),
+			&apiv1electra.BlindedBeaconBlock{},
 		)
 	default:
 		return nil, fmt.Errorf("unsupported version %s", res.consensusVersion)
