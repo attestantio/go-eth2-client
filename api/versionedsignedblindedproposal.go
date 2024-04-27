@@ -17,6 +17,7 @@ import (
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
+	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
@@ -27,6 +28,7 @@ type VersionedSignedBlindedProposal struct {
 	Bellatrix *apiv1bellatrix.SignedBlindedBeaconBlock
 	Capella   *apiv1capella.SignedBlindedBeaconBlock
 	Deneb     *apiv1deneb.SignedBlindedBeaconBlock
+	Electra   *apiv1electra.SignedBlindedBeaconBlock
 }
 
 // Slot returns the slot of the signed blinded proposal.
@@ -53,13 +55,20 @@ func (v *VersionedSignedBlindedProposal) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Deneb.Message.Slot, nil
+	case spec.DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Electra.Message.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
 }
 
-// Attestations returns the attestations of the blinded proposal.
-func (v *VersionedSignedBlindedProposal) Attestations() ([]*phase0.Attestation, error) {
+// Attestations returns the attestations of the signed blinded proposal.
+func (v *VersionedSignedBlindedProposal) Attestations() ([]spec.VersionedAttestation, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil ||
@@ -68,7 +77,15 @@ func (v *VersionedSignedBlindedProposal) Attestations() ([]*phase0.Attestation, 
 			return nil, ErrDataMissing
 		}
 
-		return v.Bellatrix.Message.Body.Attestations, nil
+		versionedAttestations := make([]spec.VersionedAttestation, len(v.Bellatrix.Message.Body.Attestations))
+		for i, attestation := range v.Bellatrix.Message.Body.Attestations {
+			versionedAttestations[i] = spec.VersionedAttestation{
+				Version:   spec.DataVersionBellatrix,
+				Bellatrix: attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil ||
 			v.Capella.Message == nil ||
@@ -76,7 +93,15 @@ func (v *VersionedSignedBlindedProposal) Attestations() ([]*phase0.Attestation, 
 			return nil, ErrDataMissing
 		}
 
-		return v.Capella.Message.Body.Attestations, nil
+		versionedAttestations := make([]spec.VersionedAttestation, len(v.Capella.Message.Body.Attestations))
+		for i, attestation := range v.Capella.Message.Body.Attestations {
+			versionedAttestations[i] = spec.VersionedAttestation{
+				Version: spec.DataVersionCapella,
+				Capella: attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
 			v.Deneb.Message == nil ||
@@ -84,7 +109,31 @@ func (v *VersionedSignedBlindedProposal) Attestations() ([]*phase0.Attestation, 
 			return nil, ErrDataMissing
 		}
 
-		return v.Deneb.Message.Body.Attestations, nil
+		versionedAttestations := make([]spec.VersionedAttestation, len(v.Deneb.Message.Body.Attestations))
+		for i, attestation := range v.Deneb.Message.Body.Attestations {
+			versionedAttestations[i] = spec.VersionedAttestation{
+				Version: spec.DataVersionDeneb,
+				Deneb:   attestation,
+			}
+		}
+
+		return versionedAttestations, nil
+	case spec.DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		versionedAttestations := make([]spec.VersionedAttestation, len(v.Electra.Message.Body.Attestations))
+		for i, attestation := range v.Electra.Message.Body.Attestations {
+			versionedAttestations[i] = spec.VersionedAttestation{
+				Version: spec.DataVersionElectra,
+				Electra: attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -111,6 +160,12 @@ func (v *VersionedSignedBlindedProposal) Root() (phase0.Root, error) {
 		}
 
 		return v.Deneb.Message.HashTreeRoot()
+	case spec.DataVersionElectra:
+		if v.Electra == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Electra.Message.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -139,6 +194,14 @@ func (v *VersionedSignedBlindedProposal) BodyRoot() (phase0.Root, error) {
 		}
 
 		return v.Deneb.Message.Body.HashTreeRoot()
+	case spec.DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Electra.Message.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -166,6 +229,13 @@ func (v *VersionedSignedBlindedProposal) ParentRoot() (phase0.Root, error) {
 		}
 
 		return v.Deneb.Message.ParentRoot, nil
+	case spec.DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Electra.Message.ParentRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -193,6 +263,13 @@ func (v *VersionedSignedBlindedProposal) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Deneb.Message.StateRoot, nil
+	case spec.DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Electra.Message.StateRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -221,6 +298,14 @@ func (v *VersionedSignedBlindedProposal) AttesterSlashings() ([]*phase0.Attester
 		}
 
 		return v.Deneb.Message.Body.AttesterSlashings, nil
+	case spec.DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		return v.Electra.Message.Body.AttesterSlashings, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -249,6 +334,14 @@ func (v *VersionedSignedBlindedProposal) ProposerSlashings() ([]*phase0.Proposer
 		}
 
 		return v.Deneb.Message.Body.ProposerSlashings, nil
+	case spec.DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		return v.Electra.Message.Body.ProposerSlashings, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -278,6 +371,13 @@ func (v *VersionedSignedBlindedProposal) ProposerIndex() (phase0.ValidatorIndex,
 		}
 
 		return v.Deneb.Message.ProposerIndex, nil
+	case spec.DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Electra.Message.ProposerIndex, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -313,6 +413,15 @@ func (v *VersionedSignedBlindedProposal) ExecutionBlockHash() (phase0.Hash32, er
 		}
 
 		return v.Deneb.Message.Body.ExecutionPayloadHeader.BlockHash, nil
+	case spec.DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil ||
+			v.Electra.Message.Body.ExecutionPayloadHeader == nil {
+			return phase0.Hash32{}, ErrDataMissing
+		}
+
+		return v.Electra.Message.Body.ExecutionPayloadHeader.BlockHash, nil
 	default:
 		return phase0.Hash32{}, ErrUnsupportedVersion
 	}
@@ -348,6 +457,15 @@ func (v *VersionedSignedBlindedProposal) ExecutionBlockNumber() (uint64, error) 
 		}
 
 		return v.Deneb.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
+	case spec.DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil ||
+			v.Electra.Message.Body.ExecutionPayloadHeader == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Electra.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -374,6 +492,12 @@ func (v *VersionedSignedBlindedProposal) Signature() (phase0.BLSSignature, error
 		}
 
 		return v.Deneb.Signature, nil
+	case spec.DataVersionElectra:
+		if v.Electra == nil {
+			return phase0.BLSSignature{}, ErrDataMissing
+		}
+
+		return v.Electra.Signature, nil
 	default:
 		return phase0.BLSSignature{}, ErrUnsupportedVersion
 	}
