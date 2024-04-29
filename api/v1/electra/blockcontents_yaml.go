@@ -48,15 +48,15 @@ func (b *BlockContents) MarshalYAML() ([]byte, error) {
 // UnmarshalYAML implements yaml.Unmarshaler.
 func (b *BlockContents) UnmarshalYAML(input []byte) error {
 	// We unmarshal to the JSON struct to save on duplicate code.
-	var data blockContentsJSON
-	if err := yaml.Unmarshal(input, &data); err != nil {
+	var unmarshaled blockContentsJSON
+	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
 
-	bytes, err := json.Marshal(data)
+	marshaled, err := json.Marshal(unmarshaled)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	return b.UnmarshalJSON(bytes)
+	return b.UnmarshalJSON(marshaled)
 }
