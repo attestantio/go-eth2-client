@@ -47,14 +47,14 @@ func (c *Consolidation) MarshalYAML() ([]byte, error) {
 func (c *Consolidation) UnmarshalYAML(input []byte) error {
 	// This is very inefficient, but YAML is only used for spec tests so we do this
 	// rather than maintain a custom YAML unmarshaller.
-	var data consolidationJSON
-	if err := yaml.Unmarshal(input, &data); err != nil {
+	var unmarshaled consolidationJSON
+	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
-	bytes, err := json.Marshal(&data)
+	marshaled, err := json.Marshal(&unmarshaled)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	return c.UnmarshalJSON(bytes)
+	return c.UnmarshalJSON(marshaled)
 }

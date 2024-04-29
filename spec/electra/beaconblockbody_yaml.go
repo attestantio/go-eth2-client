@@ -75,14 +75,14 @@ func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
 func (b *BeaconBlockBody) UnmarshalYAML(input []byte) error {
 	// This is very inefficient, but YAML is only used for spec tests so we do this
 	// rather than maintain a custom YAML unmarshaller.
-	var data beaconBlockBodyJSON
-	if err := yaml.Unmarshal(input, &data); err != nil {
+	var unmarshaled beaconBlockBodyJSON
+	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
-	bytes, err := json.Marshal(data)
+	marshaled, err := json.Marshal(unmarshaled)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	return b.UnmarshalJSON(bytes)
+	return b.UnmarshalJSON(marshaled)
 }
