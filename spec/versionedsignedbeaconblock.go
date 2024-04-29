@@ -15,6 +15,7 @@ package spec
 
 import (
 	"errors"
+
 	"github.com/attestantio/go-eth2-client/spec/electra"
 
 	"github.com/attestantio/go-eth2-client/spec/altair"

@@ -16,6 +16,7 @@ package electra
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/goccy/go-yaml"
 )
 

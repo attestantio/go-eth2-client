@@ -14,8 +14,9 @@
 package api
 
 import (
-	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
 	"math/big"
+
+	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
 
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"

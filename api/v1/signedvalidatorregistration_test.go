@@ -20,8 +20,8 @@ import (
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/goccy/go-yaml"
-	require "github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	require "github.com/stretchr/testify/require"
 )
 
 func TestSignedValidatorRegistrationJSON(t *testing.T) {

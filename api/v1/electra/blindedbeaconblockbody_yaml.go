@@ -16,6 +16,7 @@ package electra
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/attestantio/go-eth2-client/spec/electra"
 
 	"github.com/attestantio/go-eth2-client/spec/altair"

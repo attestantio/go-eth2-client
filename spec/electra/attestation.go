@@ -18,8 +18,9 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"strings"
+
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
