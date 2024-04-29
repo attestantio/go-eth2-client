@@ -316,6 +316,7 @@ func (v *VersionedProposal) Attestations() ([]spec.VersionedAttestation, error) 
 				Phase0:  attestation,
 			}
 		}
+
 		return versionedAttestations, nil
 	case spec.DataVersionAltair:
 		versionedAttestations := make([]spec.VersionedAttestation, len(v.Altair.Body.Attestations))
@@ -325,6 +326,7 @@ func (v *VersionedProposal) Attestations() ([]spec.VersionedAttestation, error) 
 				Altair:  attestation,
 			}
 		}
+
 		return versionedAttestations, nil
 	case spec.DataVersionBellatrix:
 		if v.Blinded {
@@ -335,6 +337,7 @@ func (v *VersionedProposal) Attestations() ([]spec.VersionedAttestation, error) 
 					Bellatrix: attestation,
 				}
 			}
+
 			return versionedAttestations, nil
 		}
 
@@ -345,6 +348,7 @@ func (v *VersionedProposal) Attestations() ([]spec.VersionedAttestation, error) 
 				Bellatrix: attestation,
 			}
 		}
+
 		return versionedAttestations, nil
 	case spec.DataVersionCapella:
 		if v.Blinded {
@@ -355,6 +359,7 @@ func (v *VersionedProposal) Attestations() ([]spec.VersionedAttestation, error) 
 					Capella: attestation,
 				}
 			}
+
 			return versionedAttestations, nil
 		}
 
@@ -365,6 +370,7 @@ func (v *VersionedProposal) Attestations() ([]spec.VersionedAttestation, error) 
 				Capella: attestation,
 			}
 		}
+
 		return versionedAttestations, nil
 	case spec.DataVersionDeneb:
 		if v.Blinded {
@@ -375,6 +381,7 @@ func (v *VersionedProposal) Attestations() ([]spec.VersionedAttestation, error) 
 					Deneb:   attestation,
 				}
 			}
+
 			return versionedAttestations, nil
 		}
 
@@ -385,6 +392,7 @@ func (v *VersionedProposal) Attestations() ([]spec.VersionedAttestation, error) 
 				Deneb:   attestation,
 			}
 		}
+
 		return versionedAttestations, nil
 	case spec.DataVersionElectra:
 		if v.Blinded {
@@ -395,6 +403,7 @@ func (v *VersionedProposal) Attestations() ([]spec.VersionedAttestation, error) 
 					Electra: attestation,
 				}
 			}
+
 			return versionedAttestations, nil
 		}
 
@@ -405,6 +414,7 @@ func (v *VersionedProposal) Attestations() ([]spec.VersionedAttestation, error) 
 				Electra: attestation,
 			}
 		}
+
 		return versionedAttestations, nil
 	default:
 		return nil, ErrUnsupportedVersion
