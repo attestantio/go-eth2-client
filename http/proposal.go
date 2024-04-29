@@ -18,9 +18,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
 	"math/big"
 	"strings"
+
+	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"

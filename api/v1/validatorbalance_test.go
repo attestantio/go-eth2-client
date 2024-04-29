@@ -18,8 +18,8 @@ import (
 	"testing"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	require "github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	require "github.com/stretchr/testify/require"
 )
 
 func TestValidatorBalanceJSON(t *testing.T) {
