@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
 	"github.com/attestantio/go-eth2-client/spec/electra"
 
 	client "github.com/attestantio/go-eth2-client"

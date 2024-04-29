@@ -4,9 +4,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"github.com/attestantio/go-eth2-client/spec/electra"
 	"strconv"
 	"strings"
+
+	"github.com/attestantio/go-eth2-client/spec/electra"
 
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"

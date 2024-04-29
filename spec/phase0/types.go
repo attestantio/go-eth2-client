@@ -16,8 +16,9 @@ package phase0
 import (
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 // Epoch is an epoch number.

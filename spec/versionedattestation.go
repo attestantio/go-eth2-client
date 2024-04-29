@@ -15,6 +15,7 @@ package spec
 
 import (
 	"errors"
+
 	"github.com/prysmaticlabs/go-bitfield"
 
 	"github.com/attestantio/go-eth2-client/spec/electra"
