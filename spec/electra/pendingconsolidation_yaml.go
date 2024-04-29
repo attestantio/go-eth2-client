@@ -45,14 +45,14 @@ func (p *PendingConsolidation) MarshalYAML() ([]byte, error) {
 func (p *PendingConsolidation) UnmarshalYAML(input []byte) error {
 	// This is very inefficient, but YAML is only used for spec tests so we do this
 	// rather than maintain a custom YAML unmarshaller.
-	var data pendingConsolidationJSON
-	if err := yaml.Unmarshal(input, &data); err != nil {
+	var unmarshaled pendingConsolidationJSON
+	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
-	bytes, err := json.Marshal(&data)
+	marshaled, err := json.Marshal(&unmarshaled)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	return p.UnmarshalJSON(bytes)
+	return p.UnmarshalJSON(marshaled)
 }
