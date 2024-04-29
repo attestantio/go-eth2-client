@@ -287,6 +287,8 @@ func (v *VersionedSignedBeaconBlock) Graffiti() ([32]byte, error) {
 }
 
 // Attestations returns the attestations of the beacon block.
+//
+//nolint:gocyclo
 func (v *VersionedSignedBeaconBlock) Attestations() ([]VersionedAttestation, error) {
 	switch v.Version {
 	case DataVersionPhase0:
