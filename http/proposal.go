@@ -129,7 +129,7 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context, res *httpRespo
 	}
 
 	var dynSSZ *dynssz.DynSsz
-	if s.useDynamicSSZ {
+	if s.customSpecSupport {
 		specs, err := s.Spec(ctx, &api.SpecOpts{})
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to request specs"), err)
@@ -142,14 +142,14 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context, res *httpRespo
 	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
 		response.Data.Phase0 = &phase0.BeaconBlock{}
-		if s.useDynamicSSZ {
+		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Phase0, res.body)
 		} else {
 			err = response.Data.Phase0.UnmarshalSSZ(res.body)
 		}
 	case spec.DataVersionAltair:
 		response.Data.Altair = &altair.BeaconBlock{}
-		if s.useDynamicSSZ {
+		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Altair, res.body)
 		} else {
 			err = response.Data.Altair.UnmarshalSSZ(res.body)
@@ -157,14 +157,14 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context, res *httpRespo
 	case spec.DataVersionBellatrix:
 		if response.Data.Blinded {
 			response.Data.BellatrixBlinded = &apiv1bellatrix.BlindedBeaconBlock{}
-			if s.useDynamicSSZ {
+			if s.customSpecSupport {
 				err = dynSSZ.UnmarshalSSZ(response.Data.BellatrixBlinded, res.body)
 			} else {
 				err = response.Data.BellatrixBlinded.UnmarshalSSZ(res.body)
 			}
 		} else {
 			response.Data.Bellatrix = &bellatrix.BeaconBlock{}
-			if s.useDynamicSSZ {
+			if s.customSpecSupport {
 				err = dynSSZ.UnmarshalSSZ(response.Data.Bellatrix, res.body)
 			} else {
 				err = response.Data.Bellatrix.UnmarshalSSZ(res.body)
@@ -173,14 +173,14 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context, res *httpRespo
 	case spec.DataVersionCapella:
 		if response.Data.Blinded {
 			response.Data.CapellaBlinded = &apiv1capella.BlindedBeaconBlock{}
-			if s.useDynamicSSZ {
+			if s.customSpecSupport {
 				err = dynSSZ.UnmarshalSSZ(response.Data.CapellaBlinded, res.body)
 			} else {
 				err = response.Data.CapellaBlinded.UnmarshalSSZ(res.body)
 			}
 		} else {
 			response.Data.Capella = &capella.BeaconBlock{}
-			if s.useDynamicSSZ {
+			if s.customSpecSupport {
 				err = dynSSZ.UnmarshalSSZ(response.Data.Capella, res.body)
 			} else {
 				err = response.Data.Capella.UnmarshalSSZ(res.body)
@@ -189,14 +189,14 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context, res *httpRespo
 	case spec.DataVersionDeneb:
 		if response.Data.Blinded {
 			response.Data.DenebBlinded = &apiv1deneb.BlindedBeaconBlock{}
-			if s.useDynamicSSZ {
+			if s.customSpecSupport {
 				err = dynSSZ.UnmarshalSSZ(response.Data.DenebBlinded, res.body)
 			} else {
 				err = response.Data.DenebBlinded.UnmarshalSSZ(res.body)
 			}
 		} else {
 			response.Data.Deneb = &apiv1deneb.BlockContents{}
-			if s.useDynamicSSZ {
+			if s.customSpecSupport {
 				err = dynSSZ.UnmarshalSSZ(response.Data.Deneb, res.body)
 			} else {
 				err = response.Data.Deneb.UnmarshalSSZ(res.body)

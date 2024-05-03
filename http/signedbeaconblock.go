@@ -75,7 +75,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context, res *httpRespons
 	}
 
 	var dynSSZ *dynssz.DynSsz
-	if s.useDynamicSSZ {
+	if s.customSpecSupport {
 		specs, err := s.Spec(ctx, &api.SpecOpts{})
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to request specs"), err)
@@ -88,7 +88,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context, res *httpRespons
 	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
 		response.Data.Phase0 = &phase0.SignedBeaconBlock{}
-		if s.useDynamicSSZ {
+		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Phase0, res.body)
 		} else {
 			err = response.Data.Phase0.UnmarshalSSZ(res.body)
@@ -98,7 +98,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context, res *httpRespons
 		}
 	case spec.DataVersionAltair:
 		response.Data.Altair = &altair.SignedBeaconBlock{}
-		if s.useDynamicSSZ {
+		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Altair, res.body)
 		} else {
 			err = response.Data.Altair.UnmarshalSSZ(res.body)
@@ -108,7 +108,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context, res *httpRespons
 		}
 	case spec.DataVersionBellatrix:
 		response.Data.Bellatrix = &bellatrix.SignedBeaconBlock{}
-		if s.useDynamicSSZ {
+		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Bellatrix, res.body)
 		} else {
 			err = response.Data.Bellatrix.UnmarshalSSZ(res.body)
@@ -118,7 +118,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context, res *httpRespons
 		}
 	case spec.DataVersionCapella:
 		response.Data.Capella = &capella.SignedBeaconBlock{}
-		if s.useDynamicSSZ {
+		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Capella, res.body)
 		} else {
 			err = response.Data.Capella.UnmarshalSSZ(res.body)
@@ -128,7 +128,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context, res *httpRespons
 		}
 	case spec.DataVersionDeneb:
 		response.Data.Deneb = &deneb.SignedBeaconBlock{}
-		if s.useDynamicSSZ {
+		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Deneb, res.body)
 		} else {
 			err = response.Data.Deneb.UnmarshalSSZ(res.body)

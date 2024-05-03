@@ -33,7 +33,7 @@ type parameters struct {
 	allowDelayedStart  bool
 	hooks              *Hooks
 	reducedMemoryUsage bool
-	dynamicSSZ         bool
+	customSpecSupport  bool
 }
 
 // Parameter is the interface for service parameters.
@@ -125,11 +125,11 @@ func WithReducedMemoryUsage(reducedMemoryUsage bool) Parameter {
 	})
 }
 
-// WithDynamicSSZ use dynamic SSZ library, which is able to handle non-mainnet presets.
-// Dynamic SSZ en-/decoding is much slower than the static one. Use only if required.
-func WithDynamicSSZ(dynamicSSZ bool) Parameter {
+// WithCustomSpecSupport switches from the built in static SSZ library to a new dynamic SSZ library, which is able to handle non-mainnet presets.
+// Dynamic SSZ en-/decoding is much slower than the static one, so this should only be used if required.
+func WithCustomSpecSupport(customSpecSupport bool) Parameter {
 	return parameterFunc(func(p *parameters) {
-		p.dynamicSSZ = dynamicSSZ
+		p.customSpecSupport = customSpecSupport
 	})
 }
 

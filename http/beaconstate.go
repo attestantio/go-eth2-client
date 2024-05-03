@@ -72,7 +72,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 	}
 
 	var dynSSZ *dynssz.DynSsz
-	if s.useDynamicSSZ {
+	if s.customSpecSupport {
 		specs, err := s.Spec(ctx, &api.SpecOpts{})
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to request specs"), err)
@@ -85,7 +85,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
 		response.Data.Phase0 = &phase0.BeaconState{}
-		if s.useDynamicSSZ {
+		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Phase0, res.body)
 		} else {
 			err = response.Data.Phase0.UnmarshalSSZ(res.body)
@@ -95,7 +95,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		}
 	case spec.DataVersionAltair:
 		response.Data.Altair = &altair.BeaconState{}
-		if s.useDynamicSSZ {
+		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Altair, res.body)
 		} else {
 			err = response.Data.Altair.UnmarshalSSZ(res.body)
@@ -105,7 +105,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		}
 	case spec.DataVersionBellatrix:
 		response.Data.Bellatrix = &bellatrix.BeaconState{}
-		if s.useDynamicSSZ {
+		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Bellatrix, res.body)
 		} else {
 			err = response.Data.Bellatrix.UnmarshalSSZ(res.body)
@@ -115,7 +115,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		}
 	case spec.DataVersionCapella:
 		response.Data.Capella = &capella.BeaconState{}
-		if s.useDynamicSSZ {
+		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Capella, res.body)
 		} else {
 			err = response.Data.Capella.UnmarshalSSZ(res.body)
@@ -125,7 +125,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		}
 	case spec.DataVersionDeneb:
 		response.Data.Deneb = &deneb.BeaconState{}
-		if s.useDynamicSSZ {
+		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Deneb, res.body)
 		} else {
 			err = response.Data.Deneb.UnmarshalSSZ(res.body)
