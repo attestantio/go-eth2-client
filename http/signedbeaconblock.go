@@ -76,12 +76,12 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context, res *httpRespons
 
 	var dynSSZ *dynssz.DynSsz
 	if s.useDynamicSSZ {
-		spec, err := s.Spec(ctx, &api.SpecOpts{})
+		specs, err := s.Spec(ctx, &api.SpecOpts{})
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to request specs"), err)
 		}
 
-		dynSSZ = dynssz.NewDynSsz(spec.Data)
+		dynSSZ = dynssz.NewDynSsz(specs.Data)
 	}
 
 	var err error
