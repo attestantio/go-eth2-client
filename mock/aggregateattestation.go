@@ -21,7 +21,7 @@ import (
 )
 
 // AggregateAttestation fetches the aggregate attestation given an attestation.
-func (s *Service) AggregateAttestation(_ context.Context,
+func (*Service) AggregateAttestation(_ context.Context,
 	_ *api.AggregateAttestationOpts,
 ) (
 	*api.Response[*phase0.Attestation],

@@ -118,7 +118,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 }
 
 // Name returns the name of the client implementation.
-func (s *Service) Name() string {
+func (*Service) Name() string {
 	return "multi"
 }
 

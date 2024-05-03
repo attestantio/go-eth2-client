@@ -108,7 +108,7 @@ func (s *Service) chunkedValidatorBalances(ctx context.Context,
 	}, nil
 }
 
-func (s *Service) validatorBalancesFromJSON(_ context.Context,
+func (*Service) validatorBalancesFromJSON(_ context.Context,
 	httpResponse *httpResponse,
 ) (
 	*api.Response[map[phase0.ValidatorIndex]phase0.Gwei],

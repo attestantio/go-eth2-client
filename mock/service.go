@@ -76,7 +76,7 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 	}
 
 	// Close the service on context done.
-	go func(s *Service) {
+	go func(*Service) {
 		<-ctx.Done()
 		log.Trace().Msg("Context done; closing connection")
 		s.close()
@@ -105,7 +105,7 @@ func (s *Service) fetchStaticValues(ctx context.Context) error {
 }
 
 // Name provides the name of the service.
-func (s *Service) Name() string {
+func (*Service) Name() string {
 	return "Mock"
 }
 
@@ -115,7 +115,7 @@ func (s *Service) Address() string {
 }
 
 // IsActive returns true if the client is active.
-func (s *Service) IsActive() bool {
+func (*Service) IsActive() bool {
 	return true
 }
 
@@ -125,5 +125,5 @@ func (s *Service) IsSynced() bool {
 }
 
 // close closes the service, freeing up resources.
-func (s *Service) close() {
+func (*Service) close() {
 }

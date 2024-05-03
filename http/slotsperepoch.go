@@ -30,5 +30,10 @@ func (s *Service) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 		return 0, err
 	}
 
-	return response.Data["SLOTS_PER_EPOCH"].(uint64), nil
+	res, isCorrectType := response.Data["SLOTS_PER_EPOCH"].(uint64)
+	if !isCorrectType {
+		return 0, ErrIncorrectType
+	}
+
+	return res, nil
 }

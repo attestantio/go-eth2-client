@@ -1,3 +1,9 @@
+0.21.3:
+  - relax requirement for proposals to use the graffiti we request
+
+0.21.2:
+  - fuzz testing fixes
+
 0.21.1:
   - fix potential crash when unmarshaling Gwei values
   - add `WithReducedMemoryUsage()` option for http service

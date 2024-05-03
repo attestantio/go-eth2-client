@@ -143,7 +143,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context, res *httpRespons
 	return response, nil
 }
 
-func (s *Service) signedBeaconBlockFromJSON(res *httpResponse) (*api.Response[*spec.VersionedSignedBeaconBlock], error) {
+func (*Service) signedBeaconBlockFromJSON(res *httpResponse) (*api.Response[*spec.VersionedSignedBeaconBlock], error) {
 	response := &api.Response[*spec.VersionedSignedBeaconBlock]{
 		Data: &spec.VersionedSignedBeaconBlock{
 			Version: res.consensusVersion,

@@ -53,7 +53,7 @@ func (s *Service) AttestationPool(ctx context.Context,
 	}
 }
 
-func (s *Service) attestationPoolFromJSON(_ context.Context,
+func (*Service) attestationPoolFromJSON(_ context.Context,
 	opts *api.AttestationPoolOpts,
 	httpResponse *httpResponse,
 ) (

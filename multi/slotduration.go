@@ -25,7 +25,7 @@ import (
 //
 // Deprecated: use Spec().
 func (s *Service) SlotDuration(ctx context.Context) (time.Duration, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		duration, err := client.(consensusclient.SlotDurationProvider).SlotDuration(ctx)
 		if err != nil {
 			return nil, err
@@ -40,5 +40,10 @@ func (s *Service) SlotDuration(ctx context.Context) (time.Duration, error) {
 		return 0, err
 	}
 
-	return res.(time.Duration), nil
+	response, isResponse := res.(time.Duration)
+	if !isResponse {
+		return 0, ErrIncorrectType
+	}
+
+	return response, nil
 }

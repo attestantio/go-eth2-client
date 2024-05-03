@@ -140,7 +140,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 	return response, nil
 }
 
-func (s *Service) beaconStateFromJSON(res *httpResponse) (*api.Response[*spec.VersionedBeaconState], error) {
+func (*Service) beaconStateFromJSON(res *httpResponse) (*api.Response[*spec.VersionedBeaconState], error) {
 	response := &api.Response[*spec.VersionedBeaconState]{
 		Data: &spec.VersionedBeaconState{
 			Version: res.consensusVersion,

@@ -21,7 +21,7 @@ import (
 )
 
 // BeaconBlockRoot fetches a block's root given a block ID.
-func (s *Service) BeaconBlockRoot(_ context.Context,
+func (*Service) BeaconBlockRoot(_ context.Context,
 	_ *api.BeaconBlockRootOpts,
 ) (
 	*api.Response[*phase0.Root],

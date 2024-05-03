@@ -28,7 +28,7 @@ func (s *Service) BeaconCommittees(ctx context.Context,
 	*api.Response[[]*apiv1.BeaconCommittee],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		beaconCommittees, err := client.(consensusclient.BeaconCommitteesProvider).BeaconCommittees(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -40,5 +40,10 @@ func (s *Service) BeaconCommittees(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[[]*apiv1.BeaconCommittee]), nil
+	response, isResponse := res.(*api.Response[[]*apiv1.BeaconCommittee])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

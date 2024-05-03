@@ -22,7 +22,7 @@ import (
 
 // SubmitVoluntaryExit submits a voluntary exit.
 func (s *Service) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		err := client.(consensusclient.VoluntaryExitSubmitter).SubmitVoluntaryExit(ctx, voluntaryExit)
 		if err != nil {
 			return nil, err

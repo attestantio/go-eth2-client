@@ -24,7 +24,7 @@ import (
 func (s *Service) SubmitAggregateAttestations(ctx context.Context,
 	aggregateAndProofs []*phase0.SignedAggregateAndProof,
 ) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		err := client.(consensusclient.AggregateAttestationsSubmitter).SubmitAggregateAttestations(ctx, aggregateAndProofs)
 		if err != nil {
 			return nil, err

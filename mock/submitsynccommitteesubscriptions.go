@@ -20,6 +20,6 @@ import (
 )
 
 // SubmitSyncCommitteeSubscriptions subscribes to sync committees.
-func (s *Service) SubmitSyncCommitteeSubscriptions(_ context.Context, _ []*api.SyncCommitteeSubscription) error {
+func (*Service) SubmitSyncCommitteeSubscriptions(_ context.Context, _ []*api.SyncCommitteeSubscription) error {
 	return nil
 }

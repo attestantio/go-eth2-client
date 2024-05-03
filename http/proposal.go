@@ -98,7 +98,7 @@ func (s *Service) Proposal(ctx context.Context,
 		return nil, errors.Join(fmt.Errorf("beacon block proposal for slot %d; expected %d", blockSlot, opts.Slot), client.ErrInconsistentResult)
 	}
 
-	// Only check the RANDAO reveal and graffiti if we are not connected to DVT middleware,
+	// Only check the RANDAO reveal if we are not connected to DVT middleware,
 	// as the returned values will be decided by the middleware.
 	if !s.connectedToDVTMiddleware {
 		blockRandaoReveal, err := response.Data.RandaoReveal()
@@ -107,14 +107,6 @@ func (s *Service) Proposal(ctx context.Context,
 		}
 		if !bytes.Equal(blockRandaoReveal[:], opts.RandaoReveal[:]) {
 			return nil, errors.Join(fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", blockRandaoReveal[:], opts.RandaoReveal[:]), client.ErrInconsistentResult)
-		}
-
-		blockGraffiti, err := response.Data.Graffiti()
-		if err != nil {
-			return nil, err
-		}
-		if !bytes.Equal(blockGraffiti[:], opts.Graffiti[:]) {
-			return nil, errors.Join(fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", blockGraffiti[:], opts.Graffiti[:]), client.ErrInconsistentResult)
 		}
 	}
 
@@ -268,7 +260,7 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[
 	return response, nil
 }
 
-func (s *Service) populateProposalDataFromHeaders(response *api.Response[*api.VersionedProposal],
+func (*Service) populateProposalDataFromHeaders(response *api.Response[*api.VersionedProposal],
 	headers map[string]string,
 ) error {
 	for k, v := range headers {

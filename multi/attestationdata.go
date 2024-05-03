@@ -28,7 +28,7 @@ func (s *Service) AttestationData(ctx context.Context,
 	*api.Response[*phase0.AttestationData],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		attestationData, err := client.(consensusclient.AttestationDataProvider).AttestationData(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -40,5 +40,10 @@ func (s *Service) AttestationData(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[*phase0.AttestationData]), nil
+	response, isResponse := res.(*api.Response[*phase0.AttestationData])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

@@ -92,7 +92,7 @@ func (s *Service) submitProposalData(ctx context.Context,
 	return body, contentType, nil
 }
 
-func (s *Service) submitProposalJSON(_ context.Context,
+func (*Service) submitProposalJSON(_ context.Context,
 	proposal *api.VersionedSignedProposal,
 ) (
 	[]byte,
@@ -126,7 +126,7 @@ func (s *Service) submitProposalJSON(_ context.Context,
 	return specJSON, nil
 }
 
-func (s *Service) submitProposalSSZ(_ context.Context,
+func (*Service) submitProposalSSZ(_ context.Context,
 	proposal *api.VersionedSignedProposal,
 ) (
 	[]byte,

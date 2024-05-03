@@ -48,7 +48,7 @@ type Service struct {
 	// lifetime of a beacon node.
 	genesis              *apiv1.Genesis
 	genesisMutex         sync.RWMutex
-	spec                 map[string]interface{}
+	spec                 map[string]any
 	specMutex            sync.RWMutex
 	depositContract      *apiv1.DepositContract
 	depositContractMutex sync.RWMutex
@@ -232,7 +232,7 @@ func (s *Service) checkDVT(ctx context.Context) error {
 }
 
 // Name provides the name of the service.
-func (s *Service) Name() string {
+func (*Service) Name() string {
 	return "Standard (HTTP)"
 }
 
@@ -242,7 +242,7 @@ func (s *Service) Address() string {
 }
 
 // close closes the service, freeing up resources.
-func (s *Service) close() {
+func (*Service) close() {
 }
 
 // CheckConnectionState checks the connection state for the client, potentially updating

@@ -17,7 +17,7 @@ import (
 	"context"
 	"time"
 
-	api "github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"

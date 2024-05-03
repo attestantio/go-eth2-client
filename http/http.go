@@ -33,6 +33,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// defaultUserAgent is sent with requests if no other user agent has been supplied.
+const defaultUserAgent = "go-eth2-client/0.21.3"
+
 // post sends an HTTP post request and returns the body.
 func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io.Reader, error) {
 	// #nosec G404
@@ -47,11 +50,11 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 		e.Str("body", string(bodyBytes)).Msg("POST request")
 	}
 
-	url := urlForCall(s.base, endpoint, "")
+	callURL := urlForCall(s.base, endpoint, "")
 
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
-	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, url.String(), body)
+	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, callURL.String(), body)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to create POST request"), err)
 	}
@@ -59,13 +62,13 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	if req.Header.Get("User-Agent") == "" {
-		req.Header.Set("User-Agent", "go-eth2-client/0.21.1")
+		req.Header.Set("User-Agent", defaultUserAgent)
 	}
 
 	resp, err := s.client.Do(req)
 	if err != nil {
 		go s.CheckConnectionState(ctx)
-		s.monitorPostComplete(ctx, url.Path, "failed")
+		s.monitorPostComplete(ctx, callURL.Path, "failed")
 
 		return nil, errors.Join(errors.New("failed to call POST endpoint"), err)
 	}
@@ -80,7 +83,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	if statusFamily != 2 {
 		log.Debug().Int("status_code", resp.StatusCode).Str("data", string(data)).Msg("POST failed")
 
-		s.monitorPostComplete(ctx, url.Path, "failed")
+		s.monitorPostComplete(ctx, callURL.Path, "failed")
 
 		return nil, &api.Error{
 			Method:     http.MethodPost,
@@ -91,7 +94,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	}
 
 	log.Trace().Str("response", string(data)).Msg("POST response")
-	s.monitorPostComplete(ctx, url.Path, "succeeded")
+	s.monitorPostComplete(ctx, callURL.Path, "succeeded")
 
 	return bytes.NewReader(data), nil
 }
@@ -130,13 +133,13 @@ func (s *Service) post2(ctx context.Context,
 		}
 	}
 
-	url := urlForCall(s.base, endpoint, query)
-	log.Trace().Str("url", url.String()).Msg("URL to POST")
-	span.SetAttributes(attribute.String("url", url.String()))
+	callURL := urlForCall(s.base, endpoint, query)
+	log.Trace().Str("url", callURL.String()).Msg("URL to POST")
+	span.SetAttributes(attribute.String("url", callURL.String()))
 
 	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
-	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, url.String(), body)
+	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, callURL.String(), body)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to create POST request"), err)
 	}
@@ -149,7 +152,7 @@ func (s *Service) post2(ctx context.Context,
 		req.Header.Set(k, v)
 	}
 	if req.Header.Get("User-Agent") == "" {
-		req.Header.Set("User-Agent", "go-eth2-client/0.21.1")
+		req.Header.Set("User-Agent", defaultUserAgent)
 	}
 
 	resp, err := s.client.Do(req)
@@ -165,7 +168,7 @@ func (s *Service) post2(ctx context.Context,
 		}
 
 		span.SetStatus(codes.Error, err.Error())
-		s.monitorPostComplete(ctx, url.Path, "failed")
+		s.monitorPostComplete(ctx, callURL.Path, "failed")
 
 		return nil, errors.Join(errors.New("failed to call POST endpoint"), err)
 	}
@@ -189,7 +192,7 @@ func (s *Service) post2(ctx context.Context,
 		}
 
 		span.SetStatus(codes.Error, err.Error())
-		s.monitorPostComplete(ctx, url.Path, "failed")
+		s.monitorPostComplete(ctx, callURL.Path, "failed")
 
 		return nil, errors.Join(errors.New("failed to read POST response"), err)
 	}
@@ -198,7 +201,7 @@ func (s *Service) post2(ctx context.Context,
 		// Nothing returned.  This is not considered an error.
 		span.AddEvent("Received empty response")
 		log.Trace().Msg("Endpoint returned no content")
-		s.monitorPostComplete(ctx, url.Path, "succeeded")
+		s.monitorPostComplete(ctx, callURL.Path, "succeeded")
 
 		return res, nil
 	}
@@ -226,7 +229,7 @@ func (s *Service) post2(ctx context.Context,
 		log.Debug().Int("status_code", resp.StatusCode).RawJSON("response", trimmedResponse).Msg("POST failed")
 
 		span.SetStatus(codes.Error, fmt.Sprintf("Status code %d", resp.StatusCode))
-		s.monitorPostComplete(ctx, url.Path, "failed")
+		s.monitorPostComplete(ctx, callURL.Path, "failed")
 
 		return nil, &api.Error{
 			Method:     http.MethodPost,
@@ -236,7 +239,7 @@ func (s *Service) post2(ctx context.Context,
 		}
 	}
 
-	s.monitorPostComplete(ctx, url.Path, "succeeded")
+	s.monitorPostComplete(ctx, callURL.Path, "succeeded")
 
 	return res, nil
 }
@@ -276,9 +279,9 @@ func (s *Service) get(ctx context.Context,
 	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Str("endpoint", endpoint).Logger()
 	log.Trace().Msg("GET request")
 
-	url := urlForCall(s.base, endpoint, query)
-	log.Trace().Str("url", url.String()).Msg("URL to GET")
-	span.SetAttributes(attribute.String("url", url.String()))
+	callURL := urlForCall(s.base, endpoint, query)
+	log.Trace().Str("url", callURL.String()).Msg("URL to GET")
+	span.SetAttributes(attribute.String("url", callURL.String()))
 
 	timeout := s.timeout
 	if opts.Timeout != 0 {
@@ -287,7 +290,7 @@ func (s *Service) get(ctx context.Context,
 
 	opCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
-	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, url.String(), nil)
+	req, err := http.NewRequestWithContext(opCtx, http.MethodGet, callURL.String(), nil)
 	if err != nil {
 		span.SetStatus(codes.Error, "Failed to create request")
 
@@ -310,7 +313,7 @@ func (s *Service) get(ctx context.Context,
 			// We don't consider context canceled to be a potential connection issue, as the user canceled the context.
 		case errors.Is(err, context.DeadlineExceeded):
 			// We don't consider context deadline exceeded to be a potential connection issue, as the user selected the deadline.
-		case strings.HasSuffix(url.String(), "/node/syncing"):
+		case strings.HasSuffix(callURL.String(), "/node/syncing"):
 			// Special case; if we have called the syncing endpoint and it failed then we don't check the connectino status, as
 			// that calls the syncing endpoint itself and so we find ourselves in an endless loop.
 		default:
@@ -319,7 +322,7 @@ func (s *Service) get(ctx context.Context,
 		}
 
 		span.SetStatus(codes.Error, err.Error())
-		s.monitorGetComplete(ctx, url.Path, "failed")
+		s.monitorGetComplete(ctx, callURL.Path, "failed")
 
 		return nil, errors.Join(errors.New("failed to call GET endpoint"), err)
 	}
@@ -347,7 +350,7 @@ func (s *Service) get(ctx context.Context,
 		}
 
 		span.SetStatus(codes.Error, err.Error())
-		s.monitorGetComplete(ctx, url.Path, "failed")
+		s.monitorGetComplete(ctx, callURL.Path, "failed")
 
 		return nil, errors.Join(errors.New("failed to read GET response"), err)
 	}
@@ -356,7 +359,7 @@ func (s *Service) get(ctx context.Context,
 		// Nothing returned.  This is not considered an error.
 		span.AddEvent("Received empty response")
 		log.Trace().Msg("Endpoint returned no content")
-		s.monitorGetComplete(ctx, url.Path, "succeeded")
+		s.monitorGetComplete(ctx, callURL.Path, "succeeded")
 
 		return res, nil
 	}
@@ -372,8 +375,8 @@ func (s *Service) get(ctx context.Context,
 	))
 
 	if res.contentType == ContentTypeJSON {
-		trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
 		if e := log.Trace(); e.Enabled() {
+			trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
 			e.RawJSON("body", trimmedResponse).Msg("GET response")
 		}
 	}
@@ -384,7 +387,7 @@ func (s *Service) get(ctx context.Context,
 		log.Debug().Int("status_code", resp.StatusCode).RawJSON("response", trimmedResponse).Msg("GET failed")
 
 		span.SetStatus(codes.Error, fmt.Sprintf("Status code %d", resp.StatusCode))
-		s.monitorGetComplete(ctx, url.Path, "failed")
+		s.monitorGetComplete(ctx, callURL.Path, "failed")
 
 		return nil, &api.Error{
 			Method:     http.MethodGet,
@@ -398,7 +401,7 @@ func (s *Service) get(ctx context.Context,
 		return nil, errors.Join(errors.New("failed to parse consensus version"), err)
 	}
 
-	s.monitorGetComplete(ctx, url.Path, "succeeded")
+	s.monitorGetComplete(ctx, callURL.Path, "succeeded")
 
 	return res, nil
 }
@@ -466,7 +469,10 @@ func metadataFromHeaders(headers map[string]string) map[string]any {
 }
 
 // urlForCall patches together a URL for a call.
-func urlForCall(base *url.URL, endpoint string, query string) *url.URL {
+func urlForCall(base *url.URL,
+	endpoint string,
+	query string,
+) *url.URL {
 	callURL := *base
 	callURL.Path = endpoint
 	if callURL.RawQuery == "" {

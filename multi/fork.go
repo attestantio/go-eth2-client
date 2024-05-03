@@ -28,7 +28,7 @@ func (s *Service) Fork(ctx context.Context,
 	*api.Response[*phase0.Fork],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		fork, err := client.(consensusclient.ForkProvider).Fork(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -40,5 +40,10 @@ func (s *Service) Fork(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[*phase0.Fork]), nil
+	response, isResponse := res.(*api.Response[*phase0.Fork])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

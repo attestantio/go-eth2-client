@@ -31,5 +31,10 @@ func (s *Service) SlotDuration(ctx context.Context) (time.Duration, error) {
 		return 0, err
 	}
 
-	return response.Data["SECONDS_PER_SLOT"].(time.Duration), nil
+	res, isCorrectType := response.Data["SECONDS_PER_SLOT"].(time.Duration)
+	if !isCorrectType {
+		return 0, ErrIncorrectType
+	}
+
+	return res, nil
 }

@@ -27,7 +27,7 @@ func (s *Service) Spec(ctx context.Context,
 	*api.Response[map[string]any],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		aggregate, err := client.(consensusclient.SpecProvider).Spec(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -39,5 +39,10 @@ func (s *Service) Spec(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[map[string]any]), nil
+	response, isResponse := res.(*api.Response[map[string]any])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }

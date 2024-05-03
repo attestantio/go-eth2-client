@@ -129,7 +129,7 @@ func (s *Service) activateClient(ctx context.Context, client consensusclient.Ser
 
 // callFunc is the definition for a call function.  It provides a generic return interface
 // to allow the caller to unpick the results as it sees fit.
-type callFunc func(ctx context.Context, client consensusclient.Service) (interface{}, error)
+type callFunc func(ctx context.Context, client consensusclient.Service) (any, error)
 
 // errHandlerFunc is the definition for an error handler function.  It looks at the error
 // returned from the client, potentially rewrites it, and also states if the error should
@@ -137,7 +137,7 @@ type callFunc func(ctx context.Context, client consensusclient.Service) (interfa
 type errHandlerFunc func(ctx context.Context, client consensusclient.Service, err error) (bool, error)
 
 // doCall carries out a call on the active clients in turn until one succeeds.
-func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandlerFunc) (interface{}, error) {
+func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandlerFunc) (any, error) {
 	log := s.log.With().Logger()
 	ctx = log.WithContext(ctx)
 
@@ -159,7 +159,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 	}
 
 	var err error
-	var res interface{}
+	var res any
 	for _, client := range activeClients {
 		res, err = call(ctx, client)
 		if err != nil {
@@ -209,7 +209,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 
 // providerInfo returns information on the provider.
 // Currently this just returns the name of the service (lighthouse/teku/etc.).
-func (s *Service) providerInfo(ctx context.Context, provider consensusclient.Service) string {
+func (*Service) providerInfo(ctx context.Context, provider consensusclient.Service) string {
 	providerName := "<unknown>"
 	nodeVersionProvider, isNodeVersionProvider := provider.(consensusclient.NodeVersionProvider)
 	if isNodeVersionProvider {

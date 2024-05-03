@@ -23,7 +23,7 @@ import (
 )
 
 // Proposal fetches a proposal for signing.
-func (s *Service) Proposal(_ context.Context,
+func (*Service) Proposal(_ context.Context,
 	opts *api.ProposalOpts,
 ) (
 	*api.Response[*api.VersionedProposal], error,
@@ -95,11 +95,11 @@ func (s *Service) Proposal(_ context.Context,
 				},
 			},
 			Graffiti:          opts.Graffiti,
-			ProposerSlashings: []*phase0.ProposerSlashing{},
-			AttesterSlashings: []*phase0.AttesterSlashing{},
+			ProposerSlashings: make([]*phase0.ProposerSlashing, 0),
+			AttesterSlashings: make([]*phase0.AttesterSlashing, 0),
 			Attestations:      attestations,
-			Deposits:          []*phase0.Deposit{},
-			VoluntaryExits:    []*phase0.SignedVoluntaryExit{},
+			Deposits:          make([]*phase0.Deposit, 0),
+			VoluntaryExits:    make([]*phase0.SignedVoluntaryExit, 0),
 		},
 	}
 

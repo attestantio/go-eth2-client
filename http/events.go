@@ -25,7 +25,7 @@ import (
 	"strings"
 	"time"
 
-	client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
@@ -35,12 +35,12 @@ import (
 )
 
 // Events feeds requested events with the given topics to the supplied handler.
-func (s *Service) Events(ctx context.Context, topics []string, handler client.EventHandlerFunc) error {
+func (s *Service) Events(ctx context.Context, topics []string, handler consensusclient.EventHandlerFunc) error {
 	if err := s.assertIsActive(ctx); err != nil {
 		return err
 	}
 	if len(topics) == 0 {
-		return errors.Join(errors.New("no topics supplied"), client.ErrInvalidOptions)
+		return errors.Join(errors.New("no topics supplied"), consensusclient.ErrInvalidOptions)
 	}
 
 	// #nosec G404
@@ -58,10 +58,10 @@ func (s *Service) Events(ctx context.Context, topics []string, handler client.Ev
 	if err != nil {
 		return errors.Join(errors.New("invalid endpoint"), err)
 	}
-	url := s.base.ResolveReference(reference).String()
-	log.Trace().Str("url", url).Msg("GET request to events stream")
+	callURL := s.base.ResolveReference(reference).String()
+	log.Trace().Str("url", callURL).Msg("GET request to events stream")
 
-	client := sse.NewClient(url)
+	client := sse.NewClient(callURL)
 	client.Connection.Transport = &http.Transport{
 		Dial: (&net.Dialer{
 			Timeout:   2 * time.Second,
@@ -92,7 +92,7 @@ func (s *Service) Events(ctx context.Context, topics []string, handler client.Ev
 }
 
 // handleEvent parses an event and passes it on to the handler.
-func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler client.EventHandlerFunc) {
+func (*Service) handleEvent(ctx context.Context, msg *sse.Event, handler consensusclient.EventHandlerFunc) {
 	log := zerolog.Ctx(ctx)
 
 	if handler == nil {

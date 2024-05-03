@@ -24,7 +24,7 @@ import (
 func (s *Service) SubmitSyncCommitteeMessages(ctx context.Context,
 	messages []*altair.SyncCommitteeMessage,
 ) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		err := client.(consensusclient.SyncCommitteeMessagesSubmitter).SubmitSyncCommitteeMessages(ctx, messages)
 		if err != nil {
 			return nil, err

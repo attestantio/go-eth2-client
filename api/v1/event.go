@@ -27,7 +27,7 @@ type Event struct {
 	// Topic is the topic of the event.
 	Topic string
 	// Data is the data of the event.
-	Data interface{}
+	Data any
 }
 
 // SupportedEventTopics is a map of supported event topics.
@@ -45,8 +45,8 @@ var SupportedEventTopics = map[string]bool{
 
 // eventJSON is the spec representation of the struct.
 type eventJSON struct {
-	Topic string                 `json:"topic"`
-	Data  map[string]interface{} `json:"data"`
+	Topic string         `json:"topic"`
+	Data  map[string]any `json:"data"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -56,7 +56,7 @@ func (e *Event) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal data")
 	}
-	var unmarshalled map[string]interface{}
+	var unmarshalled map[string]any
 	if err := json.Unmarshal(data, &unmarshalled); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal data")
 	}

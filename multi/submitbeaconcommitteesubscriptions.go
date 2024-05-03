@@ -24,7 +24,7 @@ import (
 func (s *Service) SubmitBeaconCommitteeSubscriptions(ctx context.Context,
 	subscriptions []*api.BeaconCommitteeSubscription,
 ) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		err := client.(consensusclient.BeaconCommitteeSubscriptionsSubmitter).SubmitBeaconCommitteeSubscriptions(ctx, subscriptions)
 		if err != nil {
 			return nil, err

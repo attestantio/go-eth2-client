@@ -28,7 +28,7 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 	*api.Response[*phase0.Attestation],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		aggregate, err := client.(consensusclient.AggregateAttestationProvider).AggregateAttestation(ctx, opts)
 		if err != nil {
 			return nil, err
@@ -40,5 +40,10 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 		return nil, err
 	}
 
-	return res.(*api.Response[*phase0.Attestation]), nil
+	response, isResponse := res.(*api.Response[*phase0.Attestation])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
 }
