@@ -65,6 +65,18 @@ func TestParseAddress(t *testing.T) {
 			address: "http://user:%2A%2A%2A@foo.com?a=***&b=***",
 		},
 		{
+			name:    "Path",
+			input:   "http://user:pass@foo.com/path?a=1&b=2",
+			base:    "http://user:pass@foo.com/path?a=1&b=2",
+			address: "http://user:%2A%2A%2A@foo.com/%2A%2A%2A?a=***&b=***",
+		},
+		{
+			name:    "PathTrailingSlash",
+			input:   "http://user:pass@foo.com/path/?a=1&b=2",
+			base:    "http://user:pass@foo.com/path?a=1&b=2",
+			address: "http://user:%2A%2A%2A@foo.com/%2A%2A%2A?a=***&b=***",
+		},
+		{
 			name:  "Invalid",
 			input: "http:// foo",
 			err:   "invalid URL\nparse \"http:// foo\": invalid character \" \" in host name",
@@ -85,12 +97,12 @@ func TestParseAddress(t *testing.T) {
 }
 
 func mustParseURL(input string) *url.URL {
-	res, err := url.Parse(input)
+	base, _, err := parseAddress(input)
 	if err != nil {
 		panic(err)
 	}
 
-	return res
+	return base
 }
 
 func TestURLForCall(t *testing.T) {
@@ -116,16 +128,16 @@ func TestURLForCall(t *testing.T) {
 		},
 		{
 			name:     "WithBaseQuery",
-			base:     mustParseURL("http://example.com?bar=3"),
+			base:     mustParseURL("http://example.com/?bar=3"),
 			endpoint: "/foo",
 			expected: "http://example.com/foo?bar=3",
 		},
 		{
 			name:     "Complex",
-			base:     mustParseURL("http://user:pass@foo.com?a=1&b=2"),
+			base:     mustParseURL("http://user:pass@foo.com/path?a=1&b=2"),
 			endpoint: "/foo",
 			query:    "bar=3",
-			expected: "http://user:pass@foo.com/foo?a=1&b=2&bar=3",
+			expected: "http://user:pass@foo.com/path/foo?a=1&b=2&bar=3",
 		},
 	}
 
