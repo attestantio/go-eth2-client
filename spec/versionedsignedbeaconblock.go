@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2023 Attestant Limited.
+// Copyright © 2021 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,6 +16,8 @@ package spec
 import (
 	"errors"
 
+	"github.com/attestantio/go-eth2-client/spec/electra"
+
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
@@ -31,6 +33,7 @@ type VersionedSignedBeaconBlock struct {
 	Bellatrix *bellatrix.SignedBeaconBlock
 	Capella   *capella.SignedBeaconBlock
 	Deneb     *deneb.SignedBeaconBlock
+	Electra   *electra.SignedBeaconBlock
 }
 
 // Slot returns the slot of the signed beacon block.
@@ -66,6 +69,12 @@ func (v *VersionedSignedBeaconBlock) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Deneb.Message.Slot, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil {
+			return 0, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -104,6 +113,12 @@ func (v *VersionedSignedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, err
 		}
 
 		return v.Deneb.Message.ProposerIndex, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil {
+			return 0, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.ProposerIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -130,6 +145,12 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error)
 		}
 
 		return v.Deneb.Message.Body.ExecutionPayload.BlockHash, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil || v.Electra.Message.Body.ExecutionPayload == nil {
+			return phase0.Hash32{}, errors.New("no deneb block")
+		}
+
+		return v.Electra.Message.Body.ExecutionPayload.BlockHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -156,6 +177,12 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockNumber() (uint64, error) {
 		}
 
 		return v.Deneb.Message.Body.ExecutionPayload.BlockNumber, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil || v.Electra.Message.Body.ExecutionPayload == nil {
+			return 0, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.ExecutionPayload.BlockNumber, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -186,6 +213,12 @@ func (v *VersionedSignedBeaconBlock) ExecutionTransactions() ([]bellatrix.Transa
 		}
 
 		return v.Deneb.Message.Body.ExecutionPayload.Transactions, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil || v.Electra.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.ExecutionPayload.Transactions, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -224,44 +257,106 @@ func (v *VersionedSignedBeaconBlock) Graffiti() ([32]byte, error) {
 		}
 
 		return v.Deneb.Message.Body.Graffiti, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return [32]byte{}, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.Graffiti, nil
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
 }
 
 // Attestations returns the attestations of the beacon block.
-func (v *VersionedSignedBeaconBlock) Attestations() ([]*phase0.Attestation, error) {
+//
+//nolint:gocyclo
+func (v *VersionedSignedBeaconBlock) Attestations() ([]VersionedAttestation, error) {
 	switch v.Version {
 	case DataVersionPhase0:
 		if v.Phase0 == nil || v.Phase0.Message == nil || v.Phase0.Message.Body == nil {
 			return nil, errors.New("no phase0 block")
 		}
 
-		return v.Phase0.Message.Body.Attestations, nil
+		versionedAttestations := make([]VersionedAttestation, len(v.Phase0.Message.Body.Attestations))
+		for i, attestation := range v.Phase0.Message.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version: DataVersionPhase0,
+				Phase0:  attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	case DataVersionAltair:
 		if v.Altair == nil || v.Altair.Message == nil || v.Altair.Message.Body == nil {
 			return nil, errors.New("no altair block")
 		}
 
-		return v.Altair.Message.Body.Attestations, nil
+		versionedAttestations := make([]VersionedAttestation, len(v.Altair.Message.Body.Attestations))
+		for i, attestation := range v.Altair.Message.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version: DataVersionAltair,
+				Altair:  attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil {
 			return nil, errors.New("no bellatrix block")
 		}
 
-		return v.Bellatrix.Message.Body.Attestations, nil
+		versionedAttestations := make([]VersionedAttestation, len(v.Bellatrix.Message.Body.Attestations))
+		for i, attestation := range v.Bellatrix.Message.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version:   DataVersionBellatrix,
+				Bellatrix: attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	case DataVersionCapella:
 		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil {
 			return nil, errors.New("no capella block")
 		}
 
-		return v.Capella.Message.Body.Attestations, nil
+		versionedAttestations := make([]VersionedAttestation, len(v.Capella.Message.Body.Attestations))
+		for i, attestation := range v.Capella.Message.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version: DataVersionCapella,
+				Capella: attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
 
-		return v.Deneb.Message.Body.Attestations, nil
+		versionedAttestations := make([]VersionedAttestation, len(v.Deneb.Message.Body.Attestations))
+		for i, attestation := range v.Deneb.Message.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version: DataVersionDeneb,
+				Deneb:   attestation,
+			}
+		}
+
+		return versionedAttestations, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		versionedAttestations := make([]VersionedAttestation, len(v.Electra.Message.Body.Attestations))
+		for i, attestation := range v.Electra.Message.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version: DataVersionElectra,
+				Electra: attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -300,6 +395,12 @@ func (v *VersionedSignedBeaconBlock) Root() (phase0.Root, error) {
 		}
 
 		return v.Deneb.Message.HashTreeRoot()
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil {
+			return phase0.Root{}, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -338,6 +439,12 @@ func (v *VersionedSignedBeaconBlock) BodyRoot() (phase0.Root, error) {
 		}
 
 		return v.Deneb.Message.Body.HashTreeRoot()
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return phase0.Root{}, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -376,6 +483,12 @@ func (v *VersionedSignedBeaconBlock) ParentRoot() (phase0.Root, error) {
 		}
 
 		return v.Deneb.Message.ParentRoot, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil {
+			return phase0.Root{}, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -414,6 +527,12 @@ func (v *VersionedSignedBeaconBlock) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Deneb.Message.StateRoot, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil {
+			return phase0.Root{}, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -452,6 +571,12 @@ func (v *VersionedSignedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error)
 		}
 
 		return v.Deneb.Message.Body.RANDAOReveal, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.RANDAOReveal, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -490,6 +615,12 @@ func (v *VersionedSignedBeaconBlock) ETH1Data() (*phase0.ETH1Data, error) {
 		}
 
 		return v.Deneb.Message.Body.ETH1Data, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.ETH1Data, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -528,6 +659,12 @@ func (v *VersionedSignedBeaconBlock) Deposits() ([]*phase0.Deposit, error) {
 		}
 
 		return v.Deneb.Message.Body.Deposits, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.Deposits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -566,6 +703,12 @@ func (v *VersionedSignedBeaconBlock) VoluntaryExits() ([]*phase0.SignedVoluntary
 		}
 
 		return v.Deneb.Message.Body.VoluntaryExits, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.VoluntaryExits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -604,6 +747,12 @@ func (v *VersionedSignedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlas
 		}
 
 		return v.Deneb.Message.Body.AttesterSlashings, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.AttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -642,6 +791,12 @@ func (v *VersionedSignedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlas
 		}
 
 		return v.Deneb.Message.Body.ProposerSlashings, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -676,6 +831,12 @@ func (v *VersionedSignedBeaconBlock) SyncAggregate() (*altair.SyncAggregate, err
 		}
 
 		return v.Deneb.Message.Body.SyncAggregate, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.SyncAggregate, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -702,6 +863,12 @@ func (v *VersionedSignedBeaconBlock) BLSToExecutionChanges() ([]*capella.SignedB
 		}
 
 		return v.Deneb.Message.Body.BLSToExecutionChanges, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.BLSToExecutionChanges, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -728,6 +895,12 @@ func (v *VersionedSignedBeaconBlock) Withdrawals() ([]*capella.Withdrawal, error
 		}
 
 		return v.Deneb.Message.Body.ExecutionPayload.Withdrawals, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil || v.Electra.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.ExecutionPayload.Withdrawals, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -750,6 +923,36 @@ func (v *VersionedSignedBeaconBlock) BlobKZGCommitments() ([]deneb.KZGCommitment
 		}
 
 		return v.Deneb.Message.Body.BlobKZGCommitments, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.BlobKZGCommitments, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// Consolidations returns the consolidations of the beacon block.
+func (v *VersionedSignedBeaconBlock) Consolidations() ([]*electra.SignedConsolidation, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return nil, errors.New("phase0 block does not have consolidations")
+	case DataVersionAltair:
+		return nil, errors.New("altair block does not have consolidations")
+	case DataVersionBellatrix:
+		return nil, errors.New("bellatrix block does not have consolidations")
+	case DataVersionCapella:
+		return nil, errors.New("capella block does not have consolidations")
+	case DataVersionDeneb:
+		return nil, errors.New("deneb block does not have consolidations")
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.Consolidations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -788,6 +991,12 @@ func (v *VersionedSignedBeaconBlock) String() string {
 		}
 
 		return v.Deneb.String()
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return ""
+		}
+
+		return v.Electra.String()
 	default:
 		return "unknown version"
 	}

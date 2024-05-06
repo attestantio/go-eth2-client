@@ -436,7 +436,7 @@ func TestMarshalJSON(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			require.NotPanics(t, func() {
-				res, err := json.Marshal(&test.state) //test.state.MarshalJSON()
+				res, err := json.Marshal(&test.state) // test.state.MarshalJSON()
 				test.errFunc(t, err)
 				require.Equal(t, test.expected, res)
 			})

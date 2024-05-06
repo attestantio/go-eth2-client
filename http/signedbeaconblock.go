@@ -19,6 +19,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/attestantio/go-eth2-client/spec/electra"
+
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -99,6 +101,11 @@ func (*Service) signedBeaconBlockFromSSZ(res *httpResponse) (*api.Response[*spec
 		if err := response.Data.Deneb.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Join(errors.New("failed to decode deneb signed block contents"), err)
 		}
+	case spec.DataVersionElectra:
+		response.Data.Electra = &electra.SignedBeaconBlock{}
+		if err := response.Data.Electra.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Join(errors.New("failed to decode electra signed block contents"), err)
+		}
 	default:
 		return nil, fmt.Errorf("unhandled block version %s", res.consensusVersion)
 	}
@@ -125,6 +132,8 @@ func (*Service) signedBeaconBlockFromJSON(res *httpResponse) (*api.Response[*spe
 		response.Data.Capella, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &capella.SignedBeaconBlock{})
 	case spec.DataVersionDeneb:
 		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &deneb.SignedBeaconBlock{})
+	case spec.DataVersionElectra:
+		response.Data.Electra, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &electra.SignedBeaconBlock{})
 	default:
 		return nil, fmt.Errorf("unhandled version %s", res.consensusVersion)
 	}
