@@ -29,6 +29,9 @@ func (e *Epoch) UnmarshalJSON(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
+	if len(input) < 3 {
+		return errors.New("input malformed")
+	}
 
 	if !bytes.HasPrefix(input, []byte{'"'}) {
 		return errors.New("invalid prefix")
@@ -47,7 +50,7 @@ func (e *Epoch) UnmarshalJSON(input []byte) error {
 }
 
 // MarshalJSON implements json.Marshaler.
-func (e *Epoch) MarshalJSON() ([]byte, error) {
+func (e Epoch) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf(`"%d"`, e)), nil
 }
 
