@@ -392,11 +392,16 @@ func parseAddress(address string) (*url.URL, *url.URL, error) {
 	if err != nil {
 		return nil, nil, errors.Join(errors.New("invalid URL"), err)
 	}
-	base.Path = ""
+	// Remove any trailing slash from the path.
+	base.Path = strings.TrimSuffix(base.Path, "/")
+
 	baseAddress := *base
 	if _, pwExists := baseAddress.User.Password(); pwExists {
 		user := baseAddress.User.Username()
 		baseAddress.User = url.UserPassword(user, "***")
+	}
+	if baseAddress.Path != "" {
+		baseAddress.Path = "***"
 	}
 	if baseAddress.RawQuery != "" {
 		sensitiveRegex := regexp.MustCompile("=([^&]*)(&)?")

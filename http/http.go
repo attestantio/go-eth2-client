@@ -474,7 +474,7 @@ func urlForCall(base *url.URL,
 	query string,
 ) *url.URL {
 	callURL := *base
-	callURL.Path = endpoint
+	callURL.Path += endpoint
 	if callURL.RawQuery == "" {
 		callURL.RawQuery = query
 	} else if query != "" {
