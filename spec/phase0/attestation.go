@@ -72,7 +72,7 @@ func (a *Attestation) unpack(attestationJSON *attestationJSON) error {
 		return errors.New("aggregation bits missing")
 	}
 	if a.AggregationBits, err = hex.DecodeString(strings.TrimPrefix(attestationJSON.AggregationBits, "0x")); err != nil {
-		return errors.Wrap(err, "invalid value for aggregation bits")
+		return errors.Wrap(err, "invalid value for beacon block root")
 	}
 	a.Data = attestationJSON.Data
 	if a.Data == nil {
