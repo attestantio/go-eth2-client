@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/ferranbt/fastssz v0.1.3
-	github.com/goccy/go-yaml v1.11.3
+	github.com/goccy/go-yaml v1.9.2
 	github.com/golang/snappy v0.0.4
 	github.com/holiman/uint256 v1.2.4
 	github.com/huandu/go-clone v1.6.0
