@@ -27,6 +27,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	dynssz "github.com/pk910/dynamic-ssz"
 )
 
 // BeaconState fetches a beacon state.
@@ -54,7 +55,7 @@ func (s *Service) BeaconState(ctx context.Context,
 
 	switch httpResponse.contentType {
 	case ContentTypeSSZ:
-		return s.beaconStateFromSSZ(httpResponse)
+		return s.beaconStateFromSSZ(ctx, httpResponse)
 	case ContentTypeJSON:
 		return s.beaconStateFromJSON(httpResponse)
 	default:
@@ -62,7 +63,7 @@ func (s *Service) BeaconState(ctx context.Context,
 	}
 }
 
-func (*Service) beaconStateFromSSZ(res *httpResponse) (*api.Response[*spec.VersionedBeaconState], error) {
+func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*api.Response[*spec.VersionedBeaconState], error) {
 	response := &api.Response[*spec.VersionedBeaconState]{
 		Data: &spec.VersionedBeaconState{
 			Version: res.consensusVersion,
@@ -70,30 +71,66 @@ func (*Service) beaconStateFromSSZ(res *httpResponse) (*api.Response[*spec.Versi
 		Metadata: metadataFromHeaders(res.headers),
 	}
 
+	var dynSSZ *dynssz.DynSsz
+	if s.customSpecSupport {
+		specs, err := s.Spec(ctx, &api.SpecOpts{})
+		if err != nil {
+			return nil, errors.Join(errors.New("failed to request specs"), err)
+		}
+
+		dynSSZ = dynssz.NewDynSsz(specs.Data)
+	}
+
+	var err error
 	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
 		response.Data.Phase0 = &phase0.BeaconState{}
-		if err := response.Data.Phase0.UnmarshalSSZ(res.body); err != nil {
+		if s.customSpecSupport {
+			err = dynSSZ.UnmarshalSSZ(response.Data.Phase0, res.body)
+		} else {
+			err = response.Data.Phase0.UnmarshalSSZ(res.body)
+		}
+		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode phase0 beacon state"), err)
 		}
 	case spec.DataVersionAltair:
 		response.Data.Altair = &altair.BeaconState{}
-		if err := response.Data.Altair.UnmarshalSSZ(res.body); err != nil {
+		if s.customSpecSupport {
+			err = dynSSZ.UnmarshalSSZ(response.Data.Altair, res.body)
+		} else {
+			err = response.Data.Altair.UnmarshalSSZ(res.body)
+		}
+		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode altair beacon state"), err)
 		}
 	case spec.DataVersionBellatrix:
 		response.Data.Bellatrix = &bellatrix.BeaconState{}
-		if err := response.Data.Bellatrix.UnmarshalSSZ(res.body); err != nil {
+		if s.customSpecSupport {
+			err = dynSSZ.UnmarshalSSZ(response.Data.Bellatrix, res.body)
+		} else {
+			err = response.Data.Bellatrix.UnmarshalSSZ(res.body)
+		}
+		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode bellatrix beacon state"), err)
 		}
 	case spec.DataVersionCapella:
 		response.Data.Capella = &capella.BeaconState{}
-		if err := response.Data.Capella.UnmarshalSSZ(res.body); err != nil {
+		if s.customSpecSupport {
+			err = dynSSZ.UnmarshalSSZ(response.Data.Capella, res.body)
+		} else {
+			err = response.Data.Capella.UnmarshalSSZ(res.body)
+		}
+		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode capella beacon state"), err)
 		}
 	case spec.DataVersionDeneb:
 		response.Data.Deneb = &deneb.BeaconState{}
-		if err := response.Data.Deneb.UnmarshalSSZ(res.body); err != nil {
+		if s.customSpecSupport {
+			err = dynSSZ.UnmarshalSSZ(response.Data.Deneb, res.body)
+		} else {
+			err = response.Data.Deneb.UnmarshalSSZ(res.body)
+		}
+		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode deneb beacon state"), err)
 		}
 	default:

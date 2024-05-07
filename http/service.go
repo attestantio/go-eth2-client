@@ -73,6 +73,7 @@ type Service struct {
 	enforceJSON              bool
 	connectedToDVTMiddleware bool
 	reducedMemoryUsage       bool
+	customSpecSupport        bool
 }
 
 // New creates a new Ethereum 2 client service, connecting with a standard HTTP.
@@ -126,6 +127,7 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		pingSem:             semaphore.NewWeighted(1),
 		hooks:               parameters.hooks,
 		reducedMemoryUsage:  parameters.reducedMemoryUsage,
+		customSpecSupport:   parameters.customSpecSupport,
 	}
 
 	// Ping the client to see if it is ready to serve requests.

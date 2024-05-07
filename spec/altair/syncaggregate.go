@@ -28,7 +28,7 @@ import (
 
 // SyncAggregate is the Ethereum 2 sync aggregate structure.
 type SyncAggregate struct {
-	SyncCommitteeBits      bitfield.Bitvector512 `ssz-size:"64"`
+	SyncCommitteeBits      bitfield.Bitvector512 `dynssz-size:"SYNC_COMMITTEE_SIZE/8" ssz-size:"64"`
 	SyncCommitteeSignature phase0.BLSSignature   `ssz-size:"96"`
 }
 
@@ -69,12 +69,6 @@ func (s *SyncAggregate) unpack(syncAggregateJSON *syncAggregateJSON) error {
 	syncCommitteeBits, err := hex.DecodeString(strings.TrimPrefix(syncAggregateJSON.SyncCommitteeBits, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for sync committee bits")
-	}
-	if len(syncCommitteeBits) < syncCommitteeSize/8 {
-		return errors.New("sync committee bits too short")
-	}
-	if len(syncCommitteeBits) > syncCommitteeSize/8 {
-		return errors.New("sync committee bits too long")
 	}
 	s.SyncCommitteeBits = syncCommitteeBits
 
