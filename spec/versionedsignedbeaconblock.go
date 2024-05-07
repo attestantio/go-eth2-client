@@ -734,7 +734,7 @@ func (v *VersionedSignedBeaconBlock) VoluntaryExits() ([]*phase0.SignedVoluntary
 
 // AttesterSlashings returns the attester slashings of the beacon block.
 //
-// nolint:gocyclo
+//nolint:gocyclo
 func (v *VersionedSignedBeaconBlock) AttesterSlashings() ([]VersionedAttesterSlashing, error) {
 	switch v.Version {
 	case DataVersionPhase0:
