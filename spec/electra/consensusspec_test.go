@@ -287,6 +287,8 @@ func testYAMLFormat(input []byte) string {
 
 	replacements := [][][]byte{
 		{[]byte(`"`), []byte(`'`)},
+		// Field 'extra_data' in ExecutionPayloadHeader/case_1 has a non-standard format, fix here.
+		{[]byte(`extra_data: 0,`), []byte(`extra_data: '0x',`)},
 	}
 	for _, replacement := range replacements {
 		res = bytes.ReplaceAll(res, replacement[0], replacement[1])
