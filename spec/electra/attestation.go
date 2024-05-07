@@ -31,7 +31,7 @@ import (
 type Attestation struct {
 	AggregationBits bitfield.Bitlist `ssz-max:"131072"`
 	Data            *phase0.AttestationData
-	CommitteeBits   bitfield.Bitvector64 `ssz-size:"1"`
+	CommitteeBits   bitfield.Bitvector64 `ssz-size:"8"`
 	Signature       phase0.BLSSignature  `ssz-size:"96"`
 }
 

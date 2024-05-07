@@ -31,7 +31,7 @@ type beaconBlockBodyYAML struct {
 	ETH1Data              *phase0.ETH1Data                      `yaml:"eth1_data"`
 	Graffiti              string                                `yaml:"graffiti"`
 	ProposerSlashings     []*phase0.ProposerSlashing            `yaml:"proposer_slashings"`
-	AttesterSlashings     []*phase0.AttesterSlashing            `yaml:"attester_slashings"`
+	AttesterSlashings     []*AttesterSlashing                   `yaml:"attester_slashings"`
 	Attestations          []*Attestation                        `yaml:"attestations"`
 	Deposits              []*phase0.Deposit                     `yaml:"deposits"`
 	VoluntaryExits        []*phase0.SignedVoluntaryExit         `yaml:"voluntary_exits"`
@@ -39,7 +39,7 @@ type beaconBlockBodyYAML struct {
 	ExecutionPayload      *ExecutionPayload                     `yaml:"execution_payload"`
 	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `yaml:"bls_to_execution_changes"`
 	BlobKZGCommitments    []string                              `yaml:"blob_kzg_commitments"`
-	Consolidations        []*SignedConsolidation                `json:"consolidations"`
+	Consolidations        []*SignedConsolidation                `yaml:"consolidations"`
 }
 
 // MarshalYAML implements yaml.Marshaler.

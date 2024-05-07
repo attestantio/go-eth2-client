@@ -32,7 +32,7 @@ type beaconBlockBodyJSON struct {
 	ETH1Data              *phase0.ETH1Data                      `json:"eth1_data"`
 	Graffiti              string                                `json:"graffiti"`
 	ProposerSlashings     []*phase0.ProposerSlashing            `json:"proposer_slashings"`
-	AttesterSlashings     []*phase0.AttesterSlashing            `json:"attester_slashings"`
+	AttesterSlashings     []*AttesterSlashing                   `json:"attester_slashings"`
 	Attestations          []*Attestation                        `json:"attestations"`
 	Deposits              []*phase0.Deposit                     `json:"deposits"`
 	VoluntaryExits        []*phase0.SignedVoluntaryExit         `json:"voluntary_exits"`
@@ -168,7 +168,7 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "blob_kzg_commitments")
 	}
 
-	if err := json.Unmarshal(raw["consolidations"], &b.BlobKZGCommitments); err != nil {
+	if err := json.Unmarshal(raw["consolidations"], &b.Consolidations); err != nil {
 		return errors.Wrap(err, "consolidations")
 	}
 
