@@ -15,7 +15,6 @@ package electra
 
 import (
 	"encoding/json"
-
 	"github.com/attestantio/go-eth2-client/codecs"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"

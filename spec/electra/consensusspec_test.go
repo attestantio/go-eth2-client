@@ -44,7 +44,7 @@ func TestConsensusSpec(t *testing.T) {
 	}{
 		{
 			name: "AggregateAndProof",
-			s:    &phase0.AggregateAndProof{},
+			s:    &electra.AggregateAndProof{},
 		},
 		{
 			name: "Attestation",
@@ -56,7 +56,7 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "AttesterSlashing",
-			s:    &phase0.AttesterSlashing{},
+			s:    &electra.AttesterSlashing{},
 		},
 		{
 			name: "BeaconBlock",
@@ -168,7 +168,7 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "SignedAggregateAndProof",
-			s:    &phase0.SignedAggregateAndProof{},
+			s:    &electra.SignedAggregateAndProof{},
 		},
 		{
 			name: "SignedBeaconBlock",

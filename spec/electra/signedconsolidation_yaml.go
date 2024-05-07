@@ -24,7 +24,7 @@ import (
 
 // signedConsolidationYAML is the spec representation of the struct.
 type signedConsolidationYAML struct {
-	Message   Consolidation       `yaml:"message"`
+	Message   *Consolidation      `yaml:"message"`
 	Signature phase0.BLSSignature `yaml:"signature"`
 }
 
