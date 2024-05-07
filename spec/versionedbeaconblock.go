@@ -540,44 +540,92 @@ func (v *VersionedBeaconBlock) Attestations() ([]VersionedAttestation, error) {
 }
 
 // AttesterSlashings returns the attester slashings of the beacon block.
-func (v *VersionedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlashing, error) {
+func (v *VersionedBeaconBlock) AttesterSlashings() ([]VersionedAttesterSlashing, error) {
 	switch v.Version {
 	case DataVersionPhase0:
 		if v.Phase0 == nil || v.Phase0.Body == nil {
 			return nil, errors.New("no phase0 block")
 		}
 
-		return v.Phase0.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Phase0.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Phase0.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionPhase0,
+				Phase0:  attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case DataVersionAltair:
 		if v.Altair == nil || v.Altair.Body == nil {
 			return nil, errors.New("no altair block")
 		}
 
-		return v.Altair.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Altair.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Altair.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionAltair,
+				Altair:  attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return nil, errors.New("no bellatrix block")
 		}
 
-		return v.Bellatrix.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Bellatrix.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Bellatrix.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version:   DataVersionBellatrix,
+				Bellatrix: attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case DataVersionCapella:
 		if v.Capella == nil || v.Capella.Body == nil {
 			return nil, errors.New("no capella block")
 		}
 
-		return v.Capella.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Capella.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Capella.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionCapella,
+				Capella: attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
 
-		return v.Deneb.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Deneb.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Deneb.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionDeneb,
+				Deneb:   attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case DataVersionElectra:
 		if v.Electra == nil || v.Electra.Body == nil {
 			return nil, errors.New("no electra block")
 		}
 
-		return v.Electra.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Electra.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Electra.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionElectra,
+				Electra: attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
