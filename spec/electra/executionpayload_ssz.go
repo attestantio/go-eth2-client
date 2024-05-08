@@ -436,7 +436,7 @@ func (e *ExecutionPayload) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 				hh.MerkleizeWithMixin(elemIndx, byteLen, (1073741824+31)/32)
 			}
 		}
-		hh.MerkleizeWithMixin(subIndx, num, 1073741824)
+		hh.MerkleizeWithMixin(subIndx, num, 1048576)
 	}
 
 	// Field (14) 'Withdrawals'

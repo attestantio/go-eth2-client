@@ -22,7 +22,7 @@ import (
 
 // SignedConsolidation is a signed consolidation.
 type SignedConsolidation struct {
-	Message   Consolidation
+	Message   *Consolidation
 	Signature phase0.BLSSignature `ssz-size:"96"`
 }
 

@@ -23,7 +23,7 @@ import (
 
 // signedConsolidationJSON is the spec representation of the struct.
 type signedConsolidationJSON struct {
-	Message   Consolidation       `json:"message"`
+	Message   *Consolidation      `json:"message"`
 	Signature phase0.BLSSignature `json:"signature"`
 }
 
@@ -42,9 +42,12 @@ func (s *SignedConsolidation) UnmarshalJSON(input []byte) error {
 		return err
 	}
 
-	if err := s.Message.UnmarshalJSON(raw["message"]); err != nil {
+	var message Consolidation
+	if err := message.UnmarshalJSON(raw["message"]); err != nil {
 		return errors.Wrap(err, "message")
 	}
+	s.Message = &message
+
 	if err := s.Signature.UnmarshalJSON(raw["signature"]); err != nil {
 		return errors.Wrap(err, "signature")
 	}

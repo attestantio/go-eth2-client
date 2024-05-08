@@ -44,7 +44,7 @@ func TestConsensusSpec(t *testing.T) {
 	}{
 		{
 			name: "AggregateAndProof",
-			s:    &phase0.AggregateAndProof{},
+			s:    &electra.AggregateAndProof{},
 		},
 		{
 			name: "Attestation",
@@ -56,7 +56,7 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "AttesterSlashing",
-			s:    &phase0.AttesterSlashing{},
+			s:    &electra.AttesterSlashing{},
 		},
 		{
 			name: "BeaconBlock",
@@ -168,7 +168,7 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "SignedAggregateAndProof",
-			s:    &phase0.SignedAggregateAndProof{},
+			s:    &electra.SignedAggregateAndProof{},
 		},
 		{
 			name: "SignedBeaconBlock",
@@ -287,6 +287,8 @@ func testYAMLFormat(input []byte) string {
 
 	replacements := [][][]byte{
 		{[]byte(`"`), []byte(`'`)},
+		// Field 'extra_data' in ExecutionPayloadHeader/case_1 has a non-standard format, fix here.
+		{[]byte(`extra_data: 0,`), []byte(`extra_data: '0x',`)},
 	}
 	for _, replacement := range replacements {
 		res = bytes.ReplaceAll(res, replacement[0], replacement[1])

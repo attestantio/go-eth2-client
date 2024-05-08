@@ -44,7 +44,6 @@ type executionPayloadHeaderYAML struct {
 	BlobGasUsed            uint64                     `yaml:"blob_gas_used"`
 	ExcessBlobGas          uint64                     `yaml:"excess_blob_gas"`
 	DepositReceiptsRoot    phase0.Root                `yaml:"deposit_receipts_root"`
-	ExitsRoot              phase0.Root                `yaml:"exits_root"`
 	WithdrawalRequestsRoot phase0.Root                `yaml:"withdrawal_requests_root"`
 }
 
