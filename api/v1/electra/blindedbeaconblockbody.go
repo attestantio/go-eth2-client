@@ -31,7 +31,7 @@ type BlindedBeaconBlockBody struct {
 	ETH1Data               *phase0.ETH1Data
 	Graffiti               [32]byte                      `ssz-size:"32"`
 	ProposerSlashings      []*phase0.ProposerSlashing    `ssz-max:"16"`
-	AttesterSlashings      []*phase0.AttesterSlashing    `ssz-max:"1"`
+	AttesterSlashings      []*electra.AttesterSlashing   `ssz-max:"1"`
 	Attestations           []*electra.Attestation        `ssz-max:"8"`
 	Deposits               []*phase0.Deposit             `ssz-max:"16"`
 	VoluntaryExits         []*phase0.SignedVoluntaryExit `ssz-max:"16"`
