@@ -94,19 +94,22 @@ func (v *VersionedSignedBlindedProposal) Attestations() ([]*phase0.Attestation, 
 func (v *VersionedSignedBlindedProposal) Root() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
 		return v.Bellatrix.Message.HashTreeRoot()
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
+		if v.Capella == nil ||
+			v.Capella.Message == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
 		return v.Capella.Message.HashTreeRoot()
 	case spec.DataVersionDeneb:
-		if v.Deneb == nil {
+		if v.Deneb == nil ||
+			v.Deneb.Message == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
@@ -120,13 +123,17 @@ func (v *VersionedSignedBlindedProposal) Root() (phase0.Root, error) {
 func (v *VersionedSignedBlindedProposal) BodyRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil ||
+			v.Bellatrix.Message.Body == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
 		return v.Bellatrix.Message.Body.HashTreeRoot()
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
+		if v.Capella == nil ||
+			v.Capella.Message == nil ||
+			v.Capella.Message.Body == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
@@ -148,13 +155,15 @@ func (v *VersionedSignedBlindedProposal) BodyRoot() (phase0.Root, error) {
 func (v *VersionedSignedBlindedProposal) ParentRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
 		return v.Bellatrix.Message.ParentRoot, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
+		if v.Capella == nil ||
+			v.Capella.Message == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
@@ -175,13 +184,15 @@ func (v *VersionedSignedBlindedProposal) ParentRoot() (phase0.Root, error) {
 func (v *VersionedSignedBlindedProposal) StateRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
 		return v.Bellatrix.Message.StateRoot, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
+		if v.Capella == nil ||
+			v.Capella.Message == nil {
 			return phase0.Root{}, ErrDataMissing
 		}
 
@@ -202,13 +213,17 @@ func (v *VersionedSignedBlindedProposal) StateRoot() (phase0.Root, error) {
 func (v *VersionedSignedBlindedProposal) AttesterSlashings() ([]*phase0.AttesterSlashing, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil ||
+			v.Bellatrix.Message.Body == nil {
 			return nil, ErrDataMissing
 		}
 
 		return v.Bellatrix.Message.Body.AttesterSlashings, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
+		if v.Capella == nil ||
+			v.Capella.Message == nil ||
+			v.Capella.Message.Body == nil {
 			return nil, ErrDataMissing
 		}
 
@@ -230,13 +245,17 @@ func (v *VersionedSignedBlindedProposal) AttesterSlashings() ([]*phase0.Attester
 func (v *VersionedSignedBlindedProposal) ProposerSlashings() ([]*phase0.ProposerSlashing, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil ||
+			v.Bellatrix.Message.Body == nil {
 			return nil, ErrDataMissing
 		}
 
 		return v.Bellatrix.Message.Body.ProposerSlashings, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
+		if v.Capella == nil ||
+			v.Capella.Message == nil ||
+			v.Capella.Message.Body == nil {
 			return nil, ErrDataMissing
 		}
 
