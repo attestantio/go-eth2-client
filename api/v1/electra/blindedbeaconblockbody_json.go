@@ -34,7 +34,7 @@ type blindedBeaconBlockBodyJSON struct {
 	ETH1Data               *phase0.ETH1Data                      `json:"eth1_data"`
 	Graffiti               string                                `json:"graffiti"`
 	ProposerSlashings      []*phase0.ProposerSlashing            `json:"proposer_slashings"`
-	AttesterSlashings      []*phase0.AttesterSlashing            `json:"attester_slashings"`
+	AttesterSlashings      []*electra.AttesterSlashing           `json:"attester_slashings"`
 	Attestations           []*electra.Attestation                `json:"attestations"`
 	Deposits               []*phase0.Deposit                     `json:"deposits"`
 	VoluntaryExits         []*phase0.SignedVoluntaryExit         `json:"voluntary_exits"`

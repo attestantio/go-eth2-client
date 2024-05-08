@@ -283,7 +283,7 @@ func (v *VersionedSignedBlindedBeaconBlock) StateRoot() (phase0.Root, error) {
 }
 
 // AttesterSlashings returns the attester slashings of the beacon block.
-func (v *VersionedSignedBlindedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlashing, error) {
+func (v *VersionedSignedBlindedBeaconBlock) AttesterSlashings() ([]spec.VersionedAttesterSlashing, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil ||
@@ -292,7 +292,15 @@ func (v *VersionedSignedBlindedBeaconBlock) AttesterSlashings() ([]*phase0.Attes
 			return nil, ErrDataMissing
 		}
 
-		return v.Bellatrix.Message.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]spec.VersionedAttesterSlashing, len(v.Bellatrix.Message.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Bellatrix.Message.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = spec.VersionedAttesterSlashing{
+				Version:   spec.DataVersionBellatrix,
+				Bellatrix: attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil ||
 			v.Capella.Message == nil ||
@@ -300,7 +308,15 @@ func (v *VersionedSignedBlindedBeaconBlock) AttesterSlashings() ([]*phase0.Attes
 			return nil, ErrDataMissing
 		}
 
-		return v.Capella.Message.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]spec.VersionedAttesterSlashing, len(v.Capella.Message.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Capella.Message.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = spec.VersionedAttesterSlashing{
+				Version: spec.DataVersionCapella,
+				Capella: attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil ||
 			v.Deneb.Message == nil ||
@@ -308,13 +324,29 @@ func (v *VersionedSignedBlindedBeaconBlock) AttesterSlashings() ([]*phase0.Attes
 			return nil, ErrDataMissing
 		}
 
-		return v.Deneb.Message.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]spec.VersionedAttesterSlashing, len(v.Deneb.Message.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Deneb.Message.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = spec.VersionedAttesterSlashing{
+				Version: spec.DataVersionDeneb,
+				Deneb:   attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case spec.DataVersionElectra:
 		if v.Electra == nil {
 			return nil, ErrDataMissing
 		}
 
-		return v.Electra.Message.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]spec.VersionedAttesterSlashing, len(v.Electra.Message.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Electra.Message.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = spec.VersionedAttesterSlashing{
+				Version: spec.DataVersionElectra,
+				Electra: attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
