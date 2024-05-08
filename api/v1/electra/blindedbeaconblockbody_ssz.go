@@ -304,10 +304,10 @@ func (b *BlindedBeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 		if err != nil {
 			return err
 		}
-		b.AttesterSlashings = make([]*phase0.AttesterSlashing, num)
+		b.AttesterSlashings = make([]*electra.AttesterSlashing, num)
 		err = ssz.UnmarshalDynamic(buf, num, func(indx int, buf []byte) (err error) {
 			if b.AttesterSlashings[indx] == nil {
-				b.AttesterSlashings[indx] = new(phase0.AttesterSlashing)
+				b.AttesterSlashings[indx] = new(electra.AttesterSlashing)
 			}
 			if err = b.AttesterSlashings[indx].UnmarshalSSZ(buf); err != nil {
 				return err
