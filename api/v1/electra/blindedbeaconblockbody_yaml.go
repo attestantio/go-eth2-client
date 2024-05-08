@@ -31,7 +31,7 @@ type blindedBeaconBlockBodyYAML struct {
 	ETH1Data               *phase0.ETH1Data                      `yaml:"eth1_data"`
 	Graffiti               string                                `yaml:"graffiti"`
 	ProposerSlashings      []*phase0.ProposerSlashing            `yaml:"proposer_slashings"`
-	AttesterSlashings      []*phase0.AttesterSlashing            `yaml:"attester_slashings"`
+	AttesterSlashings      []*electra.AttesterSlashing           `yaml:"attester_slashings"`
 	Attestations           []*electra.Attestation                `yaml:"attestations"`
 	Deposits               []*phase0.Deposit                     `yaml:"deposits"`
 	VoluntaryExits         []*phase0.SignedVoluntaryExit         `yaml:"voluntary_exits"`
