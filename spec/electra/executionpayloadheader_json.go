@@ -167,7 +167,9 @@ func (e *ExecutionPayloadHeader) UnmarshalJSON(input []byte) error {
 
 	var tmpBytes []byte
 	switch {
-	case bytes.Equal(raw["extra_data"], []byte{'0', 'x'}), bytes.Equal(raw["extra_data"], []byte{'0'}), bytes.Equal(raw["extra_data"], []byte{'"', '0', '"'}):
+	case bytes.Equal(raw["extra_data"], []byte{'0', 'x'}),
+		bytes.Equal(raw["extra_data"], []byte{'0'}),
+		bytes.Equal(raw["extra_data"], []byte{'"', '0', '"'}):
 		// Empty.
 	default:
 		tmpBytes = bytes.TrimPrefix(bytes.Trim(raw["extra_data"], `"`), []byte{'0', 'x'})

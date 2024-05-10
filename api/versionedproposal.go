@@ -815,7 +815,10 @@ func (v *VersionedProposal) payloadPresent() bool {
 			return v.ElectraBlinded != nil && v.ElectraBlinded.Body != nil && v.ElectraBlinded.Body.ExecutionPayloadHeader != nil
 		}
 
-		return v.Electra != nil && v.Electra.Block != nil && v.Electra.Block.Body != nil && v.Electra.Block.Body.ExecutionPayload != nil
+		return v.Electra != nil &&
+			v.Electra.Block != nil &&
+			v.Electra.Block.Body != nil &&
+			v.Electra.Block.Body.ExecutionPayload != nil
 	}
 
 	return false

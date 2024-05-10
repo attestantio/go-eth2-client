@@ -152,7 +152,10 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error)
 
 		return v.Deneb.Message.Body.ExecutionPayload.BlockHash, nil
 	case DataVersionElectra:
-		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil || v.Electra.Message.Body.ExecutionPayload == nil {
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil ||
+			v.Electra.Message.Body.ExecutionPayload == nil {
 			return phase0.Hash32{}, errors.New("no deneb block")
 		}
 
@@ -190,7 +193,10 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockNumber() (uint64, error) {
 
 		return v.Deneb.Message.Body.ExecutionPayload.BlockNumber, nil
 	case DataVersionElectra:
-		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil || v.Electra.Message.Body.ExecutionPayload == nil {
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil ||
+			v.Electra.Message.Body.ExecutionPayload == nil {
 			return 0, errors.New("no electra block")
 		}
 
@@ -232,7 +238,10 @@ func (v *VersionedSignedBeaconBlock) ExecutionTransactions() ([]bellatrix.Transa
 
 		return v.Deneb.Message.Body.ExecutionPayload.Transactions, nil
 	case DataVersionElectra:
-		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil || v.Electra.Message.Body.ExecutionPayload == nil {
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil ||
+			v.Electra.Message.Body.ExecutionPayload == nil {
 			return nil, errors.New("no electra block")
 		}
 
@@ -967,7 +976,10 @@ func (v *VersionedSignedBeaconBlock) Withdrawals() ([]*capella.Withdrawal, error
 
 		return v.Deneb.Message.Body.ExecutionPayload.Withdrawals, nil
 	case DataVersionElectra:
-		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil || v.Electra.Message.Body.ExecutionPayload == nil {
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil ||
+			v.Electra.Message.Body.ExecutionPayload == nil {
 			return nil, errors.New("no electra block")
 		}
 
