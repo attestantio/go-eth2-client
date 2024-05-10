@@ -303,9 +303,15 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[
 		}
 	case spec.DataVersionElectra:
 		if response.Data.Blinded {
-			response.Data.ElectraBlinded, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1electra.BlindedBeaconBlock{})
+			response.Data.ElectraBlinded, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&apiv1electra.BlindedBeaconBlock{},
+			)
 		} else {
-			response.Data.Electra, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1electra.BlockContents{})
+			response.Data.Electra, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&apiv1electra.BlockContents{},
+			)
 		}
 	default:
 		err = fmt.Errorf("unsupported version %s", res.consensusVersion)
