@@ -21,7 +21,12 @@ import (
 )
 
 // VoluntaryExitPool fetches the voluntary exit pool.
-func (*Service) VoluntaryExitPool(_ context.Context, _ *api.VoluntaryExitPoolOpts) (*api.Response[[]*spec.SignedVoluntaryExit], error) {
+func (*Service) VoluntaryExitPool(_ context.Context,
+	_ *api.VoluntaryExitPoolOpts,
+) (
+	*api.Response[[]*spec.SignedVoluntaryExit],
+	error,
+) {
 	res := make([]*spec.SignedVoluntaryExit, 5)
 	for i := 0; i < 5; i++ {
 		res[i] = &spec.SignedVoluntaryExit{

@@ -25,10 +25,13 @@ type ValidatorsOpts struct {
 	// State is the state at which the data is obtained.
 	// It can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 	State string
-	// Indices is a list of validator indices to restrict the returned values.  If no indices are supplied then no filter will be applied.
+	// Indices is a list of validator indices to restrict the returned values.
+	// If no indices are supplied then no filter will be applied.
 	Indices []phase0.ValidatorIndex
-	// PubKeys is a list of validator public keys to restrict the returned values.  If no public keys are supplied then no filter will be applied.
+	// PubKeys is a list of validator public keys to restrict the returned values.
+	// If no public keys are supplied then no filter will be applied.
 	PubKeys []phase0.BLSPubKey
-	// ValidatorStates is a list of validator states to restric the returned values.  If no validator states are supplied then no filter will be applied.
+	// ValidatorStates is a list of validator states to restric the returned values.
+	// If no validator states are supplied then no filter will be applied.
 	ValidatorStates []apiv1.ValidatorState
 }

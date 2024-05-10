@@ -55,7 +55,11 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 
 	// Confirm the attestation is for the requested slot.
 	if data.Data.Slot != opts.Slot {
-		return nil, errors.Join(fmt.Errorf("aggregate attestation for slot %d; expected %d", data.Data.Slot, opts.Slot), client.ErrInconsistentResult)
+		return nil,
+			errors.Join(
+				fmt.Errorf("aggregate attestation for slot %d; expected %d", data.Data.Slot, opts.Slot),
+				client.ErrInconsistentResult,
+			)
 	}
 
 	// Confirm the attestation data is correct.
@@ -64,7 +68,10 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 		return nil, errors.Join(errors.New("failed to obtain hash tree root of aggregate attestation data"), err)
 	}
 	if !bytes.Equal(dataRoot[:], opts.AttestationDataRoot[:]) {
-		return nil, errors.Join(fmt.Errorf("aggregate attestation has data root %#x; expected %#x", dataRoot[:], opts.AttestationDataRoot[:]), client.ErrInconsistentResult)
+		return nil, errors.Join(
+			fmt.Errorf("aggregate attestation has data root %#x; expected %#x", dataRoot[:], opts.AttestationDataRoot[:]),
+			client.ErrInconsistentResult,
+		)
 	}
 
 	return &api.Response[*phase0.Attestation]{

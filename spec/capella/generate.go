@@ -13,6 +13,7 @@
 
 package capella
 
+//nolint:revive
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
 //go:generate rm -f beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go blstoexecutionchange_ssz.go executionpayloadheader_ssz.go executionpayload_ssz.go historicalsummary_ssz.go signedbeaconblock_ssz.go signedblstoexecutionchange_ssz.go withdrawal_ssz.go
 //go:generate sszgen -suffix ssz -include ../phase0,../altair,../bellatrix -path . -objs BeaconBlockBody,BeaconBlock,BeaconState,BLSToExecutionChange,ExecutionPayload,ExecutionPayloadHeader,HistoricalSummary,SignedBeaconBlock,SignedBLSToExecutionChange,Withdrawal

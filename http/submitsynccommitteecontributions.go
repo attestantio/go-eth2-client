@@ -23,7 +23,9 @@ import (
 )
 
 // SubmitSyncCommitteeContributions submits sync committee contributions.
-func (s *Service) SubmitSyncCommitteeContributions(ctx context.Context, contributionAndProofs []*altair.SignedContributionAndProof) error {
+func (s *Service) SubmitSyncCommitteeContributions(ctx context.Context,
+	contributionAndProofs []*altair.SignedContributionAndProof,
+) error {
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
 	}

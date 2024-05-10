@@ -22,7 +22,12 @@ import (
 )
 
 // Validators provides the validators, with their balance and status, for a given state.
-func (*Service) Validators(_ context.Context, _ *api.ValidatorsOpts) (*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator], error) {
+func (*Service) Validators(_ context.Context,
+	_ *api.ValidatorsOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
+	error,
+) {
 	return &api.Response[map[phase0.ValidatorIndex]*apiv1.Validator]{
 		Data:     map[phase0.ValidatorIndex]*apiv1.Validator{},
 		Metadata: make(map[string]any),

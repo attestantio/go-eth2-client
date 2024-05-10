@@ -604,7 +604,9 @@ func (v *VersionedProposal) payloadPresent() bool {
 		return false
 	case spec.DataVersionBellatrix:
 		if v.Blinded {
-			return v.BellatrixBlinded != nil && v.BellatrixBlinded.Body != nil && v.BellatrixBlinded.Body.ExecutionPayloadHeader != nil
+			return v.BellatrixBlinded != nil &&
+				v.BellatrixBlinded.Body != nil &&
+				v.BellatrixBlinded.Body.ExecutionPayloadHeader != nil
 		}
 
 		return v.Bellatrix != nil && v.Bellatrix.Body != nil && v.Bellatrix.Body.ExecutionPayload != nil

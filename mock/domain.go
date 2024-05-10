@@ -30,7 +30,7 @@ func (s *Service) Domain(ctx context.Context, domainType phase0.DomainType, epoc
 		return phase0.Domain{}, errors.Wrap(err, "failed to obtain fork")
 	}
 
-	return s.domain(ctx, domainType, epoch, fork)
+	return s.calculateDomain(ctx, domainType, epoch, fork)
 }
 
 // GenesisDomain returns the domain for the given domain type at genesis.
@@ -44,10 +44,10 @@ func (s *Service) GenesisDomain(ctx context.Context, domainType phase0.DomainTyp
 		return phase0.Domain{}, errors.Wrap(err, "failed to obtain fork")
 	}
 
-	return s.domain(ctx, domainType, 0, fork)
+	return s.calculateDomain(ctx, domainType, 0, fork)
 }
 
-func (s *Service) domain(ctx context.Context,
+func (s *Service) calculateDomain(ctx context.Context,
 	domainType phase0.DomainType,
 	epoch phase0.Epoch,
 	fork *phase0.Fork,

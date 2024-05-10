@@ -13,6 +13,7 @@
 
 package capella
 
+//nolint:revive
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
 //go:generate rm -f blindedbeaconblockbody_ssz.go blindedbeaconblock_ssz.go signedblindedbeaconblock_ssz.go
 //go:generate sszgen --include ../../../spec/phase0,../../../spec/altair,../../../spec/bellatrix,../../../spec/capella -path . --suffix ssz -objs BlindedBeaconBlockBody,BlindedBeaconBlock,SignedBlindedBeaconBlock

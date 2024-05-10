@@ -66,7 +66,12 @@ func (s *Service) SignedBeaconBlock(ctx context.Context,
 	return response, nil
 }
 
-func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context, res *httpResponse) (*api.Response[*spec.VersionedSignedBeaconBlock], error) {
+func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
+	res *httpResponse,
+) (
+	*api.Response[*spec.VersionedSignedBeaconBlock],
+	error,
+) {
 	response := &api.Response[*spec.VersionedSignedBeaconBlock]{
 		Data: &spec.VersionedSignedBeaconBlock{
 			Version: res.consensusVersion,
@@ -153,15 +158,25 @@ func (*Service) signedBeaconBlockFromJSON(res *httpResponse) (*api.Response[*spe
 	var err error
 	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
-		response.Data.Phase0, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &phase0.SignedBeaconBlock{})
+		response.Data.Phase0, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
+			&phase0.SignedBeaconBlock{},
+		)
 	case spec.DataVersionAltair:
-		response.Data.Altair, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &altair.SignedBeaconBlock{})
+		response.Data.Altair, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
+			&altair.SignedBeaconBlock{},
+		)
 	case spec.DataVersionBellatrix:
-		response.Data.Bellatrix, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &bellatrix.SignedBeaconBlock{})
+		response.Data.Bellatrix, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
+			&bellatrix.SignedBeaconBlock{},
+		)
 	case spec.DataVersionCapella:
-		response.Data.Capella, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &capella.SignedBeaconBlock{})
+		response.Data.Capella, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
+			&capella.SignedBeaconBlock{},
+		)
 	case spec.DataVersionDeneb:
-		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &deneb.SignedBeaconBlock{})
+		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
+			&deneb.SignedBeaconBlock{},
+		)
 	default:
 		return nil, fmt.Errorf("unhandled version %s", res.consensusVersion)
 	}

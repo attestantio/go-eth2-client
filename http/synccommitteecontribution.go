@@ -42,7 +42,11 @@ func (s *Service) SyncCommitteeContribution(ctx context.Context,
 	}
 
 	endpoint := "/eth/v1/validator/sync_committee_contribution"
-	query := fmt.Sprintf("slot=%d&subcommittee_index=%d&beacon_block_root=%#x", opts.Slot, opts.SubcommitteeIndex, opts.BeaconBlockRoot)
+	query := fmt.Sprintf("slot=%d&subcommittee_index=%d&beacon_block_root=%#x",
+		opts.Slot,
+		opts.SubcommitteeIndex,
+		opts.BeaconBlockRoot,
+	)
 	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
 	if err != nil {
 		return nil, err
@@ -55,12 +59,21 @@ func (s *Service) SyncCommitteeContribution(ctx context.Context,
 
 	// Confirm the contribution is for the requested slot.
 	if data.Slot != opts.Slot {
-		return nil, errors.Join(fmt.Errorf("sync committee contiribution for slot %d; expected %d", data.Slot, opts.Slot), client.ErrInconsistentResult)
+		return nil, errors.Join(
+			fmt.Errorf("sync committee contiribution for slot %d; expected %d", data.Slot, opts.Slot),
+			client.ErrInconsistentResult,
+		)
 	}
 
 	// Confirm the beacon block root is correct.
 	if !bytes.Equal(data.BeaconBlockRoot[:], opts.BeaconBlockRoot[:]) {
-		return nil, errors.Join(fmt.Errorf("sync committee proposal has beacon bock root %#x; expected %#x", data.BeaconBlockRoot[:], opts.BeaconBlockRoot[:]), client.ErrInconsistentResult)
+		return nil, errors.Join(
+			fmt.Errorf("sync committee proposal has beacon bock root %#x; expected %#x",
+				data.BeaconBlockRoot[:],
+				opts.BeaconBlockRoot[:],
+			),
+			client.ErrInconsistentResult,
+		)
 	}
 
 	return &api.Response[*altair.SyncCommitteeContribution]{

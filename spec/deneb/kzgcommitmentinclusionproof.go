@@ -80,25 +80,26 @@ func (k *KZGCommitmentInclusionProof) MarshalJSON() ([]byte, error) {
 		return nil, errors.New("value nil")
 	}
 
-	return []byte(fmt.Sprintf(`["%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x"]`,
-		k[0],
-		k[1],
-		k[2],
-		k[3],
-		k[4],
-		k[5],
-		k[6],
-		k[7],
-		k[8],
-		k[9],
-		k[10],
-		k[11],
-		k[12],
-		k[13],
-		k[14],
-		k[15],
-		k[16],
-	)), nil
+	return []byte(
+		fmt.Sprintf(`["%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x"]`,
+			k[0],
+			k[1],
+			k[2],
+			k[3],
+			k[4],
+			k[5],
+			k[6],
+			k[7],
+			k[8],
+			k[9],
+			k[10],
+			k[11],
+			k[12],
+			k[13],
+			k[14],
+			k[15],
+			k[16],
+		)), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
@@ -147,23 +148,24 @@ func (k *KZGCommitmentInclusionProof) unmarshalElementYAML(element int, input []
 
 // MarshalYAML implements yaml.Marshaler.
 func (k KZGCommitmentInclusionProof) MarshalYAML() ([]byte, error) {
-	return []byte(fmt.Sprintf(`["%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x"]`,
-		k[0],
-		k[1],
-		k[2],
-		k[3],
-		k[4],
-		k[5],
-		k[6],
-		k[7],
-		k[8],
-		k[9],
-		k[10],
-		k[11],
-		k[12],
-		k[13],
-		k[14],
-		k[15],
-		k[16],
-	)), nil
+	return []byte(
+		fmt.Sprintf(`["%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x"]`,
+			k[0],
+			k[1],
+			k[2],
+			k[3],
+			k[4],
+			k[5],
+			k[6],
+			k[7],
+			k[8],
+			k[9],
+			k[10],
+			k[11],
+			k[12],
+			k[13],
+			k[14],
+			k[15],
+			k[16],
+		)), nil
 }

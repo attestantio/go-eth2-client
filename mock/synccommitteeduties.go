@@ -21,7 +21,12 @@ import (
 )
 
 // SyncCommitteeDuties obtains sync committee duties.
-func (*Service) SyncCommitteeDuties(_ context.Context, opts *api.SyncCommitteeDutiesOpts) (*api.Response[[]*apiv1.SyncCommitteeDuty], error) {
+func (*Service) SyncCommitteeDuties(_ context.Context,
+	opts *api.SyncCommitteeDutiesOpts,
+) (
+	*api.Response[[]*apiv1.SyncCommitteeDuty],
+	error,
+) {
 	data := make([]*apiv1.SyncCommitteeDuty, len(opts.Indices))
 	for i := range opts.Indices {
 		data[i] = &apiv1.SyncCommitteeDuty{

@@ -39,23 +39,26 @@ func (s *Service) monitor(ctx context.Context) {
 
 			return
 		case <-time.After(30 * time.Second):
-			s.recheck(ctx, false)
+			s.recheck(ctx)
 		}
 	}
 }
 
 // recheck checks clients to update their state.
-func (s *Service) recheck(ctx context.Context, forceUpdate bool) {
+func (s *Service) recheck(ctx context.Context) {
 	// Fetch all clients.
 	clients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
 	s.clientsMu.RLock()
+	activeClients := len(s.activeClients)
 	clients = append(clients, s.activeClients...)
 	clients = append(clients, s.inactiveClients...)
 	s.clientsMu.RUnlock()
 
 	// Ping each client to update its state.
 	for _, client := range clients {
-		if forceUpdate {
+		// We actively recheck the connection state if we had no active clients at the start of the check, in an attempt to obtain
+		// at least 1 active client.
+		if activeClients == 0 {
 			if httpClient, isHTTPClient := client.(*http.Service); isHTTPClient {
 				httpClient.CheckConnectionState(ctx)
 			}
@@ -148,7 +151,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 
 	if len(activeClients) == 0 {
 		// There are no active clients; attempt to re-enable the inactive clients.
-		s.recheck(ctx, true)
+		s.recheck(ctx)
 		s.clientsMu.RLock()
 		activeClients = s.activeClients
 		s.clientsMu.RUnlock()
@@ -161,21 +164,22 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 	var err error
 	var res any
 	for _, client := range activeClients {
+		log := log.With().Str("client", client.Name()).Str("address", client.Address()).Logger()
 		res, err = call(ctx, client)
 		if err != nil {
-			log.Trace().Str("client", client.Name()).Str("address", client.Address()).Err(err).Msg("Potentially deactivating client due to error")
+			log.Trace().Err(err).Msg("Potentially deactivating client due to error")
 			var apiErr *api.Error
 			switch {
 			case errors.As(err, &apiErr) && apiErr.StatusCode/100 == 4:
-				log.Trace().Str("client", client.Name()).Str("address", client.Address()).Err(err).Msg("Not deactivating client on user error")
+				log.Trace().Err(err).Msg("Not deactivating client on user error")
 
 				return res, err
 			case errors.Is(err, context.Canceled):
-				log.Trace().Str("client", client.Name()).Str("address", client.Address()).Msg("Not deactivating client on canceled context")
+				log.Trace().Msg("Not deactivating client on canceled context")
 
 				return res, err
 			case errors.Is(err, context.DeadlineExceeded):
-				log.Trace().Str("client", client.Name()).Str("address", client.Address()).Msg("Not deactivating client on context deadline exceeded")
+				log.Trace().Msg("Not deactivating client on context deadline exceeded")
 
 				return res, err
 			}
@@ -185,7 +189,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 				failover, err = errHandler(ctx, client, err)
 			}
 			if failover {
-				log.Debug().Str("client", client.Name()).Str("address", client.Address()).Err(err).Msg("Deactivating client on error")
+				log.Debug().Err(err).Msg("Deactivating client on error")
 				s.deactivateClient(ctx, client)
 
 				continue

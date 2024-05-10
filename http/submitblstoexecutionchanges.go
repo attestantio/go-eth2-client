@@ -23,7 +23,9 @@ import (
 )
 
 // SubmitBLSToExecutionChanges submits BLS to execution address change operations.
-func (s *Service) SubmitBLSToExecutionChanges(ctx context.Context, blsToExecutionChanges []*capella.SignedBLSToExecutionChange) error {
+func (s *Service) SubmitBLSToExecutionChanges(ctx context.Context,
+	blsToExecutionChanges []*capella.SignedBLSToExecutionChange,
+) error {
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
 	}

@@ -122,7 +122,12 @@ func (s *Erroring) SlotFromStateID(ctx context.Context, stateID string) (phase0.
 }
 
 // NodeVersion returns a free-text string with the node version.
-func (s *Erroring) NodeVersion(ctx context.Context, opts *api.NodeVersionOpts) (*api.Response[string], error) {
+func (s *Erroring) NodeVersion(ctx context.Context,
+	opts *api.NodeVersionOpts,
+) (
+	*api.Response[string],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -286,7 +291,9 @@ func (s *Erroring) SubmitProposalPreparations(ctx context.Context, preparations 
 }
 
 // SubmitSyncCommitteeContributions submits sync committee contributions.
-func (s *Erroring) SubmitSyncCommitteeContributions(ctx context.Context, contributionAndProofs []*altair.SignedContributionAndProof) error {
+func (s *Erroring) SubmitSyncCommitteeContributions(ctx context.Context,
+	contributionAndProofs []*altair.SignedContributionAndProof,
+) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -418,7 +425,9 @@ func (s *Erroring) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedS
 }
 
 // SubmitBeaconCommitteeSubscriptions subscribes to beacon committees.
-func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*apiv1.BeaconCommitteeSubscription) error {
+func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context,
+	subscriptions []*apiv1.BeaconCommitteeSubscription,
+) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -433,7 +442,9 @@ func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subsc
 // SubmitBlindedBeaconBlock submits a blinded beacon block.
 //
 // Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitBlindedProposal() instead.
-func (s *Erroring) SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error {
+func (s *Erroring) SubmitBlindedBeaconBlock(ctx context.Context,
+	block *api.VersionedSignedBlindedBeaconBlock,
+) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -446,7 +457,9 @@ func (s *Erroring) SubmitBlindedBeaconBlock(ctx context.Context, block *api.Vers
 }
 
 // SubmitValidatorRegistrations submits a validator registration.
-func (s *Erroring) SubmitValidatorRegistrations(ctx context.Context, registrations []*api.VersionedSignedValidatorRegistration) error {
+func (s *Erroring) SubmitValidatorRegistrations(ctx context.Context,
+	registrations []*api.VersionedSignedValidatorRegistration,
+) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -472,7 +485,12 @@ func (s *Erroring) SubmitSyncCommitteeSubscriptions(ctx context.Context, subscri
 }
 
 // BeaconState fetches a beacon state.
-func (s *Erroring) BeaconState(ctx context.Context, opts *api.BeaconStateOpts) (*api.Response[*spec.VersionedBeaconState], error) {
+func (s *Erroring) BeaconState(ctx context.Context,
+	opts *api.BeaconStateOpts,
+) (
+	*api.Response[*spec.VersionedBeaconState],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -498,7 +516,12 @@ func (s *Erroring) Events(ctx context.Context, topics []string, handler consensu
 }
 
 // Finality provides the finality given a state ID.
-func (s *Erroring) Finality(ctx context.Context, opts *api.FinalityOpts) (*api.Response[*apiv1.Finality], error) {
+func (s *Erroring) Finality(ctx context.Context,
+	opts *api.FinalityOpts,
+) (
+	*api.Response[*apiv1.Finality],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -529,7 +552,12 @@ func (s *Erroring) Fork(ctx context.Context,
 }
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Erroring) ForkSchedule(ctx context.Context, opts *api.ForkScheduleOpts) (*api.Response[[]*phase0.Fork], error) {
+func (s *Erroring) ForkSchedule(ctx context.Context,
+	opts *api.ForkScheduleOpts,
+) (
+	*api.Response[[]*phase0.Fork],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -542,7 +570,12 @@ func (s *Erroring) ForkSchedule(ctx context.Context, opts *api.ForkScheduleOpts)
 }
 
 // Genesis fetches genesis information for the chain.
-func (s *Erroring) Genesis(ctx context.Context, opts *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error) {
+func (s *Erroring) Genesis(ctx context.Context,
+	opts *api.GenesisOpts,
+) (
+	*api.Response[*apiv1.Genesis],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -555,7 +588,12 @@ func (s *Erroring) Genesis(ctx context.Context, opts *api.GenesisOpts) (*api.Res
 }
 
 // NodeSyncing provides the state of the node's synchronization with the chain.
-func (s *Erroring) NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error) {
+func (s *Erroring) NodeSyncing(ctx context.Context,
+	opts *api.NodeSyncingOpts,
+) (
+	*api.Response[*apiv1.SyncState],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -568,7 +606,12 @@ func (s *Erroring) NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (
 }
 
 // NodePeers provides the peers of the node.
-func (s *Erroring) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error) {
+func (s *Erroring) NodePeers(ctx context.Context,
+	opts *api.NodePeersOpts,
+) (
+	*api.Response[[]*apiv1.Peer],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -599,7 +642,12 @@ func (s *Erroring) ProposerDuties(ctx context.Context,
 }
 
 // SyncCommittee fetches the sync committee for the given state.
-func (s *Erroring) SyncCommittee(ctx context.Context, opts *api.SyncCommitteeOpts) (*api.Response[*apiv1.SyncCommittee], error) {
+func (s *Erroring) SyncCommittee(ctx context.Context,
+	opts *api.SyncCommitteeOpts,
+) (
+	*api.Response[*apiv1.SyncCommittee],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -612,7 +660,12 @@ func (s *Erroring) SyncCommittee(ctx context.Context, opts *api.SyncCommitteeOpt
 }
 
 // SyncCommitteeContribution provides a sync committee contribution.
-func (s *Erroring) SyncCommitteeContribution(ctx context.Context, opts *api.SyncCommitteeContributionOpts) (*api.Response[*altair.SyncCommitteeContribution], error) {
+func (s *Erroring) SyncCommitteeContribution(ctx context.Context,
+	opts *api.SyncCommitteeContributionOpts,
+) (
+	*api.Response[*altair.SyncCommitteeContribution],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -626,7 +679,12 @@ func (s *Erroring) SyncCommitteeContribution(ctx context.Context, opts *api.Sync
 
 // SyncCommitteeDuties obtains sync committee duties.
 // If validatorIndicess is nil it will return all duties for the given epoch.
-func (s *Erroring) SyncCommitteeDuties(ctx context.Context, opts *api.SyncCommitteeDutiesOpts) (*api.Response[[]*apiv1.SyncCommitteeDuty], error) {
+func (s *Erroring) SyncCommitteeDuties(ctx context.Context,
+	opts *api.SyncCommitteeDutiesOpts,
+) (
+	*api.Response[[]*apiv1.SyncCommitteeDuty],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -639,7 +697,12 @@ func (s *Erroring) SyncCommitteeDuties(ctx context.Context, opts *api.SyncCommit
 }
 
 // Spec provides the spec information of the chain.
-func (s *Erroring) Spec(ctx context.Context, opts *api.SpecOpts) (*api.Response[map[string]any], error) {
+func (s *Erroring) Spec(ctx context.Context,
+	opts *api.SpecOpts,
+) (
+	*api.Response[map[string]any],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -701,7 +764,12 @@ func (s *Erroring) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase
 }
 
 // VoluntaryExitPool fetches the voluntary exit pool.
-func (s *Erroring) VoluntaryExitPool(ctx context.Context, opts *api.VoluntaryExitPoolOpts) (*api.Response[[]*phase0.SignedVoluntaryExit], error) {
+func (s *Erroring) VoluntaryExitPool(ctx context.Context,
+	opts *api.VoluntaryExitPoolOpts,
+) (
+	*api.Response[[]*phase0.SignedVoluntaryExit],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -755,7 +823,12 @@ func (s *Erroring) GenesisTime(ctx context.Context) (time.Time, error) {
 }
 
 // DepositContract provides details of the Ethereum 1 deposit contract for the chain.
-func (s *Erroring) DepositContract(ctx context.Context, opts *api.DepositContractOpts) (*api.Response[*apiv1.DepositContract], error) {
+func (s *Erroring) DepositContract(ctx context.Context,
+	opts *api.DepositContractOpts,
+) (
+	*api.Response[*apiv1.DepositContract],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -768,7 +841,12 @@ func (s *Erroring) DepositContract(ctx context.Context, opts *api.DepositContrac
 }
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
-func (s *Erroring) SignedBeaconBlock(ctx context.Context, opts *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error) {
+func (s *Erroring) SignedBeaconBlock(ctx context.Context,
+	opts *api.SignedBeaconBlockOpts,
+) (
+	*api.Response[*spec.VersionedSignedBeaconBlock],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -781,7 +859,12 @@ func (s *Erroring) SignedBeaconBlock(ctx context.Context, opts *api.SignedBeacon
 }
 
 // BlobSidecars fetches the blobs given a block ID.
-func (s *Erroring) BlobSidecars(ctx context.Context, opts *api.BlobSidecarsOpts) (*api.Response[[]*deneb.BlobSidecar], error) {
+func (s *Erroring) BlobSidecars(ctx context.Context,
+	opts *api.BlobSidecarsOpts,
+) (
+	*api.Response[[]*deneb.BlobSidecar],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -812,7 +895,12 @@ func (s *Erroring) BeaconStateRoot(ctx context.Context,
 }
 
 // ForkChoice fetches the node's current fork choice context.
-func (s *Erroring) ForkChoice(ctx context.Context, opts *api.ForkChoiceOpts) (*api.Response[*apiv1.ForkChoice], error) {
+func (s *Erroring) ForkChoice(ctx context.Context,
+	opts *api.ForkChoiceOpts,
+) (
+	*api.Response[*apiv1.ForkChoice],
+	error,
+) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}

@@ -84,7 +84,9 @@ func (d *DepositData) unpack(depositDataJSON *depositDataJSON) error {
 	if depositDataJSON.WithdrawalCredentials == "" {
 		return errors.New("withdrawal credentials missing")
 	}
-	if d.WithdrawalCredentials, err = hex.DecodeString(strings.TrimPrefix(depositDataJSON.WithdrawalCredentials, "0x")); err != nil {
+	if d.WithdrawalCredentials, err = hex.DecodeString(
+		strings.TrimPrefix(depositDataJSON.WithdrawalCredentials, "0x"),
+	); err != nil {
 		return errors.Wrap(err, "invalid value for withdrawal credentials")
 	}
 	if len(d.WithdrawalCredentials) != HashLength {

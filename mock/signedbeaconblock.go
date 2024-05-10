@@ -22,7 +22,12 @@ import (
 )
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
-func (*Service) SignedBeaconBlock(_ context.Context, _ *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error) {
+func (*Service) SignedBeaconBlock(_ context.Context,
+	_ *api.SignedBeaconBlockOpts,
+) (
+	*api.Response[*spec.VersionedSignedBeaconBlock],
+	error,
+) {
 	return &api.Response[*spec.VersionedSignedBeaconBlock]{
 		Data: &spec.VersionedSignedBeaconBlock{
 			Version: spec.DataVersionPhase0,

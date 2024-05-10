@@ -13,6 +13,7 @@
 
 package v1
 
+//nolint:revive
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
 //go:generate rm -f signedvalidatorregistration_ssz.go validatorregistration_ssz.go
 //go:generate sszgen -suffix ssz -include ../../spec/phase0,../../spec/altair,../../spec/bellatrix -path . -objs SignedValidatorRegistration,ValidatorRegistration

@@ -22,6 +22,7 @@ type ValidatorBalancesOpts struct {
 	// State is the state at which the data is obtained.
 	// It can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
 	State string
-	// Indices is a list of validator indices to restrict the returned values.  If no indices are supplied then no filter will be applied.
+	// Indices is a list of validator indices to restrict the returned values.
+	// If no indices are supplied then no filter will be applied.
 	Indices []phase0.ValidatorIndex
 }

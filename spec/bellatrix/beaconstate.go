@@ -141,13 +141,13 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range s.Slashings {
 		slashings[i] = fmt.Sprintf("%d", s.Slashings[i])
 	}
-	PreviousEpochParticipation := make([]string, len(s.PreviousEpochParticipation))
+	previousEpochParticipation := make([]string, len(s.PreviousEpochParticipation))
 	for i := range s.PreviousEpochParticipation {
-		PreviousEpochParticipation[i] = fmt.Sprintf("%d", s.PreviousEpochParticipation[i])
+		previousEpochParticipation[i] = fmt.Sprintf("%d", s.PreviousEpochParticipation[i])
 	}
-	CurrentEpochParticipation := make([]string, len(s.CurrentEpochParticipation))
+	currentEpochParticipation := make([]string, len(s.CurrentEpochParticipation))
 	for i := range s.CurrentEpochParticipation {
-		CurrentEpochParticipation[i] = fmt.Sprintf("%d", s.CurrentEpochParticipation[i])
+		currentEpochParticipation[i] = fmt.Sprintf("%d", s.CurrentEpochParticipation[i])
 	}
 	inactivityScores := make([]string, len(s.InactivityScores))
 	for i := range s.InactivityScores {
@@ -170,8 +170,8 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 		Balances:                     balances,
 		RANDAOMixes:                  randaoMixes,
 		Slashings:                    slashings,
-		PreviousEpochParticipation:   PreviousEpochParticipation,
-		CurrentEpochParticipation:    CurrentEpochParticipation,
+		PreviousEpochParticipation:   previousEpochParticipation,
+		CurrentEpochParticipation:    currentEpochParticipation,
 		JustificationBits:            fmt.Sprintf("%#x", s.JustificationBits.Bytes()),
 		PreviousJustifiedCheckpoint:  s.PreviousJustifiedCheckpoint,
 		CurrentJustifiedCheckpoint:   s.CurrentJustifiedCheckpoint,
@@ -429,13 +429,13 @@ func (s *BeaconState) MarshalYAML() ([]byte, error) {
 	for i := range s.Slashings {
 		slashings[i] = uint64(s.Slashings[i])
 	}
-	PreviousEpochParticipation := make([]uint8, len(s.PreviousEpochParticipation))
+	previousEpochParticipation := make([]uint8, len(s.PreviousEpochParticipation))
 	for i := range s.PreviousEpochParticipation {
-		PreviousEpochParticipation[i] = uint8(s.PreviousEpochParticipation[i])
+		previousEpochParticipation[i] = uint8(s.PreviousEpochParticipation[i])
 	}
-	CurrentEpochParticipation := make([]uint8, len(s.CurrentEpochParticipation))
+	currentEpochParticipation := make([]uint8, len(s.CurrentEpochParticipation))
 	for i := range s.CurrentEpochParticipation {
-		CurrentEpochParticipation[i] = uint8(s.CurrentEpochParticipation[i])
+		currentEpochParticipation[i] = uint8(s.CurrentEpochParticipation[i])
 	}
 	yamlBytes, err := yaml.MarshalWithOptions(&beaconStateYAML{
 		GenesisTime:                  s.GenesisTime,
@@ -453,8 +453,8 @@ func (s *BeaconState) MarshalYAML() ([]byte, error) {
 		Balances:                     balances,
 		RANDAOMixes:                  randaoMixes,
 		Slashings:                    slashings,
-		PreviousEpochParticipation:   PreviousEpochParticipation,
-		CurrentEpochParticipation:    CurrentEpochParticipation,
+		PreviousEpochParticipation:   previousEpochParticipation,
+		CurrentEpochParticipation:    currentEpochParticipation,
 		JustificationBits:            fmt.Sprintf("%#x", s.JustificationBits.Bytes()),
 		PreviousJustifiedCheckpoint:  s.PreviousJustifiedCheckpoint,
 		CurrentJustifiedCheckpoint:   s.CurrentJustifiedCheckpoint,

@@ -83,8 +83,9 @@ func (*Sleepy) IsSynced() bool {
 
 // sleep sleeps for a bounded amount of time.
 func (s *Sleepy) sleep(_ context.Context) {
-	// #nosec G404
-	duration := time.Duration(s.minSleep.Milliseconds()+rand.Int63n(s.maxSleep.Milliseconds()-s.minSleep.Milliseconds())) * time.Millisecond
+	duration := time.Duration(s.minSleep.Milliseconds()+
+		// #nosec G404
+		rand.Int63n(s.maxSleep.Milliseconds()-s.minSleep.Milliseconds())) * time.Millisecond
 	time.Sleep(duration)
 }
 
@@ -115,7 +116,12 @@ func (s *Sleepy) SlotFromStateID(ctx context.Context, stateID string) (phase0.Sl
 }
 
 // NodeVersion returns a free-text string with the node version.
-func (s *Sleepy) NodeVersion(ctx context.Context, opts *api.NodeVersionOpts) (*api.Response[string], error) {
+func (s *Sleepy) NodeVersion(ctx context.Context,
+	opts *api.NodeVersionOpts,
+) (
+	*api.Response[string],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.NodeVersionProvider)
 	if !isNext {
@@ -343,7 +349,9 @@ func (s *Sleepy) SubmitBlindedBeaconBlock(ctx context.Context, block *api.Versio
 }
 
 // SubmitValidatorRegistrations submits a validator registration.
-func (s *Sleepy) SubmitValidatorRegistrations(ctx context.Context, registrations []*api.VersionedSignedValidatorRegistration) error {
+func (s *Sleepy) SubmitValidatorRegistrations(ctx context.Context,
+	registrations []*api.VersionedSignedValidatorRegistration,
+) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ValidatorRegistrationsSubmitter)
 	if !isNext {
@@ -354,7 +362,12 @@ func (s *Sleepy) SubmitValidatorRegistrations(ctx context.Context, registrations
 }
 
 // BeaconState fetches a beacon state.
-func (s *Sleepy) BeaconState(ctx context.Context, opts *api.BeaconStateOpts) (*api.Response[*spec.VersionedBeaconState], error) {
+func (s *Sleepy) BeaconState(ctx context.Context,
+	opts *api.BeaconStateOpts,
+) (
+	*api.Response[*spec.VersionedBeaconState],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.BeaconStateProvider)
 	if !isNext {
@@ -376,7 +389,12 @@ func (s *Sleepy) Events(ctx context.Context, topics []string, handler consensusc
 }
 
 // Finality provides the finality given a state ID.
-func (s *Sleepy) Finality(ctx context.Context, opts *api.FinalityOpts) (*api.Response[*apiv1.Finality], error) {
+func (s *Sleepy) Finality(ctx context.Context,
+	opts *api.FinalityOpts,
+) (
+	*api.Response[*apiv1.Finality],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.FinalityProvider)
 	if !isNext {
@@ -403,7 +421,12 @@ func (s *Sleepy) Fork(ctx context.Context,
 }
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Sleepy) ForkSchedule(ctx context.Context, opts *api.ForkScheduleOpts) (*api.Response[[]*phase0.Fork], error) {
+func (s *Sleepy) ForkSchedule(ctx context.Context,
+	opts *api.ForkScheduleOpts,
+) (
+	*api.Response[[]*phase0.Fork],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ForkScheduleProvider)
 	if !isNext {
@@ -414,7 +437,12 @@ func (s *Sleepy) ForkSchedule(ctx context.Context, opts *api.ForkScheduleOpts) (
 }
 
 // Genesis fetches genesis information for the chain.
-func (s *Sleepy) Genesis(ctx context.Context, opts *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error) {
+func (s *Sleepy) Genesis(ctx context.Context,
+	opts *api.GenesisOpts,
+) (
+	*api.Response[*apiv1.Genesis],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.GenesisProvider)
 	if !isNext {
@@ -425,7 +453,12 @@ func (s *Sleepy) Genesis(ctx context.Context, opts *api.GenesisOpts) (*api.Respo
 }
 
 // NodeSyncing provides the state of the node's synchronization with the chain.
-func (s *Sleepy) NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error) {
+func (s *Sleepy) NodeSyncing(ctx context.Context,
+	opts *api.NodeSyncingOpts,
+) (
+	*api.Response[*apiv1.SyncState],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.NodeSyncingProvider)
 	if !isNext {
@@ -436,7 +469,12 @@ func (s *Sleepy) NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (*a
 }
 
 // NodePeers provides the peers of the node.
-func (s *Sleepy) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error) {
+func (s *Sleepy) NodePeers(ctx context.Context,
+	opts *api.NodePeersOpts,
+) (
+	*api.Response[[]*apiv1.Peer],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.NodePeersProvider)
 	if !isNext {
@@ -463,7 +501,12 @@ func (s *Sleepy) ProposerDuties(ctx context.Context,
 }
 
 // Spec provides the spec information of the chain.
-func (s *Sleepy) Spec(ctx context.Context, opts *api.SpecOpts) (*api.Response[map[string]any], error) {
+func (s *Sleepy) Spec(ctx context.Context,
+	opts *api.SpecOpts,
+) (
+	*api.Response[map[string]any],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.SpecProvider)
 	if !isNext {
@@ -517,7 +560,12 @@ func (s *Sleepy) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.
 }
 
 // VoluntaryExitPool fetches the voluntary exit pool.
-func (s *Sleepy) VoluntaryExitPool(ctx context.Context, opts *api.VoluntaryExitPoolOpts) (*api.Response[[]*phase0.SignedVoluntaryExit], error) {
+func (s *Sleepy) VoluntaryExitPool(ctx context.Context,
+	opts *api.VoluntaryExitPoolOpts,
+) (
+	*api.Response[[]*phase0.SignedVoluntaryExit],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.VoluntaryExitPoolProvider)
 	if !isNext {
@@ -563,7 +611,12 @@ func (s *Sleepy) GenesisTime(ctx context.Context) (time.Time, error) {
 }
 
 // ForkChoice fetches the node's current fork choice context.
-func (s *Sleepy) ForkChoice(ctx context.Context, opts *api.ForkChoiceOpts) (*api.Response[*apiv1.ForkChoice], error) {
+func (s *Sleepy) ForkChoice(ctx context.Context,
+	opts *api.ForkChoiceOpts,
+) (
+	*api.Response[*apiv1.ForkChoice],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.ForkChoiceProvider)
 	if !isNext {
@@ -574,7 +627,12 @@ func (s *Sleepy) ForkChoice(ctx context.Context, opts *api.ForkChoiceOpts) (*api
 }
 
 // BlobSidecars fetches the blobs sidecars given options.
-func (s *Sleepy) BlobSidecars(ctx context.Context, opts *api.BlobSidecarsOpts) (*api.Response[[]*deneb.BlobSidecar], error) {
+func (s *Sleepy) BlobSidecars(ctx context.Context,
+	opts *api.BlobSidecarsOpts,
+) (
+	*api.Response[[]*deneb.BlobSidecar],
+	error,
+) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.BlobSidecarsProvider)
 	if !isNext {

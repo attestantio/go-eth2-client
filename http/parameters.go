@@ -125,7 +125,8 @@ func WithReducedMemoryUsage(reducedMemoryUsage bool) Parameter {
 	})
 }
 
-// WithCustomSpecSupport switches from the built in static SSZ library to a new dynamic SSZ library, which is able to handle non-mainnet presets.
+// WithCustomSpecSupport switches from the built in static SSZ library to a new dynamic SSZ library, which is able to handle
+// non-mainnet presets.
 // Dynamic SSZ en-/decoding is much slower than the static one, so this should only be used if required.
 func WithCustomSpecSupport(customSpecSupport bool) Parameter {
 	return parameterFunc(func(p *parameters) {

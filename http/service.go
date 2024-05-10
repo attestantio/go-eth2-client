@@ -302,7 +302,12 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 	// 	// Switched from synced to not synced.
 	// }
 
-	log.Trace().Bool("was_active", wasActive).Bool("active", active).Bool("was_synced", wasSynced).Bool("synced", synced).Msg("Updated connection state")
+	log.Trace().
+		Bool("was_active", wasActive).
+		Bool("active", active).
+		Bool("was_synced", wasSynced).
+		Bool("synced", synced).
+		Msg("Updated connection state")
 
 	s.connectionMu.Lock()
 	s.connectionActive = active

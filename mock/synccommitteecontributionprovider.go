@@ -23,7 +23,12 @@ import (
 )
 
 // SyncCommitteeContribution provides a sync committee contribution.
-func (*Service) SyncCommitteeContribution(_ context.Context, _ *api.SyncCommitteeContributionOpts) (*api.Response[*altair.SyncCommitteeContribution], error) {
+func (*Service) SyncCommitteeContribution(_ context.Context,
+	_ *api.SyncCommitteeContributionOpts,
+) (
+	*api.Response[*altair.SyncCommitteeContribution],
+	error,
+) {
 	return &api.Response[*altair.SyncCommitteeContribution]{
 		Data: &altair.SyncCommitteeContribution{
 			Slot: 5,

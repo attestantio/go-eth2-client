@@ -90,7 +90,9 @@ type templateReplacement struct {
 
 var endpointTemplates = []*templateReplacement{
 	{
-		pattern:     regexp.MustCompile("/(blinded_blocks|blob_sidecars|blocks|headers|sync_committee)/(0x[0-9a-fA-F]{64}|[0-9]+|head|genesis|finalized)"),
+		pattern: regexp.MustCompile(
+			"/(blinded_blocks|blob_sidecars|blocks|headers|sync_committee)/(0x[0-9a-fA-F]{64}|[0-9]+|head|genesis|finalized)",
+		),
 		replacement: []byte("/$1/{block_id}"),
 	},
 	{

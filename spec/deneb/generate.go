@@ -13,6 +13,7 @@
 
 package deneb
 
+//nolint:revive
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
 //go:generate rm -f beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go blobidentifier_ssz.go blobsidecar_ssz.go executionpayload_ssz.go executionpayloadheader_ssz.go signedbeaconblock_ssz.go signedblobsidecar_ssz.go
 //go:generate sszgen --suffix=ssz --path . --include ../phase0,../altair,../bellatrix,../capella --objs BeaconBlockBody,BeaconBlock,BeaconState,BlobIdentifier,BlobSidecar,ExecutionPayload,ExecutionPayloadHeader,SignedBeaconBlock,SignedBlobSidecar

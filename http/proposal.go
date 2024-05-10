@@ -60,7 +60,10 @@ func (s *Service) Proposal(ctx context.Context,
 
 	if opts.SkipRandaoVerification {
 		if !opts.RandaoReveal.IsInfinity() {
-			return nil, errors.Join(errors.New("randao reveal must be point at infinity if skip randao verification is set"), client.ErrInvalidOptions)
+			return nil, errors.Join(
+				errors.New("randao reveal must be point at infinity if skip randao verification is set"),
+				client.ErrInvalidOptions,
+			)
 		}
 		query = fmt.Sprintf("%s&skip_randao_verification", query)
 	}
@@ -95,7 +98,10 @@ func (s *Service) Proposal(ctx context.Context,
 		return nil, err
 	}
 	if blockSlot != opts.Slot {
-		return nil, errors.Join(fmt.Errorf("beacon block proposal for slot %d; expected %d", blockSlot, opts.Slot), client.ErrInconsistentResult)
+		return nil, errors.Join(
+			fmt.Errorf("beacon block proposal for slot %d; expected %d", blockSlot, opts.Slot),
+			client.ErrInconsistentResult,
+		)
 	}
 
 	// Only check the RANDAO reveal if we are not connected to DVT middleware,
@@ -106,7 +112,10 @@ func (s *Service) Proposal(ctx context.Context,
 			return nil, err
 		}
 		if !bytes.Equal(blockRandaoReveal[:], opts.RandaoReveal[:]) {
-			return nil, errors.Join(fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", blockRandaoReveal[:], opts.RandaoReveal[:]), client.ErrInconsistentResult)
+			return nil, errors.Join(
+				fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", blockRandaoReveal[:], opts.RandaoReveal[:]),
+				client.ErrInconsistentResult,
+			)
 		}
 	}
 
@@ -114,7 +123,12 @@ func (s *Service) Proposal(ctx context.Context,
 }
 
 //nolint:nestif
-func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context, res *httpResponse) (*api.Response[*api.VersionedProposal], error) {
+func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context,
+	res *httpResponse,
+) (
+	*api.Response[*api.VersionedProposal],
+	error,
+) {
 	response := &api.Response[*api.VersionedProposal]{
 		Data: &api.VersionedProposal{
 			Version:        res.consensusVersion,
@@ -206,7 +220,10 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context, res *httpRespo
 		return nil, fmt.Errorf("unhandled block proposal version %s", res.consensusVersion)
 	}
 	if err != nil {
-		return nil, errors.Join(fmt.Errorf("failed to decode %v SSZ beacon block (blinded: %v)", res.consensusVersion, response.Data.Blinded), err)
+		return nil, errors.Join(
+			fmt.Errorf("failed to decode %v SSZ beacon block (blinded: %v)", res.consensusVersion, response.Data.Blinded),
+			err,
+		)
 	}
 
 	return response, nil
@@ -229,32 +246,59 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[
 	var err error
 	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
-		response.Data.Phase0, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &phase0.BeaconBlock{})
+		response.Data.Phase0, response.Metadata, err = decodeJSONResponse(
+			bytes.NewReader(res.body),
+			&phase0.BeaconBlock{},
+		)
 	case spec.DataVersionAltair:
-		response.Data.Altair, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &altair.BeaconBlock{})
+		response.Data.Altair, response.Metadata, err = decodeJSONResponse(
+			bytes.NewReader(res.body),
+			&altair.BeaconBlock{},
+		)
 	case spec.DataVersionBellatrix:
 		if response.Data.Blinded {
-			response.Data.BellatrixBlinded, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1bellatrix.BlindedBeaconBlock{})
+			response.Data.BellatrixBlinded, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&apiv1bellatrix.BlindedBeaconBlock{},
+			)
 		} else {
-			response.Data.Bellatrix, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &bellatrix.BeaconBlock{})
+			response.Data.Bellatrix, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&bellatrix.BeaconBlock{},
+			)
 		}
 	case spec.DataVersionCapella:
 		if response.Data.Blinded {
-			response.Data.CapellaBlinded, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1capella.BlindedBeaconBlock{})
+			response.Data.CapellaBlinded, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&apiv1capella.BlindedBeaconBlock{},
+			)
 		} else {
-			response.Data.Capella, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &capella.BeaconBlock{})
+			response.Data.Capella, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&capella.BeaconBlock{},
+			)
 		}
 	case spec.DataVersionDeneb:
 		if response.Data.Blinded {
-			response.Data.DenebBlinded, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1deneb.BlindedBeaconBlock{})
+			response.Data.DenebBlinded, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&apiv1deneb.BlindedBeaconBlock{},
+			)
 		} else {
-			response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &apiv1deneb.BlockContents{})
+			response.Data.Deneb, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&apiv1deneb.BlockContents{},
+			)
 		}
 	default:
 		err = fmt.Errorf("unsupported version %s", res.consensusVersion)
 	}
 	if err != nil {
-		return nil, errors.Join(fmt.Errorf("failed to decode %v JSON beacon block (blinded: %v)", res.consensusVersion, response.Data.Blinded), err)
+		return nil, errors.Join(
+			fmt.Errorf("failed to decode %v JSON beacon block (blinded: %v)", res.consensusVersion, response.Data.Blinded),
+			err,
+		)
 	}
 
 	return response, nil

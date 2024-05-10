@@ -113,13 +113,19 @@ func (v *VersionedSignedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, err
 func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error) {
 	switch v.Version {
 	case DataVersionBellatrix:
-		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil || v.Bellatrix.Message.Body.ExecutionPayload == nil {
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil ||
+			v.Bellatrix.Message.Body == nil ||
+			v.Bellatrix.Message.Body.ExecutionPayload == nil {
 			return phase0.Hash32{}, errors.New("no bellatrix block")
 		}
 
 		return v.Bellatrix.Message.Body.ExecutionPayload.BlockHash, nil
 	case DataVersionCapella:
-		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayload == nil {
+		if v.Capella == nil ||
+			v.Capella.Message == nil ||
+			v.Capella.Message.Body == nil ||
+			v.Capella.Message.Body.ExecutionPayload == nil {
 			return phase0.Hash32{}, errors.New("no capella block")
 		}
 
@@ -139,13 +145,19 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error)
 func (v *VersionedSignedBeaconBlock) ExecutionBlockNumber() (uint64, error) {
 	switch v.Version {
 	case DataVersionBellatrix:
-		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil || v.Bellatrix.Message.Body.ExecutionPayload == nil {
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil ||
+			v.Bellatrix.Message.Body == nil ||
+			v.Bellatrix.Message.Body.ExecutionPayload == nil {
 			return 0, errors.New("no bellatrix block")
 		}
 
 		return v.Bellatrix.Message.Body.ExecutionPayload.BlockNumber, nil
 	case DataVersionCapella:
-		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayload == nil {
+		if v.Capella == nil ||
+			v.Capella.Message == nil ||
+			v.Capella.Message.Body == nil ||
+			v.Capella.Message.Body.ExecutionPayload == nil {
 			return 0, errors.New("no capella block")
 		}
 
@@ -169,13 +181,19 @@ func (v *VersionedSignedBeaconBlock) ExecutionTransactions() ([]bellatrix.Transa
 	case DataVersionAltair:
 		return nil, errors.New("altair block does not have execution transactions")
 	case DataVersionBellatrix:
-		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil || v.Bellatrix.Message.Body.ExecutionPayload == nil {
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil ||
+			v.Bellatrix.Message.Body == nil ||
+			v.Bellatrix.Message.Body.ExecutionPayload == nil {
 			return nil, errors.New("no bellatrix block")
 		}
 
 		return v.Bellatrix.Message.Body.ExecutionPayload.Transactions, nil
 	case DataVersionCapella:
-		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayload == nil {
+		if v.Capella == nil ||
+			v.Capella.Message == nil ||
+			v.Capella.Message.Body == nil ||
+			v.Capella.Message.Body.ExecutionPayload == nil {
 			return nil, errors.New("no capella block")
 		}
 
@@ -717,7 +735,10 @@ func (v *VersionedSignedBeaconBlock) Withdrawals() ([]*capella.Withdrawal, error
 	case DataVersionBellatrix:
 		return nil, errors.New("bellatrix block does not have execution withdrawals")
 	case DataVersionCapella:
-		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil || v.Capella.Message.Body.ExecutionPayload == nil {
+		if v.Capella == nil ||
+			v.Capella.Message == nil ||
+			v.Capella.Message.Body == nil ||
+			v.Capella.Message.Body.ExecutionPayload == nil {
 			return nil, errors.New("no capella block")
 		}
 

@@ -74,13 +74,13 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range b.Slashings {
 		slashings[i] = fmt.Sprintf("%d", b.Slashings[i])
 	}
-	PreviousEpochParticipation := make([]string, len(b.PreviousEpochParticipation))
+	previousEpochParticipation := make([]string, len(b.PreviousEpochParticipation))
 	for i := range b.PreviousEpochParticipation {
-		PreviousEpochParticipation[i] = fmt.Sprintf("%d", b.PreviousEpochParticipation[i])
+		previousEpochParticipation[i] = fmt.Sprintf("%d", b.PreviousEpochParticipation[i])
 	}
-	CurrentEpochParticipation := make([]string, len(b.CurrentEpochParticipation))
+	currentEpochParticipation := make([]string, len(b.CurrentEpochParticipation))
 	for i := range b.CurrentEpochParticipation {
-		CurrentEpochParticipation[i] = fmt.Sprintf("%d", b.CurrentEpochParticipation[i])
+		currentEpochParticipation[i] = fmt.Sprintf("%d", b.CurrentEpochParticipation[i])
 	}
 	inactivityScores := make([]string, len(b.InactivityScores))
 	for i := range b.InactivityScores {
@@ -103,8 +103,8 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 		Balances:                     balances,
 		RANDAOMixes:                  randaoMixes,
 		Slashings:                    slashings,
-		PreviousEpochParticipation:   PreviousEpochParticipation,
-		CurrentEpochParticipation:    CurrentEpochParticipation,
+		PreviousEpochParticipation:   previousEpochParticipation,
+		CurrentEpochParticipation:    currentEpochParticipation,
 		JustificationBits:            fmt.Sprintf("%#x", b.JustificationBits.Bytes()),
 		PreviousJustifiedCheckpoint:  b.PreviousJustifiedCheckpoint,
 		CurrentJustifiedCheckpoint:   b.CurrentJustifiedCheckpoint,

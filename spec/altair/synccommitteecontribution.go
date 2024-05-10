@@ -107,7 +107,9 @@ func (s *SyncCommitteeContribution) unpack(syncCommitteeContributionJSON *syncCo
 	if syncCommitteeContributionJSON.AggregationBits == "" {
 		return errors.New("aggregation bits missing")
 	}
-	if s.AggregationBits, err = hex.DecodeString(strings.TrimPrefix(syncCommitteeContributionJSON.AggregationBits, "0x")); err != nil {
+	if s.AggregationBits, err = hex.DecodeString(
+		strings.TrimPrefix(syncCommitteeContributionJSON.AggregationBits, "0x"),
+	); err != nil {
 		return errors.Wrap(err, "invalid value for aggregation bits")
 	}
 	if syncCommitteeContributionJSON.Signature == "" {

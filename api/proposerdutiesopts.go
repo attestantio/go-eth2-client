@@ -21,6 +21,7 @@ type ProposerDutiesOpts struct {
 
 	// Epoch is the epoch for which the data is obtained.
 	Epoch phase0.Epoch
-	// Indices is a list of validators to restrict the returned values.  If no indices are supplied then no filter will be applied.
+	// Indices is a list of validators to restrict the returned values.
+	// If no indices are supplied then no filter will be applied.
 	Indices []phase0.ValidatorIndex
 }
