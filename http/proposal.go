@@ -221,10 +221,18 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context,
 	case spec.DataVersionElectra:
 		if response.Data.Blinded {
 			response.Data.ElectraBlinded = &apiv1electra.BlindedBeaconBlock{}
-			err = response.Data.ElectraBlinded.UnmarshalSSZ(res.body)
+			if s.customSpecSupport {
+				err = dynSSZ.UnmarshalSSZ(response.Data.ElectraBlinded, res.body)
+			} else {
+				err = response.Data.ElectraBlinded.UnmarshalSSZ(res.body)
+			}
 		} else {
 			response.Data.Electra = &apiv1electra.BlockContents{}
-			err = response.Data.Electra.UnmarshalSSZ(res.body)
+			if s.customSpecSupport {
+				err = dynSSZ.UnmarshalSSZ(response.Data.Electra, res.body)
+			} else {
+				err = response.Data.Electra.UnmarshalSSZ(res.body)
+			}
 		}
 	default:
 		return nil, fmt.Errorf("unhandled block proposal version %s", res.consensusVersion)

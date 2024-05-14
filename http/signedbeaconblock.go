@@ -145,8 +145,13 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 		}
 	case spec.DataVersionElectra:
 		response.Data.Electra = &electra.SignedBeaconBlock{}
-		if err := response.Data.Electra.UnmarshalSSZ(res.body); err != nil {
-			return nil, errors.Join(errors.New("failed to decode electra signed block contents"), err)
+		if s.customSpecSupport {
+			err = dynSSZ.UnmarshalSSZ(response.Data.Electra, res.body)
+		} else {
+			err = response.Data.Electra.UnmarshalSSZ(res.body)
+		}
+		if err != nil {
+			return nil, errors.Join(errors.New("failed to decode deneb signed block contents"), err)
 		}
 	default:
 		return nil, fmt.Errorf("unhandled block version %s", res.consensusVersion)
