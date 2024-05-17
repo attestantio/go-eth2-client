@@ -39,7 +39,7 @@ type BlindedBeaconBlockBody struct {
 	ExecutionPayloadHeader *electra.ExecutionPayloadHeader
 	BLSToExecutionChanges  []*capella.SignedBLSToExecutionChange `ssz-max:"16"`
 	BlobKZGCommitments     []deneb.KZGCommitment                 `ssz-max:"4096" ssz-size:"?,48"`
-	Consolidations         []*electra.SignedConsolidation        `ssz-max:"16"`
+	Consolidations         []*electra.SignedConsolidation        `ssz-max:"1"`
 }
 
 // String returns a string version of the structure.
