@@ -422,7 +422,7 @@ func (b *BlindedBeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 	// Field (12) 'Consolidations'
 	{
 		buf = tail[o12:]
-		num, err := ssz.DivideInt2(len(buf), 120, 16)
+		num, err := ssz.DivideInt2(len(buf), 120, 1)
 		if err != nil {
 			return err
 		}
@@ -641,7 +641,7 @@ func (b *BlindedBeaconBlockBody) HashTreeRootWith(hh ssz.HashWalker) (err error)
 				return
 			}
 		}
-		hh.MerkleizeWithMixin(subIndx, num, 16)
+		hh.MerkleizeWithMixin(subIndx, num, 1)
 	}
 
 	hh.Merkleize(indx)
