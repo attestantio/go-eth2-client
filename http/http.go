@@ -47,7 +47,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 		}
 		body = bytes.NewReader(bodyBytes)
 
-		e.Str("body", string(bodyBytes)).Msg("POST request")
+		e.RawJSON("body", bodyBytes).Msg("POST request")
 	}
 
 	callURL := urlForCall(s.base, endpoint, "")
@@ -127,7 +127,7 @@ func (s *Service) post2(ctx context.Context,
 			}
 			body = bytes.NewReader(bodyBytes)
 
-			e.Str("body", string(bodyBytes)).Msg("POST request")
+			e.RawJSON("body", bodyBytes).Msg("POST request")
 		default:
 			e.Str("content_type", contentType.String()).Msg("POST request")
 		}
