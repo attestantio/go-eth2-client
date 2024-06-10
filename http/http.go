@@ -93,7 +93,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 		return nil, errors.Join(errors.New("failed to read POST response"), err)
 	}
 
-	statusFamily := resp.StatusCode / 100
+	statusFamily := statusCodeFamily(resp.StatusCode)
 	if statusFamily != 2 {
 		trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(data, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
 		log.Debug().Int("status_code", resp.StatusCode).RawJSON("response", trimmedResponse).Msg("POST failed")
@@ -239,7 +239,7 @@ func (s *Service) post2(ctx context.Context,
 		}
 	}
 
-	statusFamily := resp.StatusCode / 100
+	statusFamily := statusCodeFamily(resp.StatusCode)
 	if statusFamily != 2 {
 		if res.contentType == ContentTypeJSON {
 			trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
@@ -401,7 +401,7 @@ func (s *Service) get(ctx context.Context,
 		}
 	}
 
-	statusFamily := resp.StatusCode / 100
+	statusFamily := statusCodeFamily(resp.StatusCode)
 	if statusFamily != 2 {
 		trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
 		log.Debug().Int("status_code", resp.StatusCode).RawJSON("response", trimmedResponse).Msg("GET failed")
@@ -502,4 +502,8 @@ func urlForCall(base *url.URL,
 	}
 
 	return &callURL
+}
+
+func statusCodeFamily(status int) int {
+	return status / 100
 }
