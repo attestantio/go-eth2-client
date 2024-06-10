@@ -34,7 +34,7 @@ import (
 )
 
 // defaultUserAgent is sent with requests if no other user agent has been supplied.
-const defaultUserAgent = "go-eth2-client/0.21.4"
+const defaultUserAgent = "go-eth2-client/0.21.5"
 
 // post sends an HTTP post request and returns the body.
 func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io.Reader, error) {
