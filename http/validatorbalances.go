@@ -57,7 +57,7 @@ func (s *Service) ValidatorBalances(ctx context.Context,
 		query = "id=" + strings.Join(ids, ",")
 	}
 
-	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
 	if err != nil {
 		return nil, err
 	}

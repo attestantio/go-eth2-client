@@ -41,7 +41,7 @@ func (s *Service) BeaconStateRoot(ctx context.Context, opts *api.BeaconStateRoot
 	}
 
 	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/root", opts.State)
-	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, err
 	}

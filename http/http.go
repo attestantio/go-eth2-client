@@ -284,10 +284,13 @@ type httpResponse struct {
 }
 
 // get sends an HTTP get request and returns the response.
+//
+//nolint:revive
 func (s *Service) get(ctx context.Context,
 	endpoint string,
 	query string,
 	opts *api.CommonOpts,
+	supportsSSZ bool,
 ) (
 	*httpResponse,
 	error,
@@ -318,7 +321,7 @@ func (s *Service) get(ctx context.Context,
 	}
 
 	s.addExtraHeaders(req)
-	if s.enforceJSON {
+	if s.enforceJSON || !supportsSSZ {
 		// JSON only.
 		req.Header.Set("Accept", "application/json")
 	} else {

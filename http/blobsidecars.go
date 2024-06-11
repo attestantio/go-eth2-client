@@ -42,7 +42,7 @@ func (s *Service) BlobSidecars(ctx context.Context,
 	}
 
 	endpoint := fmt.Sprintf("/eth/v1/beacon/blob_sidecars/%s", opts.Block)
-	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, true)
 	if err != nil {
 		return nil, err
 	}
