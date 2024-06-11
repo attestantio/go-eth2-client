@@ -60,7 +60,7 @@ func (s *Service) NodeVersion(ctx context.Context,
 
 	// Up to us to fetch the information.
 	endpoint := "/eth/v1/node/version"
-	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, err
 	}

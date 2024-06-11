@@ -47,7 +47,7 @@ func (s *Service) BeaconCommittees(ctx context.Context,
 		query = fmt.Sprintf("epoch=%d", *opts.Epoch)
 	}
 
-	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
 	if err != nil {
 		return nil, err
 	}

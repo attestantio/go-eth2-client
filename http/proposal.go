@@ -74,7 +74,7 @@ func (s *Service) Proposal(ctx context.Context,
 		query = fmt.Sprintf("%s&builder_boost_factor=%d", query, *opts.BuilderBoostFactor)
 	}
 
-	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, true)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request beacon block proposal"), err)
 	}

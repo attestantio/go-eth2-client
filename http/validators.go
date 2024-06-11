@@ -163,7 +163,7 @@ func (s *Service) Validators(ctx context.Context,
 		}
 	}
 
-	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request validators"), err)
 	}

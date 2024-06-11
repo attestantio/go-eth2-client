@@ -40,7 +40,7 @@ func (s *Service) AttestationPool(ctx context.Context,
 
 	endpoint := "/eth/v1/beacon/pool/attestations"
 	query := fmt.Sprintf("slot=%d", opts.Slot)
-	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
 	if err != nil {
 		return nil, err
 	}

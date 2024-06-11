@@ -38,7 +38,7 @@ func (s *Service) BeaconBlockHeader(ctx context.Context,
 	}
 
 	endpoint := fmt.Sprintf("/eth/v1/beacon/headers/%s", opts.Block)
-	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, err
 	}
