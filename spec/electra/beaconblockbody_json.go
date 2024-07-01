@@ -66,8 +66,6 @@ func (b *BeaconBlockBody) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-//
-//nolint:gocyclo
 func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	raw, err := codecs.RawJSON(&beaconBlockBodyJSON{}, input)
 	if err != nil {
