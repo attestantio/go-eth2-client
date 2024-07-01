@@ -39,7 +39,6 @@ type blindedBeaconBlockBodyYAML struct {
 	ExecutionPayloadHeader *electra.ExecutionPayloadHeader       `yaml:"execution_payload_header"`
 	BLSToExecutionChanges  []*capella.SignedBLSToExecutionChange `yaml:"bls_to_execution_changes"`
 	BlobKZGCommitments     []string                              `yaml:"blob_kzg_commitments"`
-	Consolidations         []*electra.SignedConsolidation        `json:"consolidations"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
@@ -62,7 +61,6 @@ func (b *BlindedBeaconBlockBody) MarshalYAML() ([]byte, error) {
 		ExecutionPayloadHeader: b.ExecutionPayloadHeader,
 		BLSToExecutionChanges:  b.BLSToExecutionChanges,
 		BlobKZGCommitments:     blobKZGCommitments,
-		Consolidations:         b.Consolidations,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

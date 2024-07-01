@@ -98,7 +98,7 @@ type PayloadAttributesV4 struct {
 	DepositRequests []*electra.DepositRequest
 	// WithdrawalRequests is the list of withdrawal requests.
 	WithdrawalRequests []*electra.WithdrawalRequest
-	// ConsolidationRequests is the list of withdrawal requests.
+	// ConsolidationRequests is the list of consolidation requests.
 	ConsolidationRequests []*electra.ConsolidationRequest
 }
 
