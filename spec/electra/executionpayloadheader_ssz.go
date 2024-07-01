@@ -16,7 +16,7 @@ func (e *ExecutionPayloadHeader) MarshalSSZ() ([]byte, error) {
 // MarshalSSZTo ssz marshals the ExecutionPayloadHeader object to a target array
 func (e *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
-	offset := int(648)
+	offset := int(680)
 
 	// Field (0) 'ParentHash'
 	dst = append(dst, e.ParentHash[:]...)
@@ -74,10 +74,13 @@ func (e *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error
 	dst = ssz.MarshalUint64(dst, e.ExcessBlobGas)
 
 	// Field (17) 'DepositReceiptsRoot'
-	dst = append(dst, e.DepositReceiptsRoot[:]...)
+	dst = append(dst, e.DepositRequestsRoot[:]...)
 
 	// Field (18) 'WithdrawalRequestsRoot'
 	dst = append(dst, e.WithdrawalRequestsRoot[:]...)
+
+	// Field (19) 'ConsolidationRequestsRoot'
+	dst = append(dst, e.ConsolidationRequestsRoot[:]...)
 
 	// Field (10) 'ExtraData'
 	if size := len(e.ExtraData); size > 32 {
@@ -93,7 +96,7 @@ func (e *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error
 func (e *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
-	if size < 648 {
+	if size < 680 {
 		return ssz.ErrSize
 	}
 
@@ -135,7 +138,7 @@ func (e *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) error {
 		return ssz.ErrOffset
 	}
 
-	if o10 < 648 {
+	if o10 < 680 {
 		return ssz.ErrInvalidVariableOffset
 	}
 
@@ -163,10 +166,13 @@ func (e *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) error {
 	e.ExcessBlobGas = ssz.UnmarshallUint64(buf[576:584])
 
 	// Field (17) 'DepositReceiptsRoot'
-	copy(e.DepositReceiptsRoot[:], buf[584:616])
+	copy(e.DepositRequestsRoot[:], buf[584:616])
 
 	// Field (18) 'WithdrawalRequestsRoot'
 	copy(e.WithdrawalRequestsRoot[:], buf[616:648])
+
+	// Field (19) 'ConsolidationRequestsRoot'
+	copy(e.ConsolidationRequestsRoot[:], buf[648:680])
 
 	// Field (10) 'ExtraData'
 	{
@@ -184,7 +190,7 @@ func (e *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) error {
 
 // SizeSSZ returns the ssz encoded size in bytes for the ExecutionPayloadHeader object
 func (e *ExecutionPayloadHeader) SizeSSZ() (size int) {
-	size = 648
+	size = 680
 
 	// Field (10) 'ExtraData'
 	size += len(e.ExtraData)
@@ -267,10 +273,13 @@ func (e *ExecutionPayloadHeader) HashTreeRootWith(hh ssz.HashWalker) (err error)
 	hh.PutUint64(e.ExcessBlobGas)
 
 	// Field (17) 'DepositReceiptsRoot'
-	hh.PutBytes(e.DepositReceiptsRoot[:])
+	hh.PutBytes(e.DepositRequestsRoot[:])
 
 	// Field (18) 'WithdrawalRequestsRoot'
 	hh.PutBytes(e.WithdrawalRequestsRoot[:])
+
+	// Field (19) 'ConsolidationRequestsRoot'
+	hh.PutBytes(e.ConsolidationRequestsRoot[:])
 
 	hh.Merkleize(indx)
 	return

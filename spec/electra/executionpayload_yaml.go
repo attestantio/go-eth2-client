@@ -25,25 +25,26 @@ import (
 
 // executionPayloadYAML is the spec representation of the struct.
 type executionPayloadYAML struct {
-	ParentHash         string                             `yaml:"parent_hash"`
-	FeeRecipient       string                             `yaml:"fee_recipient"`
-	StateRoot          string                             `yaml:"state_root"`
-	ReceiptsRoot       string                             `yaml:"receipts_root"`
-	LogsBloom          string                             `yaml:"logs_bloom"`
-	PrevRandao         string                             `yaml:"prev_randao"`
-	BlockNumber        uint64                             `yaml:"block_number"`
-	GasLimit           uint64                             `yaml:"gas_limit"`
-	GasUsed            uint64                             `yaml:"gas_used"`
-	Timestamp          uint64                             `yaml:"timestamp"`
-	ExtraData          string                             `yaml:"extra_data"`
-	BaseFeePerGas      string                             `yaml:"base_fee_per_gas"`
-	BlockHash          string                             `yaml:"block_hash"`
-	Transactions       []string                           `yaml:"transactions"`
-	Withdrawals        []*capella.Withdrawal              `yaml:"withdrawals"`
-	BlobGasUsed        uint64                             `yaml:"blob_gas_used"`
-	ExcessBlobGas      uint64                             `yaml:"excess_blob_gas"`
-	DepositReceipts    []*DepositReceipt                  `yaml:"deposit_receipts"`
-	WithdrawalRequests []*ExecutionLayerWithdrawalRequest `yaml:"withdrawal_requests"`
+	ParentHash            string                  `yaml:"parent_hash"`
+	FeeRecipient          string                  `yaml:"fee_recipient"`
+	StateRoot             string                  `yaml:"state_root"`
+	ReceiptsRoot          string                  `yaml:"receipts_root"`
+	LogsBloom             string                  `yaml:"logs_bloom"`
+	PrevRandao            string                  `yaml:"prev_randao"`
+	BlockNumber           uint64                  `yaml:"block_number"`
+	GasLimit              uint64                  `yaml:"gas_limit"`
+	GasUsed               uint64                  `yaml:"gas_used"`
+	Timestamp             uint64                  `yaml:"timestamp"`
+	ExtraData             string                  `yaml:"extra_data"`
+	BaseFeePerGas         string                  `yaml:"base_fee_per_gas"`
+	BlockHash             string                  `yaml:"block_hash"`
+	Transactions          []string                `yaml:"transactions"`
+	Withdrawals           []*capella.Withdrawal   `yaml:"withdrawals"`
+	BlobGasUsed           uint64                  `yaml:"blob_gas_used"`
+	ExcessBlobGas         uint64                  `yaml:"excess_blob_gas"`
+	DepositRequests       []*DepositRequest       `yaml:"deposit_receipts"`
+	WithdrawalRequests    []*WithdrawalRequest    `yaml:"withdrawal_requests"`
+	ConsolidationRequests []*ConsolidationRequest `yaml:"consolidation_requests"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
@@ -59,25 +60,26 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 	}
 
 	yamlBytes, err := yaml.MarshalWithOptions(&executionPayloadYAML{
-		ParentHash:         e.ParentHash.String(),
-		FeeRecipient:       e.FeeRecipient.String(),
-		StateRoot:          e.StateRoot.String(),
-		ReceiptsRoot:       e.ReceiptsRoot.String(),
-		LogsBloom:          fmt.Sprintf("%#x", e.LogsBloom),
-		PrevRandao:         fmt.Sprintf("%#x", e.PrevRandao),
-		BlockNumber:        e.BlockNumber,
-		GasLimit:           e.GasLimit,
-		GasUsed:            e.GasUsed,
-		Timestamp:          e.Timestamp,
-		ExtraData:          extraData,
-		BaseFeePerGas:      e.BaseFeePerGas.Dec(),
-		BlockHash:          fmt.Sprintf("%#x", e.BlockHash),
-		Transactions:       transactions,
-		Withdrawals:        e.Withdrawals,
-		BlobGasUsed:        e.BlobGasUsed,
-		ExcessBlobGas:      e.ExcessBlobGas,
-		DepositReceipts:    e.DepositReceipts,
-		WithdrawalRequests: e.WithdrawalRequests,
+		ParentHash:            e.ParentHash.String(),
+		FeeRecipient:          e.FeeRecipient.String(),
+		StateRoot:             e.StateRoot.String(),
+		ReceiptsRoot:          e.ReceiptsRoot.String(),
+		LogsBloom:             fmt.Sprintf("%#x", e.LogsBloom),
+		PrevRandao:            fmt.Sprintf("%#x", e.PrevRandao),
+		BlockNumber:           e.BlockNumber,
+		GasLimit:              e.GasLimit,
+		GasUsed:               e.GasUsed,
+		Timestamp:             e.Timestamp,
+		ExtraData:             extraData,
+		BaseFeePerGas:         e.BaseFeePerGas.Dec(),
+		BlockHash:             fmt.Sprintf("%#x", e.BlockHash),
+		Transactions:          transactions,
+		Withdrawals:           e.Withdrawals,
+		BlobGasUsed:           e.BlobGasUsed,
+		ExcessBlobGas:         e.ExcessBlobGas,
+		DepositRequests:       e.DepositRequests,
+		WithdrawalRequests:    e.WithdrawalRequests,
+		ConsolidationRequests: e.ConsolidationRequests,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

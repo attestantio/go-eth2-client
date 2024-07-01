@@ -29,25 +29,26 @@ import (
 
 // executionPayloadHeaderJSON is the spec representation of the struct.
 type executionPayloadHeaderJSON struct {
-	ParentHash             phase0.Hash32              `json:"parent_hash"`
-	FeeRecipient           bellatrix.ExecutionAddress `json:"fee_recipient"`
-	StateRoot              phase0.Root                `json:"state_root"`
-	ReceiptsRoot           phase0.Root                `json:"receipts_root"`
-	LogsBloom              string                     `json:"logs_bloom"`
-	PrevRandao             string                     `json:"prev_randao"`
-	BlockNumber            string                     `json:"block_number"`
-	GasLimit               string                     `json:"gas_limit"`
-	GasUsed                string                     `json:"gas_used"`
-	Timestamp              string                     `json:"timestamp"`
-	ExtraData              string                     `json:"extra_data"`
-	BaseFeePerGas          string                     `json:"base_fee_per_gas"`
-	BlockHash              phase0.Hash32              `json:"block_hash"`
-	TransactionsRoot       phase0.Root                `json:"transactions_root"`
-	WithdrawalsRoot        phase0.Root                `json:"withdrawals_root"`
-	BlobGasUsed            string                     `json:"blob_gas_used"`
-	ExcessBlobGas          string                     `json:"excess_blob_gas"`
-	DepositReceiptsRoot    phase0.Root                `json:"deposit_receipts_root"`
-	WithdrawalRequestsRoot phase0.Root                `json:"withdrawal_requests_root"`
+	ParentHash                phase0.Hash32              `json:"parent_hash"`
+	FeeRecipient              bellatrix.ExecutionAddress `json:"fee_recipient"`
+	StateRoot                 phase0.Root                `json:"state_root"`
+	ReceiptsRoot              phase0.Root                `json:"receipts_root"`
+	LogsBloom                 string                     `json:"logs_bloom"`
+	PrevRandao                string                     `json:"prev_randao"`
+	BlockNumber               string                     `json:"block_number"`
+	GasLimit                  string                     `json:"gas_limit"`
+	GasUsed                   string                     `json:"gas_used"`
+	Timestamp                 string                     `json:"timestamp"`
+	ExtraData                 string                     `json:"extra_data"`
+	BaseFeePerGas             string                     `json:"base_fee_per_gas"`
+	BlockHash                 phase0.Hash32              `json:"block_hash"`
+	TransactionsRoot          phase0.Root                `json:"transactions_root"`
+	WithdrawalsRoot           phase0.Root                `json:"withdrawals_root"`
+	BlobGasUsed               string                     `json:"blob_gas_used"`
+	ExcessBlobGas             string                     `json:"excess_blob_gas"`
+	DepositRequestsRoot       phase0.Root                `json:"deposit_requests_root"`
+	WithdrawalRequestsRoot    phase0.Root                `json:"withdrawal_requests_root"`
+	ConsolidationRequestsRoot phase0.Root                `json:"consolidation_requests_root"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -58,25 +59,26 @@ func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(&executionPayloadHeaderJSON{
-		ParentHash:             e.ParentHash,
-		FeeRecipient:           e.FeeRecipient,
-		StateRoot:              e.StateRoot,
-		ReceiptsRoot:           e.ReceiptsRoot,
-		LogsBloom:              fmt.Sprintf("%#x", e.LogsBloom),
-		PrevRandao:             fmt.Sprintf("%#x", e.PrevRandao),
-		BlockNumber:            strconv.FormatUint(e.BlockNumber, 10),
-		GasLimit:               strconv.FormatUint(e.GasLimit, 10),
-		GasUsed:                strconv.FormatUint(e.GasUsed, 10),
-		Timestamp:              strconv.FormatUint(e.Timestamp, 10),
-		ExtraData:              extraData,
-		BaseFeePerGas:          e.BaseFeePerGas.Dec(),
-		BlockHash:              e.BlockHash,
-		TransactionsRoot:       e.TransactionsRoot,
-		WithdrawalsRoot:        e.WithdrawalsRoot,
-		BlobGasUsed:            strconv.FormatUint(e.BlobGasUsed, 10),
-		ExcessBlobGas:          strconv.FormatUint(e.ExcessBlobGas, 10),
-		DepositReceiptsRoot:    e.DepositReceiptsRoot,
-		WithdrawalRequestsRoot: e.WithdrawalRequestsRoot,
+		ParentHash:                e.ParentHash,
+		FeeRecipient:              e.FeeRecipient,
+		StateRoot:                 e.StateRoot,
+		ReceiptsRoot:              e.ReceiptsRoot,
+		LogsBloom:                 fmt.Sprintf("%#x", e.LogsBloom),
+		PrevRandao:                fmt.Sprintf("%#x", e.PrevRandao),
+		BlockNumber:               strconv.FormatUint(e.BlockNumber, 10),
+		GasLimit:                  strconv.FormatUint(e.GasLimit, 10),
+		GasUsed:                   strconv.FormatUint(e.GasUsed, 10),
+		Timestamp:                 strconv.FormatUint(e.Timestamp, 10),
+		ExtraData:                 extraData,
+		BaseFeePerGas:             e.BaseFeePerGas.Dec(),
+		BlockHash:                 e.BlockHash,
+		TransactionsRoot:          e.TransactionsRoot,
+		WithdrawalsRoot:           e.WithdrawalsRoot,
+		BlobGasUsed:               strconv.FormatUint(e.BlobGasUsed, 10),
+		ExcessBlobGas:             strconv.FormatUint(e.ExcessBlobGas, 10),
+		DepositRequestsRoot:       e.DepositRequestsRoot,
+		WithdrawalRequestsRoot:    e.WithdrawalRequestsRoot,
+		ConsolidationRequestsRoot: e.ConsolidationRequestsRoot,
 	})
 }
 
@@ -220,12 +222,16 @@ func (e *ExecutionPayloadHeader) UnmarshalJSON(input []byte) error {
 	}
 	e.ExcessBlobGas = tmpUint
 
-	if err := e.DepositReceiptsRoot.UnmarshalJSON(raw["deposit_receipts_root"]); err != nil {
+	if err := e.DepositRequestsRoot.UnmarshalJSON(raw["deposit_receipts_root"]); err != nil {
 		return errors.Wrap(err, "deposit_receipts_root")
 	}
 
 	if err := e.WithdrawalRequestsRoot.UnmarshalJSON(raw["withdrawal_requests_root"]); err != nil {
 		return errors.Wrap(err, "withdrawal_requests_root")
+	}
+
+	if err := e.ConsolidationRequestsRoot.UnmarshalJSON(raw["consolidation_requests_root"]); err != nil {
+		return errors.Wrap(err, "consolidation_requests_root")
 	}
 
 	return nil

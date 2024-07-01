@@ -23,16 +23,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-// executionLayerWithdrawalRequestYAML is the spec representation of the struct.
-type executionLayerWithdrawalRequestYAML struct {
+// withdrawalRequestYAML is the spec representation of the struct.
+type withdrawalRequestYAML struct {
 	SourceAddress   bellatrix.ExecutionAddress `yaml:"source_address"`
 	ValidatorPubkey phase0.BLSPubKey           `yaml:"validator_pubkey"`
 	Amount          phase0.Gwei                `yaml:"amount"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
-func (e *ExecutionLayerWithdrawalRequest) MarshalYAML() ([]byte, error) {
-	yamlBytes, err := yaml.MarshalWithOptions(&executionLayerWithdrawalRequestYAML{
+func (e *WithdrawalRequest) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&withdrawalRequestYAML{
 		SourceAddress:   e.SourceAddress,
 		ValidatorPubkey: e.ValidatorPubkey,
 		Amount:          e.Amount,
@@ -45,10 +45,10 @@ func (e *ExecutionLayerWithdrawalRequest) MarshalYAML() ([]byte, error) {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (e *ExecutionLayerWithdrawalRequest) UnmarshalYAML(input []byte) error {
+func (e *WithdrawalRequest) UnmarshalYAML(input []byte) error {
 	// This is very inefficient, but YAML is only used for spec tests so we do this
 	// rather than maintain a custom YAML unmarshaller.
-	var unmarshaled executionLayerWithdrawalRequestJSON
+	var unmarshaled withdrawalRequestYAML
 	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}

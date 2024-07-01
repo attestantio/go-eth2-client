@@ -675,30 +675,6 @@ func (v *VersionedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlashing, 
 	}
 }
 
-// Consolidations returns the consolidations of the beacon block.
-func (v *VersionedBeaconBlock) Consolidations() ([]*electra.SignedConsolidation, error) {
-	switch v.Version {
-	case DataVersionPhase0:
-		return nil, errors.New("consolidations not available in phase0 block")
-	case DataVersionAltair:
-		return nil, errors.New("consolidations not available in altair block")
-	case DataVersionBellatrix:
-		return nil, errors.New("consolidations not available in bellatrix block")
-	case DataVersionCapella:
-		return nil, errors.New("consolidations not available in capella block")
-	case DataVersionDeneb:
-		return nil, errors.New("consolidations not available in deneb block")
-	case DataVersionElectra:
-		if v.Electra == nil || v.Electra.Body == nil {
-			return nil, errors.New("no electra block")
-		}
-
-		return v.Electra.Body.Consolidations, nil
-	default:
-		return nil, errors.New("unknown version")
-	}
-}
-
 // String returns a string version of the structure.
 func (v *VersionedBeaconBlock) String() string {
 	switch v.Version {

@@ -31,24 +31,24 @@ import (
 type Attestation struct {
 	AggregationBits bitfield.Bitlist `ssz-max:"131072"`
 	Data            *phase0.AttestationData
-	CommitteeBits   bitfield.Bitvector64 `dynssz-size:"MAX_COMMITTEES_PER_SLOT/8" ssz-size:"8"`
 	Signature       phase0.BLSSignature  `ssz-size:"96"`
+	CommitteeBits   bitfield.Bitvector64 `dynssz-size:"MAX_COMMITTEES_PER_SLOT/8" ssz-size:"8"`
 }
 
 // attestationJSON is a raw representation of the struct.
 type attestationJSON struct {
 	AggregationBits string                  `json:"aggregation_bits"`
 	Data            *phase0.AttestationData `json:"data"`
-	CommitteeBits   string                  `json:"committee_bits"`
 	Signature       string                  `json:"signature"`
+	CommitteeBits   string                  `json:"committee_bits"`
 }
 
 // attestationYAML is a raw representation of the struct.
 type attestationYAML struct {
 	AggregationBits string                  `yaml:"aggregation_bits"`
 	Data            *phase0.AttestationData `yaml:"data"`
-	CommitteeBits   string                  `yaml:"committee_bits"`
 	Signature       string                  `yaml:"signature"`
+	CommitteeBits   string                  `yaml:"committee_bits"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -56,8 +56,8 @@ func (a *Attestation) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&attestationJSON{
 		AggregationBits: fmt.Sprintf("%#x", []byte(a.AggregationBits)),
 		Data:            a.Data,
-		CommitteeBits:   fmt.Sprintf("%#x", a.CommitteeBits),
 		Signature:       fmt.Sprintf("%#x", a.Signature),
+		CommitteeBits:   fmt.Sprintf("%#x", a.CommitteeBits),
 	})
 }
 
@@ -84,12 +84,6 @@ func (a *Attestation) unpack(attestationJSON *attestationJSON) error {
 	if a.Data == nil {
 		return errors.New("data missing")
 	}
-	if attestationJSON.CommitteeBits == "" {
-		return errors.New("committee bits missing")
-	}
-	if a.CommitteeBits, err = hex.DecodeString(strings.TrimPrefix(attestationJSON.CommitteeBits, "0x")); err != nil {
-		return errors.Wrap(err, "invalid value for committee bits")
-	}
 	if attestationJSON.Signature == "" {
 		return errors.New("signature missing")
 	}
@@ -101,6 +95,12 @@ func (a *Attestation) unpack(attestationJSON *attestationJSON) error {
 		return errors.New("incorrect length for signature")
 	}
 	copy(a.Signature[:], signature)
+	if attestationJSON.CommitteeBits == "" {
+		return errors.New("committee bits missing")
+	}
+	if a.CommitteeBits, err = hex.DecodeString(strings.TrimPrefix(attestationJSON.CommitteeBits, "0x")); err != nil {
+		return errors.Wrap(err, "invalid value for committee bits")
+	}
 
 	return nil
 }
@@ -110,8 +110,8 @@ func (a *Attestation) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&attestationYAML{
 		AggregationBits: fmt.Sprintf("%#x", []byte(a.AggregationBits)),
 		Data:            a.Data,
-		CommitteeBits:   fmt.Sprintf("%#x", []byte(a.CommitteeBits)),
 		Signature:       fmt.Sprintf("%#x", a.Signature),
+		CommitteeBits:   fmt.Sprintf("%#x", []byte(a.CommitteeBits)),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

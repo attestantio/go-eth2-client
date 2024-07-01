@@ -22,25 +22,25 @@ import (
 	"github.com/pkg/errors"
 )
 
-// executionLayerWithdrawalRequestJSON is the spec representation of the struct.
-type executionLayerWithdrawalRequestJSON struct {
-	SourceAddress   bellatrix.ExecutionAddress `json:"source_address"`
-	ValidatorPubkey phase0.BLSPubKey           `json:"validator_pubkey"`
-	Amount          phase0.Gwei                `json:"amount"`
+// consolidationRequestJSON is the spec representation of the struct.
+type consolidationRequestJSON struct {
+	SourceAddress bellatrix.ExecutionAddress `json:"source_address"`
+	SourcePubkey  phase0.BLSPubKey           `json:"source_pubkey"`
+	TargetPubkey  phase0.BLSPubKey           `json:"target_pubkey"`
 }
 
 // MarshalJSON implements json.Marshaler.
-func (e *ExecutionLayerWithdrawalRequest) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&executionLayerWithdrawalRequestJSON{
-		SourceAddress:   e.SourceAddress,
-		ValidatorPubkey: e.ValidatorPubkey,
-		Amount:          e.Amount,
+func (e *ConsolidationRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&consolidationRequestJSON{
+		SourceAddress: e.SourceAddress,
+		SourcePubkey:  e.SourcePubkey,
+		TargetPubkey:  e.TargetPubkey,
 	})
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (e *ExecutionLayerWithdrawalRequest) UnmarshalJSON(input []byte) error {
-	raw, err := codecs.RawJSON(&executionLayerWithdrawalRequestJSON{}, input)
+func (e *ConsolidationRequest) UnmarshalJSON(input []byte) error {
+	raw, err := codecs.RawJSON(&consolidationRequestJSON{}, input)
 	if err != nil {
 		return err
 	}
@@ -48,11 +48,11 @@ func (e *ExecutionLayerWithdrawalRequest) UnmarshalJSON(input []byte) error {
 	if err := e.SourceAddress.UnmarshalJSON(raw["source_address"]); err != nil {
 		return errors.Wrap(err, "source_address")
 	}
-	if err := e.ValidatorPubkey.UnmarshalJSON(raw["validator_pubkey"]); err != nil {
-		return errors.Wrap(err, "validator_pubkey")
+	if err := e.SourcePubkey.UnmarshalJSON(raw["source_pubkey"]); err != nil {
+		return errors.Wrap(err, "source_pubkey")
 	}
-	if err := e.Amount.UnmarshalJSON(raw["amount"]); err != nil {
-		return errors.Wrap(err, "amount")
+	if err := e.TargetPubkey.UnmarshalJSON(raw["target_pubkey"]); err != nil {
+		return errors.Wrap(err, "target_pubkey")
 	}
 
 	return nil
