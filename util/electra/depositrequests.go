@@ -15,7 +15,7 @@ package electra
 
 import "github.com/attestantio/go-eth2-client/spec/electra"
 
-// DepositReceipts provides information about deposit receipts.
-type DepositReceipts struct {
-	DepositReceipts []*electra.DepositReceipt `ssz-max:"8192"`
+// DepositRequests provides information about deposit requests.
+type DepositRequests struct {
+	DepositRequests []*electra.DepositRequest `ssz-max:"8192"`
 }

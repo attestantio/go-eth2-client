@@ -24,8 +24,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// depositReceiptJSON is the spec representation of the struct.
-type depositReceiptJSON struct {
+// depositRequestJSON is the spec representation of the struct.
+type depositRequestJSON struct {
 	Pubkey                string `json:"pubkey"`
 	WithdrawalCredentials string `json:"withdrawal_credentials"`
 	Amount                string `json:"amount"`
@@ -34,8 +34,8 @@ type depositReceiptJSON struct {
 }
 
 // MarshalJSON implements json.Marshaler.
-func (d *DepositReceipt) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&depositReceiptJSON{
+func (d *DepositRequest) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&depositRequestJSON{
 		Pubkey:                fmt.Sprintf("%#x", d.Pubkey),
 		WithdrawalCredentials: fmt.Sprintf("%#x", d.WithdrawalCredentials),
 		Amount:                fmt.Sprintf("%d", d.Amount),
@@ -45,8 +45,8 @@ func (d *DepositReceipt) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (d *DepositReceipt) UnmarshalJSON(input []byte) error {
-	var depositReceipt depositReceiptJSON
+func (d *DepositRequest) UnmarshalJSON(input []byte) error {
+	var depositReceipt depositRequestJSON
 	if err := json.Unmarshal(input, &depositReceipt); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
@@ -54,7 +54,7 @@ func (d *DepositReceipt) UnmarshalJSON(input []byte) error {
 	return d.unpack(&depositReceipt)
 }
 
-func (d *DepositReceipt) unpack(depositReceipt *depositReceiptJSON) error {
+func (d *DepositRequest) unpack(depositReceipt *depositRequestJSON) error {
 	if depositReceipt.Pubkey == "" {
 		return errors.New("public key missing")
 	}

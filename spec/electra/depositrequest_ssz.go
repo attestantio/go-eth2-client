@@ -8,13 +8,13 @@ import (
 	ssz "github.com/ferranbt/fastssz"
 )
 
-// MarshalSSZ ssz marshals the DepositReceipt object
-func (d *DepositReceipt) MarshalSSZ() ([]byte, error) {
+// MarshalSSZ ssz marshals the DepositRequest object
+func (d *DepositRequest) MarshalSSZ() ([]byte, error) {
 	return ssz.MarshalSSZ(d)
 }
 
-// MarshalSSZTo ssz marshals the DepositReceipt object to a target array
-func (d *DepositReceipt) MarshalSSZTo(buf []byte) (dst []byte, err error) {
+// MarshalSSZTo ssz marshals the DepositRequest object to a target array
+func (d *DepositRequest) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 
 	// Field (0) 'Pubkey'
@@ -22,7 +22,7 @@ func (d *DepositReceipt) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 
 	// Field (1) 'WithdrawalCredentials'
 	if size := len(d.WithdrawalCredentials); size != 32 {
-		err = ssz.ErrBytesLengthFn("DepositReceipt.WithdrawalCredentials", size, 32)
+		err = ssz.ErrBytesLengthFn("DepositRequest.WithdrawalCredentials", size, 32)
 		return
 	}
 	dst = append(dst, d.WithdrawalCredentials...)
@@ -39,8 +39,8 @@ func (d *DepositReceipt) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	return
 }
 
-// UnmarshalSSZ ssz unmarshals the DepositReceipt object
-func (d *DepositReceipt) UnmarshalSSZ(buf []byte) error {
+// UnmarshalSSZ ssz unmarshals the DepositRequest object
+func (d *DepositRequest) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
 	if size != 192 {
@@ -68,19 +68,19 @@ func (d *DepositReceipt) UnmarshalSSZ(buf []byte) error {
 	return err
 }
 
-// SizeSSZ returns the ssz encoded size in bytes for the DepositReceipt object
-func (d *DepositReceipt) SizeSSZ() (size int) {
+// SizeSSZ returns the ssz encoded size in bytes for the DepositRequest object
+func (d *DepositRequest) SizeSSZ() (size int) {
 	size = 192
 	return
 }
 
-// HashTreeRoot ssz hashes the DepositReceipt object
-func (d *DepositReceipt) HashTreeRoot() ([32]byte, error) {
+// HashTreeRoot ssz hashes the DepositRequest object
+func (d *DepositRequest) HashTreeRoot() ([32]byte, error) {
 	return ssz.HashWithDefaultHasher(d)
 }
 
-// HashTreeRootWith ssz hashes the DepositReceipt object with a hasher
-func (d *DepositReceipt) HashTreeRootWith(hh ssz.HashWalker) (err error) {
+// HashTreeRootWith ssz hashes the DepositRequest object with a hasher
+func (d *DepositRequest) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'Pubkey'
@@ -88,7 +88,7 @@ func (d *DepositReceipt) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 
 	// Field (1) 'WithdrawalCredentials'
 	if size := len(d.WithdrawalCredentials); size != 32 {
-		err = ssz.ErrBytesLengthFn("DepositReceipt.WithdrawalCredentials", size, 32)
+		err = ssz.ErrBytesLengthFn("DepositRequest.WithdrawalCredentials", size, 32)
 		return
 	}
 	hh.PutBytes(d.WithdrawalCredentials)
@@ -106,7 +106,7 @@ func (d *DepositReceipt) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	return
 }
 
-// GetTree ssz hashes the DepositReceipt object
-func (d *DepositReceipt) GetTree() (*ssz.Node, error) {
+// GetTree ssz hashes the DepositRequest object
+func (d *DepositRequest) GetTree() (*ssz.Node, error) {
 	return ssz.ProofTree(d)
 }

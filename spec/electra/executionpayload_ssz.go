@@ -18,7 +18,7 @@ func (e *ExecutionPayload) MarshalSSZ() ([]byte, error) {
 // MarshalSSZTo ssz marshals the ExecutionPayload object to a target array
 func (e *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
-	offset := int(536)
+	offset := int(540)
 
 	// Field (0) 'ParentHash'
 	dst = append(dst, e.ParentHash[:]...)
@@ -80,13 +80,17 @@ func (e *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	// Field (16) 'ExcessBlobGas'
 	dst = ssz.MarshalUint64(dst, e.ExcessBlobGas)
 
-	// Offset (17) 'DepositReceipts'
+	// Offset (17) 'DepositRequests'
 	dst = ssz.WriteOffset(dst, offset)
-	offset += len(e.DepositReceipts) * 192
+	offset += len(e.DepositRequests) * 192
 
 	// Offset (18) 'WithdrawalRequests'
 	dst = ssz.WriteOffset(dst, offset)
 	offset += len(e.WithdrawalRequests) * 76
+
+	// Offset (19) 'ConsolidationRequests'
+	dst = ssz.WriteOffset(dst, offset)
+	offset += len(e.ConsolidationRequests) * 116
 
 	// Field (10) 'ExtraData'
 	if size := len(e.ExtraData); size > 32 {
@@ -126,13 +130,13 @@ func (e *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 
-	// Field (17) 'DepositReceipts'
-	if size := len(e.DepositReceipts); size > 8192 {
-		err = ssz.ErrListTooBigFn("ExecutionPayload.DepositReceipts", size, 8192)
+	// Field (17) 'DepositRequests'
+	if size := len(e.DepositRequests); size > 8192 {
+		err = ssz.ErrListTooBigFn("ExecutionPayload.DepositRequests", size, 8192)
 		return
 	}
-	for ii := 0; ii < len(e.DepositReceipts); ii++ {
-		if dst, err = e.DepositReceipts[ii].MarshalSSZTo(dst); err != nil {
+	for ii := 0; ii < len(e.DepositRequests); ii++ {
+		if dst, err = e.DepositRequests[ii].MarshalSSZTo(dst); err != nil {
 			return
 		}
 	}
@@ -148,6 +152,17 @@ func (e *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 
+	// Field (19) 'ConsolidationRequests'
+	if size := len(e.ConsolidationRequests); size > 1 {
+		err = ssz.ErrListTooBigFn("ExecutionPayload.ConsolidationRequests", size, 1)
+		return
+	}
+	for ii := 0; ii < len(e.ConsolidationRequests); ii++ {
+		if dst, err = e.ConsolidationRequests[ii].MarshalSSZTo(dst); err != nil {
+			return
+		}
+	}
+
 	return
 }
 
@@ -155,12 +170,12 @@ func (e *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 func (e *ExecutionPayload) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
-	if size < 536 {
+	if size < 540 {
 		return ssz.ErrSize
 	}
 
 	tail := buf
-	var o10, o13, o14, o17, o18 uint64
+	var o10, o13, o14, o17, o18, o19 uint64
 
 	// Field (0) 'ParentHash'
 	copy(e.ParentHash[:], buf[0:32])
@@ -197,7 +212,7 @@ func (e *ExecutionPayload) UnmarshalSSZ(buf []byte) error {
 		return ssz.ErrOffset
 	}
 
-	if o10 < 536 {
+	if o10 < 540 {
 		return ssz.ErrInvalidVariableOffset
 	}
 
@@ -228,13 +243,18 @@ func (e *ExecutionPayload) UnmarshalSSZ(buf []byte) error {
 	// Field (16) 'ExcessBlobGas'
 	e.ExcessBlobGas = ssz.UnmarshallUint64(buf[520:528])
 
-	// Offset (17) 'DepositReceipts'
+	// Offset (17) 'DepositRequests'
 	if o17 = ssz.ReadOffset(buf[528:532]); o17 > size || o14 > o17 {
 		return ssz.ErrOffset
 	}
 
 	// Offset (18) 'WithdrawalRequests'
 	if o18 = ssz.ReadOffset(buf[532:536]); o18 > size || o17 > o18 {
+		return ssz.ErrOffset
+	}
+
+	// Offset (19) 'ConsolidationRequests'
+	if o19 = ssz.ReadOffset(buf[536:540]); o18 > size || o18 > o19 {
 		return ssz.ErrOffset
 	}
 
@@ -291,19 +311,19 @@ func (e *ExecutionPayload) UnmarshalSSZ(buf []byte) error {
 		}
 	}
 
-	// Field (17) 'DepositReceipts'
+	// Field (17) 'DepositRequests'
 	{
 		buf = tail[o17:o18]
 		num, err := ssz.DivideInt2(len(buf), 192, 8192)
 		if err != nil {
 			return err
 		}
-		e.DepositReceipts = make([]*DepositReceipt, num)
+		e.DepositRequests = make([]*DepositRequest, num)
 		for ii := 0; ii < num; ii++ {
-			if e.DepositReceipts[ii] == nil {
-				e.DepositReceipts[ii] = new(DepositReceipt)
+			if e.DepositRequests[ii] == nil {
+				e.DepositRequests[ii] = new(DepositRequest)
 			}
-			if err = e.DepositReceipts[ii].UnmarshalSSZ(buf[ii*192 : (ii+1)*192]); err != nil {
+			if err = e.DepositRequests[ii].UnmarshalSSZ(buf[ii*192 : (ii+1)*192]); err != nil {
 				return err
 			}
 		}
@@ -316,12 +336,30 @@ func (e *ExecutionPayload) UnmarshalSSZ(buf []byte) error {
 		if err != nil {
 			return err
 		}
-		e.WithdrawalRequests = make([]*ExecutionLayerWithdrawalRequest, num)
+		e.WithdrawalRequests = make([]*WithdrawalRequest, num)
 		for ii := 0; ii < num; ii++ {
 			if e.WithdrawalRequests[ii] == nil {
-				e.WithdrawalRequests[ii] = new(ExecutionLayerWithdrawalRequest)
+				e.WithdrawalRequests[ii] = new(WithdrawalRequest)
 			}
 			if err = e.WithdrawalRequests[ii].UnmarshalSSZ(buf[ii*76 : (ii+1)*76]); err != nil {
+				return err
+			}
+		}
+	}
+
+	// Field (19) 'ConsolidationRequests'
+	{
+		buf = tail[o19:]
+		num, err := ssz.DivideInt2(len(buf), 116, 1)
+		if err != nil {
+			return err
+		}
+		e.ConsolidationRequests = make([]*ConsolidationRequest, num)
+		for ii := 0; ii < num; ii++ {
+			if e.ConsolidationRequests[ii] == nil {
+				e.ConsolidationRequests[ii] = new(ConsolidationRequest)
+			}
+			if err = e.ConsolidationRequests[ii].UnmarshalSSZ(buf[ii*116 : (ii+1)*116]); err != nil {
 				return err
 			}
 		}
@@ -331,7 +369,7 @@ func (e *ExecutionPayload) UnmarshalSSZ(buf []byte) error {
 
 // SizeSSZ returns the ssz encoded size in bytes for the ExecutionPayload object
 func (e *ExecutionPayload) SizeSSZ() (size int) {
-	size = 536
+	size = 540
 
 	// Field (10) 'ExtraData'
 	size += len(e.ExtraData)
@@ -345,11 +383,14 @@ func (e *ExecutionPayload) SizeSSZ() (size int) {
 	// Field (14) 'Withdrawals'
 	size += len(e.Withdrawals) * 44
 
-	// Field (17) 'DepositReceipts'
-	size += len(e.DepositReceipts) * 192
+	// Field (17) 'DepositRequests'
+	size += len(e.DepositRequests) * 192
 
 	// Field (18) 'WithdrawalRequests'
 	size += len(e.WithdrawalRequests) * 76
+
+	// Field (19) 'ConsolidationRequests'
+	size += len(e.ConsolidationRequests) * 116
 
 	return
 }
@@ -461,15 +502,15 @@ func (e *ExecutionPayload) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	// Field (16) 'ExcessBlobGas'
 	hh.PutUint64(e.ExcessBlobGas)
 
-	// Field (17) 'DepositReceipts'
+	// Field (17) 'DepositRequests'
 	{
 		subIndx := hh.Index()
-		num := uint64(len(e.DepositReceipts))
+		num := uint64(len(e.DepositRequests))
 		if num > 8192 {
 			err = ssz.ErrIncorrectListSize
 			return
 		}
-		for _, elem := range e.DepositReceipts {
+		for _, elem := range e.DepositRequests {
 			if err = elem.HashTreeRootWith(hh); err != nil {
 				return
 			}
@@ -491,6 +532,22 @@ func (e *ExecutionPayload) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 			}
 		}
 		hh.MerkleizeWithMixin(subIndx, num, 16)
+	}
+
+	// Field (19) 'ConsolidationRequests'
+	{
+		subIndx := hh.Index()
+		num := uint64(len(e.ConsolidationRequests))
+		if num > 1 {
+			err = ssz.ErrIncorrectListSize
+			return
+		}
+		for _, elem := range e.ConsolidationRequests {
+			if err = elem.HashTreeRootWith(hh); err != nil {
+				return
+			}
+		}
+		hh.MerkleizeWithMixin(subIndx, num, 1)
 	}
 
 	hh.Merkleize(indx)

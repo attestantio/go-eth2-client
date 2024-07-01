@@ -40,7 +40,6 @@ type beaconBlockBodyJSON struct {
 	ExecutionPayload      *ExecutionPayload                     `json:"execution_payload"`
 	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `json:"bls_to_execution_changes"`
 	BlobKZGCommitments    []string                              `json:"blob_kzg_commitments"`
-	Consolidations        []*SignedConsolidation                `json:"consolidations"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -63,7 +62,6 @@ func (b *BeaconBlockBody) MarshalJSON() ([]byte, error) {
 		ExecutionPayload:      b.ExecutionPayload,
 		BLSToExecutionChanges: b.BLSToExecutionChanges,
 		BlobKZGCommitments:    blobKZGCommitments,
-		Consolidations:        b.Consolidations,
 	})
 }
 
@@ -166,10 +164,6 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 
 	if err := json.Unmarshal(raw["blob_kzg_commitments"], &b.BlobKZGCommitments); err != nil {
 		return errors.Wrap(err, "blob_kzg_commitments")
-	}
-
-	if err := json.Unmarshal(raw["consolidations"], &b.Consolidations); err != nil {
-		return errors.Wrap(err, "consolidations")
 	}
 
 	return nil

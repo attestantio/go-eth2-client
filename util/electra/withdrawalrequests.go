@@ -15,7 +15,7 @@ package electra
 
 import "github.com/attestantio/go-eth2-client/spec/electra"
 
-// ExecutionPayloadWithdrawalRequests provides information about execution layer withdrawal requests.
-type ExecutionPayloadWithdrawalRequests struct {
-	WithdrawalRequests []*electra.ExecutionLayerWithdrawalRequest `ssz-max:"16"`
+// WithdrawalRequests provides information about execution layer withdrawal requests.
+type WithdrawalRequests struct {
+	WithdrawalRequests []*electra.WithdrawalRequest `ssz-max:"16"`
 }

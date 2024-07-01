@@ -16,22 +16,21 @@ package electra
 import (
 	"fmt"
 
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 )
 
-// DepositReceipt represents a deposit receipt.
-type DepositReceipt struct {
-	Pubkey                phase0.BLSPubKey `ssz-size:"48"`
-	WithdrawalCredentials []byte           `ssz-size:"32"`
-	Amount                phase0.Gwei
-	Signature             phase0.BLSSignature `ssz-size:"96"`
-	Index                 uint64
+// WithdrawalRequest represents an execution layer withdraw request.
+type WithdrawalRequest struct {
+	SourceAddress   bellatrix.ExecutionAddress `ssz-size:"20"`
+	ValidatorPubkey phase0.BLSPubKey           `ssz-size:"48"`
+	Amount          phase0.Gwei
 }
 
 // String returns a string version of the structure.
-func (d *DepositReceipt) String() string {
-	data, err := yaml.Marshal(d)
+func (e *WithdrawalRequest) String() string {
+	data, err := yaml.Marshal(e)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

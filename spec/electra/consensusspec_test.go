@@ -107,8 +107,8 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &phase0.DepositData{},
 		},
 		{
-			name: "DepositReceipt",
-			s:    &electra.DepositReceipt{},
+			name: "DepositRequest",
+			s:    &electra.DepositRequest{},
 		},
 		{
 			name: "DepositMessage",
@@ -119,8 +119,8 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &phase0.ETH1Data{},
 		},
 		{
-			name: "ExecutionLayerWithdrawalRequest",
-			s:    &electra.ExecutionLayerWithdrawalRequest{},
+			name: "WithdrawalRequest",
+			s:    &electra.WithdrawalRequest{},
 		},
 		{
 			name: "ExecutionPayload",

@@ -38,7 +38,6 @@ type BeaconBlockBody struct {
 	ExecutionPayload      *ExecutionPayload
 	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `ssz-max:"16"`
 	BlobKZGCommitments    []deneb.KZGCommitment                 `ssz-max:"4096" ssz-size:"?,48"`
-	Consolidations        []*SignedConsolidation                `ssz-max:"1"`
 }
 
 // String returns a string version of the structure.

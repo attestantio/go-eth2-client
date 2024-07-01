@@ -8,13 +8,13 @@ import (
 	ssz "github.com/ferranbt/fastssz"
 )
 
-// MarshalSSZ ssz marshals the ExecutionLayerWithdrawalRequest object
-func (e *ExecutionLayerWithdrawalRequest) MarshalSSZ() ([]byte, error) {
+// MarshalSSZ ssz marshals the WithdrawalRequest object
+func (e *WithdrawalRequest) MarshalSSZ() ([]byte, error) {
 	return ssz.MarshalSSZ(e)
 }
 
-// MarshalSSZTo ssz marshals the ExecutionLayerWithdrawalRequest object to a target array
-func (e *ExecutionLayerWithdrawalRequest) MarshalSSZTo(buf []byte) (dst []byte, err error) {
+// MarshalSSZTo ssz marshals the WithdrawalRequest object to a target array
+func (e *WithdrawalRequest) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 
 	// Field (0) 'SourceAddress'
@@ -29,8 +29,8 @@ func (e *ExecutionLayerWithdrawalRequest) MarshalSSZTo(buf []byte) (dst []byte, 
 	return
 }
 
-// UnmarshalSSZ ssz unmarshals the ExecutionLayerWithdrawalRequest object
-func (e *ExecutionLayerWithdrawalRequest) UnmarshalSSZ(buf []byte) error {
+// UnmarshalSSZ ssz unmarshals the WithdrawalRequest object
+func (e *WithdrawalRequest) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
 	if size != 76 {
@@ -49,19 +49,19 @@ func (e *ExecutionLayerWithdrawalRequest) UnmarshalSSZ(buf []byte) error {
 	return err
 }
 
-// SizeSSZ returns the ssz encoded size in bytes for the ExecutionLayerWithdrawalRequest object
-func (e *ExecutionLayerWithdrawalRequest) SizeSSZ() (size int) {
+// SizeSSZ returns the ssz encoded size in bytes for the WithdrawalRequest object
+func (e *WithdrawalRequest) SizeSSZ() (size int) {
 	size = 76
 	return
 }
 
-// HashTreeRoot ssz hashes the ExecutionLayerWithdrawalRequest object
-func (e *ExecutionLayerWithdrawalRequest) HashTreeRoot() ([32]byte, error) {
+// HashTreeRoot ssz hashes the WithdrawalRequest object
+func (e *WithdrawalRequest) HashTreeRoot() ([32]byte, error) {
 	return ssz.HashWithDefaultHasher(e)
 }
 
-// HashTreeRootWith ssz hashes the ExecutionLayerWithdrawalRequest object with a hasher
-func (e *ExecutionLayerWithdrawalRequest) HashTreeRootWith(hh ssz.HashWalker) (err error) {
+// HashTreeRootWith ssz hashes the WithdrawalRequest object with a hasher
+func (e *WithdrawalRequest) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'SourceAddress'
@@ -77,7 +77,7 @@ func (e *ExecutionLayerWithdrawalRequest) HashTreeRootWith(hh ssz.HashWalker) (e
 	return
 }
 
-// GetTree ssz hashes the ExecutionLayerWithdrawalRequest object
-func (e *ExecutionLayerWithdrawalRequest) GetTree() (*ssz.Node, error) {
+// GetTree ssz hashes the WithdrawalRequest object
+func (e *WithdrawalRequest) GetTree() (*ssz.Node, error) {
 	return ssz.ProofTree(e)
 }

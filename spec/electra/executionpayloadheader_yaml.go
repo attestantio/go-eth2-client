@@ -72,7 +72,7 @@ func (e *ExecutionPayloadHeader) MarshalYAML() ([]byte, error) {
 		WithdrawalsRoot:        e.WithdrawalsRoot,
 		BlobGasUsed:            e.BlobGasUsed,
 		ExcessBlobGas:          e.ExcessBlobGas,
-		DepositReceiptsRoot:    e.DepositReceiptsRoot,
+		DepositReceiptsRoot:    e.DepositRequestsRoot,
 		WithdrawalRequestsRoot: e.WithdrawalRequestsRoot,
 	}, yaml.Flow(true))
 	if err != nil {

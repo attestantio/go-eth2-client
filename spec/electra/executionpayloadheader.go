@@ -24,25 +24,26 @@ import (
 
 // ExecutionPayloadHeader represents an execution layer payload header.
 type ExecutionPayloadHeader struct {
-	ParentHash             phase0.Hash32              `ssz-size:"32"`
-	FeeRecipient           bellatrix.ExecutionAddress `ssz-size:"20"`
-	StateRoot              phase0.Root                `ssz-size:"32"`
-	ReceiptsRoot           phase0.Root                `ssz-size:"32"`
-	LogsBloom              [256]byte                  `ssz-size:"256"`
-	PrevRandao             [32]byte                   `ssz-size:"32"`
-	BlockNumber            uint64
-	GasLimit               uint64
-	GasUsed                uint64
-	Timestamp              uint64
-	ExtraData              []byte        `ssz-max:"32"`
-	BaseFeePerGas          *uint256.Int  `ssz-size:"32"`
-	BlockHash              phase0.Hash32 `ssz-size:"32"`
-	TransactionsRoot       phase0.Root   `ssz-size:"32"`
-	WithdrawalsRoot        phase0.Root   `ssz-size:"32"`
-	BlobGasUsed            uint64
-	ExcessBlobGas          uint64
-	DepositReceiptsRoot    phase0.Root `ssz-size:"32"`
-	WithdrawalRequestsRoot phase0.Root `ssz-size:"32"`
+	ParentHash                phase0.Hash32              `ssz-size:"32"`
+	FeeRecipient              bellatrix.ExecutionAddress `ssz-size:"20"`
+	StateRoot                 phase0.Root                `ssz-size:"32"`
+	ReceiptsRoot              phase0.Root                `ssz-size:"32"`
+	LogsBloom                 [256]byte                  `ssz-size:"256"`
+	PrevRandao                [32]byte                   `ssz-size:"32"`
+	BlockNumber               uint64
+	GasLimit                  uint64
+	GasUsed                   uint64
+	Timestamp                 uint64
+	ExtraData                 []byte        `ssz-max:"32"`
+	BaseFeePerGas             *uint256.Int  `ssz-size:"32"`
+	BlockHash                 phase0.Hash32 `ssz-size:"32"`
+	TransactionsRoot          phase0.Root   `ssz-size:"32"`
+	WithdrawalsRoot           phase0.Root   `ssz-size:"32"`
+	BlobGasUsed               uint64
+	ExcessBlobGas             uint64
+	DepositRequestsRoot       phase0.Root `ssz-size:"32"`
+	WithdrawalRequestsRoot    phase0.Root `ssz-size:"32"`
+	ConsolidationRequestsRoot phase0.Root `ssz-size:"32"`
 }
 
 // String returns a string version of the structure.
