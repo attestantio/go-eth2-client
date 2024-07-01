@@ -94,10 +94,12 @@ type PayloadAttributesV4 struct {
 	Withdrawals []*capella.Withdrawal
 	// ParentBeaconBlockRoot is the parent beacon block root.
 	ParentBeaconBlockRoot phase0.Root
-	// DepositReceipts is the list of deposit receipts.
-	DepositReceipts []*electra.DepositReceipt
-	// WithdrawalRequests is the list of execution layer withdrawal requests.
-	WithdrawalRequests []*electra.ExecutionLayerWithdrawalRequest
+	// DepositRequests is the list of deposit receipts.
+	DepositRequests []*electra.DepositRequest
+	// WithdrawalRequests is the list of withdrawal requests.
+	WithdrawalRequests []*electra.WithdrawalRequest
+	// ConsolidationRequests is the list of withdrawal requests.
+	ConsolidationRequests []*electra.ConsolidationRequest
 }
 
 // payloadAttributesEventJSON is the spec representation of the event.
@@ -142,13 +144,14 @@ type payloadAttributesV3JSON struct {
 
 // payloadAttributesV4JSON is the spec representation of the payload attributes v4.
 type payloadAttributesV4JSON struct {
-	Timestamp             string                                     `json:"timestamp"`
-	PrevRandao            string                                     `json:"prev_randao"`
-	SuggestedFeeRecipient string                                     `json:"suggested_fee_recipient"`
-	Withdrawals           []*capella.Withdrawal                      `json:"withdrawals"`
-	ParentBeaconBlockRoot string                                     `json:"parent_beacon_block_root"`
-	DepositReceipts       []*electra.DepositReceipt                  `json:"deposit_receipts"`
-	WithdrawalRequests    []*electra.ExecutionLayerWithdrawalRequest `json:"withdrawal_requests"`
+	Timestamp             string                          `json:"timestamp"`
+	PrevRandao            string                          `json:"prev_randao"`
+	SuggestedFeeRecipient string                          `json:"suggested_fee_recipient"`
+	Withdrawals           []*capella.Withdrawal           `json:"withdrawals"`
+	ParentBeaconBlockRoot string                          `json:"parent_beacon_block_root"`
+	DepositRequests       []*electra.DepositRequest       `json:"deposit_requests"`
+	WithdrawalRequests    []*electra.WithdrawalRequest    `json:"withdrawal_requests"`
+	ConsolidationRequests []*electra.ConsolidationRequest `json:"consolidation_requests"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -394,15 +397,15 @@ func (p *PayloadAttributesV4) unpack(data *payloadAttributesV4JSON) error {
 	}
 	copy(p.ParentBeaconBlockRoot[:], parentBeaconBlockRoot)
 
-	if data.DepositReceipts == nil {
-		return errors.New("payload attributes deposit receipts missing")
+	if data.DepositRequests == nil {
+		return errors.New("payload attributes deposit requests missing")
 	}
-	for i := range data.DepositReceipts {
-		if data.DepositReceipts[i] == nil {
-			return fmt.Errorf("deposit receipts entry %d missing", i)
+	for i := range data.DepositRequests {
+		if data.DepositRequests[i] == nil {
+			return fmt.Errorf("deposit requests entry %d missing", i)
 		}
 	}
-	p.DepositReceipts = data.DepositReceipts
+	p.DepositRequests = data.DepositRequests
 
 	if data.WithdrawalRequests == nil {
 		return errors.New("payload attributes withdraw requests missing")
@@ -413,6 +416,16 @@ func (p *PayloadAttributesV4) unpack(data *payloadAttributesV4JSON) error {
 		}
 	}
 	p.WithdrawalRequests = data.WithdrawalRequests
+
+	if data.ConsolidationRequests == nil {
+		return errors.New("payload attributes consolidation requests missing")
+	}
+	for i := range data.ConsolidationRequests {
+		if data.ConsolidationRequests[i] == nil {
+			return fmt.Errorf("consolidation requests entry %d missing", i)
+		}
+	}
+	p.ConsolidationRequests = data.ConsolidationRequests
 
 	return nil
 }
@@ -472,8 +485,9 @@ func (e *PayloadAttributesEvent) MarshalJSON() ([]byte, error) {
 			SuggestedFeeRecipient: e.Data.V4.SuggestedFeeRecipient.String(),
 			Withdrawals:           e.Data.V4.Withdrawals,
 			ParentBeaconBlockRoot: fmt.Sprintf("%#x", e.Data.V4.ParentBeaconBlockRoot),
-			DepositReceipts:       e.Data.V4.DepositReceipts,
+			DepositRequests:       e.Data.V4.DepositRequests,
 			WithdrawalRequests:    e.Data.V4.WithdrawalRequests,
+			ConsolidationRequests: e.Data.V4.ConsolidationRequests,
 		})
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to marshal payload attributes v4")
