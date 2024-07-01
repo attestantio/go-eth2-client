@@ -157,12 +157,10 @@ linters:
   # https://golangci-lint.run/usage/linters/#disabled-by-default
   disable:
     - cyclop
-    - deadcode
     - depguard
     - dupl
     - execinquery
     - exhaustive
-    - exhaustivestruct
     - exhaustruct
     - forcetypeassert
     - funlen
@@ -172,21 +170,13 @@ linters:
     - gocognit
     - goconst
     - err113
-    - golint
     - gomnd
-    - ifshort
-    - interfacer
     - ireturn
     - lll
     - maintidx
-    - maligned
     - mnd
     - musttag
-    - nosnakecase
     - perfsprint
-    - scopelint
-    - structcheck
-    - varcheck
     - varnamelen
     - wrapcheck
     - wsl

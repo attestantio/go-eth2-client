@@ -38,7 +38,7 @@ func (s *Service) Finality(ctx context.Context,
 	}
 
 	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/finality_checkpoints", opts.State)
-	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, err
 	}

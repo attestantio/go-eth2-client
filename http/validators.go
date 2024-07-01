@@ -163,7 +163,7 @@ func (s *Service) Validators(ctx context.Context,
 		}
 	}
 
-	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request validators"), err)
 	}
@@ -314,7 +314,7 @@ func (s *Service) chunkedValidatorsByIndex(ctx context.Context,
 			chunkEnd = len(opts.Indices)
 		}
 		chunk := opts.Indices[chunkStart:chunkEnd]
-		chunkRes, err := s.Validators(ctx, &api.ValidatorsOpts{State: opts.State, Indices: chunk})
+		chunkRes, err := s.Validators(ctx, &api.ValidatorsOpts{State: opts.State, Indices: chunk, Common: opts.Common})
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to obtain chunk"), err)
 		}
@@ -349,7 +349,7 @@ func (s *Service) chunkedValidatorsByPubkey(ctx context.Context,
 			chunkEnd = len(opts.PubKeys)
 		}
 		chunk := opts.PubKeys[chunkStart:chunkEnd]
-		chunkRes, err := s.Validators(ctx, &api.ValidatorsOpts{State: opts.State, PubKeys: chunk})
+		chunkRes, err := s.Validators(ctx, &api.ValidatorsOpts{State: opts.State, PubKeys: chunk, Common: opts.Common})
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to obtain chunk"), err)
 		}
