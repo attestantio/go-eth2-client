@@ -15,7 +15,6 @@ package multi
 
 import (
 	"context"
-	nethttp "net/http"
 	"strings"
 	"time"
 
@@ -171,7 +170,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 			log.Trace().Err(err).Msg("Potentially deactivating client due to error")
 			var apiErr *api.Error
 			switch {
-			case errors.As(err, &apiErr) && apiErr.StatusCode/nethttp.StatusContinue == 4:
+			case errors.As(err, &apiErr) && apiErr.StatusCode/100 == 4:
 				log.Trace().Err(err).Msg("Not deactivating client on user error")
 
 				return res, err
