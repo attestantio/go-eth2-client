@@ -268,5 +268,14 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 		}
 	}
 
+	if err := json.Unmarshal(raw["consolidation_requests"], &e.ConsolidationRequests); err != nil {
+		return errors.Wrap(err, "consolidation_requests")
+	}
+	for i := range e.ConsolidationRequests {
+		if e.ConsolidationRequests[i] == nil {
+			return fmt.Errorf("consolidation requests entry %d missing", i)
+		}
+	}
+
 	return nil
 }
