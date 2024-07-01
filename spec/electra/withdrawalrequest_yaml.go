@@ -17,22 +17,25 @@ import (
 	"bytes"
 	"encoding/json"
 
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
-// signedConsolidationYAML is the spec representation of the struct.
-type signedConsolidationYAML struct {
-	Message   *Consolidation      `yaml:"message"`
-	Signature phase0.BLSSignature `yaml:"signature"`
+// withdrawalRequestYAML is the spec representation of the struct.
+type withdrawalRequestYAML struct {
+	SourceAddress   bellatrix.ExecutionAddress `yaml:"source_address"`
+	ValidatorPubkey phase0.BLSPubKey           `yaml:"validator_pubkey"`
+	Amount          phase0.Gwei                `yaml:"amount"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
-func (s *SignedConsolidation) MarshalYAML() ([]byte, error) {
-	yamlBytes, err := yaml.MarshalWithOptions(&signedConsolidationYAML{
-		Message:   s.Message,
-		Signature: s.Signature,
+func (e *WithdrawalRequest) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&withdrawalRequestYAML{
+		SourceAddress:   e.SourceAddress,
+		ValidatorPubkey: e.ValidatorPubkey,
+		Amount:          e.Amount,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
@@ -42,10 +45,10 @@ func (s *SignedConsolidation) MarshalYAML() ([]byte, error) {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (s *SignedConsolidation) UnmarshalYAML(input []byte) error {
+func (e *WithdrawalRequest) UnmarshalYAML(input []byte) error {
 	// This is very inefficient, but YAML is only used for spec tests so we do this
 	// rather than maintain a custom YAML unmarshaller.
-	var unmarshaled signedConsolidationJSON
+	var unmarshaled withdrawalRequestYAML
 	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
@@ -54,5 +57,5 @@ func (s *SignedConsolidation) UnmarshalYAML(input []byte) error {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	return s.UnmarshalJSON(marshaled)
+	return e.UnmarshalJSON(marshaled)
 }

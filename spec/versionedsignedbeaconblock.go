@@ -1017,30 +1017,6 @@ func (v *VersionedSignedBeaconBlock) BlobKZGCommitments() ([]deneb.KZGCommitment
 	}
 }
 
-// Consolidations returns the consolidations of the beacon block.
-func (v *VersionedSignedBeaconBlock) Consolidations() ([]*electra.SignedConsolidation, error) {
-	switch v.Version {
-	case DataVersionPhase0:
-		return nil, errors.New("phase0 block does not have consolidations")
-	case DataVersionAltair:
-		return nil, errors.New("altair block does not have consolidations")
-	case DataVersionBellatrix:
-		return nil, errors.New("bellatrix block does not have consolidations")
-	case DataVersionCapella:
-		return nil, errors.New("capella block does not have consolidations")
-	case DataVersionDeneb:
-		return nil, errors.New("deneb block does not have consolidations")
-	case DataVersionElectra:
-		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
-			return nil, errors.New("no electra block")
-		}
-
-		return v.Electra.Message.Body.Consolidations, nil
-	default:
-		return nil, errors.New("unknown version")
-	}
-}
-
 // String returns a string version of the structure.
 func (v *VersionedSignedBeaconBlock) String() string {
 	switch v.Version {

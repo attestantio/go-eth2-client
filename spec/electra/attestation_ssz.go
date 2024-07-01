@@ -30,15 +30,15 @@ func (a *Attestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		return
 	}
 
-	// Field (2) 'CommitteeBits'
+	// Field (2) 'Signature'
+	dst = append(dst, a.Signature[:]...)
+
+	// Field (3) 'CommitteeBits'
 	if size := len(a.CommitteeBits); size != 8 {
 		err = ssz.ErrBytesLengthFn("Attestation.CommitteeBits", size, 8)
 		return
 	}
 	dst = append(dst, a.CommitteeBits...)
-
-	// Field (3) 'Signature'
-	dst = append(dst, a.Signature[:]...)
 
 	// Field (0) 'AggregationBits'
 	if size := len(a.AggregationBits); size > 131072 {
@@ -78,14 +78,14 @@ func (a *Attestation) UnmarshalSSZ(buf []byte) error {
 		return err
 	}
 
-	// Field (2) 'CommitteeBits'
-	if cap(a.CommitteeBits) == 0 {
-		a.CommitteeBits = make([]byte, 0, len(buf[132:140]))
-	}
-	a.CommitteeBits = append(a.CommitteeBits, buf[132:140]...)
+	// Field (2) 'Signature'
+	copy(a.Signature[:], buf[132:228])
 
-	// Field (3) 'Signature'
-	copy(a.Signature[:], buf[140:236])
+	// Field (3) 'CommitteeBits'
+	if cap(a.CommitteeBits) == 0 {
+		a.CommitteeBits = make([]byte, 0, len(buf[228:236]))
+	}
+	a.CommitteeBits = append(a.CommitteeBits, buf[228:236]...)
 
 	// Field (0) 'AggregationBits'
 	{
@@ -135,15 +135,15 @@ func (a *Attestation) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 		return
 	}
 
-	// Field (2) 'CommitteeBits'
+	// Field (3) 'Signature'
+	hh.PutBytes(a.Signature[:])
+
+	// Field (3) 'CommitteeBits'
 	if size := len(a.CommitteeBits); size != 8 {
 		err = ssz.ErrBytesLengthFn("Attestation.CommitteeBits", size, 8)
 		return
 	}
 	hh.PutBytes(a.CommitteeBits)
-
-	// Field (3) 'Signature'
-	hh.PutBytes(a.Signature[:])
 
 	hh.Merkleize(indx)
 	return

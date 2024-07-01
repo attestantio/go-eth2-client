@@ -39,7 +39,7 @@ func (s *Service) ForkChoice(ctx context.Context,
 	}
 
 	endpoint := "/eth/v1/debug/fork_choice"
-	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, err
 	}

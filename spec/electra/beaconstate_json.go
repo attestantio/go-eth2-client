@@ -58,7 +58,7 @@ type beaconStateJSON struct {
 	NextWithdrawalIndex           string                       `json:"next_withdrawal_index"`
 	NextWithdrawalValidatorIndex  string                       `json:"next_withdrawal_validator_index"`
 	HistoricalSummaries           []*capella.HistoricalSummary `json:"historical_summaries"`
-	DepositReceiptsStartIndex     string                       `json:"deposit_receipts_start_index"`
+	DepositRequestsStartIndex     string                       `json:"deposit_requests_start_index"`
 	DepositBalanceToConsume       phase0.Gwei                  `json:"deposit_balance_to_consume"`
 	ExitBalanceToConsume          phase0.Gwei                  `json:"exit_balance_to_consume"`
 	EarliestExitEpoch             phase0.Epoch                 `json:"earliest_exit_epoch"`
@@ -125,7 +125,7 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 		NextWithdrawalIndex:           fmt.Sprintf("%d", b.NextWithdrawalIndex),
 		NextWithdrawalValidatorIndex:  fmt.Sprintf("%d", b.NextWithdrawalValidatorIndex),
 		HistoricalSummaries:           b.HistoricalSummaries,
-		DepositReceiptsStartIndex:     fmt.Sprintf("%d", b.DepositReceiptsStartIndex),
+		DepositRequestsStartIndex:     fmt.Sprintf("%d", b.DepositRequestsStartIndex),
 		DepositBalanceToConsume:       b.DepositBalanceToConsume,
 		ExitBalanceToConsume:          b.ExitBalanceToConsume,
 		EarliestExitEpoch:             b.EarliestExitEpoch,
@@ -295,9 +295,9 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 		}
 	}
 
-	depositReceiptsStartIndex := string(bytes.Trim(raw["deposit_receipts_start_index"], `"`))
-	if b.DepositReceiptsStartIndex, err = strconv.ParseUint(depositReceiptsStartIndex, 10, 64); err != nil {
-		return errors.Wrap(err, "deposit_receipts_start_index")
+	depositRequestsStartIndex := string(bytes.Trim(raw["deposit_requests_start_index"], `"`))
+	if b.DepositRequestsStartIndex, err = strconv.ParseUint(depositRequestsStartIndex, 10, 64); err != nil {
+		return errors.Wrap(err, "deposit_requests_start_index")
 	}
 
 	if err := b.DepositBalanceToConsume.UnmarshalJSON(raw["deposit_balance_to_consume"]); err != nil {

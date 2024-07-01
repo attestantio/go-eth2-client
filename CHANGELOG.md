@@ -1,3 +1,7 @@
+0.21.4:
+  - additional nil checks
+  - allow non-mainnet configurations
+
 0.21.3:
   - relax requirement for proposals to use the graffiti we request
 

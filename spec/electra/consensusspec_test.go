@@ -95,6 +95,10 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &electra.Consolidation{},
 		},
 		{
+			name: "ConsolidationRequest",
+			s:    &electra.ConsolidationRequest{},
+		},
+		{
 			name: "ContributionAndProof",
 			s:    &altair.ContributionAndProof{},
 		},
@@ -107,8 +111,8 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &phase0.DepositData{},
 		},
 		{
-			name: "DepositReceipt",
-			s:    &electra.DepositReceipt{},
+			name: "DepositRequest",
+			s:    &electra.DepositRequest{},
 		},
 		{
 			name: "DepositMessage",
@@ -117,10 +121,6 @@ func TestConsensusSpec(t *testing.T) {
 		{
 			name: "Eth1Data",
 			s:    &phase0.ETH1Data{},
-		},
-		{
-			name: "ExecutionLayerWithdrawalRequest",
-			s:    &electra.ExecutionLayerWithdrawalRequest{},
 		},
 		{
 			name: "ExecutionPayload",
@@ -183,10 +183,6 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &capella.SignedBLSToExecutionChange{},
 		},
 		{
-			name: "SignedConsolidation",
-			s:    &electra.SignedConsolidation{},
-		},
-		{
 			name: "SignedContributionAndProof",
 			s:    &altair.SignedContributionAndProof{},
 		},
@@ -221,6 +217,10 @@ func TestConsensusSpec(t *testing.T) {
 		{
 			name: "Withdrawal",
 			s:    &capella.Withdrawal{},
+		},
+		{
+			name: "WithdrawalRequest",
+			s:    &electra.WithdrawalRequest{},
 		},
 	}
 

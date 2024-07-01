@@ -9,12 +9,12 @@ import (
 )
 
 // MarshalSSZ ssz marshals the ExecutionPayloadWithdrawalRequests object
-func (e *ExecutionPayloadWithdrawalRequests) MarshalSSZ() ([]byte, error) {
+func (e *WithdrawalRequests) MarshalSSZ() ([]byte, error) {
 	return ssz.MarshalSSZ(e)
 }
 
 // MarshalSSZTo ssz marshals the ExecutionPayloadWithdrawalRequests object to a target array
-func (e *ExecutionPayloadWithdrawalRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
+func (e *WithdrawalRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	offset := int(4)
 
@@ -37,7 +37,7 @@ func (e *ExecutionPayloadWithdrawalRequests) MarshalSSZTo(buf []byte) (dst []byt
 }
 
 // UnmarshalSSZ ssz unmarshals the ExecutionPayloadWithdrawalRequests object
-func (e *ExecutionPayloadWithdrawalRequests) UnmarshalSSZ(buf []byte) error {
+func (e *WithdrawalRequests) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
 	if size < 4 {
@@ -63,10 +63,10 @@ func (e *ExecutionPayloadWithdrawalRequests) UnmarshalSSZ(buf []byte) error {
 		if err != nil {
 			return err
 		}
-		e.WithdrawalRequests = make([]*electra.ExecutionLayerWithdrawalRequest, num)
+		e.WithdrawalRequests = make([]*electra.WithdrawalRequest, num)
 		for ii := 0; ii < num; ii++ {
 			if e.WithdrawalRequests[ii] == nil {
-				e.WithdrawalRequests[ii] = new(electra.ExecutionLayerWithdrawalRequest)
+				e.WithdrawalRequests[ii] = new(electra.WithdrawalRequest)
 			}
 			if err = e.WithdrawalRequests[ii].UnmarshalSSZ(buf[ii*76 : (ii+1)*76]); err != nil {
 				return err
@@ -77,7 +77,7 @@ func (e *ExecutionPayloadWithdrawalRequests) UnmarshalSSZ(buf []byte) error {
 }
 
 // SizeSSZ returns the ssz encoded size in bytes for the ExecutionPayloadWithdrawalRequests object
-func (e *ExecutionPayloadWithdrawalRequests) SizeSSZ() (size int) {
+func (e *WithdrawalRequests) SizeSSZ() (size int) {
 	size = 4
 
 	// Field (0) 'WithdrawalRequests'
@@ -87,12 +87,12 @@ func (e *ExecutionPayloadWithdrawalRequests) SizeSSZ() (size int) {
 }
 
 // HashTreeRoot ssz hashes the ExecutionPayloadWithdrawalRequests object
-func (e *ExecutionPayloadWithdrawalRequests) HashTreeRoot() ([32]byte, error) {
+func (e *WithdrawalRequests) HashTreeRoot() ([32]byte, error) {
 	return ssz.HashWithDefaultHasher(e)
 }
 
 // HashTreeRootWith ssz hashes the ExecutionPayloadWithdrawalRequests object with a hasher
-func (e *ExecutionPayloadWithdrawalRequests) HashTreeRootWith(hh ssz.HashWalker) (err error) {
+func (e *WithdrawalRequests) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'WithdrawalRequests'
@@ -116,6 +116,6 @@ func (e *ExecutionPayloadWithdrawalRequests) HashTreeRootWith(hh ssz.HashWalker)
 }
 
 // GetTree ssz hashes the ExecutionPayloadWithdrawalRequests object
-func (e *ExecutionPayloadWithdrawalRequests) GetTree() (*ssz.Node, error) {
+func (e *WithdrawalRequests) GetTree() (*ssz.Node, error) {
 	return ssz.ProofTree(e)
 }

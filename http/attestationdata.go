@@ -40,7 +40,7 @@ func (s *Service) AttestationData(ctx context.Context,
 
 	endpoint := "/eth/v1/validator/attestation_data"
 	query := fmt.Sprintf("slot=%d&committee_index=%d", opts.Slot, opts.CommitteeIndex)
-	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
 	if err != nil {
 		return nil, err
 	}

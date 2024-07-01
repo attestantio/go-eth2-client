@@ -185,7 +185,7 @@ func (b *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset += len(b.HistoricalSummaries) * 64
 
 	// Field (28) 'DepositReceiptsStartIndex'
-	dst = ssz.MarshalUint64(dst, b.DepositReceiptsStartIndex)
+	dst = ssz.MarshalUint64(dst, b.DepositRequestsStartIndex)
 
 	// Field (29) 'DepositBalanceToConsume'
 	dst = ssz.MarshalUint64(dst, uint64(b.DepositBalanceToConsume))
@@ -506,7 +506,7 @@ func (b *BeaconState) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (28) 'DepositReceiptsStartIndex'
-	b.DepositReceiptsStartIndex = ssz.UnmarshallUint64(buf[2736653:2736661])
+	b.DepositRequestsStartIndex = ssz.UnmarshallUint64(buf[2736653:2736661])
 
 	// Field (29) 'DepositBalanceToConsume'
 	b.DepositBalanceToConsume = phase0.Gwei(ssz.UnmarshallUint64(buf[2736661:2736669]))
@@ -1048,7 +1048,7 @@ func (b *BeaconState) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	}
 
 	// Field (28) 'DepositReceiptsStartIndex'
-	hh.PutUint64(b.DepositReceiptsStartIndex)
+	hh.PutUint64(b.DepositRequestsStartIndex)
 
 	// Field (29) 'DepositBalanceToConsume'
 	hh.PutUint64(uint64(b.DepositBalanceToConsume))

@@ -65,7 +65,7 @@ func (s *Service) BlindedProposal(ctx context.Context,
 		query = fmt.Sprintf("%s&skip_randao_verification", query)
 	}
 
-	res, err := s.get(ctx, endpoint, query, &opts.Common)
+	res, err := s.get(ctx, endpoint, query, &opts.Common, true)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request blinded beacon block proposal"), err)
 	}

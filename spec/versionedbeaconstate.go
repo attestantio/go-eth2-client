@@ -200,17 +200,17 @@ func (v *VersionedBeaconState) ValidatorBalances() ([]phase0.Gwei, error) {
 	}
 }
 
-// DepositReceiptsStartIndex returns the deposit receipts start index of the state.
-func (v *VersionedBeaconState) DepositReceiptsStartIndex() (uint64, error) {
+// DepositReceiptsStartIndex returns the deposit requests start index of the state.
+func (v *VersionedBeaconState) DepositRequestsStartIndex() (uint64, error) {
 	switch v.Version {
 	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella, DataVersionDeneb:
-		return 0, errors.New("state does not provide deposit receipts start index")
+		return 0, errors.New("state does not provide deposit requests start index")
 	case DataVersionElectra:
 		if v.Electra == nil {
 			return 0, errors.New("no Electra state")
 		}
 
-		return v.Electra.DepositReceiptsStartIndex, nil
+		return v.Electra.DepositRequestsStartIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}

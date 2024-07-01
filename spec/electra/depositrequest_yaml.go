@@ -20,8 +20,8 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-// depositReceiptYAML is the spec representation of the struct.
-type depositReceiptYAML struct {
+// depositRequestYAML is the spec representation of the struct.
+type depositRequestYAML struct {
 	Pubkey                string `yaml:"pubkey"`
 	WithdrawalCredentials string `yaml:"withdrawal_credentials"`
 	Amount                uint64 `yaml:"amount"`
@@ -30,8 +30,8 @@ type depositReceiptYAML struct {
 }
 
 // MarshalYAML implements yaml.Marshaler.
-func (d *DepositReceipt) MarshalYAML() ([]byte, error) {
-	yamlBytes, err := yaml.MarshalWithOptions(&depositReceiptYAML{
+func (d *DepositRequest) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&depositRequestYAML{
 		Pubkey:                fmt.Sprintf("%#x", d.Pubkey),
 		WithdrawalCredentials: fmt.Sprintf("%#x", d.WithdrawalCredentials),
 		Amount:                uint64(d.Amount),
@@ -46,9 +46,9 @@ func (d *DepositReceipt) MarshalYAML() ([]byte, error) {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (d *DepositReceipt) UnmarshalYAML(input []byte) error {
+func (d *DepositRequest) UnmarshalYAML(input []byte) error {
 	// We unmarshal to the JSON struct to save on duplicate code.
-	var depositReceipt depositReceiptJSON
+	var depositReceipt depositRequestJSON
 	if err := yaml.Unmarshal(input, &depositReceipt); err != nil {
 		return err
 	}

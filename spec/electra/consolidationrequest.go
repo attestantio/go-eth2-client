@@ -16,19 +16,21 @@ package electra
 import (
 	"fmt"
 
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 )
 
-// SignedConsolidation is a signed consolidation.
-type SignedConsolidation struct {
-	Message   *Consolidation
-	Signature phase0.BLSSignature `ssz-size:"96"`
+// ConsolidationRequest represents an execution layer consolidation request.
+type ConsolidationRequest struct {
+	SourceAddress bellatrix.ExecutionAddress `ssz-size:"20"`
+	SourcePubkey  phase0.BLSPubKey           `ssz-size:"48"`
+	TargetPubkey  phase0.BLSPubKey           `ssz-size:"48"`
 }
 
 // String returns a string version of the structure.
-func (s *SignedConsolidation) String() string {
-	data, err := yaml.Marshal(s)
+func (e *ConsolidationRequest) String() string {
+	data, err := yaml.Marshal(e)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

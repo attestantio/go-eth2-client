@@ -53,7 +53,7 @@ type BeaconState struct {
 	NextWithdrawalIndex           capella.WithdrawalIndex
 	NextWithdrawalValidatorIndex  phase0.ValidatorIndex
 	HistoricalSummaries           []*capella.HistoricalSummary `ssz-max:"16777216"`
-	DepositReceiptsStartIndex     uint64
+	DepositRequestsStartIndex     uint64
 	DepositBalanceToConsume       phase0.Gwei
 	ExitBalanceToConsume          phase0.Gwei
 	EarliestExitEpoch             phase0.Epoch

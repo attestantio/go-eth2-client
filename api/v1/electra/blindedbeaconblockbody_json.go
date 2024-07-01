@@ -42,7 +42,6 @@ type blindedBeaconBlockBodyJSON struct {
 	ExecutionPayloadHeader *electra.ExecutionPayloadHeader       `json:"execution_payload_header"`
 	BLSToExecutionChanges  []*capella.SignedBLSToExecutionChange `json:"bls_to_execution_changes"`
 	BlobKZGCommitments     []string                              `json:"blob_kzg_commitments"`
-	Consolidations         []*electra.SignedConsolidation        `json:"consolidations"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -187,16 +186,6 @@ func (b *BlindedBeaconBlockBody) unpack(data *blindedBeaconBlockBodyJSON) error 
 			return errors.New("incorrect length for blob KZG commitment")
 		}
 		copy(b.BlobKZGCommitments[i][:], data)
-	}
-	if data.Consolidations == nil {
-		b.Consolidations = make([]*electra.SignedConsolidation, 0)
-	} else {
-		for i := range data.Consolidations {
-			if data.Consolidations[i] == nil {
-				return fmt.Errorf("consolidations entry %d missing", i)
-			}
-		}
-		b.Consolidations = data.Consolidations
 	}
 
 	return nil
