@@ -222,8 +222,8 @@ func (e *ExecutionPayloadHeader) UnmarshalJSON(input []byte) error {
 	}
 	e.ExcessBlobGas = tmpUint
 
-	if err := e.DepositRequestsRoot.UnmarshalJSON(raw["deposit_receipts_root"]); err != nil {
-		return errors.Wrap(err, "deposit_receipts_root")
+	if err := e.DepositRequestsRoot.UnmarshalJSON(raw["deposit_requests_root"]); err != nil {
+		return errors.Wrap(err, "deposit_requests_root")
 	}
 
 	if err := e.WithdrawalRequestsRoot.UnmarshalJSON(raw["withdrawal_requests_root"]); err != nil {

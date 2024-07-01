@@ -55,7 +55,7 @@ type beaconStateYAML struct {
 	NextWithdrawalIndex           capella.WithdrawalIndex      `yaml:"next_withdrawal_index"`
 	NextWithdrawalValidatorIndex  phase0.ValidatorIndex        `yaml:"next_withdrawal_validator_index"`
 	HistoricalSummaries           []*capella.HistoricalSummary `yaml:"historical_summaries"`
-	DepositReceiptsStartIndex     uint64                       `yaml:"deposit_receipts_start_index"`
+	DepositRequestsStartIndex     uint64                       `yaml:"deposit_requests_start_index"`
 	DepositBalanceToConsume       phase0.Gwei                  `yaml:"deposit_balance_to_consume"`
 	ExitBalanceToConsume          phase0.Gwei                  `yaml:"exit_balance_to_consume"`
 	EarliestExitEpoch             phase0.Epoch                 `yaml:"earliest_exit_epoch"`
@@ -97,7 +97,7 @@ func (b *BeaconState) MarshalYAML() ([]byte, error) {
 		NextWithdrawalIndex:           b.NextWithdrawalIndex,
 		NextWithdrawalValidatorIndex:  b.NextWithdrawalValidatorIndex,
 		HistoricalSummaries:           b.HistoricalSummaries,
-		DepositReceiptsStartIndex:     b.DepositReceiptsStartIndex,
+		DepositRequestsStartIndex:     b.DepositRequestsStartIndex,
 		DepositBalanceToConsume:       b.DepositBalanceToConsume,
 		ExitBalanceToConsume:          b.ExitBalanceToConsume,
 		EarliestExitEpoch:             b.EarliestExitEpoch,
