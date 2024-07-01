@@ -47,7 +47,7 @@ type executionPayloadJSON struct {
 	Withdrawals           []*capella.Withdrawal      `json:"withdrawals"`
 	BlobGasUsed           string                     `json:"blob_gas_used"`
 	ExcessBlobGas         string                     `json:"excess_blob_gas"`
-	DepositRequests       []*DepositRequest          `json:"deposit_receipts"`
+	DepositRequests       []*DepositRequest          `json:"deposit_requests"`
 	WithdrawalRequests    []*WithdrawalRequest       `json:"withdrawal_requests"`
 	ConsolidationRequests []*ConsolidationRequest    `json:"consolidation_requests"`
 }
@@ -250,8 +250,8 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	}
 	e.ExcessBlobGas = tmpUint
 
-	if err := json.Unmarshal(raw["deposit_receipts"], &e.DepositRequests); err != nil {
-		return errors.Wrap(err, "deposit_receipts")
+	if err := json.Unmarshal(raw["deposit_requests"], &e.DepositRequests); err != nil {
+		return errors.Wrap(err, "deposit_requests")
 	}
 	for i := range e.DepositRequests {
 		if e.DepositRequests[i] == nil {

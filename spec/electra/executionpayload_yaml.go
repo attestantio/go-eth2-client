@@ -42,7 +42,7 @@ type executionPayloadYAML struct {
 	Withdrawals           []*capella.Withdrawal   `yaml:"withdrawals"`
 	BlobGasUsed           uint64                  `yaml:"blob_gas_used"`
 	ExcessBlobGas         uint64                  `yaml:"excess_blob_gas"`
-	DepositRequests       []*DepositRequest       `yaml:"deposit_receipts"`
+	DepositRequests       []*DepositRequest       `yaml:"deposit_requests"`
 	WithdrawalRequests    []*WithdrawalRequest    `yaml:"withdrawal_requests"`
 	ConsolidationRequests []*ConsolidationRequest `yaml:"consolidation_requests"`
 }
