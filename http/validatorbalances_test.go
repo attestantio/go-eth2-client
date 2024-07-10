@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2023 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -31,11 +31,12 @@ func TestValidatorBalances(t *testing.T) {
 	defer cancel()
 
 	tests := []struct {
-		name     string
-		opts     *api.ValidatorBalancesOpts
-		err      string
-		errCode  int
-		expected map[phase0.ValidatorIndex]phase0.Gwei
+		name             string
+		opts             *api.ValidatorBalancesOpts
+		err              string
+		errCode          int
+		expected         map[phase0.ValidatorIndex]phase0.Gwei
+		expectedBalances int
 	}{
 		{
 			name: "NoOpts",
@@ -102,6 +103,9 @@ func TestValidatorBalances(t *testing.T) {
 				require.NotNil(t, response)
 				if test.expected != nil {
 					require.Equal(t, test.expected, response.Data)
+				}
+				if test.expectedBalances > 0 {
+					require.Len(t, response.Data, test.expectedBalances)
 				}
 			}
 		})

@@ -25,4 +25,7 @@ type ValidatorBalancesOpts struct {
 	// Indices is a list of validator indices to restrict the returned values.
 	// If no indices are supplied then no filter will be applied.
 	Indices []phase0.ValidatorIndex
+	// PubKeys is a list of validator public keys to restrict the returned values.
+	// If no public keys are supplied then no filter will be applied.
+	PubKeys []phase0.BLSPubKey
 }

@@ -16,9 +16,9 @@ package http
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"strings"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -43,21 +43,23 @@ func (s *Service) ValidatorBalances(ctx context.Context,
 		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 
-	if len(opts.Indices) > s.indexChunkSize(ctx) {
-		return s.chunkedValidatorBalances(ctx, opts)
-	}
-
 	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/validator_balances", opts.State)
 	query := ""
-	if len(opts.Indices) > 0 {
-		ids := make([]string, len(opts.Indices))
-		for i := range opts.Indices {
-			ids[i] = fmt.Sprintf("%d", opts.Indices[i])
-		}
-		query = "id=" + strings.Join(ids, ",")
+
+	body := make([]string, 0, len(opts.Indices)+len(opts.PubKeys))
+	for i := range opts.Indices {
+		body = append(body, fmt.Sprintf("%d", opts.Indices[i]))
+	}
+	for i := range opts.PubKeys {
+		body = append(body, opts.PubKeys[i].String())
 	}
 
-	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
+	data, err := json.Marshal(body)
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to marshal request data"), err)
+	}
+
+	httpResponse, err := s.post2(ctx, endpoint, query, &opts.Common, bytes.NewReader(data), ContentTypeJSON, map[string]string{})
 	if err != nil {
 		return nil, err
 	}
@@ -68,44 +70,6 @@ func (s *Service) ValidatorBalances(ctx context.Context,
 	default:
 		return nil, fmt.Errorf("unhandled content type %v", httpResponse.contentType)
 	}
-}
-
-// chunkedValidatorBalances obtains the validator balances a chunk at a time.
-func (s *Service) chunkedValidatorBalances(ctx context.Context,
-	opts *api.ValidatorBalancesOpts,
-) (
-	*api.Response[map[phase0.ValidatorIndex]phase0.Gwei],
-	error,
-) {
-	data := make(map[phase0.ValidatorIndex]phase0.Gwei)
-	metadata := make(map[string]any)
-	chunkSize := s.indexChunkSize(ctx)
-	for i := 0; i < len(opts.Indices); i += chunkSize {
-		chunkStart := i
-		chunkEnd := i + chunkSize
-		if len(opts.Indices) < chunkEnd {
-			chunkEnd = len(opts.Indices)
-		}
-		chunkOpts := &api.ValidatorBalancesOpts{
-			State:   opts.State,
-			Indices: opts.Indices[chunkStart:chunkEnd],
-		}
-		chunkResponse, err := s.ValidatorBalances(ctx, chunkOpts)
-		if err != nil {
-			return nil, errors.Join(errors.New("failed to obtain chunk"), err)
-		}
-		for k, v := range chunkResponse.Data {
-			data[k] = v
-		}
-		for k, v := range chunkResponse.Metadata {
-			metadata[k] = v
-		}
-	}
-
-	return &api.Response[map[phase0.ValidatorIndex]phase0.Gwei]{
-		Data:     data,
-		Metadata: metadata,
-	}, nil
 }
 
 func (*Service) validatorBalancesFromJSON(_ context.Context,
