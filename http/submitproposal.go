@@ -77,7 +77,7 @@ func (s *Service) submitProposalData(ctx context.Context,
 		nodeClient = nodeClientResponse.Data
 	}
 
-	if s.enforceJSON || nodeClient == "lodestar" {
+	if s.enforceJSON {
 		contentType = ContentTypeJSON
 		body, err = s.submitProposalJSON(ctx, proposal)
 	} else {
