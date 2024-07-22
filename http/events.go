@@ -62,6 +62,12 @@ func (s *Service) Events(ctx context.Context, topics []string, handler consensus
 	log.Trace().Str("url", callURL).Msg("GET request to events stream")
 
 	client := sse.NewClient(callURL)
+	for k, v := range s.extraHeaders {
+		client.Headers[k] = v
+	}
+	if _, exists := client.Headers["User-Agent"]; !exists {
+		client.Headers["User-Agent"] = defaultUserAgent
+	}
 	client.Connection.Transport = &http.Transport{
 		Dial: (&net.Dialer{
 			Timeout:   2 * time.Second,

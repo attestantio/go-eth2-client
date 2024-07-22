@@ -1,3 +1,6 @@
+dev:
+  - add client headers for events stream
+
 0.21.7:
   - use POST for specific validator and validator balance information
 
