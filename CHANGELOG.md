@@ -1,4 +1,5 @@
-dev:
+0.21.8:
+  - remove Lodestar proposals workaround
   - add client headers for events stream
 
 0.21.7:
