@@ -402,17 +402,21 @@ func parseAddress(address string) (*url.URL, *url.URL, error) {
 	// Remove any trailing slash from the path.
 	base.Path = strings.TrimSuffix(base.Path, "/")
 
+	// Attempt to mask any sensitive information in the URL, for logging purposes.
 	baseAddress := *base
 	if _, pwExists := baseAddress.User.Password(); pwExists {
+		// Mask the password.
 		user := baseAddress.User.Username()
-		baseAddress.User = url.UserPassword(user, "***")
+		baseAddress.User = url.UserPassword(user, "xxxxx")
 	}
 	if baseAddress.Path != "" {
-		baseAddress.Path = "***"
+		// Mask the path.
+		baseAddress.Path = "xxxxx"
 	}
 	if baseAddress.RawQuery != "" {
+		// Mask all query values.
 		sensitiveRegex := regexp.MustCompile("=([^&]*)(&)?")
-		baseAddress.RawQuery = sensitiveRegex.ReplaceAllString(baseAddress.RawQuery, "=***$2")
+		baseAddress.RawQuery = sensitiveRegex.ReplaceAllString(baseAddress.RawQuery, "=xxxxx$2")
 	}
 
 	return base, &baseAddress, nil
