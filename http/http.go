@@ -119,7 +119,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 func (s *Service) post2(ctx context.Context,
 	endpoint string,
 	query string,
-	_ *api.CommonOpts,
+	opts *api.CommonOpts,
 	body io.Reader,
 	contentType ContentType,
 	headers map[string]string,
@@ -151,7 +151,12 @@ func (s *Service) post2(ctx context.Context,
 	log.Trace().Str("url", callURL.String()).Msg("URL to POST")
 	span.SetAttributes(attribute.String("url", callURL.String()))
 
-	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
+	timeout := s.timeout
+	if opts.Timeout != 0 {
+		timeout = opts.Timeout
+	}
+
+	opCtx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, callURL.String(), body)
 	if err != nil {
