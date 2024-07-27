@@ -1,3 +1,6 @@
+021.9:
+  - enable custom timeouts for POSTs
+
 0.21.8:
   - remove Lodestar proposals workaround
   - add client headers for events stream
