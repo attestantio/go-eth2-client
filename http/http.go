@@ -236,8 +236,8 @@ func (s *Service) post2(ctx context.Context,
 	))
 
 	if res.contentType == ContentTypeJSON {
-		trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
 		if e := log.Trace(); e.Enabled() {
+			trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
 			e.RawJSON("body", trimmedResponse).Msg("POST response")
 		}
 	}
@@ -468,6 +468,14 @@ func populateHeaders(res *httpResponse, resp *http.Response) {
 }
 
 func populateContentType(res *httpResponse, resp *http.Response) error {
+	if len(res.body) == 0 {
+		// There's no body to decode.  Some servers don't send a content type in this
+		// situation, but it doesn't matter anyway; set it to JSON and return.
+		res.contentType = ContentTypeJSON
+
+		return nil
+	}
+
 	respContentTypes, exists := resp.Header["Content-Type"]
 	if !exists {
 		return errors.New("no content type supplied in response")
