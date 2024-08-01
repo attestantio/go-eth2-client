@@ -306,6 +306,7 @@ func TestValidatorToState(t *testing.T) {
 				ActivationEpoch:            currentEpoch - 40,
 				ExitEpoch:                  currentEpoch - 30,
 				WithdrawableEpoch:          currentEpoch - 20,
+				EffectiveBalance:           1,
 			},
 			state: api.ValidatorStateWithdrawalPossible,
 		},
@@ -316,6 +317,7 @@ func TestValidatorToState(t *testing.T) {
 				ActivationEpoch:            currentEpoch - 40,
 				ExitEpoch:                  currentEpoch - 30,
 				WithdrawableEpoch:          currentEpoch - 20,
+				EffectiveBalance:           1,
 				Slashed:                    true,
 			},
 			state: api.ValidatorStateWithdrawalPossible,
@@ -327,6 +329,7 @@ func TestValidatorToState(t *testing.T) {
 				ActivationEpoch:            currentEpoch - 40,
 				ExitEpoch:                  currentEpoch - 30,
 				WithdrawableEpoch:          currentEpoch - 20,
+				EffectiveBalance:           1,
 			},
 			balance: gweiPtr(5),
 			state:   api.ValidatorStateWithdrawalPossible,
@@ -338,9 +341,21 @@ func TestValidatorToState(t *testing.T) {
 				ActivationEpoch:            currentEpoch - 40,
 				ExitEpoch:                  currentEpoch - 30,
 				WithdrawableEpoch:          currentEpoch - 20,
+				EffectiveBalance:           0,
 			},
 			balance: gweiPtr(0),
 			state:   api.ValidatorStateWithdrawalDone,
+		},
+		{
+			name: "WithdrawalDoneNoBalance",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch - 30,
+				WithdrawableEpoch:          currentEpoch - 20,
+				EffectiveBalance:           0,
+			},
+			state: api.ValidatorStateWithdrawalDone,
 		},
 	}
 
@@ -436,7 +451,7 @@ func TestMarshalJSON(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			require.NotPanics(t, func() {
-				res, err := json.Marshal(&test.state) //test.state.MarshalJSON()
+				res, err := json.Marshal(&test.state)
 				test.errFunc(t, err)
 				require.Equal(t, test.expected, res)
 			})

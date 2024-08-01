@@ -197,7 +197,7 @@ func ValidatorToState(validator *phase0.Validator,
 		}
 
 		return ValidatorStateExitedUnslashed
-	case balance != nil && *balance == 0:
+	case (balance != nil && *balance == 0) || (balance == nil && validator.EffectiveBalance == 0):
 		return ValidatorStateWithdrawalDone
 	default:
 		return ValidatorStateWithdrawalPossible

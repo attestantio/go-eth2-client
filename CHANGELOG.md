@@ -1,3 +1,6 @@
+0.21.10:
+  - better validator state when balance not supplied
+
 0.21.9:
   - enable custom timeouts for POSTs
 
