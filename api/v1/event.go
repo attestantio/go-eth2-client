@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -32,15 +33,19 @@ type Event struct {
 
 // SupportedEventTopics is a map of supported event topics.
 var SupportedEventTopics = map[string]bool{
-	"attestation":            true,
-	"block":                  true,
-	"chain_reorg":            true,
-	"finalized_checkpoint":   true,
-	"head":                   true,
-	"voluntary_exit":         true,
-	"contribution_and_proof": true,
-	"payload_attributes":     true,
-	"blob_sidecar":           true,
+	"attestation":             true,
+	"attester_slashing":       true,
+	"blob_sidecar":            true,
+	"block":                   true,
+	"block_gossip":            true,
+	"bls_to_execution_change": true,
+	"chain_reorg":             true,
+	"contribution_and_proof":  true,
+	"finalized_checkpoint":    true,
+	"head":                    true,
+	"payload_attributes":      true,
+	"proposer_slashing":       true,
+	"voluntary_exit":          true,
 }
 
 // eventJSON is the spec representation of the struct.
@@ -86,22 +91,30 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 	switch eventJSON.Topic {
 	case "attestation":
 		e.Data = &phase0.Attestation{}
+	case "attester_slashing":
+		e.Data = &phase0.AttesterSlashing{}
+	case "blob_sidecar":
+		e.Data = &BlobSidecarEvent{}
 	case "block":
 		e.Data = &BlockEvent{}
+	case "block_gossip":
+		e.Data = &BlockGossipEvent{}
+	case "bls_to_execution_change":
+		e.Data = &capella.SignedBLSToExecutionChange{}
 	case "chain_reorg":
 		e.Data = &ChainReorgEvent{}
+	case "contribution_and_proof":
+		e.Data = &altair.SignedContributionAndProof{}
 	case "finalized_checkpoint":
 		e.Data = &FinalizedCheckpointEvent{}
 	case "head":
 		e.Data = &HeadEvent{}
-	case "voluntary_exit":
-		e.Data = &phase0.SignedVoluntaryExit{}
-	case "contribution_and_proof":
-		e.Data = &altair.SignedContributionAndProof{}
 	case "payload_attributes":
 		e.Data = &PayloadAttributesEvent{}
-	case "blob_sidecar":
-		e.Data = &BlobSidecarEvent{}
+	case "proposer_slashing":
+		e.Data = &phase0.ProposerSlashing{}
+	case "voluntary_exit":
+		e.Data = &phase0.SignedVoluntaryExit{}
 	default:
 		return fmt.Errorf("unsupported event topic %s", eventJSON.Topic)
 	}

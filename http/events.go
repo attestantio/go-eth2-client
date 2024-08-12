@@ -117,114 +117,123 @@ func (*Service) handleEvent(ctx context.Context, msg *sse.Event, handler consens
 		Topic: string(msg.Event),
 	}
 	switch string(msg.Event) {
-	case "head":
-		headEvent := &api.HeadEvent{}
-		err := json.Unmarshal(msg.Data, headEvent)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse head event")
-
-			return
-		}
-		event.Data = headEvent
-	case "block":
-		blockEvent := &api.BlockEvent{}
-		err := json.Unmarshal(msg.Data, blockEvent)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse block event")
-
-			return
-		}
-		event.Data = blockEvent
 	case "attestation":
-		attestation := &phase0.Attestation{}
-		err := json.Unmarshal(msg.Data, attestation)
+		data := &phase0.Attestation{}
+		err := json.Unmarshal(msg.Data, data)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse attestation")
 
 			return
 		}
-		event.Data = attestation
-	case "voluntary_exit":
-		voluntaryExit := &phase0.SignedVoluntaryExit{}
-		err := json.Unmarshal(msg.Data, voluntaryExit)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse voluntary exit")
-
-			return
-		}
-		event.Data = voluntaryExit
-	case "finalized_checkpoint":
-		finalizedCheckpointEvent := &api.FinalizedCheckpointEvent{}
-		err := json.Unmarshal(msg.Data, finalizedCheckpointEvent)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse finalized checkpoint event")
-
-			return
-		}
-		event.Data = finalizedCheckpointEvent
-	case "chain_reorg":
-		chainReorgEvent := &api.ChainReorgEvent{}
-		err := json.Unmarshal(msg.Data, chainReorgEvent)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse chain reorg event")
-
-			return
-		}
-		event.Data = chainReorgEvent
-	case "contribution_and_proof":
-		contributionAndProofEvent := &altair.SignedContributionAndProof{}
-		err := json.Unmarshal(msg.Data, contributionAndProofEvent)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse contribution and proof event")
-
-			return
-		}
-		event.Data = contributionAndProofEvent
-	case "payload_attributes":
-		payloadAttributesEvent := &api.PayloadAttributesEvent{}
-		err := json.Unmarshal(msg.Data, payloadAttributesEvent)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse payload attributes event")
-
-			return
-		}
-		event.Data = payloadAttributesEvent
-	case "proposer_slashing":
-		proposerSlashingEvent := &phase0.ProposerSlashing{}
-		err := json.Unmarshal(msg.Data, proposerSlashingEvent)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse proposer slashing event")
-
-			return
-		}
-		event.Data = proposerSlashingEvent
+		event.Data = data
 	case "attester_slashing":
-		attesterSlashingEvent := &phase0.AttesterSlashing{}
-		err := json.Unmarshal(msg.Data, attesterSlashingEvent)
+		data := &phase0.AttesterSlashing{}
+		err := json.Unmarshal(msg.Data, data)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse attester slashing event")
 
 			return
 		}
-		event.Data = attesterSlashingEvent
-	case "bls_to_execution_change":
-		blsToExecutionChangeEvent := &capella.BLSToExecutionChange{}
-		err := json.Unmarshal(msg.Data, blsToExecutionChangeEvent)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse bls to execution change event")
-
-			return
-		}
-		event.Data = blsToExecutionChangeEvent
+		event.Data = data
 	case "blob_sidecar":
-		blobSidecar := &api.BlobSidecarEvent{}
-		err := json.Unmarshal(msg.Data, blobSidecar)
+		data := &api.BlobSidecarEvent{}
+		err := json.Unmarshal(msg.Data, data)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse blob sidecar event")
 
 			return
 		}
-		event.Data = blobSidecar
+		event.Data = data
+	case "block":
+		data := &api.BlockEvent{}
+		err := json.Unmarshal(msg.Data, data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse block event")
+
+			return
+		}
+		event.Data = data
+	case "block_gossip":
+		data := &api.BlockGossipEvent{}
+		err := json.Unmarshal(msg.Data, data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse block gossip event")
+
+			return
+		}
+		event.Data = data
+	case "bls_to_execution_change":
+		data := &capella.SignedBLSToExecutionChange{}
+		err := json.Unmarshal(msg.Data, data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse bls to execution change event")
+
+			return
+		}
+		event.Data = data
+	case "chain_reorg":
+		data := &api.ChainReorgEvent{}
+		err := json.Unmarshal(msg.Data, data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse chain reorg event")
+
+			return
+		}
+		event.Data = data
+	case "contribution_and_proof":
+		data := &altair.SignedContributionAndProof{}
+		err := json.Unmarshal(msg.Data, data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse contribution and proof event")
+
+			return
+		}
+		event.Data = data
+	case "finalized_checkpoint":
+		data := &api.FinalizedCheckpointEvent{}
+		err := json.Unmarshal(msg.Data, data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse finalized checkpoint event")
+
+			return
+		}
+		event.Data = data
+	case "head":
+		data := &api.HeadEvent{}
+		err := json.Unmarshal(msg.Data, data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse head event")
+
+			return
+		}
+		event.Data = data
+	case "payload_attributes":
+		data := &api.PayloadAttributesEvent{}
+		err := json.Unmarshal(msg.Data, data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse payload attributes event")
+
+			return
+		}
+		event.Data = data
+	case "proposer_slashing":
+		data := &phase0.ProposerSlashing{}
+		err := json.Unmarshal(msg.Data, data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse proposer slashing event")
+
+			return
+		}
+		event.Data = data
+	case "voluntary_exit":
+		data := &phase0.SignedVoluntaryExit{}
+		err := json.Unmarshal(msg.Data, data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse voluntary exit")
+
+			return
+		}
+		event.Data = data
 	case "":
 		// Used as keepalive.  Ignore.
 		return
