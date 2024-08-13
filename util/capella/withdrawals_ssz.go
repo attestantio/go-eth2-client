@@ -22,8 +22,8 @@ func (w *ExecutionPayloadWithdrawals) MarshalSSZTo(buf []byte) (dst []byte, err 
 	offset += len(w.Withdrawals) * 44
 
 	// Field (0) 'Withdrawals'
-	if size := len(w.Withdrawals); size > 16 {
-		err = ssz.ErrListTooBigFn("Withdrawals.Withdrawals", size, 16)
+	if size := len(w.Withdrawals); size > 8 {
+		err = ssz.ErrListTooBigFn("Withdrawals.Withdrawals", size, 8)
 		return
 	}
 	for ii := 0; ii < len(w.Withdrawals); ii++ {
