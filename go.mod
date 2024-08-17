@@ -57,3 +57,5 @@ retract (
 	v1.15.2 // Retraction for 1.15.1.
 	v1.15.1 // Incorrect release number.
 )
+
+replace github.com/pk910/dynamic-ssz => github.com/pk910/dynamic-ssz v0.0.0-20240817192058-f7dbf906fa78
