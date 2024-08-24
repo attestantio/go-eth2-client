@@ -73,7 +73,7 @@ func (d *DataVersion) UnmarshalJSON(input []byte) error {
 
 // String returns a string representation of the struct.
 func (d DataVersion) String() string {
-	if int(d) >= len(dataVersionStrings) {
+	if uint64(d) >= uint64(len(dataVersionStrings)) {
 		return "unknown"
 	}
 
