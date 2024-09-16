@@ -15,7 +15,9 @@ This library is under development; expect APIs and data structures to change unt
 ## Table of Contents
 
 - [Install](#install)
+- [Support](#support)
 - [Usage](#usage)
+- [Example](#example)
 - [Maintainers](#maintainers)
 - [Contribute](#contribute)
 - [License](#license)
