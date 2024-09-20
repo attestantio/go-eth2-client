@@ -21,6 +21,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -53,12 +54,15 @@ func (s *Service) Events(ctx context.Context, topics []string, handler consensus
 		}
 	}
 
-	endpoint := "/eth/v1/events"
-	query := "topics=" + strings.Join(topics, "&topics=")
-	callURL := urlForCall(s.base, endpoint, query)
-	log.Trace().Str("url", callURL.String()).Msg("GET request to events stream")
+	reference, err := url.Parse(fmt.Sprintf("eth/v1/events?topics=%s", strings.Join(topics, "&topics=")))
+	if err != nil {
+		return errors.Join(errors.New("invalid endpoint"), err)
+	}
 
-	client := sse.NewClient(callURL.String())
+	callURL := fmt.Sprintf("%s/%s", s.base.String(), reference)
+	log.Trace().Str("url", callURL).Msg("GET request to events stream")
+
+	client := sse.NewClient(callURL)
 	for k, v := range s.extraHeaders {
 		client.Headers[k] = v
 	}
