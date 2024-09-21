@@ -7,6 +7,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	ssz "github.com/ferranbt/fastssz"
 )
 
@@ -170,7 +171,7 @@ func (b *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	// Offset (24) 'LatestExecutionPayloadHeader'
 	dst = ssz.WriteOffset(dst, offset)
 	if b.LatestExecutionPayloadHeader == nil {
-		b.LatestExecutionPayloadHeader = new(ExecutionPayloadHeader)
+		b.LatestExecutionPayloadHeader = new(deneb.ExecutionPayloadHeader)
 	}
 	offset += b.LatestExecutionPayloadHeader.SizeSSZ()
 
@@ -643,7 +644,7 @@ func (b *BeaconState) UnmarshalSSZ(buf []byte) error {
 	{
 		buf = tail[o24:o27]
 		if b.LatestExecutionPayloadHeader == nil {
-			b.LatestExecutionPayloadHeader = new(ExecutionPayloadHeader)
+			b.LatestExecutionPayloadHeader = new(deneb.ExecutionPayloadHeader)
 		}
 		if err = b.LatestExecutionPayloadHeader.UnmarshalSSZ(buf); err != nil {
 			return err
@@ -751,7 +752,7 @@ func (b *BeaconState) SizeSSZ() (size int) {
 
 	// Field (24) 'LatestExecutionPayloadHeader'
 	if b.LatestExecutionPayloadHeader == nil {
-		b.LatestExecutionPayloadHeader = new(ExecutionPayloadHeader)
+		b.LatestExecutionPayloadHeader = new(deneb.ExecutionPayloadHeader)
 	}
 	size += b.LatestExecutionPayloadHeader.SizeSSZ()
 

@@ -19,7 +19,7 @@ func (b *BeaconBlockBody) MarshalSSZ() ([]byte, error) {
 // MarshalSSZTo ssz marshals the BeaconBlockBody object to a target array
 func (b *BeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
-	offset := int(392)
+	offset := int(396)
 
 	// Field (0) 'RANDAOReveal'
 	dst = append(dst, b.RANDAOReveal[:]...)
@@ -72,7 +72,7 @@ func (b *BeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	// Offset (9) 'ExecutionPayload'
 	dst = ssz.WriteOffset(dst, offset)
 	if b.ExecutionPayload == nil {
-		b.ExecutionPayload = new(ExecutionPayload)
+		b.ExecutionPayload = new(deneb.ExecutionPayload)
 	}
 	offset += b.ExecutionPayload.SizeSSZ()
 
@@ -185,12 +185,12 @@ func (b *BeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
-	if size < 392 {
+	if size < 396 {
 		return ssz.ErrSize
 	}
 
 	tail := buf
-	var o3, o4, o5, o6, o7, o9, o10, o11 uint64
+	var o3, o4, o5, o6, o7, o9, o10, o11, o12 uint64
 
 	// Field (0) 'RANDAOReveal'
 	copy(b.RANDAOReveal[:], buf[0:96])
@@ -211,7 +211,7 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 		return ssz.ErrOffset
 	}
 
-	if o3 < 392 {
+	if o3 < 396 {
 		return ssz.ErrInvalidVariableOffset
 	}
 
@@ -255,6 +255,11 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 
 	// Offset (11) 'BlobKZGCommitments'
 	if o11 = ssz.ReadOffset(buf[388:392]); o11 > size || o10 > o11 {
+		return ssz.ErrOffset
+	}
+
+	// Offset (12) 'ExecutionRequests'
+	if o12 = ssz.ReadOffset(buf[392:396]); o12 > size || o11 > o12 {
 		return ssz.ErrOffset
 	}
 
@@ -360,7 +365,7 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 	{
 		buf = tail[o9:o10]
 		if b.ExecutionPayload == nil {
-			b.ExecutionPayload = new(ExecutionPayload)
+			b.ExecutionPayload = new(deneb.ExecutionPayload)
 		}
 		if err = b.ExecutionPayload.UnmarshalSSZ(buf); err != nil {
 			return err
@@ -387,7 +392,7 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 
 	// Field (11) 'BlobKZGCommitments'
 	{
-		buf = tail[o11:]
+		buf = tail[o11:o12]
 		num, err := ssz.DivideInt2(len(buf), 48, 4096)
 		if err != nil {
 			return err
@@ -397,13 +402,24 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 			copy(b.BlobKZGCommitments[ii][:], buf[ii*48:(ii+1)*48])
 		}
 	}
+
+	// Field (12) 'ExecutionRequests'
+	{
+		buf = tail[o12:]
+		if b.ExecutionRequests == nil {
+			b.ExecutionRequests = new(ExecutionRequests)
+		}
+		if err = b.ExecutionRequests.UnmarshalSSZ(buf); err != nil {
+			return err
+		}
+	}
 	
 	return err
 }
 
 // SizeSSZ returns the ssz encoded size in bytes for the BeaconBlockBody object
 func (b *BeaconBlockBody) SizeSSZ() (size int) {
-	size = 392
+	size = 396
 
 	// Field (3) 'ProposerSlashings'
 	size += len(b.ProposerSlashings) * 416
@@ -428,7 +444,7 @@ func (b *BeaconBlockBody) SizeSSZ() (size int) {
 
 	// Field (9) 'ExecutionPayload'
 	if b.ExecutionPayload == nil {
-		b.ExecutionPayload = new(ExecutionPayload)
+		b.ExecutionPayload = new(deneb.ExecutionPayload)
 	}
 	size += b.ExecutionPayload.SizeSSZ()
 
@@ -437,6 +453,12 @@ func (b *BeaconBlockBody) SizeSSZ() (size int) {
 
 	// Field (11) 'BlobKZGCommitments'
 	size += len(b.BlobKZGCommitments) * 48
+
+	// Field (12) 'ExecutionRequests'
+	if b.ExecutionRequests == nil {
+		b.ExecutionRequests = new(ExecutionRequests)
+	}
+	size += b.ExecutionRequests.SizeSSZ()
 
 	return
 }
@@ -585,6 +607,11 @@ func (b *BeaconBlockBody) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 		}
 		numItems := uint64(len(b.BlobKZGCommitments))
 		hh.MerkleizeWithMixin(subIndx, numItems, 4096)
+	}
+
+	// Field (12) 'ExecutionRequests'
+	if err = b.ExecutionRequests.HashTreeRootWith(hh); err != nil {
+		return
 	}
 
 	hh.Merkleize(indx)
