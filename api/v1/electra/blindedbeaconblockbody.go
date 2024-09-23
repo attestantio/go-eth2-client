@@ -36,9 +36,10 @@ type BlindedBeaconBlockBody struct {
 	Deposits               []*phase0.Deposit             `ssz-max:"16"`
 	VoluntaryExits         []*phase0.SignedVoluntaryExit `ssz-max:"16"`
 	SyncAggregate          *altair.SyncAggregate
-	ExecutionPayloadHeader *electra.ExecutionPayloadHeader
+	ExecutionPayloadHeader *deneb.ExecutionPayloadHeader
 	BLSToExecutionChanges  []*capella.SignedBLSToExecutionChange `ssz-max:"16"`
 	BlobKZGCommitments     []deneb.KZGCommitment                 `ssz-max:"4096" ssz-size:"?,48"`
+	ExecutionRequests      *electra.ExecutionRequests
 }
 
 // String returns a string version of the structure.
