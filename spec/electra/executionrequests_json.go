@@ -38,8 +38,6 @@ func (e *ExecutionRequests) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-//
-//nolint:gocyclo
 func (e *ExecutionRequests) UnmarshalJSON(input []byte) error {
 	raw, err := codecs.RawJSON(&executionRequestsJSON{}, input)
 	if err != nil {
