@@ -50,7 +50,7 @@ func (d *BuilderVersion) UnmarshalJSON(input []byte) error {
 
 // String returns a string representation of the struct.
 func (d BuilderVersion) String() string {
-	if int(d) >= len(responseBuilderVersionStrings) {
+	if uint64(d) >= uint64(len(responseBuilderVersionStrings)) {
 		return "unknown"
 	}
 

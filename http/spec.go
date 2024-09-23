@@ -121,8 +121,8 @@ func (s *Service) Spec(ctx context.Context,
 
 		// Handle durations.
 		if strings.HasPrefix(k, "SECONDS_PER_") || k == "GENESIS_DELAY" {
-			intVal, err := strconv.ParseUint(v, 10, 64)
-			if err == nil && intVal != 0 {
+			intVal, err := strconv.ParseInt(v, 10, 64)
+			if err == nil && intVal >= 0 {
 				config[k] = time.Duration(intVal) * time.Second
 
 				continue
