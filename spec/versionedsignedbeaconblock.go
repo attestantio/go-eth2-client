@@ -1017,6 +1017,32 @@ func (v *VersionedSignedBeaconBlock) BlobKZGCommitments() ([]deneb.KZGCommitment
 	}
 }
 
+// ExecutionRequests returs the execution requests for the block.
+func (v *VersionedSignedBeaconBlock) ExecutionRequests() (*electra.ExecutionRequests, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return nil, errors.New("phase0 block does not have execution requests")
+	case DataVersionAltair:
+		return nil, errors.New("altair block does not have execution requests")
+	case DataVersionBellatrix:
+		return nil, errors.New("bellatrix block does not have execution requests")
+	case DataVersionCapella:
+		return nil, errors.New("capella block does not have execution requests")
+	case DataVersionDeneb:
+		return nil, errors.New("deneb block does not have execution requests")
+	case DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.ExecutionRequests, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
 // String returns a string version of the structure.
 func (v *VersionedSignedBeaconBlock) String() string {
 	switch v.Version {
