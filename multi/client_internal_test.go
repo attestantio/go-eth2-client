@@ -139,6 +139,6 @@ func TestRecheck(t *testing.T) {
 	multi.deactivateClient(ctx, consensusClient)
 
 	_, err = s.(consensusclient.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
-	// Should re-activate in recheck so not return an error.
+	// Should re-activate in recheck so as not to return an error.
 	require.NoError(t, err)
 }
