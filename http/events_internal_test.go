@@ -147,7 +147,7 @@ func TestEventHandler(t *testing.T) {
 			name: "BLSToExecutionChangeGood",
 			message: &sse.Event{
 				Event: []byte("bls_to_execution_change"),
-				Data:  []byte(`{"validator_index":"63401","from_bls_pubkey":"0xa46ed2574770ec1942d577ef89e0bf7b0d601349dab791740dead3fb5a6e2624cf62b9e58de1074c49f44b986eb39002","to_execution_address":"0xd641D2Cc74C7b6A641861260d07D67eB67bc7403"}`),
+				Data:  []byte(`{"message":{"validator_index":"63401","from_bls_pubkey":"0xa46ed2574770ec1942d577ef89e0bf7b0d601349dab791740dead3fb5a6e2624cf62b9e58de1074c49f44b986eb39002","to_execution_address":"0xd641D2Cc74C7b6A641861260d07D67eB67bc7403"},"signature":"0xb9ce6f10137a8bc73cd5545e5d6c7c61bc1294b853e71e5eb090a7a773d7773c4d7732f4244e9891cd5c1f7a5fbc951c0b368a8bd7dc44b1598a6d1bdb4476f9f364ef521c366e55565792810f0cb8bf8cc20134f32ed8dde54507f622402d6e"}`),
 			},
 			handler: handler,
 			handled: true,

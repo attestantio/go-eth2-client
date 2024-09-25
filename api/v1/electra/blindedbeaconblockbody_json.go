@@ -39,9 +39,10 @@ type blindedBeaconBlockBodyJSON struct {
 	Deposits               []*phase0.Deposit                     `json:"deposits"`
 	VoluntaryExits         []*phase0.SignedVoluntaryExit         `json:"voluntary_exits"`
 	SyncAggregate          *altair.SyncAggregate                 `json:"sync_aggregate"`
-	ExecutionPayloadHeader *electra.ExecutionPayloadHeader       `json:"execution_payload_header"`
+	ExecutionPayloadHeader *deneb.ExecutionPayloadHeader         `json:"execution_payload_header"`
 	BLSToExecutionChanges  []*capella.SignedBLSToExecutionChange `json:"bls_to_execution_changes"`
 	BlobKZGCommitments     []string                              `json:"blob_kzg_commitments"`
+	ExecutionRequests      *electra.ExecutionRequests            `json:"execution_requests"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -64,6 +65,7 @@ func (b *BlindedBeaconBlockBody) MarshalJSON() ([]byte, error) {
 		ExecutionPayloadHeader: b.ExecutionPayloadHeader,
 		BLSToExecutionChanges:  b.BLSToExecutionChanges,
 		BlobKZGCommitments:     blobKZGCommitments,
+		ExecutionRequests:      b.ExecutionRequests,
 	})
 }
 

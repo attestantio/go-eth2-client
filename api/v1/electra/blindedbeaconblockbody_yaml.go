@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"fmt"
 
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -36,9 +37,10 @@ type blindedBeaconBlockBodyYAML struct {
 	Deposits               []*phase0.Deposit                     `yaml:"deposits"`
 	VoluntaryExits         []*phase0.SignedVoluntaryExit         `yaml:"voluntary_exits"`
 	SyncAggregate          *altair.SyncAggregate                 `yaml:"sync_aggregate"`
-	ExecutionPayloadHeader *electra.ExecutionPayloadHeader       `yaml:"execution_payload_header"`
+	ExecutionPayloadHeader *deneb.ExecutionPayloadHeader         `yaml:"execution_payload_header"`
 	BLSToExecutionChanges  []*capella.SignedBLSToExecutionChange `yaml:"bls_to_execution_changes"`
 	BlobKZGCommitments     []string                              `yaml:"blob_kzg_commitments"`
+	ExecutionRequests      *electra.ExecutionRequests            `yaml:"execution_requests"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
@@ -61,6 +63,7 @@ func (b *BlindedBeaconBlockBody) MarshalYAML() ([]byte, error) {
 		ExecutionPayloadHeader: b.ExecutionPayloadHeader,
 		BLSToExecutionChanges:  b.BLSToExecutionChanges,
 		BlobKZGCommitments:     blobKZGCommitments,
+		ExecutionRequests:      b.ExecutionRequests,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

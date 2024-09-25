@@ -27,6 +27,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func slotptr(slot uint64) *phase0.Slot {
+	res := phase0.Slot(slot)
+	return &res
+}
+
 func TestAttestationPool(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -57,14 +62,14 @@ func TestAttestationPool(t *testing.T) {
 		{
 			name: "Empty",
 			opts: &api.AttestationPoolOpts{
-				Slot: 1,
+				Slot: slotptr(1),
 			},
 			expected: make([]*phase0.Attestation, 0),
 		},
 		{
 			name: "Current",
 			opts: &api.AttestationPoolOpts{
-				Slot: phase0.Slot(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / uint64(slotDuration.Seconds())),
+				Slot: slotptr(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / uint64(slotDuration.Seconds())),
 			},
 		},
 	}
