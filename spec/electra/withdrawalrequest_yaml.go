@@ -48,7 +48,7 @@ func (e *WithdrawalRequest) MarshalYAML() ([]byte, error) {
 func (e *WithdrawalRequest) UnmarshalYAML(input []byte) error {
 	// This is very inefficient, but YAML is only used for spec tests so we do this
 	// rather than maintain a custom YAML unmarshaller.
-	var unmarshaled withdrawalRequestYAML
+	var unmarshaled withdrawalRequestJSON
 	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
