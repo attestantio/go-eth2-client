@@ -60,7 +60,7 @@ type BeaconState struct {
 	EarliestExitEpoch             phase0.Epoch
 	ConsolidationBalanceToConsume phase0.Gwei
 	EarliestConsolidationEpoch    phase0.Epoch
-	PendingBalanceDeposits        []*PendingBalanceDeposit    `ssz-max:"134217728"`
+	PendingDeposits               []*PendingDeposit           `ssz-max:"134217728"`
 	PendingPartialWithdrawals     []*PendingPartialWithdrawal `ssz-max:"134217728"`
 	PendingConsolidations         []*PendingConsolidation     `ssz-max:"262144"`
 }

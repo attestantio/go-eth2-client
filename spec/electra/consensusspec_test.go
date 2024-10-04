@@ -148,7 +148,7 @@ func TestConsensusSpec(t *testing.T) {
 		},
 		{
 			name: "PendingBalanceDeposit",
-			s:    &electra.PendingBalanceDeposit{},
+			s:    &electra.PendingDeposit{},
 		},
 		{
 			name: "PendingConsolidation",
