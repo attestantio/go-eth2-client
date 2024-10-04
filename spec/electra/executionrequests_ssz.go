@@ -19,45 +19,45 @@ func (e *ExecutionRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 
 	// Offset (0) 'DepositRequests'
 	dst = ssz.WriteOffset(dst, offset)
-	offset += len(e.DepositRequests) * 192
+	offset += len(e.Deposits) * 192
 
 	// Offset (1) 'WithdrawalRequests'
 	dst = ssz.WriteOffset(dst, offset)
-	offset += len(e.WithdrawalRequests) * 76
+	offset += len(e.Withdrawals) * 76
 
 	// Offset (2) 'ConsolidationRequests'
 	dst = ssz.WriteOffset(dst, offset)
-	offset += len(e.ConsolidationRequests) * 116
+	offset += len(e.Consolidations) * 116
 
 	// Field (0) 'DepositRequests'
-	if size := len(e.DepositRequests); size > 8192 {
+	if size := len(e.Deposits); size > 8192 {
 		err = ssz.ErrListTooBigFn("ExecutionRequests.DepositRequests", size, 8192)
 		return
 	}
-	for ii := 0; ii < len(e.DepositRequests); ii++ {
-		if dst, err = e.DepositRequests[ii].MarshalSSZTo(dst); err != nil {
+	for ii := 0; ii < len(e.Deposits); ii++ {
+		if dst, err = e.Deposits[ii].MarshalSSZTo(dst); err != nil {
 			return
 		}
 	}
 
 	// Field (1) 'WithdrawalRequests'
-	if size := len(e.WithdrawalRequests); size > 16 {
+	if size := len(e.Withdrawals); size > 16 {
 		err = ssz.ErrListTooBigFn("ExecutionRequests.WithdrawalRequests", size, 16)
 		return
 	}
-	for ii := 0; ii < len(e.WithdrawalRequests); ii++ {
-		if dst, err = e.WithdrawalRequests[ii].MarshalSSZTo(dst); err != nil {
+	for ii := 0; ii < len(e.Withdrawals); ii++ {
+		if dst, err = e.Withdrawals[ii].MarshalSSZTo(dst); err != nil {
 			return
 		}
 	}
 
 	// Field (2) 'ConsolidationRequests'
-	if size := len(e.ConsolidationRequests); size > 1 {
+	if size := len(e.Consolidations); size > 1 {
 		err = ssz.ErrListTooBigFn("ExecutionRequests.ConsolidationRequests", size, 1)
 		return
 	}
-	for ii := 0; ii < len(e.ConsolidationRequests); ii++ {
-		if dst, err = e.ConsolidationRequests[ii].MarshalSSZTo(dst); err != nil {
+	for ii := 0; ii < len(e.Consolidations); ii++ {
+		if dst, err = e.Consolidations[ii].MarshalSSZTo(dst); err != nil {
 			return
 		}
 	}
@@ -102,12 +102,12 @@ func (e *ExecutionRequests) UnmarshalSSZ(buf []byte) error {
 		if err != nil {
 			return err
 		}
-		e.DepositRequests = make([]*DepositRequest, num)
+		e.Deposits = make([]*DepositRequest, num)
 		for ii := 0; ii < num; ii++ {
-			if e.DepositRequests[ii] == nil {
-				e.DepositRequests[ii] = new(DepositRequest)
+			if e.Deposits[ii] == nil {
+				e.Deposits[ii] = new(DepositRequest)
 			}
-			if err = e.DepositRequests[ii].UnmarshalSSZ(buf[ii*192 : (ii+1)*192]); err != nil {
+			if err = e.Deposits[ii].UnmarshalSSZ(buf[ii*192 : (ii+1)*192]); err != nil {
 				return err
 			}
 		}
@@ -120,12 +120,12 @@ func (e *ExecutionRequests) UnmarshalSSZ(buf []byte) error {
 		if err != nil {
 			return err
 		}
-		e.WithdrawalRequests = make([]*WithdrawalRequest, num)
+		e.Withdrawals = make([]*WithdrawalRequest, num)
 		for ii := 0; ii < num; ii++ {
-			if e.WithdrawalRequests[ii] == nil {
-				e.WithdrawalRequests[ii] = new(WithdrawalRequest)
+			if e.Withdrawals[ii] == nil {
+				e.Withdrawals[ii] = new(WithdrawalRequest)
 			}
-			if err = e.WithdrawalRequests[ii].UnmarshalSSZ(buf[ii*76 : (ii+1)*76]); err != nil {
+			if err = e.Withdrawals[ii].UnmarshalSSZ(buf[ii*76 : (ii+1)*76]); err != nil {
 				return err
 			}
 		}
@@ -138,12 +138,12 @@ func (e *ExecutionRequests) UnmarshalSSZ(buf []byte) error {
 		if err != nil {
 			return err
 		}
-		e.ConsolidationRequests = make([]*ConsolidationRequest, num)
+		e.Consolidations = make([]*ConsolidationRequest, num)
 		for ii := 0; ii < num; ii++ {
-			if e.ConsolidationRequests[ii] == nil {
-				e.ConsolidationRequests[ii] = new(ConsolidationRequest)
+			if e.Consolidations[ii] == nil {
+				e.Consolidations[ii] = new(ConsolidationRequest)
 			}
-			if err = e.ConsolidationRequests[ii].UnmarshalSSZ(buf[ii*116 : (ii+1)*116]); err != nil {
+			if err = e.Consolidations[ii].UnmarshalSSZ(buf[ii*116 : (ii+1)*116]); err != nil {
 				return err
 			}
 		}
@@ -156,13 +156,13 @@ func (e *ExecutionRequests) SizeSSZ() (size int) {
 	size = 12
 
 	// Field (0) 'DepositRequests'
-	size += len(e.DepositRequests) * 192
+	size += len(e.Deposits) * 192
 
 	// Field (1) 'WithdrawalRequests'
-	size += len(e.WithdrawalRequests) * 76
+	size += len(e.Withdrawals) * 76
 
 	// Field (2) 'ConsolidationRequests'
-	size += len(e.ConsolidationRequests) * 116
+	size += len(e.Consolidations) * 116
 
 	return
 }
@@ -179,12 +179,12 @@ func (e *ExecutionRequests) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	// Field (0) 'DepositRequests'
 	{
 		subIndx := hh.Index()
-		num := uint64(len(e.DepositRequests))
+		num := uint64(len(e.Deposits))
 		if num > 8192 {
 			err = ssz.ErrIncorrectListSize
 			return
 		}
-		for _, elem := range e.DepositRequests {
+		for _, elem := range e.Deposits {
 			if err = elem.HashTreeRootWith(hh); err != nil {
 				return
 			}
@@ -195,12 +195,12 @@ func (e *ExecutionRequests) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	// Field (1) 'WithdrawalRequests'
 	{
 		subIndx := hh.Index()
-		num := uint64(len(e.WithdrawalRequests))
+		num := uint64(len(e.Withdrawals))
 		if num > 16 {
 			err = ssz.ErrIncorrectListSize
 			return
 		}
-		for _, elem := range e.WithdrawalRequests {
+		for _, elem := range e.Withdrawals {
 			if err = elem.HashTreeRootWith(hh); err != nil {
 				return
 			}
@@ -211,12 +211,12 @@ func (e *ExecutionRequests) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	// Field (2) 'ConsolidationRequests'
 	{
 		subIndx := hh.Index()
-		num := uint64(len(e.ConsolidationRequests))
+		num := uint64(len(e.Consolidations))
 		if num > 1 {
 			err = ssz.ErrIncorrectListSize
 			return
 		}
-		for _, elem := range e.ConsolidationRequests {
+		for _, elem := range e.Consolidations {
 			if err = elem.HashTreeRootWith(hh); err != nil {
 				return
 			}

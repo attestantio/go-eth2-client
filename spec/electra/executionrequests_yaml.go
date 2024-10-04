@@ -23,17 +23,17 @@ import (
 
 // executionRequestsYAML is the spec representation of the struct.
 type executionRequestsYAML struct {
-	DepositRequests       []*DepositRequest       `yaml:"deposit_requests"`
-	WithdrawalRequests    []*WithdrawalRequest    `yaml:"withdrawal_requests"`
-	ConsolidationRequests []*ConsolidationRequest `yaml:"consolidation_requests"`
+	Deposits       []*DepositRequest       `yaml:"deposits"`
+	Withdrawals    []*WithdrawalRequest    `yaml:"withdrawals"`
+	Consolidations []*ConsolidationRequest `yaml:"consolidations"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
 func (e *ExecutionRequests) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&executionRequestsYAML{
-		DepositRequests:       e.DepositRequests,
-		WithdrawalRequests:    e.WithdrawalRequests,
-		ConsolidationRequests: e.ConsolidationRequests,
+		Deposits:       e.Deposits,
+		Withdrawals:    e.Withdrawals,
+		Consolidations: e.Consolidations,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
