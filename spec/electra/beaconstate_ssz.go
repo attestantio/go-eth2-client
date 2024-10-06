@@ -205,7 +205,7 @@ func (b *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 
 	// Offset (34) 'PendingBalanceDeposits'
 	dst = ssz.WriteOffset(dst, offset)
-	offset += len(b.PendingBalanceDeposits) * 16
+	offset += len(b.PendingDeposits) * 192
 
 	// Offset (35) 'PendingPartialWithdrawals'
 	dst = ssz.WriteOffset(dst, offset)
@@ -299,12 +299,12 @@ func (b *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 
 	// Field (34) 'PendingBalanceDeposits'
-	if size := len(b.PendingBalanceDeposits); size > 134217728 {
+	if size := len(b.PendingDeposits); size > 134217728 {
 		err = ssz.ErrListTooBigFn("BeaconState.PendingBalanceDeposits", size, 134217728)
 		return
 	}
-	for ii := 0; ii < len(b.PendingBalanceDeposits); ii++ {
-		if dst, err = b.PendingBalanceDeposits[ii].MarshalSSZTo(dst); err != nil {
+	for ii := 0; ii < len(b.PendingDeposits); ii++ {
+		if dst, err = b.PendingDeposits[ii].MarshalSSZTo(dst); err != nil {
 			return
 		}
 	}
@@ -672,16 +672,16 @@ func (b *BeaconState) UnmarshalSSZ(buf []byte) error {
 	// Field (34) 'PendingBalanceDeposits'
 	{
 		buf = tail[o34:o35]
-		num, err := ssz.DivideInt2(len(buf), 16, 134217728)
+		num, err := ssz.DivideInt2(len(buf), 192, 134217728)
 		if err != nil {
 			return err
 		}
-		b.PendingBalanceDeposits = make([]*PendingBalanceDeposit, num)
+		b.PendingDeposits = make([]*PendingDeposit, num)
 		for ii := 0; ii < num; ii++ {
-			if b.PendingBalanceDeposits[ii] == nil {
-				b.PendingBalanceDeposits[ii] = new(PendingBalanceDeposit)
+			if b.PendingDeposits[ii] == nil {
+				b.PendingDeposits[ii] = new(PendingDeposit)
 			}
-			if err = b.PendingBalanceDeposits[ii].UnmarshalSSZ(buf[ii*16 : (ii+1)*16]); err != nil {
+			if err = b.PendingDeposits[ii].UnmarshalSSZ(buf[ii*192 : (ii+1)*192]); err != nil {
 				return err
 			}
 		}
@@ -760,7 +760,7 @@ func (b *BeaconState) SizeSSZ() (size int) {
 	size += len(b.HistoricalSummaries) * 64
 
 	// Field (34) 'PendingBalanceDeposits'
-	size += len(b.PendingBalanceDeposits) * 16
+	size += len(b.PendingDeposits) * 192
 
 	// Field (35) 'PendingPartialWithdrawals'
 	size += len(b.PendingPartialWithdrawals) * 24
@@ -1069,12 +1069,12 @@ func (b *BeaconState) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	// Field (34) 'PendingBalanceDeposits'
 	{
 		subIndx := hh.Index()
-		num := uint64(len(b.PendingBalanceDeposits))
+		num := uint64(len(b.PendingDeposits))
 		if num > 134217728 {
 			err = ssz.ErrIncorrectListSize
 			return
 		}
-		for _, elem := range b.PendingBalanceDeposits {
+		for _, elem := range b.PendingDeposits {
 			if err = elem.HashTreeRootWith(hh); err != nil {
 				return
 			}

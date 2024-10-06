@@ -21,9 +21,9 @@ import (
 
 // ExecutionRequests represents an execution layer payload.
 type ExecutionRequests struct {
-	DepositRequests       []*DepositRequest       `ssz-max:"8192"`
-	WithdrawalRequests    []*WithdrawalRequest    `ssz-max:"16"`
-	ConsolidationRequests []*ConsolidationRequest `ssz-max:"1"`
+	Deposits       []*DepositRequest       `ssz-max:"8192"`
+	Withdrawals    []*WithdrawalRequest    `ssz-max:"16"`
+	Consolidations []*ConsolidationRequest `ssz-max:"1"`
 }
 
 // String returns a string version of the structure.

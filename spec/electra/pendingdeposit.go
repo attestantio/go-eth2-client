@@ -20,14 +20,17 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-// PendingBalanceDeposit represents a pending balance deposit.
-type PendingBalanceDeposit struct {
-	Index  phase0.ValidatorIndex
-	Amount phase0.Gwei
+// PendingDeposit represents a pending balance deposit.
+type PendingDeposit struct {
+	Pubkey                phase0.BLSPubKey `ssz-size:"48"`
+	WithdrawalCredentials []byte           `ssz-size:"32"`
+	Amount                phase0.Gwei
+	Signature             phase0.BLSSignature `ssz-size:"96"`
+	Slot                  phase0.Slot
 }
 
 // String returns a string version of the structure.
-func (p *PendingBalanceDeposit) String() string {
+func (p *PendingDeposit) String() string {
 	data, err := yaml.Marshal(p)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)

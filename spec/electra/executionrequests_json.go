@@ -23,17 +23,17 @@ import (
 
 // executionRequestsJSON is the spec representation of the struct.
 type executionRequestsJSON struct {
-	DepositRequests       []*DepositRequest       `json:"deposit_requests"`
-	WithdrawalRequests    []*WithdrawalRequest    `json:"withdrawal_requests"`
-	ConsolidationRequests []*ConsolidationRequest `json:"consolidation_requests"`
+	Deposits       []*DepositRequest       `json:"deposits"`
+	Withdrawals    []*WithdrawalRequest    `json:"withdrawals"`
+	Consolidations []*ConsolidationRequest `json:"consolidations"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (e *ExecutionRequests) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&executionRequestsJSON{
-		DepositRequests:       e.DepositRequests,
-		WithdrawalRequests:    e.WithdrawalRequests,
-		ConsolidationRequests: e.ConsolidationRequests,
+		Deposits:       e.Deposits,
+		Withdrawals:    e.Withdrawals,
+		Consolidations: e.Consolidations,
 	})
 }
 
@@ -44,29 +44,29 @@ func (e *ExecutionRequests) UnmarshalJSON(input []byte) error {
 		return err
 	}
 
-	if err := json.Unmarshal(raw["deposit_requests"], &e.DepositRequests); err != nil {
-		return errors.Wrap(err, "deposit_requests")
+	if err := json.Unmarshal(raw["deposits"], &e.Deposits); err != nil {
+		return errors.Wrap(err, "deposits")
 	}
-	for i := range e.DepositRequests {
-		if e.DepositRequests[i] == nil {
-			return fmt.Errorf("deposit receipts entry %d missing", i)
+	for i := range e.Deposits {
+		if e.Deposits[i] == nil {
+			return fmt.Errorf("deposits entry %d missing", i)
 		}
 	}
 
-	if err := json.Unmarshal(raw["withdrawal_requests"], &e.WithdrawalRequests); err != nil {
-		return errors.Wrap(err, "withdrawal_requests")
+	if err := json.Unmarshal(raw["withdrawals"], &e.Withdrawals); err != nil {
+		return errors.Wrap(err, "withdrawals")
 	}
-	for i := range e.WithdrawalRequests {
-		if e.WithdrawalRequests[i] == nil {
-			return fmt.Errorf("withdraw requests entry %d missing", i)
+	for i := range e.Withdrawals {
+		if e.Withdrawals[i] == nil {
+			return fmt.Errorf("withdrawals entry %d missing", i)
 		}
 	}
 
-	if err := json.Unmarshal(raw["consolidation_requests"], &e.ConsolidationRequests); err != nil {
-		return errors.Wrap(err, "consolidation_requests")
+	if err := json.Unmarshal(raw["consolidations"], &e.Consolidations); err != nil {
+		return errors.Wrap(err, "consolidations")
 	}
-	for i := range e.ConsolidationRequests {
-		if e.ConsolidationRequests[i] == nil {
+	for i := range e.Consolidations {
+		if e.Consolidations[i] == nil {
 			return fmt.Errorf("consolidation requests entry %d missing", i)
 		}
 	}

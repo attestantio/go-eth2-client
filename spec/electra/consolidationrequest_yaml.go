@@ -48,7 +48,7 @@ func (e *ConsolidationRequest) MarshalYAML() ([]byte, error) {
 func (e *ConsolidationRequest) UnmarshalYAML(input []byte) error {
 	// This is very inefficient, but YAML is only used for spec tests so we do this
 	// rather than maintain a custom YAML unmarshaller.
-	var unmarshaled consolidationRequestYAML
+	var unmarshaled consolidationRequestJSON
 	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
