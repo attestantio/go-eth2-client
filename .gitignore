@@ -17,5 +17,11 @@ coverage.html
 # Vim
 *.sw?
 
+# IntelliJ and friends
+.idea/
+
+# Makefile
+Makefile
+
 # Local TODO
 TODO.md
