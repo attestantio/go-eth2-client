@@ -189,6 +189,10 @@ func (b *BlindedBeaconBlockBody) unpack(data *blindedBeaconBlockBodyJSON) error 
 		}
 		copy(b.BlobKZGCommitments[i][:], data)
 	}
+	if data.ExecutionRequests == nil {
+		return errors.New("execution requests missing")
+	}
+	b.ExecutionRequests = data.ExecutionRequests
 
 	return nil
 }
