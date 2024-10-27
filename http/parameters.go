@@ -15,6 +15,7 @@ package http
 
 import (
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/attestantio/go-eth2-client/metrics"
@@ -34,6 +35,7 @@ type parameters struct {
 	hooks              *Hooks
 	reducedMemoryUsage bool
 	customSpecSupport  bool
+	client             *http.Client
 }
 
 // Parameter is the interface for service parameters.
@@ -131,6 +133,14 @@ func WithReducedMemoryUsage(reducedMemoryUsage bool) Parameter {
 func WithCustomSpecSupport(customSpecSupport bool) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.customSpecSupport = customSpecSupport
+	})
+}
+
+// WithHTTPClient provides a custom HTTP client for communication with the HTTP server.
+// If not supplied then a standard HTTP client is used.
+func WithHTTPClient(client *http.Client) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.client = client
 	})
 }
 
