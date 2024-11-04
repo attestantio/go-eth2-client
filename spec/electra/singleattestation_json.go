@@ -17,6 +17,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -57,9 +58,19 @@ func (a *SingleAttestation) unpack(singleAttestationJSON *singleAttestationJSON)
 	if singleAttestationJSON.CommitteeIndex == "" {
 		return errors.New("committee index missing")
 	}
+	committeeIndex, err := strconv.ParseUint(singleAttestationJSON.CommitteeIndex, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for committee index")
+	}
+	a.CommitteeIndex = phase0.CommitteeIndex(committeeIndex)
 	if singleAttestationJSON.AttesterIndex == "" {
 		return errors.New("attester index missing")
 	}
+	attesterIndex, err := strconv.ParseUint(singleAttestationJSON.AttesterIndex, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for attester index")
+	}
+	a.AttesterIndex = phase0.ValidatorIndex(attesterIndex)
 	a.Data = singleAttestationJSON.Data
 	if a.Data == nil {
 		return errors.New("data missing")
