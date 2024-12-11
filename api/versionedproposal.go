@@ -451,6 +451,36 @@ func (v *VersionedProposal) Timestamp() (uint64, error) {
 	}
 }
 
+// GasLimit returns the gas limit of the proposal.
+func (v *VersionedProposal) GasLimit() (uint64, error) {
+	if v.Version >= spec.DataVersionBellatrix && !v.payloadPresent() {
+		return 0, ErrDataMissing
+	}
+
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Blinded {
+			return v.BellatrixBlinded.Body.ExecutionPayloadHeader.GasLimit, nil
+		}
+
+		return v.Bellatrix.Body.ExecutionPayload.GasLimit, nil
+	case spec.DataVersionCapella:
+		if v.Blinded {
+			return v.CapellaBlinded.Body.ExecutionPayloadHeader.GasLimit, nil
+		}
+
+		return v.Capella.Body.ExecutionPayload.GasLimit, nil
+	case spec.DataVersionDeneb:
+		if v.Blinded {
+			return v.DenebBlinded.Body.ExecutionPayloadHeader.GasLimit, nil
+		}
+
+		return v.Deneb.Block.Body.ExecutionPayload.GasLimit, nil
+	default:
+		return 0, ErrUnsupportedVersion
+	}
+}
+
 // Blobs returns the blobs of the proposal.
 func (v *VersionedProposal) Blobs() ([]deneb.Blob, error) {
 	if v.Version >= spec.DataVersionDeneb && !v.payloadPresent() {
