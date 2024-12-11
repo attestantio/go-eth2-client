@@ -57,8 +57,17 @@ func (s *Service) SubmitBlindedBeaconBlock(ctx context.Context, block *api.Versi
 		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
-	_, err = s.post(ctx, "/eth/v1/beacon/blinded_blocks", bytes.NewBuffer(specJSON))
-	if err != nil {
+	endpoint := "/eth/v1/beacon/blinded_blocks"
+	query := ""
+
+	if _, err := s.post(ctx,
+		endpoint,
+		query,
+		&api.CommonOpts{},
+		bytes.NewReader(specJSON),
+		ContentTypeJSON,
+		map[string]string{},
+	); err != nil {
 		return errors.Join(errors.New("failed to submit blinded beacon block"), err)
 	}
 

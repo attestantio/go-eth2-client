@@ -59,7 +59,7 @@ func (s *Service) ValidatorBalances(ctx context.Context,
 		return nil, errors.Join(errors.New("failed to marshal request data"), err)
 	}
 
-	httpResponse, err := s.post2(ctx, endpoint, query, &opts.Common, bytes.NewReader(data), ContentTypeJSON, map[string]string{})
+	httpResponse, err := s.post(ctx, endpoint, query, &opts.Common, bytes.NewReader(data), ContentTypeJSON, map[string]string{})
 	if err != nil {
 		return nil, err
 	}

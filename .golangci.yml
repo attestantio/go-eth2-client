@@ -181,7 +181,6 @@ linters:
     - cyclop
     - depguard
     - dupl
-    - execinquery
     - exhaustive
     - exhaustruct
     - exportloopref
@@ -193,13 +192,13 @@ linters:
     - gocognit
     - goconst
     - err113
-    - gomnd
     - ireturn
     - lll
     - maintidx
     - mnd
     - musttag
     - perfsprint
+    - recvcheck
     - varnamelen
     - wrapcheck
     - wsl
