@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
@@ -29,13 +30,22 @@ func (s *Service) SubmitProposalPreparations(ctx context.Context, preparations [
 		return err
 	}
 
-	var reqBodyReader bytes.Buffer
-	if err := json.NewEncoder(&reqBodyReader).Encode(preparations); err != nil {
+	specJSON, err := json.Marshal(preparations)
+	if err != nil {
 		return errors.Join(errors.New("failed to encode proposal preparations"), err)
 	}
 
-	_, err := s.post(ctx, "/eth/v1/validator/prepare_beacon_proposer", &reqBodyReader)
-	if err != nil {
+	endpoint := "/eth/v1/validator/prepare_beacon_proposer"
+	query := ""
+
+	if _, err := s.post(ctx,
+		endpoint,
+		query,
+		&api.CommonOpts{},
+		bytes.NewReader(specJSON),
+		ContentTypeJSON,
+		map[string]string{},
+	); err != nil {
 		return errors.Join(errors.New("failed to send proposal preparations"), err)
 	}
 

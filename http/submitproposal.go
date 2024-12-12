@@ -52,7 +52,7 @@ func (s *Service) SubmitProposal(ctx context.Context,
 
 	headers := make(map[string]string)
 	headers["Eth-Consensus-Version"] = strings.ToLower(opts.Proposal.Version.String())
-	_, err = s.post2(ctx, endpoint, query, &opts.Common, bytes.NewBuffer(body), contentType, headers)
+	_, err = s.post(ctx, endpoint, query, &opts.Common, bytes.NewBuffer(body), contentType, headers)
 	if err != nil {
 		return errors.Join(errors.New("failed to submit proposal"), err)
 	}
