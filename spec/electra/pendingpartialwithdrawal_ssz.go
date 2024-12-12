@@ -18,7 +18,7 @@ func (p *PendingPartialWithdrawal) MarshalSSZTo(buf []byte) (dst []byte, err err
 	dst = buf
 
 	// Field (0) 'Index'
-	dst = ssz.MarshalUint64(dst, uint64(p.Index))
+	dst = ssz.MarshalUint64(dst, uint64(p.ValidatorIndex))
 
 	// Field (1) 'Amount'
 	dst = ssz.MarshalUint64(dst, uint64(p.Amount))
@@ -38,7 +38,7 @@ func (p *PendingPartialWithdrawal) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (0) 'Index'
-	p.Index = phase0.ValidatorIndex(ssz.UnmarshallUint64(buf[0:8]))
+	p.ValidatorIndex = phase0.ValidatorIndex(ssz.UnmarshallUint64(buf[0:8]))
 
 	// Field (1) 'Amount'
 	p.Amount = phase0.Gwei(ssz.UnmarshallUint64(buf[8:16]))
@@ -65,7 +65,7 @@ func (p *PendingPartialWithdrawal) HashTreeRootWith(hh ssz.HashWalker) (err erro
 	indx := hh.Index()
 
 	// Field (0) 'Index'
-	hh.PutUint64(uint64(p.Index))
+	hh.PutUint64(uint64(p.ValidatorIndex))
 
 	// Field (1) 'Amount'
 	hh.PutUint64(uint64(p.Amount))
