@@ -67,7 +67,7 @@ func (d *DataVersion) UnmarshalJSON(input []byte) error {
 		*d = DataVersionCapella
 	case `"deneb"`:
 		*d = DataVersionDeneb
-	case `"electra"`:
+	case `"electra"`, `"fulu"`:
 		*d = DataVersionElectra
 	default:
 		err = fmt.Errorf("unrecognised data version %s", string(input))
