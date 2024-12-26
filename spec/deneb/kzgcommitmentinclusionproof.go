@@ -25,7 +25,7 @@ import (
 const kzgCommitmentProofElementLength = 32
 
 // kzgCommitmentProofElements is the number of element in the proof.
-const kzgCommitmentProofElements = 17
+const kzgCommitmentProofElements = 8
 
 // KZGCommitmentInclusionProof is the proof of inclusion for a KZG commitment.
 type KZGCommitmentInclusionProof [kzgCommitmentProofElements][kzgCommitmentProofElementLength]byte
@@ -81,7 +81,7 @@ func (k *KZGCommitmentInclusionProof) MarshalJSON() ([]byte, error) {
 	}
 
 	return []byte(
-		fmt.Sprintf(`["%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x"]`,
+		fmt.Sprintf(`["%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x"]`,
 			k[0],
 			k[1],
 			k[2],
@@ -90,15 +90,6 @@ func (k *KZGCommitmentInclusionProof) MarshalJSON() ([]byte, error) {
 			k[5],
 			k[6],
 			k[7],
-			k[8],
-			k[9],
-			k[10],
-			k[11],
-			k[12],
-			k[13],
-			k[14],
-			k[15],
-			k[16],
 		)), nil
 }
 
@@ -149,7 +140,7 @@ func (k *KZGCommitmentInclusionProof) unmarshalElementYAML(element int, input []
 // MarshalYAML implements yaml.Marshaler.
 func (k KZGCommitmentInclusionProof) MarshalYAML() ([]byte, error) {
 	return []byte(
-		fmt.Sprintf(`["%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x"]`,
+		fmt.Sprintf(`["%#x","%#x","%#x","%#x","%#x","%#x","%#x","%#x"`,
 			k[0],
 			k[1],
 			k[2],
@@ -158,14 +149,5 @@ func (k KZGCommitmentInclusionProof) MarshalYAML() ([]byte, error) {
 			k[5],
 			k[6],
 			k[7],
-			k[8],
-			k[9],
-			k[10],
-			k[11],
-			k[12],
-			k[13],
-			k[14],
-			k[15],
-			k[16],
 		)), nil
 }
