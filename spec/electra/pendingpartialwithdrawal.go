@@ -22,7 +22,7 @@ import (
 
 // PendingPartialWithdrawal represents a pending partial withdrawal.
 type PendingPartialWithdrawal struct {
-	Index             phase0.ValidatorIndex
+	ValidatorIndex    phase0.ValidatorIndex
 	Amount            phase0.Gwei
 	WithdrawableEpoch phase0.Epoch
 }

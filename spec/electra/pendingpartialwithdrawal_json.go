@@ -23,7 +23,7 @@ import (
 
 // pendingPartialWithdrawalJSON is the spec representation of the struct.
 type pendingPartialWithdrawalJSON struct {
-	Index             phase0.ValidatorIndex `json:"index"`
+	ValidatorIndex    phase0.ValidatorIndex `json:"validator_index"`
 	Amount            phase0.Gwei           `json:"amount"`
 	WithdrawableEpoch phase0.Epoch          `json:"withdrawable_epoch"`
 }
@@ -31,7 +31,7 @@ type pendingPartialWithdrawalJSON struct {
 // MarshalJSON implements json.Marshaler.
 func (p *PendingPartialWithdrawal) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&pendingPartialWithdrawalJSON{
-		Index:             p.Index,
+		ValidatorIndex:    p.ValidatorIndex,
 		Amount:            p.Amount,
 		WithdrawableEpoch: p.WithdrawableEpoch,
 	})
@@ -44,8 +44,8 @@ func (p *PendingPartialWithdrawal) UnmarshalJSON(input []byte) error {
 		return err
 	}
 
-	if err := p.Index.UnmarshalJSON(raw["index"]); err != nil {
-		return errors.Wrap(err, "index")
+	if err := p.ValidatorIndex.UnmarshalJSON(raw["validator_index"]); err != nil {
+		return errors.Wrap(err, "validator_index")
 	}
 	if err := p.Amount.UnmarshalJSON(raw["amount"]); err != nil {
 		return errors.Wrap(err, "amount")
