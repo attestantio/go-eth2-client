@@ -142,6 +142,24 @@ func (v *VersionedAttestation) CommitteeBits() (bitfield.Bitvector64, error) {
 	}
 }
 
+// CommitteeIndex returns the index if only one bit is set, otherwise error.
+func (v *VersionedAttestation) CommitteeIndex() (phase0.CommitteeIndex, error) {
+	bits, err := v.CommitteeBits()
+	if err != nil {
+		return 0, err
+	}
+
+	if len(bits.BitIndices()) == 0 {
+		return 0, errors.New("no committee index found in committee bits")
+	}
+	if len(bits.BitIndices()) > 1 {
+		return 0, errors.New("multiple committee indices found in committee bits")
+	}
+	foundIndex := phase0.CommitteeIndex(bits.BitIndices()[0])
+
+	return foundIndex, nil
+}
+
 // Signature returns the signature of the attestation.
 func (v *VersionedAttestation) Signature() (phase0.BLSSignature, error) {
 	switch v.Version {

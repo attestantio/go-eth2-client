@@ -31,8 +31,11 @@ import (
 type Attestation struct {
 	AggregationBits bitfield.Bitlist `ssz-max:"131072"`
 	Data            *phase0.AttestationData
-	Signature       phase0.BLSSignature  `ssz-size:"96"`
-	CommitteeBits   bitfield.Bitvector64 `dynssz-size:"MAX_COMMITTEES_PER_SLOT/8" ssz-size:"8"`
+	Signature       phase0.BLSSignature `ssz-size:"96"`
+	// TODO: Check dynssz-size is correct as the spec states this to be of size MAX_COMMITTEES_PER_SLOT.
+	// I suspect this could be a bit to byte conversion, but wanted to make sure.
+	// https://github.com/ethereum/consensus-specs/blob/dev/specs/electra/beacon-chain.md#attestation
+	CommitteeBits bitfield.Bitvector64 `dynssz-size:"MAX_COMMITTEES_PER_SLOT/8" ssz-size:"8"`
 }
 
 // attestationJSON is a raw representation of the struct.

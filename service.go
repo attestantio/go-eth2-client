@@ -211,6 +211,12 @@ type AttestationsSubmitter interface {
 	SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error
 }
 
+// VersionedAttestationsSubmitter is the interface for submitting versioned attestations.
+type VersionedAttestationsSubmitter interface {
+	// SubmitVersionedAttestations submits attestations.
+	SubmitVersionedAttestations(ctx context.Context, opts *api.SubmitAttestationsOpts) error
+}
+
 // AttesterSlashingSubmitter is the interface for submitting attester slashings.
 type AttesterSlashingSubmitter interface {
 	// SubmitAttesterSlashing submits an attester slashing

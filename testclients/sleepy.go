@@ -251,6 +251,17 @@ func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*phase0.
 	return next.SubmitAttestations(ctx, attestations)
 }
 
+// SubmitVersionedAttestations submits versioned attestations.
+func (s *Sleepy) SubmitVersionedAttestations(ctx context.Context, opts *api.SubmitAttestationsOpts) error {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.VersionedAttestationsSubmitter)
+	if !isNext {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitVersionedAttestations(ctx, opts)
+}
+
 // AttesterDuties obtains attester duties.
 // If validatorIndices is nil it will return all duties for the given epoch.
 func (s *Sleepy) AttesterDuties(ctx context.Context,
