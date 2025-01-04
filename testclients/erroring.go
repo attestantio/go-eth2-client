@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2023 Attestant Limited.
+// Copyright © 2021 - 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -910,4 +910,58 @@ func (s *Erroring) ForkChoice(ctx context.Context,
 	}
 
 	return next.ForkChoice(ctx, opts)
+}
+
+// AttestationRewards provides rewards to the given validators for attesting.
+func (s *Erroring) AttestationRewards(ctx context.Context,
+	opts *api.AttestationRewardsOpts,
+) (
+	*api.Response[*apiv1.AttestationRewards],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.AttestationRewardsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.AttestationRewards(ctx, opts)
+}
+
+// BlockRewards provides rewards for proposing a block.
+func (s *Erroring) BlockRewards(ctx context.Context,
+	opts *api.BlockRewardsOpts,
+) (
+	*api.Response[*apiv1.BlockRewards],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.BlockRewardsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.BlockRewards(ctx, opts)
+}
+
+// SyncCommitteeRewards provides rewards to the given validators for being members of a sync committee.
+func (s *Erroring) SyncCommitteeRewards(ctx context.Context,
+	opts *api.SyncCommitteeRewardsOpts,
+) (
+	*api.Response[[]*apiv1.SyncCommitteeReward],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.SyncCommitteeRewardsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.SyncCommitteeRewards(ctx, opts)
 }

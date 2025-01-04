@@ -194,6 +194,17 @@ type AttestationPoolProvider interface {
 	)
 }
 
+// AttestationRewardsProvider is the interface for providing attestation rewards.
+type AttestationRewardsProvider interface {
+	// AttestationRewards provides rewards to the given validators for attesting.
+	AttestationRewards(ctx context.Context,
+		opts *api.AttestationRewardsOpts,
+	) (
+		*api.Response[*apiv1.AttestationRewards],
+		error,
+	)
+}
+
 // AttestationsSubmitter is the interface for submitting attestations.
 type AttestationsSubmitter interface {
 	// SubmitAttestations submits attestations.
@@ -213,6 +224,17 @@ type AttesterDutiesProvider interface {
 		opts *api.AttesterDutiesOpts,
 	) (
 		*api.Response[[]*apiv1.AttesterDuty],
+		error,
+	)
+}
+
+// BlockRewardsProvider is the interface for providing block rewards.
+type BlockRewardsProvider interface {
+	// BlockRewards provides rewards for proposing a block.
+	BlockRewards(ctx context.Context,
+		opts *api.BlockRewardsOpts,
+	) (
+		*api.Response[*apiv1.BlockRewards],
 		error,
 	)
 }
@@ -267,6 +289,17 @@ type SyncCommitteeContributionProvider interface {
 type SyncCommitteeContributionsSubmitter interface {
 	// SubmitSyncCommitteeContributions submits sync committee contributions.
 	SubmitSyncCommitteeContributions(ctx context.Context, contributionAndProofs []*altair.SignedContributionAndProof) error
+}
+
+// SyncCommitteeRewardsProvider is the interface for providing sync committee rewards.
+type SyncCommitteeRewardsProvider interface {
+	// SyncCommitteeRewards provides rewards to the given validators for being members of a sync committee.
+	SyncCommitteeRewards(ctx context.Context,
+		opts *api.SyncCommitteeRewardsOpts,
+	) (
+		*api.Response[[]*apiv1.SyncCommitteeReward],
+		error,
+	)
 }
 
 // BLSToExecutionChangesSubmitter is the interface for submitting BLS to execution address changes.
