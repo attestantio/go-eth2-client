@@ -151,7 +151,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 			err = response.Data.Electra.UnmarshalSSZ(res.body)
 		}
 		if err != nil {
-			return nil, errors.Join(errors.New("failed to decode deneb signed block contents"), err)
+			return nil, errors.Join(errors.New("failed to decode electra signed block contents"), err)
 		}
 	default:
 		return nil, fmt.Errorf("unhandled block version %s", res.consensusVersion)

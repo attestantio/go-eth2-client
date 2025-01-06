@@ -95,18 +95,21 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		}
 	}
 
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			DialContext: (&net.Dialer{
-				Timeout:   parameters.timeout,
-				KeepAlive: 30 * time.Second,
-				DualStack: true,
-			}).DialContext,
-			MaxIdleConns:        64,
-			MaxConnsPerHost:     64,
-			MaxIdleConnsPerHost: 64,
-			IdleConnTimeout:     600 * time.Second,
-		},
+	httpClient := parameters.client
+	if httpClient == nil {
+		httpClient = &http.Client{
+			Transport: &http.Transport{
+				DialContext: (&net.Dialer{
+					Timeout:   parameters.timeout,
+					KeepAlive: 30 * time.Second,
+					DualStack: true,
+				}).DialContext,
+				MaxIdleConns:        64,
+				MaxConnsPerHost:     64,
+				MaxIdleConnsPerHost: 64,
+				IdleConnTimeout:     600 * time.Second,
+			},
+		}
 	}
 
 	base, address, err := parseAddress(parameters.address)

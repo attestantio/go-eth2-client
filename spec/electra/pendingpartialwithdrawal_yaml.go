@@ -24,7 +24,7 @@ import (
 
 // pendingPartialWithdrawalYAML is the spec representation of the struct.
 type pendingPartialWithdrawalYAML struct {
-	Index             phase0.ValidatorIndex `yaml:"index"`
+	ValidatorIndex    phase0.ValidatorIndex `yaml:"validator_index"`
 	Amount            phase0.Gwei           `yaml:"amount"`
 	WithdrawableEpoch phase0.Epoch          `yaml:"withdrawable_epoch"`
 }
@@ -32,7 +32,7 @@ type pendingPartialWithdrawalYAML struct {
 // MarshalYAML implements yaml.Marshaler.
 func (p *PendingPartialWithdrawal) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&pendingPartialWithdrawalYAML{
-		Index:             p.Index,
+		ValidatorIndex:    p.ValidatorIndex,
 		Amount:            p.Amount,
 		WithdrawableEpoch: p.WithdrawableEpoch,
 	}, yaml.Flow(true))
