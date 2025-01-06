@@ -84,7 +84,7 @@ func WithIndexChunkSize(indexChunkSize int) Parameter {
 	})
 }
 
-// WithPubKeyChunkSize sets the maximum number of public kyes to send for individual validator requests.
+// WithPubKeyChunkSize sets the maximum number of public keys to send for individual validator requests.
 func WithPubKeyChunkSize(pubKeyChunkSize int) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.pubKeyChunkSize = pubKeyChunkSize

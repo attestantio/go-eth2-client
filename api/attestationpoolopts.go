@@ -23,7 +23,7 @@ type AttestationPoolOpts struct {
 	// data for all slots will be obtained.
 	Slot *phase0.Slot
 
-	// CommmitteeIndex is the committee index for which the data is obtained.
+	// CommitteeIndex is the committee index for which the data is obtained.
 	// If not present then data for all committee indices will be obtained.
 	CommitteeIndex *phase0.CommitteeIndex
 }

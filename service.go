@@ -253,7 +253,7 @@ type DepositContractProvider interface {
 // SyncCommitteeDutiesProvider is the interface for providing sync committee duties.
 type SyncCommitteeDutiesProvider interface {
 	// SyncCommitteeDuties obtains sync committee duties.
-	// If validatorIndicess is nil it will return all duties for the given epoch.
+	// If validatorIndices is nil it will return all duties for the given epoch.
 	SyncCommitteeDuties(ctx context.Context,
 		opts *api.SyncCommitteeDutiesOpts,
 	) (

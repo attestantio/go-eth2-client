@@ -100,7 +100,7 @@ func TestInterfaces(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	// Standard interfacs.
+	// Standard interfaces.
 	assert.Implements(t, (*client.AggregateAttestationProvider)(nil), s)
 	assert.Implements(t, (*client.AggregateAttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttestationDataProvider)(nil), s)

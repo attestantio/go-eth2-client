@@ -173,7 +173,7 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockNumber() (uint64, error) {
 	}
 }
 
-// ExecutionTransactions returs the execution payload transactions for the block.
+// ExecutionTransactions returns the execution payload transactions for the block.
 func (v *VersionedSignedBeaconBlock) ExecutionTransactions() ([]bellatrix.Transaction, error) {
 	switch v.Version {
 	case DataVersionPhase0:

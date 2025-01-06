@@ -319,7 +319,7 @@ func (s *Erroring) SubmitSyncCommitteeMessages(ctx context.Context, messages []*
 }
 
 // AttesterDuties obtains attester duties.
-// If validatorIndicess is nil it will return all duties for the given epoch.
+// If validatorIndices is nil it will return all duties for the given epoch.
 func (s *Erroring) AttesterDuties(ctx context.Context,
 	opts *api.AttesterDutiesOpts,
 ) (
@@ -678,7 +678,7 @@ func (s *Erroring) SyncCommitteeContribution(ctx context.Context,
 }
 
 // SyncCommitteeDuties obtains sync committee duties.
-// If validatorIndicess is nil it will return all duties for the given epoch.
+// If validatorIndices is nil it will return all duties for the given epoch.
 func (s *Erroring) SyncCommitteeDuties(ctx context.Context,
 	opts *api.SyncCommitteeDutiesOpts,
 ) (

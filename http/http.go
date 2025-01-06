@@ -274,7 +274,7 @@ func (s *Service) get(ctx context.Context,
 		case errors.Is(err, context.DeadlineExceeded):
 			// We don't consider context deadline exceeded to be a potential connection issue, as the user selected the deadline.
 		case strings.HasSuffix(callURL.String(), "/node/syncing"):
-			// Special case; if we have called the syncing endpoint and it failed then we don't check the connectino status, as
+			// Special case; if we have called the syncing endpoint and it failed then we don't check the connection status, as
 			// that calls the syncing endpoint itself and so we find ourselves in an endless loop.
 		default:
 			// We consider other errors to be potential connection issues.
