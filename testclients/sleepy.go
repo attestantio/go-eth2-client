@@ -252,7 +252,7 @@ func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*phase0.
 }
 
 // AttesterDuties obtains attester duties.
-// If validatorIndicess is nil it will return all duties for the given epoch.
+// If validatorIndices is nil it will return all duties for the given epoch.
 func (s *Sleepy) AttesterDuties(ctx context.Context,
 	opts *api.AttesterDutiesOpts,
 ) (

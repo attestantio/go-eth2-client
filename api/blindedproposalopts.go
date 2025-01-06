@@ -23,7 +23,7 @@ type BlindedProposalOpts struct {
 	Slot phase0.Slot
 	// RandaoReveal is the RANDAO reveal for the proposal.
 	RandaoReveal phase0.BLSSignature
-	// Graffit is the graffiti to be included in the beacon block body.
+	// Graffiti is the graffiti to be included in the beacon block body.
 	Graffiti [32]byte
 	// SkipRandaoVerification is true if we do not want the server to verify our RANDAO reveal.
 	// If this is set then the RANDAO reveal should be passed as the point at infinity (0xc0…00)

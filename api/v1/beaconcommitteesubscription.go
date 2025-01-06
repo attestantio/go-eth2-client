@@ -24,7 +24,7 @@ import (
 
 // BeaconCommitteeSubscription is the data required for a beacon committee subscription.
 type BeaconCommitteeSubscription struct {
-	// ValidatorIdex is the index of the validator making the subscription request.
+	// ValidatorIndex is the index of the validator making the subscription request.
 	ValidatorIndex phase0.ValidatorIndex
 	// Slot is the slot for which the validator is attesting.
 	Slot phase0.Slot

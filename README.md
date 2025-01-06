@@ -8,7 +8,7 @@
 
 Go library providing an abstraction to multiple Ethereum 2 beacon nodes.  Its external API follows the official [Ethereum beacon APIs](https://github.com/ethereum/beacon-APIs) specification.
 
-This library is under development; expect APIs and data structures to change until it reaches version 1.0.  In addition, clients' implementations of both their own and the standard API are themselves under development so implementation of the the full API can be incomplete.
+This library is under development; expect APIs and data structures to change until it reaches version 1.0.  In addition, clients' implementations of both their own and the standard API are themselves under development so implementation of the full API can be incomplete.
 
 > Between versions 0.18.0 and 0.19.0 the API has undergone a number of changes.  Please see [the detailed documentation](docs/0.19.0-changes.md) regarding these changes.
 

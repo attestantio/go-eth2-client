@@ -137,7 +137,7 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &phase0.SignedBeaconBlockHeader{},
 		},
 		{
-			name: "SignedContributionAndproof",
+			name: "SignedContributionAndProof",
 			s:    &altair.SignedContributionAndProof{},
 		},
 		{
@@ -149,7 +149,7 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &altair.SyncAggregate{},
 		},
 		{
-			name: "SyncCommitteeContribuion",
+			name: "SyncCommitteeContribution",
 			s:    &altair.SyncCommitteeContribution{},
 		},
 		{
