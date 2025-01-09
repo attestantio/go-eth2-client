@@ -144,20 +144,46 @@ func (v *VersionedAttestation) CommitteeBits() (bitfield.Bitvector64, error) {
 
 // CommitteeIndex returns the index if only one bit is set, otherwise error.
 func (v *VersionedAttestation) CommitteeIndex() (phase0.CommitteeIndex, error) {
-	bits, err := v.CommitteeBits()
-	if err != nil {
-		return 0, err
-	}
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return 0, errors.New("no Phase0 attestation")
+		}
 
-	if len(bits.BitIndices()) == 0 {
-		return 0, errors.New("no committee index found in committee bits")
-	}
-	if len(bits.BitIndices()) > 1 {
-		return 0, errors.New("multiple committee indices found in committee bits")
-	}
-	foundIndex := phase0.CommitteeIndex(bits.BitIndices()[0])
+		return v.Phase0.Data.Index, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return 0, errors.New("no Altair attestation")
+		}
 
-	return foundIndex, nil
+		return v.Altair.Data.Index, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return 0, errors.New("no Bellatrix attestation")
+		}
+
+		return v.Bellatrix.Data.Index, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no Capella attestation")
+		}
+
+		return v.Capella.Data.Index, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return 0, errors.New("no Deneb attestation")
+		}
+
+		return v.Deneb.Data.Index, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no Electra attestation")
+		}
+
+		return v.Electra.CommitteeIndex()
+	default:
+		return 0, errors.New("unknown version")
+	}
 }
 
 // Signature returns the signature of the attestation.

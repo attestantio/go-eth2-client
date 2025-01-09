@@ -29,13 +29,12 @@ import (
 
 // Attestation is the Ethereum 2 attestation structure.
 type Attestation struct {
-	AggregationBits bitfield.Bitlist `ssz-max:"131072"`
+	// bitfield.Bitlist has size of n bits + 1 length bit, e.g. an 8 bit list will require a 2 byte array.
+	AggregationBits bitfield.Bitlist `ssz-max:"16385"`
 	Data            *phase0.AttestationData
 	Signature       phase0.BLSSignature `ssz-size:"96"`
-	// TODO: Check dynssz-size is correct as the spec states this to be of size MAX_COMMITTEES_PER_SLOT.
-	// I suspect this could be a bit to byte conversion, but wanted to make sure.
-	// https://github.com/ethereum/consensus-specs/blob/dev/specs/electra/beacon-chain.md#attestation
-	CommitteeBits bitfield.Bitvector64 `dynssz-size:"MAX_COMMITTEES_PER_SLOT/8" ssz-size:"8"`
+	// bitfield.Bitvector64 is an 8 byte array so dynamic sizing doesn't make sense.
+	CommitteeBits bitfield.Bitvector64 `ssz-size:"8"`
 }
 
 // attestationJSON is a raw representation of the struct.
@@ -142,4 +141,52 @@ func (a *Attestation) String() string {
 	}
 
 	return string(data)
+}
+
+// CommitteeIndex returns the index if only one bit is set, otherwise error.
+func (a *Attestation) CommitteeIndex() (phase0.CommitteeIndex, error) {
+	bits := a.CommitteeBits
+	if len(bits.BitIndices()) == 0 {
+		return 0, errors.New("no committee index found in committee bits")
+	}
+	if len(bits.BitIndices()) > 1 {
+		return 0, errors.New("multiple committee indices found in committee bits")
+	}
+	foundIndex := phase0.CommitteeIndex(bits.BitIndices()[0])
+
+	return foundIndex, nil
+}
+
+// AggregateValidatorIndex returns the index if only one bit is set, otherwise error.
+func (a *Attestation) AggregateValidatorIndex() (phase0.ValidatorIndex, error) {
+	bits := a.AggregationBits
+	if len(bits.BitIndices()) == 0 {
+		return 0, errors.New("no validator index found in aggregation bits")
+	}
+	if len(bits.BitIndices()) > 1 {
+		return 0, errors.New("multiple validator indices found in aggregation bits")
+	}
+	foundIndex := phase0.ValidatorIndex(bits.BitIndices()[0])
+
+	return foundIndex, nil
+}
+
+// ToSingleAttestation returns a SingleAttestation representation of the Attestation.
+func (a *Attestation) ToSingleAttestation() (*SingleAttestation, error) {
+	committeeIndex, err := a.CommitteeIndex()
+	if err != nil {
+		return nil, err
+	}
+	validatorIndex, err := a.AggregateValidatorIndex()
+	if err != nil {
+		return nil, err
+	}
+	singleAttestation := SingleAttestation{
+		CommitteeIndex: committeeIndex,
+		AttesterIndex:  validatorIndex,
+		Data:           a.Data,
+		Signature:      a.Signature,
+	}
+
+	return &singleAttestation, nil
 }
