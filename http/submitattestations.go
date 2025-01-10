@@ -67,7 +67,7 @@ func (s *Service) SubmitAttestations(ctx context.Context, opts *api.SubmitAttest
 }
 
 func createUnversionedAttestations(attestations []*spec.VersionedAttestation) ([]any, error) {
-	var version *spec.DataVersion
+	var version spec.DataVersion
 	var unversionedAttestations []any
 
 	for i := range attestations {
@@ -76,9 +76,9 @@ func createUnversionedAttestations(attestations []*spec.VersionedAttestation) ([
 		}
 
 		// Ensure consistent versioning.
-		if version == nil {
-			version = &attestations[i].Version
-		} else if *version != attestations[i].Version {
+		if version == spec.DataVersionUnknown {
+			version = attestations[i].Version
+		} else if version != attestations[i].Version {
 			return nil, errors.Join(errors.New("attestations must all be of the same version"), client.ErrInvalidOptions)
 		}
 
