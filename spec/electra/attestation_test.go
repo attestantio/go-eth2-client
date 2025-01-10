@@ -163,6 +163,7 @@ func TestAttestation_SSZ(t *testing.T) {
 
 	// Should only have the bit that was set on the last bit.
 	require.Equal(t, 1, len(aggregateBits.BitIndices()))
+	require.Equal(t, aggregateSize, aggregateBits.Len())
 
 	// Set a bit beyond the bit vector.
 	committeeBits.SetBitAt(committeeSize, true)
