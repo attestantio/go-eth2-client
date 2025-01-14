@@ -100,11 +100,12 @@ func TestInterfaces(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	// Standard interfacs.
+	// Standard interfaces.
 	assert.Implements(t, (*client.AggregateAttestationProvider)(nil), s)
 	assert.Implements(t, (*client.AggregateAttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttestationDataProvider)(nil), s)
 	assert.Implements(t, (*client.AttestationPoolProvider)(nil), s)
+	assert.Implements(t, (*client.AttestationRewardsProvider)(nil), s)
 	assert.Implements(t, (*client.AttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttesterDutiesProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockHeadersProvider)(nil), s)
@@ -113,6 +114,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.BeaconCommitteeSubscriptionsSubmitter)(nil), s)
 	assert.Implements(t, (*client.BeaconStateProvider)(nil), s)
 	assert.Implements(t, (*client.BlindedBeaconBlockSubmitter)(nil), s)
+	assert.Implements(t, (*client.BlockRewardsProvider)(nil), s)
 	assert.Implements(t, (*client.BlobSidecarsProvider)(nil), s)
 	assert.Implements(t, (*client.ValidatorRegistrationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.DepositContractProvider)(nil), s)
@@ -131,6 +133,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.SyncCommitteeContributionsSubmitter)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteeDutiesProvider)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteeMessagesSubmitter)(nil), s)
+	assert.Implements(t, (*client.SyncCommitteeRewardsProvider)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteesProvider)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteeSubscriptionsSubmitter)(nil), s)
 	assert.Implements(t, (*client.ValidatorBalancesProvider)(nil), s)

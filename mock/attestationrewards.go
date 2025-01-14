@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,18 +20,18 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-// AttesterDuties obtains attester duties.
-// If validatorIndices is nil it will return all duties for the given epoch.
-func (*Service) AttesterDuties(_ context.Context, opts *api.AttesterDutiesOpts) (*api.Response[[]*apiv1.AttesterDuty], error) {
-	data := make([]*apiv1.AttesterDuty, len(opts.Indices))
-	for i := range opts.Indices {
-		data[i] = &apiv1.AttesterDuty{
-			ValidatorIndex: opts.Indices[i],
-		}
-	}
-
-	return &api.Response[[]*apiv1.AttesterDuty]{
-		Data:     data,
+// AttestationRewards provides rewards to the given validators for attesting.
+func (*Service) AttestationRewards(_ context.Context,
+	_ *api.AttestationRewardsOpts,
+) (
+	*api.Response[*apiv1.AttestationRewards],
+	error,
+) {
+	return &api.Response[*apiv1.AttestationRewards]{
+		Data: &apiv1.AttestationRewards{
+			IdealRewards: []apiv1.IdealAttestationRewards{},
+			TotalRewards: []apiv1.ValidatorAttestationRewards{},
+		},
 		Metadata: make(map[string]any),
 	}, nil
 }

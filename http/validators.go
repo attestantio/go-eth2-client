@@ -49,6 +49,9 @@ func (s *Service) Validators(ctx context.Context,
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+	if opts.State == "" {
+		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
+	}
 	span.SetAttributes(attribute.Int("validators", len(opts.Indices)+len(opts.PubKeys)))
 
 	if len(opts.Indices) == 0 && len(opts.PubKeys) == 0 {

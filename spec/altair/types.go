@@ -13,7 +13,7 @@
 
 package altair
 
-// ParticipationFlag is an individual particiation flag for a validator.
+// ParticipationFlag is an individual participation flag for a validator.
 type ParticipationFlag int
 
 const (
