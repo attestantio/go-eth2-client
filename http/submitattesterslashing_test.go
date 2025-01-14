@@ -79,8 +79,8 @@ func TestSubmitAttesterSlashing(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			// Create proposal slashing and submit.
 			err := service.(client.AttesterSlashingSubmitter).SubmitAttesterSlashing(context.Background(), &test.slashing)
-			// This should error on bad slashing
-			require.Error(t, err) //we should be getting errors about non-slashable attestations or signatures
+			// This should error on bad slashing.
+			require.Error(t, err) // We should be getting errors about non-slashable attestations or signatures.
 		})
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,15 +11,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package api
 
-import (
-	"context"
+// BlockRewardsOpts are the options for proposing a block.
+type BlockRewardsOpts struct {
+	Common CommonOpts
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
-)
-
-// FarFutureEpoch provides the values for FAR_FUTURE_EPOCH of the chain.
-func (*Service) FarFutureEpoch(_ context.Context) (spec.Epoch, error) {
-	return spec.Epoch(0xffffffffffffffff), nil
+	// Block is the ID of the block which the data is obtained.
+	Block string
 }

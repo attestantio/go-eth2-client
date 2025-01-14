@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,27 +21,26 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-// AttesterDuties obtains attester duties.
-// If validatorIndices is nil it will return all duties for the given epoch.
-func (s *Service) AttesterDuties(ctx context.Context,
-	opts *api.AttesterDutiesOpts,
+// AttestationRewards provides rewards to the given validators for attesting.
+func (s *Service) AttestationRewards(ctx context.Context,
+	opts *api.AttestationRewardsOpts,
 ) (
-	*api.Response[[]*apiv1.AttesterDuty],
+	*api.Response[*apiv1.AttestationRewards],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		block, err := client.(consensusclient.AttesterDutiesProvider).AttesterDuties(ctx, opts)
+		attestationData, err := client.(consensusclient.AttestationRewardsProvider).AttestationRewards(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
 
-		return block, nil
+		return attestationData, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	response, isResponse := res.(*api.Response[[]*apiv1.AttesterDuty])
+	response, isResponse := res.(*api.Response[*apiv1.AttestationRewards])
 	if !isResponse {
 		return nil, ErrIncorrectType
 	}

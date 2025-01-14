@@ -36,7 +36,7 @@ type Service struct {
 }
 
 // New creates a new Ethereum 2 client with multiple endpoints.
-// The endpoints are periodiclaly checked to see if they are active,
+// The endpoints are periodically checked to see if they are active,
 // and requests will retry a different client if the currently active
 // client fails to respond.
 func New(ctx context.Context, params ...Parameter) (consensusclient.Service, error) {

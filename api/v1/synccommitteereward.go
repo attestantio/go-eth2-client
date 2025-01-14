@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,44 +14,40 @@
 package v1
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
-	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
-// ProposalPreparation is the data required for proposal preparation.
-type ProposalPreparation struct {
-	// ValidatorIndex is the index of the validator making the proposal request.
+// SyncCommitteeReward is the rewards for a validator in a sync committee.
+type SyncCommitteeReward struct {
 	ValidatorIndex phase0.ValidatorIndex
-	// FeeRecipient is the execution address to be used with preparing blocks.
-	FeeRecipient bellatrix.ExecutionAddress `ssz-size:"20"`
+	// Reward can be negative, so it is an int64 (but still a Gwei value).
+	Reward int64
 }
 
-// proposalPreparationJSON is the spec representation of the struct.
-type proposalPreparationJSON struct {
+// syncCommitteeRewardJSON is the spec representation of the struct.
+type syncCommitteeRewardJSON struct {
 	ValidatorIndex string `json:"validator_index"`
-	FeeRecipient   string `json:"fee_recipient"`
+	Reward         string `json:"reward"`
 }
 
 // MarshalJSON implements json.Marshaler.
-func (p *ProposalPreparation) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&proposalPreparationJSON{
-		ValidatorIndex: fmt.Sprintf("%d", p.ValidatorIndex),
-		FeeRecipient:   p.FeeRecipient.String(),
+func (s *SyncCommitteeReward) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&syncCommitteeRewardJSON{
+		ValidatorIndex: fmt.Sprintf("%d", s.ValidatorIndex),
+		Reward:         fmt.Sprintf("%d", s.Reward),
 	})
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (p *ProposalPreparation) UnmarshalJSON(input []byte) error {
+func (s *SyncCommitteeReward) UnmarshalJSON(input []byte) error {
 	var err error
 
-	var data proposalPreparationJSON
+	var data syncCommitteeRewardJSON
 	if err = json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
@@ -63,23 +59,22 @@ func (p *ProposalPreparation) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
-	p.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
+	s.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
 
-	if data.FeeRecipient == "" {
-		return errors.New("fee recipient is missing")
+	if data.Reward == "" {
+		return errors.New("reward missing")
 	}
-	feeRecipient, err := hex.DecodeString(strings.TrimPrefix(data.FeeRecipient, "0x"))
+	s.Reward, err = strconv.ParseInt(data.Reward, 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for fee recipient")
+		return errors.Wrap(err, "invalid value for reward")
 	}
-	copy(p.FeeRecipient[:], feeRecipient)
 
 	return nil
 }
 
 // String returns a string version of the structure.
-func (p *ProposalPreparation) String() string {
-	data, err := json.Marshal(p)
+func (s *SyncCommitteeReward) String() string {
+	data, err := json.Marshal(s)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}

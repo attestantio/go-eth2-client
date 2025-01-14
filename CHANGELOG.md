@@ -1,5 +1,6 @@
-dev:
+0.23.0:
   - add attester_slashing, block_gossip, bls_to_execution_change and proposer_slashing events
+  - add AttestationRewards, BlockRewards, and SyncCommitteeRewards functions
 
 0.21.10:
   - better validator state when balance not supplied

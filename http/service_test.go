@@ -118,7 +118,7 @@ func TestInterfaces(t *testing.T) {
 	s, err := v1.New(ctx, v1.WithAddress(os.Getenv("HTTP_ADDRESS")), v1.WithTimeout(5*time.Second))
 	require.NoError(t, err)
 
-	// Standard interfacs.
+	// Standard interfaces.
 	assert.Implements(t, (*client.AggregateAttestationProvider)(nil), s)
 	assert.Implements(t, (*client.AggregateAttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttestationDataProvider)(nil), s)

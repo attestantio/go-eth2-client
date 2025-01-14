@@ -252,7 +252,7 @@ func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*phase0.
 }
 
 // AttesterDuties obtains attester duties.
-// If validatorIndicess is nil it will return all duties for the given epoch.
+// If validatorIndices is nil it will return all duties for the given epoch.
 func (s *Sleepy) AttesterDuties(ctx context.Context,
 	opts *api.AttesterDutiesOpts,
 ) (
@@ -640,4 +640,52 @@ func (s *Sleepy) BlobSidecars(ctx context.Context,
 	}
 
 	return next.BlobSidecars(ctx, opts)
+}
+
+// AttestationRewards provides rewards to the given validators for attesting.
+func (s *Sleepy) AttestationRewards(ctx context.Context,
+	opts *api.AttestationRewardsOpts,
+) (
+	*api.Response[*apiv1.AttestationRewards],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.AttestationRewardsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.AttestationRewards(ctx, opts)
+}
+
+// BlockRewards provides rewards for proposing a block.
+func (s *Sleepy) BlockRewards(ctx context.Context,
+	opts *api.BlockRewardsOpts,
+) (
+	*api.Response[*apiv1.BlockRewards],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.BlockRewardsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.BlockRewards(ctx, opts)
+}
+
+// SyncCommitteeRewards provides rewards to the given validators for being members of a sync committee.
+func (s *Sleepy) SyncCommitteeRewards(ctx context.Context,
+	opts *api.SyncCommitteeRewardsOpts,
+) (
+	*api.Response[[]*apiv1.SyncCommitteeReward],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.SyncCommitteeRewardsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.SyncCommitteeRewards(ctx, opts)
 }
