@@ -35,7 +35,7 @@ type Attestation struct {
 	Data            *phase0.AttestationData
 	Signature       phase0.BLSSignature `ssz-size:"96"`
 	// bitfield.Bitvector64 is an 8 byte array so dynamic sizing doesn't make sense.
-	CommitteeBits bitfield.Bitvector64 `ssz-size:"64"`
+	CommitteeBits bitfield.Bitvector64 `ssz-size:"8"`
 }
 
 // attestationJSON is a raw representation of the struct.
