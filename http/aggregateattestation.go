@@ -21,14 +21,14 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec"
 )
 
 // AggregateAttestation fetches the aggregate attestation for the given options.
 func (s *Service) AggregateAttestation(ctx context.Context,
 	opts *api.AggregateAttestationOpts,
 ) (
-	*api.Response[*phase0.Attestation],
+	*api.Response[*spec.VersionedAttestation],
 	error,
 ) {
 	if err := s.assertIsSynced(ctx); err != nil {
@@ -41,29 +41,37 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 		return nil, errors.Join(errors.New("no attestation data root specified"), client.ErrInvalidOptions)
 	}
 
-	endpoint := "/eth/v1/validator/aggregate_attestation"
+	endpoint := "/eth/v2/validator/aggregate_attestation"
 	query := fmt.Sprintf("slot=%d&attestation_data_root=%#x", opts.Slot, opts.AttestationDataRoot)
 	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
 	if err != nil {
 		return nil, err
 	}
 
-	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), phase0.Attestation{})
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), spec.VersionedAttestation{})
 	if err != nil {
 		return nil, err
 	}
 
 	// Confirm the attestation is for the requested slot.
-	if data.Data.Slot != opts.Slot {
+	attestationData, err := data.Data()
+	if err != nil {
 		return nil,
 			errors.Join(
-				fmt.Errorf("aggregate attestation for slot %d; expected %d", data.Data.Slot, opts.Slot),
+				errors.New("failed to extract attestation data from response"),
+				err,
+			)
+	}
+	if attestationData.Slot != opts.Slot {
+		return nil,
+			errors.Join(
+				fmt.Errorf("aggregate attestation for slot %d; expected %d", attestationData.Slot, opts.Slot),
 				client.ErrInconsistentResult,
 			)
 	}
 
 	// Confirm the attestation data is correct.
-	dataRoot, err := data.Data.HashTreeRoot()
+	dataRoot, err := attestationData.HashTreeRoot()
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to obtain hash tree root of aggregate attestation data"), err)
 	}
@@ -74,7 +82,7 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 		)
 	}
 
-	return &api.Response[*phase0.Attestation]{
+	return &api.Response[*spec.VersionedAttestation]{
 		Metadata: metadata,
 		Data:     &data,
 	}, nil

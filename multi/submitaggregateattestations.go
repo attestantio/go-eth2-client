@@ -17,15 +17,15 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // SubmitAggregateAttestations submits aggregate attestations.
 func (s *Service) SubmitAggregateAttestations(ctx context.Context,
-	aggregateAndProofs []*phase0.SignedAggregateAndProof,
+	opts *api.SubmitAggregateAttestationsOpts,
 ) error {
 	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		err := client.(consensusclient.AggregateAttestationsSubmitter).SubmitAggregateAttestations(ctx, aggregateAndProofs)
+		err := client.(consensusclient.AggregateAttestationsSubmitter).SubmitAggregateAttestations(ctx, opts)
 		if err != nil {
 			return nil, err
 		}

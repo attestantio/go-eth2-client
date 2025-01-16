@@ -15,12 +15,13 @@ package multi_test
 
 import (
 	"context"
+	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec"
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
@@ -51,7 +52,11 @@ func TestSubmitAggregateAttestations(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		err := multiClient.(consensusclient.AggregateAttestationsSubmitter).SubmitAggregateAttestations(ctx, []*phase0.SignedAggregateAndProof{})
+		opts := &api.SubmitAggregateAttestationsOpts{
+			Common:                   api.CommonOpts{},
+			SignedAggregateAndProofs: []*spec.VersionedSignedAggregateAndProof{},
+		}
+		err := multiClient.(consensusclient.AggregateAttestationsSubmitter).SubmitAggregateAttestations(ctx, opts)
 		require.NoError(t, err)
 	}
 	// At this point we expect mock 3 to be in active (unless probability hates us).
