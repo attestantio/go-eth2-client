@@ -197,11 +197,11 @@ func (s *Erroring) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, e
 	return next.TargetAggregatorsPerCommittee(ctx)
 }
 
-// AggregateAttestation fetches the aggregate attestation given an attestation.
+// AggregateAttestation fetches the aggregate attestation for the given options.
 func (s *Erroring) AggregateAttestation(ctx context.Context,
 	opts *api.AggregateAttestationOpts,
 ) (
-	*api.Response[*phase0.Attestation],
+	*api.Response[*spec.VersionedAttestation],
 	error,
 ) {
 	if err := s.maybeError(ctx); err != nil {
@@ -216,7 +216,7 @@ func (s *Erroring) AggregateAttestation(ctx context.Context,
 }
 
 // SubmitAggregateAttestations submits aggregate attestations.
-func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error {
+func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -225,7 +225,7 @@ func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, aggregateAnd
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.SubmitAggregateAttestations(ctx, aggregateAndProofs)
+	return next.SubmitAggregateAttestations(ctx, opts)
 }
 
 // AttestationData fetches the attestation data for the given slot and committee index.
