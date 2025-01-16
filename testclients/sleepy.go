@@ -241,7 +241,7 @@ func (s *Sleepy) AttestationPool(ctx context.Context,
 }
 
 // SubmitAttestations submits attestations.
-func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
+func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations *api.SubmitAttestationsOpts) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.AttestationsSubmitter)
 	if !isNext {

@@ -265,7 +265,7 @@ func (s *Erroring) AttestationPool(ctx context.Context,
 }
 
 // SubmitAttestations submits attestations.
-func (s *Erroring) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
+func (s *Erroring) SubmitAttestations(ctx context.Context, attestations *api.SubmitAttestationsOpts) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
