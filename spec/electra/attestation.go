@@ -31,12 +31,11 @@ import (
 //
 //nolint:tagalign
 type Attestation struct {
-	// bitfield.Bitlist has size of n bits + 1 length bit, e.g. an 8 bit list will require a 2 byte array.
-	AggregationBits bitfield.Bitlist `ssz-max:"16385" dynssz-size:"((MAX_VALIDATORS_PER_COMMITTEE*MAX_COMMITTEES_PER_SLOT)/8 + 1)"`
+	AggregationBits bitfield.Bitlist `ssz-max:"131072" dynssz-size:"MAX_VALIDATORS_PER_COMMITTEE*MAX_COMMITTEES_PER_SLOT"`
 	Data            *phase0.AttestationData
 	Signature       phase0.BLSSignature `ssz-size:"96"`
 	// bitfield.Bitvector64 is an 8 byte array so dynamic sizing doesn't make sense.
-	CommitteeBits bitfield.Bitvector64 `ssz-size:"8"`
+	CommitteeBits bitfield.Bitvector64 `ssz-size:"64"`
 }
 
 // attestationJSON is a raw representation of the struct.
