@@ -21,7 +21,16 @@ import (
 )
 
 // Fork fetches fork information for the given state.
-func (s *Service) Fork(ctx context.Context, _ *api.ForkOpts) (*api.Response[*phase0.Fork], error) {
+func (s *Service) Fork(ctx context.Context,
+	opts *api.ForkOpts,
+) (
+	*api.Response[*phase0.Fork],
+	error,
+) {
+	if s.ForkFunc != nil {
+		return s.ForkFunc(ctx, opts)
+	}
+
 	fork, err := s.forkAtEpoch(ctx, 1)
 	if err != nil {
 		return nil, err

@@ -21,12 +21,16 @@ import (
 )
 
 // AttestationRewards provides rewards to the given validators for attesting.
-func (*Service) AttestationRewards(_ context.Context,
-	_ *api.AttestationRewardsOpts,
+func (s *Service) AttestationRewards(ctx context.Context,
+	opts *api.AttestationRewardsOpts,
 ) (
 	*api.Response[*apiv1.AttestationRewards],
 	error,
 ) {
+	if s.AttestationRewardsFunc != nil {
+		return s.AttestationRewardsFunc(ctx, opts)
+	}
+
 	return &api.Response[*apiv1.AttestationRewards]{
 		Data: &apiv1.AttestationRewards{
 			IdealRewards: []apiv1.IdealAttestationRewards{},

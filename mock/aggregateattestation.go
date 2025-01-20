@@ -21,12 +21,16 @@ import (
 )
 
 // AggregateAttestation fetches the aggregate attestation given an attestation.
-func (*Service) AggregateAttestation(_ context.Context,
-	_ *api.AggregateAttestationOpts,
+func (s *Service) AggregateAttestation(ctx context.Context,
+	opts *api.AggregateAttestationOpts,
 ) (
 	*api.Response[*phase0.Attestation],
 	error,
 ) {
+	if s.AggregateAttestationFunc != nil {
+		return s.AggregateAttestationFunc(ctx, opts)
+	}
+
 	return &api.Response[*phase0.Attestation]{
 		Data: &phase0.Attestation{
 			Data: &phase0.AttestationData{

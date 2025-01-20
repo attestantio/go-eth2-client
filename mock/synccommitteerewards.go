@@ -21,12 +21,16 @@ import (
 )
 
 // SyncCommitteeRewards provides rewards to the given validators for being members of a sync committee.
-func (*Service) SyncCommitteeRewards(_ context.Context,
-	_ *api.SyncCommitteeRewardsOpts,
+func (s *Service) SyncCommitteeRewards(ctx context.Context,
+	opts *api.SyncCommitteeRewardsOpts,
 ) (
 	*api.Response[[]*apiv1.SyncCommitteeReward],
 	error,
 ) {
+	if s.SyncCommitteeRewardsFunc != nil {
+		return s.SyncCommitteeRewardsFunc(ctx, opts)
+	}
+
 	return &api.Response[[]*apiv1.SyncCommitteeReward]{
 		Data:     []*apiv1.SyncCommitteeReward{},
 		Metadata: make(map[string]any),

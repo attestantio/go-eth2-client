@@ -20,7 +20,16 @@ import (
 )
 
 // NodeVersion returns a free-text string with the node version.
-func (s *Service) NodeVersion(_ context.Context, _ *api.NodeVersionOpts) (*api.Response[string], error) {
+func (s *Service) NodeVersion(ctx context.Context,
+	opts *api.NodeVersionOpts,
+) (
+	*api.Response[string],
+	error,
+) {
+	if s.NodeVersionFunc != nil {
+		return s.NodeVersionFunc(ctx, opts)
+	}
+
 	return &api.Response[string]{
 		Data:     s.nodeVersion,
 		Metadata: make(map[string]any),
