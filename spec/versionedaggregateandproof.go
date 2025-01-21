@@ -123,3 +123,47 @@ func (v *VersionedAggregateAndProof) String() string {
 		return "unknown version"
 	}
 }
+
+// SelectionProof returns the selection proof of the aggregate.
+func (v *VersionedAggregateAndProof) SelectionProof() (phase0.BLSSignature, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return phase0.BLSSignature{}, errors.New("no phase0 signed aggregate and proof")
+		}
+
+		return v.Phase0.SelectionProof, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return phase0.BLSSignature{}, errors.New("no altair signed aggregate and proof")
+		}
+
+		return v.Altair.SelectionProof, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return phase0.BLSSignature{}, errors.New("no bellatrix signed aggregate and proof")
+		}
+
+		return v.Bellatrix.SelectionProof, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.BLSSignature{}, errors.New("no capella signed aggregate and proof")
+		}
+
+		return v.Capella.SelectionProof, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.BLSSignature{}, errors.New("no deneb signed aggregate and proof")
+		}
+
+		return v.Deneb.SelectionProof, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return phase0.BLSSignature{}, errors.New("no electra signed aggregate and proof")
+		}
+
+		return v.Electra.SelectionProof, nil
+	default:
+		return phase0.BLSSignature{}, errors.New("unknown version")
+	}
+}

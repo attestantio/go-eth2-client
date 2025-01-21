@@ -123,3 +123,47 @@ func (v *VersionedSignedAggregateAndProof) String() string {
 		return "unknown version"
 	}
 }
+
+// Signature returns the signature of the signed aggregate and proof.
+func (v *VersionedSignedAggregateAndProof) Signature() (phase0.BLSSignature, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return phase0.BLSSignature{}, errors.New("no phase0 signed aggregate and proof")
+		}
+
+		return v.Phase0.Signature, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return phase0.BLSSignature{}, errors.New("no altair signed aggregate and proof")
+		}
+
+		return v.Altair.Signature, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return phase0.BLSSignature{}, errors.New("no bellatrix signed aggregate and proof")
+		}
+
+		return v.Bellatrix.Signature, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.BLSSignature{}, errors.New("no capella signed aggregate and proof")
+		}
+
+		return v.Capella.Signature, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.BLSSignature{}, errors.New("no deneb signed aggregate and proof")
+		}
+
+		return v.Deneb.Signature, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return phase0.BLSSignature{}, errors.New("no electra signed aggregate and proof")
+		}
+
+		return v.Electra.Signature, nil
+	default:
+		return phase0.BLSSignature{}, errors.New("unknown version")
+	}
+}
