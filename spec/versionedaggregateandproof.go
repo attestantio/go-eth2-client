@@ -31,6 +31,50 @@ type VersionedAggregateAndProof struct {
 	Electra   *electra.AggregateAndProof
 }
 
+// AggregatorIndex returns the aggregator index of the aggregate.
+func (v *VersionedAggregateAndProof) AggregatorIndex() (phase0.ValidatorIndex, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return 0, errors.New("no phase0 aggregate and proof")
+		}
+
+		return v.Phase0.AggregatorIndex, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return 0, errors.New("no altair aggregate and proof")
+		}
+
+		return v.Altair.AggregatorIndex, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return 0, errors.New("no bellatrix aggregate and proof")
+		}
+
+		return v.Bellatrix.AggregatorIndex, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no capella aggregate and proof")
+		}
+
+		return v.Capella.AggregatorIndex, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return 0, errors.New("no deneb aggregate and proof")
+		}
+
+		return v.Deneb.AggregatorIndex, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no electra aggregate and proof")
+		}
+
+		return v.Electra.AggregatorIndex, nil
+	default:
+		return 0, errors.New("unknown version for aggregate and proof")
+	}
+}
+
 // HashTreeRoot returns the hash tree root of the aggregate and proof.
 func (v *VersionedAggregateAndProof) HashTreeRoot() ([32]byte, error) {
 	switch v.Version {
@@ -129,37 +173,37 @@ func (v *VersionedAggregateAndProof) SelectionProof() (phase0.BLSSignature, erro
 	switch v.Version {
 	case DataVersionPhase0:
 		if v.Phase0 == nil {
-			return phase0.BLSSignature{}, errors.New("no phase0 signed aggregate and proof")
+			return phase0.BLSSignature{}, errors.New("no phase0 aggregate and proof")
 		}
 
 		return v.Phase0.SelectionProof, nil
 	case DataVersionAltair:
 		if v.Altair == nil {
-			return phase0.BLSSignature{}, errors.New("no altair signed aggregate and proof")
+			return phase0.BLSSignature{}, errors.New("no altair aggregate and proof")
 		}
 
 		return v.Altair.SelectionProof, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return phase0.BLSSignature{}, errors.New("no bellatrix signed aggregate and proof")
+			return phase0.BLSSignature{}, errors.New("no bellatrix aggregate and proof")
 		}
 
 		return v.Bellatrix.SelectionProof, nil
 	case DataVersionCapella:
 		if v.Capella == nil {
-			return phase0.BLSSignature{}, errors.New("no capella signed aggregate and proof")
+			return phase0.BLSSignature{}, errors.New("no capella aggregate and proof")
 		}
 
 		return v.Capella.SelectionProof, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil {
-			return phase0.BLSSignature{}, errors.New("no deneb signed aggregate and proof")
+			return phase0.BLSSignature{}, errors.New("no deneb aggregate and proof")
 		}
 
 		return v.Deneb.SelectionProof, nil
 	case DataVersionElectra:
 		if v.Electra == nil {
-			return phase0.BLSSignature{}, errors.New("no electra signed aggregate and proof")
+			return phase0.BLSSignature{}, errors.New("no electra aggregate and proof")
 		}
 
 		return v.Electra.SelectionProof, nil
