@@ -175,7 +175,15 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error)
 
 		return v.Electra.Message.Body.ExecutionPayload.BlockHash, nil
 	case DataVersionEIP7732:
-		return phase0.Hash32{}, errors.New("no execution block hash for eip7732 block")
+		if v.EIP7732 == nil ||
+			v.EIP7732.Message == nil ||
+			v.EIP7732.Message.Body == nil ||
+			v.EIP7732.Message.Body.SignedExecutionPayloadHeader == nil ||
+			v.EIP7732.Message.Body.SignedExecutionPayloadHeader.Message == nil {
+			return phase0.Hash32{}, errors.New("no eip7732 block")
+		}
+
+		return v.EIP7732.Message.Body.SignedExecutionPayloadHeader.Message.BlockHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -218,7 +226,15 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockNumber() (uint64, error) {
 
 		return v.Electra.Message.Body.ExecutionPayload.BlockNumber, nil
 	case DataVersionEIP7732:
-		return 0, errors.New("no execution block number for eip7732 block")
+		if v.EIP7732 == nil ||
+			v.EIP7732.Message == nil ||
+			v.EIP7732.Message.Body == nil ||
+			v.EIP7732.Message.Body.SignedExecutionPayloadHeader == nil ||
+			v.EIP7732.Message.Body.SignedExecutionPayloadHeader.Message == nil {
+			return 0, errors.New("no eip7732 block")
+		}
+
+		return v.EIP7732.Message.Body.SignedExecutionPayloadHeader.Message.BlockNumber, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
