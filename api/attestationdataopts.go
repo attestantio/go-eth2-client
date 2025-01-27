@@ -14,7 +14,6 @@
 package api
 
 import (
-	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -26,6 +25,4 @@ type AttestationDataOpts struct {
 	Slot phase0.Slot
 	// CommitteeIndex is the committee index for which the data is obtained.
 	CommitteeIndex phase0.CommitteeIndex
-	// Version is the version of the chain we are using. Used to control fork specific logic.
-	Version spec.DataVersion
 }
