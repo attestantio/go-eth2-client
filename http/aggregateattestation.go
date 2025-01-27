@@ -42,7 +42,8 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 	}
 
 	endpoint := "/eth/v2/validator/aggregate_attestation"
-	query := fmt.Sprintf("slot=%d&attestation_data_root=%#x", opts.Slot, opts.AttestationDataRoot)
+	query := fmt.Sprintf("slot=%d&attestation_data_root=%#x&committee_index=%d",
+		opts.Slot, opts.AttestationDataRoot, opts.CommitteeIndex)
 	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
 	if err != nil {
 		return nil, err

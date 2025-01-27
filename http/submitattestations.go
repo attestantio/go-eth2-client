@@ -95,11 +95,7 @@ func createUnversionedAttestations(attestations []*spec.VersionedAttestation) ([
 		case spec.DataVersionDeneb:
 			unversionedAttestations = append(unversionedAttestations, attestations[i].Deneb)
 		case spec.DataVersionElectra:
-			singleAttestation, err := attestations[i].Electra.ToSingleAttestation()
-			if err != nil {
-				return nil, errors.Join(errors.New("failed to convert attestation to single attestation"), err)
-			}
-			unversionedAttestations = append(unversionedAttestations, singleAttestation)
+			unversionedAttestations = append(unversionedAttestations, attestations[i].Electra)
 		default:
 			return nil, errors.Join(errors.New("unknown attestation version"), client.ErrInvalidOptions)
 		}

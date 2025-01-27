@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/attestantio/go-eth2-client/spec"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -82,9 +83,14 @@ func verifyAttestationData(opts *api.AttestationDataOpts, data *phase0.Attestati
 			client.ErrInconsistentResult,
 		)
 	}
-	if data.Index != opts.CommitteeIndex {
+	// When in the electra era the data.Index is hardcoded to 0.
+	index := opts.CommitteeIndex
+	if opts.Version >= spec.DataVersionElectra {
+		index = 0
+	}
+	if data.Index != index {
 		return errors.Join(
-			fmt.Errorf("attestation data for committee index %d; expected %d", data.Index, opts.CommitteeIndex),
+			fmt.Errorf("attestation data for committee index %d; expected %d", data.Index, index),
 			client.ErrInconsistentResult,
 		)
 	}
