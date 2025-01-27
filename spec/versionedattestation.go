@@ -37,7 +37,8 @@ type VersionedAttestation struct {
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedAttestation) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.EIP7732 == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
+		v.Electra == nil && v.EIP7732 == nil
 }
 
 // AggregationBits returns the aggregation bits of the attestation.
@@ -83,6 +84,7 @@ func (v *VersionedAttestation) AggregationBits() (bitfield.Bitlist, error) {
 		if v.EIP7732 == nil {
 			return nil, errors.New("no EIP7732 attestation")
 		}
+
 		return v.EIP7732.AggregationBits, nil
 	default:
 		return nil, errors.New("unknown version")
@@ -132,6 +134,7 @@ func (v *VersionedAttestation) Data() (*phase0.AttestationData, error) {
 		if v.EIP7732 == nil {
 			return nil, errors.New("no EIP7732 attestation")
 		}
+
 		return v.EIP7732.Data, nil
 	default:
 		return nil, fmt.Errorf("unknown version: %d", v.Version)
@@ -153,6 +156,7 @@ func (v *VersionedAttestation) CommitteeBits() (bitfield.Bitvector64, error) {
 		if v.EIP7732 == nil {
 			return nil, errors.New("no EIP7732 attestation")
 		}
+
 		return v.EIP7732.CommitteeBits, nil
 	default:
 		return nil, errors.New("unknown version")
@@ -202,6 +206,7 @@ func (v *VersionedAttestation) CommitteeIndex() (phase0.CommitteeIndex, error) {
 		if v.EIP7732 == nil {
 			return 0, errors.New("no EIP7732 attestation")
 		}
+
 		return v.EIP7732.CommitteeIndex()
 	default:
 		return 0, errors.New("unknown version")
@@ -250,6 +255,7 @@ func (v *VersionedAttestation) HashTreeRoot() ([32]byte, error) {
 		if v.EIP7732 == nil {
 			return [32]byte{}, errors.New("no EIP7732 attestation")
 		}
+
 		return v.EIP7732.HashTreeRoot()
 	default:
 		return [32]byte{}, errors.New("unknown version")
@@ -299,6 +305,7 @@ func (v *VersionedAttestation) Signature() (phase0.BLSSignature, error) {
 		if v.EIP7732 == nil {
 			return phase0.BLSSignature{}, errors.New("no EIP7732 attestation")
 		}
+
 		return v.EIP7732.Signature, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
@@ -348,6 +355,7 @@ func (v *VersionedAttestation) String() string {
 		if v.EIP7732 == nil {
 			return ""
 		}
+
 		return v.EIP7732.String()
 	default:
 		return "unknown version"

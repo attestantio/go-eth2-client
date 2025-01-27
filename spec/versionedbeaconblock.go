@@ -40,7 +40,8 @@ type VersionedBeaconBlock struct {
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBeaconBlock) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.EIP7732 == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
+		v.Electra == nil && v.EIP7732 == nil
 }
 
 // Slot returns the slot of the beacon block.
@@ -86,6 +87,7 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 		if v.EIP7732 == nil {
 			return 0, errors.New("no eip7732 block")
 		}
+
 		return v.EIP7732.Slot, nil
 	default:
 		return 0, errors.New("unknown version")

@@ -358,7 +358,9 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 	if raw["latest_block_hash"] == nil {
 		return errors.New("latest block hash missing")
 	}
-	latestBlockHash, err := hex.DecodeString(strings.TrimPrefix(string(bytes.Trim(raw["latest_block_hash"], `"`)), "0x"))
+	latestBlockHash, err := hex.DecodeString(
+		strings.TrimPrefix(string(bytes.Trim(raw["latest_block_hash"], `"`)), "0x"),
+	)
 	if err != nil {
 		return errors.Wrap(err, "invalid latest block hash")
 	}
@@ -374,7 +376,9 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 	if raw["latest_withdrawals_root"] == nil {
 		return errors.New("latest withdrawals root missing")
 	}
-	latestWithdrawalsRoot, err := hex.DecodeString(strings.TrimPrefix(string(bytes.Trim(raw["latest_withdrawals_root"], `"`)), "0x"))
+	latestWithdrawalsRoot, err := hex.DecodeString(
+		strings.TrimPrefix(string(bytes.Trim(raw["latest_withdrawals_root"], `"`)), "0x"),
+	)
 	if err != nil {
 		return errors.Wrap(err, "invalid latest withdrawals root")
 	}

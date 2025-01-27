@@ -37,6 +37,7 @@ func (i *IndexedPayloadAttestation) MarshalJSON() ([]byte, error) {
 	for index := range i.AttestingIndices {
 		attestingIndices[index] = fmt.Sprintf("%d", i.AttestingIndices[index])
 	}
+
 	return json.Marshal(&indexedPayloadAttestationJSON{
 		AttestingIndices: attestingIndices,
 		Data:             i.Data,

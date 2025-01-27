@@ -23,7 +23,7 @@ import (
 
 // PayloadAttestation represents a payload attestation.
 type PayloadAttestation struct {
-	AggregationBits bitfield.Bitlist `ssz-max:"64" dynssz-size:"PTC_SIZE/8"`
+	AggregationBits bitfield.Bitlist `dynssz-size:"PTC_SIZE/8" ssz-max:"64"`
 	Data            *PayloadAttestationData
 	Signature       phase0.BLSSignature `ssz-size:"96"`
 }
@@ -34,5 +34,6 @@ func (p *PayloadAttestation) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

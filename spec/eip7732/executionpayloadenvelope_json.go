@@ -43,6 +43,7 @@ func (e *ExecutionPayloadEnvelope) MarshalJSON() ([]byte, error) {
 	for i := range e.BlobKZGCommitments {
 		blobCommitments[i] = fmt.Sprintf("%#x", e.BlobKZGCommitments[i])
 	}
+
 	return json.Marshal(&executionPayloadEnvelopeJSON{
 		Payload:            e.Payload,
 		ExecutionRequests:  e.ExecutionRequests,

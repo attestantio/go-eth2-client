@@ -1237,5 +1237,6 @@ func (v *VersionedSignedBeaconBlock) String() string {
 
 // IsEmpty returns true if the block is empty.
 func (v *VersionedSignedBeaconBlock) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.EIP7732 == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
+		v.Electra == nil && v.EIP7732 == nil
 }
