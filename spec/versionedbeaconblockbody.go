@@ -18,6 +18,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/eip7732"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
@@ -31,6 +32,7 @@ type VersionedBeaconBlockBody struct {
 	Capella   *capella.BeaconBlockBody
 	Deneb     *deneb.BeaconBlockBody
 	Electra   *electra.BeaconBlockBody
+	EIP7732   *eip7732.BeaconBlockBody
 }
 
 // String returns a string version of the structure.
@@ -72,6 +74,12 @@ func (v *VersionedBeaconBlockBody) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return ""
+		}
+
+		return v.EIP7732.String()
 	default:
 		return "unknown version"
 	}

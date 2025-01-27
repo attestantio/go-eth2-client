@@ -29,11 +29,12 @@ type VersionedIndexedAttestation struct {
 	Capella   *phase0.IndexedAttestation
 	Deneb     *phase0.IndexedAttestation
 	Electra   *electra.IndexedAttestation
+	EIP7732   *electra.IndexedAttestation
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedIndexedAttestation) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.EIP7732 == nil
 }
 
 // AttestingIndices returns the attesting indices of the indexed attestation.
@@ -75,6 +76,12 @@ func (v *VersionedIndexedAttestation) AttestingIndices() ([]uint64, error) {
 		}
 
 		return v.Electra.AttestingIndices, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return nil, errors.New("no EIP7732 indexed attestation")
+		}
+
+		return v.EIP7732.AttestingIndices, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -119,6 +126,12 @@ func (v *VersionedIndexedAttestation) Data() (*phase0.AttestationData, error) {
 		}
 
 		return v.Electra.Data, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return nil, errors.New("no EIP7732 indexed attestation")
+		}
+
+		return v.EIP7732.Data, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -163,6 +176,12 @@ func (v *VersionedIndexedAttestation) Signature() (phase0.BLSSignature, error) {
 		}
 
 		return v.Electra.Signature, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return phase0.BLSSignature{}, errors.New("no EIP7732 indexed attestation")
+		}
+
+		return v.EIP7732.Signature, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -207,6 +226,12 @@ func (v *VersionedIndexedAttestation) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return ""
+		}
+
+		return v.EIP7732.String()
 	default:
 		return "unknown version"
 	}

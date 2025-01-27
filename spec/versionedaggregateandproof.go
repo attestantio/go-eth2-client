@@ -29,6 +29,7 @@ type VersionedAggregateAndProof struct {
 	Capella   *phase0.AggregateAndProof
 	Deneb     *phase0.AggregateAndProof
 	Electra   *electra.AggregateAndProof
+	EIP7732   *electra.AggregateAndProof
 }
 
 // AggregatorIndex returns the aggregator index of the aggregate.
@@ -70,6 +71,12 @@ func (v *VersionedAggregateAndProof) AggregatorIndex() (phase0.ValidatorIndex, e
 		}
 
 		return v.Electra.AggregatorIndex, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return 0, errors.New("no EIP7732 aggregate and proof")
+		}
+
+		return v.EIP7732.AggregatorIndex, nil
 	default:
 		return 0, errors.New("unknown version for aggregate and proof")
 	}
@@ -114,6 +121,12 @@ func (v *VersionedAggregateAndProof) HashTreeRoot() ([32]byte, error) {
 		}
 
 		return v.Electra.HashTreeRoot()
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return [32]byte{}, errors.New("no EIP7732 aggregate and proof")
+		}
+
+		return v.EIP7732.HashTreeRoot()
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -121,7 +134,7 @@ func (v *VersionedAggregateAndProof) HashTreeRoot() ([32]byte, error) {
 
 // IsEmpty returns true if there is no aggregate and proof.
 func (v *VersionedAggregateAndProof) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.EIP7732 == nil
 }
 
 // String returns a string version of the structure.
@@ -163,6 +176,12 @@ func (v *VersionedAggregateAndProof) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return ""
+		}
+
+		return v.EIP7732.String()
 	default:
 		return "unknown version"
 	}
@@ -207,6 +226,12 @@ func (v *VersionedAggregateAndProof) SelectionProof() (phase0.BLSSignature, erro
 		}
 
 		return v.Electra.SelectionProof, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return phase0.BLSSignature{}, errors.New("no EIP7732 aggregate and proof")
+		}
+
+		return v.EIP7732.SelectionProof, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
