@@ -36,7 +36,7 @@ func TestAggregateAttestation(t *testing.T) {
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
 	require.NoError(t, err)
-
+	require.Equal(t, err, errors.New("waah"))
 	// Need to fetch current slot for attestation.
 	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 	require.NoError(t, err)

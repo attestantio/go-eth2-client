@@ -15,6 +15,7 @@ package http_test
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 
@@ -41,7 +42,7 @@ func TestGenesis(t *testing.T) {
 		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
 	)
 	require.NoError(t, err)
-
+	require.Equal(t, err, errors.New("waah"))
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			response, err := service.(client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
