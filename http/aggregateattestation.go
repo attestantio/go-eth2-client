@@ -22,6 +22,8 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AggregateAttestation fetches the aggregate attestation for the given options.
@@ -49,7 +51,7 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 		return nil, err
 	}
 
-	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), spec.VersionedAttestation{})
+	data, metadata, err := decodeAggregateAttestation(httpResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +59,9 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 	// Confirm the attestation is for the requested slot.
 	attestationData, err := data.Data()
 	if err != nil {
+		s.log.Error().Err(err).Msg(fmt.Sprintf("Failed to decode attestation headers:\n%v\n\nbody:\n%s\n",
+			httpResponse.headers, string(httpResponse.body)))
+
 		return nil,
 			errors.Join(
 				errors.New("failed to extract attestation data from response"),
@@ -85,6 +90,71 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 
 	return &api.Response[*spec.VersionedAttestation]{
 		Metadata: metadata,
-		Data:     &data,
+		Data:     data,
 	}, nil
+}
+
+func decodeAggregateAttestation(httpResponse *httpResponse) (*spec.VersionedAttestation, map[string]any, error) {
+	var metadata map[string]any
+	data := &spec.VersionedAttestation{
+		Version: httpResponse.consensusVersion,
+	}
+	switch httpResponse.consensusVersion {
+	case spec.DataVersionPhase0:
+		phase0Data, phase0Metadata, decodeErr := decodeJSONResponse(bytes.NewReader(httpResponse.body), &phase0.Attestation{})
+		metadata = phase0Metadata
+		data.Phase0 = phase0Data
+		if decodeErr != nil {
+			return &spec.VersionedAttestation{}, nil, decodeErr
+		}
+
+		return data, metadata, nil
+	case spec.DataVersionAltair:
+		phase0Data, phase0Metadata, decodeErr := decodeJSONResponse(bytes.NewReader(httpResponse.body), &phase0.Attestation{})
+		metadata = phase0Metadata
+		data.Altair = phase0Data
+		if decodeErr != nil {
+			return &spec.VersionedAttestation{}, nil, decodeErr
+		}
+
+		return data, metadata, nil
+	case spec.DataVersionBellatrix:
+		phase0Data, phase0Metadata, decodeErr := decodeJSONResponse(bytes.NewReader(httpResponse.body), &phase0.Attestation{})
+		metadata = phase0Metadata
+		data.Bellatrix = phase0Data
+		if decodeErr != nil {
+			return &spec.VersionedAttestation{}, nil, decodeErr
+		}
+
+		return data, metadata, nil
+	case spec.DataVersionCapella:
+		phase0Data, phase0Metadata, decodeErr := decodeJSONResponse(bytes.NewReader(httpResponse.body), &phase0.Attestation{})
+		metadata = phase0Metadata
+		data.Capella = phase0Data
+		if decodeErr != nil {
+			return &spec.VersionedAttestation{}, nil, decodeErr
+		}
+
+		return data, metadata, nil
+	case spec.DataVersionDeneb:
+		phase0Data, phase0Metadata, decodeErr := decodeJSONResponse(bytes.NewReader(httpResponse.body), &phase0.Attestation{})
+		metadata = phase0Metadata
+		data.Deneb = phase0Data
+		if decodeErr != nil {
+			return &spec.VersionedAttestation{}, nil, decodeErr
+		}
+
+		return data, metadata, nil
+	case spec.DataVersionElectra:
+		electraData, electraMetadata, decodeErr := decodeJSONResponse(bytes.NewReader(httpResponse.body), &electra.Attestation{})
+		metadata = electraMetadata
+		data.Electra = electraData
+		if decodeErr != nil {
+			return &spec.VersionedAttestation{}, nil, decodeErr
+		}
+
+		return data, metadata, nil
+	default:
+		return &spec.VersionedAttestation{}, nil, errors.New("unknown consensus version")
+	}
 }
