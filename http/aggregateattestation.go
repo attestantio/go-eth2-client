@@ -59,9 +59,6 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 	// Confirm the attestation is for the requested slot.
 	attestationData, err := data.Data()
 	if err != nil {
-		s.log.Error().Err(err).Msg(fmt.Sprintf("Failed to decode attestation headers:\n%v\n\nbody:\n%s\n",
-			httpResponse.headers, string(httpResponse.body)))
-
 		return nil,
 			errors.Join(
 				errors.New("failed to extract attestation data from response"),
