@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/attestantio/go-eth2-client/spec/eip7732"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -195,6 +196,10 @@ func (*Service) signedBeaconBlockFromJSON(res *httpResponse) (*api.Response[*spe
 	case spec.DataVersionElectra:
 		response.Data.Electra, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
 			&electra.SignedBeaconBlock{},
+		)
+	case spec.DataVersionEIP7732:
+		response.Data.EIP7732, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
+			&eip7732.SignedBeaconBlock{},
 		)
 	default:
 		return nil, fmt.Errorf("unhandled version %s", res.consensusVersion)
