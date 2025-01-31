@@ -97,8 +97,7 @@ func (s *Service) createUnversionedAttestations(attestations []*spec.VersionedAt
 		case spec.DataVersionElectra:
 			singleAttestation, err := attestations[i].Electra.ToSingleAttestation(attestations[i].ValidatorIndex)
 			if err != nil {
-				s.log.Warn().Err(errors.Join(errors.New("failed to convert attestation to single attestation"), err)).
-					Msg("Failed to convert attestation to single attestation")
+				s.log.Warn().Err(err).Msg("Failed to convert attestation to single attestation")
 
 				continue
 			}
