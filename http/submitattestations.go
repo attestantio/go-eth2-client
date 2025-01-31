@@ -37,7 +37,7 @@ func (s *Service) SubmitAttestations(ctx context.Context, opts *api.SubmitAttest
 		return errors.Join(errors.New("no attestations supplied"), client.ErrInvalidOptions)
 	}
 	attestations := opts.Attestations
-	unversionedAttestations, err := createUnversionedAttestations(attestations)
+	unversionedAttestations, err := s.createUnversionedAttestations(attestations)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (s *Service) SubmitAttestations(ctx context.Context, opts *api.SubmitAttest
 	return nil
 }
 
-func createUnversionedAttestations(attestations []*spec.VersionedAttestation) ([]any, error) {
+func (s *Service) createUnversionedAttestations(attestations []*spec.VersionedAttestation) ([]any, error) {
 	var version spec.DataVersion
 	var unversionedAttestations []any
 
@@ -95,7 +95,13 @@ func createUnversionedAttestations(attestations []*spec.VersionedAttestation) ([
 		case spec.DataVersionDeneb:
 			unversionedAttestations = append(unversionedAttestations, attestations[i].Deneb)
 		case spec.DataVersionElectra:
-			unversionedAttestations = append(unversionedAttestations, attestations[i].Electra)
+			singleAttestation, err := attestations[i].Electra.ToSingleAttestation(attestations[i].ValidatorIndex)
+			if err != nil {
+				s.log.Warn().Err(err).Msg("Failed to convert attestation to single attestation")
+
+				continue
+			}
+			unversionedAttestations = append(unversionedAttestations, singleAttestation)
 		default:
 			return nil, errors.Join(errors.New("unknown attestation version"), client.ErrInvalidOptions)
 		}
