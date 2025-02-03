@@ -285,12 +285,12 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 					// Prysm sets ELOffline incorrectly (https://github.com/prysmaticlabs/prysm/issues/14226),
 					// so it requires this workaround with checking if SyncDistance is not too high.
 					// TODO: Remove this block after the issue is resolved.
-					nodeClient, err := s.NodeClient(ctx)
+					nodeVersion, err := s.NodeVersion(ctx, &api.NodeVersionOpts{})
 					if err != nil {
 						log.Debug().Err(err).Msg("Failed to obtain node client")
 						active = false
 						synced = false
-					} else if strings.Contains(nodeClient.Data, "prysm") && response.Data.SyncDistance > 1 {
+					} else if strings.Contains(strings.ToLower(nodeVersion.Data), "prysm") && response.Data.SyncDistance > 1 {
 						synced = false
 					}
 				}
