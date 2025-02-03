@@ -181,11 +181,11 @@ func (s *Sleepy) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, err
 	return next.TargetAggregatorsPerCommittee(ctx)
 }
 
-// AggregateAttestation fetches the aggregate attestation given an attestation.
+// AggregateAttestation fetches the aggregate attestation for the given options.
 func (s *Sleepy) AggregateAttestation(ctx context.Context,
 	opts *api.AggregateAttestationOpts,
 ) (
-	*api.Response[*phase0.Attestation],
+	*api.Response[*spec.VersionedAttestation],
 	error,
 ) {
 	s.sleep(ctx)
@@ -198,14 +198,14 @@ func (s *Sleepy) AggregateAttestation(ctx context.Context,
 }
 
 // SubmitAggregateAttestations submits aggregate attestations.
-func (s *Sleepy) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error {
+func (s *Sleepy) SubmitAggregateAttestations(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.AggregateAttestationsSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
 
-	return next.SubmitAggregateAttestations(ctx, aggregateAndProofs)
+	return next.SubmitAggregateAttestations(ctx, opts)
 }
 
 // AttestationData fetches the attestation data for the given slot and committee index.
@@ -241,7 +241,7 @@ func (s *Sleepy) AttestationPool(ctx context.Context,
 }
 
 // SubmitAttestations submits attestations.
-func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
+func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations *api.SubmitAttestationsOpts) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.AttestationsSubmitter)
 	if !isNext {

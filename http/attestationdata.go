@@ -53,7 +53,7 @@ func (s *Service) AttestationData(ctx context.Context,
 	}
 }
 
-func (*Service) attestationDataFromJSON(_ context.Context,
+func (s *Service) attestationDataFromJSON(ctx context.Context,
 	opts *api.AttestationDataOpts,
 	httpResponse *httpResponse,
 ) (
@@ -65,7 +65,7 @@ func (*Service) attestationDataFromJSON(_ context.Context,
 		return nil, err
 	}
 
-	if err := verifyAttestationData(opts, &data); err != nil {
+	if err := s.verifyAttestationData(ctx, opts, &data); err != nil {
 		return nil, err
 	}
 
@@ -75,19 +75,50 @@ func (*Service) attestationDataFromJSON(_ context.Context,
 	}, nil
 }
 
-func verifyAttestationData(opts *api.AttestationDataOpts, data *phase0.AttestationData) error {
+func (s *Service) verifyAttestationData(ctx context.Context, opts *api.AttestationDataOpts, data *phase0.AttestationData) error {
 	if data.Slot != opts.Slot {
 		return errors.Join(
 			fmt.Errorf("attestation data for slot %d; expected %d", data.Slot, opts.Slot),
 			client.ErrInconsistentResult,
 		)
 	}
-	if data.Index != opts.CommitteeIndex {
+
+	electraSlot, err := s.calculateElectraSlot(ctx)
+	if err != nil {
+		return errors.Join(errors.New("failed to calculate electra slot"), err)
+	}
+
+	// When in the electra era the data.Index is hardcoded to 0.
+	index := opts.CommitteeIndex
+	if opts.Slot >= electraSlot {
+		index = 0
+	}
+	if data.Index != index {
 		return errors.Join(
-			fmt.Errorf("attestation data for committee index %d; expected %d", data.Index, opts.CommitteeIndex),
+			fmt.Errorf("attestation data for committee index %d; expected %d", data.Index, index),
 			client.ErrInconsistentResult,
 		)
 	}
 
 	return nil
+}
+
+func (s *Service) calculateElectraSlot(ctx context.Context) (phase0.Slot, error) {
+	response, err := s.Spec(ctx, &api.SpecOpts{})
+	if err != nil {
+		return 0, err
+	}
+	slotsPerEpoch, isCorrectType := response.Data["SLOTS_PER_EPOCH"].(uint64)
+	if !isCorrectType {
+		return 0, ErrIncorrectType
+	}
+
+	electraEpoch, isCorrectType := response.Data["ELECTRA_FORK_EPOCH"].(uint64)
+	if !isCorrectType {
+		return 0, ErrIncorrectType
+	}
+
+	electraSlot := phase0.Slot(slotsPerEpoch * electraEpoch)
+
+	return electraSlot, nil
 }

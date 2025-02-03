@@ -21,6 +21,8 @@ import (
 	"math/big"
 	"strings"
 
+	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
+
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
@@ -216,6 +218,22 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context,
 				err = response.Data.Deneb.UnmarshalSSZ(res.body)
 			}
 		}
+	case spec.DataVersionElectra:
+		if response.Data.Blinded {
+			response.Data.ElectraBlinded = &apiv1electra.BlindedBeaconBlock{}
+			if s.customSpecSupport {
+				err = dynSSZ.UnmarshalSSZ(response.Data.ElectraBlinded, res.body)
+			} else {
+				err = response.Data.ElectraBlinded.UnmarshalSSZ(res.body)
+			}
+		} else {
+			response.Data.Electra = &apiv1electra.BlockContents{}
+			if s.customSpecSupport {
+				err = dynSSZ.UnmarshalSSZ(response.Data.Electra, res.body)
+			} else {
+				err = response.Data.Electra.UnmarshalSSZ(res.body)
+			}
+		}
 	default:
 		return nil, fmt.Errorf("unhandled block proposal version %s", res.consensusVersion)
 	}
@@ -289,6 +307,18 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[
 			response.Data.Deneb, response.Metadata, err = decodeJSONResponse(
 				bytes.NewReader(res.body),
 				&apiv1deneb.BlockContents{},
+			)
+		}
+	case spec.DataVersionElectra:
+		if response.Data.Blinded {
+			response.Data.ElectraBlinded, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&apiv1electra.BlindedBeaconBlock{},
+			)
+		} else {
+			response.Data.Electra, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&apiv1electra.BlockContents{},
 			)
 		}
 	default:

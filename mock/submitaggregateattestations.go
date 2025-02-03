@@ -16,10 +16,10 @@ package mock
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // SubmitAggregateAttestations submits aggregate attestations.
-func (*Service) SubmitAggregateAttestations(_ context.Context, _ []*spec.SignedAggregateAndProof) error {
+func (*Service) SubmitAggregateAttestations(_ context.Context, _ *api.SubmitAggregateAttestationsOpts) error {
 	return nil
 }

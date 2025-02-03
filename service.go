@@ -161,7 +161,7 @@ type AggregateAttestationProvider interface {
 	AggregateAttestation(ctx context.Context,
 		opts *api.AggregateAttestationOpts,
 	) (
-		*api.Response[*phase0.Attestation],
+		*api.Response[*spec.VersionedAttestation],
 		error,
 	)
 }
@@ -169,7 +169,7 @@ type AggregateAttestationProvider interface {
 // AggregateAttestationsSubmitter is the interface for submitting aggregate attestations.
 type AggregateAttestationsSubmitter interface {
 	// SubmitAggregateAttestations submits aggregate attestations.
-	SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error
+	SubmitAggregateAttestations(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error
 }
 
 // AttestationDataProvider is the interface for providing attestation data.
@@ -208,7 +208,7 @@ type AttestationRewardsProvider interface {
 // AttestationsSubmitter is the interface for submitting attestations.
 type AttestationsSubmitter interface {
 	// SubmitAttestations submits attestations.
-	SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error
+	SubmitAttestations(ctx context.Context, opts *api.SubmitAttestationsOpts) error
 }
 
 // AttesterSlashingSubmitter is the interface for submitting attester slashings.
