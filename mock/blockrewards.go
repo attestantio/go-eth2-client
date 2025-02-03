@@ -21,12 +21,16 @@ import (
 )
 
 // BlockRewards provides rewards for proposing a block.
-func (*Service) BlockRewards(_ context.Context,
-	_ *api.BlockRewardsOpts,
+func (s *Service) BlockRewards(ctx context.Context,
+	opts *api.BlockRewardsOpts,
 ) (
 	*api.Response[*apiv1.BlockRewards],
 	error,
 ) {
+	if s.BlockRewardsFunc != nil {
+		return s.BlockRewardsFunc(ctx, opts)
+	}
+
 	return &api.Response[*apiv1.BlockRewards]{
 		Data:     &apiv1.BlockRewards{},
 		Metadata: make(map[string]any),

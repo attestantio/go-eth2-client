@@ -22,13 +22,17 @@ import (
 )
 
 // AggregateAttestation fetches the aggregate attestation for the given options.
-func (*Service) AggregateAttestation(_ context.Context,
-	_ *api.AggregateAttestationOpts,
+func (s *Service) AggregateAttestation(ctx context.Context,
+	opts *api.AggregateAttestationOpts,
 ) (
 	*api.Response[*spec.VersionedAttestation],
 	error,
 ) {
-	return &api.Response[*spec.VersionedAttestation]{
+	if s.AggregateAttestationFunc != nil {
+		return s.AggregateAttestationFunc(ctx, opts)
+	}
+
+  return &api.Response[*spec.VersionedAttestation]{
 		Data: &spec.VersionedAttestation{
 			Version: spec.DataVersionPhase0,
 			Phase0: &phase0.Attestation{

@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,22 +20,19 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-// ProposerDuties obtains proposer duties for the given epoch.
-// If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
-func (s *Service) ProposerDuties(ctx context.Context, opts *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error) {
-	if s.ProposerDutiesFunc != nil {
-		return s.ProposerDutiesFunc(ctx, opts)
+// ForkChoice fetches all current fork choice context.
+func (s *Service) ForkChoice(ctx context.Context,
+	opts *api.ForkChoiceOpts,
+) (
+	*api.Response[*apiv1.ForkChoice],
+	error,
+) {
+	if s.ForkChoiceFunc != nil {
+		return s.ForkChoiceFunc(ctx, opts)
 	}
 
-	data := make([]*apiv1.ProposerDuty, len(opts.Indices))
-	for i := range opts.Indices {
-		data[i] = &apiv1.ProposerDuty{
-			ValidatorIndex: opts.Indices[i],
-		}
-	}
-
-	return &api.Response[[]*apiv1.ProposerDuty]{
-		Data:     data,
+	return &api.Response[*apiv1.ForkChoice]{
+		Data:     &apiv1.ForkChoice{},
 		Metadata: make(map[string]any),
 	}, nil
 }

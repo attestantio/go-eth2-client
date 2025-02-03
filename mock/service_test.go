@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,30 +11,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package mock_test
 
 import (
 	"context"
+	"testing"
 
 	"github.com/attestantio/go-eth2-client/api"
-	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/mock"
+	"github.com/stretchr/testify/require"
 )
 
-// ProposerDuties obtains proposer duties for the given epoch.
-// If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.
-func (s *Service) ProposerDuties(ctx context.Context, opts *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error) {
-	if s.ProposerDutiesFunc != nil {
-		return s.ProposerDutiesFunc(ctx, opts)
+func TestMockFunc(t *testing.T) {
+	ctx := context.Background()
+
+	m, err := mock.New(ctx)
+	require.NoError(t, err)
+
+	m.SpecFunc = testSpec
+
+	specResponse, err := m.Spec(ctx, &api.SpecOpts{})
+	require.NoError(t, err)
+	require.NotNil(t, specResponse)
+
+	require.Contains(t, specResponse.Data, "MOCK_VALUE")
+}
+
+func testSpec(ctx context.Context, opts *api.SpecOpts) (*api.Response[map[string]any], error) {
+	data := map[string]any{
+		"MOCK_VALUE": "foo",
 	}
 
-	data := make([]*apiv1.ProposerDuty, len(opts.Indices))
-	for i := range opts.Indices {
-		data[i] = &apiv1.ProposerDuty{
-			ValidatorIndex: opts.Indices[i],
-		}
-	}
-
-	return &api.Response[[]*apiv1.ProposerDuty]{
+	return &api.Response[map[string]any]{
 		Data:     data,
 		Metadata: make(map[string]any),
 	}, nil
