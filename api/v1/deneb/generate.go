@@ -15,6 +15,6 @@ package deneb
 
 //nolint:revive
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f blindedbeaconblock_ssz.go blindedbeaconblockbody_ssz.go blockcontents_ssz.go signedblindedbeaconblock_ssz.go signedblockcontents_ssz.go
-//go:generate sszgen --include ../../../spec/phase0,../../../spec/altair,../../../spec/bellatrix,../../../spec/capella,../../../spec/deneb -path . --suffix ssz -objs BlindedBeaconBlock,BlindedBeaconBlockBody,BlockContents,SignedBlindedBeaconBlock,SignedBlockContents
-//go:generate goimports -w blindedbeaconblock_ssz.go blindedbeaconblockbody_ssz.go blockcontents_ssz.go signedblindedbeaconblock_ssz.go signedblockcontents_ssz.go
+//go:generate rm -f blindedbeaconblock_ssz.go blindedbeaconblockbody_ssz.go blindedblobsidecar_ssz.go blindedblockcontents_ssz.go blockcontents_ssz.go signedblindedbeaconblock_ssz.go signedblindedblockcontents_ssz.go signedblockcontents_ssz.go
+//go:generate sszgen --include ../../../spec/phase0,../../../spec/altair,../../../spec/bellatrix,../../../spec/capella,../../../spec/deneb -path . --suffix ssz -objs BlindedBeaconBlock,BlindedBeaconBlockBody,BlindedBlobSidecar,BlindedBlockContents,BlockContents,SignedBlindedBeaconBlock,SignedBlindedBlockContents,SignedBlockContents
+//go:generate goimports -w blindedbeaconblock_ssz.go blindedbeaconblockbody_ssz.go blindedblobsidecar_ssz.go blindedblockcontents_ssz.go blockcontents_ssz.go signedblindedbeaconblock_ssz.go signedblindedblockcontents_ssz.go,signedblockcontents_ssz.go

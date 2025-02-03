@@ -18,15 +18,15 @@ import (
 	"strings"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // SubmitAttestations submits attestations.
 func (s *Service) SubmitAttestations(ctx context.Context,
-	attestations []*phase0.Attestation,
+	opts *api.SubmitAttestationsOpts,
 ) error {
 	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		err := client.(consensusclient.AttestationsSubmitter).SubmitAttestations(ctx, attestations)
+		err := client.(consensusclient.AttestationsSubmitter).SubmitAttestations(ctx, opts)
 		if err != nil {
 			return nil, err
 		}

@@ -23,4 +23,6 @@ type AggregateAttestationOpts struct {
 	Slot phase0.Slot
 	// AttestationDataRoot is the root for which the data is obtained.
 	AttestationDataRoot phase0.Root
+	// CommitteeIndex is the committee index the attestation data belongs to.
+	CommitteeIndex phase0.CommitteeIndex
 }

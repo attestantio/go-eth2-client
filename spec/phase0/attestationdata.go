@@ -140,7 +140,7 @@ func (a *AttestationData) UnmarshalYAML(input []byte) error {
 	return a.unpack(&attestationDataJSON)
 }
 
-// String provids a string representation of the struct.
+// String provides a string representation of the struct.
 func (a *AttestationData) String() string {
 	data, err := yaml.Marshal(a)
 	if err != nil {

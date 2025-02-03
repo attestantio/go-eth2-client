@@ -19,6 +19,8 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/attestantio/go-eth2-client/spec/electra"
+
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -133,6 +135,16 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode deneb beacon state"), err)
 		}
+	case spec.DataVersionElectra:
+		response.Data.Electra = &electra.BeaconState{}
+		if s.customSpecSupport {
+			err = dynSSZ.UnmarshalSSZ(response.Data.Electra, res.body)
+		} else {
+			err = response.Data.Electra.UnmarshalSSZ(res.body)
+		}
+		if err != nil {
+			return nil, errors.Join(errors.New("failed to decode electra beacon state"), err)
+		}
 	default:
 		return nil, fmt.Errorf("unhandled state version %s", res.consensusVersion)
 	}
@@ -159,6 +171,8 @@ func (*Service) beaconStateFromJSON(res *httpResponse) (*api.Response[*spec.Vers
 		response.Data.Capella, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &capella.BeaconState{})
 	case spec.DataVersionDeneb:
 		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &deneb.BeaconState{})
+	case spec.DataVersionElectra:
+		response.Data.Electra, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &electra.BeaconState{})
 	default:
 		err = fmt.Errorf("unsupported version %s", res.consensusVersion)
 	}

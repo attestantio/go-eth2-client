@@ -17,6 +17,8 @@ import (
 	"errors"
 	"math/big"
 
+	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
+
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
@@ -41,6 +43,8 @@ type VersionedSignedProposal struct {
 	CapellaBlinded   *apiv1capella.SignedBlindedBeaconBlock
 	Deneb            *apiv1deneb.SignedBlockContents
 	DenebBlinded     *apiv1deneb.SignedBlindedBeaconBlock
+	Electra          *apiv1electra.SignedBlockContents
+	ElectraBlinded   *apiv1electra.SignedBlindedBeaconBlock
 }
 
 // AssertPresent throws an error if the expected proposal
@@ -75,6 +79,13 @@ func (v *VersionedSignedProposal) AssertPresent() error {
 		}
 		if v.DenebBlinded == nil && v.Blinded {
 			return errors.New("blinded deneb proposal not present")
+		}
+	case spec.DataVersionElectra:
+		if v.Electra == nil && !v.Blinded {
+			return errors.New("electra proposal not present")
+		}
+		if v.ElectraBlinded == nil && v.Blinded {
+			return errors.New("blinded electra proposal not present")
 		}
 	default:
 		return errors.New("unsupported version")
@@ -112,6 +123,12 @@ func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Deneb.SignedBlock.Message.Slot, nil
+	case spec.DataVersionElectra:
+		if v.Blinded {
+			return v.ElectraBlinded.Message.Slot, nil
+		}
+
+		return v.Electra.SignedBlock.Message.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -146,6 +163,12 @@ func (v *VersionedSignedProposal) ProposerIndex() (phase0.ValidatorIndex, error)
 		}
 
 		return v.Deneb.SignedBlock.Message.ProposerIndex, nil
+	case spec.DataVersionElectra:
+		if v.Blinded {
+			return v.ElectraBlinded.Message.ProposerIndex, nil
+		}
+
+		return v.Electra.SignedBlock.Message.ProposerIndex, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -176,6 +199,12 @@ func (v *VersionedSignedProposal) ExecutionBlockHash() (phase0.Hash32, error) {
 		}
 
 		return v.Deneb.SignedBlock.Message.Body.ExecutionPayload.BlockHash, nil
+	case spec.DataVersionElectra:
+		if v.Blinded {
+			return v.ElectraBlinded.Message.Body.ExecutionPayloadHeader.BlockHash, nil
+		}
+
+		return v.Electra.SignedBlock.Message.Body.ExecutionPayload.BlockHash, nil
 	default:
 		return phase0.Hash32{}, ErrUnsupportedVersion
 	}
@@ -238,6 +267,20 @@ func (v *VersionedSignedProposal) String() string {
 		}
 
 		return v.Deneb.String()
+	case spec.DataVersionElectra:
+		if v.Blinded {
+			if v.ElectraBlinded == nil {
+				return ""
+			}
+
+			return v.ElectraBlinded.String()
+		}
+
+		if v.Electra == nil {
+			return ""
+		}
+
+		return v.Electra.String()
 	default:
 		return "unsupported version"
 	}
@@ -281,6 +324,19 @@ func (v *VersionedSignedProposal) assertMessagePresent() error {
 			if v.Deneb == nil ||
 				v.Deneb.SignedBlock == nil ||
 				v.Deneb.SignedBlock.Message == nil {
+				return ErrDataMissing
+			}
+		}
+	case spec.DataVersionElectra:
+		if v.Blinded {
+			if v.ElectraBlinded == nil ||
+				v.ElectraBlinded.Message == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.Electra == nil ||
+				v.Electra.SignedBlock == nil ||
+				v.Electra.SignedBlock.Message == nil {
 				return ErrDataMissing
 			}
 		}
@@ -343,6 +399,23 @@ func (v *VersionedSignedProposal) assertExecutionPayloadPresent() error {
 				v.Deneb.SignedBlock.Message == nil ||
 				v.Deneb.SignedBlock.Message.Body == nil ||
 				v.Deneb.SignedBlock.Message.Body.ExecutionPayload == nil {
+				return ErrDataMissing
+			}
+		}
+	case spec.DataVersionElectra:
+		if v.Blinded {
+			if v.ElectraBlinded == nil ||
+				v.ElectraBlinded.Message == nil ||
+				v.ElectraBlinded.Message.Body == nil ||
+				v.ElectraBlinded.Message.Body.ExecutionPayloadHeader == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.Electra == nil ||
+				v.Electra.SignedBlock == nil ||
+				v.Electra.SignedBlock.Message == nil ||
+				v.Electra.SignedBlock.Message.Body == nil ||
+				v.Electra.SignedBlock.Message.Body.ExecutionPayload == nil {
 				return ErrDataMissing
 			}
 		}

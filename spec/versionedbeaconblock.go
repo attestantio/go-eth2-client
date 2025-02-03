@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2023 Attestant Limited.
+// Copyright © 2021 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,6 +16,8 @@ package spec
 import (
 	"errors"
 
+	"github.com/attestantio/go-eth2-client/spec/electra"
+
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
@@ -31,6 +33,7 @@ type VersionedBeaconBlock struct {
 	Bellatrix *bellatrix.BeaconBlock
 	Capella   *capella.BeaconBlock
 	Deneb     *deneb.BeaconBlock
+	Electra   *electra.BeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
@@ -71,6 +74,12 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Deneb.Slot, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no electra block")
+		}
+
+		return v.Electra.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -124,6 +133,15 @@ func (v *VersionedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
 		}
 
 		return v.Deneb.Body.RANDAOReveal, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return phase0.BLSSignature{}, errors.New("no electra block")
+		}
+		if v.Electra.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no electra block body")
+		}
+
+		return v.Electra.Body.RANDAOReveal, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -177,6 +195,15 @@ func (v *VersionedBeaconBlock) Graffiti() ([32]byte, error) {
 		}
 
 		return v.Deneb.Body.Graffiti, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return [32]byte{}, errors.New("no electra block")
+		}
+		if v.Electra.Body == nil {
+			return [32]byte{}, errors.New("no electra block body")
+		}
+
+		return v.Electra.Body.Graffiti, nil
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -215,6 +242,12 @@ func (v *VersionedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
 		}
 
 		return v.Deneb.ProposerIndex, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no electra block")
+		}
+
+		return v.Electra.ProposerIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -253,6 +286,12 @@ func (v *VersionedBeaconBlock) Root() (phase0.Root, error) {
 		}
 
 		return v.Deneb.HashTreeRoot()
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return phase0.Root{}, errors.New("no electra block")
+		}
+
+		return v.Electra.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -306,6 +345,15 @@ func (v *VersionedBeaconBlock) BodyRoot() (phase0.Root, error) {
 		}
 
 		return v.Deneb.Body.HashTreeRoot()
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return phase0.Root{}, errors.New("no electra block")
+		}
+		if v.Electra.Body == nil {
+			return phase0.Root{}, errors.New("no electra block body")
+		}
+
+		return v.Electra.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -344,6 +392,12 @@ func (v *VersionedBeaconBlock) ParentRoot() (phase0.Root, error) {
 		}
 
 		return v.Deneb.ParentRoot, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return phase0.Root{}, errors.New("no electra block")
+		}
+
+		return v.Electra.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -382,82 +436,196 @@ func (v *VersionedBeaconBlock) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Deneb.StateRoot, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return phase0.Root{}, errors.New("no electra block")
+		}
+
+		return v.Electra.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
 }
 
 // Attestations returns the attestations of the beacon block.
-func (v *VersionedBeaconBlock) Attestations() ([]*phase0.Attestation, error) {
+func (v *VersionedBeaconBlock) Attestations() ([]VersionedAttestation, error) {
 	switch v.Version {
 	case DataVersionPhase0:
 		if v.Phase0 == nil || v.Phase0.Body == nil {
 			return nil, errors.New("no phase0 block")
 		}
 
-		return v.Phase0.Body.Attestations, nil
+		versionedAttestations := make([]VersionedAttestation, len(v.Phase0.Body.Attestations))
+		for i, attestation := range v.Phase0.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version: DataVersionPhase0,
+				Phase0:  attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	case DataVersionAltair:
 		if v.Altair == nil || v.Altair.Body == nil {
 			return nil, errors.New("no altair block")
 		}
 
-		return v.Altair.Body.Attestations, nil
+		versionedAttestations := make([]VersionedAttestation, len(v.Altair.Body.Attestations))
+		for i, attestation := range v.Altair.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version: DataVersionAltair,
+				Altair:  attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return nil, errors.New("no bellatrix block")
 		}
 
-		return v.Bellatrix.Body.Attestations, nil
+		versionedAttestations := make([]VersionedAttestation, len(v.Bellatrix.Body.Attestations))
+		for i, attestation := range v.Bellatrix.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version:   DataVersionBellatrix,
+				Bellatrix: attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	case DataVersionCapella:
 		if v.Capella == nil || v.Capella.Body == nil {
 			return nil, errors.New("no capella block")
 		}
 
-		return v.Capella.Body.Attestations, nil
+		versionedAttestations := make([]VersionedAttestation, len(v.Capella.Body.Attestations))
+		for i, attestation := range v.Capella.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version: DataVersionCapella,
+				Capella: attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
 
-		return v.Deneb.Body.Attestations, nil
+		versionedAttestations := make([]VersionedAttestation, len(v.Deneb.Body.Attestations))
+		for i, attestation := range v.Deneb.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version: DataVersionDeneb,
+				Deneb:   attestation,
+			}
+		}
+
+		return versionedAttestations, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		versionedAttestations := make([]VersionedAttestation, len(v.Electra.Body.Attestations))
+		for i, attestation := range v.Electra.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version: DataVersionElectra,
+				Electra: attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
 }
 
 // AttesterSlashings returns the attester slashings of the beacon block.
-func (v *VersionedBeaconBlock) AttesterSlashings() ([]*phase0.AttesterSlashing, error) {
+func (v *VersionedBeaconBlock) AttesterSlashings() ([]VersionedAttesterSlashing, error) {
 	switch v.Version {
 	case DataVersionPhase0:
 		if v.Phase0 == nil || v.Phase0.Body == nil {
 			return nil, errors.New("no phase0 block")
 		}
 
-		return v.Phase0.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Phase0.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Phase0.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionPhase0,
+				Phase0:  attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case DataVersionAltair:
 		if v.Altair == nil || v.Altair.Body == nil {
 			return nil, errors.New("no altair block")
 		}
 
-		return v.Altair.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Altair.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Altair.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionAltair,
+				Altair:  attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
 			return nil, errors.New("no bellatrix block")
 		}
 
-		return v.Bellatrix.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Bellatrix.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Bellatrix.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version:   DataVersionBellatrix,
+				Bellatrix: attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case DataVersionCapella:
 		if v.Capella == nil || v.Capella.Body == nil {
 			return nil, errors.New("no capella block")
 		}
 
-		return v.Capella.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Capella.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Capella.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionCapella,
+				Capella: attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Body == nil {
 			return nil, errors.New("no deneb block")
 		}
 
-		return v.Deneb.Body.AttesterSlashings, nil
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Deneb.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Deneb.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionDeneb,
+				Deneb:   attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Electra.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Electra.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionElectra,
+				Electra: attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -496,6 +664,12 @@ func (v *VersionedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlashing, 
 		}
 
 		return v.Deneb.Body.ProposerSlashings, nil
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -534,6 +708,12 @@ func (v *VersionedBeaconBlock) String() string {
 		}
 
 		return v.Deneb.String()
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return ""
+		}
+
+		return v.Electra.String()
 	default:
 		return "unknown version"
 	}

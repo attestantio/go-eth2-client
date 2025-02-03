@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2023 Attestant Limited.
+// Copyright © 2021 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,6 +20,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -31,11 +32,12 @@ type VersionedBeaconState struct {
 	Bellatrix *bellatrix.BeaconState
 	Capella   *capella.BeaconState
 	Deneb     *deneb.BeaconState
+	Electra   *electra.BeaconState
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBeaconState) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil
 }
 
 // Slot returns the slot of the state.
@@ -71,6 +73,12 @@ func (v *VersionedBeaconState) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Deneb.Slot, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no Electra state")
+		}
+
+		return v.Electra.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -93,6 +101,12 @@ func (v *VersionedBeaconState) NextWithdrawalValidatorIndex() (phase0.ValidatorI
 		}
 
 		return v.Deneb.NextWithdrawalValidatorIndex, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no Electra state")
+		}
+
+		return v.Electra.NextWithdrawalValidatorIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -131,6 +145,12 @@ func (v *VersionedBeaconState) Validators() ([]*phase0.Validator, error) {
 		}
 
 		return v.Deneb.Validators, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return nil, errors.New("no Electra state")
+		}
+
+		return v.Electra.Validators, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -169,6 +189,156 @@ func (v *VersionedBeaconState) ValidatorBalances() ([]phase0.Gwei, error) {
 		}
 
 		return v.Deneb.Balances, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return nil, errors.New("no Electra state")
+		}
+
+		return v.Electra.Balances, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// DepositReceiptsStartIndex returns the deposit requests start index of the state.
+func (v *VersionedBeaconState) DepositRequestsStartIndex() (uint64, error) {
+	switch v.Version {
+	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella, DataVersionDeneb:
+		return 0, errors.New("state does not provide deposit requests start index")
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no Electra state")
+		}
+
+		return v.Electra.DepositRequestsStartIndex, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
+// DepositBalanceToConsume returns the deposit balance to consume of the state.
+func (v *VersionedBeaconState) DepositBalanceToConsume() (phase0.Gwei, error) {
+	switch v.Version {
+	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella, DataVersionDeneb:
+		return 0, errors.New("state does not provide deposit balance to consume")
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no Electra state")
+		}
+
+		return v.Electra.DepositBalanceToConsume, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
+// ExitBalanceToConsume returns the deposit balance to consume of the state.
+func (v *VersionedBeaconState) ExitBalanceToConsume() (phase0.Gwei, error) {
+	switch v.Version {
+	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella, DataVersionDeneb:
+		return 0, errors.New("state does not provide exit balance to consume")
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no Electra state")
+		}
+
+		return v.Electra.ExitBalanceToConsume, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
+// EarliestExitEpoch returns the earliest exit epoch of the state.
+func (v *VersionedBeaconState) EarliestExitEpoch() (phase0.Epoch, error) {
+	switch v.Version {
+	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella, DataVersionDeneb:
+		return 0, errors.New("state does not provide earliest exit epoch")
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no Electra state")
+		}
+
+		return v.Electra.EarliestExitEpoch, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
+// ConsolidationBalanceToConsume returns the consolidation balance to consume of the state.
+func (v *VersionedBeaconState) ConsolidationBalanceToConsume() (phase0.Gwei, error) {
+	switch v.Version {
+	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella, DataVersionDeneb:
+		return 0, errors.New("state does not provide consolidation balance to consume")
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no Electra state")
+		}
+
+		return v.Electra.ConsolidationBalanceToConsume, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
+// EarliestConsolidationEpoch returns the earliest consolidation epoch of the state.
+func (v *VersionedBeaconState) EarliestConsolidationEpoch() (phase0.Epoch, error) {
+	switch v.Version {
+	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella, DataVersionDeneb:
+		return 0, errors.New("state does not provide earliest consolidation epoch")
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no Electra state")
+		}
+
+		return v.Electra.EarliestConsolidationEpoch, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
+// PendingDeposits returns the pending deposits of the state.
+func (v *VersionedBeaconState) PendingDeposits() ([]*electra.PendingDeposit, error) {
+	switch v.Version {
+	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella, DataVersionDeneb:
+		return nil, errors.New("state does not provide pending deposits")
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return nil, errors.New("no Electra state")
+		}
+
+		return v.Electra.PendingDeposits, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// PendingPartialWithdrawals returns the pending partial withdrawals of the state.
+func (v *VersionedBeaconState) PendingPartialWithdrawals() ([]*electra.PendingPartialWithdrawal, error) {
+	switch v.Version {
+	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella, DataVersionDeneb:
+		return nil, errors.New("state does not provide pending partial withdrawals")
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return nil, errors.New("no Electra state")
+		}
+
+		return v.Electra.PendingPartialWithdrawals, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// PendingConsolidations returns the pending consolidations of the state.
+func (v *VersionedBeaconState) PendingConsolidations() ([]*electra.PendingConsolidation, error) {
+	switch v.Version {
+	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella, DataVersionDeneb:
+		return nil, errors.New("state does not provide pending consolidations")
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return nil, errors.New("no Electra state")
+		}
+
+		return v.Electra.PendingConsolidations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -207,6 +377,12 @@ func (v *VersionedBeaconState) String() string {
 		}
 
 		return v.Deneb.String()
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return ""
+		}
+
+		return v.Electra.String()
 	default:
 		return "unknown version"
 	}
