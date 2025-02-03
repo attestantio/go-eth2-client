@@ -32,7 +32,7 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 		return s.AggregateAttestationFunc(ctx, opts)
 	}
 
-  return &api.Response[*spec.VersionedAttestation]{
+	return &api.Response[*spec.VersionedAttestation]{
 		Data: &spec.VersionedAttestation{
 			Version: spec.DataVersionPhase0,
 			Phase0: &phase0.Attestation{
