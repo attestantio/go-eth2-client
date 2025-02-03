@@ -290,9 +290,7 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 						log.Debug().Err(err).Msg("Failed to obtain node client")
 						active = false
 						synced = false
-					}
-
-					if strings.Contains(nodeClient.Data, "prysm") && response.Data.SyncDistance > 1 {
+					} else if strings.Contains(nodeClient.Data, "prysm") && response.Data.SyncDistance > 1 {
 						synced = false
 					}
 				}
