@@ -74,6 +74,7 @@ type Service struct {
 	connectedToDVTMiddleware bool
 	reducedMemoryUsage       bool
 	customSpecSupport        bool
+	elConnectionCheck        bool
 }
 
 // New creates a new Ethereum 2 client service, connecting with a standard HTTP.
@@ -131,6 +132,7 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		hooks:               parameters.hooks,
 		reducedMemoryUsage:  parameters.reducedMemoryUsage,
 		customSpecSupport:   parameters.customSpecSupport,
+		elConnectionCheck:   parameters.elConnectionCheck,
 	}
 
 	// Ping the client to see if it is ready to serve requests.
@@ -276,6 +278,9 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 		} else {
 			active = true
 			synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
+			if s.elConnectionCheck && response.Data.ELOffline {
+				synced = false
+			}
 		}
 		s.pingSem.Release(1)
 	}
