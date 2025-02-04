@@ -634,6 +634,12 @@ func (v *VersionedProposal) GasLimit() (uint64, error) {
 		}
 
 		return v.Deneb.Block.Body.ExecutionPayload.GasLimit, nil
+	case spec.DataVersionElectra:
+		if v.Blinded {
+			return v.ElectraBlinded.Body.ExecutionPayloadHeader.GasLimit, nil
+		}
+
+		return v.Electra.Block.Body.ExecutionPayload.GasLimit, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
