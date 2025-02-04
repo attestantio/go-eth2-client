@@ -25,14 +25,15 @@ import (
 
 // VersionedAttestation contains a versioned attestation.
 type VersionedAttestation struct {
-	Version   DataVersion
-	Phase0    *phase0.Attestation
-	Altair    *phase0.Attestation
-	Bellatrix *phase0.Attestation
-	Capella   *phase0.Attestation
-	Deneb     *phase0.Attestation
-	Electra   *electra.Attestation
-	EIP7732   *electra.Attestation
+	Version        DataVersion
+	ValidatorIndex *phase0.ValidatorIndex
+	Phase0         *phase0.Attestation
+	Altair         *phase0.Attestation
+	Bellatrix      *phase0.Attestation
+	Capella        *phase0.Attestation
+	Deneb          *phase0.Attestation
+	Electra        *electra.Attestation
+	EIP7732        *electra.Attestation
 }
 
 // IsEmpty returns true if there is no block.

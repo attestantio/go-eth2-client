@@ -173,18 +173,17 @@ func (a *Attestation) AggregateValidatorIndex() (phase0.ValidatorIndex, error) {
 }
 
 // ToSingleAttestation returns a SingleAttestation representation of the Attestation.
-func (a *Attestation) ToSingleAttestation() (*SingleAttestation, error) {
-	committeeIndex, err := a.CommitteeIndex()
-	if err != nil {
-		return nil, err
+func (a *Attestation) ToSingleAttestation(validatorIndex *phase0.ValidatorIndex) (*SingleAttestation, error) {
+	if validatorIndex == nil {
+		return nil, errors.New("validator index is nil")
 	}
-	validatorIndex, err := a.AggregateValidatorIndex()
+	committeeIndex, err := a.CommitteeIndex()
 	if err != nil {
 		return nil, err
 	}
 	singleAttestation := SingleAttestation{
 		CommitteeIndex: committeeIndex,
-		AttesterIndex:  validatorIndex,
+		AttesterIndex:  *validatorIndex,
 		Data:           a.Data,
 		Signature:      a.Signature,
 	}
