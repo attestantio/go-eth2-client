@@ -32,6 +32,7 @@ type executionPayloadEnvelopeJSON struct {
 	ExecutionRequests  *electra.ExecutionRequests `json:"execution_requests"`
 	BuilderIndex       string                     `json:"builder_index"`
 	BeaconBlockRoot    string                     `json:"beacon_block_root"`
+	Slot               string                     `json:"slot"`
 	BlobKZGCommitments []string                   `json:"blob_kzg_commitments"`
 	PayloadWithheld    bool                       `json:"payload_withheld"`
 	StateRoot          string                     `json:"state_root"`
@@ -49,8 +50,8 @@ func (e *ExecutionPayloadEnvelope) MarshalJSON() ([]byte, error) {
 		ExecutionRequests:  e.ExecutionRequests,
 		BuilderIndex:       fmt.Sprintf("%d", e.BuilderIndex),
 		BeaconBlockRoot:    fmt.Sprintf("%#x", e.BeaconBlockRoot),
+		Slot:               fmt.Sprintf("%d", e.Slot),
 		BlobKZGCommitments: blobCommitments,
-		PayloadWithheld:    e.PayloadWithheld,
 		StateRoot:          fmt.Sprintf("%#x", e.StateRoot),
 	})
 }
@@ -90,6 +91,15 @@ func (e *ExecutionPayloadEnvelope) UnmarshalJSON(input []byte) error {
 	}
 	copy(e.BeaconBlockRoot[:], root)
 
+	if data.Slot == "" {
+		return errors.New("slot missing")
+	}
+	slot, err := strconv.ParseUint(data.Slot, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid slot")
+	}
+	e.Slot = phase0.Slot(slot)
+
 	e.BlobKZGCommitments = make([]deneb.KZGCommitment, len(data.BlobKZGCommitments))
 	for i := range data.BlobKZGCommitments {
 		commitment, err := hex.DecodeString(strings.TrimPrefix(data.BlobKZGCommitments[i], "0x"))
@@ -98,8 +108,6 @@ func (e *ExecutionPayloadEnvelope) UnmarshalJSON(input []byte) error {
 		}
 		copy(e.BlobKZGCommitments[i][:], commitment)
 	}
-
-	e.PayloadWithheld = data.PayloadWithheld
 
 	if data.StateRoot == "" {
 		return errors.New("state root missing")

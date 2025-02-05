@@ -27,10 +27,10 @@ type ExecutionPayloadEnvelope struct {
 	Payload            *deneb.ExecutionPayload
 	ExecutionRequests  *electra.ExecutionRequests
 	BuilderIndex       phase0.ValidatorIndex
-	BeaconBlockRoot    phase0.Root           `ssz-size:"32"`
-	BlobKZGCommitments []deneb.KZGCommitment `ssz-max:"6"` // MAX_BLOB_COMMITMENTS_PER_BLOCK
-	PayloadWithheld    bool
-	StateRoot          phase0.Root `ssz-size:"32"`
+	BeaconBlockRoot    phase0.Root `ssz-size:"32"`
+	Slot               phase0.Slot
+	BlobKZGCommitments []deneb.KZGCommitment `ssz-max:"4096" ssz-size:"?,48"`
+	StateRoot          phase0.Root           `ssz-size:"32"`
 }
 
 // String returns a string version of the structure.

@@ -16,5 +16,5 @@ package eip7732
 //nolint:revive
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
 //go:generate rm -f beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go executionpayloadheader_ssz.go payloadattestation_ssz.go payloadattestationdata_ssz.go signedexecutionpayloadheader_ssz.go
-//go:generate sszgen --suffix=ssz --path . --include ../phase0,../altair,../bellatrix,../capella,../deneb,../electra --objs BeaconBlockBody,BeaconBlock,BeaconState,ExecutionPayloadHeader,PayloadAttestation,PayloadAttestationData,SignedExecutionPayloadHeader
-//go:generate goimports -w beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go executionpayloadheader_ssz.go payloadattestation_ssz.go payloadattestationdata_ssz.go signedexecutionpayloadheader_ssz.go
+//go:generate sszgen --suffix=ssz --path . --include ../phase0,../altair,../bellatrix,../capella,../deneb,../electra --objs BeaconBlockBody,BeaconBlock,BeaconState,ExecutionPayloadEnvelope,ExecutionPayloadHeader,IndexedPayloadAttestation,PayloadAttestation,PayloadAttestationData,PayloadAttestationMessage,SignedBeaconBlock,SignedExecutionPayloadEnvelope,SignedExecutionPayloadHeader
+//go:generate goimports -w beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go executionpayloadenvelope_ssz.go executionpayloadheader_ssz.go indexedpayloadattestation_ssz.go payloadattestation_ssz.go payloadattestationdata_ssz.go payloadattestationmessage_ssz.go signedbeaconblock_ssz.go signedexecutionpayloadenvelope_ssz.go signedexecutionpayloadheader_ssz.go
