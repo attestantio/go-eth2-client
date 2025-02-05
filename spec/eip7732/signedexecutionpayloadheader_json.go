@@ -19,14 +19,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/pkg/errors"
 )
 
 // signedExecutionPayloadHeaderJSON is the spec representation of the struct.
 type signedExecutionPayloadHeaderJSON struct {
-	Message   *deneb.ExecutionPayloadHeader `json:"message"`
-	Signature string                        `json:"signature"`
+	Message   *ExecutionPayloadHeader `json:"message"`
+	Signature string                  `json:"signature"`
 }
 
 // MarshalJSON implements json.Marshaler.

@@ -226,15 +226,7 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockNumber() (uint64, error) {
 
 		return v.Electra.Message.Body.ExecutionPayload.BlockNumber, nil
 	case DataVersionEIP7732:
-		if v.EIP7732 == nil ||
-			v.EIP7732.Message == nil ||
-			v.EIP7732.Message.Body == nil ||
-			v.EIP7732.Message.Body.SignedExecutionPayloadHeader == nil ||
-			v.EIP7732.Message.Body.SignedExecutionPayloadHeader.Message == nil {
-			return 0, errors.New("no eip7732 block")
-		}
-
-		return v.EIP7732.Message.Body.SignedExecutionPayloadHeader.Message.BlockNumber, nil
+		return 0, errors.New("no execution block number for eip7732 block")
 	default:
 		return 0, errors.New("unknown version")
 	}

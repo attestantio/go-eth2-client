@@ -16,14 +16,13 @@ package eip7732
 import (
 	"fmt"
 
-	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 )
 
 // SignedExecutionPayloadHeader represents a signed execution payload header.
 type SignedExecutionPayloadHeader struct {
-	Message   *deneb.ExecutionPayloadHeader
+	Message   *ExecutionPayloadHeader
 	Signature phase0.BLSSignature `ssz-size:"96"`
 }
 
