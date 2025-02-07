@@ -21,7 +21,16 @@ import (
 )
 
 // BeaconStateRoot fetches a beacon state's root given a state ID.
-func (*Service) BeaconStateRoot(_ context.Context, _ *api.BeaconStateRootOpts) (*api.Response[*phase0.Root], error) {
+func (s *Service) BeaconStateRoot(ctx context.Context,
+	opts *api.BeaconStateRootOpts,
+) (
+	*api.Response[*phase0.Root],
+	error,
+) {
+	if s.BeaconStateRootFunc != nil {
+		return s.BeaconStateRootFunc(ctx, opts)
+	}
+
 	data := phase0.Root{}
 
 	return &api.Response[*phase0.Root]{

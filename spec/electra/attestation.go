@@ -28,11 +28,14 @@ import (
 )
 
 // Attestation is the Ethereum 2 attestation structure.
+//
+//nolint:tagalign
 type Attestation struct {
-	AggregationBits bitfield.Bitlist `ssz-max:"131072"`
+	AggregationBits bitfield.Bitlist `ssz-max:"131072" dynssz-max:"MAX_VALIDATORS_PER_COMMITTEE*MAX_COMMITTEES_PER_SLOT"`
 	Data            *phase0.AttestationData
-	Signature       phase0.BLSSignature  `ssz-size:"96"`
-	CommitteeBits   bitfield.Bitvector64 `dynssz-size:"MAX_COMMITTEES_PER_SLOT/8" ssz-size:"8"`
+	Signature       phase0.BLSSignature `ssz-size:"96"`
+	// bitfield.Bitvector64 is an 8 byte array so dynamic sizing doesn't make sense.
+	CommitteeBits bitfield.Bitvector64 `ssz-size:"8"`
 }
 
 // attestationJSON is a raw representation of the struct.
@@ -139,4 +142,51 @@ func (a *Attestation) String() string {
 	}
 
 	return string(data)
+}
+
+// CommitteeIndex returns the index if only one bit is set, otherwise error.
+func (a *Attestation) CommitteeIndex() (phase0.CommitteeIndex, error) {
+	bits := a.CommitteeBits
+	if len(bits.BitIndices()) == 0 {
+		return 0, errors.New("no committee index found in committee bits")
+	}
+	if len(bits.BitIndices()) > 1 {
+		return 0, errors.New("multiple committee indices found in committee bits")
+	}
+	foundIndex := phase0.CommitteeIndex(bits.BitIndices()[0])
+
+	return foundIndex, nil
+}
+
+// AggregateValidatorIndex returns the index if only one bit is set, otherwise error.
+func (a *Attestation) AggregateValidatorIndex() (phase0.ValidatorIndex, error) {
+	bits := a.AggregationBits
+	if len(bits.BitIndices()) == 0 {
+		return 0, errors.New("no validator index found in aggregation bits")
+	}
+	if len(bits.BitIndices()) > 1 {
+		return 0, errors.New("multiple validator indices found in aggregation bits")
+	}
+	foundIndex := phase0.ValidatorIndex(bits.BitIndices()[0])
+
+	return foundIndex, nil
+}
+
+// ToSingleAttestation returns a SingleAttestation representation of the Attestation.
+func (a *Attestation) ToSingleAttestation(validatorIndex *phase0.ValidatorIndex) (*SingleAttestation, error) {
+	if validatorIndex == nil {
+		return nil, errors.New("validator index is nil")
+	}
+	committeeIndex, err := a.CommitteeIndex()
+	if err != nil {
+		return nil, err
+	}
+	singleAttestation := SingleAttestation{
+		CommitteeIndex: committeeIndex,
+		AttesterIndex:  *validatorIndex,
+		Data:           a.Data,
+		Signature:      a.Signature,
+	}
+
+	return &singleAttestation, nil
 }

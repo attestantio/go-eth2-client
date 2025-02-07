@@ -22,7 +22,7 @@ import (
 )
 
 // AttesterDuties obtains attester duties.
-// If validatorIndicess is nil it will return all duties for the given epoch.
+// If validatorIndices is nil it will return all duties for the given epoch.
 func (s *Service) AttesterDuties(ctx context.Context,
 	opts *api.AttesterDutiesOpts,
 ) (

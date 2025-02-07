@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2023 Attestant Limited.
+// Copyright © 2021 - 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -197,11 +197,11 @@ func (s *Erroring) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, e
 	return next.TargetAggregatorsPerCommittee(ctx)
 }
 
-// AggregateAttestation fetches the aggregate attestation given an attestation.
+// AggregateAttestation fetches the aggregate attestation for the given options.
 func (s *Erroring) AggregateAttestation(ctx context.Context,
 	opts *api.AggregateAttestationOpts,
 ) (
-	*api.Response[*phase0.Attestation],
+	*api.Response[*spec.VersionedAttestation],
 	error,
 ) {
 	if err := s.maybeError(ctx); err != nil {
@@ -216,7 +216,7 @@ func (s *Erroring) AggregateAttestation(ctx context.Context,
 }
 
 // SubmitAggregateAttestations submits aggregate attestations.
-func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error {
+func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -225,7 +225,7 @@ func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, aggregateAnd
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.SubmitAggregateAttestations(ctx, aggregateAndProofs)
+	return next.SubmitAggregateAttestations(ctx, opts)
 }
 
 // AttestationData fetches the attestation data for the given slot and committee index.
@@ -265,7 +265,7 @@ func (s *Erroring) AttestationPool(ctx context.Context,
 }
 
 // SubmitAttestations submits attestations.
-func (s *Erroring) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
+func (s *Erroring) SubmitAttestations(ctx context.Context, attestations *api.SubmitAttestationsOpts) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -319,7 +319,7 @@ func (s *Erroring) SubmitSyncCommitteeMessages(ctx context.Context, messages []*
 }
 
 // AttesterDuties obtains attester duties.
-// If validatorIndicess is nil it will return all duties for the given epoch.
+// If validatorIndices is nil it will return all duties for the given epoch.
 func (s *Erroring) AttesterDuties(ctx context.Context,
 	opts *api.AttesterDutiesOpts,
 ) (
@@ -678,7 +678,7 @@ func (s *Erroring) SyncCommitteeContribution(ctx context.Context,
 }
 
 // SyncCommitteeDuties obtains sync committee duties.
-// If validatorIndicess is nil it will return all duties for the given epoch.
+// If validatorIndices is nil it will return all duties for the given epoch.
 func (s *Erroring) SyncCommitteeDuties(ctx context.Context,
 	opts *api.SyncCommitteeDutiesOpts,
 ) (
@@ -910,4 +910,58 @@ func (s *Erroring) ForkChoice(ctx context.Context,
 	}
 
 	return next.ForkChoice(ctx, opts)
+}
+
+// AttestationRewards provides rewards to the given validators for attesting.
+func (s *Erroring) AttestationRewards(ctx context.Context,
+	opts *api.AttestationRewardsOpts,
+) (
+	*api.Response[*apiv1.AttestationRewards],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.AttestationRewardsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.AttestationRewards(ctx, opts)
+}
+
+// BlockRewards provides rewards for proposing a block.
+func (s *Erroring) BlockRewards(ctx context.Context,
+	opts *api.BlockRewardsOpts,
+) (
+	*api.Response[*apiv1.BlockRewards],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.BlockRewardsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.BlockRewards(ctx, opts)
+}
+
+// SyncCommitteeRewards provides rewards to the given validators for being members of a sync committee.
+func (s *Erroring) SyncCommitteeRewards(ctx context.Context,
+	opts *api.SyncCommitteeRewardsOpts,
+) (
+	*api.Response[[]*apiv1.SyncCommitteeReward],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.SyncCommitteeRewardsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.SyncCommitteeRewards(ctx, opts)
 }

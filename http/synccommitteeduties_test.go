@@ -75,7 +75,7 @@ func TestSyncCommitteeDuties(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, response)
 			require.NotNil(t, response.Data)
-			// No guaratee that any included indices will be have a sync duty.
+			// No guarantee that any included indices will have a sync duty.
 		})
 	}
 }

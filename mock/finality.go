@@ -22,7 +22,11 @@ import (
 )
 
 // Finality provides the finality given a state ID.
-func (*Service) Finality(_ context.Context, _ *api.FinalityOpts) (*api.Response[*apiv1.Finality], error) {
+func (s *Service) Finality(ctx context.Context, opts *api.FinalityOpts) (*api.Response[*apiv1.Finality], error) {
+	if s.FinalityFunc != nil {
+		return s.FinalityFunc(ctx, opts)
+	}
+
 	return &api.Response[*apiv1.Finality]{
 		Data: &apiv1.Finality{
 			Finalized: &phase0.Checkpoint{

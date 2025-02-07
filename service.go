@@ -161,7 +161,7 @@ type AggregateAttestationProvider interface {
 	AggregateAttestation(ctx context.Context,
 		opts *api.AggregateAttestationOpts,
 	) (
-		*api.Response[*phase0.Attestation],
+		*api.Response[*spec.VersionedAttestation],
 		error,
 	)
 }
@@ -169,7 +169,7 @@ type AggregateAttestationProvider interface {
 // AggregateAttestationsSubmitter is the interface for submitting aggregate attestations.
 type AggregateAttestationsSubmitter interface {
 	// SubmitAggregateAttestations submits aggregate attestations.
-	SubmitAggregateAttestations(ctx context.Context, aggregateAndProofs []*phase0.SignedAggregateAndProof) error
+	SubmitAggregateAttestations(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error
 }
 
 // AttestationDataProvider is the interface for providing attestation data.
@@ -194,10 +194,21 @@ type AttestationPoolProvider interface {
 	)
 }
 
+// AttestationRewardsProvider is the interface for providing attestation rewards.
+type AttestationRewardsProvider interface {
+	// AttestationRewards provides rewards to the given validators for attesting.
+	AttestationRewards(ctx context.Context,
+		opts *api.AttestationRewardsOpts,
+	) (
+		*api.Response[*apiv1.AttestationRewards],
+		error,
+	)
+}
+
 // AttestationsSubmitter is the interface for submitting attestations.
 type AttestationsSubmitter interface {
 	// SubmitAttestations submits attestations.
-	SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error
+	SubmitAttestations(ctx context.Context, opts *api.SubmitAttestationsOpts) error
 }
 
 // AttesterSlashingSubmitter is the interface for submitting attester slashings.
@@ -217,6 +228,17 @@ type AttesterDutiesProvider interface {
 	)
 }
 
+// BlockRewardsProvider is the interface for providing block rewards.
+type BlockRewardsProvider interface {
+	// BlockRewards provides rewards for proposing a block.
+	BlockRewards(ctx context.Context,
+		opts *api.BlockRewardsOpts,
+	) (
+		*api.Response[*apiv1.BlockRewards],
+		error,
+	)
+}
+
 // DepositContractProvider is the interface for providing details about the deposit contract.
 type DepositContractProvider interface {
 	// DepositContract provides details of the execution deposit contract for the chain.
@@ -231,7 +253,7 @@ type DepositContractProvider interface {
 // SyncCommitteeDutiesProvider is the interface for providing sync committee duties.
 type SyncCommitteeDutiesProvider interface {
 	// SyncCommitteeDuties obtains sync committee duties.
-	// If validatorIndicess is nil it will return all duties for the given epoch.
+	// If validatorIndices is nil it will return all duties for the given epoch.
 	SyncCommitteeDuties(ctx context.Context,
 		opts *api.SyncCommitteeDutiesOpts,
 	) (
@@ -267,6 +289,17 @@ type SyncCommitteeContributionProvider interface {
 type SyncCommitteeContributionsSubmitter interface {
 	// SubmitSyncCommitteeContributions submits sync committee contributions.
 	SubmitSyncCommitteeContributions(ctx context.Context, contributionAndProofs []*altair.SignedContributionAndProof) error
+}
+
+// SyncCommitteeRewardsProvider is the interface for providing sync committee rewards.
+type SyncCommitteeRewardsProvider interface {
+	// SyncCommitteeRewards provides rewards to the given validators for being members of a sync committee.
+	SyncCommitteeRewards(ctx context.Context,
+		opts *api.SyncCommitteeRewardsOpts,
+	) (
+		*api.Response[[]*apiv1.SyncCommitteeReward],
+		error,
+	)
 }
 
 // BLSToExecutionChangesSubmitter is the interface for submitting BLS to execution address changes.

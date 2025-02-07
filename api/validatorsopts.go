@@ -31,7 +31,7 @@ type ValidatorsOpts struct {
 	// PubKeys is a list of validator public keys to restrict the returned values.
 	// If no public keys are supplied then no filter will be applied.
 	PubKeys []phase0.BLSPubKey
-	// ValidatorStates is a list of validator states to restric the returned values.
+	// ValidatorStates is a list of validator states to restrict the returned values.
 	// If no validator states are supplied then no filter will be applied.
 	ValidatorStates []apiv1.ValidatorState
 }
