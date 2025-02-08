@@ -28,7 +28,7 @@ import (
 type ExecutionPayloadEvent struct {
 	BlockRoot           phase0.Root
 	Slot                phase0.Slot
-	PayloadHash         phase0.Hash32
+	ExecutionBlockHash  phase0.Hash32
 	ExecutionOptimistic bool
 }
 
@@ -36,7 +36,7 @@ type ExecutionPayloadEvent struct {
 type executionPayloadEventJSON struct {
 	BlockRoot           string `json:"block_root"`
 	Slot                string `json:"slot"`
-	PayloadHash         string `json:"payload_hash"`
+	ExecutionBlockHash  string `json:"execution_block_hash"`
 	ExecutionOptimistic bool   `json:"execution_optimistic"`
 }
 
@@ -45,7 +45,7 @@ func (e *ExecutionPayloadEvent) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&executionPayloadEventJSON{
 		BlockRoot:           fmt.Sprintf("%#x", e.BlockRoot),
 		Slot:                fmt.Sprintf("%d", e.Slot),
-		PayloadHash:         fmt.Sprintf("%#x", e.PayloadHash),
+		ExecutionBlockHash:  fmt.Sprintf("%#x", e.ExecutionBlockHash),
 		ExecutionOptimistic: e.ExecutionOptimistic,
 	})
 }
@@ -77,17 +77,18 @@ func (e *ExecutionPayloadEvent) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "invalid value for slot")
 	}
 	e.Slot = phase0.Slot(slot)
-	if executionPayloadEventJSON.PayloadHash == "" {
+	if executionPayloadEventJSON.ExecutionBlockHash == "" {
 		return errors.New("payload hash missing")
 	}
-	payloadHash, err := hex.DecodeString(strings.TrimPrefix(executionPayloadEventJSON.PayloadHash, "0x"))
+	payloadHash, err := hex.DecodeString(strings.TrimPrefix(executionPayloadEventJSON.ExecutionBlockHash, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for payload hash")
 	}
 	if len(payloadHash) != rootLength {
 		return fmt.Errorf("incorrect length %d for payload hash", len(payloadHash))
 	}
-	copy(e.PayloadHash[:], payloadHash)
+	copy(e.ExecutionBlockHash[:], payloadHash)
+	e.ExecutionOptimistic = executionPayloadEventJSON.ExecutionOptimistic
 
 	return nil
 }
