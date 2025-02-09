@@ -104,7 +104,10 @@ func (s *Service) signedExecutionPayloadEnvelopeFromSSZ(ctx context.Context,
 	return response, nil
 }
 
-func (*Service) signedExecutionPayloadEnvelopeFromJSON(res *httpResponse) (*api.Response[*eip7732.SignedExecutionPayloadEnvelope], error) {
+func (*Service) signedExecutionPayloadEnvelopeFromJSON(res *httpResponse) (
+	*api.Response[*eip7732.SignedExecutionPayloadEnvelope],
+	error,
+) {
 	response := &api.Response[*eip7732.SignedExecutionPayloadEnvelope]{}
 
 	if res.consensusVersion != spec.DataVersionEIP7732 {
