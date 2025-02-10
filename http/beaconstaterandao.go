@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2022, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,49 +14,45 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/hex"
-	"encoding/json"
+	"errors"
 	"fmt"
-	"strings"
 
+	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
-type stateRandaoJSON struct {
-	Data *stateRandaoDataJSON `json:"data"`
+type beaconStateRandaoJSON struct {
+	Randao phase0.Root `json:"randao"`
 }
 
-type stateRandaoDataJSON struct {
-	Randao string `json:"randao"`
-}
-
-// BeaconStateRandao fetches a beacon state RANDAO given a state ID.
-func (s *Service) BeaconStateRandao(ctx context.Context, stateID string) (*phase0.Root, error) {
-	if stateID == "" {
-		return nil, errors.New("no state ID specified")
+// BeaconStateRandao fetches the beacon state RANDAO given a set of options.
+func (s *Service) BeaconStateRandao(ctx context.Context, opts *api.BeaconStateRandaoOpts) (*api.Response[*phase0.Root], error) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
+	if opts == nil {
+		return nil, client.ErrNoOptions
+	}
+	if opts.State == "" {
+		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/randao", stateID))
+	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/randao", opts.State)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request state RANDAO")
-	}
-	if respBodyReader == nil {
-		return nil, nil
+		return nil, err
 	}
 
-	var data stateRandaoJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&data); err != nil {
-		return nil, errors.Wrap(err, "failed to parse state RANDAO")
-	}
-
-	bytes, err := hex.DecodeString(strings.TrimPrefix(data.Data.Randao, "0x"))
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), beaconStateRandaoJSON{})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse state RANDAO value")
+		return nil, err
 	}
-	var stateRandao phase0.Root
-	copy(stateRandao[:], bytes)
 
-	return &stateRandao, nil
+	return &api.Response[*phase0.Root]{
+		Data:     &data.Randao,
+		Metadata: metadata,
+	}, nil
 }

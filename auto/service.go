@@ -16,7 +16,7 @@ package auto
 import (
 	"context"
 
-	client "github.com/attestantio/go-eth2-client"
+	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -28,7 +28,7 @@ var log zerolog.Logger
 
 // New creates a new Ethereum 2 client service, trying different implementations at the given address.
 // Deprecated.  Use the `http` module instead.
-func New(ctx context.Context, params ...Parameter) (client.Service, error) {
+func New(ctx context.Context, params ...Parameter) (consensusclient.Service, error) {
 	parameters, err := parseAndCheckParameters(params...)
 	if err != nil {
 		return nil, errors.Wrap(err, "problem with parameters")
@@ -51,7 +51,7 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 	return nil, errors.New("failed to connect to Ethereum 2 client with any known method")
 }
 
-func tryHTTP(ctx context.Context, parameters *parameters) (client.Service, error) {
+func tryHTTP(ctx context.Context, parameters *parameters) (consensusclient.Service, error) {
 	httpParameters := make([]http.Parameter, 0)
 	httpParameters = append(httpParameters, http.WithLogLevel(parameters.logLevel))
 	httpParameters = append(httpParameters, http.WithAddress(parameters.address))
@@ -60,5 +60,6 @@ func tryHTTP(ctx context.Context, parameters *parameters) (client.Service, error
 	if err != nil {
 		return nil, errors.Wrap(err, "failed when trying to open connection with standard API")
 	}
+
 	return client, nil
 }

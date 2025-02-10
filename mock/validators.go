@@ -16,14 +16,24 @@ package mock
 import (
 	"context"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // Validators provides the validators, with their balance and status, for a given state.
-// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validatorIndices is a list of validator indices to restrict the returned values.  If no validators IDs are supplied no filter
-// will be applied.
-func (s *Service) Validators(_ context.Context, _ string, _ []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]*api.Validator, error) {
-	return map[phase0.ValidatorIndex]*api.Validator{}, nil
+func (s *Service) Validators(ctx context.Context,
+	opts *api.ValidatorsOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator],
+	error,
+) {
+	if s.ValidatorsFunc != nil {
+		return s.ValidatorsFunc(ctx, opts)
+	}
+
+	return &api.Response[map[phase0.ValidatorIndex]*apiv1.Validator]{
+		Data:     map[phase0.ValidatorIndex]*apiv1.Validator{},
+		Metadata: make(map[string]any),
+	}, nil
 }

@@ -17,23 +17,33 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // DepositContract provides details of the Ethereum 1 deposit contract for the chain.
-func (s *Service) DepositContract(ctx context.Context) (*api.DepositContract, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		aggregate, err := client.(consensusclient.DepositContractProvider).DepositContract(ctx)
+func (s *Service) DepositContract(ctx context.Context,
+	opts *api.DepositContractOpts,
+) (
+	*api.Response[*apiv1.DepositContract],
+	error,
+) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
+		aggregate, err := client.(consensusclient.DepositContractProvider).DepositContract(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return aggregate, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
+
+	response, isResponse := res.(*api.Response[*apiv1.DepositContract])
+	if !isResponse {
+		return nil, ErrIncorrectType
 	}
-	return res.(*api.DepositContract), nil
+
+	return response, nil
 }

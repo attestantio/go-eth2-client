@@ -16,10 +16,23 @@ package mock
 import (
 	"context"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-// DepositContract provides details of the Ethereum 1 deposit contract for the chain.
-func (s *Service) DepositContract(_ context.Context) (*api.DepositContract, error) {
-	return &api.DepositContract{}, nil
+// DepositContract provides details of the execution layer deposit contract for the chain.
+func (s *Service) DepositContract(ctx context.Context,
+	opts *api.DepositContractOpts,
+) (
+	*api.Response[*apiv1.DepositContract],
+	error,
+) {
+	if s.DepositContractFunc != nil {
+		return s.DepositContractFunc(ctx, opts)
+	}
+
+	return &api.Response[*apiv1.DepositContract]{
+		Data:     &apiv1.DepositContract{},
+		Metadata: make(map[string]any),
+	}, nil
 }

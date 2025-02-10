@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,50 +16,71 @@ package http
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
+	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-type syncCommitteeDutiesJSON struct {
-	Data []*api.SyncCommitteeDuty `json:"data"`
-}
-
 // SyncCommitteeDuties obtains sync committee duties.
-func (s *Service) SyncCommitteeDuties(ctx context.Context, epoch phase0.Epoch, validatorIndices []phase0.ValidatorIndex) ([]*api.SyncCommitteeDuty, error) {
+func (s *Service) SyncCommitteeDuties(ctx context.Context,
+	opts *api.SyncCommitteeDutiesOpts,
+) (
+	*api.Response[[]*apiv1.SyncCommitteeDuty],
+	error,
+) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
+	if opts == nil {
+		return nil, client.ErrNoOptions
+	}
+	if len(opts.Indices) == 0 {
+		return nil, errors.Join(errors.New("no validator indices specified"), client.ErrInvalidOptions)
+	}
+
 	var reqBodyReader bytes.Buffer
 	if _, err := reqBodyReader.WriteString(`[`); err != nil {
-		return nil, errors.Wrap(err, "failed to write validator index array start")
+		return nil, errors.Join(errors.New("failed to write validator index array start"), err)
 	}
-	for i := range validatorIndices {
-		if _, err := reqBodyReader.WriteString(fmt.Sprintf(`"%d"`, validatorIndices[i])); err != nil {
-			return nil, errors.Wrap(err, "failed to write index")
+	for i := range opts.Indices {
+		if _, err := reqBodyReader.WriteString(fmt.Sprintf(`"%d"`, opts.Indices[i])); err != nil {
+			return nil, errors.Join(errors.New("failed to write index"), err)
 		}
-		if i != len(validatorIndices)-1 {
+		if i != len(opts.Indices)-1 {
 			if _, err := reqBodyReader.WriteString(`,`); err != nil {
-				return nil, errors.Wrap(err, "failed to write separator")
+				return nil, errors.Join(errors.New("failed to write separator"), err)
 			}
 		}
 	}
 	if _, err := reqBodyReader.WriteString(`]`); err != nil {
-		return nil, errors.Wrap(err, "failed to write end of validator index array")
+		return nil, errors.Join(errors.New("failed to write end of validator index array"), err)
 	}
-	url := fmt.Sprintf("/eth/v1/validator/duties/sync/%d", epoch)
-	respBodyReader, err := s.post(ctx, url, &reqBodyReader)
+
+	endpoint := fmt.Sprintf("/eth/v1/validator/duties/sync/%d", opts.Epoch)
+	query := ""
+
+	httpResponse, err := s.post(ctx,
+		endpoint,
+		query,
+		&api.CommonOpts{},
+		&reqBodyReader,
+		ContentTypeJSON,
+		map[string]string{},
+	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request sync committee duties")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain sync committee duties")
+		return nil, errors.Join(errors.New("failed to request sync committee duties"), err)
 	}
 
-	var resp syncCommitteeDutiesJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse sync committee duties response")
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*apiv1.SyncCommitteeDuty{})
+	if err != nil {
+		return nil, err
 	}
 
-	return resp.Data, nil
+	return &api.Response[[]*apiv1.SyncCommitteeDuty]{
+		Metadata: metadata,
+		Data:     data,
+	}, nil
 }

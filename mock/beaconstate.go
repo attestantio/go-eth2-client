@@ -16,13 +16,23 @@ package mock
 import (
 	"context"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // BeaconState fetches a beacon state given a state ID.
-func (s *Service) BeaconState(_ context.Context, _ string) (*spec.VersionedBeaconState, error) {
-	return &spec.VersionedBeaconState{
+func (s *Service) BeaconState(ctx context.Context,
+	opts *api.BeaconStateOpts,
+) (
+	*api.Response[*spec.VersionedBeaconState],
+	error,
+) {
+	if s.BeaconStateFunc != nil {
+		return s.BeaconStateFunc(ctx, opts)
+	}
+
+	data := &spec.VersionedBeaconState{
 		Version: spec.DataVersionPhase0,
 		Phase0: &phase0.BeaconState{
 			LatestBlockHeader:           &phase0.BeaconBlockHeader{},
@@ -31,5 +41,10 @@ func (s *Service) BeaconState(_ context.Context, _ string) (*spec.VersionedBeaco
 			CurrentJustifiedCheckpoint:  &phase0.Checkpoint{},
 			FinalizedCheckpoint:         &phase0.Checkpoint{},
 		},
+	}
+
+	return &api.Response[*spec.VersionedBeaconState]{
+		Data:     data,
+		Metadata: make(map[string]any),
 	}, nil
 }

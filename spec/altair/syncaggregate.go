@@ -28,7 +28,7 @@ import (
 
 // SyncAggregate is the Ethereum 2 sync aggregate structure.
 type SyncAggregate struct {
-	SyncCommitteeBits      bitfield.Bitvector512 `ssz-size:"64"`
+	SyncCommitteeBits      bitfield.Bitvector512 `dynssz-size:"SYNC_COMMITTEE_SIZE/8" ssz-size:"64"`
 	SyncCommitteeSignature phase0.BLSSignature   `ssz-size:"96"`
 }
 
@@ -58,6 +58,7 @@ func (s *SyncAggregate) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &syncAggregateJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&syncAggregateJSON)
 }
 
@@ -68,12 +69,6 @@ func (s *SyncAggregate) unpack(syncAggregateJSON *syncAggregateJSON) error {
 	syncCommitteeBits, err := hex.DecodeString(strings.TrimPrefix(syncAggregateJSON.SyncCommitteeBits, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for sync committee bits")
-	}
-	if len(syncCommitteeBits) < syncCommitteeSize/8 {
-		return errors.New("sync committee bits too short")
-	}
-	if len(syncCommitteeBits) > syncCommitteeSize/8 {
-		return errors.New("sync committee bits too long")
 	}
 	s.SyncCommitteeBits = syncCommitteeBits
 
@@ -104,6 +99,7 @@ func (s *SyncAggregate) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -114,6 +110,7 @@ func (s *SyncAggregate) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &syncAggregateJSON); err != nil {
 		return err
 	}
+
 	return s.unpack(&syncAggregateJSON)
 }
 
@@ -123,5 +120,6 @@ func (s *SyncAggregate) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

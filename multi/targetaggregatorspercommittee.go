@@ -21,8 +21,10 @@ import (
 )
 
 // TargetAggregatorsPerCommittee provides the target number of aggregators for each attestation committee.
+//
+// Deprecated:  Use Spec().
 func (s *Service) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		aggregators, err := client.(consensusclient.TargetAggregatorsPerCommitteeProvider).TargetAggregatorsPerCommittee(ctx)
 		if err != nil {
 			return nil, err
@@ -30,10 +32,17 @@ func (s *Service) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, er
 		if aggregators == 0 {
 			return nil, errors.New("zero value not a valid response")
 		}
+
 		return aggregators, nil
 	}, nil)
 	if err != nil {
 		return 0, err
 	}
-	return res.(uint64), nil
+
+	response, isResponse := res.(uint64)
+	if !isResponse {
+		return 0, ErrIncorrectType
+	}
+
+	return response, nil
 }

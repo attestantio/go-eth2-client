@@ -65,6 +65,7 @@ func (d *DepositData) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &depositDataJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return d.unpack(&depositDataJSON)
 }
 
@@ -83,7 +84,9 @@ func (d *DepositData) unpack(depositDataJSON *depositDataJSON) error {
 	if depositDataJSON.WithdrawalCredentials == "" {
 		return errors.New("withdrawal credentials missing")
 	}
-	if d.WithdrawalCredentials, err = hex.DecodeString(strings.TrimPrefix(depositDataJSON.WithdrawalCredentials, "0x")); err != nil {
+	if d.WithdrawalCredentials, err = hex.DecodeString(
+		strings.TrimPrefix(depositDataJSON.WithdrawalCredentials, "0x"),
+	); err != nil {
 		return errors.Wrap(err, "invalid value for withdrawal credentials")
 	}
 	if len(d.WithdrawalCredentials) != HashLength {
@@ -123,6 +126,7 @@ func (d *DepositData) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -133,6 +137,7 @@ func (d *DepositData) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &depositDataJSON); err != nil {
 		return err
 	}
+
 	return d.unpack(&depositDataJSON)
 }
 
@@ -142,5 +147,6 @@ func (d *DepositData) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

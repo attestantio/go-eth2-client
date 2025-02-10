@@ -74,20 +74,21 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range b.Slashings {
 		slashings[i] = fmt.Sprintf("%d", b.Slashings[i])
 	}
-	PreviousEpochParticipation := make([]string, len(b.PreviousEpochParticipation))
+	previousEpochParticipation := make([]string, len(b.PreviousEpochParticipation))
 	for i := range b.PreviousEpochParticipation {
-		PreviousEpochParticipation[i] = fmt.Sprintf("%d", b.PreviousEpochParticipation[i])
+		previousEpochParticipation[i] = fmt.Sprintf("%d", b.PreviousEpochParticipation[i])
 	}
-	CurrentEpochParticipation := make([]string, len(b.CurrentEpochParticipation))
+	currentEpochParticipation := make([]string, len(b.CurrentEpochParticipation))
 	for i := range b.CurrentEpochParticipation {
-		CurrentEpochParticipation[i] = fmt.Sprintf("%d", b.CurrentEpochParticipation[i])
+		currentEpochParticipation[i] = fmt.Sprintf("%d", b.CurrentEpochParticipation[i])
 	}
 	inactivityScores := make([]string, len(b.InactivityScores))
 	for i := range b.InactivityScores {
-		inactivityScores[i] = fmt.Sprintf("%d", b.InactivityScores[i])
+		inactivityScores[i] = strconv.FormatUint(b.InactivityScores[i], 10)
 	}
+
 	return json.Marshal(&beaconStateJSON{
-		GenesisTime:                  fmt.Sprintf("%d", b.GenesisTime),
+		GenesisTime:                  strconv.FormatUint(b.GenesisTime, 10),
 		GenesisValidatorsRoot:        b.GenesisValidatorsRoot,
 		Slot:                         b.Slot,
 		Fork:                         b.Fork,
@@ -97,13 +98,13 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 		HistoricalRoots:              b.HistoricalRoots,
 		ETH1Data:                     b.ETH1Data,
 		ETH1DataVotes:                b.ETH1DataVotes,
-		ETH1DepositIndex:             fmt.Sprintf("%d", b.ETH1DepositIndex),
+		ETH1DepositIndex:             strconv.FormatUint(b.ETH1DepositIndex, 10),
 		Validators:                   b.Validators,
 		Balances:                     balances,
 		RANDAOMixes:                  randaoMixes,
 		Slashings:                    slashings,
-		PreviousEpochParticipation:   PreviousEpochParticipation,
-		CurrentEpochParticipation:    CurrentEpochParticipation,
+		PreviousEpochParticipation:   previousEpochParticipation,
+		CurrentEpochParticipation:    currentEpochParticipation,
 		JustificationBits:            fmt.Sprintf("%#x", b.JustificationBits.Bytes()),
 		PreviousJustifiedCheckpoint:  b.PreviousJustifiedCheckpoint,
 		CurrentJustifiedCheckpoint:   b.CurrentJustifiedCheckpoint,
@@ -170,6 +171,11 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["eth1_data_votes"], &b.ETH1DataVotes); err != nil {
 		return errors.Wrap(err, "eth1_data_votes")
 	}
+	for i := range b.ETH1DataVotes {
+		if b.ETH1DataVotes[i] == nil {
+			return fmt.Errorf("eth1 data votes entry %d missing", i)
+		}
+	}
 
 	eth1DepositIndex := string(bytes.Trim(raw["eth1_deposit_index"], `"`))
 	if b.ETH1DepositIndex, err = strconv.ParseUint(eth1DepositIndex, 10, 64); err != nil {
@@ -178,6 +184,11 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 
 	if err := json.Unmarshal(raw["validators"], &b.Validators); err != nil {
 		return errors.Wrap(err, "validators")
+	}
+	for i := range b.Validators {
+		if b.Validators[i] == nil {
+			return fmt.Errorf("validators entry %d missing", i)
+		}
 	}
 
 	if err := json.Unmarshal(raw["balances"], &b.Balances); err != nil {
@@ -259,6 +270,11 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 
 	if err := json.Unmarshal(raw["historical_summaries"], &b.HistoricalSummaries); err != nil {
 		return errors.Wrap(err, "historical_summaries")
+	}
+	for i := range b.HistoricalSummaries {
+		if b.HistoricalSummaries[i] == nil {
+			return fmt.Errorf("historical summaries entry %d missing", i)
+		}
 	}
 
 	return nil

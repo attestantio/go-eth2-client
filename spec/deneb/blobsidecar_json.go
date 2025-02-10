@@ -24,27 +24,23 @@ import (
 
 // blobSidecarJSON is the spec representation of the struct.
 type blobSidecarJSON struct {
-	BlockRoot       phase0.Root   `json:"block_root"`
-	Index           string        `json:"index"`
-	Slot            string        `json:"slot"`
-	BlockParentRoot phase0.Root   `json:"block_parent_root"`
-	ProposerIndex   string        `json:"proposer_index"`
-	Blob            Blob          `json:"blob"`
-	KzgCommitment   KzgCommitment `json:"kzg_commitment"`
-	KzgProof        KzgProof      `json:"kzg_proof"`
+	Index                       string                          `json:"index"`
+	Blob                        Blob                            `json:"blob"`
+	KZGCommitment               KZGCommitment                   `json:"kzg_commitment"`
+	KZGProof                    KZGProof                        `json:"kzg_proof"`
+	SignedBlockHeader           *phase0.SignedBeaconBlockHeader `json:"signed_block_header"`
+	KZGCommitmentInclusionProof KZGCommitmentInclusionProof     `json:"kzg_commitment_inclusion_proof"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (b *BlobSidecar) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&blobSidecarJSON{
-		BlockRoot:       b.BlockRoot,
-		Index:           fmt.Sprintf("%d", b.Index),
-		Slot:            fmt.Sprintf("%d", b.Slot),
-		BlockParentRoot: b.BlockParentRoot,
-		ProposerIndex:   fmt.Sprintf("%d", b.ProposerIndex),
-		Blob:            b.Blob,
-		KzgCommitment:   b.KzgCommitment,
-		KzgProof:        b.KzgProof,
+		Index:                       fmt.Sprintf("%d", b.Index),
+		Blob:                        b.Blob,
+		KZGCommitment:               b.KZGCommitment,
+		KZGProof:                    b.KZGProof,
+		SignedBlockHeader:           b.SignedBlockHeader,
+		KZGCommitmentInclusionProof: b.KZGCommitmentInclusionProof,
 	})
 }
 
@@ -55,36 +51,29 @@ func (b *BlobSidecar) UnmarshalJSON(input []byte) error {
 		return err
 	}
 
-	if err := b.BlockRoot.UnmarshalJSON(raw["block_root"]); err != nil {
-		return errors.Wrap(err, "block_root")
-	}
-
 	if err := b.Index.UnmarshalJSON(raw["index"]); err != nil {
 		return errors.Wrap(err, "index")
-	}
-
-	if err := b.Slot.UnmarshalJSON(raw["slot"]); err != nil {
-		return errors.Wrap(err, "slot")
-	}
-
-	if err := b.BlockParentRoot.UnmarshalJSON(raw["block_parent_root"]); err != nil {
-		return errors.Wrap(err, "block_parent_root")
-	}
-
-	if err := b.ProposerIndex.UnmarshalJSON(raw["proposer_index"]); err != nil {
-		return errors.Wrap(err, "proposer_index")
 	}
 
 	if err := b.Blob.UnmarshalJSON(raw["blob"]); err != nil {
 		return errors.Wrap(err, "blob")
 	}
 
-	if err := b.KzgCommitment.UnmarshalJSON(raw["kzg_commitment"]); err != nil {
+	if err := b.KZGCommitment.UnmarshalJSON(raw["kzg_commitment"]); err != nil {
 		return errors.Wrap(err, "kzg_commitment")
 	}
 
-	if err := b.KzgProof.UnmarshalJSON(raw["kzg_proof"]); err != nil {
+	if err := b.KZGProof.UnmarshalJSON(raw["kzg_proof"]); err != nil {
 		return errors.Wrap(err, "kzg_proof")
+	}
+
+	b.SignedBlockHeader = &phase0.SignedBeaconBlockHeader{}
+	if err := b.SignedBlockHeader.UnmarshalJSON(raw["signed_block_header"]); err != nil {
+		return errors.Wrap(err, "signed_block_header")
+	}
+
+	if err := b.KZGCommitmentInclusionProof.UnmarshalJSON(raw["kzg_commitment_inclusion_proof"]); err != nil {
+		return errors.Wrap(err, "kzg_commitment_inclusion_proof")
 	}
 
 	return nil

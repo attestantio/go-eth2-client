@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,20 +16,33 @@ package mock
 import (
 	"context"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // SignedBeaconBlock fetches a signed beacon block given a block ID.
-func (s *Service) SignedBeaconBlock(_ context.Context, _ string) (*spec.VersionedSignedBeaconBlock, error) {
-	return &spec.VersionedSignedBeaconBlock{
-		Version: spec.DataVersionPhase0,
-		Phase0: &phase0.SignedBeaconBlock{
-			Message: &phase0.BeaconBlock{
-				Body: &phase0.BeaconBlockBody{
-					ETH1Data: &phase0.ETH1Data{},
+func (s *Service) SignedBeaconBlock(ctx context.Context,
+	opts *api.SignedBeaconBlockOpts,
+) (
+	*api.Response[*spec.VersionedSignedBeaconBlock],
+	error,
+) {
+	if s.SignedBeaconBlockFunc != nil {
+		return s.SignedBeaconBlockFunc(ctx, opts)
+	}
+
+	return &api.Response[*spec.VersionedSignedBeaconBlock]{
+		Data: &spec.VersionedSignedBeaconBlock{
+			Version: spec.DataVersionPhase0,
+			Phase0: &phase0.SignedBeaconBlock{
+				Message: &phase0.BeaconBlock{
+					Body: &phase0.BeaconBlockBody{
+						ETH1Data: &phase0.ETH1Data{},
+					},
 				},
 			},
 		},
+		Metadata: make(map[string]any),
 	}, nil
 }

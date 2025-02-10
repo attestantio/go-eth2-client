@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2022, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,50 +17,66 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/pkg/errors"
 )
 
 // SubmitValidatorRegistrations submits a validator registration.
-func (s *Service) SubmitValidatorRegistrations(ctx context.Context, registrations []*api.VersionedSignedValidatorRegistration) error {
+func (s *Service) SubmitValidatorRegistrations(ctx context.Context,
+	registrations []*api.VersionedSignedValidatorRegistration,
+) error {
+	if err := s.assertIsActive(ctx); err != nil {
+		return err
+	}
 	if len(registrations) == 0 {
-		return errors.New("no registrations supplied")
+		return errors.Join(errors.New("no registrations supplied"), client.ErrInvalidOptions)
 	}
 
 	// Unwrap versioned registrations.
 	var version *spec.BuilderVersion
-	var unversionedRegistrations []interface{}
+	var unversionedRegistrations []any
 
-	for _, registration := range registrations {
-		if registration == nil {
-			return errors.New("nil registration supplied")
+	for i := range registrations {
+		if registrations[i] == nil {
+			return errors.Join(errors.New("nil registration supplied"), client.ErrInvalidOptions)
 		}
 
 		// Ensure consistent versioning.
 		if version == nil {
-			version = &registration.Version
-		} else if *version != registration.Version {
-			return errors.New("registrations must all be of the same version")
+			version = &registrations[i].Version
+		} else if *version != registrations[i].Version {
+			return errors.Join(errors.New("registrations must all be of the same version"), client.ErrInvalidOptions)
 		}
 
 		// Append to unversionedRegistrations.
-		switch registration.Version {
+		switch registrations[i].Version {
 		case spec.BuilderVersionV1:
-			unversionedRegistrations = append(unversionedRegistrations, registration.V1)
+			unversionedRegistrations = append(unversionedRegistrations, registrations[i].V1)
 		default:
-			return errors.New("unknown validator registration version")
+			return errors.Join(errors.New("unknown validator registration version"), client.ErrInvalidOptions)
 		}
 	}
 
 	specJSON, err := json.Marshal(unversionedRegistrations)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal JSON")
+		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
-	_, err = s.post(ctx, "/eth/v1/validator/register_validator", bytes.NewBuffer(specJSON))
-	if err != nil {
-		return errors.Wrap(err, "failed to submit validator registration")
+
+	endpoint := "/eth/v1/validator/register_validator"
+	query := ""
+
+	if _, err := s.post(ctx,
+		endpoint,
+		query,
+		&api.CommonOpts{},
+		bytes.NewReader(specJSON),
+		ContentTypeJSON,
+		map[string]string{},
+	); err != nil {
+		return errors.Join(errors.New("failed to submit validator registration"), err)
 	}
 
 	return nil

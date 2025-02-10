@@ -45,8 +45,8 @@ type executionPayloadJSON struct {
 	BlockHash     phase0.Hash32              `json:"block_hash"`
 	Transactions  []string                   `json:"transactions"`
 	Withdrawals   []*capella.Withdrawal      `json:"withdrawals"`
-	DataGasUsed   string                     `json:"data_gas_used"`
-	ExcessDataGas string                     `json:"excess_data_gas"`
+	BlobGasUsed   string                     `json:"blob_gas_used"`
+	ExcessBlobGas string                     `json:"excess_blob_gas"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -68,17 +68,17 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 		ReceiptsRoot:  e.ReceiptsRoot,
 		LogsBloom:     fmt.Sprintf("%#x", e.LogsBloom),
 		PrevRandao:    fmt.Sprintf("%#x", e.PrevRandao),
-		BlockNumber:   fmt.Sprintf("%d", e.BlockNumber),
-		GasLimit:      fmt.Sprintf("%d", e.GasLimit),
-		GasUsed:       fmt.Sprintf("%d", e.GasUsed),
-		Timestamp:     fmt.Sprintf("%d", e.Timestamp),
+		BlockNumber:   strconv.FormatUint(e.BlockNumber, 10),
+		GasLimit:      strconv.FormatUint(e.GasLimit, 10),
+		GasUsed:       strconv.FormatUint(e.GasUsed, 10),
+		Timestamp:     strconv.FormatUint(e.Timestamp, 10),
 		ExtraData:     extraData,
 		BaseFeePerGas: e.BaseFeePerGas.Dec(),
 		BlockHash:     e.BlockHash,
 		Transactions:  transactions,
 		Withdrawals:   e.Withdrawals,
-		DataGasUsed:   fmt.Sprintf("%d", e.DataGasUsed),
-		ExcessDataGas: fmt.Sprintf("%d", e.ExcessDataGas),
+		BlobGasUsed:   strconv.FormatUint(e.BlobGasUsed, 10),
+		ExcessBlobGas: strconv.FormatUint(e.ExcessBlobGas, 10),
 	})
 }
 
@@ -205,6 +205,9 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["transactions"], &transactions); err != nil {
 		return errors.Wrap(err, "transactions")
 	}
+	if len(transactions) > bellatrix.MaxTransactionsPerPayload {
+		return errors.Wrap(err, "incorrect length for transactions")
+	}
 	e.Transactions = make([]bellatrix.Transaction, len(transactions))
 	for i := range transactions {
 		if len(transactions[i]) == 0 ||
@@ -216,23 +219,31 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 		if err := json.Unmarshal(transactions[i], &e.Transactions[i]); err != nil {
 			return errors.Wrapf(err, "transaction %d", i)
 		}
+		if len(e.Transactions[i]) > bellatrix.MaxBytesPerTransaction {
+			return errors.Wrapf(err, "incorrect length for transaction %d", i)
+		}
 	}
 
 	if err := json.Unmarshal(raw["withdrawals"], &e.Withdrawals); err != nil {
 		return errors.Wrap(err, "withdrawals")
 	}
-
-	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["data_gas_used"], `"`)), 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "data_gas_used")
+	for i := range e.Withdrawals {
+		if e.Withdrawals[i] == nil {
+			return fmt.Errorf("withdrawals entry %d missing", i)
+		}
 	}
-	e.DataGasUsed = tmpUint
 
-	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["excess_data_gas"], `"`)), 10, 64)
+	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["blob_gas_used"], `"`)), 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "excess_data_gas")
+		return errors.Wrap(err, "blob_gas_used")
 	}
-	e.ExcessDataGas = tmpUint
+	e.BlobGasUsed = tmpUint
+
+	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["excess_blob_gas"], `"`)), 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "excess_blob_gas")
+	}
+	e.ExcessBlobGas = tmpUint
 
 	return nil
 }

@@ -23,17 +23,20 @@ import (
 )
 
 type parameters struct {
-	logLevel     zerolog.Level
-	monitor      metrics.Service
-	clients      []consensusclient.Service
-	addresses    []string
-	timeout      time.Duration
-	extraHeaders map[string]string
+	logLevel          zerolog.Level
+	monitor           metrics.Service
+	clients           []consensusclient.Service
+	addresses         []string
+	timeout           time.Duration
+	extraHeaders      map[string]string
+	enforceJSON       bool
+	allowDelayedStart bool
+	name              string
 }
 
 // Parameter is the interface for service parameters.
 type Parameter interface {
-	apply(*parameters)
+	apply(p *parameters)
 }
 
 type parameterFunc func(*parameters)
@@ -77,10 +80,31 @@ func WithAddresses(addresses []string) Parameter {
 	})
 }
 
+// WithEnforceJSON forces all requests and responses to be in JSON, not sending or requesting SSZ.
+func WithEnforceJSON(enforceJSON bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.enforceJSON = enforceJSON
+	})
+}
+
+// WithAllowDelayedStart allows the service to start even if the client is unavailable.
+func WithAllowDelayedStart(allowDelayedStart bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.allowDelayedStart = allowDelayedStart
+	})
+}
+
 // WithExtraHeaders sets additional headers to be sent with each HTTP request.
 func WithExtraHeaders(headers map[string]string) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.extraHeaders = headers
+	})
+}
+
+// WithName sets the name for the multiclient.
+func WithName(name string) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.name = name
 	})
 }
 
@@ -97,7 +121,7 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 		}
 	}
 
-	if parameters.timeout == 0 {
+	if len(parameters.addresses) > 0 && parameters.timeout == 0 {
 		return nil, errors.New("no timeout specified")
 	}
 	if len(parameters.clients)+len(parameters.addresses) == 0 {

@@ -65,6 +65,11 @@ func (f *ForkChoice) UnmarshalJSON(input []byte) error {
 	if forkChoiceJSON.ForkChoiceNodes == nil {
 		return errors.New("fork choice nodes missing")
 	}
+	for i := range forkChoiceJSON.ForkChoiceNodes {
+		if forkChoiceJSON.ForkChoiceNodes[i] == nil {
+			return fmt.Errorf("fork choice node entry %d missing", i)
+		}
+	}
 	f.ForkChoiceNodes = forkChoiceJSON.ForkChoiceNodes
 
 	return nil
@@ -76,6 +81,7 @@ func (f *ForkChoice) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }
 
@@ -100,6 +106,7 @@ const (
 	ForkChoiceNodeValidityOptimistic
 )
 
+// ForkChoiceNodeValidityStrings are the strings for fork choice validity names.
 var ForkChoiceNodeValidityStrings = [...]string{
 	"unknown",
 	"invalid",
@@ -107,8 +114,9 @@ var ForkChoiceNodeValidityStrings = [...]string{
 	"optimistic",
 }
 
+// ForkChoiceNodeValidityFromString converts a string input to a fork choice.
 func ForkChoiceNodeValidityFromString(input string) (ForkChoiceNodeValidity, error) {
-	switch strings.ToLower(string(input)) {
+	switch strings.ToLower(input) {
 	case "invalid":
 		return ForkChoiceNodeValidityInvalid, nil
 	case "valid":
@@ -116,7 +124,7 @@ func ForkChoiceNodeValidityFromString(input string) (ForkChoiceNodeValidity, err
 	case "optimistic":
 		return ForkChoiceNodeValidityOptimistic, nil
 	default:
-		return ForkChoiceNodeValidityUnknown, fmt.Errorf("unrecognised fork choice validity: %s", string(input))
+		return ForkChoiceNodeValidityUnknown, fmt.Errorf("unrecognised fork choice validity: %s", input)
 	}
 }
 
@@ -139,12 +147,14 @@ func (d *ForkChoiceNodeValidity) UnmarshalJSON(input []byte) error {
 
 // String returns a string representation of the ForkChoiceNodeValidity.
 func (d ForkChoiceNodeValidity) String() string {
-	if int(d) >= len(ForkChoiceNodeValidityStrings) {
+	if uint64(d) >= uint64(len(ForkChoiceNodeValidityStrings)) {
 		return "unknown"
 	}
+
 	return ForkChoiceNodeValidityStrings[d]
 }
 
+// ForkChoiceNode is a node in the fork choice tree.
 type ForkChoiceNode struct {
 	// Slot is the slot of the node.
 	Slot phase0.Slot
@@ -152,7 +162,7 @@ type ForkChoiceNode struct {
 	BlockRoot phase0.Root
 	// ParentRoot is the parent root of the node.
 	ParentRoot phase0.Root
-	// JustifiedEpcih is the justified epoch of the node.
+	// JustifiedEpcoh is the justified epoch of the node.
 	JustifiedEpoch phase0.Epoch
 	// FinalizedEpoch is the finalized epoch of the node.
 	FinalizedEpoch phase0.Epoch
@@ -160,23 +170,23 @@ type ForkChoiceNode struct {
 	Weight uint64
 	// Validity is the validity of the node.
 	Validity ForkChoiceNodeValidity
-	// ExecutiionBlockHash is the execution block hash of the node.
+	// ExecutionBlockHash is the execution block hash of the node.
 	ExecutionBlockHash phase0.Root
 	// ExtraData is the extra data of the node.
-	ExtraData map[string]interface{}
+	ExtraData map[string]any
 }
 
 // forkChoiceNodeJSON is the json representation of the struct.
 type forkChoiceNodeJSON struct {
-	Slot               string                 `json:"slot"`
-	BlockRoot          string                 `json:"block_root"`
-	ParentRoot         string                 `json:"parent_root"`
-	JustifiedEpoch     string                 `json:"justified_epoch"`
-	FinalizedEpoch     string                 `json:"finalized_epoch"`
-	Weight             string                 `json:"weight"`
-	Validity           string                 `json:"validity"`
-	ExecutionBlockHash string                 `json:"execution_block_hash"`
-	ExtraData          map[string]interface{} `json:"extra_data,omitempty"`
+	Slot               string         `json:"slot"`
+	BlockRoot          string         `json:"block_root"`
+	ParentRoot         string         `json:"parent_root"`
+	JustifiedEpoch     string         `json:"justified_epoch"`
+	FinalizedEpoch     string         `json:"finalized_epoch"`
+	Weight             string         `json:"weight"`
+	Validity           string         `json:"validity"`
+	ExecutionBlockHash string         `json:"execution_block_hash"`
+	ExtraData          map[string]any `json:"extra_data,omitempty"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -187,7 +197,7 @@ func (f *ForkChoiceNode) MarshalJSON() ([]byte, error) {
 		ParentRoot:         fmt.Sprintf("%#x", f.ParentRoot),
 		JustifiedEpoch:     fmt.Sprintf("%d", f.JustifiedEpoch),
 		FinalizedEpoch:     fmt.Sprintf("%d", f.FinalizedEpoch),
-		Weight:             fmt.Sprintf("%d", f.Weight),
+		Weight:             strconv.FormatUint(f.Weight, 10),
 		Validity:           f.Validity.String(),
 		ExecutionBlockHash: fmt.Sprintf("%#x", f.ExecutionBlockHash),
 		ExtraData:          f.ExtraData,
@@ -268,5 +278,6 @@ func (f *ForkChoiceNode) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

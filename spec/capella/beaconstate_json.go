@@ -83,20 +83,21 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range s.Slashings {
 		slashings[i] = fmt.Sprintf("%d", s.Slashings[i])
 	}
-	PreviousEpochParticipation := make([]string, len(s.PreviousEpochParticipation))
+	previousEpochParticipation := make([]string, len(s.PreviousEpochParticipation))
 	for i := range s.PreviousEpochParticipation {
-		PreviousEpochParticipation[i] = fmt.Sprintf("%d", s.PreviousEpochParticipation[i])
+		previousEpochParticipation[i] = fmt.Sprintf("%d", s.PreviousEpochParticipation[i])
 	}
-	CurrentEpochParticipation := make([]string, len(s.CurrentEpochParticipation))
+	currentEpochParticipation := make([]string, len(s.CurrentEpochParticipation))
 	for i := range s.CurrentEpochParticipation {
-		CurrentEpochParticipation[i] = fmt.Sprintf("%d", s.CurrentEpochParticipation[i])
+		currentEpochParticipation[i] = fmt.Sprintf("%d", s.CurrentEpochParticipation[i])
 	}
 	inactivityScores := make([]string, len(s.InactivityScores))
 	for i := range s.InactivityScores {
-		inactivityScores[i] = fmt.Sprintf("%d", s.InactivityScores[i])
+		inactivityScores[i] = strconv.FormatUint(s.InactivityScores[i], 10)
 	}
+
 	return json.Marshal(&beaconStateJSON{
-		GenesisTime:                  fmt.Sprintf("%d", s.GenesisTime),
+		GenesisTime:                  strconv.FormatUint(s.GenesisTime, 10),
 		GenesisValidatorsRoot:        fmt.Sprintf("%#x", s.GenesisValidatorsRoot),
 		Slot:                         fmt.Sprintf("%d", s.Slot),
 		Fork:                         s.Fork,
@@ -106,13 +107,13 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 		HistoricalRoots:              historicalRoots,
 		ETH1Data:                     s.ETH1Data,
 		ETH1DataVotes:                s.ETH1DataVotes,
-		ETH1DepositIndex:             fmt.Sprintf("%d", s.ETH1DepositIndex),
+		ETH1DepositIndex:             strconv.FormatUint(s.ETH1DepositIndex, 10),
 		Validators:                   s.Validators,
 		Balances:                     balances,
 		RANDAOMixes:                  randaoMixes,
 		Slashings:                    slashings,
-		PreviousEpochParticipation:   PreviousEpochParticipation,
-		CurrentEpochParticipation:    CurrentEpochParticipation,
+		PreviousEpochParticipation:   previousEpochParticipation,
+		CurrentEpochParticipation:    currentEpochParticipation,
 		JustificationBits:            fmt.Sprintf("%#x", s.JustificationBits.Bytes()),
 		PreviousJustifiedCheckpoint:  s.PreviousJustifiedCheckpoint,
 		CurrentJustifiedCheckpoint:   s.CurrentJustifiedCheckpoint,
@@ -133,11 +134,13 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&data)
 }
 
 // unpack unpacks JSON data in to a spec representation.
-// nolint:gocyclo
+//
+//nolint:gocyclo
 func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	var err error
 
@@ -223,18 +226,30 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 		return errors.New("eth1 data missing")
 	}
 	s.ETH1Data = data.ETH1Data
-	// ETH1DataVotes can be empty.
+	// ETH1DataVotes can be empty, but if present the individual votes must not be null.
+	if data.ETH1DataVotes != nil {
+		for i := range data.Validators {
+			if data.Validators[i] == nil {
+				return fmt.Errorf("validators entry %d missing", i)
+			}
+		}
+	}
 	s.ETH1DataVotes = data.ETH1DataVotes
 	if data.Validators == nil {
 		return errors.New("validators missing")
 	}
+	for i := range data.Validators {
+		if data.Validators[i] == nil {
+			return fmt.Errorf("validators entry %d missing", i)
+		}
+	}
+	s.Validators = data.Validators
 	if data.ETH1DepositIndex == "" {
 		return errors.New("eth1 deposit index missing")
 	}
 	if s.ETH1DepositIndex, err = strconv.ParseUint(data.ETH1DepositIndex, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for eth1 deposit index")
 	}
-	s.Validators = data.Validators
 	s.Balances = make([]phase0.Gwei, len(data.Balances))
 	for i := range data.Balances {
 		if data.Balances[i] == "" {
@@ -338,7 +353,7 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	}
 	s.NextWithdrawalIndex = WithdrawalIndex(nextWithdrawalIndex)
 	if data.NextWithdrawalValidatorIndex == "" {
-		return errors.New("next validator validator index missing")
+		return errors.New("next withdrawal validator index missing")
 	}
 	nextWithdrawalValidatorIndex, err := strconv.ParseUint(data.NextWithdrawalValidatorIndex, 10, 64)
 	if err != nil {
@@ -347,6 +362,11 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 	s.NextWithdrawalValidatorIndex = phase0.ValidatorIndex(nextWithdrawalValidatorIndex)
 	if data.HistoricalSummaries == nil {
 		return errors.New("historical summaries missing")
+	}
+	for i := range data.HistoricalSummaries {
+		if data.HistoricalSummaries[i] == nil {
+			return fmt.Errorf("historical summaries entry %d missing", i)
+		}
 	}
 	s.HistoricalSummaries = data.HistoricalSummaries
 

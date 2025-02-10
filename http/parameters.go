@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,24 +14,33 @@
 package http
 
 import (
+	"errors"
+	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/attestantio/go-eth2-client/metrics"
 	"github.com/rs/zerolog"
 )
 
 type parameters struct {
-	logLevel        zerolog.Level
-	address         string
-	timeout         time.Duration
-	indexChunkSize  int
-	pubKeyChunkSize int
-	extraHeaders    map[string]string
+	logLevel           zerolog.Level
+	monitor            metrics.Service
+	address            string
+	timeout            time.Duration
+	indexChunkSize     int
+	pubKeyChunkSize    int
+	extraHeaders       map[string]string
+	enforceJSON        bool
+	allowDelayedStart  bool
+	hooks              *Hooks
+	reducedMemoryUsage bool
+	customSpecSupport  bool
+	client             *http.Client
 }
 
 // Parameter is the interface for service parameters.
 type Parameter interface {
-	apply(*parameters)
+	apply(p *parameters)
 }
 
 type parameterFunc func(*parameters)
@@ -44,6 +53,13 @@ func (f parameterFunc) apply(p *parameters) {
 func WithLogLevel(logLevel zerolog.Level) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.logLevel = logLevel
+	})
+}
+
+// WithMonitor sets the monitor for the service.
+func WithMonitor(monitor metrics.Service) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.monitor = monitor
 	})
 }
 
@@ -68,7 +84,7 @@ func WithIndexChunkSize(indexChunkSize int) Parameter {
 	})
 }
 
-// WithPubKeyChunkSize sets the maximum number of public kyes to send for individual validator requests.
+// WithPubKeyChunkSize sets the maximum number of public keys to send for individual validator requests.
 func WithPubKeyChunkSize(pubKeyChunkSize int) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.pubKeyChunkSize = pubKeyChunkSize
@@ -82,14 +98,62 @@ func WithExtraHeaders(headers map[string]string) Parameter {
 	})
 }
 
+// WithEnforceJSON forces all requests and responses to be in JSON, not sending or requesting SSZ.
+func WithEnforceJSON(enforceJSON bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.enforceJSON = enforceJSON
+	})
+}
+
+// WithAllowDelayedStart allows the service to start even if the client is unavailable.
+func WithAllowDelayedStart(allowDelayedStart bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.allowDelayedStart = allowDelayedStart
+	})
+}
+
+// WithHooks sets the hooks for client activation and sync events.
+func WithHooks(hooks *Hooks) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.hooks = hooks
+	})
+}
+
+// WithReducedMemoryUsage reduces memory usage by disabling certain actions that may take significant amount of memory.
+// Enabling this may result in longer response times.
+func WithReducedMemoryUsage(reducedMemoryUsage bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.reducedMemoryUsage = reducedMemoryUsage
+	})
+}
+
+// WithCustomSpecSupport switches from the built in static SSZ library to a new dynamic SSZ library, which is able to handle
+// non-mainnet presets.
+// Dynamic SSZ en-/decoding is much slower than the static one, so this should only be used if required.
+func WithCustomSpecSupport(customSpecSupport bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.customSpecSupport = customSpecSupport
+	})
+}
+
+// WithHTTPClient provides a custom HTTP client for communication with the HTTP server.
+// If not supplied then a standard HTTP client is used.
+func WithHTTPClient(client *http.Client) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.client = client
+	})
+}
+
 // parseAndCheckParameters parses and checks parameters to ensure that mandatory parameters are present and correct.
 func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	parameters := parameters{
-		logLevel:        zerolog.GlobalLevel(),
-		timeout:         2 * time.Second,
-		indexChunkSize:  -1,
-		pubKeyChunkSize: -1,
-		extraHeaders:    make(map[string]string),
+		logLevel:          zerolog.GlobalLevel(),
+		timeout:           2 * time.Second,
+		indexChunkSize:    -1,
+		pubKeyChunkSize:   -1,
+		extraHeaders:      make(map[string]string),
+		allowDelayedStart: false,
+		hooks:             &Hooks{},
 	}
 	for _, p := range params {
 		if params != nil {
@@ -108,6 +172,9 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	}
 	if parameters.pubKeyChunkSize == 0 {
 		return nil, errors.New("no public key chunk size specified")
+	}
+	if parameters.hooks == nil {
+		return nil, errors.New("no hooks specified")
 	}
 
 	return &parameters, nil

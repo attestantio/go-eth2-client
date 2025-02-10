@@ -37,14 +37,14 @@ func TestService(t *testing.T) {
 	}{
 		{
 			name: "Nil",
-			err:  "problem with parameters: no address specified",
+			err:  "problem with parameters\nno address specified",
 		},
 		{
 			name: "AddressNil",
 			parameters: []v1.Parameter{
 				v1.WithTimeout(5 * time.Second),
 			},
-			err: "problem with parameters: no address specified",
+			err: "problem with parameters\nno address specified",
 		},
 		{
 			name: "TimeoutZero",
@@ -52,7 +52,7 @@ func TestService(t *testing.T) {
 				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),
 				v1.WithTimeout(0),
 			},
-			err: "problem with parameters: no timeout specified",
+			err: "problem with parameters\nno timeout specified",
 		},
 		{
 			name: "AddressInvalid",
@@ -60,7 +60,7 @@ func TestService(t *testing.T) {
 				v1.WithAddress(string([]byte{0x01})),
 				v1.WithTimeout(5 * time.Second),
 			},
-			err: `invalid URL: parse "http://\x01/": net/url: invalid control character in URL`,
+			err: "invalid URL\nparse \"http://\\x01\": net/url: invalid control character in URL",
 		},
 		{
 			name: "IndexChunkSizeZero",
@@ -69,7 +69,7 @@ func TestService(t *testing.T) {
 				v1.WithTimeout(5 * time.Second),
 				v1.WithIndexChunkSize(0),
 			},
-			err: "problem with parameters: no index chunk size specified",
+			err: "problem with parameters\nno index chunk size specified",
 		},
 		{
 			name: "PubKeyChunkSizeZero",
@@ -78,13 +78,23 @@ func TestService(t *testing.T) {
 				v1.WithTimeout(5 * time.Second),
 				v1.WithPubKeyChunkSize(0),
 			},
-			err: "problem with parameters: no public key chunk size specified",
+			err: "problem with parameters\nno public key chunk size specified",
+		},
+		{
+			name: "HooksMissing",
+			parameters: []v1.Parameter{
+				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),
+				v1.WithTimeout(5 * time.Second),
+				v1.WithHooks(nil),
+			},
+			err: "problem with parameters\nno hooks specified",
 		},
 		{
 			name: "Good",
 			parameters: []v1.Parameter{
 				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),
 				v1.WithTimeout(5 * time.Second),
+				v1.WithAllowDelayedStart(true),
 			},
 		},
 	}
@@ -108,7 +118,7 @@ func TestInterfaces(t *testing.T) {
 	s, err := v1.New(ctx, v1.WithAddress(os.Getenv("HTTP_ADDRESS")), v1.WithTimeout(5*time.Second))
 	require.NoError(t, err)
 
-	// Standard interfacs.
+	// Standard interfaces.
 	assert.Implements(t, (*client.AggregateAttestationProvider)(nil), s)
 	assert.Implements(t, (*client.AggregateAttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttestationDataProvider)(nil), s)
@@ -117,7 +127,6 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.AttesterDutiesProvider)(nil), s)
 	assert.Implements(t, (*client.BLSToExecutionChangesSubmitter)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockHeadersProvider)(nil), s)
-	assert.Implements(t, (*client.BeaconBlockProposalProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockRootProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockSubmitter)(nil), s)
 	assert.Implements(t, (*client.BeaconCommitteeSubscriptionsSubmitter)(nil), s)
@@ -133,6 +142,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.ForkScheduleProvider)(nil), s)
 	assert.Implements(t, (*client.GenesisProvider)(nil), s)
 	assert.Implements(t, (*client.NodeSyncingProvider)(nil), s)
+	assert.Implements(t, (*client.ProposalProvider)(nil), s)
 	assert.Implements(t, (*client.ProposerDutiesProvider)(nil), s)
 	assert.Implements(t, (*client.ProposalPreparationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.SpecProvider)(nil), s)
@@ -145,6 +155,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.ValidatorBalancesProvider)(nil), s)
 	assert.Implements(t, (*client.ValidatorsProvider)(nil), s)
 	assert.Implements(t, (*client.VoluntaryExitSubmitter)(nil), s)
+	assert.Implements(t, (*client.VoluntaryExitPoolProvider)(nil), s)
 
 	// Non-standard extensions.
 	assert.Implements(t, (*client.DomainProvider)(nil), s)

@@ -17,23 +17,33 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // ForkSchedule provides details of past and future changes in the chain's fork version.
-func (s *Service) ForkSchedule(ctx context.Context) ([]*phase0.Fork, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		forkSchedule, err := client.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx)
+func (s *Service) ForkSchedule(ctx context.Context,
+	opts *api.ForkScheduleOpts,
+) (
+	*api.Response[[]*phase0.Fork],
+	error,
+) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
+		forkSchedule, err := client.(consensusclient.ForkScheduleProvider).ForkSchedule(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return forkSchedule, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
+
+	response, isResponse := res.(*api.Response[[]*phase0.Fork])
+	if !isResponse {
+		return nil, ErrIncorrectType
 	}
-	return res.([]*phase0.Fork), nil
+
+	return response, nil
 }

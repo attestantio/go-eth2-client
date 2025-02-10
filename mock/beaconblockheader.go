@@ -16,15 +16,28 @@ package mock
 import (
 	"context"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // BeaconBlockHeader provides the block header of a given block ID.
-func (s *Service) BeaconBlockHeader(_ context.Context, _ string) (*api.BeaconBlockHeader, error) {
-	return &api.BeaconBlockHeader{
-		Header: &spec.SignedBeaconBlockHeader{
-			Message: &spec.BeaconBlockHeader{},
+func (s *Service) BeaconBlockHeader(ctx context.Context,
+	opts *api.BeaconBlockHeaderOpts,
+) (
+	*api.Response[*apiv1.BeaconBlockHeader],
+	error,
+) {
+	if s.BeaconBlockHeaderFunc != nil {
+		return s.BeaconBlockHeaderFunc(ctx, opts)
+	}
+
+	return &api.Response[*apiv1.BeaconBlockHeader]{
+		Data: &apiv1.BeaconBlockHeader{
+			Header: &phase0.SignedBeaconBlockHeader{
+				Message: &phase0.BeaconBlockHeader{},
+			},
 		},
+		Metadata: make(map[string]any),
 	}, nil
 }

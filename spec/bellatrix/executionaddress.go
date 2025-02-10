@@ -1,4 +1,4 @@
-// Copyright © 2022, 2023 Attestant Limited.
+// Copyright © 2022 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -25,27 +25,34 @@ import (
 // ExecutionAddress is a execution address.
 type ExecutionAddress [20]byte
 
+var emptyExecutionAddress = ExecutionAddress{}
+
+// IsZero returns true if the execution address is zero.
+func (a ExecutionAddress) IsZero() bool {
+	return bytes.Equal(a[:], emptyExecutionAddress[:])
+}
+
 // String returns an EIP-55 string version of the address.
 func (a ExecutionAddress) String() string {
-	bytes := []byte(fmt.Sprintf("%x", a[:]))
+	data := []byte(hex.EncodeToString(a[:]))
 
 	keccak := sha3.NewLegacyKeccak256()
-	keccak.Write(bytes)
+	keccak.Write(data)
 	hash := keccak.Sum(nil)
 
-	for i := 0; i < len(bytes); i++ {
+	for i := 0; i < len(data); i++ {
 		hashByte := hash[i/2]
 		if i%2 == 0 {
 			hashByte >>= 4
 		} else {
 			hashByte &= 0xf
 		}
-		if bytes[i] > '9' && hashByte > 7 {
-			bytes[i] -= 32
+		if data[i] > '9' && hashByte > 7 {
+			data[i] -= 32
 		}
 	}
 
-	return fmt.Sprintf("0x%s", string(bytes))
+	return fmt.Sprintf("0x%s", string(data))
 }
 
 // Format formats the execution address.

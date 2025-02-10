@@ -40,8 +40,8 @@ type ExecutionPayload struct {
 	BlockHash     phase0.Hash32           `ssz-size:"32"`
 	Transactions  []bellatrix.Transaction `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
 	Withdrawals   []*capella.Withdrawal   `ssz-max:"16"`
-	DataGasUsed   uint64
-	ExcessDataGas uint64
+	BlobGasUsed   uint64
+	ExcessBlobGas uint64
 }
 
 // String returns a string version of the structure.
@@ -50,5 +50,6 @@ func (e *ExecutionPayload) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

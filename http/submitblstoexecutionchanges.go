@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2022, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,21 +17,37 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/pkg/errors"
 )
 
 // SubmitBLSToExecutionChanges submits BLS to execution address change operations.
-func (s *Service) SubmitBLSToExecutionChanges(ctx context.Context, blsToExecutionChanges []*capella.SignedBLSToExecutionChange) error {
-	specJSON, err := json.Marshal(blsToExecutionChanges)
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal JSON")
+func (s *Service) SubmitBLSToExecutionChanges(ctx context.Context,
+	blsToExecutionChanges []*capella.SignedBLSToExecutionChange,
+) error {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return err
 	}
 
-	_, err = s.post(ctx, "/eth/v1/beacon/pool/bls_to_execution_changes", bytes.NewBuffer(specJSON))
+	specJSON, err := json.Marshal(blsToExecutionChanges)
 	if err != nil {
-		return errors.Wrap(err, "failed to submit BLS to execution change")
+		return errors.Join(errors.New("failed to marshal JSON"), err)
+	}
+
+	endpoint := "/eth/v1/beacon/pool/bls_to_execution_changes"
+	query := ""
+
+	if _, err := s.post(ctx,
+		endpoint,
+		query,
+		&api.CommonOpts{},
+		bytes.NewReader(specJSON),
+		ContentTypeJSON,
+		map[string]string{},
+	); err != nil {
+		return errors.Join(errors.New("failed to submit BLS to execution change"), err)
 	}
 
 	return nil

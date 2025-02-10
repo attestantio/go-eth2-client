@@ -38,14 +38,14 @@ type beaconBlockBodyYAML struct {
 	SyncAggregate         *altair.SyncAggregate                 `yaml:"sync_aggregate"`
 	ExecutionPayload      *ExecutionPayload                     `yaml:"execution_payload"`
 	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `yaml:"bls_to_execution_changes"`
-	BlobKzgCommitments    []string                              `yaml:"blob_kzg_commitments"`
+	BlobKZGCommitments    []string                              `yaml:"blob_kzg_commitments"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
 func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
-	blobKzgCommitments := make([]string, len(b.BlobKzgCommitments))
-	for i := range b.BlobKzgCommitments {
-		blobKzgCommitments[i] = b.BlobKzgCommitments[i].String()
+	blobKZGCommitments := make([]string, len(b.BlobKZGCommitments))
+	for i := range b.BlobKZGCommitments {
+		blobKZGCommitments[i] = b.BlobKZGCommitments[i].String()
 	}
 
 	yamlBytes, err := yaml.MarshalWithOptions(&beaconBlockBodyYAML{
@@ -60,11 +60,12 @@ func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
 		SyncAggregate:         b.SyncAggregate,
 		ExecutionPayload:      b.ExecutionPayload,
 		BLSToExecutionChanges: b.BLSToExecutionChanges,
-		BlobKzgCommitments:    blobKzgCommitments,
+		BlobKZGCommitments:    blobKZGCommitments,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -72,14 +73,14 @@ func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
 func (b *BeaconBlockBody) UnmarshalYAML(input []byte) error {
 	// This is very inefficient, but YAML is only used for spec tests so we do this
 	// rather than maintain a custom YAML unmarshaller.
-	var data beaconBlockBodyJSON
-	if err := yaml.Unmarshal(input, &data); err != nil {
+	var unmarshaled beaconBlockBodyJSON
+	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
-	bytes, err := json.Marshal(data)
+	marshaled, err := json.Marshal(unmarshaled)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	return b.UnmarshalJSON(bytes)
+	return b.UnmarshalJSON(marshaled)
 }

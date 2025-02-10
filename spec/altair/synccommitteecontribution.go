@@ -33,7 +33,7 @@ type SyncCommitteeContribution struct {
 	BeaconBlockRoot   phase0.Root `ssz-size:"32"`
 	SubcommitteeIndex uint64
 	// AggregationBits size is SYNC_COMMITTEE_SIZE // SYNC_COMMITTEE_SUBNET_COUNT
-	AggregationBits bitfield.Bitvector128 `ssz-size:"16"`
+	AggregationBits bitfield.Bitvector128 `dynssz-size:"SYNC_COMMITTEE_SIZE/SYNC_COMMITTEE_SUBNET_COUNT" ssz-size:"16"`
 	Signature       phase0.BLSSignature   `ssz-size:"96"`
 }
 
@@ -60,7 +60,7 @@ func (s *SyncCommitteeContribution) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&syncCommitteeContributionJSON{
 		Slot:              fmt.Sprintf("%d", s.Slot),
 		BeaconBlockRoot:   fmt.Sprintf("%#x", s.BeaconBlockRoot),
-		SubcommitteeIndex: fmt.Sprintf("%d", s.SubcommitteeIndex),
+		SubcommitteeIndex: strconv.FormatUint(s.SubcommitteeIndex, 10),
 		AggregationBits:   fmt.Sprintf("%#x", []byte(s.AggregationBits)),
 		Signature:         fmt.Sprintf("%#x", s.Signature),
 	})
@@ -72,6 +72,7 @@ func (s *SyncCommitteeContribution) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &syncCommitteeContributionJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&syncCommitteeContributionJSON)
 }
 
@@ -106,7 +107,9 @@ func (s *SyncCommitteeContribution) unpack(syncCommitteeContributionJSON *syncCo
 	if syncCommitteeContributionJSON.AggregationBits == "" {
 		return errors.New("aggregation bits missing")
 	}
-	if s.AggregationBits, err = hex.DecodeString(strings.TrimPrefix(syncCommitteeContributionJSON.AggregationBits, "0x")); err != nil {
+	if s.AggregationBits, err = hex.DecodeString(
+		strings.TrimPrefix(syncCommitteeContributionJSON.AggregationBits, "0x"),
+	); err != nil {
 		return errors.Wrap(err, "invalid value for aggregation bits")
 	}
 	if syncCommitteeContributionJSON.Signature == "" {
@@ -136,6 +139,7 @@ func (s *SyncCommitteeContribution) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -146,6 +150,7 @@ func (s *SyncCommitteeContribution) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &syncCommitteeContributionJSON); err != nil {
 		return err
 	}
+
 	return s.unpack(&syncCommitteeContributionJSON)
 }
 
@@ -155,5 +160,6 @@ func (s *SyncCommitteeContribution) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

@@ -17,31 +17,34 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // SyncCommitteeDuties obtains attester duties.
-// If validatorIndicess is nil it will return all duties for the given epoch.
+// If validatorIndices is nil it will return all duties for the given epoch.
 func (s *Service) SyncCommitteeDuties(ctx context.Context,
-	epoch phase0.Epoch,
-	validatorIndices []phase0.ValidatorIndex,
+	opts *api.SyncCommitteeDutiesOpts,
 ) (
-	[]*api.SyncCommitteeDuty,
+	*api.Response[[]*apiv1.SyncCommitteeDuty],
 	error,
 ) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		block, err := client.(consensusclient.SyncCommitteeDutiesProvider).SyncCommitteeDuties(ctx, epoch, validatorIndices)
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
+		response, err := client.(consensusclient.SyncCommitteeDutiesProvider).SyncCommitteeDuties(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
-		return block, nil
+
+		return response, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
+
+	response, isResponse := res.(*api.Response[[]*apiv1.SyncCommitteeDuty])
+	if !isResponse {
+		return nil, ErrIncorrectType
 	}
-	return res.([]*api.SyncCommitteeDuty), nil
+
+	return response, nil
 }

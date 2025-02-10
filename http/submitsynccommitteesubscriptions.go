@@ -17,21 +17,35 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/pkg/errors"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // SubmitSyncCommitteeSubscriptions subscribes to sync committees.
-func (s *Service) SubmitSyncCommitteeSubscriptions(ctx context.Context, subscriptions []*api.SyncCommitteeSubscription) error {
-	var reqBodyReader bytes.Buffer
-	if err := json.NewEncoder(&reqBodyReader).Encode(subscriptions); err != nil {
-		return errors.Wrap(err, "failed to encode sync committee subscriptions")
+func (s *Service) SubmitSyncCommitteeSubscriptions(ctx context.Context, subscriptions []*apiv1.SyncCommitteeSubscription) error {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return err
 	}
 
-	_, err := s.post(ctx, "/eth/v1/validator/sync_committee_subscriptions", &reqBodyReader)
+	specJSON, err := json.Marshal(subscriptions)
 	if err != nil {
-		return errors.Wrap(err, "failed to request sync committee subscriptions")
+		return errors.Join(errors.New("failed to encode sync committee subscriptions"), err)
+	}
+
+	endpoint := "/eth/v1/validator/sync_committee_subscriptions"
+	query := ""
+
+	if _, err := s.post(ctx,
+		endpoint,
+		query,
+		&api.CommonOpts{},
+		bytes.NewReader(specJSON),
+		ContentTypeJSON,
+		map[string]string{},
+	); err != nil {
+		return errors.Join(errors.New("failed to request sync committee subscriptions"), err)
 	}
 
 	return nil

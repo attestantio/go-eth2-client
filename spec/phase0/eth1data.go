@@ -51,7 +51,7 @@ type eth1DataYAML struct {
 func (e *ETH1Data) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&eth1DataJSON{
 		DepositRoot:  fmt.Sprintf("%#x", e.DepositRoot),
-		DepositCount: fmt.Sprintf("%d", e.DepositCount),
+		DepositCount: strconv.FormatUint(e.DepositCount, 10),
 		BlockHash:    fmt.Sprintf("%#x", e.BlockHash),
 	})
 }
@@ -62,6 +62,7 @@ func (e *ETH1Data) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &eth1DataJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return e.unpack(&eth1DataJSON)
 }
 
@@ -106,6 +107,7 @@ func (e *ETH1Data) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -116,6 +118,7 @@ func (e *ETH1Data) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &eth1DataJSON); err != nil {
 		return err
 	}
+
 	return e.unpack(&eth1DataJSON)
 }
 
@@ -125,5 +128,6 @@ func (e *ETH1Data) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

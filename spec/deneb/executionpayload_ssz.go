@@ -74,11 +74,11 @@ func (e *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = ssz.WriteOffset(dst, offset)
 	offset += len(e.Withdrawals) * 44
 
-	// Field (15) 'DataGasUsed'
-	dst = ssz.MarshalUint64(dst, e.DataGasUsed)
+	// Field (15) 'BlobGasUsed'
+	dst = ssz.MarshalUint64(dst, e.BlobGasUsed)
 
-	// Field (16) 'ExcessDataGas'
-	dst = ssz.MarshalUint64(dst, e.ExcessDataGas)
+	// Field (16) 'ExcessBlobGas'
+	dst = ssz.MarshalUint64(dst, e.ExcessBlobGas)
 
 	// Field (10) 'ExtraData'
 	if size := len(e.ExtraData); size > 32 {
@@ -192,11 +192,11 @@ func (e *ExecutionPayload) UnmarshalSSZ(buf []byte) error {
 		return ssz.ErrOffset
 	}
 
-	// Field (15) 'DataGasUsed'
-	e.DataGasUsed = ssz.UnmarshallUint64(buf[512:520])
+	// Field (15) 'BlobGasUsed'
+	e.BlobGasUsed = ssz.UnmarshallUint64(buf[512:520])
 
-	// Field (16) 'ExcessDataGas'
-	e.ExcessDataGas = ssz.UnmarshallUint64(buf[520:528])
+	// Field (16) 'ExcessBlobGas'
+	e.ExcessBlobGas = ssz.UnmarshallUint64(buf[520:528])
 
 	// Field (10) 'ExtraData'
 	{
@@ -373,11 +373,11 @@ func (e *ExecutionPayload) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 		hh.MerkleizeWithMixin(subIndx, num, 16)
 	}
 
-	// Field (15) 'DataGasUsed'
-	hh.PutUint64(e.DataGasUsed)
+	// Field (15) 'BlobGasUsed'
+	hh.PutUint64(e.BlobGasUsed)
 
-	// Field (16) 'ExcessDataGas'
-	hh.PutUint64(e.ExcessDataGas)
+	// Field (16) 'ExcessBlobGas'
+	hh.PutUint64(e.ExcessBlobGas)
 
 	hh.Merkleize(indx)
 	return

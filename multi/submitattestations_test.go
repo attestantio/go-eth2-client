@@ -15,6 +15,8 @@ package multi_test
 
 import (
 	"context"
+	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec"
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
@@ -50,8 +52,14 @@ func TestSubmitAttestations(t *testing.T) {
 	)
 	require.NoError(t, err)
 
+	versionedAttestations := []*spec.VersionedAttestation{
+		{Version: spec.DataVersionPhase0, Phase0: &phase0.Attestation{}},
+	}
+	opts := &api.SubmitAttestationsOpts{
+		Attestations: versionedAttestations,
+	}
 	for i := 0; i < 128; i++ {
-		err := multiClient.(consensusclient.AttestationsSubmitter).SubmitAttestations(ctx, []*phase0.Attestation{})
+		err := multiClient.(consensusclient.AttestationsSubmitter).SubmitAttestations(ctx, opts)
 		require.NoError(t, err)
 	}
 	// At this point we expect mock 3 to be in active (unless probability hates us).

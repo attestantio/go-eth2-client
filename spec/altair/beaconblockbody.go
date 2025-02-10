@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -85,6 +85,7 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &beaconBlockBodyJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return b.unpack(&beaconBlockBodyJSON)
 }
 
@@ -118,21 +119,46 @@ func (b *BeaconBlockBody) unpack(beaconBlockBodyJSON *beaconBlockBodyJSON) error
 	if beaconBlockBodyJSON.ProposerSlashings == nil {
 		return errors.New("proposer slashings missing")
 	}
+	for i := range beaconBlockBodyJSON.ProposerSlashings {
+		if beaconBlockBodyJSON.ProposerSlashings[i] == nil {
+			return fmt.Errorf("proposer slashings entry %d missing", i)
+		}
+	}
 	b.ProposerSlashings = beaconBlockBodyJSON.ProposerSlashings
 	if beaconBlockBodyJSON.AttesterSlashings == nil {
 		return errors.New("attester slashings missing")
+	}
+	for i := range beaconBlockBodyJSON.AttesterSlashings {
+		if beaconBlockBodyJSON.AttesterSlashings[i] == nil {
+			return fmt.Errorf("attester slashings entry %d missing", i)
+		}
 	}
 	b.AttesterSlashings = beaconBlockBodyJSON.AttesterSlashings
 	if beaconBlockBodyJSON.Attestations == nil {
 		return errors.New("attestations missing")
 	}
+	for i := range beaconBlockBodyJSON.Attestations {
+		if beaconBlockBodyJSON.Attestations[i] == nil {
+			return fmt.Errorf("attestations entry %d missing", i)
+		}
+	}
 	b.Attestations = beaconBlockBodyJSON.Attestations
 	if beaconBlockBodyJSON.Deposits == nil {
 		return errors.New("deposits missing")
 	}
+	for i := range beaconBlockBodyJSON.Deposits {
+		if beaconBlockBodyJSON.Deposits[i] == nil {
+			return fmt.Errorf("deposits entry %d missing", i)
+		}
+	}
 	b.Deposits = beaconBlockBodyJSON.Deposits
 	if beaconBlockBodyJSON.VoluntaryExits == nil {
 		return errors.New("voluntary exits missing")
+	}
+	for i := range beaconBlockBodyJSON.VoluntaryExits {
+		if beaconBlockBodyJSON.VoluntaryExits[i] == nil {
+			return fmt.Errorf("voluntary exits entry %d missing", i)
+		}
 	}
 	b.VoluntaryExits = beaconBlockBodyJSON.VoluntaryExits
 	if beaconBlockBodyJSON.SyncAggregate == nil {
@@ -159,6 +185,7 @@ func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -169,6 +196,7 @@ func (b *BeaconBlockBody) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &beaconBlockBodyJSON); err != nil {
 		return err
 	}
+
 	return b.unpack(&beaconBlockBodyJSON)
 }
 
@@ -178,5 +206,6 @@ func (b *BeaconBlockBody) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

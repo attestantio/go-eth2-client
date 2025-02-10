@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,83 +14,83 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"strings"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
-type validatorBalancesJSON struct {
-	Data []*api.ValidatorBalance `json:"data"`
-}
-
-// ValidatorBalances provides the validator balances for a given state.
-// stateID can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
-// validatorIndices is a list of validator indices to restrict the returned values.  If no validators are supplied no filter
-// will be applied.
-func (s *Service) ValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
-	if stateID == "" {
-		return nil, errors.New("no state ID specified")
+// ValidatorBalances provides the validator balances for the given options.
+func (s *Service) ValidatorBalances(ctx context.Context,
+	opts *api.ValidatorBalancesOpts,
+) (
+	*api.Response[map[phase0.ValidatorIndex]phase0.Gwei],
+	error,
+) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
+	if opts == nil {
+		return nil, client.ErrNoOptions
+	}
+	if opts.State == "" {
+		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 
-	if len(validatorIndices) > s.indexChunkSize(ctx) {
-		return s.chunkedValidatorBalances(ctx, stateID, validatorIndices)
+	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/validator_balances", opts.State)
+	query := ""
+
+	body := make([]string, 0, len(opts.Indices)+len(opts.PubKeys))
+	for i := range opts.Indices {
+		body = append(body, fmt.Sprintf("%d", opts.Indices[i]))
+	}
+	for i := range opts.PubKeys {
+		body = append(body, opts.PubKeys[i].String())
 	}
 
-	url := fmt.Sprintf("/eth/v1/beacon/states/%s/validator_balances", stateID)
-	if len(validatorIndices) != 0 {
-		ids := make([]string, len(validatorIndices))
-		for i := range validatorIndices {
-			ids[i] = fmt.Sprintf("%d", validatorIndices[i])
-		}
-		url = fmt.Sprintf("%s?id=%s", url, strings.Join(ids, ","))
-	}
-
-	respBodyReader, err := s.get(ctx, url)
+	data, err := json.Marshal(body)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request validator balances")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain validator balances")
+		return nil, errors.Join(errors.New("failed to marshal request data"), err)
 	}
 
-	var validatorBalancesJSON validatorBalancesJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&validatorBalancesJSON); err != nil {
-		return nil, errors.Wrap(err, "failed to parse validator balances")
-	}
-	if validatorBalancesJSON.Data == nil {
-		return nil, errors.New("no validator balances returned")
+	httpResponse, err := s.post(ctx, endpoint, query, &opts.Common, bytes.NewReader(data), ContentTypeJSON, map[string]string{})
+	if err != nil {
+		return nil, err
 	}
 
-	res := make(map[phase0.ValidatorIndex]phase0.Gwei)
-	for _, validatorBalance := range validatorBalancesJSON.Data {
-		res[validatorBalance.Index] = validatorBalance.Balance
+	switch httpResponse.contentType {
+	case ContentTypeJSON:
+		return s.validatorBalancesFromJSON(ctx, httpResponse)
+	default:
+		return nil, fmt.Errorf("unhandled content type %v", httpResponse.contentType)
 	}
-	return res, nil
 }
 
-// chunkedValidatorBalances obtains the validator balances a chunk at a time.
-func (s *Service) chunkedValidatorBalances(ctx context.Context, stateID string, validatorIndices []phase0.ValidatorIndex) (map[phase0.ValidatorIndex]phase0.Gwei, error) {
-	res := make(map[phase0.ValidatorIndex]phase0.Gwei)
-	indexChunkSize := s.indexChunkSize(ctx)
-	for i := 0; i < len(validatorIndices); i += indexChunkSize {
-		chunkStart := i
-		chunkEnd := i + indexChunkSize
-		if len(validatorIndices) < chunkEnd {
-			chunkEnd = len(validatorIndices)
-		}
-		chunk := validatorIndices[chunkStart:chunkEnd]
-		chunkRes, err := s.ValidatorBalances(ctx, stateID, chunk)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to obtain chunk")
-		}
-		for k, v := range chunkRes {
-			res[k] = v
-		}
+func (*Service) validatorBalancesFromJSON(_ context.Context,
+	httpResponse *httpResponse,
+) (
+	*api.Response[map[phase0.ValidatorIndex]phase0.Gwei],
+	error,
+) {
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*apiv1.ValidatorBalance{})
+	if err != nil {
+		return nil, err
 	}
-	return res, nil
+
+	response := &api.Response[map[phase0.ValidatorIndex]phase0.Gwei]{
+		Data:     make(map[phase0.ValidatorIndex]phase0.Gwei),
+		Metadata: metadata,
+	}
+
+	for _, datum := range data {
+		response.Data[datum.Index] = datum.Balance
+	}
+
+	return response, nil
 }

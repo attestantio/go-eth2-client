@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
 )
@@ -43,12 +44,13 @@ func TestGenesis(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			genesis, err := service.(client.GenesisProvider).Genesis(ctx)
+			response, err := service.(client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 			require.NoError(t, err)
-			require.NotNil(t, genesis)
-			require.NotNil(t, genesis.GenesisTime)
-			require.NotNil(t, genesis.GenesisValidatorsRoot)
-			require.NotNil(t, genesis.GenesisForkVersion)
+			require.NotNil(t, response)
+			require.NotNil(t, response.Data)
+			require.NotNil(t, response.Data.GenesisTime)
+			require.NotNil(t, response.Data.GenesisValidatorsRoot)
+			require.NotNil(t, response.Data.GenesisForkVersion)
 		})
 	}
 }

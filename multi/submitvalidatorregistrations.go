@@ -21,13 +21,17 @@ import (
 )
 
 // SubmitValidatorRegistrations submits a validator registration.
-func (s *Service) SubmitValidatorRegistrations(ctx context.Context, registrations []*api.VersionedSignedValidatorRegistration) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+func (s *Service) SubmitValidatorRegistrations(ctx context.Context,
+	registrations []*api.VersionedSignedValidatorRegistration,
+) error {
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		err := client.(consensusclient.ValidatorRegistrationsSubmitter).SubmitValidatorRegistrations(ctx, registrations)
 		if err != nil {
 			return nil, err
 		}
+
 		return true, nil
 	}, nil)
+
 	return err
 }

@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,23 +14,42 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/pkg/errors"
+	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 type genesisJSON struct {
-	Data *api.Genesis `json:"data"`
+	Data *apiv1.Genesis `json:"data"`
 }
 
 // Genesis provides the genesis information of the chain.
-func (s *Service) Genesis(ctx context.Context) (*api.Genesis, error) {
+func (s *Service) Genesis(ctx context.Context,
+	opts *api.GenesisOpts,
+) (
+	*api.Response[*apiv1.Genesis],
+	error,
+) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
+	if opts == nil {
+		return nil, client.ErrNoOptions
+	}
+
 	s.genesisMutex.RLock()
 	if s.genesis != nil {
 		defer s.genesisMutex.RUnlock()
-		return s.genesis, nil
+
+		return &api.Response[*apiv1.Genesis]{
+			Data:     s.genesis,
+			Metadata: make(map[string]any),
+		}, nil
 	}
 	s.genesisMutex.RUnlock()
 
@@ -38,22 +57,27 @@ func (s *Service) Genesis(ctx context.Context) (*api.Genesis, error) {
 	defer s.genesisMutex.Unlock()
 	if s.genesis != nil {
 		// Someone else fetched this whilst we were waiting for the lock.
-		return s.genesis, nil
+		return &api.Response[*apiv1.Genesis]{
+			Data:     s.genesis,
+			Metadata: make(map[string]any),
+		}, nil
 	}
 
 	// Up to us to fetch the information.
-	respBodyReader, err := s.get(ctx, "/eth/v1/beacon/genesis")
+	endpoint := "/eth/v1/beacon/genesis"
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request genesis")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain genesis")
+		return nil, errors.Join(errors.New("failed to request genesis"), err)
 	}
 
 	var resp genesisJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse genesis")
+	if err := json.NewDecoder(bytes.NewReader(httpResponse.body)).Decode(&resp); err != nil {
+		return nil, errors.Join(errors.New("failed to parse genesis"), err)
 	}
 	s.genesis = resp.Data
-	return s.genesis, nil
+
+	return &api.Response[*apiv1.Genesis]{
+		Data:     s.genesis,
+		Metadata: make(map[string]any),
+	}, nil
 }

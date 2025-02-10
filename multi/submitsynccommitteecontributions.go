@@ -24,12 +24,16 @@ import (
 func (s *Service) SubmitSyncCommitteeContributions(ctx context.Context,
 	contributionAndProofs []*altair.SignedContributionAndProof,
 ) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		err := client.(consensusclient.SyncCommitteeContributionsSubmitter).SubmitSyncCommitteeContributions(ctx, contributionAndProofs)
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
+		err := client.(consensusclient.SyncCommitteeContributionsSubmitter).SubmitSyncCommitteeContributions(ctx,
+			contributionAndProofs,
+		)
 		if err != nil {
 			return nil, err
 		}
+
 		return true, nil
 	}, nil)
+
 	return err
 }

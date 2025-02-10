@@ -20,6 +20,6 @@ import (
 )
 
 // SubmitSyncCommitteeContributions submits sync committee contributions.
-func (s *Service) SubmitSyncCommitteeContributions(_ context.Context, _ []*altair.SignedContributionAndProof) error {
+func (*Service) SubmitSyncCommitteeContributions(_ context.Context, _ []*altair.SignedContributionAndProof) error {
 	return nil
 }

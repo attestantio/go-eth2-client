@@ -16,20 +16,29 @@ package mock
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // AttestationPool fetches the attestation pool for the given slot.
-func (s *Service) AttestationPool(_ context.Context, _ spec.Slot) ([]*spec.Attestation, error) {
-	res := make([]*spec.Attestation, 5)
+func (*Service) AttestationPool(_ context.Context,
+	_ *api.AttestationPoolOpts,
+) (
+	*api.Response[[]*phase0.Attestation],
+	error,
+) {
+	data := make([]*phase0.Attestation, 5)
 	for i := 0; i < 5; i++ {
-		res[i] = &spec.Attestation{
-			Data: &spec.AttestationData{
-				Source: &spec.Checkpoint{},
-				Target: &spec.Checkpoint{},
+		data[i] = &phase0.Attestation{
+			Data: &phase0.AttestationData{
+				Source: &phase0.Checkpoint{},
+				Target: &phase0.Checkpoint{},
 			},
 		}
 	}
 
-	return res, nil
+	return &api.Response[[]*phase0.Attestation]{
+		Data:     data,
+		Metadata: make(map[string]any),
+	}, nil
 }

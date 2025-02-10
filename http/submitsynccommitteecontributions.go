@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,21 +17,37 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/altair"
-	"github.com/pkg/errors"
 )
 
 // SubmitSyncCommitteeContributions submits sync committee contributions.
-func (s *Service) SubmitSyncCommitteeContributions(ctx context.Context, contributionAndProofs []*altair.SignedContributionAndProof) error {
-	specJSON, err := json.Marshal(contributionAndProofs)
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal JSON")
+func (s *Service) SubmitSyncCommitteeContributions(ctx context.Context,
+	contributionAndProofs []*altair.SignedContributionAndProof,
+) error {
+	if err := s.assertIsSynced(ctx); err != nil {
+		return err
 	}
 
-	_, err = s.post(ctx, "/eth/v1/validator/contribution_and_proofs", bytes.NewBuffer(specJSON))
+	specJSON, err := json.Marshal(contributionAndProofs)
 	if err != nil {
-		return errors.Wrap(err, "failed to submit contribution and proofs")
+		return errors.Join(errors.New("failed to marshal JSON"), err)
+	}
+
+	endpoint := "/eth/v1/validator/contribution_and_proofs"
+	query := ""
+
+	if _, err := s.post(ctx,
+		endpoint,
+		query,
+		&api.CommonOpts{},
+		bytes.NewReader(specJSON),
+		ContentTypeJSON,
+		map[string]string{},
+	); err != nil {
+		return errors.Join(errors.New("failed to submit contribution and proofs"), err)
 	}
 
 	return nil

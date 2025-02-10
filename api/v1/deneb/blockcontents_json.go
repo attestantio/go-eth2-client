@@ -16,43 +16,45 @@ package deneb
 import (
 	"encoding/json"
 
+	"github.com/attestantio/go-eth2-client/codecs"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/pkg/errors"
 )
 
 // blockContentsJSON is the spec representation of the struct.
 type blockContentsJSON struct {
-	Block        *deneb.BeaconBlock   `json:"block"`
-	BlobSidecars []*deneb.BlobSidecar `json:"blob_sidecars"`
+	Block     *deneb.BeaconBlock `json:"block"`
+	KZGProofs []deneb.KZGProof   `json:"kzg_proofs"`
+	Blobs     []deneb.Blob       `json:"blobs"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (b *BlockContents) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&blockContentsJSON{
-		Block:        b.Block,
-		BlobSidecars: b.BlobSidecars,
+		Block:     b.Block,
+		KZGProofs: b.KZGProofs,
+		Blobs:     b.Blobs,
 	})
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *BlockContents) UnmarshalJSON(input []byte) error {
-	var data blockContentsJSON
-	if err := json.Unmarshal(input, &data); err != nil {
-		return errors.Wrap(err, "invalid JSON")
+	raw, err := codecs.RawJSON(&blockContentsJSON{}, input)
+	if err != nil {
+		return err
 	}
-	return b.unpack(&data)
-}
 
-func (b *BlockContents) unpack(data *blockContentsJSON) error {
-	if data.Block == nil {
-		return errors.New("block missing")
+	if err := json.Unmarshal(raw["block"], &b.Block); err != nil {
+		return errors.Wrap(err, "block")
 	}
-	b.Block = data.Block
 
-	if data.BlobSidecars == nil {
-		return errors.New("blob sidecars missing")
+	if err := json.Unmarshal(raw["kzg_proofs"], &b.KZGProofs); err != nil {
+		return errors.Wrap(err, "kzg_proofs")
 	}
-	b.BlobSidecars = data.BlobSidecars
+
+	if err := json.Unmarshal(raw["blobs"], &b.Blobs); err != nil {
+		return errors.Wrap(err, "blobs")
+	}
 
 	return nil
 }

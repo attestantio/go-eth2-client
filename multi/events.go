@@ -20,7 +20,8 @@ import (
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/rs/zerolog"
 )
 
@@ -51,6 +52,7 @@ func (s *Service) Events(ctx context.Context,
 		}
 		if err := client.(consensusclient.EventsProvider).Events(ctx, topics, ah.handleEvent); err != nil {
 			inactiveClients = append(inactiveClients, client)
+
 			continue
 		}
 		log.Trace().Str("address", ah.address).Strs("topics", topics).Msg("Events handler active")
@@ -68,19 +70,33 @@ func (s *Service) Events(ctx context.Context,
 			for {
 				provider, isProvider := c.(consensusclient.NodeSyncingProvider)
 				if !isProvider {
-					ah.log.Error().Str("address", ah.address).Strs("topics", topics).Msg("Not a node syncing provider")
+					ah.log.Error().
+						Str("address", ah.address).
+						Strs("topics", topics).
+						Msg("Not a node syncing provider")
+
 					return
 				}
-				syncState, err := provider.NodeSyncing(ctx)
+				syncResponse, err := provider.NodeSyncing(ctx, &api.NodeSyncingOpts{})
 				if err != nil {
-					ah.log.Error().Str("address", ah.address).Strs("topics", topics).Err(err).Msg("Failed to obtain sync state from node")
+					ah.log.Error().
+						Str("address", ah.address).
+						Strs("topics", topics).
+						Err(err).
+						Msg("Failed to obtain sync state from node")
+
 					return
 				}
-				if !syncState.IsSyncing {
+				if !syncResponse.Data.IsSyncing {
 					// Client is now synced, set up the events call.
 					if err := c.(consensusclient.EventsProvider).Events(ctx, topics, ah.handleEvent); err != nil {
-						ah.log.Error().Str("address", ah.address).Strs("topics", topics).Err(err).Msg("Failed to set up events handler")
+						ah.log.Error().
+							Str("address", ah.address).
+							Strs("topics", topics).
+							Err(err).
+							Msg("Failed to set up events handler")
 					}
+
 					// Return either way.
 					return
 				}
@@ -99,13 +115,16 @@ type activeHandler struct {
 	handler consensusclient.EventHandlerFunc
 }
 
-func (h *activeHandler) handleEvent(event *api.Event) {
+func (h *activeHandler) handleEvent(event *apiv1.Event) {
 	h.log.Trace().Str("address", h.address).Str("topic", event.Topic).Msg("Event received")
 	// We only forward events from the currently active provider.  If we did not do this then we could end up with
 	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
 	// block end up with an earlier block.
 	if h.s.Address() == h.address {
-		h.log.Trace().Str("address", h.address).Str("topic", event.Topic).Msg("Forwarding due to primary active address")
+		h.log.Trace().
+			Str("address", h.address).
+			Str("topic", event.Topic).
+			Msg("Forwarding due to primary active address")
 		h.handler(event)
 	}
 }

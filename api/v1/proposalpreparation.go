@@ -27,7 +27,7 @@ import (
 
 // ProposalPreparation is the data required for proposal preparation.
 type ProposalPreparation struct {
-	// ValidatorIdex is the index of the validator making the proposal request.
+	// ValidatorIndex is the index of the validator making the proposal request.
 	ValidatorIndex phase0.ValidatorIndex
 	// FeeRecipient is the execution address to be used with preparing blocks.
 	FeeRecipient bellatrix.ExecutionAddress `ssz-size:"20"`
@@ -83,5 +83,6 @@ func (p *ProposalPreparation) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021 - 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,41 +14,70 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 
+	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/altair"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
-
-type syncCommitteeContributionJSON struct {
-	Data *altair.SyncCommitteeContribution `json:"data"`
-}
 
 // SyncCommitteeContribution provides a sync committee contribution.
 func (s *Service) SyncCommitteeContribution(ctx context.Context,
-	slot phase0.Slot,
-	subcommitteeIndex uint64,
-	beaconBlockRoot phase0.Root,
+	opts *api.SyncCommitteeContributionOpts,
 ) (
-	*altair.SyncCommitteeContribution,
+	*api.Response[*altair.SyncCommitteeContribution],
 	error,
 ) {
-	url := fmt.Sprintf("/eth/v1/validator/sync_committee_contribution?slot=%d&subcommittee_index=%d&beacon_block_root=%#x", slot, subcommitteeIndex, beaconBlockRoot)
-	respBodyReader, err := s.get(ctx, url)
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
+	if opts == nil {
+		return nil, client.ErrNoOptions
+	}
+	if opts.BeaconBlockRoot.IsZero() {
+		return nil, errors.Join(errors.New("no beacon block root specified"), client.ErrInvalidOptions)
+	}
+
+	endpoint := "/eth/v1/validator/sync_committee_contribution"
+	query := fmt.Sprintf("slot=%d&subcommittee_index=%d&beacon_block_root=%#x",
+		opts.Slot,
+		opts.SubcommitteeIndex,
+		opts.BeaconBlockRoot,
+	)
+	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request sync committee contribution")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain sync committee contribution")
+		return nil, err
 	}
 
-	var resp syncCommitteeContributionJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse sync committee contribution")
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), altair.SyncCommitteeContribution{})
+	if err != nil {
+		return nil, err
 	}
 
-	return resp.Data, nil
+	// Confirm the contribution is for the requested slot.
+	if data.Slot != opts.Slot {
+		return nil, errors.Join(
+			fmt.Errorf("sync committee contiribution for slot %d; expected %d", data.Slot, opts.Slot),
+			client.ErrInconsistentResult,
+		)
+	}
+
+	// Confirm the beacon block root is correct.
+	if !bytes.Equal(data.BeaconBlockRoot[:], opts.BeaconBlockRoot[:]) {
+		return nil, errors.Join(
+			fmt.Errorf("sync committee proposal has beacon bock root %#x; expected %#x",
+				data.BeaconBlockRoot[:],
+				opts.BeaconBlockRoot[:],
+			),
+			client.ErrInconsistentResult,
+		)
+	}
+
+	return &api.Response[*altair.SyncCommitteeContribution]{
+		Metadata: metadata,
+		Data:     &data,
+	}, nil
 }

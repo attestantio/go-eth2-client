@@ -25,12 +25,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Altair constants.
-var syncCommitteeSize = 512
-
 // SyncCommittee is the Ethereum 2 sync committee structure.
 type SyncCommittee struct {
-	Pubkeys         []phase0.BLSPubKey `ssz-size:"512,48"`
+	Pubkeys         []phase0.BLSPubKey `dynssz-size:"SYNC_COMMITTEE_SIZE,48" ssz-size:"512,48"`
 	AggregatePubkey phase0.BLSPubKey   `ssz-size:"48"`
 }
 
@@ -65,14 +62,15 @@ func (s *SyncCommittee) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &syncCommitteeJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&syncCommitteeJSON)
 }
 
 func (s *SyncCommittee) unpack(syncCommitteeJSON *syncCommitteeJSON) error {
-	if len(syncCommitteeJSON.Pubkeys) != syncCommitteeSize {
-		return errors.New("incorrect length for public keys")
+	if len(syncCommitteeJSON.Pubkeys) == 0 {
+		return errors.New("public keys missing")
 	}
-	s.Pubkeys = make([]phase0.BLSPubKey, syncCommitteeSize)
+	s.Pubkeys = make([]phase0.BLSPubKey, len(syncCommitteeJSON.Pubkeys))
 	for i := range syncCommitteeJSON.Pubkeys {
 		pubKey, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeJSON.Pubkeys[i], "0x"))
 		if err != nil {
@@ -113,6 +111,7 @@ func (s *SyncCommittee) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -123,6 +122,7 @@ func (s *SyncCommittee) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &syncCommitteeJSON); err != nil {
 		return err
 	}
+
 	return s.unpack(&syncCommitteeJSON)
 }
 
@@ -132,5 +132,6 @@ func (s *SyncCommittee) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

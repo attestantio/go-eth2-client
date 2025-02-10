@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2022, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -94,6 +94,7 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return b.unpack(&data)
 }
 
@@ -127,21 +128,46 @@ func (b *BeaconBlockBody) unpack(data *beaconBlockBodyJSON) error {
 	if data.ProposerSlashings == nil {
 		return errors.New("proposer slashings missing")
 	}
+	for i := range data.ProposerSlashings {
+		if data.ProposerSlashings[i] == nil {
+			return fmt.Errorf("proposer slashings entry %d missing", i)
+		}
+	}
 	b.ProposerSlashings = data.ProposerSlashings
 	if data.AttesterSlashings == nil {
 		return errors.New("attester slashings missing")
+	}
+	for i := range data.AttesterSlashings {
+		if data.AttesterSlashings[i] == nil {
+			return fmt.Errorf("attester slashings entry %d missing", i)
+		}
 	}
 	b.AttesterSlashings = data.AttesterSlashings
 	if data.Attestations == nil {
 		return errors.New("attestations missing")
 	}
+	for i := range data.Attestations {
+		if data.Attestations[i] == nil {
+			return fmt.Errorf("attestations entry %d missing", i)
+		}
+	}
 	b.Attestations = data.Attestations
 	if data.Deposits == nil {
 		return errors.New("deposits missing")
 	}
+	for i := range data.Deposits {
+		if data.Deposits[i] == nil {
+			return fmt.Errorf("deposits entry %d missing", i)
+		}
+	}
 	b.Deposits = data.Deposits
 	if data.VoluntaryExits == nil {
 		return errors.New("voluntary exits missing")
+	}
+	for i := range data.VoluntaryExits {
+		if data.VoluntaryExits[i] == nil {
+			return fmt.Errorf("voluntary exits entry %d missing", i)
+		}
 	}
 	b.VoluntaryExits = data.VoluntaryExits
 	if data.SyncAggregate == nil {
@@ -175,6 +201,7 @@ func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -185,6 +212,7 @@ func (b *BeaconBlockBody) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return err
 	}
+
 	return b.unpack(&data)
 }
 
@@ -194,5 +222,6 @@ func (b *BeaconBlockBody) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

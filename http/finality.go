@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2024 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,39 +14,42 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/pkg/errors"
+	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-type finalityJSON struct {
-	Data *api.Finality `json:"data"`
-}
-
 // Finality provides the finality given a state ID.
-func (s *Service) Finality(ctx context.Context, stateID string) (*api.Finality, error) {
-	if stateID == "" {
-		return nil, errors.New("no state ID specified")
+func (s *Service) Finality(ctx context.Context,
+	opts *api.FinalityOpts,
+) (
+	*api.Response[*apiv1.Finality],
+	error,
+) {
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
+	}
+	if opts == nil {
+		return nil, client.ErrNoOptions
 	}
 
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/states/%s/finality_checkpoints", stateID))
+	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/finality_checkpoints", opts.State)
+	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request finality checkpoints")
-	}
-	if respBodyReader == nil {
-		return nil, errors.New("failed to obtain finality checkpoints")
+		return nil, err
 	}
 
-	var finalityJSON finalityJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&finalityJSON); err != nil {
-		return nil, errors.Wrap(err, "failed to parse finality")
-	}
-	if finalityJSON.Data == nil {
-		return nil, errors.New("no finality returned")
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), &apiv1.Finality{})
+	if err != nil {
+		return nil, err
 	}
 
-	return finalityJSON.Data, nil
+	return &api.Response[*apiv1.Finality]{
+		Metadata: metadata,
+		Data:     data,
+	}, nil
 }

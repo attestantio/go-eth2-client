@@ -19,6 +19,6 @@ import (
 )
 
 // SlotDuration provides the duration of a slot of the chain.
-func (s *Service) SlotDuration(_ context.Context) (time.Duration, error) {
+func (*Service) SlotDuration(_ context.Context) (time.Duration, error) {
 	return 12 * time.Second, nil
 }

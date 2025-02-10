@@ -17,24 +17,28 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 )
 
 // BeaconState fetches a beacon state.
-// N.B if the requested beacon state is not available this will return nil without an error.
-func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
-	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
-		beaconState, err := client.(consensusclient.BeaconStateProvider).BeaconState(ctx, stateID)
+func (s *Service) BeaconState(ctx context.Context, opts *api.BeaconStateOpts) (*api.Response[*spec.VersionedBeaconState], error) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
+		beaconState, err := client.(consensusclient.BeaconStateProvider).BeaconState(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
+
 		return beaconState, nil
 	}, nil)
 	if err != nil {
 		return nil, err
 	}
-	if res == nil {
-		return nil, nil
+
+	response, isResponse := res.(*api.Response[*spec.VersionedBeaconState])
+	if !isResponse {
+		return nil, ErrIncorrectType
 	}
-	return res.(*spec.VersionedBeaconState), nil
+
+	return response, nil
 }

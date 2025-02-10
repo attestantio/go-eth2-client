@@ -15,6 +15,7 @@ package http_test
 
 import (
 	"context"
+	"errors"
 	"math"
 	"os"
 	"testing"
@@ -24,7 +25,6 @@ import (
 	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -47,7 +47,7 @@ func TestSubmitValidatorRegistrations(t *testing.T) {
 					},
 				},
 			},
-			expectErr: errors.New("unknown validator registration version"),
+			expectErr: errors.New("unknown validator registration version\ninvalid options"),
 		},
 		{
 			name: "InconsistentVersioning",
@@ -65,7 +65,7 @@ func TestSubmitValidatorRegistrations(t *testing.T) {
 					},
 				},
 			},
-			expectErr: errors.New("registrations must all be of the same version"),
+			expectErr: errors.New("registrations must all be of the same version\ninvalid options"),
 		},
 	}
 

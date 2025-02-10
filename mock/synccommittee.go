@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,16 +16,14 @@ package mock
 import (
 	"context"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // SyncCommittee fetches the sync committee for the given state.
-func (s *Service) SyncCommittee(_ context.Context, _ string) (*api.SyncCommittee, error) {
-	return &api.SyncCommittee{}, nil
-}
-
-// SyncCommitteeAtEpoch fetches the sync committee for the given epoch at the given state.
-func (s *Service) SyncCommitteeAtEpoch(_ context.Context, _ string, _ phase0.Epoch) (*api.SyncCommittee, error) {
-	return &api.SyncCommittee{}, nil
+func (*Service) SyncCommittee(_ context.Context, _ *api.SyncCommitteeOpts) (*api.Response[*apiv1.SyncCommittee], error) {
+	return &api.Response[*apiv1.SyncCommittee]{
+		Data:     &apiv1.SyncCommittee{},
+		Metadata: make(map[string]any),
+	}, nil
 }

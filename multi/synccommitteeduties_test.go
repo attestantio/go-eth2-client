@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -51,7 +52,10 @@ func TestSyncCommitteeDuties(t *testing.T) {
 	require.NoError(t, err)
 
 	for i := 0; i < 128; i++ {
-		res, err := multiClient.(consensusclient.SyncCommitteeDutiesProvider).SyncCommitteeDuties(ctx, 1, []phase0.ValidatorIndex{1, 2, 3})
+		res, err := multiClient.(consensusclient.SyncCommitteeDutiesProvider).SyncCommitteeDuties(ctx, &api.SyncCommitteeDutiesOpts{
+			Epoch:   1,
+			Indices: []phase0.ValidatorIndex{1, 2, 3},
+		})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

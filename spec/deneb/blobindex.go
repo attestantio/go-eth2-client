@@ -29,7 +29,9 @@ func (b *BlobIndex) UnmarshalJSON(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
-
+	if len(input) < 3 {
+		return errors.New("input malformed")
+	}
 	if !bytes.HasPrefix(input, []byte{'"'}) {
 		return errors.New("invalid prefix")
 	}
@@ -51,5 +53,6 @@ func (b *BlobIndex) MarshalJSON() ([]byte, error) {
 	if b == nil {
 		return nil, errors.New("value nil")
 	}
+
 	return []byte(fmt.Sprintf(`"%d"`, *b)), nil
 }

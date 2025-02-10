@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"context"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -29,11 +30,11 @@ func (s *Service) Domain(ctx context.Context, domainType phase0.DomainType, epoc
 		return phase0.Domain{}, errors.Wrap(err, "failed to obtain fork")
 	}
 
-	return s.domain(ctx, domainType, epoch, fork)
+	return s.calculateDomain(ctx, domainType, epoch, fork)
 }
 
 // GenesisDomain returns the domain for the given domain type at genesis.
-// N.B. this is not always the same as the the domain at epoch 0.  It is possible
+// N.B. this is not always the same as the domain at epoch 0.  It is possible
 // for a chain's fork schedule to have multiple forks at genesis.  In this situation,
 // GenesisDomain() will return the first, and Domain() will return the last.
 func (s *Service) GenesisDomain(ctx context.Context, domainType phase0.DomainType) (phase0.Domain, error) {
@@ -43,10 +44,10 @@ func (s *Service) GenesisDomain(ctx context.Context, domainType phase0.DomainTyp
 		return phase0.Domain{}, errors.Wrap(err, "failed to obtain fork")
 	}
 
-	return s.domain(ctx, domainType, 0, fork)
+	return s.calculateDomain(ctx, domainType, 0, fork)
 }
 
-func (s *Service) domain(ctx context.Context,
+func (s *Service) calculateDomain(ctx context.Context,
 	domainType phase0.DomainType,
 	epoch phase0.Epoch,
 	fork *phase0.Fork,
@@ -68,12 +69,12 @@ func (s *Service) domain(ctx context.Context,
 
 	if !bytes.Equal(domainType[:], []byte{0x00, 0x00, 0x00, 0x01}) {
 		// Use the chain's genesis validators root for non-application domain types.
-		genesis, err := s.Genesis(ctx)
+		genesisResponse, err := s.Genesis(ctx, &api.GenesisOpts{})
 		if err != nil {
 			return phase0.Domain{}, errors.Wrap(err, "failed to obtain genesis")
 		}
 
-		forkData.GenesisValidatorsRoot = genesis.GenesisValidatorsRoot
+		forkData.GenesisValidatorsRoot = genesisResponse.Data.GenesisValidatorsRoot
 	}
 
 	root, err := forkData.HashTreeRoot()
@@ -84,40 +85,42 @@ func (s *Service) domain(ctx context.Context,
 	var domain phase0.Domain
 	copy(domain[:], domainType[:])
 	copy(domain[4:], root[:])
+
 	return domain, nil
 }
 
 // forkAtEpoch works through the fork schedule to obtain the current fork.
 func (s *Service) forkAtEpoch(ctx context.Context, epoch phase0.Epoch) (*phase0.Fork, error) {
-	forkSchedule, err := s.ForkSchedule(ctx)
+	response, err := s.ForkSchedule(ctx, &api.ForkScheduleOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain fork schedule")
 	}
 
-	if len(forkSchedule) == 0 {
+	if len(response.Data) == 0 {
 		return nil, errors.New("no fork schedule returned")
 	}
 
-	currentFork := forkSchedule[0]
-	for i := range forkSchedule {
-		if forkSchedule[i].Epoch > epoch {
+	currentFork := response.Data[0]
+	for i := range response.Data {
+		if response.Data[i].Epoch > epoch {
 			break
 		}
-		currentFork = forkSchedule[i]
+		currentFork = response.Data[i]
 	}
+
 	return currentFork, nil
 }
 
 // forkAtGenesis returns the genesis fork.
 func (s *Service) forkAtGenesis(ctx context.Context) (*phase0.Fork, error) {
-	forkSchedule, err := s.ForkSchedule(ctx)
+	response, err := s.ForkSchedule(ctx, &api.ForkScheduleOpts{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain fork schedule")
 	}
 
-	if len(forkSchedule) == 0 {
+	if len(response.Data) == 0 {
 		return nil, errors.New("no fork schedule returned")
 	}
 
-	return forkSchedule[0], nil
+	return response.Data[0], nil
 }

@@ -59,9 +59,20 @@ var validatorStateStrings = [...]string{
 	"withdrawal_done",
 }
 
+// valid returns true if v integer value can be represented as one of the validator state strings.
+func (v ValidatorState) valid() bool {
+	return v >= 0 && int(v) < len(validatorStateStrings)
+}
+
 // MarshalJSON implements json.Marshaler.
 func (v *ValidatorState) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", validatorStateStrings[*v])), nil
+	vs := validatorStateStrings[0]
+
+	if v.valid() {
+		vs = validatorStateStrings[*v]
+	}
+
+	return []byte(fmt.Sprintf("%q", vs)), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -91,10 +102,15 @@ func (v *ValidatorState) UnmarshalJSON(input []byte) error {
 	default:
 		err = fmt.Errorf("unrecognised validator state %s", string(input))
 	}
+
 	return err
 }
 
 func (v ValidatorState) String() string {
+	if !v.valid() {
+		return validatorStateStrings[0] // unknown
+	}
+
 	return validatorStateStrings[v]
 }
 
@@ -147,38 +163,43 @@ func (v ValidatorState) HasBalance() bool {
 }
 
 // ValidatorToState is a helper that calculates the validator status given a validator struct.
-func ValidatorToState(validator *phase0.Validator, currentEpoch phase0.Epoch, farFutureEpoch phase0.Epoch) ValidatorState {
+func ValidatorToState(validator *phase0.Validator,
+	balance *phase0.Gwei,
+	currentEpoch phase0.Epoch,
+	farFutureEpoch phase0.Epoch,
+) ValidatorState {
 	if validator == nil {
 		return ValidatorStateUnknown
 	}
 
-	if validator.ActivationEpoch > currentEpoch {
+	switch {
+	case validator.ActivationEpoch > currentEpoch:
 		// Pending.
 		if validator.ActivationEligibilityEpoch == farFutureEpoch {
 			return ValidatorStatePendingInitialized
 		}
-		return ValidatorStatePendingQueued
-	}
 
-	if validator.ActivationEpoch <= currentEpoch && currentEpoch < validator.ExitEpoch {
-		// Active.
-		if validator.ExitEpoch == farFutureEpoch {
-			return ValidatorStateActiveOngoing
-		}
+		return ValidatorStatePendingQueued
+	case validator.ExitEpoch == farFutureEpoch:
+		// Active ongoing.
+		return ValidatorStateActiveOngoing
+	case validator.ExitEpoch > currentEpoch:
+		// Active exiting.
 		if validator.Slashed {
 			return ValidatorStateActiveSlashed
 		}
-		return ValidatorStateActiveExiting
-	}
 
-	if validator.ExitEpoch <= currentEpoch && currentEpoch < validator.WithdrawableEpoch {
+		return ValidatorStateActiveExiting
+	case validator.WithdrawableEpoch > currentEpoch:
 		// Exited.
 		if validator.Slashed {
 			return ValidatorStateExitedSlashed
 		}
-		return ValidatorStateExitedUnslashed
-	}
 
-	// Withdrawable.  No balance available so state possible.
-	return ValidatorStateWithdrawalPossible
+		return ValidatorStateExitedUnslashed
+	case (balance != nil && *balance == 0) || (balance == nil && validator.EffectiveBalance == 0):
+		return ValidatorStateWithdrawalDone
+	default:
+		return ValidatorStateWithdrawalPossible
+	}
 }

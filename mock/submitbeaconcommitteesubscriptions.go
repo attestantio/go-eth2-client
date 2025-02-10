@@ -20,6 +20,6 @@ import (
 )
 
 // SubmitBeaconCommitteeSubscriptions subscribes to beacon committees.
-func (s *Service) SubmitBeaconCommitteeSubscriptions(_ context.Context, _ []*api.BeaconCommitteeSubscription) error {
+func (*Service) SubmitBeaconCommitteeSubscriptions(_ context.Context, _ []*api.BeaconCommitteeSubscription) error {
 	return nil
 }

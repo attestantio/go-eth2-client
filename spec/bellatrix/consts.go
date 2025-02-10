@@ -21,6 +21,12 @@ const FeeRecipientLength = 20
 // ExecutionAddressLength is the number of bytes in an execution address.
 const ExecutionAddressLength = 20
 
+// MaxBytesPerTransaction is the maximum number of bytes in a transaction.
+const MaxBytesPerTransaction = 1_073_741_824
+
+// MaxTransactionsPerPayload is the maximum number of transactions in a payload.
+const MaxTransactionsPerPayload = 1_048_576
+
 var maxBaseFeePerGas = new(big.Int).SetBytes([]byte{
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,

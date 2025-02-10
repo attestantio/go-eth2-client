@@ -103,10 +103,10 @@ func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
 		ReceiptsRoot:     fmt.Sprintf("%#x", e.ReceiptsRoot),
 		LogsBloom:        fmt.Sprintf("%#x", e.LogsBloom),
 		PrevRandao:       fmt.Sprintf("%#x", e.PrevRandao),
-		BlockNumber:      fmt.Sprintf("%d", e.BlockNumber),
-		GasLimit:         fmt.Sprintf("%d", e.GasLimit),
-		GasUsed:          fmt.Sprintf("%d", e.GasUsed),
-		Timestamp:        fmt.Sprintf("%d", e.Timestamp),
+		BlockNumber:      strconv.FormatUint(e.BlockNumber, 10),
+		GasLimit:         strconv.FormatUint(e.GasLimit, 10),
+		GasUsed:          strconv.FormatUint(e.GasUsed, 10),
+		Timestamp:        strconv.FormatUint(e.Timestamp, 10),
 		ExtraData:        extraData,
 		BaseFeePerGas:    baseFeePerGas.String(),
 		BlockHash:        fmt.Sprintf("%#x", e.BlockHash),
@@ -120,10 +120,11 @@ func (e *ExecutionPayloadHeader) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return e.unpack(&data)
 }
 
-// nolint:gocyclo
+//nolint:gocyclo
 func (e *ExecutionPayloadHeader) unpack(data *executionPayloadHeaderJSON) error {
 	if data.ParentHash == "" {
 		return errors.New("parent hash missing")
@@ -271,6 +272,9 @@ func (e *ExecutionPayloadHeader) unpack(data *executionPayloadHeaderJSON) error 
 	if !ok {
 		return errors.New("invalid value for base fee per gas")
 	}
+	if baseFeePerGas.Sign() == -1 {
+		return errors.New("base fee per gas cannot be negative")
+	}
 	if baseFeePerGas.Cmp(maxBaseFeePerGas) > 0 {
 		return errors.New("overflow for base fee per gas")
 	}
@@ -345,6 +349,7 @@ func (e *ExecutionPayloadHeader) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -355,6 +360,7 @@ func (e *ExecutionPayloadHeader) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return err
 	}
+
 	return e.unpack(&data)
 }
 
@@ -364,5 +370,6 @@ func (e *ExecutionPayloadHeader) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

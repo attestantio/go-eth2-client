@@ -25,12 +25,14 @@ import (
 func (s *Service) SubmitProposalPreparations(ctx context.Context,
 	preparations []*apiv1.ProposalPreparation,
 ) error {
-	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
+	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		err := client.(consensusclient.ProposalPreparationsSubmitter).SubmitProposalPreparations(ctx, preparations)
 		if err != nil {
 			return nil, err
 		}
+
 		return true, nil
 	}, nil)
+
 	return err
 }

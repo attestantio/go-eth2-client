@@ -16,13 +16,24 @@ package mock
 import (
 	"context"
 	"time"
+
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // Spec provides the spec information of the chain.
 // This returns various useful values.
-func (s *Service) Spec(_ context.Context) (map[string]interface{}, error) {
-	return map[string]interface{}{
+func (s *Service) Spec(ctx context.Context, opts *api.SpecOpts) (*api.Response[map[string]any], error) {
+	if s.SpecFunc != nil {
+		return s.SpecFunc(ctx, opts)
+	}
+
+	data := map[string]any{
 		"SECONDS_PER_SLOT": 12 * time.Second,
 		"SLOTS_PER_EPOCH":  uint64(32),
+	}
+
+	return &api.Response[map[string]any]{
+		Data:     data,
+		Metadata: make(map[string]any),
 	}, nil
 }

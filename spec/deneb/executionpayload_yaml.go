@@ -40,8 +40,8 @@ type executionPayloadYAML struct {
 	BlockHash     string                `yaml:"block_hash"`
 	Transactions  []string              `yaml:"transactions"`
 	Withdrawals   []*capella.Withdrawal `yaml:"withdrawals"`
-	DataGasUsed   uint64                `yaml:"data_gas_used"`
-	ExcessDataGas uint64                `yaml:"excess_data_gas"`
+	BlobGasUsed   uint64                `yaml:"blob_gas_used"`
+	ExcessBlobGas uint64                `yaml:"excess_blob_gas"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
@@ -72,12 +72,13 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 		BlockHash:     fmt.Sprintf("%#x", e.BlockHash),
 		Transactions:  transactions,
 		Withdrawals:   e.Withdrawals,
-		DataGasUsed:   e.DataGasUsed,
-		ExcessDataGas: e.ExcessDataGas,
+		BlobGasUsed:   e.BlobGasUsed,
+		ExcessBlobGas: e.ExcessBlobGas,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -85,14 +86,14 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 func (e *ExecutionPayload) UnmarshalYAML(input []byte) error {
 	// This is very inefficient, but YAML is only used for spec tests so we do this
 	// rather than maintain a custom YAML unmarshaller.
-	var data executionPayloadJSON
-	if err := yaml.Unmarshal(input, &data); err != nil {
+	var unmarshaled executionPayloadJSON
+	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
-	bytes, err := json.Marshal(data)
+	marshaled, err := json.Marshal(unmarshaled)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	return e.UnmarshalJSON(bytes)
+	return e.UnmarshalJSON(marshaled)
 }

@@ -58,7 +58,7 @@ func (b *Blob) UnmarshalJSON(input []byte) error {
 		return errors.New("invalid prefix")
 	}
 	if !bytes.HasSuffix(input, []byte{'"'}) {
-		return errors.New("Invalid suffix")
+		return errors.New("invalid suffix")
 	}
 	if len(input) != 1+2+BlobLength*2+1 {
 		return errors.New("incorrect length")
@@ -91,7 +91,7 @@ func (b *Blob) UnmarshalYAML(input []byte) error {
 		return errors.New("invalid prefix")
 	}
 	if !bytes.HasSuffix(input, []byte{'\''}) {
-		return errors.New("Invalid suffix")
+		return errors.New("invalid suffix")
 	}
 	if len(input) != 1+2+BlobLength*2+1 {
 		return errors.New("incorrect length")

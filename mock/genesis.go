@@ -16,13 +16,18 @@ package mock
 import (
 	"context"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // Genesis provides the genesis information of the chain.
-func (s *Service) Genesis(_ context.Context) (*api.Genesis, error) {
-	return &api.Genesis{
+func (s *Service) Genesis(ctx context.Context, opts *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error) {
+	if s.GenesisFunc != nil {
+		return s.GenesisFunc(ctx, opts)
+	}
+
+	data := &apiv1.Genesis{
 		GenesisTime: s.genesisTime,
 		GenesisValidatorsRoot: phase0.Root([32]byte{
 			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
@@ -31,5 +36,10 @@ func (s *Service) Genesis(_ context.Context) (*api.Genesis, error) {
 		GenesisForkVersion: phase0.Version([4]byte{
 			0x01, 0x02, 0x03, 0x04,
 		}),
+	}
+
+	return &api.Response[*apiv1.Genesis]{
+		Data:     data,
+		Metadata: make(map[string]any),
 	}, nil
 }
