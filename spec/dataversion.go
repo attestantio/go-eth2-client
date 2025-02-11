@@ -70,7 +70,7 @@ func (d *DataVersion) UnmarshalJSON(input []byte) error {
 		*d = DataVersionCapella
 	case `"deneb"`:
 		*d = DataVersionDeneb
-	case `"electra"`:
+	case `"electra"`, `"fulu"`:
 		*d = DataVersionElectra
 	case `"eip7805"`:
 		*d = DataVersionEip7805
