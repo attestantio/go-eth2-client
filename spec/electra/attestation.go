@@ -31,7 +31,7 @@ import (
 //
 //nolint:tagalign
 type Attestation struct {
-	AggregationBits bitfield.Bitlist `ssz-max:"131072" dynssz-size:"MAX_VALIDATORS_PER_COMMITTEE*MAX_COMMITTEES_PER_SLOT"`
+	AggregationBits bitfield.Bitlist `ssz-max:"131072" dynssz-max:"MAX_VALIDATORS_PER_COMMITTEE*MAX_COMMITTEES_PER_SLOT"`
 	Data            *phase0.AttestationData
 	Signature       phase0.BLSSignature `ssz-size:"96"`
 	// bitfield.Bitvector64 is an 8 byte array so dynamic sizing doesn't make sense.
