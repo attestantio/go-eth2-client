@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,8 +19,8 @@ import "github.com/attestantio/go-eth2-client/spec/phase0"
 type ValidatorLivenessOpts struct {
 	Common CommonOpts
 
-	// Epoch is the epoch for which liveness is obtained.
+	// Epoch is the epoch for which the data is obtained.
 	Epoch phase0.Epoch
-	// ValidatorIndices is the indices of the validators for which liveness is obtained.
+	// Indices is a list of validators for which to obtain the duties.
 	Indices []phase0.ValidatorIndex
 }

@@ -505,9 +505,9 @@ type NodeSyncingProvider interface {
 	)
 }
 
-// ValidatorLivenessProvider is the interface for providing validator liveness state.
+// ValidatorLivenessProvider is the interface for providing validator liveness data.
 type ValidatorLivenessProvider interface {
-	// ValidatorLiveness provides the liveness state of validators in a given epoch.
+	// ValidatorLiveness provides the liveness data to the given validators.
 	ValidatorLiveness(ctx context.Context,
 		opts *api.ValidatorLivenessOpts,
 	) (

@@ -17,12 +17,13 @@ import (
 	"context"
 	"testing"
 
-	client "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/mock"
-	"github.com/attestantio/go-eth2-client/multi"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/mock"
+	"github.com/attestantio/go-eth2-client/multi"
 )
 
 func TestService(t *testing.T) {
@@ -137,6 +138,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.SyncCommitteesProvider)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteeSubscriptionsSubmitter)(nil), s)
 	assert.Implements(t, (*client.ValidatorBalancesProvider)(nil), s)
+	assert.Implements(t, (*client.ValidatorLivenessProvider)(nil), s)
 	assert.Implements(t, (*client.ValidatorsProvider)(nil), s)
 	assert.Implements(t, (*client.VoluntaryExitSubmitter)(nil), s)
 	assert.Implements(t, (*client.VoluntaryExitPoolProvider)(nil), s)
