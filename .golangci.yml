@@ -183,7 +183,6 @@ linters:
     - dupl
     - exhaustive
     - exhaustruct
-    - exportloopref
     - forcetypeassert
     - funlen
     - gci
@@ -200,6 +199,7 @@ linters:
     - musttag
     - perfsprint
     - recvcheck
+    - tenv
     - varnamelen
     - wrapcheck
     - wsl
