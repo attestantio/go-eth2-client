@@ -689,3 +689,19 @@ func (s *Sleepy) SyncCommitteeRewards(ctx context.Context,
 
 	return next.SyncCommitteeRewards(ctx, opts)
 }
+
+// ValidatorLiveness provides the liveness data to the given validators.
+func (s *Sleepy) ValidatorLiveness(ctx context.Context,
+	opts *api.ValidatorLivenessOpts,
+) (
+	*api.Response[[]*apiv1.ValidatorLiveness],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.ValidatorLivenessProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.ValidatorLiveness(ctx, opts)
+}

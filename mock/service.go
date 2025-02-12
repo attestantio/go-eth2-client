@@ -78,6 +78,7 @@ type Service struct {
 	SyncCommitteeDutiesFunc       func(context.Context, *api.SyncCommitteeDutiesOpts) (*api.Response[[]*apiv1.SyncCommitteeDuty], error)
 	SyncCommitteeRewardsFunc      func(context.Context, *api.SyncCommitteeRewardsOpts) (*api.Response[[]*apiv1.SyncCommitteeReward], error)
 	ValidatorBalancesFunc         func(context.Context, *api.ValidatorBalancesOpts) (*api.Response[map[phase0.ValidatorIndex]phase0.Gwei], error)
+	ValidatorLivenessFunc         func(context.Context, *api.ValidatorLivenessOpts) (*api.Response[[]*apiv1.ValidatorLiveness], error)
 	ValidatorsFunc                func(context.Context, *api.ValidatorsOpts) (*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator], error)
 	VoluntaryExitPoolFunc         func(context.Context, *api.VoluntaryExitPoolOpts) (*api.Response[[]*phase0.SignedVoluntaryExit], error)
 }
