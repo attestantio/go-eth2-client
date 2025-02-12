@@ -401,16 +401,16 @@ func populateHeaders(res *httpResponse, resp *http.Response) {
 }
 
 func populateContentType(res *httpResponse, resp *http.Response) error {
-	if len(res.body) == 0 {
-		// There's no body to decode.  Some servers don't send a content type in this
-		// situation, but it doesn't matter anyway; set it to JSON and return.
-		res.contentType = ContentTypeJSON
-
-		return nil
-	}
-
 	respContentTypes, exists := resp.Header["Content-Type"]
 	if !exists {
+		if len(res.body) == 0 {
+			// There's no body to decode.  Some servers don't send a content type in this
+			// situation, but it doesn't matter anyway; set it to JSON and return.
+			res.contentType = ContentTypeJSON
+
+			return nil
+		}
+
 		return errors.New("no content type supplied in response")
 	}
 	if len(respContentTypes) != 1 {
