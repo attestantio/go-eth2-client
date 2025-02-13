@@ -47,11 +47,15 @@ func (s *Service) SubmitAggregateAttestations(ctx context.Context, opts *api.Sub
 		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
-	endpoint := "/eth/v2/validator/aggregate_and_proofs"
-	query := ""
+	version := aggregateAndProofs[0].Version
 
 	headers := make(map[string]string)
-	headers["Eth-Consensus-Version"] = strings.ToLower(aggregateAndProofs[0].Version.String())
+	endpoint := "/eth/v1/validator/aggregate_and_proofs"
+	query := ""
+	if version == spec.DataVersionElectra {
+		endpoint = "/eth/v2/validator/aggregate_and_proofs"
+		headers["Eth-Consensus-Version"] = strings.ToLower(version.String())
+	}
 	if _, err = s.post(ctx,
 		endpoint,
 		query,

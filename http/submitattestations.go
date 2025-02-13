@@ -47,11 +47,15 @@ func (s *Service) SubmitAttestations(ctx context.Context, opts *api.SubmitAttest
 		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
-	endpoint := "/eth/v2/beacon/pool/attestations"
+	version := attestations[0].Version
+	endpoint := "/eth/v1/beacon/pool/attestations"
 	query := ""
-
 	headers := make(map[string]string)
-	headers["Eth-Consensus-Version"] = strings.ToLower(attestations[0].Version.String())
+
+	if version == spec.DataVersionElectra {
+		endpoint = "/eth/v2/beacon/pool/attestations"
+		headers["Eth-Consensus-Version"] = strings.ToLower(version.String())
+	}
 	if _, err = s.post(ctx,
 		endpoint,
 		query,
