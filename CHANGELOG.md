@@ -1,3 +1,7 @@
+dev:
+  - support single_attestation event
+  - support change to attestation event; this event now emits a spec.VersionedAttestation
+
 0.24.0:
   - support electra
     - the most notable change is that a number of functions now use spec.VersionedAttestation in place of phase0.Attestation
