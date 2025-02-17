@@ -97,22 +97,38 @@ func (s *Service) Events(ctx context.Context, topics []string, handler consensus
 	return nil
 }
 
-func getEventToStructMapping() map[string]any {
-	return map[string]any{
-		"attestation":             &spec.VersionedAttestation{},
-		"attester_slashing":       &phase0.AttesterSlashing{},
-		"blob_sidecar":            &api.BlobSidecarEvent{},
-		"block":                   &api.BlockEvent{},
-		"block_gossip":            &api.BlockGossipEvent{},
-		"bls_to_execution_change": &capella.SignedBLSToExecutionChange{},
-		"chain_reorg":             &api.ChainReorgEvent{},
-		"contribution_and_proof":  &altair.SignedContributionAndProof{},
-		"finalized_checkpoint":    &api.FinalizedCheckpointEvent{},
-		"head":                    &api.HeadEvent{},
-		"payload_attributes":      &api.PayloadAttributesEvent{},
-		"proposer_slashing":       &phase0.ProposerSlashing{},
-		"single_attestation":      &electra.SingleAttestation{},
-		"voluntary_exit":          &phase0.SignedVoluntaryExit{},
+func mapEventStruct(key string) (any, error) {
+	switch key {
+	case "attestation":
+		return &spec.VersionedAttestation{}, nil
+	case "attester_slashing":
+		return &phase0.AttesterSlashing{}, nil
+	case "blob_sidecar":
+		return &api.BlobSidecarEvent{}, nil
+	case "block":
+		return &api.BlockEvent{}, nil
+	case "block_gossip":
+		return &api.BlockGossipEvent{}, nil
+	case "bls_to_execution_change":
+		return &capella.SignedBLSToExecutionChange{}, nil
+	case "chain_reorg":
+		return &api.ChainReorgEvent{}, nil
+	case "contribution_and_proof":
+		return &altair.SignedContributionAndProof{}, nil
+	case "finalized_checkpoint":
+		return &api.FinalizedCheckpointEvent{}, nil
+	case "head":
+		return &api.HeadEvent{}, nil
+	case "payload_attributes":
+		return &api.PayloadAttributesEvent{}, nil
+	case "proposer_slashing":
+		return &phase0.ProposerSlashing{}, nil
+	case "single_attestation":
+		return &electra.SingleAttestation{}, nil
+	case "voluntary_exit":
+		return &phase0.SignedVoluntaryExit{}, nil
+	default:
+		return nil, errors.New("unknown event type")
 	}
 }
 
@@ -140,13 +156,13 @@ func (*Service) handleEvent(ctx context.Context, msg *sse.Event, handler consens
 	if eventString == "" {
 		return
 	}
-	data, exists := getEventToStructMapping()[eventString]
-	if !exists {
+	data, err := mapEventStruct(eventString)
+	if err != nil {
 		log.Warn().Str("topic", string(msg.Event)).Msg("Received message with unhandled topic; ignoring")
 
 		return
 	}
-	err := json.Unmarshal(msg.Data, data)
+	err = json.Unmarshal(msg.Data, data)
 	if err != nil {
 		errorMessage := fmt.Sprintf("Failed to parse %s event", strings.ReplaceAll(eventString, "_", " "))
 		log.Error().Err(err).RawJSON("data", msg.Data).Msg(errorMessage)
