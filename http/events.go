@@ -97,6 +97,25 @@ func (s *Service) Events(ctx context.Context, topics []string, handler consensus
 	return nil
 }
 
+func getEventToStructMapping() map[string]any {
+	return map[string]any{
+		"attestation":             &spec.VersionedAttestation{},
+		"attester_slashing":       &phase0.AttesterSlashing{},
+		"blob_sidecar":            &api.BlobSidecarEvent{},
+		"block":                   &api.BlockEvent{},
+		"block_gossip":            &api.BlockGossipEvent{},
+		"bls_to_execution_change": &capella.SignedBLSToExecutionChange{},
+		"chain_reorg":             &api.ChainReorgEvent{},
+		"contribution_and_proof":  &altair.SignedContributionAndProof{},
+		"finalized_checkpoint":    &api.FinalizedCheckpointEvent{},
+		"head":                    &api.HeadEvent{},
+		"payload_attributes":      &api.PayloadAttributesEvent{},
+		"proposer_slashing":       &phase0.ProposerSlashing{},
+		"single_attestation":      &electra.SingleAttestation{},
+		"voluntary_exit":          &phase0.SignedVoluntaryExit{},
+	}
+}
+
 // handleEvent parses an event and passes it on to the handler.
 func (*Service) handleEvent(ctx context.Context, msg *sse.Event, handler consensusclient.EventHandlerFunc) {
 	log := zerolog.Ctx(ctx)
@@ -112,143 +131,28 @@ func (*Service) handleEvent(ctx context.Context, msg *sse.Event, handler consens
 		return
 	}
 
+	eventString := string(msg.Event)
 	event := &api.Event{
-		Topic: string(msg.Event),
+		Topic: eventString,
 	}
-	switch string(msg.Event) {
-	case "attestation":
-		data := &spec.VersionedAttestation{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse attestation")
 
-			return
-		}
-		event.Data = data
-	case "attester_slashing":
-		data := &phase0.AttesterSlashing{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse attester slashing event")
-
-			return
-		}
-		event.Data = data
-	case "blob_sidecar":
-		data := &api.BlobSidecarEvent{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse blob sidecar event")
-
-			return
-		}
-		event.Data = data
-	case "block":
-		data := &api.BlockEvent{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse block event")
-
-			return
-		}
-		event.Data = data
-	case "block_gossip":
-		data := &api.BlockGossipEvent{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse block gossip event")
-
-			return
-		}
-		event.Data = data
-	case "bls_to_execution_change":
-		data := &capella.SignedBLSToExecutionChange{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse bls to execution change event")
-
-			return
-		}
-		event.Data = data
-	case "chain_reorg":
-		data := &api.ChainReorgEvent{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse chain reorg event")
-
-			return
-		}
-		event.Data = data
-	case "contribution_and_proof":
-		data := &altair.SignedContributionAndProof{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse contribution and proof event")
-
-			return
-		}
-		event.Data = data
-	case "finalized_checkpoint":
-		data := &api.FinalizedCheckpointEvent{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse finalized checkpoint event")
-
-			return
-		}
-		event.Data = data
-	case "head":
-		data := &api.HeadEvent{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse head event")
-
-			return
-		}
-		event.Data = data
-	case "payload_attributes":
-		data := &api.PayloadAttributesEvent{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse payload attributes event")
-
-			return
-		}
-		event.Data = data
-	case "proposer_slashing":
-		data := &phase0.ProposerSlashing{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse proposer slashing event")
-
-			return
-		}
-		event.Data = data
-	case "single_attestation":
-		data := &electra.SingleAttestation{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse single attestation event")
-
-			return
-		}
-		event.Data = data
-	case "voluntary_exit":
-		data := &phase0.SignedVoluntaryExit{}
-		err := json.Unmarshal(msg.Data, data)
-		if err != nil {
-			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse voluntary exit")
-
-			return
-		}
-		event.Data = data
-	case "":
-		// Used as keepalive.  Ignore.
+	// Used as keepalive.  Ignore.
+	if eventString == "" {
 		return
-	default:
+	}
+	data, exists := getEventToStructMapping()[eventString]
+	if !exists {
 		log.Warn().Str("topic", string(msg.Event)).Msg("Received message with unhandled topic; ignoring")
 
 		return
 	}
+	err := json.Unmarshal(msg.Data, data)
+	if err != nil {
+		errorMessage := fmt.Sprintf("Failed to parse %s event", strings.ReplaceAll(eventString, "_", " "))
+		log.Error().Err(err).RawJSON("data", msg.Data).Msg(errorMessage)
+
+		return
+	}
+	event.Data = data
 	handler(event)
 }
