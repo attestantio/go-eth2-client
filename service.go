@@ -632,9 +632,3 @@ type NodeClientProvider interface {
 	// NodeClient provides the client for the node.
 	NodeClient(ctx context.Context) (*api.Response[string], error)
 }
-
-// HashRootProvider provides the hash tree root for a beacon chain object.
-type HashRootProvider interface {
-	// HashRoot provides the hashroot for a beacon chain object.
-	HashRoot(ctx context.Context, obj any) (phase0.Root, error)
-}
