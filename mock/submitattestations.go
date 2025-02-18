@@ -16,10 +16,10 @@ package mock
 import (
 	"context"
 
-	spec "github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // SubmitAttestations submits attestations.
-func (*Service) SubmitAttestations(_ context.Context, _ []*spec.Attestation) error {
+func (*Service) SubmitAttestations(_ context.Context, _ *api.SubmitAttestationsOpts) error {
 	return nil
 }

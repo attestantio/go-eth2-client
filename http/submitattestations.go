@@ -18,25 +18,94 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strings"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec"
 )
 
-// SubmitAttestations submits attestations.
-func (s *Service) SubmitAttestations(ctx context.Context, attestations []*phase0.Attestation) error {
+// SubmitAttestations submits versioned attestations.
+func (s *Service) SubmitAttestations(ctx context.Context, opts *api.SubmitAttestationsOpts) error {
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
 	}
+	if opts == nil {
+		return client.ErrNoOptions
+	}
+	if len(opts.Attestations) == 0 {
+		return errors.Join(errors.New("no attestations supplied"), client.ErrInvalidOptions)
+	}
+	attestations := opts.Attestations
+	unversionedAttestations, err := s.createUnversionedAttestations(attestations)
+	if err != nil {
+		return err
+	}
 
-	specJSON, err := json.Marshal(attestations)
+	specJSON, err := json.Marshal(unversionedAttestations)
 	if err != nil {
 		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
-	_, err = s.post(ctx, "/eth/v1/beacon/pool/attestations", bytes.NewBuffer(specJSON))
-	if err != nil {
-		return errors.Join(errors.New("failed to submit beacon attestations"), err)
+	endpoint := "/eth/v2/beacon/pool/attestations"
+	query := ""
+
+	headers := make(map[string]string)
+	headers["Eth-Consensus-Version"] = strings.ToLower(attestations[0].Version.String())
+	if _, err = s.post(ctx,
+		endpoint,
+		query,
+		&opts.Common,
+		bytes.NewReader(specJSON),
+		ContentTypeJSON,
+		headers,
+	); err != nil {
+		return errors.Join(errors.New("failed to submit versioned beacon attestations"), err)
 	}
 
 	return nil
+}
+
+func (s *Service) createUnversionedAttestations(attestations []*spec.VersionedAttestation) ([]any, error) {
+	var version spec.DataVersion
+	var unversionedAttestations []any
+
+	for i := range attestations {
+		if attestations[i] == nil {
+			return nil, errors.Join(errors.New("nil attestation version supplied"), client.ErrInvalidOptions)
+		}
+
+		// Ensure consistent versioning.
+		if version == spec.DataVersionUnknown {
+			version = attestations[i].Version
+		} else if version != attestations[i].Version {
+			return nil, errors.Join(errors.New("attestations must all be of the same version"), client.ErrInvalidOptions)
+		}
+
+		// Append to unversionedAttestations.
+		switch attestations[i].Version {
+		case spec.DataVersionPhase0:
+			unversionedAttestations = append(unversionedAttestations, attestations[i].Phase0)
+		case spec.DataVersionAltair:
+			unversionedAttestations = append(unversionedAttestations, attestations[i].Altair)
+		case spec.DataVersionBellatrix:
+			unversionedAttestations = append(unversionedAttestations, attestations[i].Bellatrix)
+		case spec.DataVersionCapella:
+			unversionedAttestations = append(unversionedAttestations, attestations[i].Capella)
+		case spec.DataVersionDeneb:
+			unversionedAttestations = append(unversionedAttestations, attestations[i].Deneb)
+		case spec.DataVersionElectra:
+			singleAttestation, err := attestations[i].Electra.ToSingleAttestation(attestations[i].ValidatorIndex)
+			if err != nil {
+				s.log.Warn().Err(err).Msg("Failed to convert attestation to single attestation")
+
+				continue
+			}
+			unversionedAttestations = append(unversionedAttestations, singleAttestation)
+		default:
+			return nil, errors.Join(errors.New("unknown attestation version"), client.ErrInvalidOptions)
+		}
+	}
+
+	return unversionedAttestations, nil
 }

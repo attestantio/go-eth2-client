@@ -23,11 +23,15 @@ import (
 )
 
 // Proposal fetches a proposal for signing.
-func (*Service) Proposal(_ context.Context,
+func (s *Service) Proposal(ctx context.Context,
 	opts *api.ProposalOpts,
 ) (
 	*api.Response[*api.VersionedProposal], error,
 ) {
+	if s.ProposalFunc != nil {
+		return s.ProposalFunc(ctx, opts)
+	}
+
 	// Build a beacon block.
 
 	// Create a few attestations.

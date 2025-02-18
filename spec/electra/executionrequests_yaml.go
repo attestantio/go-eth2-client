@@ -17,22 +17,23 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
-// pendingBalanceDepositYAML is the spec representation of the struct.
-type pendingBalanceDepositYAML struct {
-	Index  phase0.ValidatorIndex `yaml:"index"`
-	Amount phase0.Gwei           `yaml:"amount"`
+// executionRequestsYAML is the spec representation of the struct.
+type executionRequestsYAML struct {
+	Deposits       []*DepositRequest       `yaml:"deposits"`
+	Withdrawals    []*WithdrawalRequest    `yaml:"withdrawals"`
+	Consolidations []*ConsolidationRequest `yaml:"consolidations"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
-func (p *PendingBalanceDeposit) MarshalYAML() ([]byte, error) {
-	yamlBytes, err := yaml.MarshalWithOptions(&pendingBalanceDepositYAML{
-		Index:  p.Index,
-		Amount: p.Amount,
+func (e *ExecutionRequests) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&executionRequestsYAML{
+		Deposits:       e.Deposits,
+		Withdrawals:    e.Withdrawals,
+		Consolidations: e.Consolidations,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
@@ -42,17 +43,17 @@ func (p *PendingBalanceDeposit) MarshalYAML() ([]byte, error) {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (p *PendingBalanceDeposit) UnmarshalYAML(input []byte) error {
+func (e *ExecutionRequests) UnmarshalYAML(input []byte) error {
 	// This is very inefficient, but YAML is only used for spec tests so we do this
 	// rather than maintain a custom YAML unmarshaller.
-	var unmarshaled pendingBalanceDepositJSON
+	var unmarshaled executionRequestsJSON
 	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
-	marshaled, err := json.Marshal(&unmarshaled)
+	marshaled, err := json.Marshal(unmarshaled)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	return p.UnmarshalJSON(marshaled)
+	return e.UnmarshalJSON(marshaled)
 }

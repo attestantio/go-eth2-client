@@ -147,7 +147,7 @@ func (d *ForkChoiceNodeValidity) UnmarshalJSON(input []byte) error {
 
 // String returns a string representation of the ForkChoiceNodeValidity.
 func (d ForkChoiceNodeValidity) String() string {
-	if int(d) >= len(ForkChoiceNodeValidityStrings) {
+	if uint64(d) >= uint64(len(ForkChoiceNodeValidityStrings)) {
 		return "unknown"
 	}
 
@@ -162,7 +162,7 @@ type ForkChoiceNode struct {
 	BlockRoot phase0.Root
 	// ParentRoot is the parent root of the node.
 	ParentRoot phase0.Root
-	// JustifiedEpcih is the justified epoch of the node.
+	// JustifiedEpcoh is the justified epoch of the node.
 	JustifiedEpoch phase0.Epoch
 	// FinalizedEpoch is the finalized epoch of the node.
 	FinalizedEpoch phase0.Epoch
@@ -170,7 +170,7 @@ type ForkChoiceNode struct {
 	Weight uint64
 	// Validity is the validity of the node.
 	Validity ForkChoiceNodeValidity
-	// ExecutiionBlockHash is the execution block hash of the node.
+	// ExecutionBlockHash is the execution block hash of the node.
 	ExecutionBlockHash phase0.Root
 	// ExtraData is the extra data of the node.
 	ExtraData map[string]any

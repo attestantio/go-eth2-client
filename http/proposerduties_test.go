@@ -59,12 +59,6 @@ func TestProposerDuties(t *testing.T) {
 			expected: int(slotsPerEpoch - 1),
 		},
 		{
-			name:     "Old",
-			opts:     &api.ProposerDutiesOpts{Epoch: 1},
-			expected: int(slotsPerEpoch),
-			err:      "GET failed with status 404",
-		},
-		{
 			name:     "Current",
 			opts:     &api.ProposerDutiesOpts{Epoch: phase0.Epoch(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / (uint64(slotDuration.Seconds()) * slotsPerEpoch))},
 			expected: int(slotsPerEpoch),

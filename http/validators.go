@@ -49,6 +49,9 @@ func (s *Service) Validators(ctx context.Context,
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+	if opts.State == "" {
+		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
+	}
 	span.SetAttributes(attribute.Int("validators", len(opts.Indices)+len(opts.PubKeys)))
 
 	if len(opts.Indices) == 0 && len(opts.PubKeys) == 0 {
@@ -78,7 +81,7 @@ func (s *Service) Validators(ctx context.Context,
 		return nil, errors.Join(errors.New("failed to marshal request data"), err)
 	}
 
-	httpResponse, err := s.post2(ctx, endpoint, query, &opts.Common, bytes.NewReader(reqData), ContentTypeJSON, map[string]string{})
+	httpResponse, err := s.post(ctx, endpoint, query, &opts.Common, bytes.NewReader(reqData), ContentTypeJSON, map[string]string{})
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request validators"), err)
 	}

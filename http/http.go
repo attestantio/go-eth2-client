@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2024 Attestant Limited.
+// Copyright © 2020 - 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -27,6 +27,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/rs/zerolog"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -34,89 +35,10 @@ import (
 )
 
 // defaultUserAgent is sent with requests if no other user agent has been supplied.
-const defaultUserAgent = "go-eth2-client/0.21.10"
+const defaultUserAgent = "go-eth2-client/0.24.0"
 
 // post sends an HTTP post request and returns the body.
-func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io.Reader, error) {
-	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "post")
-	defer span.End()
-
-	// #nosec G404
-	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Str("endpoint", endpoint).Logger()
-	if e := log.Trace(); e.Enabled() {
-		bodyBytes, err := io.ReadAll(body)
-		if err != nil {
-			return nil, errors.New("failed to read request body")
-		}
-		body = bytes.NewReader(bodyBytes)
-
-		e.RawJSON("body", bodyBytes).Msg("POST request")
-	}
-
-	callURL := urlForCall(s.base, endpoint, "")
-	log.Trace().Str("url", callURL.String()).Msg("URL to POST")
-	span.SetAttributes(attribute.String("url", callURL.String()))
-
-	opCtx, cancel := context.WithTimeout(ctx, s.timeout)
-	defer cancel()
-	req, err := http.NewRequestWithContext(opCtx, http.MethodPost, callURL.String(), body)
-	if err != nil {
-		span.SetStatus(codes.Error, "Failed to create request")
-
-		return nil, errors.Join(errors.New("failed to create POST request"), err)
-	}
-
-	s.addExtraHeaders(req)
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-	if req.Header.Get("User-Agent") == "" {
-		req.Header.Set("User-Agent", defaultUserAgent)
-	}
-
-	resp, err := s.client.Do(req)
-	if err != nil {
-		go s.CheckConnectionState(ctx)
-
-		span.SetStatus(codes.Error, err.Error())
-		s.monitorPostComplete(ctx, callURL.Path, "failed")
-
-		return nil, errors.Join(errors.New("failed to call POST endpoint"), err)
-	}
-	defer resp.Body.Close()
-	log = log.With().Int("status_code", resp.StatusCode).Logger()
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		span.SetStatus(codes.Error, err.Error())
-		s.monitorPostComplete(ctx, callURL.Path, "failed")
-
-		return nil, errors.Join(errors.New("failed to read POST response"), err)
-	}
-
-	statusFamily := statusCodeFamily(resp.StatusCode)
-	if statusFamily != 2 {
-		trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(data, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
-		log.Debug().Int("status_code", resp.StatusCode).RawJSON("response", trimmedResponse).Msg("POST failed")
-
-		span.SetStatus(codes.Error, fmt.Sprintf("Status code %d", resp.StatusCode))
-		s.monitorPostComplete(ctx, callURL.Path, "failed")
-
-		return nil, &api.Error{
-			Method:     http.MethodPost,
-			StatusCode: resp.StatusCode,
-			Endpoint:   endpoint,
-			Data:       data,
-		}
-	}
-
-	log.Trace().Str("response", string(data)).Msg("POST response")
-	s.monitorPostComplete(ctx, callURL.Path, "succeeded")
-
-	return bytes.NewReader(data), nil
-}
-
-// post2 sends an HTTP post request and returns the body.
-func (s *Service) post2(ctx context.Context,
+func (s *Service) post(ctx context.Context,
 	endpoint string,
 	query string,
 	opts *api.CommonOpts,
@@ -244,12 +166,7 @@ func (s *Service) post2(ctx context.Context,
 
 	statusFamily := statusCodeFamily(resp.StatusCode)
 	if statusFamily != 2 {
-		if res.contentType == ContentTypeJSON {
-			trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
-			log.Debug().Int("status_code", resp.StatusCode).RawJSON("response", trimmedResponse).Msg("POST failed")
-		} else {
-			log.Debug().Int("status_code", resp.StatusCode).Msg("POST failed")
-		}
+		s.logBadStatus(ctx, "POST", res, log)
 
 		span.SetStatus(codes.Error, fmt.Sprintf("Status code %d", resp.StatusCode))
 		s.monitorPostComplete(ctx, callURL.Path, "failed")
@@ -265,6 +182,23 @@ func (s *Service) post2(ctx context.Context,
 	s.monitorPostComplete(ctx, callURL.Path, "succeeded")
 
 	return res, nil
+}
+
+func (*Service) logBadStatus(_ context.Context,
+	method string,
+	res *httpResponse,
+	log zerolog.Logger,
+) {
+	if res.contentType == ContentTypeJSON {
+		trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
+		if bytes.HasPrefix(res.body, []byte("{")) {
+			log.Debug().Int("status_code", res.statusCode).RawJSON("response", trimmedResponse).Msg(method + " failed")
+		} else {
+			log.Debug().Int("status_code", res.statusCode).Str("response", string(trimmedResponse)).Msg(method + " failed")
+		}
+	} else {
+		log.Debug().Int("status_code", res.statusCode).Msg(method + " failed")
+	}
 }
 
 func (s *Service) addExtraHeaders(req *http.Request) {
@@ -340,7 +274,7 @@ func (s *Service) get(ctx context.Context,
 		case errors.Is(err, context.DeadlineExceeded):
 			// We don't consider context deadline exceeded to be a potential connection issue, as the user selected the deadline.
 		case strings.HasSuffix(callURL.String(), "/node/syncing"):
-			// Special case; if we have called the syncing endpoint and it failed then we don't check the connectino status, as
+			// Special case; if we have called the syncing endpoint and it failed then we don't check the connection status, as
 			// that calls the syncing endpoint itself and so we find ourselves in an endless loop.
 		default:
 			// We consider other errors to be potential connection issues.
@@ -400,17 +334,9 @@ func (s *Service) get(ctx context.Context,
 		attribute.String("content-type", res.contentType.String()),
 	))
 
-	if res.contentType == ContentTypeJSON {
-		if e := log.Trace(); e.Enabled() {
-			trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
-			e.RawJSON("body", trimmedResponse).Msg("GET response")
-		}
-	}
-
 	statusFamily := statusCodeFamily(resp.StatusCode)
 	if statusFamily != 2 {
-		trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
-		log.Debug().Int("status_code", resp.StatusCode).RawJSON("response", trimmedResponse).Msg("GET failed")
+		s.logBadStatus(ctx, "GET", res, log)
 
 		span.SetStatus(codes.Error, fmt.Sprintf("Status code %d", resp.StatusCode))
 		s.monitorGetComplete(ctx, callURL.Path, "failed")
@@ -420,6 +346,13 @@ func (s *Service) get(ctx context.Context,
 			StatusCode: resp.StatusCode,
 			Endpoint:   endpoint,
 			Data:       res.body,
+		}
+	}
+
+	if res.contentType == ContentTypeJSON {
+		if e := log.Trace(); e.Enabled() {
+			trimmedResponse := bytes.ReplaceAll(bytes.ReplaceAll(res.body, []byte{0x0a}, []byte{}), []byte{0x0d}, []byte{})
+			e.RawJSON("body", trimmedResponse).Msg("GET response")
 		}
 	}
 
@@ -468,16 +401,16 @@ func populateHeaders(res *httpResponse, resp *http.Response) {
 }
 
 func populateContentType(res *httpResponse, resp *http.Response) error {
-	if len(res.body) == 0 {
-		// There's no body to decode.  Some servers don't send a content type in this
-		// situation, but it doesn't matter anyway; set it to JSON and return.
-		res.contentType = ContentTypeJSON
-
-		return nil
-	}
-
 	respContentTypes, exists := resp.Header["Content-Type"]
 	if !exists {
+		if len(res.body) == 0 {
+			// There's no body to decode.  Some servers don't send a content type in this
+			// situation, but it doesn't matter anyway; set it to JSON and return.
+			res.contentType = ContentTypeJSON
+
+			return nil
+		}
+
 		return errors.New("no content type supplied in response")
 	}
 	if len(respContentTypes) != 1 {

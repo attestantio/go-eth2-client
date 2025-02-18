@@ -21,14 +21,15 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
-	"net/url"
 	"strings"
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/r3labs/sse/v2"
 	"github.com/rs/zerolog"
@@ -54,14 +55,12 @@ func (s *Service) Events(ctx context.Context, topics []string, handler consensus
 		}
 	}
 
-	reference, err := url.Parse(fmt.Sprintf("eth/v1/events?topics=%s", strings.Join(topics, "&topics=")))
-	if err != nil {
-		return errors.Join(errors.New("invalid endpoint"), err)
-	}
-	callURL := s.base.ResolveReference(reference).String()
-	log.Trace().Str("url", callURL).Msg("GET request to events stream")
+	endpoint := "/eth/v1/events"
+	query := "topics=" + strings.Join(topics, "&topics=")
+	callURL := urlForCall(s.base, endpoint, query)
+	log.Trace().Str("url", callURL.String()).Msg("GET request to events stream")
 
-	client := sse.NewClient(callURL)
+	client := sse.NewClient(callURL.String())
 	for k, v := range s.extraHeaders {
 		client.Headers[k] = v
 	}
@@ -118,7 +117,7 @@ func (*Service) handleEvent(ctx context.Context, msg *sse.Event, handler consens
 	}
 	switch string(msg.Event) {
 	case "attestation":
-		data := &phase0.Attestation{}
+		data := &spec.VersionedAttestation{}
 		err := json.Unmarshal(msg.Data, data)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse attestation")
@@ -221,6 +220,15 @@ func (*Service) handleEvent(ctx context.Context, msg *sse.Event, handler consens
 		err := json.Unmarshal(msg.Data, data)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse proposer slashing event")
+
+			return
+		}
+		event.Data = data
+	case "single_attestation":
+		data := &electra.SingleAttestation{}
+		err := json.Unmarshal(msg.Data, data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse single attestation event")
 
 			return
 		}

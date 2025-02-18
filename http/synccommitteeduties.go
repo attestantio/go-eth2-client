@@ -59,13 +59,22 @@ func (s *Service) SyncCommitteeDuties(ctx context.Context,
 		return nil, errors.Join(errors.New("failed to write end of validator index array"), err)
 	}
 
-	url := fmt.Sprintf("/eth/v1/validator/duties/sync/%d", opts.Epoch)
-	respBodyReader, err := s.post(ctx, url, &reqBodyReader)
+	endpoint := fmt.Sprintf("/eth/v1/validator/duties/sync/%d", opts.Epoch)
+	query := ""
+
+	httpResponse, err := s.post(ctx,
+		endpoint,
+		query,
+		&api.CommonOpts{},
+		&reqBodyReader,
+		ContentTypeJSON,
+		map[string]string{},
+	)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request sync committee duties"), err)
 	}
 
-	data, metadata, err := decodeJSONResponse(respBodyReader, []*apiv1.SyncCommitteeDuty{})
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*apiv1.SyncCommitteeDuty{})
 	if err != nil {
 		return nil, err
 	}

@@ -15,6 +15,7 @@ package http
 
 import (
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/attestantio/go-eth2-client/metrics"
@@ -34,6 +35,7 @@ type parameters struct {
 	hooks              *Hooks
 	reducedMemoryUsage bool
 	customSpecSupport  bool
+	client             *http.Client
 }
 
 // Parameter is the interface for service parameters.
@@ -82,7 +84,7 @@ func WithIndexChunkSize(indexChunkSize int) Parameter {
 	})
 }
 
-// WithPubKeyChunkSize sets the maximum number of public kyes to send for individual validator requests.
+// WithPubKeyChunkSize sets the maximum number of public keys to send for individual validator requests.
 func WithPubKeyChunkSize(pubKeyChunkSize int) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.pubKeyChunkSize = pubKeyChunkSize
@@ -131,6 +133,14 @@ func WithReducedMemoryUsage(reducedMemoryUsage bool) Parameter {
 func WithCustomSpecSupport(customSpecSupport bool) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.customSpecSupport = customSpecSupport
+	})
+}
+
+// WithHTTPClient provides a custom HTTP client for communication with the HTTP server.
+// If not supplied then a standard HTTP client is used.
+func WithHTTPClient(client *http.Client) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.client = client
 	})
 }
 

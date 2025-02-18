@@ -19,6 +19,7 @@ import (
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -426,6 +427,50 @@ func (v *VersionedSignedBlindedBeaconBlock) ProposerIndex() (phase0.ValidatorInd
 	}
 }
 
+// ExecutionParentHash returns the parent hash of the beacon block.
+func (v *VersionedSignedBlindedBeaconBlock) ExecutionParentHash() (phase0.Hash32, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Message == nil ||
+			v.Bellatrix.Message.Body == nil ||
+			v.Bellatrix.Message.Body.ExecutionPayloadHeader == nil {
+			return phase0.Hash32{}, ErrDataMissing
+		}
+
+		return v.Bellatrix.Message.Body.ExecutionPayloadHeader.ParentHash, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil ||
+			v.Capella.Message == nil ||
+			v.Capella.Message.Body == nil ||
+			v.Capella.Message.Body.ExecutionPayloadHeader == nil {
+			return phase0.Hash32{}, ErrDataMissing
+		}
+
+		return v.Capella.Message.Body.ExecutionPayloadHeader.ParentHash, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil ||
+			v.Deneb.Message == nil ||
+			v.Deneb.Message.Body == nil ||
+			v.Deneb.Message.Body.ExecutionPayloadHeader == nil {
+			return phase0.Hash32{}, ErrDataMissing
+		}
+
+		return v.Deneb.Message.Body.ExecutionPayloadHeader.ParentHash, nil
+	case spec.DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil ||
+			v.Electra.Message.Body.ExecutionPayloadHeader == nil {
+			return phase0.Hash32{}, ErrDataMissing
+		}
+
+		return v.Electra.Message.Body.ExecutionPayloadHeader.ParentHash, nil
+	default:
+		return phase0.Hash32{}, ErrUnsupportedVersion
+	}
+}
+
 // ExecutionBlockHash returns the hash of the beacon block.
 func (v *VersionedSignedBlindedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error) {
 	switch v.Version {
@@ -511,6 +556,34 @@ func (v *VersionedSignedBlindedBeaconBlock) ExecutionBlockNumber() (uint64, erro
 		return v.Electra.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
 	default:
 		return 0, ErrUnsupportedVersion
+	}
+}
+
+// BlobKZGCommitments returns the blob KZG commitments of the beacon block.
+func (v *VersionedSignedBlindedBeaconBlock) BlobKZGCommitments() ([]deneb.KZGCommitment, error) {
+	switch v.Version {
+	case spec.DataVersionPhase0:
+		return nil, ErrDataMissing
+	case spec.DataVersionAltair:
+		return nil, ErrDataMissing
+	case spec.DataVersionBellatrix:
+		return nil, ErrDataMissing
+	case spec.DataVersionCapella:
+		return nil, ErrDataMissing
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		return v.Deneb.Message.Body.BlobKZGCommitments, nil
+	case spec.DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		return v.Electra.Message.Body.BlobKZGCommitments, nil
+	default:
+		return nil, ErrUnsupportedVersion
 	}
 }
 

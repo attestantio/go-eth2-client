@@ -16,10 +16,9 @@ package electra
 import (
 	"fmt"
 
-	"github.com/attestantio/go-eth2-client/spec/deneb"
-
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 )
@@ -35,9 +34,10 @@ type BeaconBlockBody struct {
 	Deposits              []*phase0.Deposit             `dynssz-max:"MAX_DEPOSITS"           ssz-max:"16"`
 	VoluntaryExits        []*phase0.SignedVoluntaryExit `dynssz-max:"MAX_VOLUNTARY_EXITS"    ssz-max:"16"`
 	SyncAggregate         *altair.SyncAggregate
-	ExecutionPayload      *ExecutionPayload
-	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `dynssz-max:"MAX_BLS_TO_EXECUTION_CHANGES"   ssz-max:"16"`
+	ExecutionPayload      *deneb.ExecutionPayload
+	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `dynssz-max:"MAX_BLS_TO_EXECUTION_CHANGES" ssz-max:"16"`
 	BlobKZGCommitments    []deneb.KZGCommitment                 `dynssz-max:"MAX_BLOB_COMMITMENTS_PER_BLOCK" ssz-max:"4096" ssz-size:"?,48"`
+	ExecutionRequests     *ExecutionRequests
 }
 
 // String returns a string version of the structure.

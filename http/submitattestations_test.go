@@ -15,6 +15,7 @@ package http_test
 
 import (
 	"context"
+	"github.com/attestantio/go-eth2-client/spec"
 	"os"
 	"strings"
 	"testing"
@@ -79,7 +80,13 @@ func TestSubmitAttestations(t *testing.T) {
 				}),
 			}
 
-			err = service.(client.AttestationsSubmitter).SubmitAttestations(ctx, []*phase0.Attestation{attestation})
+			versionedAttestations := []*spec.VersionedAttestation{
+				{Version: spec.DataVersionPhase0, Phase0: attestation},
+			}
+			opts := &api.SubmitAttestationsOpts{
+				Attestations: versionedAttestations,
+			}
+			err = service.(client.AttestationsSubmitter).SubmitAttestations(ctx, opts)
 			switch {
 			case test.err != "":
 				require.ErrorContains(t, err, test.err)

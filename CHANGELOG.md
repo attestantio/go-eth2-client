@@ -1,5 +1,22 @@
 dev:
+  - support single_attestation event
+  - support change to attestation event; this event now emits a spec.VersionedAttestation
+
+0.24.0:
+  - support electra
+    - the most notable change is that a number of functions now use spec.VersionedAttestation in place of phase0.Attestation
+    - this release uses a number of new beacon API endpoints, specifically:
+      - /eth/v2/validator/aggregate_attestation
+      - /eth/v2/validator/aggregate_and_proofs
+      - /eth/v2/beacon/pool/attestations
+      These endpoints are supported in all current releases of major beacon nodes at the time of release
+
+0.23.1:
+  - add ability to override individual provider functions in mock client
+
+0.23.0:
   - add attester_slashing, block_gossip, bls_to_execution_change and proposer_slashing events
+  - add AttestationRewards, BlockRewards, and SyncCommitteeRewards functions
 
 0.21.10:
   - better validator state when balance not supplied

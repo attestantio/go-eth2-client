@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -33,8 +34,17 @@ func (s *Service) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0
 		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
-	_, err = s.post(ctx, "/eth/v1/beacon/pool/voluntary_exits", bytes.NewBuffer(specJSON))
-	if err != nil {
+	endpoint := "/eth/v1/beacon/pool/voluntary_exits"
+	query := ""
+
+	if _, err := s.post(ctx,
+		endpoint,
+		query,
+		&api.CommonOpts{},
+		bytes.NewReader(specJSON),
+		ContentTypeJSON,
+		map[string]string{},
+	); err != nil {
 		return errors.Join(errors.New("failed to submit voluntary exit"), err)
 	}
 

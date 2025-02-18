@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -39,8 +40,14 @@ func (s *Service) AttestationPool(ctx context.Context,
 	}
 
 	endpoint := "/eth/v1/beacon/pool/attestations"
-	query := fmt.Sprintf("slot=%d", opts.Slot)
-	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
+	queryItems := make([]string, 0)
+	if opts.Slot != nil {
+		queryItems = append(queryItems, fmt.Sprintf("slot=%d", *opts.Slot))
+	}
+	if opts.CommitteeIndex != nil {
+		queryItems = append(queryItems, fmt.Sprintf("committee_index=%d", *opts.CommitteeIndex))
+	}
+	httpResponse, err := s.get(ctx, endpoint, strings.Join(queryItems, "&"), &opts.Common, false)
 	if err != nil {
 		return nil, err
 	}
@@ -77,8 +84,11 @@ func (*Service) attestationPoolFromJSON(_ context.Context,
 
 func verifyAttestationPool(opts *api.AttestationPoolOpts, data []*phase0.Attestation) error {
 	for _, datum := range data {
-		if datum.Data.Slot != opts.Slot {
+		if opts.Slot != nil && datum.Data.Slot != *opts.Slot {
 			return errors.New("attestation data not for requested slot")
+		}
+		if opts.CommitteeIndex != nil && datum.Data.Index != *opts.CommitteeIndex {
+			return errors.New("attestation data not for requested committee index")
 		}
 	}
 

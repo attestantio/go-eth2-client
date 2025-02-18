@@ -74,38 +74,16 @@ run:
 
 # output configuration options
 output:
-  # Format: colored-line-number|line-number|json|tab|checkstyle|code-climate|junit-xml|github-actions
-  #
-  # Multiple can be specified by separating them by comma, output can be provided
-  # for each of them by separating format name and path by colon symbol.
-  # Output path can be either `stdout`, `stderr` or path to the file to write to.
-  # Example: "checkstyle:report.json,colored-line-number"
-  #
-  # Default: colored-line-number
-  # format: json
-
-  # Print lines of code with issue.
-  # Default: true
-  # print-issued-lines: false
-
-  # Print linter name in the end of issue text.
-  # Default: true
-  # print-linter-name: false
-
-  # Make issues output unique by line.
-  # Default: true
-  # uniq-by-line: false
-
-  # Add a prefix to the output file references.
-  # Default is no prefix.
-  # path-prefix: ""
-
-  # Sort results by: filepath, line and column.
-  # sort-results: true
-
+  formats:
+    - format: colored-line-number
+      path: stderr
 
 # All available settings of specific linters.
 linters-settings:
+  gosec:
+    excludes:
+      - G115 # This generates a lot of false positives.
+
   lll:
     line-length: 132
 
@@ -149,6 +127,24 @@ linters-settings:
         json: snake
         yaml: snake
 
+  goheader:
+    values:
+      regexp:
+        YEARS: '(20\d\d - 20\d\d|20\d\d, 20\d\d|20\d\d)'
+    template: |-
+      Copyright © {{ YEARS }} Attestant Limited.
+      Licensed under the Apache License, Version 2.0 (the "License");
+      you may not use this file except in compliance with the License.
+      You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+      Unless required by applicable law or agreed to in writing, software
+      distributed under the License is distributed on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+      See the License for the specific language governing permissions and
+      limitations under the License.
+
 linters:
   # Enable all available linters.
   # Default: false
@@ -159,7 +155,6 @@ linters:
     - cyclop
     - depguard
     - dupl
-    - execinquery
     - exhaustive
     - exhaustruct
     - forcetypeassert
@@ -170,13 +165,15 @@ linters:
     - gocognit
     - goconst
     - err113
-    - gomnd
+    - intrange
     - ireturn
     - lll
     - maintidx
     - mnd
     - musttag
     - perfsprint
+    - recvcheck
+    - tenv
     - varnamelen
     - wrapcheck
     - wsl

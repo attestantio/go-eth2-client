@@ -18,6 +18,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	bitfield "github.com/prysmaticlabs/go-bitfield"
@@ -49,7 +50,7 @@ type BeaconState struct {
 	InactivityScores              []uint64 `dynssz-max:"VALIDATOR_REGISTRY_LIMIT" ssz-max:"1099511627776"`
 	CurrentSyncCommittee          *altair.SyncCommittee
 	NextSyncCommittee             *altair.SyncCommittee
-	LatestExecutionPayloadHeader  *ExecutionPayloadHeader
+	LatestExecutionPayloadHeader  *deneb.ExecutionPayloadHeader
 	NextWithdrawalIndex           capella.WithdrawalIndex
 	NextWithdrawalValidatorIndex  phase0.ValidatorIndex
 	HistoricalSummaries           []*capella.HistoricalSummary `dynssz-max:"HISTORICAL_ROOTS_LIMIT" ssz-max:"16777216"`
@@ -59,7 +60,7 @@ type BeaconState struct {
 	EarliestExitEpoch             phase0.Epoch
 	ConsolidationBalanceToConsume phase0.Gwei
 	EarliestConsolidationEpoch    phase0.Epoch
-	PendingBalanceDeposits        []*PendingBalanceDeposit    `dynssz-max:"PENDING_BALANCE_DEPOSITS_LIMIT"    ssz-max:"134217728"`
+	PendingDeposits               []*PendingDeposit           `dynssz-max:"PENDING_DEPOSITS_LIMIT"            ssz-max:"134217728"`
 	PendingPartialWithdrawals     []*PendingPartialWithdrawal `dynssz-max:"PENDING_PARTIAL_WITHDRAWALS_LIMIT" ssz-max:"134217728"`
 	PendingConsolidations         []*PendingConsolidation     `dynssz-max:"PENDING_CONSOLIDATIONS_LIMIT"      ssz-max:"262144"`
 }

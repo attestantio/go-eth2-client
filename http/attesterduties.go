@@ -60,13 +60,22 @@ func (s *Service) AttesterDuties(ctx context.Context,
 		return nil, errors.Join(errors.New("failed to write end of validator index array"), err)
 	}
 
-	url := fmt.Sprintf("/eth/v1/validator/duties/attester/%d", opts.Epoch)
-	respBodyReader, err := s.post(ctx, url, &reqBodyReader)
+	endpoint := fmt.Sprintf("/eth/v1/validator/duties/attester/%d", opts.Epoch)
+	query := ""
+
+	httpResponse, err := s.post(ctx,
+		endpoint,
+		query,
+		&api.CommonOpts{},
+		&reqBodyReader,
+		ContentTypeJSON,
+		map[string]string{},
+	)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request attester duties"), err)
 	}
 
-	data, metadata, err := decodeJSONResponse(respBodyReader, []*apiv1.AttesterDuty{})
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*apiv1.AttesterDuty{})
 	if err != nil {
 		return nil, err
 	}

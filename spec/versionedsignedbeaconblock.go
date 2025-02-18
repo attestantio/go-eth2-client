@@ -156,7 +156,7 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error)
 			v.Electra.Message == nil ||
 			v.Electra.Message.Body == nil ||
 			v.Electra.Message.Body.ExecutionPayload == nil {
-			return phase0.Hash32{}, errors.New("no deneb block")
+			return phase0.Hash32{}, errors.New("no electra block")
 		}
 
 		return v.Electra.Message.Body.ExecutionPayload.BlockHash, nil
@@ -206,7 +206,7 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockNumber() (uint64, error) {
 	}
 }
 
-// ExecutionTransactions returs the execution payload transactions for the block.
+// ExecutionTransactions returns the execution payload transactions for the block.
 func (v *VersionedSignedBeaconBlock) ExecutionTransactions() ([]bellatrix.Transaction, error) {
 	switch v.Version {
 	case DataVersionPhase0:
@@ -298,16 +298,16 @@ func (v *VersionedSignedBeaconBlock) Graffiti() ([32]byte, error) {
 // Attestations returns the attestations of the beacon block.
 //
 //nolint:gocyclo
-func (v *VersionedSignedBeaconBlock) Attestations() ([]VersionedAttestation, error) {
+func (v *VersionedSignedBeaconBlock) Attestations() ([]*VersionedAttestation, error) {
 	switch v.Version {
 	case DataVersionPhase0:
 		if v.Phase0 == nil || v.Phase0.Message == nil || v.Phase0.Message.Body == nil {
 			return nil, errors.New("no phase0 block")
 		}
 
-		versionedAttestations := make([]VersionedAttestation, len(v.Phase0.Message.Body.Attestations))
+		versionedAttestations := make([]*VersionedAttestation, len(v.Phase0.Message.Body.Attestations))
 		for i, attestation := range v.Phase0.Message.Body.Attestations {
-			versionedAttestations[i] = VersionedAttestation{
+			versionedAttestations[i] = &VersionedAttestation{
 				Version: DataVersionPhase0,
 				Phase0:  attestation,
 			}
@@ -319,9 +319,9 @@ func (v *VersionedSignedBeaconBlock) Attestations() ([]VersionedAttestation, err
 			return nil, errors.New("no altair block")
 		}
 
-		versionedAttestations := make([]VersionedAttestation, len(v.Altair.Message.Body.Attestations))
+		versionedAttestations := make([]*VersionedAttestation, len(v.Altair.Message.Body.Attestations))
 		for i, attestation := range v.Altair.Message.Body.Attestations {
-			versionedAttestations[i] = VersionedAttestation{
+			versionedAttestations[i] = &VersionedAttestation{
 				Version: DataVersionAltair,
 				Altair:  attestation,
 			}
@@ -333,9 +333,9 @@ func (v *VersionedSignedBeaconBlock) Attestations() ([]VersionedAttestation, err
 			return nil, errors.New("no bellatrix block")
 		}
 
-		versionedAttestations := make([]VersionedAttestation, len(v.Bellatrix.Message.Body.Attestations))
+		versionedAttestations := make([]*VersionedAttestation, len(v.Bellatrix.Message.Body.Attestations))
 		for i, attestation := range v.Bellatrix.Message.Body.Attestations {
-			versionedAttestations[i] = VersionedAttestation{
+			versionedAttestations[i] = &VersionedAttestation{
 				Version:   DataVersionBellatrix,
 				Bellatrix: attestation,
 			}
@@ -347,9 +347,9 @@ func (v *VersionedSignedBeaconBlock) Attestations() ([]VersionedAttestation, err
 			return nil, errors.New("no capella block")
 		}
 
-		versionedAttestations := make([]VersionedAttestation, len(v.Capella.Message.Body.Attestations))
+		versionedAttestations := make([]*VersionedAttestation, len(v.Capella.Message.Body.Attestations))
 		for i, attestation := range v.Capella.Message.Body.Attestations {
-			versionedAttestations[i] = VersionedAttestation{
+			versionedAttestations[i] = &VersionedAttestation{
 				Version: DataVersionCapella,
 				Capella: attestation,
 			}
@@ -361,9 +361,9 @@ func (v *VersionedSignedBeaconBlock) Attestations() ([]VersionedAttestation, err
 			return nil, errors.New("no deneb block")
 		}
 
-		versionedAttestations := make([]VersionedAttestation, len(v.Deneb.Message.Body.Attestations))
+		versionedAttestations := make([]*VersionedAttestation, len(v.Deneb.Message.Body.Attestations))
 		for i, attestation := range v.Deneb.Message.Body.Attestations {
-			versionedAttestations[i] = VersionedAttestation{
+			versionedAttestations[i] = &VersionedAttestation{
 				Version: DataVersionDeneb,
 				Deneb:   attestation,
 			}
@@ -375,9 +375,9 @@ func (v *VersionedSignedBeaconBlock) Attestations() ([]VersionedAttestation, err
 			return nil, errors.New("no electra block")
 		}
 
-		versionedAttestations := make([]VersionedAttestation, len(v.Electra.Message.Body.Attestations))
+		versionedAttestations := make([]*VersionedAttestation, len(v.Electra.Message.Body.Attestations))
 		for i, attestation := range v.Electra.Message.Body.Attestations {
-			versionedAttestations[i] = VersionedAttestation{
+			versionedAttestations[i] = &VersionedAttestation{
 				Version: DataVersionElectra,
 				Electra: attestation,
 			}
@@ -1012,6 +1012,32 @@ func (v *VersionedSignedBeaconBlock) BlobKZGCommitments() ([]deneb.KZGCommitment
 		}
 
 		return v.Electra.Message.Body.BlobKZGCommitments, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// ExecutionRequests returs the execution requests for the block.
+func (v *VersionedSignedBeaconBlock) ExecutionRequests() (*electra.ExecutionRequests, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return nil, errors.New("phase0 block does not have execution requests")
+	case DataVersionAltair:
+		return nil, errors.New("altair block does not have execution requests")
+	case DataVersionBellatrix:
+		return nil, errors.New("bellatrix block does not have execution requests")
+	case DataVersionCapella:
+		return nil, errors.New("capella block does not have execution requests")
+	case DataVersionDeneb:
+		return nil, errors.New("deneb block does not have execution requests")
+	case DataVersionElectra:
+		if v.Electra == nil ||
+			v.Electra.Message == nil ||
+			v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		return v.Electra.Message.Body.ExecutionRequests, nil
 	default:
 		return nil, errors.New("unknown version")
 	}

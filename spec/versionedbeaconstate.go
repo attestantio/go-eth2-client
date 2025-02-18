@@ -296,17 +296,17 @@ func (v *VersionedBeaconState) EarliestConsolidationEpoch() (phase0.Epoch, error
 	}
 }
 
-// PendingBalanceDeposits returns the pending balance deposits of the state.
-func (v *VersionedBeaconState) PendingBalanceDeposits() ([]*electra.PendingBalanceDeposit, error) {
+// PendingDeposits returns the pending deposits of the state.
+func (v *VersionedBeaconState) PendingDeposits() ([]*electra.PendingDeposit, error) {
 	switch v.Version {
 	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella, DataVersionDeneb:
-		return nil, errors.New("state does not provide pending balance deposits")
+		return nil, errors.New("state does not provide pending deposits")
 	case DataVersionElectra:
 		if v.Electra == nil {
 			return nil, errors.New("no Electra state")
 		}
 
-		return v.Electra.PendingBalanceDeposits, nil
+		return v.Electra.PendingDeposits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}

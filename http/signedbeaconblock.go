@@ -45,6 +45,9 @@ func (s *Service) SignedBeaconBlock(ctx context.Context,
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+	if opts.Block == "" {
+		return nil, errors.Join(errors.New("no block specified"), client.ErrInvalidOptions)
+	}
 
 	endpoint := fmt.Sprintf("/eth/v2/beacon/blocks/%s", opts.Block)
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, true)
@@ -151,7 +154,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 			err = response.Data.Electra.UnmarshalSSZ(res.body)
 		}
 		if err != nil {
-			return nil, errors.Join(errors.New("failed to decode deneb signed block contents"), err)
+			return nil, errors.Join(errors.New("failed to decode electra signed block contents"), err)
 		}
 	default:
 		return nil, fmt.Errorf("unhandled block version %s", res.consensusVersion)

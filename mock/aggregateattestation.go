@@ -17,21 +17,29 @@ import (
 	"context"
 
 	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// AggregateAttestation fetches the aggregate attestation given an attestation.
-func (*Service) AggregateAttestation(_ context.Context,
-	_ *api.AggregateAttestationOpts,
+// AggregateAttestation fetches the aggregate attestation for the given options.
+func (s *Service) AggregateAttestation(ctx context.Context,
+	opts *api.AggregateAttestationOpts,
 ) (
-	*api.Response[*phase0.Attestation],
+	*api.Response[*spec.VersionedAttestation],
 	error,
 ) {
-	return &api.Response[*phase0.Attestation]{
-		Data: &phase0.Attestation{
-			Data: &phase0.AttestationData{
-				Source: &phase0.Checkpoint{},
-				Target: &phase0.Checkpoint{},
+	if s.AggregateAttestationFunc != nil {
+		return s.AggregateAttestationFunc(ctx, opts)
+	}
+
+	return &api.Response[*spec.VersionedAttestation]{
+		Data: &spec.VersionedAttestation{
+			Version: spec.DataVersionPhase0,
+			Phase0: &phase0.Attestation{
+				Data: &phase0.AttestationData{
+					Source: &phase0.Checkpoint{},
+					Target: &phase0.Checkpoint{},
+				},
 			},
 		},
 		Metadata: make(map[string]any),

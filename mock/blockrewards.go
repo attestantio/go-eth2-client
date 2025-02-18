@@ -1,4 +1,4 @@
-// Copyright © 2024 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,27 +11,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package electra
+package mock
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/goccy/go-yaml"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-// PendingBalanceDeposit represents a pending balance deposit.
-type PendingBalanceDeposit struct {
-	Index  phase0.ValidatorIndex
-	Amount phase0.Gwei
-}
-
-// String returns a string version of the structure.
-func (p *PendingBalanceDeposit) String() string {
-	data, err := yaml.Marshal(p)
-	if err != nil {
-		return fmt.Sprintf("ERR: %v", err)
+// BlockRewards provides rewards for proposing a block.
+func (s *Service) BlockRewards(ctx context.Context,
+	opts *api.BlockRewardsOpts,
+) (
+	*api.Response[*apiv1.BlockRewards],
+	error,
+) {
+	if s.BlockRewardsFunc != nil {
+		return s.BlockRewardsFunc(ctx, opts)
 	}
 
-	return string(data)
+	return &api.Response[*apiv1.BlockRewards]{
+		Data:     &apiv1.BlockRewards{},
+		Metadata: make(map[string]any),
+	}, nil
 }
