@@ -98,6 +98,8 @@ func (s *Service) Events(ctx context.Context, topics []string, handler consensus
 }
 
 // handleEvent parses an event and passes it on to the handler.
+//
+//nolint:gocyclo
 func (*Service) handleEvent(ctx context.Context, msg *sse.Event, handler consensusclient.EventHandlerFunc) {
 	log := zerolog.Ctx(ctx)
 

@@ -39,7 +39,7 @@ type ExecutionPayload struct {
 	GasLimit      uint64
 	GasUsed       uint64
 	Timestamp     uint64
-	ExtraData     []byte        `dynssz-max:"MAX_EXTRA_DATA_BYTES" ssz-max:"32"`
+	ExtraData     []byte        `dynssz-max:"MAX_EXTRA_DATA_BYTES"                                   ssz-max:"32"`
 	BaseFeePerGas [32]byte      `ssz-size:"32"`
 	BlockHash     phase0.Hash32 `ssz-size:"32"`
 	Transactions  []Transaction `dynssz-max:"MAX_TRANSACTIONS_PER_PAYLOAD,MAX_BYTES_PER_TRANSACTION" ssz-max:"1048576,1073741824"`
