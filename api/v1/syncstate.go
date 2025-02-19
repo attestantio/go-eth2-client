@@ -32,6 +32,8 @@ type SyncState struct {
 	IsOptimistic bool
 	// IsSyncing is true if the node is syncing.
 	IsSyncing bool
+	// ELOffline is true if the node's EL client is offline.
+	ELOffline bool
 }
 
 // syncStateJSON is the spec representation of the struct.
@@ -40,6 +42,7 @@ type syncStateJSON struct {
 	SyncDistance string `json:"sync_distance"`
 	IsOptimistic bool   `json:"is_optimistic"`
 	IsSyncing    bool   `json:"is_syncing"`
+	ELOffline    bool   `json:"el_offline"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -49,6 +52,7 @@ func (s *SyncState) MarshalJSON() ([]byte, error) {
 		SyncDistance: fmt.Sprintf("%d", s.SyncDistance),
 		IsOptimistic: s.IsOptimistic,
 		IsSyncing:    s.IsSyncing,
+		ELOffline:    s.ELOffline,
 	})
 }
 
@@ -78,6 +82,7 @@ func (s *SyncState) UnmarshalJSON(input []byte) error {
 	s.SyncDistance = phase0.Slot(syncDistance)
 	s.IsOptimistic = syncStateJSON.IsOptimistic
 	s.IsSyncing = syncStateJSON.IsSyncing
+	s.ELOffline = syncStateJSON.ELOffline
 
 	return nil
 }
