@@ -29,6 +29,8 @@ import (
 )
 
 // ExecutionPayload represents an execution layer payload.
+//
+//nolint:revive
 type ExecutionPayload struct {
 	ParentHash    phase0.Hash32              `ssz-size:"32"`
 	FeeRecipient  bellatrix.ExecutionAddress `ssz-size:"20"`
@@ -40,11 +42,11 @@ type ExecutionPayload struct {
 	GasLimit      uint64
 	GasUsed       uint64
 	Timestamp     uint64
-	ExtraData     []byte                  `ssz-max:"32"`
+	ExtraData     []byte                  `dynssz-max:"MAX_EXTRA_DATA_BYTES"                                   ssz-max:"32"`
 	BaseFeePerGas [32]byte                `ssz-size:"32"`
 	BlockHash     phase0.Hash32           `ssz-size:"32"`
-	Transactions  []bellatrix.Transaction `ssz-max:"1048576,1073741824" ssz-size:"?,?"`
-	Withdrawals   []*Withdrawal           `ssz-max:"16"`
+	Transactions  []bellatrix.Transaction `dynssz-max:"MAX_TRANSACTIONS_PER_PAYLOAD,MAX_BYTES_PER_TRANSACTION" ssz-max:"1048576,1073741824" ssz-size:"?,?"`
+	Withdrawals   []*Withdrawal           `dynssz-max:"MAX_WITHDRAWALS_PER_PAYLOAD"                            ssz-max:"16"`
 }
 
 // executionPayloadJSON is the spec representation of the struct.
