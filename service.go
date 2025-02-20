@@ -148,9 +148,6 @@ type SyncCommitteesProvider interface {
 	)
 }
 
-// EventHandlerFunc is the handler for events.
-type EventHandlerFunc func(*apiv1.Event)
-
 //
 // Standard API
 //
@@ -425,7 +422,7 @@ type ValidatorRegistrationsSubmitter interface {
 // EventsProvider is the interface for providing events.
 type EventsProvider interface {
 	// Events feeds requested events with the given topics to the supplied handler.
-	Events(ctx context.Context, topics []string, handler EventHandlerFunc) error
+	Events(ctx context.Context, opts *api.EventsOpts) error
 }
 
 // FinalityProvider is the interface for providing finality information.
