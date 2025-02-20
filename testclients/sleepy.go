@@ -378,14 +378,14 @@ func (s *Sleepy) BeaconState(ctx context.Context,
 }
 
 // Events feeds requested events with the given topics to the supplied handler.
-func (s *Sleepy) Events(ctx context.Context, topics []string, handler consensusclient.EventHandlerFunc) error {
+func (s *Sleepy) Events(ctx context.Context, opts *api.EventsOpts) error {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.EventsProvider)
 	if !isNext {
 		return errors.New("next does not support this call")
 	}
 
-	return next.Events(ctx, topics, handler)
+	return next.Events(ctx, opts)
 }
 
 // Finality provides the finality given a state ID.
