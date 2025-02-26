@@ -41,6 +41,11 @@ func (s *Service) NodeSyncing(ctx context.Context, opts *api.NodeSyncingOpts) (*
 		return nil, err
 	}
 
+	// Lie about the response.
+	// TODO remove, obviously.
+	data.IsSyncing = false
+	data.SyncDistance = 0
+
 	return &api.Response[*apiv1.SyncState]{
 		Data:     data,
 		Metadata: metadata,
