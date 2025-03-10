@@ -48,6 +48,16 @@ var dataVersionStrings = [...]string{
 	"electra",
 }
 
+var stringToDataVersion = map[string]DataVersion{
+	dataVersionStrings[0]: DataVersionUnknown,
+	dataVersionStrings[1]: DataVersionPhase0,
+	dataVersionStrings[2]: DataVersionAltair,
+	dataVersionStrings[3]: DataVersionBellatrix,
+	dataVersionStrings[4]: DataVersionCapella,
+	dataVersionStrings[5]: DataVersionDeneb,
+	dataVersionStrings[6]: DataVersionElectra,
+}
+
 // MarshalJSON implements json.Marshaler.
 func (d *DataVersion) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("%q", dataVersionStrings[*d])), nil
@@ -55,24 +65,11 @@ func (d *DataVersion) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (d *DataVersion) UnmarshalJSON(input []byte) error {
-	var err error
-	switch strings.ToLower(string(input)) {
-	case `"phase0"`:
-		*d = DataVersionPhase0
-	case `"altair"`:
-		*d = DataVersionAltair
-	case `"bellatrix"`:
-		*d = DataVersionBellatrix
-	case `"capella"`:
-		*d = DataVersionCapella
-	case `"deneb"`:
-		*d = DataVersionDeneb
-	case `"electra"`:
-		*d = DataVersionElectra
-	default:
-		err = fmt.Errorf("unrecognised data version %s", string(input))
+	fork := strings.ReplaceAll(strings.ToLower(string(input)), `"`, ``)
+	version, err := DataVersionFromString(fork)
+	if err == nil {
+		*d = version
 	}
-
 	return err
 }
 
@@ -81,6 +78,12 @@ func (d DataVersion) String() string {
 	if uint64(d) >= uint64(len(dataVersionStrings)) {
 		return "unknown"
 	}
-
 	return dataVersionStrings[d]
+}
+
+func DataVersionFromString(fork string) (DataVersion, error) {
+	if fork, ok := stringToDataVersion[fork]; ok {
+		return fork, nil
+	}
+	return DataVersionUnknown, fmt.Errorf("unrecognised data version %s", string(input))
 }
