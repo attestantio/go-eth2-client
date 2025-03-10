@@ -15,7 +15,6 @@ package spec
 
 import (
 	"fmt"
-	"strings"
 )
 
 // DataVersion defines the spec version of the data in a response.
@@ -65,8 +64,11 @@ func (d *DataVersion) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (d *DataVersion) UnmarshalJSON(input []byte) error {
-	fork := strings.ReplaceAll(strings.ToLower(string(input)), `"`, ``)
-	version, err := DataVersionFromString(fork)
+	if len(input) < 2 {
+		return fmt.Errorf("unrecognised data version %s", string(input))
+	}
+	// get rid of prefix and suffix `"`
+	version, err := DataVersionFromString(string(input[1 : len(input)-1]))
 	if err == nil {
 		*d = version
 	}
@@ -85,5 +87,5 @@ func DataVersionFromString(fork string) (DataVersion, error) {
 	if fork, ok := stringToDataVersion[fork]; ok {
 		return fork, nil
 	}
-	return DataVersionUnknown, fmt.Errorf("unrecognised data version %s", string(input))
+	return DataVersionUnknown, fmt.Errorf("unrecognised data version %s", fork)
 }
