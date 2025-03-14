@@ -25,6 +25,7 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -704,4 +705,20 @@ func (s *Sleepy) ValidatorLiveness(ctx context.Context,
 	}
 
 	return next.ValidatorLiveness(ctx, opts)
+}
+
+// PendingDeposits provides the pending deposits for a given state.
+func (s *Sleepy) PendingDeposits(ctx context.Context,
+	opts *api.PendingDepositsOpts,
+) (
+	*api.Response[[]*electra.PendingDeposit],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.PendingDepositProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.PendingDeposits(ctx, opts)
 }
