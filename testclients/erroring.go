@@ -26,6 +26,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -982,4 +983,22 @@ func (s *Erroring) ValidatorLiveness(ctx context.Context,
 	}
 
 	return next.ValidatorLiveness(ctx, opts)
+}
+
+// PendingDeposits provides the pending deposits for a given state.
+func (s *Erroring) PendingDeposits(ctx context.Context,
+	opts *api.PendingDepositsOpts,
+) (
+	*api.Response[[]*electra.PendingDeposit],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.PendingDepositProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.PendingDeposits(ctx, opts)
 }
