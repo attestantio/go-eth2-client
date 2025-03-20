@@ -17,7 +17,6 @@ import (
 	"context"
 	"time"
 
-	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -61,7 +60,7 @@ type Service struct {
 	BeaconStateRootFunc           func(context.Context, *api.BeaconStateRootOpts) (*api.Response[*phase0.Root], error)
 	BlockRewardsFunc              func(context.Context, *api.BlockRewardsOpts) (*api.Response[*apiv1.BlockRewards], error)
 	DepositContractFunc           func(context.Context, *api.DepositContractOpts) (*api.Response[*apiv1.DepositContract], error)
-	EventsFunc                    func(context.Context, []string, client.EventHandlerFunc) error
+	EventsFunc                    func(context.Context, *api.EventsOpts) error
 	FinalityFunc                  func(context.Context, *api.FinalityOpts) (*api.Response[*apiv1.Finality], error)
 	ForkChoiceFunc                func(context.Context, *api.ForkChoiceOpts) (*api.Response[*apiv1.ForkChoice], error)
 	ForkFunc                      func(context.Context, *api.ForkOpts) (*api.Response[*phase0.Fork], error)

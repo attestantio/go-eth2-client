@@ -503,7 +503,7 @@ func (s *Erroring) BeaconState(ctx context.Context,
 }
 
 // Events feeds requested events with the given topics to the supplied handler.
-func (s *Erroring) Events(ctx context.Context, topics []string, handler consensusclient.EventHandlerFunc) error {
+func (s *Erroring) Events(ctx context.Context, opts *api.EventsOpts) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
@@ -512,7 +512,7 @@ func (s *Erroring) Events(ctx context.Context, topics []string, handler consensu
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.Events(ctx, topics, handler)
+	return next.Events(ctx, opts)
 }
 
 // Finality provides the finality given a state ID.
