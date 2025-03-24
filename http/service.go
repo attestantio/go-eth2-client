@@ -327,7 +327,7 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 	}
 }
 
-//nolint:revive,nonamedreturns
+//nolint:nonamedreturns
 func (s *Service) checkClientStatus(ctx context.Context, wasActive, wasSynced bool) (active, synced bool, err error) {
 	acquired := s.pingSem.TryAcquire(1)
 	if !acquired {
