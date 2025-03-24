@@ -26,8 +26,10 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/r3labs/sse/v2"
 	"github.com/rs/zerolog"
@@ -96,6 +98,8 @@ func (s *Service) Events(ctx context.Context, topics []string, handler consensus
 }
 
 // handleEvent parses an event and passes it on to the handler.
+//
+//nolint:gocyclo
 func (*Service) handleEvent(ctx context.Context, msg *sse.Event, handler consensusclient.EventHandlerFunc) {
 	log := zerolog.Ctx(ctx)
 
@@ -115,7 +119,7 @@ func (*Service) handleEvent(ctx context.Context, msg *sse.Event, handler consens
 	}
 	switch string(msg.Event) {
 	case "attestation":
-		data := &phase0.Attestation{}
+		data := &spec.VersionedAttestation{}
 		err := json.Unmarshal(msg.Data, data)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse attestation")
@@ -218,6 +222,15 @@ func (*Service) handleEvent(ctx context.Context, msg *sse.Event, handler consens
 		err := json.Unmarshal(msg.Data, data)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse proposer slashing event")
+
+			return
+		}
+		event.Data = data
+	case "single_attestation":
+		data := &electra.SingleAttestation{}
+		err := json.Unmarshal(msg.Data, data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse single attestation event")
 
 			return
 		}

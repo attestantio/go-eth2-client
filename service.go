@@ -505,6 +505,17 @@ type NodeSyncingProvider interface {
 	)
 }
 
+// ValidatorLivenessProvider is the interface for providing validator liveness data.
+type ValidatorLivenessProvider interface {
+	// ValidatorLiveness provides the liveness data to the given validators.
+	ValidatorLiveness(ctx context.Context,
+		opts *api.ValidatorLivenessOpts,
+	) (
+		*api.Response[[]*apiv1.ValidatorLiveness],
+		error,
+	)
+}
+
 // NodeVersionProvider is the interface for providing the node version.
 type NodeVersionProvider interface {
 	// NodeVersion returns a free-text string with the node version.

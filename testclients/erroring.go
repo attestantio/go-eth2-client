@@ -965,3 +965,21 @@ func (s *Erroring) SyncCommitteeRewards(ctx context.Context,
 
 	return next.SyncCommitteeRewards(ctx, opts)
 }
+
+// ValidatorLiveness provides the liveness data to the given validators.
+func (s *Erroring) ValidatorLiveness(ctx context.Context,
+	opts *api.ValidatorLivenessOpts,
+) (
+	*api.Response[[]*apiv1.ValidatorLiveness],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.ValidatorLivenessProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.ValidatorLiveness(ctx, opts)
+}
