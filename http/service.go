@@ -275,12 +275,12 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 			log.Debug().Err(err).Msg("Failed to obtain sync state from node")
 			active = false
 			synced = false
+		} else if s.elConnectionCheck && response.Data.ELOffline {
+			active = true
+			synced = false
 		} else {
 			active = true
 			synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
-			if s.elConnectionCheck && response.Data.ELOffline {
-				synced = false
-			}
 		}
 		s.pingSem.Release(1)
 	}
