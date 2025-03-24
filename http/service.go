@@ -414,6 +414,7 @@ func (s *Service) assertIsSynced(ctx context.Context) error {
 	return nil
 }
 
+//nolint:revive
 func parseAddress(address string) (*url.URL, *url.URL, error) {
 	if !strings.HasPrefix(address, "http") {
 		address = fmt.Sprintf("http://%s", address)
