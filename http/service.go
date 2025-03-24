@@ -261,7 +261,7 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 	wasSynced := s.connectionSynced
 	s.connectionMu.Unlock()
 
-	active, synced, err := s.checkClientActiveAndSynced(ctx, wasActive, wasSynced)
+	active, synced, err := s.checkClientStatus(ctx, wasActive, wasSynced)
 	if err != nil {
 		log.Debug().Err(err).Msg("Failed to obtain sync state from node")
 	}
@@ -327,7 +327,8 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 	}
 }
 
-func (s *Service) checkClientActiveAndSynced(ctx context.Context, wasActive, wasSynced bool) (bool, bool, error) {
+//nolint:revive,nonamedreturns
+func (s *Service) checkClientStatus(ctx context.Context, wasActive, wasSynced bool) (active, synced bool, err error) {
 	acquired := s.pingSem.TryAcquire(1)
 	if !acquired {
 		// Means there is another ping running, just use current info.
