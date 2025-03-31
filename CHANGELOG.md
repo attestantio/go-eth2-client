@@ -1,4 +1,4 @@
-dev:
+0.24.2:
   - support single_attestation event
   - support change to attestation event; this event now emits a spec.VersionedAttestation
   - support change to attester_slashing event; this event now emits an electra.AttesterSlashing
