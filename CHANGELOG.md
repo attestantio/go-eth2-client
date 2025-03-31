@@ -1,6 +1,8 @@
 dev:
   - support single_attestation event
   - support change to attestation event; this event now emits a spec.VersionedAttestation
+  - support change to attester_slashing event; this event now emits an electra.AttesterSlashing
+  - update Events endpoint to provide specific handlers for each event
 
 0.24.0:
   - support electra
