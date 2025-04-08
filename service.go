@@ -186,7 +186,7 @@ type AttestationPoolProvider interface {
 	AttestationPool(ctx context.Context,
 		opts *api.AttestationPoolOpts,
 	) (
-		*api.Response[[]*phase0.Attestation],
+		*api.Response[[]*spec.VersionedAttestation],
 		error,
 	)
 }

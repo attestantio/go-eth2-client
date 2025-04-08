@@ -250,7 +250,7 @@ func (s *Erroring) AttestationData(ctx context.Context,
 func (s *Erroring) AttestationPool(ctx context.Context,
 	opts *api.AttestationPoolOpts,
 ) (
-	*api.Response[[]*phase0.Attestation],
+	*api.Response[[]*spec.VersionedAttestation],
 	error,
 ) {
 	if err := s.maybeError(ctx); err != nil {

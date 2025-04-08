@@ -228,7 +228,7 @@ func (s *Sleepy) AttestationData(ctx context.Context,
 func (s *Sleepy) AttestationPool(ctx context.Context,
 	opts *api.AttestationPoolOpts,
 ) (
-	*api.Response[[]*phase0.Attestation],
+	*api.Response[[]*spec.VersionedAttestation],
 	error,
 ) {
 	s.sleep(ctx)
