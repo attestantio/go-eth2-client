@@ -146,6 +146,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 			return nil, errors.Join(errors.New("failed to decode electra beacon state"), err)
 		}
 	case spec.DataVersionEip7805:
+		response.Data.Eip7805 = &electra.BeaconState{}
 		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Eip7805, res.body)
 		} else {
