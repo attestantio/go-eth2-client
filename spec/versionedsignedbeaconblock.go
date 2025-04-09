@@ -34,6 +34,7 @@ type VersionedSignedBeaconBlock struct {
 	Capella   *capella.SignedBeaconBlock
 	Deneb     *deneb.SignedBeaconBlock
 	Electra   *electra.SignedBeaconBlock
+	Eip7805   *electra.SignedBeaconBlock
 }
 
 // Slot returns the slot of the signed beacon block.
@@ -75,6 +76,12 @@ func (v *VersionedSignedBeaconBlock) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Electra.Message.Slot, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil {
+			return 0, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -119,6 +126,12 @@ func (v *VersionedSignedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, err
 		}
 
 		return v.Electra.Message.ProposerIndex, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil {
+			return 0, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.ProposerIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -160,6 +173,15 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error)
 		}
 
 		return v.Electra.Message.Body.ExecutionPayload.BlockHash, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil ||
+			v.Eip7805.Message == nil ||
+			v.Eip7805.Message.Body == nil ||
+			v.Eip7805.Message.Body.ExecutionPayload == nil {
+			return phase0.Hash32{}, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.ExecutionPayload.BlockHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -201,6 +223,15 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockNumber() (uint64, error) {
 		}
 
 		return v.Electra.Message.Body.ExecutionPayload.BlockNumber, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil ||
+			v.Eip7805.Message == nil ||
+			v.Eip7805.Message.Body == nil ||
+			v.Eip7805.Message.Body.ExecutionPayload == nil {
+			return 0, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.ExecutionPayload.BlockNumber, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -246,6 +277,15 @@ func (v *VersionedSignedBeaconBlock) ExecutionTransactions() ([]bellatrix.Transa
 		}
 
 		return v.Electra.Message.Body.ExecutionPayload.Transactions, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil ||
+			v.Eip7805.Message == nil ||
+			v.Eip7805.Message.Body == nil ||
+			v.Eip7805.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.ExecutionPayload.Transactions, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -290,6 +330,12 @@ func (v *VersionedSignedBeaconBlock) Graffiti() ([32]byte, error) {
 		}
 
 		return v.Electra.Message.Body.Graffiti, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return [32]byte{}, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.Graffiti, nil
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -384,6 +430,20 @@ func (v *VersionedSignedBeaconBlock) Attestations() ([]*VersionedAttestation, er
 		}
 
 		return versionedAttestations, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		versionedAttestations := make([]*VersionedAttestation, len(v.Eip7805.Message.Body.Attestations))
+		for i, attestation := range v.Eip7805.Message.Body.Attestations {
+			versionedAttestations[i] = &VersionedAttestation{
+				Version: DataVersionEip7805,
+				Eip7805: attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -428,6 +488,12 @@ func (v *VersionedSignedBeaconBlock) Root() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.HashTreeRoot()
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil {
+			return phase0.Root{}, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -472,6 +538,12 @@ func (v *VersionedSignedBeaconBlock) BodyRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.Body.HashTreeRoot()
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return phase0.Root{}, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -516,6 +588,12 @@ func (v *VersionedSignedBeaconBlock) ParentRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.ParentRoot, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil {
+			return phase0.Root{}, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -560,6 +638,12 @@ func (v *VersionedSignedBeaconBlock) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.StateRoot, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil {
+			return phase0.Root{}, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -604,6 +688,12 @@ func (v *VersionedSignedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error)
 		}
 
 		return v.Electra.Message.Body.RANDAOReveal, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.RANDAOReveal, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -648,6 +738,12 @@ func (v *VersionedSignedBeaconBlock) ETH1Data() (*phase0.ETH1Data, error) {
 		}
 
 		return v.Electra.Message.Body.ETH1Data, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.ETH1Data, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -692,6 +788,12 @@ func (v *VersionedSignedBeaconBlock) Deposits() ([]*phase0.Deposit, error) {
 		}
 
 		return v.Electra.Message.Body.Deposits, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.Deposits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -736,6 +838,12 @@ func (v *VersionedSignedBeaconBlock) VoluntaryExits() ([]*phase0.SignedVoluntary
 		}
 
 		return v.Electra.Message.Body.VoluntaryExits, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.VoluntaryExits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -830,6 +938,20 @@ func (v *VersionedSignedBeaconBlock) AttesterSlashings() ([]VersionedAttesterSla
 		}
 
 		return versionedAttesterSlashings, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Eip7805.Message.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Eip7805.Message.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionEip7805,
+				Eip7805: attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -874,6 +996,12 @@ func (v *VersionedSignedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlas
 		}
 
 		return v.Electra.Message.Body.ProposerSlashings, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -914,6 +1042,12 @@ func (v *VersionedSignedBeaconBlock) SyncAggregate() (*altair.SyncAggregate, err
 		}
 
 		return v.Electra.Message.Body.SyncAggregate, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.SyncAggregate, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -946,6 +1080,12 @@ func (v *VersionedSignedBeaconBlock) BLSToExecutionChanges() ([]*capella.SignedB
 		}
 
 		return v.Electra.Message.Body.BLSToExecutionChanges, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.BLSToExecutionChanges, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -984,6 +1124,15 @@ func (v *VersionedSignedBeaconBlock) Withdrawals() ([]*capella.Withdrawal, error
 		}
 
 		return v.Electra.Message.Body.ExecutionPayload.Withdrawals, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil ||
+			v.Eip7805.Message == nil ||
+			v.Eip7805.Message.Body == nil ||
+			v.Eip7805.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.ExecutionPayload.Withdrawals, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -1012,6 +1161,12 @@ func (v *VersionedSignedBeaconBlock) BlobKZGCommitments() ([]deneb.KZGCommitment
 		}
 
 		return v.Electra.Message.Body.BlobKZGCommitments, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.BlobKZGCommitments, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -1038,6 +1193,14 @@ func (v *VersionedSignedBeaconBlock) ExecutionRequests() (*electra.ExecutionRequ
 		}
 
 		return v.Electra.Message.Body.ExecutionRequests, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil ||
+			v.Eip7805.Message == nil ||
+			v.Eip7805.Message.Body == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		return v.Eip7805.Message.Body.ExecutionRequests, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -1082,6 +1245,12 @@ func (v *VersionedSignedBeaconBlock) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return ""
+		}
+
+		return v.Eip7805.String()
 	default:
 		return "unknown version"
 	}

@@ -33,11 +33,12 @@ type VersionedBeaconState struct {
 	Capella   *capella.BeaconState
 	Deneb     *deneb.BeaconState
 	Electra   *electra.BeaconState
+	Eip7805   *electra.BeaconState
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBeaconState) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Eip7805 == nil
 }
 
 // Slot returns the slot of the state.
@@ -79,6 +80,12 @@ func (v *VersionedBeaconState) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Electra.Slot, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return 0, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -107,6 +114,12 @@ func (v *VersionedBeaconState) NextWithdrawalValidatorIndex() (phase0.ValidatorI
 		}
 
 		return v.Electra.NextWithdrawalValidatorIndex, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return 0, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.NextWithdrawalValidatorIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -151,6 +164,12 @@ func (v *VersionedBeaconState) Validators() ([]*phase0.Validator, error) {
 		}
 
 		return v.Electra.Validators, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return nil, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.Validators, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -195,6 +214,12 @@ func (v *VersionedBeaconState) ValidatorBalances() ([]phase0.Gwei, error) {
 		}
 
 		return v.Electra.Balances, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return nil, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.Balances, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -211,6 +236,12 @@ func (v *VersionedBeaconState) DepositRequestsStartIndex() (uint64, error) {
 		}
 
 		return v.Electra.DepositRequestsStartIndex, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return 0, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.DepositRequestsStartIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -227,6 +258,12 @@ func (v *VersionedBeaconState) DepositBalanceToConsume() (phase0.Gwei, error) {
 		}
 
 		return v.Electra.DepositBalanceToConsume, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return 0, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.DepositBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -243,6 +280,12 @@ func (v *VersionedBeaconState) ExitBalanceToConsume() (phase0.Gwei, error) {
 		}
 
 		return v.Electra.ExitBalanceToConsume, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return 0, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.ExitBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -259,6 +302,12 @@ func (v *VersionedBeaconState) EarliestExitEpoch() (phase0.Epoch, error) {
 		}
 
 		return v.Electra.EarliestExitEpoch, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return 0, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.EarliestExitEpoch, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -275,6 +324,12 @@ func (v *VersionedBeaconState) ConsolidationBalanceToConsume() (phase0.Gwei, err
 		}
 
 		return v.Electra.ConsolidationBalanceToConsume, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return 0, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.ConsolidationBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -291,6 +346,12 @@ func (v *VersionedBeaconState) EarliestConsolidationEpoch() (phase0.Epoch, error
 		}
 
 		return v.Electra.EarliestConsolidationEpoch, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return 0, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.EarliestConsolidationEpoch, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -307,6 +368,12 @@ func (v *VersionedBeaconState) PendingDeposits() ([]*electra.PendingDeposit, err
 		}
 
 		return v.Electra.PendingDeposits, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return nil, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.PendingDeposits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -323,6 +390,12 @@ func (v *VersionedBeaconState) PendingPartialWithdrawals() ([]*electra.PendingPa
 		}
 
 		return v.Electra.PendingPartialWithdrawals, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return nil, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.PendingPartialWithdrawals, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -339,6 +412,12 @@ func (v *VersionedBeaconState) PendingConsolidations() ([]*electra.PendingConsol
 		}
 
 		return v.Electra.PendingConsolidations, nil
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return nil, errors.New("no EIP7805 state")
+		}
+
+		return v.Eip7805.PendingConsolidations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -383,6 +462,12 @@ func (v *VersionedBeaconState) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return ""
+		}
+
+		return v.Eip7805.String()
 	default:
 		return "unknown version"
 	}
