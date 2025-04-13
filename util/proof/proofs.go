@@ -81,7 +81,7 @@ import (
 	"reflect"
 )
 
-// NumFields returns the number of fields in a struct
+// NumFields returns the number of fields in a struct.
 func NumFields(o any) int {
 	if o == nil {
 		return 0
@@ -101,7 +101,7 @@ func NumFields(o any) int {
 	return t.NumField()
 }
 
-// FieldByName returns the field with the given name
+// FieldByName returns the field with the given name.
 func FieldByName(o any, fieldName string) (reflect.Value, error) {
 	if o == nil {
 		return reflect.Value{}, errors.New("nil object")
@@ -123,8 +123,8 @@ func FieldByName(o any, fieldName string) (reflect.Value, error) {
 	return v.FieldByName(fieldName), nil
 }
 
-// FieldIndex returns the index of a field in a struct
-// The index represents the field's position in the struct's memory layout
+// FieldIndex returns the index of a field in a struct.
+// The index represents the field's position in the struct's memory layout.
 func FieldIndex(o any, fieldName string) (int, error) {
 	if o == nil {
 		return 0, errors.New("nil object")
@@ -149,25 +149,28 @@ func FieldIndex(o any, fieldName string) (int, error) {
 	return field.Index[0], nil
 }
 
-// FieldGeneralizedIndex obtains the generalized index of a field leaf using the field name
+// FieldGeneralizedIndex obtains the generalized index of a field leaf using the field name.
 func FieldGeneralizedIndex(o any, fieldName string) (int, error) {
 	index, err := FieldIndex(o, fieldName)
 	if err != nil {
 		return 0, err
 	}
+
 	return LeafGeneralizedIndex(index, NumFields(o)), nil
 }
 
-// LeafGeneralizedIndex calculates the generalized index of a leaf in a binary Merkle tree
-// The generalized index is the absolute position of the leaf in the tree's array representation
+// LeafGeneralizedIndex calculates the generalized index of a leaf in a binary Merkle tree.
+// The generalized index is the absolute position of the leaf in the tree's array representation.
 func LeafGeneralizedIndex(leafIdx int, nleaves int) int {
 	depth := TreeDepth(uint64(nleaves))
 	generalizedIndex := math.Pow(2, float64(depth)) + float64(leafIdx)
+
 	return int(generalizedIndex)
 }
 
-// TreeDepth returns the depth of a binary tree with given number of leaves
+// TreeDepth returns the depth of a binary tree with given number of leaves.
 func TreeDepth(nleaves uint64) uint8 {
 	depth := math.Ceil(math.Log2(float64(nleaves)))
+
 	return uint8(depth)
 }

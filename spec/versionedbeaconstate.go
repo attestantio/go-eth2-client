@@ -22,7 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/attestantio/go-eth2-client/util/proof"
+	proofutil "github.com/attestantio/go-eth2-client/util/proof"
 	ssz "github.com/ferranbt/fastssz"
 )
 
@@ -470,7 +470,7 @@ func (v *VersionedBeaconState) FieldIndex(name string) (int, error) {
 		return 0, err
 	}
 
-	return proof.FieldIndex(state, name)
+	return proofutil.FieldIndex(state, name)
 }
 
 // FieldGeneralizedIndex returns the generalized index for a given field name.
@@ -483,7 +483,7 @@ func (v *VersionedBeaconState) FieldGeneralizedIndex(name string) (int, error) {
 		return 0, err
 	}
 
-	return proof.FieldGeneralizedIndex(state, name)
+	return proofutil.FieldGeneralizedIndex(state, name)
 }
 
 // FieldRoot returns the SSZ hash root of a specific field in the beacon state.
