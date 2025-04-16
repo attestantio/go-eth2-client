@@ -15,6 +15,7 @@ package spec
 
 import (
 	"fmt"
+	"strings"
 )
 
 // DataVersion defines the spec version of the data in a response.
@@ -47,16 +48,6 @@ var dataVersionStrings = [...]string{
 	"electra",
 }
 
-var stringToDataVersion = map[string]DataVersion{
-	dataVersionStrings[0]: DataVersionUnknown,
-	dataVersionStrings[1]: DataVersionPhase0,
-	dataVersionStrings[2]: DataVersionAltair,
-	dataVersionStrings[3]: DataVersionBellatrix,
-	dataVersionStrings[4]: DataVersionCapella,
-	dataVersionStrings[5]: DataVersionDeneb,
-	dataVersionStrings[6]: DataVersionElectra,
-}
-
 // MarshalJSON implements json.Marshaler.
 func (d *DataVersion) MarshalJSON() ([]byte, error) {
 	return []byte(fmt.Sprintf("%q", dataVersionStrings[*d])), nil
@@ -64,28 +55,37 @@ func (d *DataVersion) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (d *DataVersion) UnmarshalJSON(input []byte) error {
-	if len(input) < 2 {
-		return fmt.Errorf("unrecognised data version %s", string(input))
+	var err error
+	switch strings.ToLower(string(input)) {
+	case `"phase0"`:
+		*d = DataVersionPhase0
+	case `"altair"`:
+		*d = DataVersionAltair
+	case `"bellatrix"`:
+		*d = DataVersionBellatrix
+	case `"capella"`:
+		*d = DataVersionCapella
+	case `"deneb"`:
+		*d = DataVersionDeneb
+	case `"electra"`:
+		*d = DataVersionElectra
+	default:
+		err = fmt.Errorf("unrecognised data version %s", string(input))
 	}
-	// get rid of prefix and suffix `"`
-	version, err := DataVersionFromString(string(input[1 : len(input)-1]))
-	if err == nil {
-		*d = version
-	}
+
 	return err
 }
 
 // String returns a string representation of the struct.
 func (d DataVersion) String() string {
-	if uint64(d) >= uint64(len(dataVersionStrings)) {
+	if int(d) >= len(dataVersionStrings) {
 		return "unknown"
 	}
+
 	return dataVersionStrings[d]
 }
 
 func DataVersionFromString(fork string) (DataVersion, error) {
-	if fork, ok := stringToDataVersion[fork]; ok {
-		return fork, nil
-	}
-	return DataVersionUnknown, fmt.Errorf("unrecognised data version %s", fork)
+	var version DataVersion
+	return version, version.UnmarshalJSON([]byte(fmt.Sprintf("\"%v\"", fork)))
 }
