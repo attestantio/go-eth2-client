@@ -23,6 +23,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -596,6 +597,17 @@ type VoluntaryExitPoolProvider interface {
 		opts *api.VoluntaryExitPoolOpts,
 	) (
 		*api.Response[[]*phase0.SignedVoluntaryExit],
+		error,
+	)
+}
+
+// PendingDepositProvider is the interface for providing pending deposit information.
+type PendingDepositProvider interface {
+	// PendingDeposits provides the pending deposits for a given state.
+	PendingDeposits(ctx context.Context,
+		opts *api.PendingDepositsOpts,
+	) (
+		*api.Response[[]*electra.PendingDeposit],
 		error,
 	)
 }
