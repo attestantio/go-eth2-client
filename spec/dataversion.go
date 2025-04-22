@@ -70,7 +70,7 @@ func (d *DataVersion) UnmarshalJSON(input []byte) error {
 		return fmt.Errorf("unrecognised data version %s", string(input))
 	}
 	*d = version
-	
+
 	return nil
 }
 
