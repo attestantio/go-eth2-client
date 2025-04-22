@@ -70,6 +70,7 @@ func (d *DataVersion) UnmarshalJSON(input []byte) error {
 		return fmt.Errorf("unrecognised data version %s", string(input))
 	}
 	*d = version
+	
 	return nil
 }
 
@@ -83,8 +84,9 @@ func (d DataVersion) String() string {
 }
 
 // DataVersionFromString turns a fork string into a DataVersion
-// returns an error if the fork is not recognized
+// returns an error if the fork is not recognized.
 func DataVersionFromString(fork string) (DataVersion, error) {
 	var version DataVersion
+
 	return version, version.UnmarshalJSON([]byte(fmt.Sprintf("\"%v\"", fork)))
 }
