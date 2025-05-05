@@ -21,10 +21,10 @@ import (
 	"strconv"
 	"strings"
 
+	bitfield "github.com/OffchainLabs/go-bitfield"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
-	bitfield "github.com/prysmaticlabs/go-bitfield"
 )
 
 // BeaconState represents a beacon state.

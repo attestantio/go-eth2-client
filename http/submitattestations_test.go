@@ -15,17 +15,18 @@ package http_test
 
 import (
 	"context"
-	"github.com/attestantio/go-eth2-client/spec"
 	"os"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/attestantio/go-eth2-client/spec"
+
+	"github.com/OffchainLabs/go-bitfield"
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/prysmaticlabs/go-bitfield"
 	"github.com/stretchr/testify/require"
 )
 

@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"strings"
 
+	bitfield "github.com/OffchainLabs/go-bitfield"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
-	bitfield "github.com/prysmaticlabs/go-bitfield"
 )
 
 // Attestation is the Ethereum 2 attestation structure.

@@ -22,9 +22,9 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 
+	bitfield "github.com/OffchainLabs/go-bitfield"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
-	bitfield "github.com/prysmaticlabs/go-bitfield"
 )
 
 // Attestation is the Ethereum 2 attestation structure.
