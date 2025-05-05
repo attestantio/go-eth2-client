@@ -1,3 +1,5 @@
+github.com/OffchainLabs/go-bitfield v0.0.0-20250408211841-ad7364de91a5 h1:25NqnaOHAsyeeq5PAAKVXdkmTbmAkd8aL8h5sgX1Vys=
+github.com/OffchainLabs/go-bitfield v0.0.0-20250408211841-ad7364de91a5/go.mod h1:6TZI4FU6zT8x6ZfWa1J8YQ2NgW0wLV/W3fHRca8ISBo=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/cespare/xxhash/v2 v2.2.0 h1:DC2CZ1Ep5Y4k3ZQ899DldepgrayRUGE6BBZ/cd9Cj44=
@@ -83,8 +85,6 @@ github.com/prometheus/common v0.42.0 h1:EKsfXEYo4JpWMHH5cg+KOUWeuJSov1Id8zGR8eeI
 github.com/prometheus/common v0.42.0/go.mod h1:xBwqVerjNdUDjgODMpudtOMwlOwf2SaTr1yjz4b7Zbc=
 github.com/prometheus/procfs v0.10.1 h1:kYK1Va/YMlutzCGazswoHKo//tZVlFpKYh+PymziUAg=
 github.com/prometheus/procfs v0.10.1/go.mod h1:nwNm2aOCAYw8uTR/9bWRREkZFxAUcWzPHWJq+XBB/FM=
-github.com/prysmaticlabs/go-bitfield v0.0.0-20240618144021-706c95b2dd15 h1:lC8kiphgdOBTcbTvo8MwkvpKjO0SlAgjv4xIK5FGJ94=
-github.com/prysmaticlabs/go-bitfield v0.0.0-20240618144021-706c95b2dd15/go.mod h1:8svFBIKKu31YriBG/pNizo9N0Jr9i5PQ+dFkxWg3x5k=
 github.com/prysmaticlabs/gohashtree v0.0.4-beta h1:H/EbCuXPeTV3lpKeXGPpEV9gsUpkqOOVnWapUyeWro4=
 github.com/prysmaticlabs/gohashtree v0.0.4-beta/go.mod h1:BFdtALS+Ffhg3lGQIHv9HDWuHS8cTvHZzrHWxwOtGOs=
 github.com/r3labs/sse/v2 v2.10.0 h1:hFEkLLFY4LDifoHdiCN/LlGBAdVJYsANaLqNYa1l/v0=

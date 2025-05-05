@@ -5,6 +5,7 @@ go 1.21.0
 toolchain go1.23.2
 
 require (
+	github.com/OffchainLabs/go-bitfield v0.0.0-20250408211841-ad7364de91a5
 	github.com/ferranbt/fastssz v0.1.4
 	github.com/goccy/go-yaml v1.9.2
 	github.com/golang/snappy v0.0.4
@@ -14,7 +15,6 @@ require (
 	github.com/pk910/dynamic-ssz v0.0.4
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.16.0
-	github.com/prysmaticlabs/go-bitfield v0.0.0-20240618144021-706c95b2dd15
 	github.com/r3labs/sse/v2 v2.10.0
 	github.com/rs/zerolog v1.32.0
 	github.com/stretchr/testify v1.8.4
