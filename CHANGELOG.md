@@ -1,3 +1,13 @@
+0.25.1:
+  - add Merkle tree and proof generation against beacon state
+    - add Tree interface for state field proofs
+    - add convenience methods for field access and proofs:
+      - ValidatorByIndex
+      - ValidatorBalance
+      - FieldTree
+      - ProveField
+      - VerifyFieldProof
+
 0.24.2:
   - support single_attestation event
   - support change to attestation event; this event now emits a spec.VersionedAttestation
