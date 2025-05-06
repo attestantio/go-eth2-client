@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2024 Attestant Limited.
+// Copyright © 2021 - 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,6 +22,8 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	proofutil "github.com/attestantio/go-eth2-client/util/proof"
+	ssz "github.com/ferranbt/fastssz"
 )
 
 // VersionedBeaconState contains a versioned beacon state.
@@ -342,6 +344,260 @@ func (v *VersionedBeaconState) PendingConsolidations() ([]*electra.PendingConsol
 	default:
 		return nil, errors.New("unknown version")
 	}
+}
+
+// ValidatorAtIndex returns the validator at the given index.
+// This is a convenience method that handles accessing the validators array.
+// Parameters:
+//   - index: The index of the validator to retrieve
+//
+// Returns:
+//   - *phase0.Validator: The validator at the given index
+//   - error: If the index is invalid or there's an error accessing the validators
+func (v *VersionedBeaconState) ValidatorAtIndex(index phase0.ValidatorIndex) (*phase0.Validator, error) {
+	validators, err := v.Validators()
+	if err != nil {
+		return nil, err
+	}
+
+	if index >= phase0.ValidatorIndex(len(validators)) {
+		return nil, errors.New("validator index out of bounds")
+	}
+
+	return validators[index], nil
+}
+
+// ValidatorBalance returns the balance of the validator at the given index.
+// This is a convenience method that handles accessing the balances array.
+// Parameters:
+//   - index: The index of the validator whose balance to retrieve
+//
+// Returns:
+//   - phase0.Gwei: The balance in Gwei
+//   - error: If the index is invalid or there's an error accessing the balances
+func (v *VersionedBeaconState) ValidatorBalance(index phase0.ValidatorIndex) (phase0.Gwei, error) {
+	balances, err := v.ValidatorBalances()
+	if err != nil {
+		return 0, err
+	}
+
+	if index >= phase0.ValidatorIndex(len(balances)) {
+		return 0, errors.New("validator index out of bounds")
+	}
+
+	return balances[index], nil
+}
+
+// stateObject returns the underlying beacon state object based on the version.
+func (v *VersionedBeaconState) stateObject() (any, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return nil, errors.New("no Phase0 state")
+		}
+
+		return v.Phase0, nil
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return nil, errors.New("no Altair state")
+		}
+
+		return v.Altair, nil
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return nil, errors.New("no Bellatrix state")
+		}
+
+		return v.Bellatrix, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return nil, errors.New("no Capella state")
+		}
+
+		return v.Capella, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return nil, errors.New("no Deneb state")
+		}
+
+		return v.Deneb, nil
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return nil, errors.New("no Electra state")
+		}
+
+		return v.Electra, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// Tree returns the Merkle tree representation of the beacon state.
+// This allows for generating Merkle proofs of state fields.
+// Returns an error if the state is empty or not hash tree rootable.
+func (v *VersionedBeaconState) Tree() (*Tree, error) {
+	state, err := v.stateObject()
+	if err != nil {
+		return nil, err
+	}
+	hashTreeRootable, ok := state.(ssz.HashRoot)
+	if !ok {
+		return nil, errors.New("state is not hash tree rootable")
+	}
+
+	sszNode, err := hashTreeRootable.GetTree()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Tree{node: sszNode}, nil
+}
+
+// HashTreeRoot returns the SSZ hash tree root of the beacon state.
+// Returns an error if the state is empty or not hash tree rootable.
+func (v *VersionedBeaconState) HashTreeRoot() (phase0.Hash32, error) {
+	state, err := v.stateObject()
+	if err != nil {
+		return phase0.Hash32{}, err
+	}
+
+	hashTreeRootable, ok := state.(ssz.HashRoot)
+	if !ok {
+		return phase0.Hash32{}, errors.New("state is not hash tree rootable")
+	}
+
+	return hashTreeRootable.HashTreeRoot()
+}
+
+// FieldIndex returns the struct field index for a given field name.
+// The index represents the field's position in the struct's memory layout.
+// Returns an error if the field doesn't exist or the state is empty.
+func (v *VersionedBeaconState) FieldIndex(name string) (int, error) {
+	state, err := v.stateObject()
+	if err != nil {
+		return 0, err
+	}
+
+	return proofutil.FieldIndex(state, name)
+}
+
+// FieldGeneralizedIndex returns the generalized index for a given field name.
+// The generalized index represents the field's absolute position in the Merkle tree.
+// This is used for generating and verifying Merkle proofs.
+// Returns an error if the field doesn't exist or the state is empty.
+func (v *VersionedBeaconState) FieldGeneralizedIndex(name string) (int, error) {
+	state, err := v.stateObject()
+	if err != nil {
+		return 0, err
+	}
+
+	return proofutil.FieldGeneralizedIndex(state, name)
+}
+
+// FieldRoot returns the SSZ hash root of a specific field in the beacon state.
+// Parameters:
+//   - name: The name of the field to get the root for
+//
+// Returns:
+//   - phase0.Hash32: The SSZ hash root of the field
+//   - error: If the field doesn't exist, the state is empty, or the field is not hash tree rootable
+func (v *VersionedBeaconState) FieldRoot(name string) (phase0.Hash32, error) {
+	stateTree, err := v.Tree()
+	if err != nil {
+		return phase0.Hash32{}, err
+	}
+
+	fieldGeneralizedIndex, err := v.FieldGeneralizedIndex(name)
+	if err != nil {
+		return phase0.Hash32{}, err
+	}
+
+	fieldTree, err := stateTree.Subtree(fieldGeneralizedIndex)
+	if err != nil {
+		return phase0.Hash32{}, err
+	}
+
+	return fieldTree.Root()
+}
+
+// FieldTree returns the Merkle subtree for a specific field in the beacon state.
+func (v *VersionedBeaconState) FieldTree(name string) (*Tree, error) {
+	stateTree, err := v.Tree()
+	if err != nil {
+		return nil, err
+	}
+
+	fieldGeneralizedIndex, err := v.FieldGeneralizedIndex(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return stateTree.Subtree(fieldGeneralizedIndex)
+}
+
+// ProveField generates a Merkle proof for a specific field against the beacon state root.
+// Parameters:
+//   - name: The name of the field to generate a proof for
+//
+// Returns:
+//   - []phase0.Hash32: The Merkle proof as a sequence of 32-byte hashes
+//   - error: If the field doesn't exist or there's an error generating the proof
+func (v *VersionedBeaconState) ProveField(name string) ([]phase0.Hash32, error) {
+	stateTree, err := v.Tree()
+	if err != nil {
+		return nil, err
+	}
+
+	fieldGeneralizedIndex, err := v.FieldGeneralizedIndex(name)
+	if err != nil {
+		return nil, err
+	}
+
+	return stateTree.Prove(fieldGeneralizedIndex)
+}
+
+// VerifyFieldProof verifies a Merkle proof for a field against the beacon state root.
+// Parameters:
+//   - proof: The Merkle proof as a sequence of 32-byte hashes
+//   - name: The name of the field the proof is for
+//
+// Returns:
+//   - bool: True if the proof is valid, false otherwise
+//   - error: If there's an error during verification
+func (v *VersionedBeaconState) VerifyFieldProof(proof []phase0.Hash32, name string) (bool, error) {
+	// Get the state root
+	stateRoot, err := v.HashTreeRoot()
+	if err != nil {
+		return false, err
+	}
+
+	// Get the field's generalized index
+	fieldGeneralizedIndex, err := v.FieldGeneralizedIndex(name)
+	if err != nil {
+		return false, err
+	}
+
+	// Get the field's root
+	fieldRoot, err := v.FieldRoot(name)
+	if err != nil {
+		return false, err
+	}
+
+	// Convert proof to ssz.Proof format
+	proofHashes := make([][]byte, len(proof))
+	for i, hash := range proof {
+		proofHashes[i] = make([]byte, 32)
+		copy(proofHashes[i], hash[:])
+	}
+
+	// Create and verify the proof
+	sszProof := &ssz.Proof{
+		Index:  fieldGeneralizedIndex,
+		Leaf:   fieldRoot[:],
+		Hashes: proofHashes,
+	}
+
+	return ssz.VerifyProof(stateRoot[:], sszProof)
 }
 
 // String returns a string version of the structure.
