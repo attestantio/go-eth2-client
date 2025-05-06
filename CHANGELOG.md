@@ -8,6 +8,9 @@
       - ProveField
       - VerifyFieldProof
 
+0.25.0:
+  - update attestationpool endpoint to receive versioned attestations
+
 0.24.2:
   - support single_attestation event
   - support change to attestation event; this event now emits a spec.VersionedAttestation
