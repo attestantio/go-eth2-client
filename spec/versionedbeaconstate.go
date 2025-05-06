@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2024 Attestant Limited.
+// Copyright © 2021 - 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -346,7 +346,7 @@ func (v *VersionedBeaconState) PendingConsolidations() ([]*electra.PendingConsol
 	}
 }
 
-// ValidatorByIndex returns the validator at the given index.
+// ValidatorAtIndex returns the validator at the given index.
 // This is a convenience method that handles accessing the validators array.
 // Parameters:
 //   - index: The index of the validator to retrieve
@@ -354,16 +354,20 @@ func (v *VersionedBeaconState) PendingConsolidations() ([]*electra.PendingConsol
 // Returns:
 //   - *phase0.Validator: The validator at the given index
 //   - error: If the index is invalid or there's an error accessing the validators
-func (v *VersionedBeaconState) ValidatorByIndex(index phase0.ValidatorIndex) (*phase0.Validator, error) {
+func (v *VersionedBeaconState) ValidatorAtIndex(index phase0.ValidatorIndex) (*phase0.Validator, error) {
 	validators, err := v.Validators()
 	if err != nil {
 		return nil, err
 	}
 
+	if index >= phase0.ValidatorIndex(len(validators)) {
+		return nil, errors.New("validator index out of bounds")
+	}
+
 	return validators[index], nil
 }
 
-// BalanceByIndex returns the balance of the validator at the given index.
+// ValidatorBalance returns the balance of the validator at the given index.
 // This is a convenience method that handles accessing the balances array.
 // Parameters:
 //   - index: The index of the validator whose balance to retrieve
@@ -371,10 +375,14 @@ func (v *VersionedBeaconState) ValidatorByIndex(index phase0.ValidatorIndex) (*p
 // Returns:
 //   - phase0.Gwei: The balance in Gwei
 //   - error: If the index is invalid or there's an error accessing the balances
-func (v *VersionedBeaconState) BalanceByIndex(index phase0.ValidatorIndex) (phase0.Gwei, error) {
+func (v *VersionedBeaconState) ValidatorBalance(index phase0.ValidatorIndex) (phase0.Gwei, error) {
 	balances, err := v.ValidatorBalances()
 	if err != nil {
 		return 0, err
+	}
+
+	if index >= phase0.ValidatorIndex(len(balances)) {
+		return 0, errors.New("validator index out of bounds")
 	}
 
 	return balances[index], nil
@@ -427,7 +435,7 @@ func (v *VersionedBeaconState) stateObject() (any, error) {
 // Tree returns the Merkle tree representation of the beacon state.
 // This allows for generating Merkle proofs of state fields.
 // Returns an error if the state is empty or not hash tree rootable.
-func (v *VersionedBeaconState) Tree() (Tree, error) {
+func (v *VersionedBeaconState) Tree() (*Tree, error) {
 	state, err := v.stateObject()
 	if err != nil {
 		return nil, err
@@ -442,7 +450,7 @@ func (v *VersionedBeaconState) Tree() (Tree, error) {
 		return nil, err
 	}
 
-	return newTree(sszNode), nil
+	return &Tree{node: sszNode}, nil
 }
 
 // HashTreeRoot returns the SSZ hash tree root of the beacon state.
@@ -504,7 +512,7 @@ func (v *VersionedBeaconState) FieldRoot(name string) (phase0.Hash32, error) {
 		return phase0.Hash32{}, err
 	}
 
-	fieldTree, err := stateTree.Get(fieldGeneralizedIndex)
+	fieldTree, err := stateTree.Subtree(fieldGeneralizedIndex)
 	if err != nil {
 		return phase0.Hash32{}, err
 	}
@@ -513,7 +521,7 @@ func (v *VersionedBeaconState) FieldRoot(name string) (phase0.Hash32, error) {
 }
 
 // FieldTree returns the Merkle subtree for a specific field in the beacon state.
-func (v *VersionedBeaconState) FieldTree(name string) (Tree, error) {
+func (v *VersionedBeaconState) FieldTree(name string) (*Tree, error) {
 	stateTree, err := v.Tree()
 	if err != nil {
 		return nil, err
@@ -524,7 +532,7 @@ func (v *VersionedBeaconState) FieldTree(name string) (Tree, error) {
 		return nil, err
 	}
 
-	return stateTree.Get(fieldGeneralizedIndex)
+	return stateTree.Subtree(fieldGeneralizedIndex)
 }
 
 // ProveField generates a Merkle proof for a specific field against the beacon state root.

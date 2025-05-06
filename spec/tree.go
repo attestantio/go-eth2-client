@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2024 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,28 +21,12 @@ import (
 )
 
 // Tree represents a Merkle tree structure for beacon state data.
-type Tree interface {
-	// Root returns the root hash of the tree
-	Root() (phase0.Hash32, error)
-
-	// Get returns a subtree at the given generalized index
-	Get(index int) (Tree, error)
-
-	// Prove generates a Merkle proof for a given generalized index
-	Prove(index int) ([]phase0.Hash32, error)
-}
-
-// sszTree is an adapter that implements the Tree interface using fastssz.
-type sszTree struct {
+type Tree struct {
 	node *ssz.Node
 }
 
-func newTree(node *ssz.Node) Tree {
-	return &sszTree{node: node}
-}
-
 // Root returns the root hash of the tree.
-func (t *sszTree) Root() (phase0.Hash32, error) {
+func (t *Tree) Root() (phase0.Hash32, error) {
 	if t.node == nil {
 		return phase0.Hash32{}, errors.New("nil tree")
 	}
@@ -52,8 +36,8 @@ func (t *sszTree) Root() (phase0.Hash32, error) {
 	return root, nil
 }
 
-// Get returns a subtree at the given generalized index.
-func (t *sszTree) Get(index int) (Tree, error) {
+// Subtree returns a subtree at the given generalized index.
+func (t *Tree) Subtree(index int) (*Tree, error) {
 	if t.node == nil {
 		return nil, errors.New("nil tree")
 	}
@@ -62,11 +46,11 @@ func (t *sszTree) Get(index int) (Tree, error) {
 		return nil, err
 	}
 
-	return newTree(node), nil
+	return &Tree{node: node}, nil
 }
 
 // Prove generates a Merkle proof for a given generalized index.
-func (t *sszTree) Prove(index int) ([]phase0.Hash32, error) {
+func (t *Tree) Prove(index int) ([]phase0.Hash32, error) {
 	if t.node == nil {
 		return nil, errors.New("nil tree")
 	}

@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
 
@@ -162,4 +163,19 @@ func TestProveField(t *testing.T) {
 	valid, err := state.VerifyFieldProof(proof, "Balances")
 	require.NoError(t, err)
 	require.True(t, valid)
+}
+
+func TestInvalidValidatorIndex(t *testing.T) {
+	state, err := readVersionedBeaconState(t, "holesky_beaconstate_2649079.ssz", spec.DataVersionDeneb)
+	if err != nil {
+		t.Skip("holesky_beaconstate_2649079.ssz not available")
+	}
+	validatorIndex := phase0.ValidatorIndex(176565800)
+	validator, err := state.ValidatorAtIndex(validatorIndex)
+	require.Error(t, err, "validator index out of bounds")
+	require.Nil(t, validator)
+
+	balance, err := state.ValidatorBalance(validatorIndex)
+	require.Error(t, err, "validator index out of bounds")
+	require.Equal(t, phase0.Gwei(0), balance)
 }
