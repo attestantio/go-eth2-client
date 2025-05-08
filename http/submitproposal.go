@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -54,7 +55,10 @@ func (s *Service) SubmitProposal(ctx context.Context,
 	headers["Eth-Consensus-Version"] = strings.ToLower(opts.Proposal.Version.String())
 	_, err = s.post(ctx, endpoint, query, &opts.Common, bytes.NewBuffer(body), contentType, headers)
 	if err != nil {
-		return errors.Join(errors.New("failed to submit proposal"), err)
+		headersString := fmt.Sprintf("%v", headers)
+		bodyString := string(body)
+		debugInfo := fmt.Sprintf(`{"headers": "%v", "body": "%s"}`, headersString, bodyString)
+		return errors.Join(errors.New("failed to submit proposal: "+debugInfo), err)
 	}
 
 	return nil
