@@ -27,7 +27,7 @@ import (
 
 // Attestation is the Ethereum 2 attestation structure.
 type Attestation struct {
-	AggregationBits bitfield.Bitlist `ssz-max:"2048"`
+	AggregationBits bitfield.Bitlist `dynssz-max:"MAX_VALIDATORS_PER_COMMITTEE" ssz-max:"2048"`
 	Data            *AttestationData
 	Signature       BLSSignature `ssz-size:"96"`
 }

@@ -16,6 +16,7 @@ package http
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -48,8 +49,16 @@ func (s *Service) BeaconBlockHeader(ctx context.Context,
 		return nil, err
 	}
 
+	if !isBlockHeaderResponseValid(&data) {
+		return nil, errors.New("invalid beacon block header")
+	}
+
 	return &api.Response[*apiv1.BeaconBlockHeader]{
 		Metadata: metadata,
 		Data:     &data,
 	}, nil
+}
+
+func isBlockHeaderResponseValid(blockHeader *apiv1.BeaconBlockHeader) bool {
+	return blockHeader.Header != nil && blockHeader.Header.Message != nil
 }

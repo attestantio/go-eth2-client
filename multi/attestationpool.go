@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,14 +18,14 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/spec"
 )
 
 // AttestationPool obtains the attestation pool for a given slot.
 func (s *Service) AttestationPool(ctx context.Context,
 	opts *api.AttestationPoolOpts,
 ) (
-	*api.Response[[]*phase0.Attestation],
+	*api.Response[[]*spec.VersionedAttestation],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
@@ -40,7 +40,7 @@ func (s *Service) AttestationPool(ctx context.Context,
 		return nil, err
 	}
 
-	response, isResponse := res.(*api.Response[[]*phase0.Attestation])
+	response, isResponse := res.(*api.Response[[]*spec.VersionedAttestation])
 	if !isResponse {
 		return nil, ErrIncorrectType
 	}

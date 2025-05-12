@@ -66,6 +66,14 @@ func (s *Service) BlobSidecars(ctx context.Context,
 func (*Service) blobSidecarsFromSSZ(res *httpResponse) (*api.Response[[]*deneb.BlobSidecar], error) {
 	response := &api.Response[[]*deneb.BlobSidecar]{}
 
+	if len(res.body) == 0 {
+		// This is a valid response when there are no blobs for the request.
+		response.Data = make([]*deneb.BlobSidecar, 0)
+		response.Metadata = make(map[string]any)
+
+		return response, nil
+	}
+
 	data := &api.BlobSidecars{}
 	if err := data.UnmarshalSSZ(res.body); err != nil {
 		return nil, errors.Join(errors.New("failed to decode blob sidecars"), err)
