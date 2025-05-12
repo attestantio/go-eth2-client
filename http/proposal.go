@@ -234,6 +234,22 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context,
 				err = response.Data.Electra.UnmarshalSSZ(res.body)
 			}
 		}
+	case spec.DataVersionFulu:
+		if response.Data.Blinded {
+			response.Data.FuluBlinded = &apiv1electra.BlindedBeaconBlock{}
+			if s.customSpecSupport {
+				err = dynSSZ.UnmarshalSSZ(response.Data.FuluBlinded, res.body)
+			} else {
+				err = response.Data.FuluBlinded.UnmarshalSSZ(res.body)
+			}
+		} else {
+			response.Data.Fulu = &apiv1electra.BlockContents{}
+			if s.customSpecSupport {
+				err = dynSSZ.UnmarshalSSZ(response.Data.Fulu, res.body)
+			} else {
+				err = response.Data.Fulu.UnmarshalSSZ(res.body)
+			}
+		}
 	default:
 		return nil, fmt.Errorf("unhandled block proposal version %s", res.consensusVersion)
 	}
@@ -317,6 +333,18 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[
 			)
 		} else {
 			response.Data.Electra, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&apiv1electra.BlockContents{},
+			)
+		}
+	case spec.DataVersionFulu:
+		if response.Data.Blinded {
+			response.Data.FuluBlinded, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&apiv1electra.BlindedBeaconBlock{},
+			)
+		} else {
+			response.Data.Fulu, response.Metadata, err = decodeJSONResponse(
 				bytes.NewReader(res.body),
 				&apiv1electra.BlockContents{},
 			)

@@ -33,6 +33,7 @@ type VersionedBeaconState struct {
 	Capella   *capella.BeaconState
 	Deneb     *deneb.BeaconState
 	Electra   *electra.BeaconState
+	Fulu      *electra.BeaconState
 }
 
 // IsEmpty returns true if there is no block.
@@ -79,6 +80,12 @@ func (v *VersionedBeaconState) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Electra.Slot, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -107,6 +114,12 @@ func (v *VersionedBeaconState) NextWithdrawalValidatorIndex() (phase0.ValidatorI
 		}
 
 		return v.Electra.NextWithdrawalValidatorIndex, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.NextWithdrawalValidatorIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -151,6 +164,12 @@ func (v *VersionedBeaconState) Validators() ([]*phase0.Validator, error) {
 		}
 
 		return v.Electra.Validators, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.Validators, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -195,6 +214,12 @@ func (v *VersionedBeaconState) ValidatorBalances() ([]phase0.Gwei, error) {
 		}
 
 		return v.Electra.Balances, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.Balances, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -211,6 +236,12 @@ func (v *VersionedBeaconState) DepositRequestsStartIndex() (uint64, error) {
 		}
 
 		return v.Electra.DepositRequestsStartIndex, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.DepositRequestsStartIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -227,6 +258,12 @@ func (v *VersionedBeaconState) DepositBalanceToConsume() (phase0.Gwei, error) {
 		}
 
 		return v.Electra.DepositBalanceToConsume, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.DepositBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -243,6 +280,12 @@ func (v *VersionedBeaconState) ExitBalanceToConsume() (phase0.Gwei, error) {
 		}
 
 		return v.Electra.ExitBalanceToConsume, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.ExitBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -259,6 +302,12 @@ func (v *VersionedBeaconState) EarliestExitEpoch() (phase0.Epoch, error) {
 		}
 
 		return v.Electra.EarliestExitEpoch, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.EarliestExitEpoch, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -275,6 +324,12 @@ func (v *VersionedBeaconState) ConsolidationBalanceToConsume() (phase0.Gwei, err
 		}
 
 		return v.Electra.ConsolidationBalanceToConsume, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.ConsolidationBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -291,6 +346,12 @@ func (v *VersionedBeaconState) EarliestConsolidationEpoch() (phase0.Epoch, error
 		}
 
 		return v.Electra.EarliestConsolidationEpoch, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.EarliestConsolidationEpoch, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -307,6 +368,12 @@ func (v *VersionedBeaconState) PendingDeposits() ([]*electra.PendingDeposit, err
 		}
 
 		return v.Electra.PendingDeposits, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.PendingDeposits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -323,6 +390,12 @@ func (v *VersionedBeaconState) PendingPartialWithdrawals() ([]*electra.PendingPa
 		}
 
 		return v.Electra.PendingPartialWithdrawals, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.PendingPartialWithdrawals, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -339,6 +412,12 @@ func (v *VersionedBeaconState) PendingConsolidations() ([]*electra.PendingConsol
 		}
 
 		return v.Electra.PendingConsolidations, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.PendingConsolidations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -383,6 +462,12 @@ func (v *VersionedBeaconState) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	default:
 		return "unknown version"
 	}

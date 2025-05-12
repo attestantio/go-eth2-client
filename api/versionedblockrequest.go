@@ -30,6 +30,7 @@ type VersionedBlockRequest struct {
 	Capella   *capella.SignedBeaconBlock
 	Deneb     *deneb.SignedBeaconBlock
 	Electra   *electra.SignedBeaconBlock
+	Fulu      *electra.SignedBeaconBlock
 }
 
 // Slot returns the slot of the signed beacon block.
@@ -63,6 +64,13 @@ func (v *VersionedBlockRequest) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Electra.Message.Slot, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Fulu.Message.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -107,6 +115,15 @@ func (v *VersionedBlockRequest) ExecutionBlockHash() (phase0.Hash32, error) {
 		}
 
 		return v.Electra.Message.Body.ExecutionPayload.BlockHash, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil ||
+			v.Fulu.Message.Body == nil ||
+			v.Fulu.Message.Body.ExecutionPayload == nil {
+			return phase0.Hash32{}, ErrDataMissing
+		}
+
+		return v.Fulu.Message.Body.ExecutionPayload.BlockHash, nil
 	default:
 		return phase0.Hash32{}, ErrUnsupportedVersion
 	}
@@ -179,6 +196,22 @@ func (v *VersionedBlockRequest) Attestations() ([]spec.VersionedAttestation, err
 		}
 
 		return versionedAttestations, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil ||
+			v.Fulu.Message.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		versionedAttestations := make([]spec.VersionedAttestation, len(v.Fulu.Message.Body.Attestations))
+		for i, attestation := range v.Fulu.Message.Body.Attestations {
+			versionedAttestations[i] = spec.VersionedAttestation{
+				Version: spec.DataVersionFulu,
+				Fulu:    attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -215,6 +248,13 @@ func (v *VersionedBlockRequest) Root() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.HashTreeRoot()
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.Message.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -255,6 +295,14 @@ func (v *VersionedBlockRequest) BodyRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.Body.HashTreeRoot()
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil ||
+			v.Fulu.Message.Body == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.Message.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -291,6 +339,13 @@ func (v *VersionedBlockRequest) ParentRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.ParentRoot, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.Message.ParentRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -327,6 +382,13 @@ func (v *VersionedBlockRequest) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.StateRoot, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.Message.StateRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -399,6 +461,22 @@ func (v *VersionedBlockRequest) AttesterSlashings() ([]spec.VersionedAttesterSla
 		}
 
 		return versionedAttesterSlashings, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil ||
+			v.Fulu.Message.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		versionedAttesterSlashings := make([]spec.VersionedAttesterSlashing, len(v.Fulu.Message.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Fulu.Message.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = spec.VersionedAttesterSlashing{
+				Version: spec.DataVersionFulu,
+				Fulu:    attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -439,6 +517,14 @@ func (v *VersionedBlockRequest) ProposerSlashings() ([]*phase0.ProposerSlashing,
 		}
 
 		return v.Electra.Message.Body.ProposerSlashings, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil ||
+			v.Fulu.Message.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		return v.Fulu.Message.Body.ProposerSlashings, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -479,6 +565,14 @@ func (v *VersionedBlockRequest) SyncAggregate() (*altair.SyncAggregate, error) {
 		}
 
 		return v.Electra.Message.Body.SyncAggregate, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil ||
+			v.Fulu.Message.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		return v.Fulu.Message.Body.SyncAggregate, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -511,6 +605,12 @@ func (v *VersionedBlockRequest) String() string {
 		}
 
 		return v.Electra.String()
+	case spec.DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	default:
 		return "unsupported version"
 	}
