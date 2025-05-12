@@ -329,6 +329,8 @@ func (v *VersionedSignedProposal) String() string {
 
 // assertMessagePresent throws an error if the expected message
 // given the version and blinded fields is not present.
+//
+//nolint:gocyclo // ignore
 func (v *VersionedSignedProposal) assertMessagePresent() error {
 	switch v.Version {
 	case spec.DataVersionBellatrix:

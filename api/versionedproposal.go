@@ -948,6 +948,7 @@ func (v *VersionedProposal) bodyPresent() bool {
 	return false
 }
 
+//nolint:gocyclo // ignore
 func (v *VersionedProposal) payloadPresent() bool {
 	switch v.Version {
 	case spec.DataVersionPhase0:

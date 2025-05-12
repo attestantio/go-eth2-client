@@ -84,7 +84,8 @@ func (v *VersionedSignedAggregateAndProof) AggregatorIndex() (phase0.ValidatorIn
 
 // IsEmpty returns true if there is no aggregate and proof.
 func (v *VersionedSignedAggregateAndProof) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
+		v.Electra == nil && v.Fulu == nil
 }
 
 // SelectionProof returns the selection proof of the signed aggregate.
