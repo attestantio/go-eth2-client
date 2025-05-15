@@ -204,7 +204,7 @@ func (s *Service) parseSpecsContainer(data map[string]any) map[string]any {
 			continue
 		} else if strVal, isStr := v.(string); isStr {
 			intVal, err := strconv.ParseUint(strVal, 10, 64)
-			if err == nil && intVal != 0 {
+			if err == nil {
 				config[k] = intVal
 
 				continue
