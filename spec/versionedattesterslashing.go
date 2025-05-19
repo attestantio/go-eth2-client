@@ -29,6 +29,7 @@ type VersionedAttesterSlashing struct {
 	Capella   *phase0.AttesterSlashing
 	Deneb     *phase0.AttesterSlashing
 	Electra   *electra.AttesterSlashing
+	Fulu      *electra.AttesterSlashing
 }
 
 // IsEmpty returns true if there is no block.
@@ -102,6 +103,17 @@ func (v *VersionedAttesterSlashing) Attestation1() (*VersionedIndexedAttestation
 		versionedIndexedAttestation := VersionedIndexedAttestation{
 			Version: DataVersionElectra,
 			Electra: v.Electra.Attestation1,
+		}
+
+		return &versionedIndexedAttestation, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu indexed attestation")
+		}
+
+		versionedIndexedAttestation := VersionedIndexedAttestation{
+			Version: DataVersionFulu,
+			Fulu:    v.Fulu.Attestation1,
 		}
 
 		return &versionedIndexedAttestation, nil
@@ -179,6 +191,17 @@ func (v *VersionedAttesterSlashing) Attestation2() (*VersionedIndexedAttestation
 		}
 
 		return &versionedIndexedAttestation, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu indexed attestation")
+		}
+
+		versionedIndexedAttestation := VersionedIndexedAttestation{
+			Version: DataVersionFulu,
+			Fulu:    v.Fulu.Attestation2,
+		}
+
+		return &versionedIndexedAttestation, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -223,6 +246,12 @@ func (v *VersionedAttesterSlashing) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	default:
 		return "unknown version"
 	}

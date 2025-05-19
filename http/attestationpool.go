@@ -111,6 +111,10 @@ func verifyAttestationPool(opts *api.AttestationPoolOpts, data []*spec.Versioned
 			if err := verifyElectraAttestation(opts, datum.Electra); err != nil {
 				return err
 			}
+		case spec.DataVersionFulu:
+			if err := verifyElectraAttestation(opts, datum.Fulu); err != nil {
+				return err
+			}
 		default:
 			return errors.New("unsupported attestation version")
 		}
