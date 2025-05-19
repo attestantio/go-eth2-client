@@ -350,7 +350,9 @@ func (*Service) populateProposalDataFromHeaders(response *api.Response[*api.Vers
 		case strings.EqualFold(k, "Eth-Consensus-Block-Value"):
 			var success bool
 			response.Data.ConsensusValue, success = new(big.Int).SetString(v, 10)
-			if !success {
+			// https://github.com/OffchainLabs/prysm/pull/14111
+			// Having the consensus block value is not critical to block production
+			if !success && v != "" {
 				return fmt.Errorf("proposal header Eth-Consensus-Block-Value %s not a valid integer", v)
 			}
 		}
