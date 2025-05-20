@@ -76,7 +76,6 @@ package proof
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"reflect"
 )
@@ -99,28 +98,6 @@ func NumFields(o any) int {
 	}
 
 	return t.NumField()
-}
-
-// FieldByName returns the field with the given name.
-func FieldByName(o any, fieldName string) (reflect.Value, error) {
-	if o == nil {
-		return reflect.Value{}, errors.New("nil object")
-	}
-	v := reflect.ValueOf(o)
-
-	// If it's a pointer, get the underlying value
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-
-	// Get the type after dereferencing
-	t := v.Type()
-	_, ok := t.FieldByName(fieldName)
-	if !ok {
-		return reflect.Value{}, fmt.Errorf("field %s not found", fieldName)
-	}
-
-	return v.FieldByName(fieldName), nil
 }
 
 // FieldIndex returns the index of a field in a struct.

@@ -388,97 +388,135 @@ func (v *VersionedBeaconState) ValidatorBalance(index phase0.ValidatorIndex) (ph
 	return balances[index], nil
 }
 
-// stateObject returns the underlying beacon state object based on the version.
-func (v *VersionedBeaconState) stateObject() (any, error) {
+// GetTree returns the GetTree of the specific beacon state version.
+func (v *VersionedBeaconState) GetTree() (*ssz.Node, error) {
 	switch v.Version {
 	case DataVersionPhase0:
 		if v.Phase0 == nil {
 			return nil, errors.New("no Phase0 state")
 		}
-
-		return v.Phase0, nil
+		return v.Phase0.GetTree()
 	case DataVersionAltair:
 		if v.Altair == nil {
 			return nil, errors.New("no Altair state")
 		}
 
-		return v.Altair, nil
+		return v.Altair.GetTree()
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return nil, errors.New("no Bellatrix state")
 		}
 
-		return v.Bellatrix, nil
+		return v.Bellatrix.GetTree()
 	case DataVersionCapella:
 		if v.Capella == nil {
 			return nil, errors.New("no Capella state")
 		}
 
-		return v.Capella, nil
+		return v.Capella.GetTree()
 	case DataVersionDeneb:
 		if v.Deneb == nil {
 			return nil, errors.New("no Deneb state")
 		}
 
-		return v.Deneb, nil
+		return v.Deneb.GetTree()
 	case DataVersionElectra:
 		if v.Electra == nil {
 			return nil, errors.New("no Electra state")
 		}
 
-		return v.Electra, nil
+		return v.Electra.GetTree()
 	default:
 		return nil, errors.New("unknown version")
 	}
 }
 
-// Tree returns the Merkle tree representation of the beacon state.
-// This allows for generating Merkle proofs of state fields.
-// Returns an error if the state is empty or not hash tree rootable.
-func (v *VersionedBeaconState) Tree() (*Tree, error) {
-	state, err := v.stateObject()
-	if err != nil {
-		return nil, err
-	}
-	hashTreeRootable, ok := state.(ssz.HashRoot)
-	if !ok {
-		return nil, errors.New("state is not hash tree rootable")
-	}
-
-	sszNode, err := hashTreeRootable.GetTree()
-	if err != nil {
-		return nil, err
-	}
-
-	return &Tree{node: sszNode}, nil
-}
-
-// HashTreeRoot returns the SSZ hash tree root of the beacon state.
-// Returns an error if the state is empty or not hash tree rootable.
+// HashTreeRoot returns the HashTreeRoot of the specific beacon state version.
 func (v *VersionedBeaconState) HashTreeRoot() (phase0.Hash32, error) {
-	state, err := v.stateObject()
-	if err != nil {
-		return phase0.Hash32{}, err
-	}
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return phase0.Hash32{}, errors.New("no Phase0 state")
+		}
+		return v.Phase0.HashTreeRoot()
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return phase0.Hash32{}, errors.New("no Altair state")
+		}
 
-	hashTreeRootable, ok := state.(ssz.HashRoot)
-	if !ok {
-		return phase0.Hash32{}, errors.New("state is not hash tree rootable")
-	}
+		return v.Altair.HashTreeRoot()
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return phase0.Hash32{}, errors.New("no Bellatrix state")
+		}
 
-	return hashTreeRootable.HashTreeRoot()
+		return v.Bellatrix.HashTreeRoot()
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return phase0.Hash32{}, errors.New("no Capella state")
+		}
+
+		return v.Capella.HashTreeRoot()
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Hash32{}, errors.New("no Deneb state")
+		}
+
+		return v.Deneb.HashTreeRoot()
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return phase0.Hash32{}, errors.New("no Electra state")
+		}
+
+		return v.Electra.HashTreeRoot()
+	default:
+		return phase0.Hash32{}, errors.New("unknown version")
+	}
 }
 
 // FieldIndex returns the struct field index for a given field name.
 // The index represents the field's position in the struct's memory layout.
 // Returns an error if the field doesn't exist or the state is empty.
 func (v *VersionedBeaconState) FieldIndex(name string) (int, error) {
-	state, err := v.stateObject()
-	if err != nil {
-		return 0, err
-	}
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return 0, errors.New("no Phase0 state")
+		}
+		return proofutil.FieldIndex(v.Phase0, name)
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return 0, errors.New("no Altair state")
+		}
 
-	return proofutil.FieldIndex(state, name)
+		return proofutil.FieldIndex(v.Altair, name)
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return 0, errors.New("no Bellatrix state")
+		}
+
+		return proofutil.FieldIndex(v.Bellatrix, name)
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no Capella state")
+		}
+
+		return proofutil.FieldIndex(v.Capella, name)
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return 0, errors.New("no Deneb state")
+		}
+
+		return proofutil.FieldIndex(v.Deneb, name)
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no Electra state")
+		}
+
+		return proofutil.FieldIndex(v.Electra, name)
+	default:
+		return 0, errors.New("unknown version")
+	}
 }
 
 // FieldGeneralizedIndex returns the generalized index for a given field name.
@@ -486,12 +524,45 @@ func (v *VersionedBeaconState) FieldIndex(name string) (int, error) {
 // This is used for generating and verifying Merkle proofs.
 // Returns an error if the field doesn't exist or the state is empty.
 func (v *VersionedBeaconState) FieldGeneralizedIndex(name string) (int, error) {
-	state, err := v.stateObject()
-	if err != nil {
-		return 0, err
-	}
+	switch v.Version {
+	case DataVersionPhase0:
+		if v.Phase0 == nil {
+			return 0, errors.New("no Phase0 state")
+		}
+		return proofutil.FieldGeneralizedIndex(v.Phase0, name)
+	case DataVersionAltair:
+		if v.Altair == nil {
+			return 0, errors.New("no Altair state")
+		}
 
-	return proofutil.FieldGeneralizedIndex(state, name)
+		return proofutil.FieldGeneralizedIndex(v.Altair, name)
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return 0, errors.New("no Bellatrix state")
+		}
+
+		return proofutil.FieldGeneralizedIndex(v.Bellatrix, name)
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no Capella state")
+		}
+
+		return proofutil.FieldGeneralizedIndex(v.Capella, name)
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return 0, errors.New("no Deneb state")
+		}
+
+		return proofutil.FieldGeneralizedIndex(v.Deneb, name)
+	case DataVersionElectra:
+		if v.Electra == nil {
+			return 0, errors.New("no Electra state")
+		}
+
+		return proofutil.FieldGeneralizedIndex(v.Electra, name)
+	default:
+		return 0, errors.New("unknown version")
+	}
 }
 
 // FieldRoot returns the SSZ hash root of a specific field in the beacon state.
@@ -502,27 +573,19 @@ func (v *VersionedBeaconState) FieldGeneralizedIndex(name string) (int, error) {
 //   - phase0.Hash32: The SSZ hash root of the field
 //   - error: If the field doesn't exist, the state is empty, or the field is not hash tree rootable
 func (v *VersionedBeaconState) FieldRoot(name string) (phase0.Hash32, error) {
-	stateTree, err := v.Tree()
+	fieldTree, err := v.FieldTree(name)
 	if err != nil {
 		return phase0.Hash32{}, err
 	}
+	var root phase0.Hash32
+	copy(root[:], fieldTree.Hash())
 
-	fieldGeneralizedIndex, err := v.FieldGeneralizedIndex(name)
-	if err != nil {
-		return phase0.Hash32{}, err
-	}
-
-	fieldTree, err := stateTree.Subtree(fieldGeneralizedIndex)
-	if err != nil {
-		return phase0.Hash32{}, err
-	}
-
-	return fieldTree.Root()
+	return root, nil
 }
 
 // FieldTree returns the Merkle subtree for a specific field in the beacon state.
-func (v *VersionedBeaconState) FieldTree(name string) (*Tree, error) {
-	stateTree, err := v.Tree()
+func (v *VersionedBeaconState) FieldTree(name string) (*ssz.Node, error) {
+	stateTree, err := v.GetTree()
 	if err != nil {
 		return nil, err
 	}
@@ -532,7 +595,7 @@ func (v *VersionedBeaconState) FieldTree(name string) (*Tree, error) {
 		return nil, err
 	}
 
-	return stateTree.Subtree(fieldGeneralizedIndex)
+	return stateTree.Get(fieldGeneralizedIndex)
 }
 
 // ProveField generates a Merkle proof for a specific field against the beacon state root.
@@ -543,7 +606,7 @@ func (v *VersionedBeaconState) FieldTree(name string) (*Tree, error) {
 //   - []phase0.Hash32: The Merkle proof as a sequence of 32-byte hashes
 //   - error: If the field doesn't exist or there's an error generating the proof
 func (v *VersionedBeaconState) ProveField(name string) ([]phase0.Hash32, error) {
-	stateTree, err := v.Tree()
+	stateTree, err := v.GetTree()
 	if err != nil {
 		return nil, err
 	}
@@ -553,7 +616,17 @@ func (v *VersionedBeaconState) ProveField(name string) ([]phase0.Hash32, error) 
 		return nil, err
 	}
 
-	return stateTree.Prove(fieldGeneralizedIndex)
+	proof, err := stateTree.Prove(fieldGeneralizedIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	proofBytes := make([]phase0.Hash32, len(proof.Hashes))
+	for i, hash := range proof.Hashes {
+		copy(proofBytes[i][:], hash)
+	}
+
+	return proofBytes, nil
 }
 
 // VerifyFieldProof verifies a Merkle proof for a field against the beacon state root.
