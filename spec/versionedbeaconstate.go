@@ -202,7 +202,7 @@ func (v *VersionedBeaconState) ValidatorBalances() ([]phase0.Gwei, error) {
 	}
 }
 
-// DepositReceiptsStartIndex returns the deposit requests start index of the state.
+// DepositRequestsStartIndex returns the deposit requests start index of the state.
 func (v *VersionedBeaconState) DepositRequestsStartIndex() (uint64, error) {
 	switch v.Version {
 	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella, DataVersionDeneb:
