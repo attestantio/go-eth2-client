@@ -55,6 +55,8 @@ func (s *Service) SubmitBlindedProposal(ctx context.Context,
 		specJSON, err = json.Marshal(opts.Proposal.Deneb)
 	case spec.DataVersionElectra:
 		specJSON, err = json.Marshal(opts.Proposal.Electra)
+	case spec.DataVersionFulu:
+		specJSON, err = json.Marshal(opts.Proposal.Fulu)
 	default:
 		err = errors.New("unknown proposal version")
 	}

@@ -86,7 +86,7 @@ func TestSyncCommitteeRewards(t *testing.T) {
 				if test.expectedResponse != "" {
 					responseJSON, err := json.Marshal(response.Data)
 					require.NoError(t, err)
-					require.Equal(t, test.expectedResponse, string(responseJSON))
+					require.JSONEq(t, test.expectedResponse, string(responseJSON))
 				}
 			}
 		})

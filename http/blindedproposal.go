@@ -146,6 +146,11 @@ func (*Service) blindedProposalFromSSZ(res *httpResponse) (*api.Response[*api.Ve
 		if err := response.Data.Electra.UnmarshalSSZ(res.body); err != nil {
 			return nil, errors.Join(errors.New("failed to decode electra blinded beacon block proposal"), err)
 		}
+	case spec.DataVersionFulu:
+		response.Data.Fulu = &apiv1electra.BlindedBeaconBlock{}
+		if err := response.Data.Fulu.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Join(errors.New("failed to decode fulu blinded beacon block proposal"), err)
+		}
 	default:
 		return nil, fmt.Errorf("unhandled block proposal version %s", res.consensusVersion)
 	}
@@ -179,6 +184,11 @@ func (*Service) blindedProposalFromJSON(res *httpResponse) (*api.Response[*api.V
 		)
 	case spec.DataVersionElectra:
 		response.Data.Electra, response.Metadata, err = decodeJSONResponse(
+			bytes.NewReader(res.body),
+			&apiv1electra.BlindedBeaconBlock{},
+		)
+	case spec.DataVersionFulu:
+		response.Data.Fulu, response.Metadata, err = decodeJSONResponse(
 			bytes.NewReader(res.body),
 			&apiv1electra.BlindedBeaconBlock{},
 		)

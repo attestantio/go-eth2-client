@@ -30,6 +30,7 @@ type VersionedBlindedBeaconBlock struct {
 	Capella   *apiv1capella.BlindedBeaconBlock
 	Deneb     *apiv1deneb.BlindedBeaconBlock
 	Electra   *apiv1electra.BlindedBeaconBlock
+	Fulu      *apiv1electra.BlindedBeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
@@ -64,6 +65,12 @@ func (v *VersionedBlindedBeaconBlock) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Electra.Slot, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Fulu.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -96,6 +103,12 @@ func (v *VersionedBlindedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, er
 		}
 
 		return v.Electra.ProposerIndex, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Fulu.ProposerIndex, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -132,6 +145,13 @@ func (v *VersionedBlindedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error
 		}
 
 		return v.Electra.Body.RANDAOReveal, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Body == nil {
+			return phase0.BLSSignature{}, ErrDataMissing
+		}
+
+		return v.Fulu.Body.RANDAOReveal, nil
 	default:
 		return phase0.BLSSignature{}, ErrUnsupportedVersion
 	}
@@ -168,6 +188,13 @@ func (v *VersionedBlindedBeaconBlock) Graffiti() ([32]byte, error) {
 		}
 
 		return v.Electra.Body.Graffiti, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Body == nil {
+			return [32]byte{}, ErrDataMissing
+		}
+
+		return v.Fulu.Body.Graffiti, nil
 	default:
 		return [32]byte{}, ErrUnsupportedVersion
 	}
@@ -232,6 +259,20 @@ func (v *VersionedBlindedBeaconBlock) Attestations() ([]spec.VersionedAttestatio
 		}
 
 		return versionedAttestations, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		versionedAttestations := make([]spec.VersionedAttestation, len(v.Fulu.Body.Attestations))
+		for i, attestation := range v.Fulu.Body.Attestations {
+			versionedAttestations[i] = spec.VersionedAttestation{
+				Version: spec.DataVersionFulu,
+				Fulu:    attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -264,6 +305,12 @@ func (v *VersionedBlindedBeaconBlock) Root() (phase0.Root, error) {
 		}
 
 		return v.Electra.HashTreeRoot()
+	case spec.DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -296,6 +343,12 @@ func (v *VersionedBlindedBeaconBlock) BodyRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Body.HashTreeRoot()
+	case spec.DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -328,6 +381,12 @@ func (v *VersionedBlindedBeaconBlock) ParentRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.ParentRoot, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.ParentRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -360,6 +419,12 @@ func (v *VersionedBlindedBeaconBlock) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.StateRoot, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.StateRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -400,6 +465,14 @@ func (v *VersionedBlindedBeaconBlock) TransactionsRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Body.ExecutionPayloadHeader.TransactionsRoot, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Body == nil ||
+			v.Fulu.Body.ExecutionPayloadHeader == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.Body.ExecutionPayloadHeader.TransactionsRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -440,6 +513,14 @@ func (v *VersionedBlindedBeaconBlock) FeeRecipient() (bellatrix.ExecutionAddress
 		}
 
 		return v.Electra.Body.ExecutionPayloadHeader.FeeRecipient, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Body == nil ||
+			v.Fulu.Body.ExecutionPayloadHeader == nil {
+			return bellatrix.ExecutionAddress{}, ErrDataMissing
+		}
+
+		return v.Fulu.Body.ExecutionPayloadHeader.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, ErrUnsupportedVersion
 	}
@@ -480,6 +561,14 @@ func (v *VersionedBlindedBeaconBlock) Timestamp() (uint64, error) {
 		}
 
 		return v.Electra.Body.ExecutionPayloadHeader.Timestamp, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Body == nil ||
+			v.Fulu.Body.ExecutionPayloadHeader == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Fulu.Body.ExecutionPayloadHeader.Timestamp, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -512,6 +601,12 @@ func (v *VersionedBlindedBeaconBlock) String() string {
 		}
 
 		return v.Electra.String()
+	case spec.DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	default:
 		return "unknown version"
 	}

@@ -29,11 +29,11 @@ type BeaconBlockBody struct {
 	RANDAOReveal      BLSSignature `ssz-size:"96"`
 	ETH1Data          *ETH1Data
 	Graffiti          [32]byte               `ssz-size:"32"`
-	ProposerSlashings []*ProposerSlashing    `ssz-max:"16"`
-	AttesterSlashings []*AttesterSlashing    `ssz-max:"2"`
-	Attestations      []*Attestation         `ssz-max:"128"`
-	Deposits          []*Deposit             `ssz-max:"16"`
-	VoluntaryExits    []*SignedVoluntaryExit `ssz-max:"16"`
+	ProposerSlashings []*ProposerSlashing    `dynssz-max:"MAX_PROPOSER_SLASHINGS" ssz-max:"16"`
+	AttesterSlashings []*AttesterSlashing    `dynssz-max:"MAX_ATTESTER_SLASHINGS" ssz-max:"2"`
+	Attestations      []*Attestation         `dynssz-max:"MAX_ATTESTATIONS"       ssz-max:"128"`
+	Deposits          []*Deposit             `dynssz-max:"MAX_DEPOSITS"           ssz-max:"16"`
+	VoluntaryExits    []*SignedVoluntaryExit `dynssz-max:"MAX_VOLUNTARY_EXITS"    ssz-max:"16"`
 }
 
 // beaconBlockBodyJSON is the spec representation of the struct.
