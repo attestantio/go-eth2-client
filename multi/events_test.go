@@ -18,6 +18,7 @@ import (
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
 	"github.com/attestantio/go-eth2-client/testclients"
@@ -49,5 +50,7 @@ func TestEvents(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	require.NoError(t, multiClient.(consensusclient.EventsProvider).Events(ctx, []string{}, nil))
+	require.NoError(t, multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{
+		Topics: []string{"block"},
+	}))
 }

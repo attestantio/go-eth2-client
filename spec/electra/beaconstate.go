@@ -25,6 +25,8 @@ import (
 )
 
 // BeaconState represents a beacon state.
+//
+//nolint:revive
 type BeaconState struct {
 	GenesisTime                   uint64
 	GenesisValidatorsRoot         phase0.Root `ssz-size:"32"`
@@ -33,36 +35,36 @@ type BeaconState struct {
 	LatestBlockHeader             *phase0.BeaconBlockHeader
 	BlockRoots                    []phase0.Root `dynssz-size:"SLOTS_PER_HISTORICAL_ROOT,32" ssz-size:"8192,32"`
 	StateRoots                    []phase0.Root `dynssz-size:"SLOTS_PER_HISTORICAL_ROOT,32" ssz-size:"8192,32"`
-	HistoricalRoots               []phase0.Root `ssz-max:"16777216"                         ssz-size:"?,32"`
+	HistoricalRoots               []phase0.Root `dynssz-max:"HISTORICAL_ROOTS_LIMIT"        ssz-max:"16777216" ssz-size:"?,32"`
 	ETH1Data                      *phase0.ETH1Data
-	ETH1DataVotes                 []*phase0.ETH1Data `ssz-max:"2048"`
+	ETH1DataVotes                 []*phase0.ETH1Data `dynssz-max:"EPOCHS_PER_ETH1_VOTING_PERIOD*SLOTS_PER_EPOCH" ssz-max:"2048"`
 	ETH1DepositIndex              uint64
-	Validators                    []*phase0.Validator         `ssz-max:"1099511627776"`
-	Balances                      []phase0.Gwei               `ssz-max:"1099511627776"`
+	Validators                    []*phase0.Validator         `dynssz-max:"VALIDATOR_REGISTRY_LIMIT"         ssz-max:"1099511627776"`
+	Balances                      []phase0.Gwei               `dynssz-max:"VALIDATOR_REGISTRY_LIMIT"         ssz-max:"1099511627776"`
 	RANDAOMixes                   []phase0.Root               `dynssz-size:"EPOCHS_PER_HISTORICAL_VECTOR,32" ssz-size:"65536,32"`
 	Slashings                     []phase0.Gwei               `dynssz-size:"EPOCHS_PER_SLASHINGS_VECTOR"     ssz-size:"8192"`
-	PreviousEpochParticipation    []altair.ParticipationFlags `ssz-max:"1099511627776"`
-	CurrentEpochParticipation     []altair.ParticipationFlags `ssz-max:"1099511627776"`
+	PreviousEpochParticipation    []altair.ParticipationFlags `dynssz-max:"VALIDATOR_REGISTRY_LIMIT"         ssz-max:"1099511627776"`
+	CurrentEpochParticipation     []altair.ParticipationFlags `dynssz-max:"VALIDATOR_REGISTRY_LIMIT"         ssz-max:"1099511627776"`
 	JustificationBits             bitfield.Bitvector4         `ssz-size:"1"`
 	PreviousJustifiedCheckpoint   *phase0.Checkpoint
 	CurrentJustifiedCheckpoint    *phase0.Checkpoint
 	FinalizedCheckpoint           *phase0.Checkpoint
-	InactivityScores              []uint64 `ssz-max:"1099511627776"`
+	InactivityScores              []uint64 `dynssz-max:"VALIDATOR_REGISTRY_LIMIT" ssz-max:"1099511627776"`
 	CurrentSyncCommittee          *altair.SyncCommittee
 	NextSyncCommittee             *altair.SyncCommittee
 	LatestExecutionPayloadHeader  *deneb.ExecutionPayloadHeader
 	NextWithdrawalIndex           capella.WithdrawalIndex
 	NextWithdrawalValidatorIndex  phase0.ValidatorIndex
-	HistoricalSummaries           []*capella.HistoricalSummary `ssz-max:"16777216"`
+	HistoricalSummaries           []*capella.HistoricalSummary `dynssz-max:"HISTORICAL_ROOTS_LIMIT" ssz-max:"16777216"`
 	DepositRequestsStartIndex     uint64
 	DepositBalanceToConsume       phase0.Gwei
 	ExitBalanceToConsume          phase0.Gwei
 	EarliestExitEpoch             phase0.Epoch
 	ConsolidationBalanceToConsume phase0.Gwei
 	EarliestConsolidationEpoch    phase0.Epoch
-	PendingDeposits               []*PendingDeposit           `ssz-max:"134217728"`
-	PendingPartialWithdrawals     []*PendingPartialWithdrawal `ssz-max:"134217728"`
-	PendingConsolidations         []*PendingConsolidation     `ssz-max:"262144"`
+	PendingDeposits               []*PendingDeposit           `dynssz-max:"PENDING_DEPOSITS_LIMIT"            ssz-max:"134217728"`
+	PendingPartialWithdrawals     []*PendingPartialWithdrawal `dynssz-max:"PENDING_PARTIAL_WITHDRAWALS_LIMIT" ssz-max:"134217728"`
+	PendingConsolidations         []*PendingConsolidation     `dynssz-max:"PENDING_CONSOLIDATIONS_LIMIT"      ssz-max:"262144"`
 }
 
 // String returns a string version of the structure.

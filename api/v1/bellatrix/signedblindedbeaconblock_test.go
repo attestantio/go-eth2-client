@@ -126,7 +126,7 @@ func TestSignedBlindedBeaconBlockYAML(t *testing.T) {
 				require.NoError(t, err)
 				assert.Equal(t, res.String(), string(rt))
 				rt = bytes.TrimSuffix(rt, []byte("\n"))
-				assert.Equal(t, string(test.input), string(rt))
+				assert.YAMLEq(t, string(test.input), string(rt))
 			}
 		})
 	}

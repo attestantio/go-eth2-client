@@ -24,19 +24,21 @@ import (
 )
 
 // BeaconBlockBody represents the body of a beacon block.
+//
+//nolint:revive
 type BeaconBlockBody struct {
 	RANDAOReveal          phase0.BLSSignature `ssz-size:"96"`
 	ETH1Data              *phase0.ETH1Data
 	Graffiti              [32]byte                      `ssz-size:"32"`
-	ProposerSlashings     []*phase0.ProposerSlashing    `ssz-max:"16"`
-	AttesterSlashings     []*AttesterSlashing           `ssz-max:"1"`
-	Attestations          []*Attestation                `ssz-max:"8"`
-	Deposits              []*phase0.Deposit             `ssz-max:"16"`
-	VoluntaryExits        []*phase0.SignedVoluntaryExit `ssz-max:"16"`
+	ProposerSlashings     []*phase0.ProposerSlashing    `dynssz-max:"MAX_PROPOSER_SLASHINGS"         ssz-max:"16"`
+	AttesterSlashings     []*AttesterSlashing           `dynssz-max:"MAX_ATTESTER_SLASHINGS_ELECTRA" ssz-max:"1"`
+	Attestations          []*Attestation                `dynssz-max:"MAX_ATTESTATIONS_ELECTRA"       ssz-max:"8"`
+	Deposits              []*phase0.Deposit             `dynssz-max:"MAX_DEPOSITS"                   ssz-max:"16"`
+	VoluntaryExits        []*phase0.SignedVoluntaryExit `dynssz-max:"MAX_VOLUNTARY_EXITS"            ssz-max:"16"`
 	SyncAggregate         *altair.SyncAggregate
 	ExecutionPayload      *deneb.ExecutionPayload
-	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `ssz-max:"16"`
-	BlobKZGCommitments    []deneb.KZGCommitment                 `ssz-max:"4096" ssz-size:"?,48"`
+	BLSToExecutionChanges []*capella.SignedBLSToExecutionChange `dynssz-max:"MAX_BLS_TO_EXECUTION_CHANGES"   ssz-max:"16"`
+	BlobKZGCommitments    []deneb.KZGCommitment                 `dynssz-max:"MAX_BLOB_COMMITMENTS_PER_BLOCK" ssz-max:"4096" ssz-size:"?,48"`
 	ExecutionRequests     *ExecutionRequests
 }
 
