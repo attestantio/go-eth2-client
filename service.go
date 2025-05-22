@@ -24,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/eip7732"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -149,9 +150,6 @@ type SyncCommitteesProvider interface {
 	)
 }
 
-// EventHandlerFunc is the handler for events.
-type EventHandlerFunc func(*apiv1.Event)
-
 //
 // Standard API
 //
@@ -190,7 +188,7 @@ type AttestationPoolProvider interface {
 	AttestationPool(ctx context.Context,
 		opts *api.AttestationPoolOpts,
 	) (
-		*api.Response[[]*phase0.Attestation],
+		*api.Response[[]*spec.VersionedAttestation],
 		error,
 	)
 }
@@ -426,7 +424,7 @@ type ValidatorRegistrationsSubmitter interface {
 // EventsProvider is the interface for providing events.
 type EventsProvider interface {
 	// Events feeds requested events with the given topics to the supplied handler.
-	Events(ctx context.Context, topics []string, handler EventHandlerFunc) error
+	Events(ctx context.Context, opts *api.EventsOpts) error
 }
 
 // FinalityProvider is the interface for providing finality information.
@@ -502,6 +500,17 @@ type NodeSyncingProvider interface {
 		opts *api.NodeSyncingOpts,
 	) (
 		*api.Response[*apiv1.SyncState],
+		error,
+	)
+}
+
+// ValidatorLivenessProvider is the interface for providing validator liveness data.
+type ValidatorLivenessProvider interface {
+	// ValidatorLiveness provides the liveness data to the given validators.
+	ValidatorLiveness(ctx context.Context,
+		opts *api.ValidatorLivenessOpts,
+	) (
+		*api.Response[[]*apiv1.ValidatorLiveness],
 		error,
 	)
 }
@@ -600,6 +609,17 @@ type ExecutionPayloadProvider interface {
 		opts *api.SignedExecutionPayloadEnvelopeOpts,
 	) (
 		*api.Response[*eip7732.SignedExecutionPayloadEnvelope],
+		error,
+	)
+}
+
+// PendingDepositProvider is the interface for providing pending deposit information.
+type PendingDepositProvider interface {
+	// PendingDeposits provides the pending deposits for a given state.
+	PendingDeposits(ctx context.Context,
+		opts *api.PendingDepositsOpts,
+	) (
+		*api.Response[[]*electra.PendingDeposit],
 		error,
 	)
 }

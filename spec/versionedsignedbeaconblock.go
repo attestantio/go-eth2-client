@@ -170,7 +170,7 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error)
 			v.Electra.Message == nil ||
 			v.Electra.Message.Body == nil ||
 			v.Electra.Message.Body.ExecutionPayload == nil {
-			return phase0.Hash32{}, errors.New("no deneb block")
+			return phase0.Hash32{}, errors.New("no electra block")
 		}
 
 		return v.Electra.Message.Body.ExecutionPayload.BlockHash, nil

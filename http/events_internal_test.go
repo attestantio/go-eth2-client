@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/r3labs/sse/v2"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
@@ -35,14 +35,14 @@ func TestEventHandler(t *testing.T) {
 	defer cancel()
 
 	handled := false
-	handler := func(*api.Event) {
+	handler := func(*apiv1.Event) {
 		handled = true
 	}
 
 	tests := []struct {
 		name    string
 		message *sse.Event
-		handler client.EventHandlerFunc
+		handler api.EventHandlerFunc
 		handled bool
 	}{
 		{
@@ -177,7 +177,9 @@ func TestEventHandler(t *testing.T) {
 			handled = false
 			log := zerolog.New(&bytes.Buffer{})
 			ctx = log.WithContext(ctx)
-			h.handleEvent(ctx, test.message, test.handler)
+			h.handleEvent(ctx, test.message, &api.EventsOpts{
+				Handler: test.handler,
+			})
 			require.Equal(t, test.handled, handled)
 		})
 	}

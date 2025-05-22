@@ -17,6 +17,7 @@ import (
 	"context"
 
 	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -24,20 +25,23 @@ import (
 func (*Service) AttestationPool(_ context.Context,
 	_ *api.AttestationPoolOpts,
 ) (
-	*api.Response[[]*phase0.Attestation],
+	*api.Response[[]*spec.VersionedAttestation],
 	error,
 ) {
-	data := make([]*phase0.Attestation, 5)
+	data := make([]*spec.VersionedAttestation, 5)
 	for i := 0; i < 5; i++ {
-		data[i] = &phase0.Attestation{
-			Data: &phase0.AttestationData{
-				Source: &phase0.Checkpoint{},
-				Target: &phase0.Checkpoint{},
+		data[i] = &spec.VersionedAttestation{
+			Version: spec.DataVersionPhase0,
+			Phase0: &phase0.Attestation{
+				Data: &phase0.AttestationData{
+					Source: &phase0.Checkpoint{},
+					Target: &phase0.Checkpoint{},
+				},
 			},
 		}
 	}
 
-	return &api.Response[[]*phase0.Attestation]{
+	return &api.Response[[]*spec.VersionedAttestation]{
 		Data:     data,
 		Metadata: make(map[string]any),
 	}, nil

@@ -23,6 +23,7 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
@@ -51,7 +52,7 @@ func TestAttestationPool(t *testing.T) {
 	tests := []struct {
 		name     string
 		opts     *api.AttestationPoolOpts
-		expected []*phase0.Attestation
+		expected []*spec.VersionedAttestation
 		err      string
 		errCode  int
 	}{
@@ -64,7 +65,7 @@ func TestAttestationPool(t *testing.T) {
 			opts: &api.AttestationPoolOpts{
 				Slot: slotptr(1),
 			},
-			expected: make([]*phase0.Attestation, 0),
+			expected: make([]*spec.VersionedAttestation, 0),
 		},
 		{
 			name: "Current",
