@@ -21,7 +21,8 @@ import (
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
 )
@@ -51,10 +52,13 @@ func TestEvents(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 			eventsMu := sync.Mutex{}
 			events := 0
-			err := service.(client.EventsProvider).Events(ctx, test.topics, func(event *api.Event) {
-				eventsMu.Lock()
-				events++
-				eventsMu.Unlock()
+			err := service.(client.EventsProvider).Events(ctx, &api.EventsOpts{
+				Topics: test.topics,
+				Handler: func(*apiv1.Event) {
+					eventsMu.Lock()
+					events++
+					eventsMu.Unlock()
+				},
 			})
 			require.NoError(t, err)
 			time.Sleep(30 * time.Second)

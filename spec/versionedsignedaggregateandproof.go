@@ -29,6 +29,7 @@ type VersionedSignedAggregateAndProof struct {
 	Capella   *phase0.SignedAggregateAndProof
 	Deneb     *phase0.SignedAggregateAndProof
 	Electra   *electra.SignedAggregateAndProof
+	Fulu      *electra.SignedAggregateAndProof
 	Eip7805   *electra.SignedAggregateAndProof
 }
 
@@ -71,6 +72,12 @@ func (v *VersionedSignedAggregateAndProof) AggregatorIndex() (phase0.ValidatorIn
 		}
 
 		return v.Electra.Message.AggregatorIndex, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no fulu signed aggregate and proof")
+		}
+
+		return v.Fulu.Message.AggregatorIndex, nil
 	case DataVersionEip7805:
 		if v.Eip7805 == nil {
 			return 0, errors.New("no eip7805 signed aggregate and proof")
@@ -84,7 +91,8 @@ func (v *VersionedSignedAggregateAndProof) AggregatorIndex() (phase0.ValidatorIn
 
 // IsEmpty returns true if there is no aggregate and proof.
 func (v *VersionedSignedAggregateAndProof) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Eip7805 == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
+		v.Electra == nil && v.Fulu == nil && v.Eip7805 == nil
 }
 
 // SelectionProof returns the selection proof of the signed aggregate.
@@ -126,6 +134,12 @@ func (v *VersionedSignedAggregateAndProof) SelectionProof() (phase0.BLSSignature
 		}
 
 		return v.Electra.Message.SelectionProof, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.BLSSignature{}, errors.New("no fulu signed aggregate and proof")
+		}
+
+		return v.Fulu.Message.SelectionProof, nil
 	case DataVersionEip7805:
 		if v.Eip7805 == nil {
 			return phase0.BLSSignature{}, errors.New("no eip7805 signed aggregate and proof")
@@ -176,6 +190,12 @@ func (v *VersionedSignedAggregateAndProof) Signature() (phase0.BLSSignature, err
 		}
 
 		return v.Electra.Signature, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.BLSSignature{}, errors.New("no fulu signed aggregate and proof")
+		}
+
+		return v.Fulu.Signature, nil
 	case DataVersionEip7805:
 		if v.Eip7805 == nil {
 			return phase0.BLSSignature{}, errors.New("no eip7805 signed aggregate and proof")
@@ -226,6 +246,12 @@ func (v *VersionedSignedAggregateAndProof) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Electra.Message.Aggregate.Data.Slot, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no fulu signed aggregate and proof")
+		}
+
+		return v.Fulu.Message.Aggregate.Data.Slot, nil
 	case DataVersionEip7805:
 		if v.Eip7805 == nil {
 			return 0, errors.New("no eip7805 signed aggregate and proof")
@@ -276,6 +302,12 @@ func (v *VersionedSignedAggregateAndProof) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	case DataVersionEip7805:
 		if v.Eip7805 == nil {
 			return ""

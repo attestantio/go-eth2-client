@@ -156,6 +156,16 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode electra signed block contents"), err)
 		}
+	case spec.DataVersionFulu:
+		response.Data.Fulu = &electra.SignedBeaconBlock{}
+		if s.customSpecSupport {
+			err = dynSSZ.UnmarshalSSZ(response.Data.Fulu, res.body)
+		} else {
+			err = response.Data.Fulu.UnmarshalSSZ(res.body)
+		}
+		if err != nil {
+			return nil, errors.Join(errors.New("failed to decode fulu signed block contents"), err)
+		}
 	case spec.DataVersionEip7805:
 		response.Data.Eip7805 = &electra.SignedBeaconBlock{}
 		if s.customSpecSupport {
@@ -204,6 +214,10 @@ func (*Service) signedBeaconBlockFromJSON(res *httpResponse) (*api.Response[*spe
 		)
 	case spec.DataVersionElectra:
 		response.Data.Electra, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
+			&electra.SignedBeaconBlock{},
+		)
+	case spec.DataVersionFulu:
+		response.Data.Fulu, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
 			&electra.SignedBeaconBlock{},
 		)
 	case spec.DataVersionEip7805:

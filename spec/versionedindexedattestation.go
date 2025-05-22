@@ -29,6 +29,7 @@ type VersionedIndexedAttestation struct {
 	Capella   *phase0.IndexedAttestation
 	Deneb     *phase0.IndexedAttestation
 	Electra   *electra.IndexedAttestation
+	Fulu      *electra.IndexedAttestation
 	Eip7805   *electra.IndexedAttestation
 }
 
@@ -76,6 +77,12 @@ func (v *VersionedIndexedAttestation) AttestingIndices() ([]uint64, error) {
 		}
 
 		return v.Electra.AttestingIndices, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu indexed attestation")
+		}
+
+		return v.Fulu.AttestingIndices, nil
 	case DataVersionEip7805:
 		if v.Eip7805 == nil {
 			return nil, errors.New("no EIP7805 indexed attestation")
@@ -126,6 +133,12 @@ func (v *VersionedIndexedAttestation) Data() (*phase0.AttestationData, error) {
 		}
 
 		return v.Electra.Data, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu indexed attestation")
+		}
+
+		return v.Fulu.Data, nil
 	case DataVersionEip7805:
 		if v.Eip7805 == nil {
 			return nil, errors.New("no EIP7805 indexed attestation")
@@ -176,6 +189,12 @@ func (v *VersionedIndexedAttestation) Signature() (phase0.BLSSignature, error) {
 		}
 
 		return v.Electra.Signature, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.BLSSignature{}, errors.New("no Fulu indexed attestation")
+		}
+
+		return v.Fulu.Signature, nil
 	case DataVersionEip7805:
 		if v.Eip7805 == nil {
 			return phase0.BLSSignature{}, errors.New("no EIP7805 indexed attestation")
@@ -226,6 +245,12 @@ func (v *VersionedIndexedAttestation) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	case DataVersionEip7805:
 		if v.Eip7805 == nil {
 			return ""
