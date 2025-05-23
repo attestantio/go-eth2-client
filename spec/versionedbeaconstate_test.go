@@ -75,17 +75,16 @@ func TestStateTree(t *testing.T) {
 		t.Skip("holesky_beaconstate_2595934.ssz not available")
 	}
 
-	tree, err := state.Tree()
+	tree, err := state.GetTree()
 	require.NoError(t, err)
 	require.NotNil(t, tree)
 
-	root, err := tree.Root()
-	require.NoError(t, err)
+	root := tree.Hash()
 	require.Equal(t, "0x738b800105bb612abc36ea4040312ecf17bc5bd25404529701d0886074820572", fmt.Sprintf("%#x", root))
 
 	hashTreeRoot, err := state.HashTreeRoot()
 	require.NoError(t, err)
-	require.Equal(t, root, hashTreeRoot)
+	require.Equal(t, root[:], hashTreeRoot[:])
 }
 
 func TestFieldIndex(t *testing.T) {

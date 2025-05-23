@@ -395,6 +395,7 @@ func (v *VersionedBeaconState) GetTree() (*ssz.Node, error) {
 		if v.Phase0 == nil {
 			return nil, errors.New("no Phase0 state")
 		}
+
 		return v.Phase0.GetTree()
 	case DataVersionAltair:
 		if v.Altair == nil {
@@ -438,6 +439,7 @@ func (v *VersionedBeaconState) HashTreeRoot() (phase0.Hash32, error) {
 		if v.Phase0 == nil {
 			return phase0.Hash32{}, errors.New("no Phase0 state")
 		}
+
 		return v.Phase0.HashTreeRoot()
 	case DataVersionAltair:
 		if v.Altair == nil {
@@ -483,6 +485,7 @@ func (v *VersionedBeaconState) FieldIndex(name string) (int, error) {
 		if v.Phase0 == nil {
 			return 0, errors.New("no Phase0 state")
 		}
+
 		return proofutil.FieldIndex(v.Phase0, name)
 	case DataVersionAltair:
 		if v.Altair == nil {
@@ -529,6 +532,7 @@ func (v *VersionedBeaconState) FieldGeneralizedIndex(name string) (int, error) {
 		if v.Phase0 == nil {
 			return 0, errors.New("no Phase0 state")
 		}
+
 		return proofutil.FieldGeneralizedIndex(v.Phase0, name)
 	case DataVersionAltair:
 		if v.Altair == nil {
