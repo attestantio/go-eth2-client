@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -72,9 +73,46 @@ func (s *Service) Spec(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
+	config := parseSpecTypes(data)
 
+	// The application mask domain type is not provided by all nodes, so add it here if not present.
+	if _, exists := config["DOMAIN_APPLICATION_MASK"]; !exists {
+		config["DOMAIN_APPLICATION_MASK"] = phase0.DomainType{0x00, 0x00, 0x00, 0x01}
+	}
+	// The BLS to execution change domain type is not provided by all nodes, so add it here if not present.
+	if _, exists := config["DOMAIN_BLS_TO_EXECUTION_CHANGE"]; !exists {
+		config["DOMAIN_BLS_TO_EXECUTION_CHANGE"] = phase0.DomainType{0x0a, 0x00, 0x00, 0x00}
+	}
+	// The builder application domain type is not officially part of the spec, so add it here if not present.
+	if _, exists := config["DOMAIN_APPLICATION_BUILDER"]; !exists {
+		config["DOMAIN_APPLICATION_BUILDER"] = phase0.DomainType{0x00, 0x00, 0x00, 0x01}
+	}
+
+	s.spec = config
+
+	return &api.Response[map[string]any]{
+		Data:     s.spec,
+		Metadata: metadata,
+	}, nil
+}
+
+func parseSpecTypes(data map[string]string) map[string]any {
 	config := make(map[string]any)
 	for k, v := range data {
+		if k == "BLOB_SCHEDULE" {
+			tmpBlobSchedule := make([]map[string]string, 0)
+			err := json.Unmarshal([]byte(v), &tmpBlobSchedule)
+			if err == nil {
+				blobSchedule := make([]map[string]any, len(tmpBlobSchedule))
+				for i, blob := range tmpBlobSchedule {
+					blobSchedule[i] = parseSpecTypes(blob)
+				}
+				config[k] = blobSchedule
+			}
+
+			continue
+		}
+
 		// Handle domains.
 		if strings.HasPrefix(k, "DOMAIN_") {
 			byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
@@ -145,24 +183,5 @@ func (s *Service) Spec(ctx context.Context,
 		// Assume string.
 		config[k] = v
 	}
-
-	// The application mask domain type is not provided by all nodes, so add it here if not present.
-	if _, exists := config["DOMAIN_APPLICATION_MASK"]; !exists {
-		config["DOMAIN_APPLICATION_MASK"] = phase0.DomainType{0x00, 0x00, 0x00, 0x01}
-	}
-	// The BLS to execution change domain type is not provided by all nodes, so add it here if not present.
-	if _, exists := config["DOMAIN_BLS_TO_EXECUTION_CHANGE"]; !exists {
-		config["DOMAIN_BLS_TO_EXECUTION_CHANGE"] = phase0.DomainType{0x0a, 0x00, 0x00, 0x00}
-	}
-	// The builder application domain type is not officially part of the spec, so add it here if not present.
-	if _, exists := config["DOMAIN_APPLICATION_BUILDER"]; !exists {
-		config["DOMAIN_APPLICATION_BUILDER"] = phase0.DomainType{0x00, 0x00, 0x00, 0x01}
-	}
-
-	s.spec = config
-
-	return &api.Response[map[string]any]{
-		Data:     s.spec,
-		Metadata: metadata,
-	}, nil
+	return config
 }
