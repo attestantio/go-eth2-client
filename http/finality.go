@@ -48,6 +48,12 @@ func (s *Service) Finality(ctx context.Context,
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	return &api.Response[*apiv1.Finality]{
 		Metadata: metadata,
 		Data:     data,

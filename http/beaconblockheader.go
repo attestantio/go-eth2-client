@@ -49,6 +49,12 @@ func (s *Service) BeaconBlockHeader(ctx context.Context,
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	if !isBlockHeaderResponseValid(&data) {
 		return nil, errors.New("invalid beacon block header")
 	}

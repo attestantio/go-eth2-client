@@ -57,6 +57,12 @@ func (s *Service) SyncCommitteeContribution(ctx context.Context,
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	// Confirm the contribution is for the requested slot.
 	if data.Slot != opts.Slot {
 		return nil, errors.Join(

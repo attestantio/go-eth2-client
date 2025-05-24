@@ -69,6 +69,12 @@ func (s *Service) DepositContract(ctx context.Context,
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	s.depositContract = &data
 
 	return &api.Response[*apiv1.DepositContract]{

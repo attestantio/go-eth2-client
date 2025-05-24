@@ -74,6 +74,12 @@ func (*Service) attestationPoolFromJSON(_ context.Context,
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	if err := verifyAttestationPool(opts, data); err != nil {
 		return nil, err
 	}

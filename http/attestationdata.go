@@ -65,6 +65,12 @@ func (s *Service) attestationDataFromJSON(ctx context.Context,
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	if err := s.verifyAttestationData(ctx, opts, &data); err != nil {
 		return nil, err
 	}

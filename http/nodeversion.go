@@ -70,6 +70,12 @@ func (s *Service) NodeVersion(ctx context.Context,
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	s.nodeVersion = data.Version
 
 	return &api.Response[string]{

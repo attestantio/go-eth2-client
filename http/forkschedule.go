@@ -68,6 +68,13 @@ func (s *Service) ForkSchedule(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
+
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	s.forkSchedule = data
 
 	return &api.Response[[]*phase0.Fork]{
