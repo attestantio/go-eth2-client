@@ -1,12 +1,17 @@
+0.25.2:
+  - add multi/submitblindedproposal
+
 0.25.1:
-- add Merkle tree and proof generation against beacon state
-    - add Tree interface for state field proofs
-    - add convenience methods for field access and proofs:
-        - ValidatorByIndex
-        - ValidatorBalance
-        - FieldTree
-        - ProveField
-        - VerifyFieldProof
+  - add Merkle tree and proof generation utils
+  - add convenience methods on versioned beaconstate for field access and proofs:
+    - ValidatorAtIndex
+    - ValidatorBalance
+    - FieldIndex
+    - FieldGeneralizedIndex
+    - FieldRoot
+    - FieldTree
+    - ProveField
+    - VerifyFieldProof
 
 0.25.0:
   - update attestation pool endpoint to receive versioned attestations
