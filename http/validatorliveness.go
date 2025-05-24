@@ -68,6 +68,12 @@ func (s *Service) ValidatorLiveness(
 		return nil, errors.Join(errors.New("failed to decode validator liveness response"), err)
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	return &api.Response[[]*apiv1.ValidatorLiveness]{
 		Data:     data,
 		Metadata: metadata,

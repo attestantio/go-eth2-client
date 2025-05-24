@@ -59,6 +59,12 @@ func (s *Service) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(meta); err != nil {
+			return nil, err
+		}
+	}
+
 	return &api.Response[[]*apiv1.Peer]{
 		Data:     data,
 		Metadata: meta,

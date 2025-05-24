@@ -58,6 +58,12 @@ func (s *Service) PendingDeposits(ctx context.Context,
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	return &api.Response[[]*electra.PendingDeposit]{
 		Data:     data,
 		Metadata: metadata,

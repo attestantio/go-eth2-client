@@ -91,6 +91,12 @@ func (s *Service) Validators(ctx context.Context,
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	// Data is returned as an array but we want it as a map.
 	mapData := make(map[phase0.ValidatorIndex]*apiv1.Validator)
 	for _, validator := range data {

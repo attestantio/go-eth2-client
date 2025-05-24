@@ -20,4 +20,8 @@ type CommonOpts struct {
 	// Timeout is a specific timeout for this call.
 	// If 0 then the default timeout is used.
 	Timeout time.Duration
+
+	// ValidateMetadata is an optional callback
+	// to validate the metadata returned by an API call.
+	ValidateMetadata func(map[string]any) error
 }

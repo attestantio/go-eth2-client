@@ -73,6 +73,12 @@ func (s *Service) Spec(ctx context.Context,
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	config := make(map[string]any)
 	for k, v := range data {
 		// Handle domains.

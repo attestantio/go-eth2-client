@@ -51,6 +51,12 @@ func (s *Service) BeaconStateRandao(ctx context.Context, opts *api.BeaconStateRa
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	return &api.Response[*phase0.Root]{
 		Data:     &data.Randao,
 		Metadata: metadata,

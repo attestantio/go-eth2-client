@@ -56,6 +56,12 @@ func (s *Service) AggregateAttestation(ctx context.Context,
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	// Confirm the attestation is for the requested slot.
 	attestationData, err := data.Data()
 	if err != nil {

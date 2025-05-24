@@ -50,6 +50,12 @@ func (s *Service) ProposerDuties(ctx context.Context,
 		return nil, err
 	}
 
+	if opts.Common.ValidateMetadata != nil {
+		if err = opts.Common.ValidateMetadata(metadata); err != nil {
+			return nil, err
+		}
+	}
+
 	// Confirm that duties are for the requested epoch.
 	slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
 	if err != nil {
