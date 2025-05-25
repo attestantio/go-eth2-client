@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2024 Attestant Limited.
+// Copyright © 2020 - 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,7 +17,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -69,11 +68,12 @@ func (s *Service) Spec(ctx context.Context,
 		return nil, err
 	}
 
-	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), map[string]string{})
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), map[string]any{})
 	if err != nil {
 		return nil, err
 	}
-	config := parseSpecTypes(data)
+
+	config := parseSpecMap(data)
 
 	// The application mask domain type is not provided by all nodes, so add it here if not present.
 	if _, exists := config["DOMAIN_APPLICATION_MASK"]; !exists {
@@ -96,92 +96,90 @@ func (s *Service) Spec(ctx context.Context,
 	}, nil
 }
 
-func parseSpecTypes(data map[string]string) map[string]any {
+func parseSpecMap(data map[string]any) map[string]any {
 	config := make(map[string]any)
 	for k, v := range data {
-		if k == "BLOB_SCHEDULE" {
-			tmpBlobSchedule := make([]map[string]string, 0)
-			err := json.Unmarshal([]byte(v), &tmpBlobSchedule)
-			if err == nil {
-				blobSchedule := make([]map[string]any, len(tmpBlobSchedule))
-				for i, blob := range tmpBlobSchedule {
-					blobSchedule[i] = parseSpecTypes(blob)
-				}
-				config[k] = blobSchedule
-			}
-
-			continue
+		switch v.(type) {
+		case string:
+			config[k] = parseSpecString(k, v.(string))
+		case []map[string]any:
+			config[k] = parseSpecArrayOfMaps(v.([]map[string]any))
+		default:
+			config[k] = v
 		}
-
-		// Handle domains.
-		if strings.HasPrefix(k, "DOMAIN_") {
-			byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
-			if err == nil {
-				var domainType phase0.DomainType
-				copy(domainType[:], byteVal)
-				config[k] = domainType
-
-				continue
-			}
-		}
-
-		// Handle fork versions.
-		if strings.HasSuffix(k, "_FORK_VERSION") {
-			byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
-			if err == nil {
-				var version phase0.Version
-				copy(version[:], byteVal)
-				config[k] = version
-
-				continue
-			}
-		}
-
-		// Handle hex strings.
-		if strings.HasPrefix(v, "0x") {
-			byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
-			if err == nil {
-				config[k] = byteVal
-
-				continue
-			}
-		}
-
-		// Handle times.
-		if strings.HasSuffix(k, "_TIME") {
-			intVal, err := strconv.ParseInt(v, 10, 64)
-			if err == nil && intVal != 0 {
-				config[k] = time.Unix(intVal, 0)
-
-				continue
-			}
-		}
-
-		// Handle durations.
-		if strings.HasPrefix(k, "SECONDS_PER_") || k == "GENESIS_DELAY" {
-			intVal, err := strconv.ParseInt(v, 10, 64)
-			if err == nil && intVal >= 0 {
-				config[k] = time.Duration(intVal) * time.Second
-
-				continue
-			}
-		}
-
-		// Handle integers.
-		if v == "0" {
-			config[k] = uint64(0)
-
-			continue
-		}
-		intVal, err := strconv.ParseUint(v, 10, 64)
-		if err == nil && intVal != 0 {
-			config[k] = intVal
-
-			continue
-		}
-
-		// Assume string.
-		config[k] = v
 	}
 	return config
+}
+
+func parseSpecString(k, v string) any {
+	// Handle domains.
+	if strings.HasPrefix(k, "DOMAIN_") {
+		byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
+		if err == nil {
+			var domainType phase0.DomainType
+			copy(domainType[:], byteVal)
+
+			return domainType
+		}
+	}
+
+	// Handle fork versions.
+	if strings.HasSuffix(k, "_FORK_VERSION") {
+		byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
+		if err == nil {
+			var version phase0.Version
+			copy(version[:], byteVal)
+
+			return version
+		}
+	}
+
+	// Handle hex strings.
+	if strings.HasPrefix(v, "0x") {
+		byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
+		if err == nil {
+			return byteVal
+		}
+	}
+
+	// Handle times.
+	if strings.HasSuffix(k, "_TIME") {
+		intVal, err := strconv.ParseInt(v, 10, 64)
+		if err == nil && intVal != 0 {
+
+			return time.Unix(intVal, 0)
+		}
+	}
+
+	// Handle durations.
+	if strings.HasPrefix(k, "SECONDS_PER_") || k == "GENESIS_DELAY" {
+		intVal, err := strconv.ParseInt(v, 10, 64)
+		if err == nil && intVal >= 0 {
+
+			return time.Duration(intVal) * time.Second
+		}
+	}
+
+	// Handle integers.
+	if v == "0" {
+
+		return uint64(0)
+	}
+	intVal, err := strconv.ParseUint(v, 10, 64)
+	if err == nil && intVal != 0 {
+
+		return intVal
+	}
+
+	// Assume string.
+	return v
+}
+
+func parseSpecArrayOfMaps(array []map[string]any) []map[string]any {
+	result := make([]map[string]any, len(array))
+	for i, element := range array {
+		result[i] = parseSpecMap(element)
+	}
+	return result
+
 }
