@@ -99,15 +99,16 @@ func (s *Service) Spec(ctx context.Context,
 func parseSpecMap(data map[string]any) map[string]any {
 	config := make(map[string]any)
 	for k, v := range data {
-		switch v.(type) {
+		switch value := v.(type) {
 		case string:
-			config[k] = parseSpecString(k, v.(string))
+			config[k] = parseSpecString(k, value)
 		case []map[string]any:
-			config[k] = parseSpecArrayOfMaps(v.([]map[string]any))
+			config[k] = parseSpecArrayOfMaps(value)
 		default:
 			config[k] = v
 		}
 	}
+
 	return config
 }
 
@@ -146,7 +147,6 @@ func parseSpecString(k, v string) any {
 	if strings.HasSuffix(k, "_TIME") {
 		intVal, err := strconv.ParseInt(v, 10, 64)
 		if err == nil && intVal != 0 {
-
 			return time.Unix(intVal, 0)
 		}
 	}
@@ -155,19 +155,16 @@ func parseSpecString(k, v string) any {
 	if strings.HasPrefix(k, "SECONDS_PER_") || k == "GENESIS_DELAY" {
 		intVal, err := strconv.ParseInt(v, 10, 64)
 		if err == nil && intVal >= 0 {
-
 			return time.Duration(intVal) * time.Second
 		}
 	}
 
 	// Handle integers.
 	if v == "0" {
-
 		return uint64(0)
 	}
 	intVal, err := strconv.ParseUint(v, 10, 64)
 	if err == nil && intVal != 0 {
-
 		return intVal
 	}
 
@@ -180,6 +177,6 @@ func parseSpecArrayOfMaps(array []map[string]any) []map[string]any {
 	for i, element := range array {
 		result[i] = parseSpecMap(element)
 	}
-	return result
 
+	return result
 }
