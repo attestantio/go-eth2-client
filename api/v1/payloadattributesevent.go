@@ -417,9 +417,6 @@ func (p *PayloadAttributesV4) unpack(data *payloadAttributesV4JSON) error {
 	}
 	p.DepositRequests = data.DepositRequests
 
-	if data.WithdrawalRequests == nil {
-		return errors.New("payload attributes withdraw requests missing")
-	}
 	for i := range data.WithdrawalRequests {
 		if data.WithdrawalRequests[i] == nil {
 			return fmt.Errorf("withdraw requests entry %d missing", i)
