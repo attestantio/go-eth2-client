@@ -410,9 +410,6 @@ func (p *PayloadAttributesV4) unpack(data *payloadAttributesV4JSON) error {
 	}
 	copy(p.ParentBeaconBlockRoot[:], parentBeaconBlockRoot)
 
-	if data.DepositRequests == nil {
-		return errors.New("payload attributes deposit requests missing")
-	}
 	for i := range data.DepositRequests {
 		if data.DepositRequests[i] == nil {
 			return fmt.Errorf("deposit requests entry %d missing", i)
