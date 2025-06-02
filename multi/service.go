@@ -77,6 +77,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 			http.WithEnforceJSON(parameters.enforceJSON),
 			http.WithExtraHeaders(parameters.extraHeaders),
 			http.WithAllowDelayedStart(true),
+			http.WithELConnectionCheck(parameters.elConnectionCheck),
 		)
 		if err != nil {
 			log.Error().Str("provider", address).Msg("Provider not present; dropping from rotation")
