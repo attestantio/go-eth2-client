@@ -63,10 +63,10 @@ type BeaconState struct {
 	EarliestExitEpoch             phase0.Epoch
 	ConsolidationBalanceToConsume phase0.Gwei
 	EarliestConsolidationEpoch    phase0.Epoch
-	PendingDeposits               []*electra.PendingDeposit           `dynssz-max:"PENDING_DEPOSITS_LIMIT"                 ssz-max:"134217728"`
-	PendingPartialWithdrawals     []*electra.PendingPartialWithdrawal `dynssz-max:"PENDING_PARTIAL_WITHDRAWALS_LIMIT"      ssz-max:"134217728"`
-	PendingConsolidations         []*electra.PendingConsolidation     `dynssz-max:"PENDING_CONSOLIDATIONS_LIMIT"           ssz-max:"262144"`
-	ProposerLookahead             []phase0.ValidatorIndex             `dynssz-max:"(MIN_SEED_LOOKAHEAD+1)*SLOTS_PER_EPOCH" ssz-max:"64"`
+	PendingDeposits               []*electra.PendingDeposit           `dynssz-max:"PENDING_DEPOSITS_LIMIT"                  ssz-max:"134217728"`
+	PendingPartialWithdrawals     []*electra.PendingPartialWithdrawal `dynssz-max:"PENDING_PARTIAL_WITHDRAWALS_LIMIT"       ssz-max:"134217728"`
+	PendingConsolidations         []*electra.PendingConsolidation     `dynssz-max:"PENDING_CONSOLIDATIONS_LIMIT"            ssz-max:"262144"`
+	ProposerLookahead             []phase0.ValidatorIndex             `dynssz-size:"(MIN_SEED_LOOKAHEAD+1)*SLOTS_PER_EPOCH" ssz-size:"64"`
 }
 
 // String returns a string version of the structure.
