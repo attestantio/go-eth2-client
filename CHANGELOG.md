@@ -1,3 +1,6 @@
+0.25.0:
+  - update attestation pool endpoint to receive versioned attestations
+
 0.24.2:
   - support single_attestation event
   - support change to attestation event; this event now emits a spec.VersionedAttestation
