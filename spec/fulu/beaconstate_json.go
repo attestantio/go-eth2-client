@@ -355,18 +355,8 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 		}
 	}
 
-	proposerLookahead := make([]string, 0)
-	if err := json.Unmarshal(raw["proposer_lookahead"], &proposerLookahead); err != nil {
+	if err := json.Unmarshal(raw["proposer_lookahead"], &b.ProposerLookahead); err != nil {
 		return errors.Wrap(err, "proposer_lookahead")
-	}
-	b.ProposerLookahead = make([]phase0.ValidatorIndex, len(proposerLookahead))
-	for i := range proposerLookahead {
-		if proposerLookahead[i] == "" {
-			return fmt.Errorf("proposer lookahead %d missing", i)
-		}
-		if err := b.ProposerLookahead[i].UnmarshalJSON([]byte(proposerLookahead[i])); err != nil {
-			return errors.Wrap(err, fmt.Sprintf("invalid value for proposer lookahead %d", i))
-		}
 	}
 
 	return nil
