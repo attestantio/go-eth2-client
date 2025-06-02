@@ -34,7 +34,7 @@ go get github.com/attestantio/go-eth2-client
 
   - [Lighthouse](https://github.com/sigp/lighthouse/) minimum version 2.0.0
   - [Nimbus](https://github.com/status-im/nimbus-eth2) minimum version 1.7.0
-  - [Prysm](https://github.com/prysmaticlabs/prysm) minimum version ?
+  - [Prysm](https://github.com/OffchainLabs/prysm) minimum version ?
   - [Teku](https://github.com/consensys/teku) minimum version 21.9.2
 
 ## Usage
@@ -51,7 +51,7 @@ package main
 import (
     "context"
     "fmt"
-    
+
     eth2client "github.com/attestantio/go-eth2-client"
     "github.com/attestantio/go-eth2-client/api"
     "github.com/attestantio/go-eth2-client/http"
@@ -70,9 +70,9 @@ func main() {
     if err != nil {
         panic(err)
     }
-    
+
     fmt.Printf("Connected to %s\n", client.Name())
-    
+
     // Client functions have their own interfaces.  Not all functions are
     // supported by all clients, so checks should be made for each function when
     // casting the service to the relevant interface.

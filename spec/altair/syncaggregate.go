@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"strings"
 
+	bitfield "github.com/OffchainLabs/go-bitfield"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
-	bitfield "github.com/prysmaticlabs/go-bitfield"
 )
 
 // SyncAggregate is the Ethereum 2 sync aggregate structure.
