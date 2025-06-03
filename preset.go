@@ -1,7 +1,6 @@
 package client
 
 import _ "embed"
-import "fmt"
 import "log"
 
 import "gopkg.in/yaml.v3"
@@ -111,7 +110,4 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Printf("minimal preset: %v\n", MinimalPreset)
-	fmt.Printf("mainnet preset: %v\n", MainnetPreset)
 }
