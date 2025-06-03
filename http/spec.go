@@ -102,14 +102,34 @@ func parseSpecMap(data map[string]any) map[string]any {
 		switch value := v.(type) {
 		case string:
 			config[k] = parseSpecString(k, value)
-		case []map[string]any:
-			config[k] = parseSpecArrayOfMaps(value)
+		case []any:
+			config[k] = parseSpecArray(value)
+		case map[string]any:
+			config[k] = parseSpecMap(value)
 		default:
 			config[k] = v
 		}
 	}
 
 	return config
+}
+
+func parseSpecArray(array []any) []any {
+	result := make([]any, len(array))
+	for i, element := range array {
+		switch value := element.(type) {
+		case string:
+			result[i] = parseSpecString("", value)
+		case []any:
+			result[i] = parseSpecArray(value)
+		case map[string]any:
+			result[i] = parseSpecMap(value)
+		default:
+			result[i] = element
+		}
+	}
+
+	return result
 }
 
 func parseSpecString(k, v string) any {
@@ -170,13 +190,4 @@ func parseSpecString(k, v string) any {
 
 	// Assume string.
 	return v
-}
-
-func parseSpecArrayOfMaps(array []map[string]any) []map[string]any {
-	result := make([]map[string]any, len(array))
-	for i, element := range array {
-		result[i] = parseSpecMap(element)
-	}
-
-	return result
 }
