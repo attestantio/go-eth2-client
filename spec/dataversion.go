@@ -36,6 +36,8 @@ const (
 	DataVersionDeneb
 	// DataVersionElectra is data applicable for the Electra release of the beacon chain.
 	DataVersionElectra
+	// DataVersionFulu is data applicable for the Fulu release of the beacon chain.
+	DataVersionFulu
 )
 
 var dataVersionStrings = [...]string{
@@ -46,6 +48,7 @@ var dataVersionStrings = [...]string{
 	"capella",
 	"deneb",
 	"electra",
+	"fulu",
 }
 
 var dataVersionMap = map[string]DataVersion{
@@ -55,6 +58,7 @@ var dataVersionMap = map[string]DataVersion{
 	`"capella"`:   DataVersionCapella,
 	`"deneb"`:     DataVersionDeneb,
 	`"electra"`:   DataVersionElectra,
+	`"fulu"`:      DataVersionFulu,
 }
 
 // MarshalJSON implements json.Marshaler.
