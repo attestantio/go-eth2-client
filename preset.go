@@ -23,9 +23,6 @@ var mainnetDeneb []byte
 //go:embed presets/mainnet/electra.yaml
 var mainnetElectra []byte
 
-//go:embed presets/mainnet/fulu.yaml
-var mainnetFulu []byte
-
 //go:embed presets/minimal/phase0.yaml
 var minimalPhase0 []byte
 
@@ -43,9 +40,6 @@ var minimalDeneb []byte
 
 //go:embed presets/minimal/electra.yaml
 var minimalElectra []byte
-
-//go:embed presets/minimal/fulu.yaml
-var minimalFulu []byte
 
 var (
 	MainnetPreset map[string]interface{}
@@ -77,10 +71,6 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = yaml.Unmarshal(minimalFulu, &MinimalPreset)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	err = yaml.Unmarshal(mainnetPhase0, &MainnetPreset)
 	if err != nil {
@@ -103,10 +93,6 @@ func init() {
 		log.Fatal(err)
 	}
 	err = yaml.Unmarshal(mainnetElectra, &MainnetPreset)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = yaml.Unmarshal(mainnetFulu, &MainnetPreset)
 	if err != nil {
 		log.Fatal(err)
 	}
