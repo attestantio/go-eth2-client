@@ -24,7 +24,7 @@ import (
 const kzgCommitmentProofElements = 17
 
 // KZGCommitmentInclusionProof is the proof of inclusion for a KZG commitment.
-type KZGCommitmentInclusionProof [kzgCommitmentProofElements]KZGCommitmentInclusionProofElement
+type KZGCommitmentInclusionProof []KZGCommitmentInclusionProofElement
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (k *KZGCommitmentInclusionProof) UnmarshalJSON(input []byte) error {
@@ -40,6 +40,8 @@ func (k *KZGCommitmentInclusionProof) UnmarshalJSON(input []byte) error {
 	if len(values) != kzgCommitmentProofElements {
 		return errors.New("incorrect number of elements")
 	}
+
+	*k = make(KZGCommitmentInclusionProof, kzgCommitmentProofElements)
 
 	for i := range values {
 		if err := k.unmarshalElementJSON(i, bytes.TrimSpace(values[i])); err != nil {
@@ -62,7 +64,7 @@ func (k *KZGCommitmentInclusionProof) unmarshalElementJSON(element int, input []
 		return errors.New("incorrect element length")
 	}
 
-	_, err := hex.Decode(k[element][:], input[3:3+kzgCommitmentProofElementLength*2])
+	_, err := hex.Decode((*k)[element][:], input[3:3+kzgCommitmentProofElementLength*2])
 	if err != nil {
 		return errors.Wrapf(err, "invalid value %s", string(input[3:3+kzgCommitmentProofElementLength*2]))
 	}
