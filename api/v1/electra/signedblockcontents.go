@@ -25,8 +25,8 @@ import (
 // SignedBlockContents represents the contents of a block, both block and blob.
 type SignedBlockContents struct {
 	SignedBlock *electra.SignedBeaconBlock
-	KZGProofs   []deneb.KZGProof `ssz-max:"4096" ssz-size:"?,48"`
-	Blobs       []deneb.Blob     `ssz-max:"4096" ssz-size:"?,131072"`
+	KZGProofs   []deneb.KZGProof `dynssz-max:"MAX_BLS_TO_EXECUTION_CHANGES" ssz-max:"4096" ssz-size:"?,48"`
+	Blobs       []deneb.Blob     `dynssz-max:"MAX_BLS_TO_EXECUTION_CHANGES" ssz-max:"4096" ssz-size:"?,131072"`
 }
 
 // String returns a string version of the structure.
