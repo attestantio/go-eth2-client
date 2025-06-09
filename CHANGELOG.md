@@ -1,3 +1,6 @@
+0.25.3:
+  - support pending consolidations and deposits
+
 0.25.2:
   - add multi/submitblindedproposal
 

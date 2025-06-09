@@ -722,3 +722,35 @@ func (s *Sleepy) PendingDeposits(ctx context.Context,
 
 	return next.PendingDeposits(ctx, opts)
 }
+
+// PendingConsolidations provides the pending consolidations for a given state.
+func (s *Sleepy) PendingConsolidations(ctx context.Context,
+	opts *api.PendingConsolidationsOpts,
+) (
+	*api.Response[[]*electra.PendingConsolidation],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.PendingConsolidationsProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.PendingConsolidations(ctx, opts)
+}
+
+// PendingPartialWithdrawals provides the pending partial withdrawals for a given state.
+func (s *Sleepy) PendingPartialWithdrawals(ctx context.Context,
+	opts *api.PendingPartialWithdrawalsOpts,
+) (
+	*api.Response[[]*electra.PendingPartialWithdrawal],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.PendingPartialWithdrawalsProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.PendingPartialWithdrawals(ctx, opts)
+}
