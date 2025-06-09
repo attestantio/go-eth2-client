@@ -1,4 +1,5 @@
-0.25.3:
+0.26.0:
+  - refactor http.Spec to allow more complex types in the keys
   - support pending consolidations and deposits
 
 0.25.2:
