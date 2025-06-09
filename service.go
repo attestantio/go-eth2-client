@@ -612,6 +612,28 @@ type PendingDepositProvider interface {
 	)
 }
 
+// PendingConsolidationsProvider is the interface for providing pending consolidations.
+type PendingConsolidationsProvider interface {
+	// PendingConsolidations provides the pending consolidations for a given state.
+	PendingConsolidations(ctx context.Context,
+		opts *api.PendingConsolidationsOpts,
+	) (
+		*api.Response[[]*electra.PendingConsolidation],
+		error,
+	)
+}
+
+// PendingPartialWithdrawalsProvider is the interface for providing pending partial withdrawals.
+type PendingPartialWithdrawalsProvider interface {
+	// PendingPartialWithdrawals provides the pending partial withdrawals for a given state.
+	PendingPartialWithdrawals(ctx context.Context,
+		opts *api.PendingPartialWithdrawalsOpts,
+	) (
+		*api.Response[[]*electra.PendingPartialWithdrawal],
+		error,
+	)
+}
+
 //
 // Local extensions
 //
