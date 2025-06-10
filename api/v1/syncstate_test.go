@@ -18,8 +18,8 @@ import (
 	"testing"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	require "github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSyncStateJSON(t *testing.T) {
@@ -69,7 +69,7 @@ func TestSyncStateJSON(t *testing.T) {
 		},
 		{
 			name:  "Good",
-			input: []byte(`{"head_slot":"1","sync_distance":"2","is_optimistic":false,"is_syncing":true}`),
+			input: []byte(`{"head_slot":"1","sync_distance":"2","is_optimistic":false,"is_syncing":true,"el_offline":false}`),
 		},
 	}
 

@@ -36,6 +36,7 @@ type parameters struct {
 	reducedMemoryUsage bool
 	customSpecSupport  bool
 	client             *http.Client
+	elConnectionCheck  bool
 }
 
 // Parameter is the interface for service parameters.
@@ -141,6 +142,13 @@ func WithCustomSpecSupport(customSpecSupport bool) Parameter {
 func WithHTTPClient(client *http.Client) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.client = client
+	})
+}
+
+// WithELConnectionCheck enables making sure EL is not offline to consider the client synced.
+func WithELConnectionCheck(elConnectionCheck bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.elConnectionCheck = elConnectionCheck
 	})
 }
 
