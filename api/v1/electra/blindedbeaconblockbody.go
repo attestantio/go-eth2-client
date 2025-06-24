@@ -38,7 +38,7 @@ type BlindedBeaconBlockBody struct {
 	SyncAggregate          *altair.SyncAggregate
 	ExecutionPayloadHeader *deneb.ExecutionPayloadHeader
 	BLSToExecutionChanges  []*capella.SignedBLSToExecutionChange `dynssz-max:"MAX_BLS_TO_EXECUTION_CHANGES"   ssz-max:"16"`
-	BlobKZGCommitments     []deneb.KZGCommitment                 `dynssz-max:"MAX_BLOB_COMMITMENTS_PER_BLOCK" ssz-max:"4096" ssz-size:"?,48"`
+	BlobKZGCommitments     []deneb.KZGCommitment                 `dynssz-max:"MAX_BLOB_COMMITMENTS_PER_BLOCK" ssz-max:"4096" ssz-size:"?,48"` //nolint:revive
 	ExecutionRequests      *electra.ExecutionRequests
 }
 
