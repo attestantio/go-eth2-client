@@ -325,6 +325,20 @@ func (s *Sleepy) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscri
 	return next.SubmitBeaconCommitteeSubscriptions(ctx, subscriptions)
 }
 
+// SubmitBeaconCommitteeSelections submits beacon committee selections.
+func (s *Sleepy) SubmitBeaconCommitteeSelections(ctx context.Context, selections []*apiv1.BeaconCommitteeSelection) (
+	*api.Response[[]*apiv1.BeaconCommitteeSelection],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.BeaconCommitteeSelectionsSubmitter)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.SubmitBeaconCommitteeSelections(ctx, selections)
+}
+
 // SubmitProposalPreparations submits proposal preparations.
 func (s *Sleepy) SubmitProposalPreparations(ctx context.Context, preparations []*apiv1.ProposalPreparation) error {
 	s.sleep(ctx)
