@@ -112,6 +112,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.BeaconBlockRootProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockSubmitter)(nil), s)
 	assert.Implements(t, (*client.BeaconCommitteeSubscriptionsSubmitter)(nil), s)
+	assert.Implements(t, (*client.BeaconCommitteeSelectionsSubmitter)(nil), s)
 	assert.Implements(t, (*client.BeaconStateProvider)(nil), s)
 	assert.Implements(t, (*client.BlindedBeaconBlockSubmitter)(nil), s)
 	assert.Implements(t, (*client.BlockRewardsProvider)(nil), s)
