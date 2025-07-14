@@ -136,6 +136,8 @@ func (*Service) checkEventSpecificHandler(opts *api.EventsOpts, topic string) er
 		hasHandler = opts.ChainReorgHandler != nil
 	case "contribution_and_proof":
 		hasHandler = opts.ContributionAndProofHandler != nil
+	case "data_column_sidecar":
+		hasHandler = opts.DataColumnSidecarHandler != nil
 	case "finalized_checkpoint":
 		hasHandler = opts.FinalizedCheckpointHandler != nil
 	case "head":
@@ -189,6 +191,8 @@ func (s *Service) handleEvent(ctx context.Context,
 		s.handleChainReorgEvent(ctx, msg, opts)
 	case "contribution_and_proof":
 		s.handleContributionAndProofEvent(ctx, msg, opts)
+	case "data_column_sidecar":
+		s.handleDataColumnSidecarEvent(ctx, msg, opts)
 	case "finalized_checkpoint":
 		s.handleFinalizedCheckpointEvent(ctx, msg, opts)
 	case "head":
@@ -562,6 +566,32 @@ func (*Service) handleVoluntaryExitEvent(ctx context.Context,
 	switch {
 	case opts.VoluntaryExitHandler != nil:
 		opts.VoluntaryExitHandler(ctx, data)
+	case opts.Handler != nil:
+		opts.Handler(&apiv1.Event{
+			Topic: string(msg.Event),
+			Data:  data,
+		})
+	default:
+		log.Debug().Msg("No specific or generic handler supplied; ignoring")
+	}
+}
+
+func (*Service) handleDataColumnSidecarEvent(ctx context.Context,
+	msg *sse.Event,
+	opts *api.EventsOpts,
+) {
+	log := zerolog.Ctx(ctx)
+	data := &apiv1.DataColumnSidecarEvent{}
+	err := json.Unmarshal(msg.Data, data)
+	if err != nil {
+		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse data column sidecar event")
+
+		return
+	}
+
+	switch {
+	case opts.DataColumnSidecarHandler != nil:
+		opts.DataColumnSidecarHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
 			Topic: string(msg.Event),

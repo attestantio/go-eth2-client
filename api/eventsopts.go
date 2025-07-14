@@ -51,6 +51,8 @@ type EventsOpts struct {
 	ChainReorgHandler ChainReorgEventHandlerFunc
 	// ContributionAndProofHandler is a handler for the contribution_and_proof event.
 	ContributionAndProofHandler ContributionAndProofEventHandlerFunc
+	// DataColumnSidecarHandler is a handler for the data_column_sidecar event.
+	DataColumnSidecarHandler DataColumnSidecarEventHandlerFunc
 	// FinalizedCheckpointHandler is a handler for the finalized_checkpoint event.
 	FinalizedCheckpointHandler FinalizedCheckpointEventHandlerFunc
 	// HeadHandler is a handler for the head event.
@@ -109,3 +111,6 @@ type SingleAttestationEventHandlerFunc func(context.Context, *electra.SingleAtte
 
 // VoluntaryExitEventHandlerFunc is the handler for voluntary_exit events.
 type VoluntaryExitEventHandlerFunc func(context.Context, *phase0.SignedVoluntaryExit)
+
+// DataColumnSidecarEventHandlerFunc is the handler for data_column_sidecar events.
+type DataColumnSidecarEventHandlerFunc func(context.Context, *apiv1.DataColumnSidecarEvent)
