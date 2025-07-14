@@ -1043,7 +1043,7 @@ func (v *VersionedSignedBeaconBlock) ExecutionRequests() (*electra.ExecutionRequ
 	}
 }
 
-// ExecutionPayload returns the execution payload of the beacon block.
+// ExecutionPayload returns the execution payload of the signed beacon block.
 func (v *VersionedSignedBeaconBlock) ExecutionPayload() (*VersionedExecutionPayload, error) {
 	versionedExecutionPayload := &VersionedExecutionPayload{
 		Version: v.Version,

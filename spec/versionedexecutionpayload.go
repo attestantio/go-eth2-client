@@ -1,4 +1,4 @@
-// Copyright © 2024 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,7 +23,7 @@ import (
 	"github.com/holiman/uint256"
 )
 
-// VersionedExecutionPayload contains a versioned attestation.
+// VersionedExecutionPayload contains a versioned execution payload.
 type VersionedExecutionPayload struct {
 	Version   DataVersion
 	Bellatrix *bellatrix.ExecutionPayload
