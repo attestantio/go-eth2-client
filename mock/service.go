@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/eip7732"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -70,6 +71,9 @@ type Service struct {
 	NodePeersFunc                      func(context.Context, *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error)
 	NodeSyncingFunc                    func(context.Context, *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error)
 	NodeVersionFunc                    func(context.Context, *api.NodeVersionOpts) (*api.Response[string], error)
+	PendingDepositsFunc                func(context.Context, *api.PendingDepositsOpts) (*api.Response[[]*electra.PendingDeposit], error)
+	PendingConsolidationsFunc          func(context.Context, *api.PendingConsolidationsOpts) (*api.Response[[]*electra.PendingConsolidation], error)
+	PendingPartialWithdrawalsFunc      func(context.Context, *api.PendingPartialWithdrawalsOpts) (*api.Response[[]*electra.PendingPartialWithdrawal], error)
 	ProposalFunc                       func(context.Context, *api.ProposalOpts) (*api.Response[*api.VersionedProposal], error)
 	ProposerDutiesFunc                 func(context.Context, *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error)
 	SignedBeaconBlockFunc              func(context.Context, *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error)
@@ -79,6 +83,7 @@ type Service struct {
 	SyncCommitteeDutiesFunc            func(context.Context, *api.SyncCommitteeDutiesOpts) (*api.Response[[]*apiv1.SyncCommitteeDuty], error)
 	SyncCommitteeRewardsFunc           func(context.Context, *api.SyncCommitteeRewardsOpts) (*api.Response[[]*apiv1.SyncCommitteeReward], error)
 	ValidatorBalancesFunc              func(context.Context, *api.ValidatorBalancesOpts) (*api.Response[map[phase0.ValidatorIndex]phase0.Gwei], error)
+	ValidatorLivenessFunc              func(context.Context, *api.ValidatorLivenessOpts) (*api.Response[[]*apiv1.ValidatorLiveness], error)
 	ValidatorsFunc                     func(context.Context, *api.ValidatorsOpts) (*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator], error)
 	VoluntaryExitPoolFunc              func(context.Context, *api.VoluntaryExitPoolOpts) (*api.Response[[]*phase0.SignedVoluntaryExit], error)
 }
