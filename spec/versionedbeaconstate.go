@@ -20,6 +20,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/eip7732"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/fulu"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -37,11 +38,13 @@ type VersionedBeaconState struct {
 	Deneb     *deneb.BeaconState
 	Electra   *electra.BeaconState
 	Fulu      *fulu.BeaconState
+	EIP7732   *eip7732.BeaconState
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBeaconState) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
+		v.Electra == nil && v.Fulu == nil && v.EIP7732 == nil
 }
 
 // Slot returns the slot of the state.
@@ -89,6 +92,12 @@ func (v *VersionedBeaconState) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.Slot, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return 0, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -123,6 +132,12 @@ func (v *VersionedBeaconState) NextWithdrawalValidatorIndex() (phase0.ValidatorI
 		}
 
 		return v.Fulu.NextWithdrawalValidatorIndex, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return 0, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.NextWithdrawalValidatorIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -173,6 +188,12 @@ func (v *VersionedBeaconState) Validators() ([]*phase0.Validator, error) {
 		}
 
 		return v.Fulu.Validators, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return nil, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.Validators, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -223,6 +244,12 @@ func (v *VersionedBeaconState) ValidatorBalances() ([]phase0.Gwei, error) {
 		}
 
 		return v.Fulu.Balances, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return nil, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.Balances, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -245,6 +272,12 @@ func (v *VersionedBeaconState) DepositRequestsStartIndex() (uint64, error) {
 		}
 
 		return v.Fulu.DepositRequestsStartIndex, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return 0, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.DepositRequestsStartIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -267,6 +300,12 @@ func (v *VersionedBeaconState) DepositBalanceToConsume() (phase0.Gwei, error) {
 		}
 
 		return v.Fulu.DepositBalanceToConsume, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return 0, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.DepositBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -289,6 +328,12 @@ func (v *VersionedBeaconState) ExitBalanceToConsume() (phase0.Gwei, error) {
 		}
 
 		return v.Fulu.ExitBalanceToConsume, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return 0, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.ExitBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -311,6 +356,12 @@ func (v *VersionedBeaconState) EarliestExitEpoch() (phase0.Epoch, error) {
 		}
 
 		return v.Fulu.EarliestExitEpoch, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return 0, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.EarliestExitEpoch, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -333,6 +384,12 @@ func (v *VersionedBeaconState) ConsolidationBalanceToConsume() (phase0.Gwei, err
 		}
 
 		return v.Fulu.ConsolidationBalanceToConsume, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return 0, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.ConsolidationBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -355,6 +412,12 @@ func (v *VersionedBeaconState) EarliestConsolidationEpoch() (phase0.Epoch, error
 		}
 
 		return v.Fulu.EarliestConsolidationEpoch, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return 0, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.EarliestConsolidationEpoch, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -377,6 +440,12 @@ func (v *VersionedBeaconState) PendingDeposits() ([]*electra.PendingDeposit, err
 		}
 
 		return v.Fulu.PendingDeposits, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return nil, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.PendingDeposits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -399,6 +468,12 @@ func (v *VersionedBeaconState) PendingPartialWithdrawals() ([]*electra.PendingPa
 		}
 
 		return v.Fulu.PendingPartialWithdrawals, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return nil, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.PendingPartialWithdrawals, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -421,6 +496,12 @@ func (v *VersionedBeaconState) PendingConsolidations() ([]*electra.PendingConsol
 		}
 
 		return v.Fulu.PendingConsolidations, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return nil, errors.New("no EIP7732 state")
+		}
+
+		return v.EIP7732.PendingConsolidations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -802,6 +883,12 @@ func (v *VersionedBeaconState) String() string {
 		}
 
 		return v.Fulu.String()
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return ""
+		}
+
+		return v.EIP7732.String()
 	default:
 		return "unknown version"
 	}

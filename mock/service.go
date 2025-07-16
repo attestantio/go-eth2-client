@@ -21,6 +21,7 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/eip7732"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -50,40 +51,41 @@ type Service struct {
 	SyncDistance phase0.Slot
 
 	// Functions that can be provided to mock specific responses from this client.
-	AggregateAttestationFunc      func(context.Context, *api.AggregateAttestationOpts) (*api.Response[*spec.VersionedAttestation], error)
-	AttesterDutiesFunc            func(context.Context, *api.AttesterDutiesOpts) (*api.Response[[]*apiv1.AttesterDuty], error)
-	AttestationDataFunc           func(context.Context, *api.AttestationDataOpts) (*api.Response[*phase0.AttestationData], error)
-	AttestationRewardsFunc        func(context.Context, *api.AttestationRewardsOpts) (*api.Response[*apiv1.AttestationRewards], error)
-	BeaconBlockHeaderFunc         func(context.Context, *api.BeaconBlockHeaderOpts) (*api.Response[*apiv1.BeaconBlockHeader], error)
-	BeaconBlockRootFunc           func(context.Context, *api.BeaconBlockRootOpts) (*api.Response[*phase0.Root], error)
-	BeaconStateFunc               func(context.Context, *api.BeaconStateOpts) (*api.Response[*spec.VersionedBeaconState], error)
-	BeaconStateRandaoFunc         func(context.Context, *api.BeaconStateRandaoOpts) (*api.Response[*phase0.Root], error)
-	BeaconStateRootFunc           func(context.Context, *api.BeaconStateRootOpts) (*api.Response[*phase0.Root], error)
-	BlockRewardsFunc              func(context.Context, *api.BlockRewardsOpts) (*api.Response[*apiv1.BlockRewards], error)
-	DepositContractFunc           func(context.Context, *api.DepositContractOpts) (*api.Response[*apiv1.DepositContract], error)
-	EventsFunc                    func(context.Context, *api.EventsOpts) error
-	FinalityFunc                  func(context.Context, *api.FinalityOpts) (*api.Response[*apiv1.Finality], error)
-	ForkChoiceFunc                func(context.Context, *api.ForkChoiceOpts) (*api.Response[*apiv1.ForkChoice], error)
-	ForkFunc                      func(context.Context, *api.ForkOpts) (*api.Response[*phase0.Fork], error)
-	ForkScheduleFunc              func(context.Context, *api.ForkScheduleOpts) (*api.Response[[]*phase0.Fork], error)
-	GenesisFunc                   func(context.Context, *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error)
-	NodePeersFunc                 func(context.Context, *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error)
-	NodeSyncingFunc               func(context.Context, *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error)
-	NodeVersionFunc               func(context.Context, *api.NodeVersionOpts) (*api.Response[string], error)
-	PendingDepositsFunc           func(context.Context, *api.PendingDepositsOpts) (*api.Response[[]*electra.PendingDeposit], error)
-	PendingConsolidationsFunc     func(context.Context, *api.PendingConsolidationsOpts) (*api.Response[[]*electra.PendingConsolidation], error)
-	PendingPartialWithdrawalsFunc func(context.Context, *api.PendingPartialWithdrawalsOpts) (*api.Response[[]*electra.PendingPartialWithdrawal], error)
-	ProposalFunc                  func(context.Context, *api.ProposalOpts) (*api.Response[*api.VersionedProposal], error)
-	ProposerDutiesFunc            func(context.Context, *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error)
-	SignedBeaconBlockFunc         func(context.Context, *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error)
-	SpecFunc                      func(context.Context, *api.SpecOpts) (*api.Response[map[string]any], error)
-	SyncCommitteeContributionFunc func(context.Context, *api.SyncCommitteeContributionOpts) (*api.Response[*altair.SyncCommitteeContribution], error)
-	SyncCommitteeDutiesFunc       func(context.Context, *api.SyncCommitteeDutiesOpts) (*api.Response[[]*apiv1.SyncCommitteeDuty], error)
-	SyncCommitteeRewardsFunc      func(context.Context, *api.SyncCommitteeRewardsOpts) (*api.Response[[]*apiv1.SyncCommitteeReward], error)
-	ValidatorBalancesFunc         func(context.Context, *api.ValidatorBalancesOpts) (*api.Response[map[phase0.ValidatorIndex]phase0.Gwei], error)
-	ValidatorLivenessFunc         func(context.Context, *api.ValidatorLivenessOpts) (*api.Response[[]*apiv1.ValidatorLiveness], error)
-	ValidatorsFunc                func(context.Context, *api.ValidatorsOpts) (*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator], error)
-	VoluntaryExitPoolFunc         func(context.Context, *api.VoluntaryExitPoolOpts) (*api.Response[[]*phase0.SignedVoluntaryExit], error)
+	AggregateAttestationFunc           func(context.Context, *api.AggregateAttestationOpts) (*api.Response[*spec.VersionedAttestation], error)
+	AttesterDutiesFunc                 func(context.Context, *api.AttesterDutiesOpts) (*api.Response[[]*apiv1.AttesterDuty], error)
+	AttestationDataFunc                func(context.Context, *api.AttestationDataOpts) (*api.Response[*phase0.AttestationData], error)
+	AttestationRewardsFunc             func(context.Context, *api.AttestationRewardsOpts) (*api.Response[*apiv1.AttestationRewards], error)
+	BeaconBlockHeaderFunc              func(context.Context, *api.BeaconBlockHeaderOpts) (*api.Response[*apiv1.BeaconBlockHeader], error)
+	BeaconBlockRootFunc                func(context.Context, *api.BeaconBlockRootOpts) (*api.Response[*phase0.Root], error)
+	BeaconStateFunc                    func(context.Context, *api.BeaconStateOpts) (*api.Response[*spec.VersionedBeaconState], error)
+	BeaconStateRandaoFunc              func(context.Context, *api.BeaconStateRandaoOpts) (*api.Response[*phase0.Root], error)
+	BeaconStateRootFunc                func(context.Context, *api.BeaconStateRootOpts) (*api.Response[*phase0.Root], error)
+	BlockRewardsFunc                   func(context.Context, *api.BlockRewardsOpts) (*api.Response[*apiv1.BlockRewards], error)
+	DepositContractFunc                func(context.Context, *api.DepositContractOpts) (*api.Response[*apiv1.DepositContract], error)
+	EventsFunc                         func(context.Context, *api.EventsOpts) error
+	FinalityFunc                       func(context.Context, *api.FinalityOpts) (*api.Response[*apiv1.Finality], error)
+	ForkChoiceFunc                     func(context.Context, *api.ForkChoiceOpts) (*api.Response[*apiv1.ForkChoice], error)
+	ForkFunc                           func(context.Context, *api.ForkOpts) (*api.Response[*phase0.Fork], error)
+	ForkScheduleFunc                   func(context.Context, *api.ForkScheduleOpts) (*api.Response[[]*phase0.Fork], error)
+	GenesisFunc                        func(context.Context, *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error)
+	NodePeersFunc                      func(context.Context, *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error)
+	NodeSyncingFunc                    func(context.Context, *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error)
+	NodeVersionFunc                    func(context.Context, *api.NodeVersionOpts) (*api.Response[string], error)
+	PendingDepositsFunc                func(context.Context, *api.PendingDepositsOpts) (*api.Response[[]*electra.PendingDeposit], error)
+	PendingConsolidationsFunc          func(context.Context, *api.PendingConsolidationsOpts) (*api.Response[[]*electra.PendingConsolidation], error)
+	PendingPartialWithdrawalsFunc      func(context.Context, *api.PendingPartialWithdrawalsOpts) (*api.Response[[]*electra.PendingPartialWithdrawal], error)
+	ProposalFunc                       func(context.Context, *api.ProposalOpts) (*api.Response[*api.VersionedProposal], error)
+	ProposerDutiesFunc                 func(context.Context, *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error)
+	SignedBeaconBlockFunc              func(context.Context, *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error)
+	SignedExecutionPayloadEnvelopeFunc func(context.Context, *api.SignedExecutionPayloadEnvelopeOpts) (*api.Response[*eip7732.SignedExecutionPayloadEnvelope], error)
+	SpecFunc                           func(context.Context, *api.SpecOpts) (*api.Response[map[string]any], error)
+	SyncCommitteeContributionFunc      func(context.Context, *api.SyncCommitteeContributionOpts) (*api.Response[*altair.SyncCommitteeContribution], error)
+	SyncCommitteeDutiesFunc            func(context.Context, *api.SyncCommitteeDutiesOpts) (*api.Response[[]*apiv1.SyncCommitteeDuty], error)
+	SyncCommitteeRewardsFunc           func(context.Context, *api.SyncCommitteeRewardsOpts) (*api.Response[[]*apiv1.SyncCommitteeReward], error)
+	ValidatorBalancesFunc              func(context.Context, *api.ValidatorBalancesOpts) (*api.Response[map[phase0.ValidatorIndex]phase0.Gwei], error)
+	ValidatorLivenessFunc              func(context.Context, *api.ValidatorLivenessOpts) (*api.Response[[]*apiv1.ValidatorLiveness], error)
+	ValidatorsFunc                     func(context.Context, *api.ValidatorsOpts) (*api.Response[map[phase0.ValidatorIndex]*apiv1.Validator], error)
+	VoluntaryExitPoolFunc              func(context.Context, *api.VoluntaryExitPoolOpts) (*api.Response[[]*phase0.SignedVoluntaryExit], error)
 }
 
 // log is a service-wide logger.

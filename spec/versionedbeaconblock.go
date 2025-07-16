@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/eip7732"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -35,12 +36,13 @@ type VersionedBeaconBlock struct {
 	Deneb     *deneb.BeaconBlock
 	Electra   *electra.BeaconBlock
 	Fulu      *electra.BeaconBlock
+	EIP7732   *eip7732.BeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBeaconBlock) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil &&
-		v.Deneb == nil && v.Electra == nil && v.Fulu == nil
+		v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.EIP7732 == nil
 }
 
 // Slot returns the slot of the beacon block.
@@ -88,6 +90,12 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.Slot, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return 0, errors.New("no eip7732 block")
+		}
+
+		return v.EIP7732.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -159,6 +167,15 @@ func (v *VersionedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
 		}
 
 		return v.Fulu.Body.RANDAOReveal, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return phase0.BLSSignature{}, errors.New("no eip7732 block")
+		}
+		if v.EIP7732.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no eip7732 block body")
+		}
+
+		return v.EIP7732.Body.RANDAOReveal, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -230,6 +247,15 @@ func (v *VersionedBeaconBlock) Graffiti() ([32]byte, error) {
 		}
 
 		return v.Fulu.Body.Graffiti, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return [32]byte{}, errors.New("no eip7732 block")
+		}
+		if v.EIP7732.Body == nil {
+			return [32]byte{}, errors.New("no eip7732 block body")
+		}
+
+		return v.EIP7732.Body.Graffiti, nil
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -280,6 +306,12 @@ func (v *VersionedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
 		}
 
 		return v.Fulu.ProposerIndex, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return 0, errors.New("no eip7732 block")
+		}
+
+		return v.EIP7732.ProposerIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -330,6 +362,12 @@ func (v *VersionedBeaconBlock) Root() (phase0.Root, error) {
 		}
 
 		return v.Fulu.HashTreeRoot()
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return phase0.Root{}, errors.New("no eip7732 block")
+		}
+
+		return v.EIP7732.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -401,6 +439,15 @@ func (v *VersionedBeaconBlock) BodyRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.Body.HashTreeRoot()
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return phase0.Root{}, errors.New("no eip7732 block")
+		}
+		if v.EIP7732.Body == nil {
+			return phase0.Root{}, errors.New("no eip7732 block body")
+		}
+
+		return v.EIP7732.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -451,6 +498,12 @@ func (v *VersionedBeaconBlock) ParentRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.ParentRoot, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return phase0.Root{}, errors.New("no eip7732 block")
+		}
+
+		return v.EIP7732.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -501,6 +554,12 @@ func (v *VersionedBeaconBlock) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.StateRoot, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return phase0.Root{}, errors.New("no eip7732 block")
+		}
+
+		return v.EIP7732.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -603,6 +662,20 @@ func (v *VersionedBeaconBlock) Attestations() ([]VersionedAttestation, error) {
 			versionedAttestations[i] = VersionedAttestation{
 				Version: DataVersionFulu,
 				Fulu:    attestation,
+			}
+		}
+
+		return versionedAttestations, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil || v.EIP7732.Body == nil {
+			return nil, errors.New("no eip7732 block")
+		}
+
+		versionedAttestations := make([]VersionedAttestation, len(v.EIP7732.Body.Attestations))
+		for i, attestation := range v.EIP7732.Body.Attestations {
+			versionedAttestations[i] = VersionedAttestation{
+				Version: DataVersionEIP7732,
+				EIP7732: attestation,
 			}
 		}
 
@@ -713,6 +786,20 @@ func (v *VersionedBeaconBlock) AttesterSlashings() ([]VersionedAttesterSlashing,
 		}
 
 		return versionedAttesterSlashings, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil || v.EIP7732.Body == nil {
+			return nil, errors.New("no eip7732 block")
+		}
+
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.EIP7732.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.EIP7732.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionEIP7732,
+				EIP7732: attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -763,6 +850,12 @@ func (v *VersionedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlashing, 
 		}
 
 		return v.Fulu.Body.ProposerSlashings, nil
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil || v.EIP7732.Body == nil {
+			return nil, errors.New("no eip7732 block")
+		}
+
+		return v.EIP7732.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -856,6 +949,12 @@ func (v *VersionedBeaconBlock) String() string {
 		}
 
 		return v.Fulu.String()
+	case DataVersionEIP7732:
+		if v.EIP7732 == nil {
+			return ""
+		}
+
+		return v.EIP7732.String()
 	default:
 		return "unknown version"
 	}
