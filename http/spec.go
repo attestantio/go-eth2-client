@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2024 Attestant Limited.
+// Copyright © 2020 - 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,7 +16,6 @@ package http
 import (
 	"bytes"
 	"context"
-	"encoding/binary"
 	"encoding/hex"
 	"strconv"
 	"strings"
@@ -74,7 +73,7 @@ func (s *Service) Spec(ctx context.Context,
 		return nil, err
 	}
 
-	config := s.parseSpecsContainer(data)
+	config := parseSpecMap(data)
 
 	// The application mask domain type is not provided by all nodes, so add it here if not present.
 	if _, exists := config["DOMAIN_APPLICATION_MASK"]; !exists {
@@ -97,127 +96,98 @@ func (s *Service) Spec(ctx context.Context,
 	}, nil
 }
 
-func (s *Service) parseSpecsContainer(data map[string]any) map[string]any {
+func parseSpecMap(data map[string]any) map[string]any {
 	config := make(map[string]any)
-
 	for k, v := range data {
-		// Handle complex structures
-		if k == "BLOB_SCHEDULE" {
-			if arrVal, isArr := v.([]map[string]any); isArr {
-				values := make([]map[string]any, len(arrVal))
-				for idx, val := range arrVal {
-					values[idx] = s.parseSpecsContainer(val)
-				}
-			}
-		}
-
-		// Handle domains.
-		if strings.HasPrefix(k, "DOMAIN_") {
-			var byteVal []byte
-			var err error
-
-			if intVal, isInt := v.(int); isInt {
-				byteVal = make([]byte, 4)
-				binary.BigEndian.PutUint32(byteVal, uint32(intVal))
-			} else if strVal, isStr := v.(string); isStr {
-				byteVal, err = hex.DecodeString(strings.TrimPrefix(strVal, "0x"))
-			}
-
-			if err == nil {
-				var domainType phase0.DomainType
-				copy(domainType[:], byteVal)
-				config[k] = domainType
-
-				continue
-			}
-		}
-
-		// Handle fork versions.
-		if strings.HasSuffix(k, "_FORK_VERSION") {
-			var byteVal []byte
-			var err error
-
-			if intVal, isInt := v.(int); isInt {
-				byteVal = make([]byte, 4)
-				binary.BigEndian.PutUint32(byteVal, uint32(intVal))
-			} else if strVal, isStr := v.(string); isStr {
-				byteVal, err = hex.DecodeString(strings.TrimPrefix(strVal, "0x"))
-			}
-
-			if err == nil {
-				var version phase0.Version
-				copy(version[:], byteVal)
-				config[k] = version
-
-				continue
-			}
-		}
-
-		// Handle hex strings.
-		if strVal, isStr := v.(string); isStr && strings.HasPrefix(strVal, "0x") {
-			byteVal, err := hex.DecodeString(strings.TrimPrefix(strVal, "0x"))
-			if err == nil {
-				config[k] = byteVal
-
-				continue
-			}
-		}
-
-		// Handle times.
-		if strings.HasSuffix(k, "_TIME") {
-			var int64Val int64
-			if intVal, isInt := v.(int); isInt {
-				int64Val = int64(intVal)
-			} else if strVal, isStr := v.(string); isStr {
-				intVal, err := strconv.ParseInt(strVal, 10, 64)
-				if err == nil {
-					int64Val = intVal
-				}
-			}
-
-			config[k] = time.Unix(int64Val, 0)
-
-			continue
-		}
-
-		// Handle durations.
-		if strings.HasPrefix(k, "SECONDS_PER_") || k == "GENESIS_DELAY" {
-			var int64Val int64
-			if intVal, isInt := v.(int); isInt {
-				int64Val = int64(intVal)
-			} else if strVal, isStr := v.(string); isStr {
-				intVal, err := strconv.ParseInt(strVal, 10, 64)
-				if err == nil {
-					int64Val = intVal
-				}
-			}
-
-			config[k] = time.Duration(int64Val) * time.Second
-
-			continue
-		}
-
-		// Handle integers.
-		if intVal, isInt := v.(int); isInt {
-			config[k] = uint64(intVal)
-
-			continue
-		} else if strVal, isStr := v.(string); isStr {
-			intVal, err := strconv.ParseUint(strVal, 10, 64)
-			if err == nil {
-				config[k] = intVal
-
-				continue
-			}
-		}
-
-		// Assume string.
-		if strVal, isStr := v.(string); isStr {
-			config[k] = strVal
-
-			continue
+		switch value := v.(type) {
+		case string:
+			config[k] = parseSpecString(k, value)
+		case []any:
+			config[k] = parseSpecArray(value)
+		case map[string]any:
+			config[k] = parseSpecMap(value)
+		default:
+			config[k] = v
 		}
 	}
 
 	return config
+}
+
+func parseSpecArray(array []any) []any {
+	result := make([]any, len(array))
+	for i, element := range array {
+		switch value := element.(type) {
+		case string:
+			result[i] = parseSpecString("", value)
+		case []any:
+			result[i] = parseSpecArray(value)
+		case map[string]any:
+			result[i] = parseSpecMap(value)
+		default:
+			result[i] = element
+		}
+	}
+
+	return result
+}
+
+func parseSpecString(k, v string) any {
+	// Handle domains.
+	if strings.HasPrefix(k, "DOMAIN_") {
+		byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
+		if err == nil {
+			var domainType phase0.DomainType
+			copy(domainType[:], byteVal)
+
+			return domainType
+		}
+	}
+
+	// Handle fork versions.
+	if strings.HasSuffix(k, "_FORK_VERSION") {
+		byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
+		if err == nil {
+			var version phase0.Version
+			copy(version[:], byteVal)
+
+			return version
+		}
+	}
+
+	// Handle hex strings.
+	if strings.HasPrefix(v, "0x") {
+		byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
+		if err == nil {
+			return byteVal
+		}
+	}
+
+	// Handle times.
+	if strings.HasSuffix(k, "_TIME") {
+		intVal, err := strconv.ParseInt(v, 10, 64)
+		if err == nil && intVal != 0 {
+			return time.Unix(intVal, 0)
+		}
+	}
+
+	// Handle durations.
+	if strings.HasPrefix(k, "SECONDS_PER_") || k == "GENESIS_DELAY" {
+		intVal, err := strconv.ParseInt(v, 10, 64)
+		if err == nil && intVal >= 0 {
+			return time.Duration(intVal) * time.Second
+		}
+	}
+
+	// Handle integers.
+	if v == "0" {
+		return uint64(0)
+	}
+	intVal, err := strconv.ParseUint(v, 10, 64)
+	if err == nil && intVal != 0 {
+		return intVal
+	}
+
+	// Assume string.
+	return v
 }
