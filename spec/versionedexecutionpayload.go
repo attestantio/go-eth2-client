@@ -36,7 +36,7 @@ type VersionedExecutionPayload struct {
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedExecutionPayload) IsEmpty() bool {
-	return v.Version < DataVersionBellatrix || (v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil)
+	return v.Version < DataVersionBellatrix || (v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.EIP7805 == nil)
 }
 
 // ParentHash returns the parent hash of the execution payload.
@@ -76,6 +76,12 @@ func (v *VersionedExecutionPayload) ParentHash() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.ParentHash, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return phase0.Hash32{}, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.ParentHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -118,6 +124,12 @@ func (v *VersionedExecutionPayload) FeeRecipient() (bellatrix.ExecutionAddress, 
 		}
 
 		return v.Fulu.FeeRecipient, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, errors.New("unknown version")
 	}
@@ -160,6 +172,12 @@ func (v *VersionedExecutionPayload) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.StateRoot, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return phase0.Root{}, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -202,6 +220,12 @@ func (v *VersionedExecutionPayload) ReceiptsRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.ReceiptsRoot, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return phase0.Root{}, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.ReceiptsRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -244,6 +268,12 @@ func (v *VersionedExecutionPayload) LogsBloom() ([256]byte, error) {
 		}
 
 		return v.Fulu.LogsBloom, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return [256]byte{}, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.LogsBloom, nil
 	default:
 		return [256]byte{}, errors.New("unknown version")
 	}
@@ -286,6 +316,12 @@ func (v *VersionedExecutionPayload) PrevRandao() ([32]byte, error) {
 		}
 
 		return v.Fulu.PrevRandao, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return [32]byte{}, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.PrevRandao, nil
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -328,6 +364,12 @@ func (v *VersionedExecutionPayload) BlockNumber() (uint64, error) {
 		}
 
 		return v.Fulu.BlockNumber, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return 0, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.BlockNumber, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -370,6 +412,12 @@ func (v *VersionedExecutionPayload) GasLimit() (uint64, error) {
 		}
 
 		return v.Fulu.GasLimit, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return 0, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.GasLimit, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -412,6 +460,12 @@ func (v *VersionedExecutionPayload) GasUsed() (uint64, error) {
 		}
 
 		return v.Fulu.GasUsed, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return 0, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.GasUsed, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -454,6 +508,12 @@ func (v *VersionedExecutionPayload) Timestamp() (uint64, error) {
 		}
 
 		return v.Fulu.Timestamp, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return 0, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.Timestamp, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -496,6 +556,12 @@ func (v *VersionedExecutionPayload) ExtraData() ([]byte, error) {
 		}
 
 		return v.Fulu.ExtraData, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return nil, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.ExtraData, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -538,6 +604,12 @@ func (v *VersionedExecutionPayload) BaseFeePerGas() (*uint256.Int, error) {
 		}
 
 		return v.Fulu.BaseFeePerGas, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return nil, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.BaseFeePerGas, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -580,6 +652,12 @@ func (v *VersionedExecutionPayload) BlockHash() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.BlockHash, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return phase0.Hash32{}, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.BlockHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -622,6 +700,12 @@ func (v *VersionedExecutionPayload) Transactions() ([]bellatrix.Transaction, err
 		}
 
 		return v.Fulu.Transactions, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return nil, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.Transactions, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -660,6 +744,12 @@ func (v *VersionedExecutionPayload) Withdrawals() ([]*capella.Withdrawal, error)
 		}
 
 		return v.Fulu.Withdrawals, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return nil, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.Withdrawals, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -694,6 +784,12 @@ func (v *VersionedExecutionPayload) BlobGasUsed() (uint64, error) {
 		}
 
 		return v.Fulu.BlobGasUsed, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return 0, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.BlobGasUsed, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -728,6 +824,12 @@ func (v *VersionedExecutionPayload) ExcessBlobGas() (uint64, error) {
 		}
 
 		return v.Fulu.ExcessBlobGas, nil
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return 0, errors.New("no eip7805 execution payload")
+		}
+
+		return v.EIP7805.ExcessBlobGas, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -770,6 +872,12 @@ func (v *VersionedExecutionPayload) String() string {
 		}
 
 		return v.Fulu.String()
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return ""
+		}
+
+		return v.EIP7805.String()
 	default:
 		return "unknown version"
 	}

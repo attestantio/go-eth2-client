@@ -592,6 +592,12 @@ func (v *VersionedBeaconState) GetTree() (*ssz.Node, error) {
 		}
 
 		return v.Fulu.GetTree()
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return nil, errors.New("no EIP7805 state")
+		}
+
+		return v.EIP7805.GetTree()
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -642,6 +648,12 @@ func (v *VersionedBeaconState) HashTreeRoot() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.HashTreeRoot()
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return phase0.Hash32{}, errors.New("no EIP7805 state")
+		}
+
+		return v.EIP7805.HashTreeRoot()
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -694,6 +706,12 @@ func (v *VersionedBeaconState) FieldIndex(name string) (int, error) {
 		}
 
 		return proofutil.FieldIndex(v.Fulu, name)
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return 0, errors.New("no EIP7805 state")
+		}
+
+		return proofutil.FieldIndex(v.EIP7805, name)
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -747,6 +765,12 @@ func (v *VersionedBeaconState) FieldGeneralizedIndex(name string) (int, error) {
 		}
 
 		return proofutil.FieldGeneralizedIndex(v.Fulu, name)
+	case DataVersionEip7805:
+		if v.EIP7805 == nil {
+			return 0, errors.New("no EIP7805 state")
+		}
+
+		return proofutil.FieldGeneralizedIndex(v.EIP7805, name)
 	default:
 		return 0, errors.New("unknown version")
 	}

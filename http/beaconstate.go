@@ -195,7 +195,7 @@ func (*Service) beaconStateFromJSON(res *httpResponse) (*api.Response[*spec.Vers
 	case spec.DataVersionElectra:
 		response.Data.Electra, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &electra.BeaconState{})
 	case spec.DataVersionFulu:
-		response.Data.Fulu, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &electra.BeaconState{})
+		response.Data.Fulu, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &fulu.BeaconState{})
 	case spec.DataVersionEip7805:
 		response.Data.EIP7805, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &electra.BeaconState{})
 	default:

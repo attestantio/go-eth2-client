@@ -1396,6 +1396,12 @@ func (v *VersionedSignedBeaconBlock) ExecutionPayload() (*VersionedExecutionPayl
 		}
 
 		versionedExecutionPayload.Fulu = v.Fulu.Message.Body.ExecutionPayload
+	case DataVersionEip7805:
+		if v.Eip7805 == nil || v.Eip7805.Message == nil || v.Eip7805.Message.Body == nil {
+			return nil, errors.New("no eip7805 block")
+		}
+
+		versionedExecutionPayload.EIP7805 = v.Eip7805.Message.Body.ExecutionPayload
 	default:
 		return nil, errors.New("unknown version")
 	}
