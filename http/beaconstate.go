@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/fulu"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -146,7 +147,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 			return nil, errors.Join(errors.New("failed to decode electra beacon state"), err)
 		}
 	case spec.DataVersionFulu:
-		response.Data.Fulu = &electra.BeaconState{}
+		response.Data.Fulu = &fulu.BeaconState{}
 		if s.customSpecSupport {
 			err = dynSSZ.UnmarshalSSZ(response.Data.Fulu, res.body)
 		} else {
@@ -156,11 +157,11 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 			return nil, errors.Join(errors.New("failed to decode fulu beacon state"), err)
 		}
 	case spec.DataVersionEip7805:
-		response.Data.Eip7805 = &electra.BeaconState{}
+		response.Data.EIP7805 = &electra.BeaconState{}
 		if s.customSpecSupport {
-			err = dynSSZ.UnmarshalSSZ(response.Data.Eip7805, res.body)
+			err = dynSSZ.UnmarshalSSZ(response.Data.EIP7805, res.body)
 		} else {
-			err = response.Data.Eip7805.UnmarshalSSZ(res.body)
+			err = response.Data.EIP7805.UnmarshalSSZ(res.body)
 		}
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode eip7805 beacon state"), err)
@@ -196,7 +197,7 @@ func (*Service) beaconStateFromJSON(res *httpResponse) (*api.Response[*spec.Vers
 	case spec.DataVersionFulu:
 		response.Data.Fulu, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &electra.BeaconState{})
 	case spec.DataVersionEip7805:
-		response.Data.Eip7805, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &electra.BeaconState{})
+		response.Data.EIP7805, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &electra.BeaconState{})
 	default:
 		err = fmt.Errorf("unsupported version %s", res.consensusVersion)
 	}

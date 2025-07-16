@@ -895,6 +895,12 @@ func (v *VersionedBeaconBlock) ExecutionPayload() (*VersionedExecutionPayload, e
 		}
 
 		versionedExecutionPayload.Electra = v.Electra.Body.ExecutionPayload
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		versionedExecutionPayload.Fulu = v.Fulu.Body.ExecutionPayload
 	case DataVersionEip7805:
 		if v.EIP7805 == nil || v.EIP7805.Body == nil {
 			return nil, errors.New("no eip7732 block")
