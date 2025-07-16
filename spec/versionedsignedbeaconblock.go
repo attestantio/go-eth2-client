@@ -1361,7 +1361,8 @@ func (v *VersionedSignedBeaconBlock) ExecutionPayload() (*VersionedExecutionPayl
 		}
 
 		versionedExecutionPayload.Electra = v.Electra.Message.Body.ExecutionPayload
-
+	case DataVersionEIP7732:
+		return nil, errors.New("no execution payload in eip7732")
 	default:
 		return nil, errors.New("unknown version")
 	}
