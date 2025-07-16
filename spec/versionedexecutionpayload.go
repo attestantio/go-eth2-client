@@ -30,6 +30,7 @@ type VersionedExecutionPayload struct {
 	Capella   *capella.ExecutionPayload
 	Deneb     *deneb.ExecutionPayload
 	Electra   *deneb.ExecutionPayload
+	Fulu      *deneb.ExecutionPayload
 }
 
 // IsEmpty returns true if there is no block.
@@ -68,6 +69,12 @@ func (v *VersionedExecutionPayload) ParentHash() (phase0.Hash32, error) {
 		}
 
 		return v.Electra.ParentHash, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.Hash32{}, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.ParentHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -104,6 +111,12 @@ func (v *VersionedExecutionPayload) FeeRecipient() (bellatrix.ExecutionAddress, 
 		}
 
 		return v.Electra.FeeRecipient, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, errors.New("unknown version")
 	}
@@ -140,6 +153,12 @@ func (v *VersionedExecutionPayload) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.StateRoot, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.Root{}, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -176,6 +195,12 @@ func (v *VersionedExecutionPayload) ReceiptsRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.ReceiptsRoot, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.Root{}, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.ReceiptsRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -212,6 +237,12 @@ func (v *VersionedExecutionPayload) LogsBloom() ([256]byte, error) {
 		}
 
 		return v.Electra.LogsBloom, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return [256]byte{}, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.LogsBloom, nil
 	default:
 		return [256]byte{}, errors.New("unknown version")
 	}
@@ -248,6 +279,12 @@ func (v *VersionedExecutionPayload) PrevRandao() ([32]byte, error) {
 		}
 
 		return v.Electra.PrevRandao, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return [32]byte{}, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.PrevRandao, nil
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -284,6 +321,12 @@ func (v *VersionedExecutionPayload) BlockNumber() (uint64, error) {
 		}
 
 		return v.Electra.BlockNumber, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.BlockNumber, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -320,6 +363,12 @@ func (v *VersionedExecutionPayload) GasLimit() (uint64, error) {
 		}
 
 		return v.Electra.GasLimit, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.GasLimit, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -356,6 +405,12 @@ func (v *VersionedExecutionPayload) GasUsed() (uint64, error) {
 		}
 
 		return v.Electra.GasUsed, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.GasUsed, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -392,6 +447,12 @@ func (v *VersionedExecutionPayload) Timestamp() (uint64, error) {
 		}
 
 		return v.Electra.Timestamp, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.Timestamp, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -428,6 +489,12 @@ func (v *VersionedExecutionPayload) ExtraData() ([]byte, error) {
 		}
 
 		return v.Electra.ExtraData, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.ExtraData, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -464,6 +531,12 @@ func (v *VersionedExecutionPayload) BaseFeePerGas() (*uint256.Int, error) {
 		}
 
 		return v.Electra.BaseFeePerGas, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.BaseFeePerGas, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -500,6 +573,12 @@ func (v *VersionedExecutionPayload) BlockHash() (phase0.Hash32, error) {
 		}
 
 		return v.Electra.BlockHash, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.Hash32{}, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.BlockHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -536,6 +615,12 @@ func (v *VersionedExecutionPayload) Transactions() ([]bellatrix.Transaction, err
 		}
 
 		return v.Electra.Transactions, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.Transactions, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -568,6 +653,12 @@ func (v *VersionedExecutionPayload) Withdrawals() ([]*capella.Withdrawal, error)
 		}
 
 		return v.Electra.Withdrawals, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.Withdrawals, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -596,6 +687,12 @@ func (v *VersionedExecutionPayload) BlobGasUsed() (uint64, error) {
 		}
 
 		return v.Electra.BlobGasUsed, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.BlobGasUsed, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -624,6 +721,12 @@ func (v *VersionedExecutionPayload) ExcessBlobGas() (uint64, error) {
 		}
 
 		return v.Electra.ExcessBlobGas, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no fulu execution payload")
+		}
+
+		return v.Fulu.ExcessBlobGas, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -660,6 +763,12 @@ func (v *VersionedExecutionPayload) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	default:
 		return "unknown version"
 	}

@@ -507,6 +507,12 @@ func (v *VersionedBeaconState) GetTree() (*ssz.Node, error) {
 		}
 
 		return v.Electra.GetTree()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.GetTree()
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -551,6 +557,12 @@ func (v *VersionedBeaconState) HashTreeRoot() (phase0.Hash32, error) {
 		}
 
 		return v.Electra.HashTreeRoot()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.Hash32{}, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.HashTreeRoot()
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -597,6 +609,12 @@ func (v *VersionedBeaconState) FieldIndex(name string) (int, error) {
 		}
 
 		return proofutil.FieldIndex(v.Electra, name)
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return proofutil.FieldIndex(v.Fulu, name)
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -644,6 +662,12 @@ func (v *VersionedBeaconState) FieldGeneralizedIndex(name string) (int, error) {
 		}
 
 		return proofutil.FieldGeneralizedIndex(v.Electra, name)
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return proofutil.FieldGeneralizedIndex(v.Fulu, name)
 	default:
 		return 0, errors.New("unknown version")
 	}

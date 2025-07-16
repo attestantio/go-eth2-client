@@ -803,7 +803,12 @@ func (v *VersionedBeaconBlock) ExecutionPayload() (*VersionedExecutionPayload, e
 		}
 
 		versionedExecutionPayload.Electra = v.Electra.Body.ExecutionPayload
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
 
+		versionedExecutionPayload.Fulu = v.Fulu.Body.ExecutionPayload
 	default:
 		return nil, errors.New("unknown version")
 	}
