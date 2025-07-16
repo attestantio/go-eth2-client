@@ -1,3 +1,22 @@
+0.26.0:
+  - refactor http.Spec to allow more complex types in the keys
+  - support pending consolidations and deposits
+
+0.25.2:
+  - add multi/submitblindedproposal
+
+0.25.1:
+  - add Merkle tree and proof generation utils
+  - add convenience methods on versioned beaconstate for field access and proofs:
+    - ValidatorAtIndex
+    - ValidatorBalance
+    - FieldIndex
+    - FieldGeneralizedIndex
+    - FieldRoot
+    - FieldTree
+    - ProveField
+    - VerifyFieldProof
+
 0.25.0:
   - update attestation pool endpoint to receive versioned attestations
 

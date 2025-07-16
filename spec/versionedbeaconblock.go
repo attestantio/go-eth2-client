@@ -768,6 +768,49 @@ func (v *VersionedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlashing, 
 	}
 }
 
+// ExecutionPayload returns the execution payload of the beacon block.
+func (v *VersionedBeaconBlock) ExecutionPayload() (*VersionedExecutionPayload, error) {
+	versionedExecutionPayload := &VersionedExecutionPayload{
+		Version: v.Version,
+	}
+
+	switch v.Version {
+	case DataVersionPhase0:
+		return nil, errors.New("no execution payload in phase0")
+	case DataVersionAltair:
+		return nil, errors.New("no execution payload in altair")
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+
+		versionedExecutionPayload.Bellatrix = v.Bellatrix.Body.ExecutionPayload
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Body == nil {
+			return nil, errors.New("no capella block")
+		}
+
+		versionedExecutionPayload.Capella = v.Capella.Body.ExecutionPayload
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Body == nil {
+			return nil, errors.New("no deneb block")
+		}
+
+		versionedExecutionPayload.Deneb = v.Deneb.Body.ExecutionPayload
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		versionedExecutionPayload.Electra = v.Electra.Body.ExecutionPayload
+
+	default:
+		return nil, errors.New("unknown version")
+	}
+
+	return versionedExecutionPayload, nil
+}
+
 // String returns a string version of the structure.
 func (v *VersionedBeaconBlock) String() string {
 	switch v.Version {

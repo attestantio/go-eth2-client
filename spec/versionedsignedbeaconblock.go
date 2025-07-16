@@ -1192,6 +1192,49 @@ func (v *VersionedSignedBeaconBlock) ExecutionRequests() (*electra.ExecutionRequ
 	}
 }
 
+// ExecutionPayload returns the execution payload of the signed beacon block.
+func (v *VersionedSignedBeaconBlock) ExecutionPayload() (*VersionedExecutionPayload, error) {
+	versionedExecutionPayload := &VersionedExecutionPayload{
+		Version: v.Version,
+	}
+
+	switch v.Version {
+	case DataVersionPhase0:
+		return nil, errors.New("no execution payload in phase0")
+	case DataVersionAltair:
+		return nil, errors.New("no execution payload in altair")
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil || v.Bellatrix.Message == nil || v.Bellatrix.Message.Body == nil {
+			return nil, errors.New("no bellatrix block")
+		}
+
+		versionedExecutionPayload.Bellatrix = v.Bellatrix.Message.Body.ExecutionPayload
+	case DataVersionCapella:
+		if v.Capella == nil || v.Capella.Message == nil || v.Capella.Message.Body == nil {
+			return nil, errors.New("no capella block")
+		}
+
+		versionedExecutionPayload.Capella = v.Capella.Message.Body.ExecutionPayload
+	case DataVersionDeneb:
+		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {
+			return nil, errors.New("no deneb block")
+		}
+
+		versionedExecutionPayload.Deneb = v.Deneb.Message.Body.ExecutionPayload
+	case DataVersionElectra:
+		if v.Electra == nil || v.Electra.Message == nil || v.Electra.Message.Body == nil {
+			return nil, errors.New("no electra block")
+		}
+
+		versionedExecutionPayload.Electra = v.Electra.Message.Body.ExecutionPayload
+
+	default:
+		return nil, errors.New("unknown version")
+	}
+
+	return versionedExecutionPayload, nil
+}
+
 // String returns a string version of the structure.
 func (v *VersionedSignedBeaconBlock) String() string {
 	switch v.Version {
