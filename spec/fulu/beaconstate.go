@@ -1,0 +1,80 @@
+// Copyright © 2025 Attestant Limited.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package fulu
+
+import (
+	"fmt"
+
+	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/goccy/go-yaml"
+	bitfield "github.com/prysmaticlabs/go-bitfield"
+)
+
+// BeaconState represents a beacon state.
+//
+//nolint:revive
+type BeaconState struct {
+	GenesisTime                   uint64
+	GenesisValidatorsRoot         phase0.Root `ssz-size:"32"`
+	Slot                          phase0.Slot
+	Fork                          *phase0.Fork
+	LatestBlockHeader             *phase0.BeaconBlockHeader
+	BlockRoots                    []phase0.Root `dynssz-size:"SLOTS_PER_HISTORICAL_ROOT,32" ssz-size:"8192,32"`
+	StateRoots                    []phase0.Root `dynssz-size:"SLOTS_PER_HISTORICAL_ROOT,32" ssz-size:"8192,32"`
+	HistoricalRoots               []phase0.Root `dynssz-max:"HISTORICAL_ROOTS_LIMIT"        ssz-max:"16777216" ssz-size:"?,32"`
+	ETH1Data                      *phase0.ETH1Data
+	ETH1DataVotes                 []*phase0.ETH1Data `dynssz-max:"EPOCHS_PER_ETH1_VOTING_PERIOD*SLOTS_PER_EPOCH" ssz-max:"2048"`
+	ETH1DepositIndex              uint64
+	Validators                    []*phase0.Validator         `dynssz-max:"VALIDATOR_REGISTRY_LIMIT"         ssz-max:"1099511627776"`
+	Balances                      []phase0.Gwei               `dynssz-max:"VALIDATOR_REGISTRY_LIMIT"         ssz-max:"1099511627776"`
+	RANDAOMixes                   []phase0.Root               `dynssz-size:"EPOCHS_PER_HISTORICAL_VECTOR,32" ssz-size:"65536,32"`
+	Slashings                     []phase0.Gwei               `dynssz-size:"EPOCHS_PER_SLASHINGS_VECTOR"     ssz-size:"8192"`
+	PreviousEpochParticipation    []altair.ParticipationFlags `dynssz-max:"VALIDATOR_REGISTRY_LIMIT"         ssz-max:"1099511627776"`
+	CurrentEpochParticipation     []altair.ParticipationFlags `dynssz-max:"VALIDATOR_REGISTRY_LIMIT"         ssz-max:"1099511627776"`
+	JustificationBits             bitfield.Bitvector4         `ssz-size:"1"`
+	PreviousJustifiedCheckpoint   *phase0.Checkpoint
+	CurrentJustifiedCheckpoint    *phase0.Checkpoint
+	FinalizedCheckpoint           *phase0.Checkpoint
+	InactivityScores              []uint64 `dynssz-max:"VALIDATOR_REGISTRY_LIMIT" ssz-max:"1099511627776"`
+	CurrentSyncCommittee          *altair.SyncCommittee
+	NextSyncCommittee             *altair.SyncCommittee
+	LatestExecutionPayloadHeader  *deneb.ExecutionPayloadHeader
+	NextWithdrawalIndex           capella.WithdrawalIndex
+	NextWithdrawalValidatorIndex  phase0.ValidatorIndex
+	HistoricalSummaries           []*capella.HistoricalSummary `dynssz-max:"HISTORICAL_ROOTS_LIMIT" ssz-max:"16777216"`
+	DepositRequestsStartIndex     uint64
+	DepositBalanceToConsume       phase0.Gwei
+	ExitBalanceToConsume          phase0.Gwei
+	EarliestExitEpoch             phase0.Epoch
+	ConsolidationBalanceToConsume phase0.Gwei
+	EarliestConsolidationEpoch    phase0.Epoch
+	PendingDeposits               []*electra.PendingDeposit           `dynssz-max:"PENDING_DEPOSITS_LIMIT"                  ssz-max:"134217728"`
+	PendingPartialWithdrawals     []*electra.PendingPartialWithdrawal `dynssz-max:"PENDING_PARTIAL_WITHDRAWALS_LIMIT"       ssz-max:"134217728"`
+	PendingConsolidations         []*electra.PendingConsolidation     `dynssz-max:"PENDING_CONSOLIDATIONS_LIMIT"            ssz-max:"262144"`
+	ProposerLookahead             []phase0.ValidatorIndex             `dynssz-size:"(MIN_SEED_LOOKAHEAD+1)*SLOTS_PER_EPOCH" ssz-size:"64"`
+}
+
+// String returns a string version of the structure.
+func (b *BeaconState) String() string {
+	data, err := yaml.Marshal(b)
+	if err != nil {
+		return fmt.Sprintf("ERR: %v", err)
+	}
+
+	return string(data)
+}

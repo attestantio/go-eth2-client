@@ -29,6 +29,7 @@ type VersionedSignedBlindedProposal struct {
 	Capella   *apiv1capella.SignedBlindedBeaconBlock
 	Deneb     *apiv1deneb.SignedBlindedBeaconBlock
 	Electra   *apiv1electra.SignedBlindedBeaconBlock
+	Fulu      *apiv1electra.SignedBlindedBeaconBlock
 }
 
 // Slot returns the slot of the signed blinded proposal.
@@ -62,6 +63,13 @@ func (v *VersionedSignedBlindedProposal) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Electra.Message.Slot, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Fulu.Message.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -134,6 +142,22 @@ func (v *VersionedSignedBlindedProposal) Attestations() ([]spec.VersionedAttesta
 		}
 
 		return versionedAttestations, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil ||
+			v.Fulu.Message.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		versionedAttestations := make([]spec.VersionedAttestation, len(v.Fulu.Message.Body.Attestations))
+		for i, attestation := range v.Fulu.Message.Body.Attestations {
+			versionedAttestations[i] = spec.VersionedAttestation{
+				Version: spec.DataVersionFulu,
+				Fulu:    attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -169,6 +193,12 @@ func (v *VersionedSignedBlindedProposal) Root() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.HashTreeRoot()
+	case spec.DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.Message.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -209,6 +239,14 @@ func (v *VersionedSignedBlindedProposal) BodyRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.Body.HashTreeRoot()
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil ||
+			v.Fulu.Message.Body == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.Message.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -245,6 +283,13 @@ func (v *VersionedSignedBlindedProposal) ParentRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.ParentRoot, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.Message.ParentRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -281,6 +326,13 @@ func (v *VersionedSignedBlindedProposal) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.StateRoot, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Fulu.Message.StateRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -353,6 +405,22 @@ func (v *VersionedSignedBlindedProposal) AttesterSlashings() ([]spec.VersionedAt
 		}
 
 		return versionedAttesterSlashings, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil ||
+			v.Fulu.Message.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		versionedAttesterSlashings := make([]spec.VersionedAttesterSlashing, len(v.Fulu.Message.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Fulu.Message.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = spec.VersionedAttesterSlashing{
+				Version: spec.DataVersionFulu,
+				Fulu:    attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -393,6 +461,14 @@ func (v *VersionedSignedBlindedProposal) ProposerSlashings() ([]*phase0.Proposer
 		}
 
 		return v.Electra.Message.Body.ProposerSlashings, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil ||
+			v.Fulu.Message.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		return v.Fulu.Message.Body.ProposerSlashings, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -429,6 +505,13 @@ func (v *VersionedSignedBlindedProposal) ProposerIndex() (phase0.ValidatorIndex,
 		}
 
 		return v.Electra.Message.ProposerIndex, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Fulu.Message.ProposerIndex, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -473,6 +556,15 @@ func (v *VersionedSignedBlindedProposal) ExecutionBlockHash() (phase0.Hash32, er
 		}
 
 		return v.Electra.Message.Body.ExecutionPayloadHeader.BlockHash, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil ||
+			v.Fulu.Message.Body == nil ||
+			v.Fulu.Message.Body.ExecutionPayloadHeader == nil {
+			return phase0.Hash32{}, ErrDataMissing
+		}
+
+		return v.Fulu.Message.Body.ExecutionPayloadHeader.BlockHash, nil
 	default:
 		return phase0.Hash32{}, ErrUnsupportedVersion
 	}
@@ -517,6 +609,15 @@ func (v *VersionedSignedBlindedProposal) ExecutionBlockNumber() (uint64, error) 
 		}
 
 		return v.Electra.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil ||
+			v.Fulu.Message == nil ||
+			v.Fulu.Message.Body == nil ||
+			v.Fulu.Message.Body.ExecutionPayloadHeader == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Fulu.Message.Body.ExecutionPayloadHeader.BlockNumber, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -549,6 +650,12 @@ func (v *VersionedSignedBlindedProposal) Signature() (phase0.BLSSignature, error
 		}
 
 		return v.Electra.Signature, nil
+	case spec.DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.BLSSignature{}, ErrDataMissing
+		}
+
+		return v.Fulu.Signature, nil
 	default:
 		return phase0.BLSSignature{}, ErrUnsupportedVersion
 	}
