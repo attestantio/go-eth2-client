@@ -22,9 +22,14 @@ import (
 )
 
 // SubmitBeaconCommitteeSelections submits beacon committee selections.
-func (s *Service) SubmitBeaconCommitteeSelections(ctx context.Context, selections []*apiv1.BeaconCommitteeSelection) (*api.Response[[]*apiv1.BeaconCommitteeSelection], error) {
+func (s *Service) SubmitBeaconCommitteeSelections(ctx context.Context,
+	selections []*apiv1.BeaconCommitteeSelection,
+) (
+	*api.Response[[]*apiv1.BeaconCommitteeSelection], error,
+) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		aggregatedSelections, err := client.(consensusclient.BeaconCommitteeSelectionsSubmitter).SubmitBeaconCommitteeSelections(ctx, selections)
+		aggregatedSelections, err := client.(consensusclient.BeaconCommitteeSelectionsSubmitter).
+			SubmitBeaconCommitteeSelections(ctx, selections)
 		if err != nil {
 			return nil, err
 		}

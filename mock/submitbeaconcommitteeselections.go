@@ -21,7 +21,11 @@ import (
 )
 
 // SubmitBeaconCommitteeSelections submits beacon committee selections.
-func (*Service) SubmitBeaconCommitteeSelections(_ context.Context, selections []*apiv1.BeaconCommitteeSelection) (*api.Response[[]*apiv1.BeaconCommitteeSelection], error) {
+func (*Service) SubmitBeaconCommitteeSelections(_ context.Context,
+	selections []*apiv1.BeaconCommitteeSelection,
+) (
+	*api.Response[[]*apiv1.BeaconCommitteeSelection], error,
+) {
 	return &api.Response[[]*apiv1.BeaconCommitteeSelection]{
 		Data:     selections,
 		Metadata: make(map[string]any),
