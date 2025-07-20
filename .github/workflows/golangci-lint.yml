@@ -2,7 +2,7 @@ name: golangci-lint
 on:
   push:
     branches:
-    - master
+      - master
   pull_request:
 
 permissions:
@@ -22,6 +22,6 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v8
         with:
-          version: 'latest'
-          args: '--timeout=60m'
+          version: "latest"
+          args: "--timeout=60m"
           skip-cache: true
