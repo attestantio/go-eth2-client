@@ -514,6 +514,22 @@ func (s *Sleepy) NodePeers(ctx context.Context,
 	return next.NodePeers(ctx, opts)
 }
 
+// NodePeerCount provides the peer count of the node.
+func (s *Sleepy) NodePeerCount(ctx context.Context,
+	opts *api.NodePeerCountOpts,
+) (
+	*api.Response[*apiv1.PeerCount],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.NodePeerCountProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.NodePeerCount(ctx, opts)
+}
+
 // ProposerDuties obtains proposer duties for the given epoch.
 func (s *Sleepy) ProposerDuties(ctx context.Context,
 	opts *api.ProposerDutiesOpts,

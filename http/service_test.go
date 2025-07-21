@@ -142,6 +142,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.ForkScheduleProvider)(nil), s)
 	assert.Implements(t, (*client.GenesisProvider)(nil), s)
 	assert.Implements(t, (*client.NodeSyncingProvider)(nil), s)
+	assert.Implements(t, (*client.NodePeerCountProvider)(nil), s)
 	assert.Implements(t, (*client.ProposalProvider)(nil), s)
 	assert.Implements(t, (*client.ProposerDutiesProvider)(nil), s)
 	assert.Implements(t, (*client.ProposalPreparationsSubmitter)(nil), s)

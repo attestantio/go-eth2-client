@@ -659,6 +659,24 @@ func (s *Erroring) NodePeers(ctx context.Context,
 	return next.NodePeers(ctx, opts)
 }
 
+// NodePeerCount provides the peer count of the node.
+func (s *Erroring) NodePeerCount(ctx context.Context,
+	opts *api.NodePeerCountOpts,
+) (
+	*api.Response[*apiv1.PeerCount],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.NodePeerCountProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.NodePeerCount(ctx, opts)
+}
+
 // ProposerDuties obtains proposer duties for the given epoch.
 func (s *Erroring) ProposerDuties(ctx context.Context,
 	opts *api.ProposerDutiesOpts,

@@ -502,6 +502,17 @@ type NodePeersProvider interface {
 	)
 }
 
+// NodePeerCountProvider is the interface for providing peer count.
+type NodePeerCountProvider interface {
+	// NodePeerCount provides the peer count of the node.
+	NodePeerCount(ctx context.Context,
+		opts *api.NodePeerCountOpts,
+	) (
+		*api.Response[*apiv1.PeerCount],
+		error,
+	)
+}
+
 // NodeSyncingProvider is the interface for providing synchronization state.
 type NodeSyncingProvider interface {
 	// NodeSyncing provides the state of the node's synchronization with the chain.
