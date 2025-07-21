@@ -15,14 +15,16 @@ package multi
 
 import (
 	"context"
+	"slices"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/rs/zerolog"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
-	"github.com/pkg/errors"
-	"github.com/rs/zerolog"
 )
 
 // monitor monitors active and inactive clients, and moves them between
@@ -130,6 +132,22 @@ func (s *Service) activateClient(ctx context.Context, client consensusclient.Ser
 	s.setConnectionsMetric(ctx, len(s.activeClients), len(s.inactiveClients))
 }
 
+// scoreClient returns client score.
+func (s *Service) scoreClient(clientAddr string) int {
+	s.clientScoresMu.RLock()
+	defer s.clientScoresMu.RUnlock()
+
+	return s.clientScores[clientAddr]
+}
+
+// penalizeClient client score.
+func (s *Service) penalizeClient(clientAddr string) {
+	s.clientScoresMu.Lock()
+	defer s.clientScoresMu.Unlock()
+
+	s.clientScores[clientAddr]--
+}
+
 // callFunc is the definition for a call function.  It provides a generic return interface
 // to allow the caller to unpick the results as it sees fit.
 type callFunc func(ctx context.Context, client consensusclient.Service) (any, error)
@@ -161,6 +179,20 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		return nil, errors.New("no clients to which to make call")
 	}
 
+	// Sort in desc order (clients with the highest scores come first), client-scores
+	// might change concurrently to sorting - but it's best to use the latest data anyway.
+	slices.SortFunc(activeClients, func(a, b consensusclient.Service) int {
+		aScore := s.scoreClient(a.Address())
+		bScore := s.scoreClient(b.Address())
+		if aScore < bScore {
+			return 1
+		}
+		if aScore > bScore {
+			return -1
+		}
+		return 0
+	})
+
 	var err error
 	var res any
 	for _, client := range activeClients {
@@ -168,19 +200,8 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		res, err = call(ctx, client)
 		if err != nil {
 			log.Trace().Err(err).Msg("Potentially deactivating client due to error")
-			var apiErr *api.Error
-			switch {
-			case errors.As(err, &apiErr) && statusCodeFamily(apiErr.StatusCode) == 4:
-				log.Trace().Err(err).Msg("Not deactivating client on user error")
-
-				return res, err
-			case errors.Is(err, context.Canceled):
+			if errors.Is(err, context.Canceled) {
 				log.Trace().Msg("Not deactivating client on canceled context")
-
-				return res, err
-			case errors.Is(err, context.DeadlineExceeded):
-				log.Trace().Msg("Not deactivating client on context deadline exceeded")
-
 				return res, err
 			}
 
@@ -189,9 +210,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 				failover, err = errHandler(ctx, client, err)
 			}
 			if failover {
-				log.Debug().Err(err).Msg("Deactivating client on error")
-				s.deactivateClient(ctx, client)
-
+				s.penalizeClient(client.Address())
 				continue
 			}
 
@@ -201,7 +220,6 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		if res == nil {
 			// No response from this client; try the next.
 			err = errors.New("empty response")
-
 			continue
 		}
 

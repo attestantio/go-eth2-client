@@ -15,13 +15,15 @@ package multi
 
 import (
 	"context"
+	"math"
 	"sync"
 
-	consensusclient "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/http"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	zerologger "github.com/rs/zerolog/log"
+
+	consensusclient "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/http"
 )
 
 // Service handles multiple Ethereum 2 clients.
@@ -33,6 +35,14 @@ type Service struct {
 	clientsMu       sync.RWMutex
 	activeClients   []consensusclient.Service
 	inactiveClients []consensusclient.Service
+
+	// clientScoresMu synchronizes access to clientScores.
+	clientScoresMu sync.RWMutex
+	// clientScores maps client-address to its reputation-score. Every time the client couldn't
+	// serve a request - its score gets decreased (with 0 being the "starting score", representing
+	// the highest score possible). This scoring mechanism allows for prioritizing stable clients
+	// over less stable ones, ensuring the best overall result multi-client can deliver.
+	clientScores map[string]int
 }
 
 // New creates a new Ethereum 2 client with multiple endpoints.
@@ -95,11 +105,20 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 	}
 	log.Trace().Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Initial providers")
 
+	clientScores := make(map[string]int, len(activeClients)+len(inactiveClients))
+	for _, client := range activeClients {
+		clientScores[client.Address()] = math.MaxInt
+	}
+	for _, client := range inactiveClients {
+		clientScores[client.Address()] = math.MaxInt
+	}
+
 	s := &Service{
 		log:             log,
 		name:            parameters.name,
 		activeClients:   activeClients,
 		inactiveClients: inactiveClients,
+		clientScores:    clientScores,
 	}
 
 	// Set initial metrics.
