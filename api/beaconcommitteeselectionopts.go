@@ -19,7 +19,6 @@ import apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 type BeaconCommitteeSelectionOpts struct {
 	Common CommonOpts
 
-	// Beacon Committee Selections is the state at which the data is obtained.
-	// It can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
+	// Beacon Committee Selections are the selections which the DV should resolve.
 	Selections []*apiv1.BeaconCommitteeSelection
 }
