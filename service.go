@@ -366,11 +366,11 @@ type BeaconCommitteeSubscriptionsSubmitter interface {
 	SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*apiv1.BeaconCommitteeSubscription) error
 }
 
-// BeaconCommitteeSelectionsSubmitter is the interface for submitting beacon committee subnet selections requests.
+// BeaconCommitteeSelectionsProvider is the interface for submitting beacon committee subnet selections requests.
 // Used by DV middleware clients.
-type BeaconCommitteeSelectionsSubmitter interface {
-	// SubmitBeaconCommitteeSelections submits beacon committee selections.
-	SubmitBeaconCommitteeSelections(ctx context.Context,
+type BeaconCommitteeSelectionsProvider interface {
+	// BeaconCommitteeSelections submits beacon committee selections.
+	BeaconCommitteeSelections(ctx context.Context,
 		opts *api.BeaconCommitteeSelectionOpts,
 	) (
 		*api.Response[[]*apiv1.BeaconCommitteeSelection],

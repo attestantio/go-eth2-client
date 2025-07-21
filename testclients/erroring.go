@@ -440,8 +440,8 @@ func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context,
 	return next.SubmitBeaconCommitteeSubscriptions(ctx, subscriptions)
 }
 
-// SubmitBeaconCommitteeSelections submits beacon committee selections.
-func (s *Erroring) SubmitBeaconCommitteeSelections(ctx context.Context,
+// BeaconCommitteeSelections submits beacon committee selections.
+func (s *Erroring) BeaconCommitteeSelections(ctx context.Context,
 	opts *api.BeaconCommitteeSelectionOpts,
 ) (
 	*api.Response[[]*apiv1.BeaconCommitteeSelection],
@@ -450,12 +450,12 @@ func (s *Erroring) SubmitBeaconCommitteeSelections(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
-	next, isNext := s.next.(consensusclient.BeaconCommitteeSelectionsSubmitter)
+	next, isNext := s.next.(consensusclient.BeaconCommitteeSelectionsProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.SubmitBeaconCommitteeSelections(ctx, opts)
+	return next.BeaconCommitteeSelections(ctx, opts)
 }
 
 // SubmitBlindedBeaconBlock submits a blinded beacon block.

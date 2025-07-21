@@ -20,8 +20,8 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-// SubmitBeaconCommitteeSelections submits beacon committee selections.
-func (*Service) SubmitBeaconCommitteeSelections(_ context.Context,
+// BeaconCommitteeSelections submits beacon committee selections.
+func (*Service) BeaconCommitteeSelections(_ context.Context,
 	opts *api.BeaconCommitteeSelectionOpts,
 ) (
 	*api.Response[[]*apiv1.BeaconCommitteeSelection], error,
