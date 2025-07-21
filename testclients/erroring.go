@@ -466,7 +466,7 @@ func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context,
 
 // SubmitBeaconCommitteeSelections submits beacon committee selections.
 func (s *Erroring) SubmitBeaconCommitteeSelections(ctx context.Context,
-	selections []*apiv1.BeaconCommitteeSelection,
+	opts *api.BeaconCommitteeSelectionOpts,
 ) (
 	*api.Response[[]*apiv1.BeaconCommitteeSelection],
 	error,
@@ -479,7 +479,7 @@ func (s *Erroring) SubmitBeaconCommitteeSelections(ctx context.Context,
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.SubmitBeaconCommitteeSelections(ctx, selections)
+	return next.SubmitBeaconCommitteeSelections(ctx, opts)
 }
 
 // SubmitBlindedBeaconBlock submits a blinded beacon block.
