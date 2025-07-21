@@ -442,7 +442,7 @@ func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context,
 
 // BeaconCommitteeSelections submits beacon committee selections.
 func (s *Erroring) BeaconCommitteeSelections(ctx context.Context,
-	opts *api.BeaconCommitteeSelectionOpts,
+	opts *api.BeaconCommitteeSelectionsOpts,
 ) (
 	*api.Response[[]*apiv1.BeaconCommitteeSelection],
 	error,

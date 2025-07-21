@@ -371,7 +371,7 @@ type BeaconCommitteeSubscriptionsSubmitter interface {
 type BeaconCommitteeSelectionsProvider interface {
 	// BeaconCommitteeSelections submits beacon committee selections.
 	BeaconCommitteeSelections(ctx context.Context,
-		opts *api.BeaconCommitteeSelectionOpts,
+		opts *api.BeaconCommitteeSelectionsOpts,
 	) (
 		*api.Response[[]*apiv1.BeaconCommitteeSelection],
 		error,

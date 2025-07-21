@@ -326,7 +326,7 @@ func (s *Sleepy) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscri
 }
 
 // BeaconCommitteeSelections submits beacon committee selections.
-func (s *Sleepy) BeaconCommitteeSelections(ctx context.Context, opts *api.BeaconCommitteeSelectionOpts) (
+func (s *Sleepy) BeaconCommitteeSelections(ctx context.Context, opts *api.BeaconCommitteeSelectionsOpts) (
 	*api.Response[[]*apiv1.BeaconCommitteeSelection],
 	error,
 ) {

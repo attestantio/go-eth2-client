@@ -22,7 +22,7 @@ import (
 
 // BeaconCommitteeSelections submits beacon committee selections.
 func (*Service) BeaconCommitteeSelections(_ context.Context,
-	opts *api.BeaconCommitteeSelectionOpts,
+	opts *api.BeaconCommitteeSelectionsOpts,
 ) (
 	*api.Response[[]*apiv1.BeaconCommitteeSelection], error,
 ) {
