@@ -53,7 +53,7 @@ func TestBeaconCommitteeSelections(t *testing.T) {
 
 	for i := 0; i < 128; i++ {
 		res, err := multiClient.(consensusclient.BeaconCommitteeSelectionsProvider).
-			BeaconCommitteeSelections(ctx, &api.BeaconCommitteeSelectionOpts{Selections: []*apiv1.BeaconCommitteeSelection{}})
+			BeaconCommitteeSelections(ctx, &api.BeaconCommitteeSelectionsOpts{Selections: []*apiv1.BeaconCommitteeSelection{}})
 		require.NoError(t, err)
 		require.NotNil(t, res)
 	}

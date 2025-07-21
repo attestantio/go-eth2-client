@@ -15,8 +15,8 @@ package api
 
 import apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 
-// BeaconStateOpts are the options for obtaining the beacon state.
-type BeaconCommitteeSelectionOpts struct {
+// BeaconCommitteeSelectionsOpts are the options for obtaining beacon committee selections.
+type BeaconCommitteeSelectionsOpts struct {
 	Common CommonOpts
 
 	// Beacon Committee Selections are the selections which the DV should resolve.

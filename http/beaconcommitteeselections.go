@@ -25,7 +25,7 @@ import (
 
 // BeaconCommitteeSelections submits beacon committee selections.
 func (s *Service) BeaconCommitteeSelections(ctx context.Context,
-	opts api.BeaconCommitteeSelectionOpts,
+	opts api.BeaconCommitteeSelectionsOpts,
 ) (
 	*api.Response[[]*apiv1.BeaconCommitteeSelection],
 	error,
