@@ -27,7 +27,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSubmitBeaconCommitteeSelections(t *testing.T) {
+func TestBeaconCommitteeSelections(t *testing.T) {
 	ctx := context.Background()
 
 	client1, err := mock.New(ctx, mock.WithName("mock 1"))
