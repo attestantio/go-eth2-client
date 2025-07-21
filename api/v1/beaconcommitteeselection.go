@@ -74,6 +74,9 @@ func (b *BeaconCommitteeSelection) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "invalid value for slot")
 	}
 	b.Slot = phase0.Slot(slot)
+	if beaconCommitteeSelectionJSON.SelectionProof == "" {
+		return errors.New("selection proof missing")
+	}
 	selectionProof, err := hex.DecodeString(strings.TrimPrefix(beaconCommitteeSelectionJSON.SelectionProof, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for selection proof")
