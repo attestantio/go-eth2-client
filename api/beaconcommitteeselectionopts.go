@@ -1,4 +1,4 @@
-// Copyright © 2025 Attestant Limited.
+// Copyright © 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,23 +11,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package api
 
-import (
-	"context"
+import apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 
-	"github.com/attestantio/go-eth2-client/api"
-	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-)
+// BeaconStateOpts are the options for obtaining the beacon state.
+type BeaconCommitteeSelectionOpts struct {
+	Common CommonOpts
 
-// SubmitBeaconCommitteeSelections submits beacon committee selections.
-func (*Service) SubmitBeaconCommitteeSelections(_ context.Context,
-	opts *api.BeaconCommitteeSelectionOpts,
-) (
-	*api.Response[[]*apiv1.BeaconCommitteeSelection], error,
-) {
-	return &api.Response[[]*apiv1.BeaconCommitteeSelection]{
-		Data:     opts.Selections,
-		Metadata: make(map[string]any),
-	}, nil
+	// Beacon Committee Selections is the state at which the data is obtained.
+	// It can be a slot number or state root, or one of the special values "genesis", "head", "justified" or "finalized".
+	Selections []*apiv1.BeaconCommitteeSelection
 }

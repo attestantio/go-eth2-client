@@ -25,7 +25,7 @@ import (
 
 // SubmitBeaconCommitteeSelections submits beacon committee selections.
 func (s *Service) SubmitBeaconCommitteeSelections(ctx context.Context,
-	selections []*apiv1.BeaconCommitteeSelection,
+	opts api.BeaconCommitteeSelectionOpts,
 ) (
 	*api.Response[[]*apiv1.BeaconCommitteeSelection],
 	error,
@@ -34,7 +34,7 @@ func (s *Service) SubmitBeaconCommitteeSelections(ctx context.Context,
 		return nil, err
 	}
 
-	specJSON, err := json.Marshal(selections)
+	specJSON, err := json.Marshal(opts.Selections)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to encode beacon committee selections"), err)
 	}
