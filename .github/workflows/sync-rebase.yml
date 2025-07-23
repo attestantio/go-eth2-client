@@ -1,0 +1,84 @@
+name: sync-rebase
+
+on:
+  schedule:
+    # scheduled at 07:00 every day
+    - cron: "0 7 * * "
+
+jobs:
+  sync_latest_from_upstream:
+    runs-on: ubuntu-latest
+    outputs:
+      has_new_commits: ${{ steps.sync.outputs.has_new_commits }}
+
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Sync upstream changes
+        id: sync
+        uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+        with:
+          target_sync_branch: master
+          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_sync_branch: master
+          upstream_sync_repo: attestantio/go-eth2-client
+
+  rebase:
+    runs-on: ubuntu-latest
+    needs: sync_latest_from_upstream
+
+    if: needs.sync_latest_from_upstream.outputs.has_new_commits == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: obol
+
+      - name: Rebase branch obol
+        id: rebase
+        run: |
+          echo "Rebasing branch obol on branch master"
+          git fetch
+          {
+            echo "RESULT<<EOF"
+            echo $(git rebase origin/master 2>&1)
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "Rebase completed"
+
+      - name: Push changes
+        if: contains(steps.rebase.outputs.RESULT, 'Successfully rebased and updated')
+        run: |
+          echo "Force pushing rebased branch"
+          git push --force-with-lease origin obol
+          echo "Push successful 🚀"
+
+      # - name: Nothing ot push
+      #   if: contains(steps.rebase.outputs.RESULT, 'is up to date.')
+      #   run: echo "Nothing to rebase on 🫧"
+
+      - name: Rebase failed error
+        if: (contains(steps.rebase.outputs.RESULT, 'error:') || contains(steps.rebase.outputs.RESULT, 'fatal:')) && !contains(steps.rebase.outputs.RESULT, 'Merge conflict in')
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: kalo-webhook-test
+          SLACK_COLOR: eb3d2c #red
+          SLACK_ICON: https://obol.org/ObolIcon.png?ref=blog.obol.org
+          SLACK_MESSAGE: "Failed to rebase branch obol on newly synced branch master due to error"
+          SLACK_TITLE: "go-eth2-client rebase failed - error"
+          SLACK_WEBHOOK: ${{ secrets.SLACK_DEV_STACK_RELEASES_WEBHOOK }}
+
+      - name: Rebase failed conflict
+        if: contains(steps.rebase.outputs.RESULT, 'Merge conflict in')
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: kalo-webhook-test
+          SLACK_COLOR: ecc926 #yellow
+          SLACK_ICON: https://obol.org/ObolIcon.png?ref=blog.obol.org
+          SLACK_MESSAGE: "Failed to rebase branch obol on newly synced branch master due to conflicts"
+          SLACK_TITLE: "go-eth2-client rebase failed - conflicts"
+          SLACK_WEBHOOK: ${{ secrets.SLACK_DEV_STACK_RELEASES_WEBHOOK }}
