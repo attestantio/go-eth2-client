@@ -3,7 +3,7 @@ name: sync-rebase
 on:
   schedule:
     # scheduled at 07:00 every day
-    - cron: "0 7 * * "
+    - cron: "0 7 * * *"
 
 jobs:
   sync_latest_from_upstream:
