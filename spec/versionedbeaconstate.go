@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/eip7732"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/fulu"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	proofutil "github.com/attestantio/go-eth2-client/util/proof"
 	ssz "github.com/ferranbt/fastssz"
@@ -36,13 +37,14 @@ type VersionedBeaconState struct {
 	Capella   *capella.BeaconState
 	Deneb     *deneb.BeaconState
 	Electra   *electra.BeaconState
+	Fulu      *fulu.BeaconState
 	EIP7732   *eip7732.BeaconState
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBeaconState) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
-		v.Electra == nil && v.EIP7732 == nil
+		v.Electra == nil && v.Fulu == nil && v.EIP7732 == nil
 }
 
 // Slot returns the slot of the state.
@@ -84,6 +86,12 @@ func (v *VersionedBeaconState) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Electra.Slot, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.Slot, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return 0, errors.New("no EIP7732 state")
@@ -118,6 +126,12 @@ func (v *VersionedBeaconState) NextWithdrawalValidatorIndex() (phase0.ValidatorI
 		}
 
 		return v.Electra.NextWithdrawalValidatorIndex, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.NextWithdrawalValidatorIndex, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return 0, errors.New("no EIP7732 state")
@@ -168,6 +182,12 @@ func (v *VersionedBeaconState) Validators() ([]*phase0.Validator, error) {
 		}
 
 		return v.Electra.Validators, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.Validators, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return nil, errors.New("no EIP7732 state")
@@ -218,6 +238,12 @@ func (v *VersionedBeaconState) ValidatorBalances() ([]phase0.Gwei, error) {
 		}
 
 		return v.Electra.Balances, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.Balances, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return nil, errors.New("no EIP7732 state")
@@ -240,6 +266,12 @@ func (v *VersionedBeaconState) DepositRequestsStartIndex() (uint64, error) {
 		}
 
 		return v.Electra.DepositRequestsStartIndex, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.DepositRequestsStartIndex, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return 0, errors.New("no EIP7732 state")
@@ -262,6 +294,12 @@ func (v *VersionedBeaconState) DepositBalanceToConsume() (phase0.Gwei, error) {
 		}
 
 		return v.Electra.DepositBalanceToConsume, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.DepositBalanceToConsume, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return 0, errors.New("no EIP7732 state")
@@ -284,6 +322,12 @@ func (v *VersionedBeaconState) ExitBalanceToConsume() (phase0.Gwei, error) {
 		}
 
 		return v.Electra.ExitBalanceToConsume, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.ExitBalanceToConsume, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return 0, errors.New("no EIP7732 state")
@@ -306,6 +350,12 @@ func (v *VersionedBeaconState) EarliestExitEpoch() (phase0.Epoch, error) {
 		}
 
 		return v.Electra.EarliestExitEpoch, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.EarliestExitEpoch, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return 0, errors.New("no EIP7732 state")
@@ -328,6 +378,12 @@ func (v *VersionedBeaconState) ConsolidationBalanceToConsume() (phase0.Gwei, err
 		}
 
 		return v.Electra.ConsolidationBalanceToConsume, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.ConsolidationBalanceToConsume, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return 0, errors.New("no EIP7732 state")
@@ -350,6 +406,12 @@ func (v *VersionedBeaconState) EarliestConsolidationEpoch() (phase0.Epoch, error
 		}
 
 		return v.Electra.EarliestConsolidationEpoch, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.EarliestConsolidationEpoch, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return 0, errors.New("no EIP7732 state")
@@ -372,6 +434,12 @@ func (v *VersionedBeaconState) PendingDeposits() ([]*electra.PendingDeposit, err
 		}
 
 		return v.Electra.PendingDeposits, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.PendingDeposits, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return nil, errors.New("no EIP7732 state")
@@ -394,6 +462,12 @@ func (v *VersionedBeaconState) PendingPartialWithdrawals() ([]*electra.PendingPa
 		}
 
 		return v.Electra.PendingPartialWithdrawals, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.PendingPartialWithdrawals, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return nil, errors.New("no EIP7732 state")
@@ -416,6 +490,12 @@ func (v *VersionedBeaconState) PendingConsolidations() ([]*electra.PendingConsol
 		}
 
 		return v.Electra.PendingConsolidations, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.PendingConsolidations, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return nil, errors.New("no EIP7732 state")
@@ -508,6 +588,12 @@ func (v *VersionedBeaconState) GetTree() (*ssz.Node, error) {
 		}
 
 		return v.Electra.GetTree()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.GetTree()
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -552,6 +638,12 @@ func (v *VersionedBeaconState) HashTreeRoot() (phase0.Hash32, error) {
 		}
 
 		return v.Electra.HashTreeRoot()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.Hash32{}, errors.New("no Fulu state")
+		}
+
+		return v.Fulu.HashTreeRoot()
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -598,6 +690,12 @@ func (v *VersionedBeaconState) FieldIndex(name string) (int, error) {
 		}
 
 		return proofutil.FieldIndex(v.Electra, name)
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return proofutil.FieldIndex(v.Fulu, name)
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -645,6 +743,12 @@ func (v *VersionedBeaconState) FieldGeneralizedIndex(name string) (int, error) {
 		}
 
 		return proofutil.FieldGeneralizedIndex(v.Electra, name)
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu state")
+		}
+
+		return proofutil.FieldGeneralizedIndex(v.Fulu, name)
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -797,6 +901,12 @@ func (v *VersionedBeaconState) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return ""

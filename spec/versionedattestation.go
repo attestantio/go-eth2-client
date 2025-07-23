@@ -33,13 +33,14 @@ type VersionedAttestation struct {
 	Capella        *phase0.Attestation
 	Deneb          *phase0.Attestation
 	Electra        *electra.Attestation
+	Fulu           *electra.Attestation
 	EIP7732        *electra.Attestation
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedAttestation) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
-		v.Electra == nil && v.EIP7732 == nil
+		v.Electra == nil && v.Fulu == nil && v.EIP7732 == nil
 }
 
 // AggregationBits returns the aggregation bits of the attestation.
@@ -81,6 +82,12 @@ func (v *VersionedAttestation) AggregationBits() (bitfield.Bitlist, error) {
 		}
 
 		return v.Electra.AggregationBits, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu attestation")
+		}
+
+		return v.Fulu.AggregationBits, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return nil, errors.New("no EIP7732 attestation")
@@ -131,6 +138,12 @@ func (v *VersionedAttestation) Data() (*phase0.AttestationData, error) {
 		}
 
 		return v.Electra.Data, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu attestation")
+		}
+
+		return v.Fulu.Data, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return nil, errors.New("no EIP7732 attestation")
@@ -153,6 +166,12 @@ func (v *VersionedAttestation) CommitteeBits() (bitfield.Bitvector64, error) {
 		}
 
 		return v.Electra.CommitteeBits, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu attestation")
+		}
+
+		return v.Fulu.CommitteeBits, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return nil, errors.New("no EIP7732 attestation")
@@ -203,6 +222,12 @@ func (v *VersionedAttestation) CommitteeIndex() (phase0.CommitteeIndex, error) {
 		}
 
 		return v.Electra.CommitteeIndex()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no Fulu attestation")
+		}
+
+		return v.Fulu.CommitteeIndex()
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return 0, errors.New("no EIP7732 attestation")
@@ -252,6 +277,12 @@ func (v *VersionedAttestation) HashTreeRoot() ([32]byte, error) {
 		}
 
 		return v.Electra.HashTreeRoot()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return [32]byte{}, errors.New("no Fulu attestation")
+		}
+
+		return v.Fulu.HashTreeRoot()
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return [32]byte{}, errors.New("no EIP7732 attestation")
@@ -302,6 +333,12 @@ func (v *VersionedAttestation) Signature() (phase0.BLSSignature, error) {
 		}
 
 		return v.Electra.Signature, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.BLSSignature{}, errors.New("no Fulu attestation")
+		}
+
+		return v.Fulu.Signature, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return phase0.BLSSignature{}, errors.New("no EIP7732 attestation")
@@ -352,6 +389,12 @@ func (v *VersionedAttestation) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return ""

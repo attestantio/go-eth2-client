@@ -35,6 +35,7 @@ type VersionedSignedBeaconBlock struct {
 	Capella   *capella.SignedBeaconBlock
 	Deneb     *deneb.SignedBeaconBlock
 	Electra   *electra.SignedBeaconBlock
+	Fulu      *electra.SignedBeaconBlock
 	EIP7732   *eip7732.SignedBeaconBlock
 }
 
@@ -77,6 +78,12 @@ func (v *VersionedSignedBeaconBlock) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Electra.Message.Slot, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil {
+			return 0, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Slot, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil {
 			return 0, errors.New("no eip7732 block")
@@ -127,6 +134,12 @@ func (v *VersionedSignedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, err
 		}
 
 		return v.Electra.Message.ProposerIndex, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil {
+			return 0, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.ProposerIndex, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil {
 			return 0, errors.New("no eip7732 block")
@@ -174,6 +187,12 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error)
 		}
 
 		return v.Electra.Message.Body.ExecutionPayload.BlockHash, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil || v.Fulu.Message.Body.ExecutionPayload == nil {
+			return phase0.Hash32{}, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.ExecutionPayload.BlockHash, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil ||
 			v.EIP7732.Message == nil ||
@@ -225,6 +244,12 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockNumber() (uint64, error) {
 		}
 
 		return v.Electra.Message.Body.ExecutionPayload.BlockNumber, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil || v.Fulu.Message.Body.ExecutionPayload == nil {
+			return 0, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.ExecutionPayload.BlockNumber, nil
 	case DataVersionEIP7732:
 		return 0, errors.New("no execution block number for eip7732 block")
 	default:
@@ -272,6 +297,12 @@ func (v *VersionedSignedBeaconBlock) ExecutionTransactions() ([]bellatrix.Transa
 		}
 
 		return v.Electra.Message.Body.ExecutionPayload.Transactions, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil || v.Fulu.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.ExecutionPayload.Transactions, nil
 	case DataVersionEIP7732:
 		return nil, errors.New("no execution block transactions for eip7732 block")
 	default:
@@ -318,6 +349,12 @@ func (v *VersionedSignedBeaconBlock) Graffiti() ([32]byte, error) {
 		}
 
 		return v.Electra.Message.Body.Graffiti, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return [32]byte{}, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.Graffiti, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil || v.EIP7732.Message.Body == nil {
 			return [32]byte{}, errors.New("no eip7732 block")
@@ -418,6 +455,20 @@ func (v *VersionedSignedBeaconBlock) Attestations() ([]*VersionedAttestation, er
 		}
 
 		return versionedAttestations, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		versionedAttestations := make([]*VersionedAttestation, len(v.Fulu.Message.Body.Attestations))
+		for i, attestation := range v.Fulu.Message.Body.Attestations {
+			versionedAttestations[i] = &VersionedAttestation{
+				Version: DataVersionFulu,
+				Fulu:    attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil || v.EIP7732.Message.Body == nil {
 			return nil, errors.New("no eip7732 block")
@@ -476,6 +527,12 @@ func (v *VersionedSignedBeaconBlock) Root() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.HashTreeRoot()
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil {
+			return phase0.Root{}, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.HashTreeRoot()
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil {
 			return phase0.Root{}, errors.New("no eip7732 block")
@@ -526,6 +583,12 @@ func (v *VersionedSignedBeaconBlock) BodyRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.Body.HashTreeRoot()
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return phase0.Root{}, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.HashTreeRoot()
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil || v.EIP7732.Message.Body == nil {
 			return phase0.Root{}, errors.New("no eip7732 block")
@@ -576,6 +639,12 @@ func (v *VersionedSignedBeaconBlock) ParentRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.ParentRoot, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil {
+			return phase0.Root{}, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.ParentRoot, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil {
 			return phase0.Root{}, errors.New("no eip7732 block")
@@ -626,6 +695,12 @@ func (v *VersionedSignedBeaconBlock) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Message.StateRoot, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil {
+			return phase0.Root{}, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.StateRoot, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil {
 			return phase0.Root{}, errors.New("no eip7732 block")
@@ -676,6 +751,12 @@ func (v *VersionedSignedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error)
 		}
 
 		return v.Electra.Message.Body.RANDAOReveal, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.RANDAOReveal, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil || v.EIP7732.Message.Body == nil {
 			return phase0.BLSSignature{}, errors.New("no eip7732 block")
@@ -726,6 +807,12 @@ func (v *VersionedSignedBeaconBlock) ETH1Data() (*phase0.ETH1Data, error) {
 		}
 
 		return v.Electra.Message.Body.ETH1Data, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.ETH1Data, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil || v.EIP7732.Message.Body == nil {
 			return nil, errors.New("no eip7732 block")
@@ -776,6 +863,12 @@ func (v *VersionedSignedBeaconBlock) Deposits() ([]*phase0.Deposit, error) {
 		}
 
 		return v.Electra.Message.Body.Deposits, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.Deposits, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil || v.EIP7732.Message.Body == nil {
 			return nil, errors.New("no eip7732 block")
@@ -826,6 +919,12 @@ func (v *VersionedSignedBeaconBlock) VoluntaryExits() ([]*phase0.SignedVoluntary
 		}
 
 		return v.Electra.Message.Body.VoluntaryExits, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.VoluntaryExits, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil || v.EIP7732.Message.Body == nil {
 			return nil, errors.New("no eip7732 block")
@@ -926,6 +1025,20 @@ func (v *VersionedSignedBeaconBlock) AttesterSlashings() ([]VersionedAttesterSla
 		}
 
 		return versionedAttesterSlashings, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Fulu.Message.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Fulu.Message.Body.AttesterSlashings {
+			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
+				Version: DataVersionFulu,
+				Fulu:    attesterSlashing,
+			}
+		}
+
+		return versionedAttesterSlashings, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil || v.EIP7732.Message.Body == nil {
 			return nil, errors.New("no eip7732 block")
@@ -984,6 +1097,12 @@ func (v *VersionedSignedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlas
 		}
 
 		return v.Electra.Message.Body.ProposerSlashings, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.ProposerSlashings, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil || v.EIP7732.Message.Body == nil {
 			return nil, errors.New("no eip7732 block")
@@ -1030,6 +1149,12 @@ func (v *VersionedSignedBeaconBlock) SyncAggregate() (*altair.SyncAggregate, err
 		}
 
 		return v.Electra.Message.Body.SyncAggregate, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.SyncAggregate, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil || v.EIP7732.Message.Body == nil {
 			return nil, errors.New("no eip7732 block")
@@ -1068,6 +1193,12 @@ func (v *VersionedSignedBeaconBlock) BLSToExecutionChanges() ([]*capella.SignedB
 		}
 
 		return v.Electra.Message.Body.BLSToExecutionChanges, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.BLSToExecutionChanges, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil || v.EIP7732.Message == nil || v.EIP7732.Message.Body == nil {
 			return nil, errors.New("no eip7732 block")
@@ -1112,6 +1243,12 @@ func (v *VersionedSignedBeaconBlock) Withdrawals() ([]*capella.Withdrawal, error
 		}
 
 		return v.Electra.Message.Body.ExecutionPayload.Withdrawals, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil || v.Fulu.Message.Body.ExecutionPayload == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.ExecutionPayload.Withdrawals, nil
 	case DataVersionEIP7732:
 		return nil, errors.New("no execution payload withdrawals for eip7732 block")
 	default:
@@ -1142,6 +1279,12 @@ func (v *VersionedSignedBeaconBlock) BlobKZGCommitments() ([]deneb.KZGCommitment
 		}
 
 		return v.Electra.Message.Body.BlobKZGCommitments, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.BlobKZGCommitments, nil
 	case DataVersionEIP7732:
 		return nil, errors.New("no blob kzg commitments for eip7732 block")
 	default:
@@ -1170,6 +1313,12 @@ func (v *VersionedSignedBeaconBlock) ExecutionRequests() (*electra.ExecutionRequ
 		}
 
 		return v.Electra.Message.Body.ExecutionRequests, nil
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		return v.Fulu.Message.Body.ExecutionRequests, nil
 	case DataVersionEIP7732:
 		return nil, errors.New("no execution requests for eip7732 block")
 	default:
@@ -1212,6 +1361,12 @@ func (v *VersionedSignedBeaconBlock) ExecutionPayload() (*VersionedExecutionPayl
 		}
 
 		versionedExecutionPayload.Electra = v.Electra.Message.Body.ExecutionPayload
+	case DataVersionFulu:
+		if v.Fulu == nil || v.Fulu.Message == nil || v.Fulu.Message.Body == nil {
+			return nil, errors.New("no fulu block")
+		}
+
+		versionedExecutionPayload.Fulu = v.Fulu.Message.Body.ExecutionPayload
 	case DataVersionEIP7732:
 		return nil, errors.New("no execution payload in eip7732")
 	default:
@@ -1260,6 +1415,12 @@ func (v *VersionedSignedBeaconBlock) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return ""
@@ -1274,5 +1435,5 @@ func (v *VersionedSignedBeaconBlock) String() string {
 // IsEmpty returns true if the block is empty.
 func (v *VersionedSignedBeaconBlock) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
-		v.Electra == nil && v.EIP7732 == nil
+		v.Electra == nil && v.Fulu == nil && v.EIP7732 == nil
 }

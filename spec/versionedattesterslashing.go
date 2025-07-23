@@ -29,13 +29,14 @@ type VersionedAttesterSlashing struct {
 	Capella   *phase0.AttesterSlashing
 	Deneb     *phase0.AttesterSlashing
 	Electra   *electra.AttesterSlashing
+	Fulu      *electra.AttesterSlashing
 	EIP7732   *electra.AttesterSlashing
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedAttesterSlashing) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
-		v.Electra == nil && v.EIP7732 == nil
+		v.Electra == nil && v.Fulu == nil && v.EIP7732 == nil
 }
 
 // Attestation1 returns the first indexed attestation.
@@ -104,6 +105,17 @@ func (v *VersionedAttesterSlashing) Attestation1() (*VersionedIndexedAttestation
 		versionedIndexedAttestation := VersionedIndexedAttestation{
 			Version: DataVersionElectra,
 			Electra: v.Electra.Attestation1,
+		}
+
+		return &versionedIndexedAttestation, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu indexed attestation")
+		}
+
+		versionedIndexedAttestation := VersionedIndexedAttestation{
+			Version: DataVersionFulu,
+			Fulu:    v.Fulu.Attestation1,
 		}
 
 		return &versionedIndexedAttestation, nil
@@ -192,6 +204,17 @@ func (v *VersionedAttesterSlashing) Attestation2() (*VersionedIndexedAttestation
 		}
 
 		return &versionedIndexedAttestation, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu indexed attestation")
+		}
+
+		versionedIndexedAttestation := VersionedIndexedAttestation{
+			Version: DataVersionFulu,
+			Fulu:    v.Fulu.Attestation2,
+		}
+
+		return &versionedIndexedAttestation, nil
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return nil, errors.New("no EIP7732 indexed attestation")
@@ -247,6 +270,12 @@ func (v *VersionedAttesterSlashing) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return ""

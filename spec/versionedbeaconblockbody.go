@@ -32,6 +32,7 @@ type VersionedBeaconBlockBody struct {
 	Capella   *capella.BeaconBlockBody
 	Deneb     *deneb.BeaconBlockBody
 	Electra   *electra.BeaconBlockBody
+	Fulu      *electra.BeaconBlockBody
 	EIP7732   *eip7732.BeaconBlockBody
 }
 
@@ -74,6 +75,12 @@ func (v *VersionedBeaconBlockBody) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	case DataVersionEIP7732:
 		if v.EIP7732 == nil {
 			return ""
