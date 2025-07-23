@@ -57,10 +57,6 @@ jobs:
           git push --force-with-lease origin obol
           echo "Push successful 🚀"
 
-      # - name: Nothing ot push
-      #   if: contains(steps.rebase.outputs.RESULT, 'is up to date.')
-      #   run: echo "Nothing to rebase on 🫧"
-
       - name: Rebase failed error
         if: (contains(steps.rebase.outputs.RESULT, 'error:') || contains(steps.rebase.outputs.RESULT, 'fatal:')) && !contains(steps.rebase.outputs.RESULT, 'Merge conflict in')
         uses: rtCamp/action-slack-notify@v2
