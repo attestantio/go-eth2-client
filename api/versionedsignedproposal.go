@@ -45,6 +45,8 @@ type VersionedSignedProposal struct {
 	DenebBlinded     *apiv1deneb.SignedBlindedBeaconBlock
 	Electra          *apiv1electra.SignedBlockContents
 	ElectraBlinded   *apiv1electra.SignedBlindedBeaconBlock
+	Fulu             *apiv1electra.SignedBlockContents
+	FuluBlinded      *apiv1electra.SignedBlindedBeaconBlock
 }
 
 // AssertPresent throws an error if the expected proposal
@@ -86,6 +88,13 @@ func (v *VersionedSignedProposal) AssertPresent() error {
 		}
 		if v.ElectraBlinded == nil && v.Blinded {
 			return errors.New("blinded electra proposal not present")
+		}
+	case spec.DataVersionFulu:
+		if v.Fulu == nil && !v.Blinded {
+			return errors.New("fulu proposal not present")
+		}
+		if v.FuluBlinded == nil && v.Blinded {
+			return errors.New("blinded fulu proposal not present")
 		}
 	default:
 		return errors.New("unsupported version")
@@ -129,6 +138,12 @@ func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Electra.SignedBlock.Message.Slot, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.Message.Slot, nil
+		}
+
+		return v.Fulu.SignedBlock.Message.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -169,6 +184,12 @@ func (v *VersionedSignedProposal) ProposerIndex() (phase0.ValidatorIndex, error)
 		}
 
 		return v.Electra.SignedBlock.Message.ProposerIndex, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.Message.ProposerIndex, nil
+		}
+
+		return v.Fulu.SignedBlock.Message.ProposerIndex, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -205,6 +226,12 @@ func (v *VersionedSignedProposal) ExecutionBlockHash() (phase0.Hash32, error) {
 		}
 
 		return v.Electra.SignedBlock.Message.Body.ExecutionPayload.BlockHash, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.Message.Body.ExecutionPayloadHeader.BlockHash, nil
+		}
+
+		return v.Fulu.SignedBlock.Message.Body.ExecutionPayload.BlockHash, nil
 	default:
 		return phase0.Hash32{}, ErrUnsupportedVersion
 	}
@@ -281,6 +308,20 @@ func (v *VersionedSignedProposal) String() string {
 		}
 
 		return v.Electra.String()
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			if v.FuluBlinded == nil {
+				return ""
+			}
+
+			return v.FuluBlinded.String()
+		}
+
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	default:
 		return "unsupported version"
 	}
@@ -288,6 +329,8 @@ func (v *VersionedSignedProposal) String() string {
 
 // assertMessagePresent throws an error if the expected message
 // given the version and blinded fields is not present.
+//
+//nolint:gocyclo // ignore
 func (v *VersionedSignedProposal) assertMessagePresent() error {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
@@ -337,6 +380,19 @@ func (v *VersionedSignedProposal) assertMessagePresent() error {
 			if v.Electra == nil ||
 				v.Electra.SignedBlock == nil ||
 				v.Electra.SignedBlock.Message == nil {
+				return ErrDataMissing
+			}
+		}
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			if v.FuluBlinded == nil ||
+				v.FuluBlinded.Message == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.Fulu == nil ||
+				v.Fulu.SignedBlock == nil ||
+				v.Fulu.SignedBlock.Message == nil {
 				return ErrDataMissing
 			}
 		}
@@ -416,6 +472,21 @@ func (v *VersionedSignedProposal) assertExecutionPayloadPresent() error {
 				v.Electra.SignedBlock.Message == nil ||
 				v.Electra.SignedBlock.Message.Body == nil ||
 				v.Electra.SignedBlock.Message.Body.ExecutionPayload == nil {
+				return ErrDataMissing
+			}
+		}
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			if v.FuluBlinded == nil ||
+				v.FuluBlinded.Message == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.Fulu == nil ||
+				v.Fulu.SignedBlock == nil ||
+				v.Fulu.SignedBlock.Message == nil ||
+				v.Fulu.SignedBlock.Message.Body == nil ||
+				v.Fulu.SignedBlock.Message.Body.ExecutionPayload == nil {
 				return ErrDataMissing
 			}
 		}

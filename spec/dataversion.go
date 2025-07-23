@@ -36,6 +36,10 @@ const (
 	DataVersionDeneb
 	// DataVersionElectra is data applicable for the Electra release of the beacon chain.
 	DataVersionElectra
+	// DataVersionFulu is data applicable for the Fulu release of the beacon chain.
+	DataVersionFulu
+	// DataVersionEIP7732 is data applicable for the EIP-7732 release of the beacon chain.
+	DataVersionEIP7732
 )
 
 var dataVersionStrings = [...]string{
@@ -46,6 +50,19 @@ var dataVersionStrings = [...]string{
 	"capella",
 	"deneb",
 	"electra",
+	"fulu",
+	"eip7732",
+}
+
+var dataVersionMap = map[string]DataVersion{
+	`"phase0"`:    DataVersionPhase0,
+	`"altair"`:    DataVersionAltair,
+	`"bellatrix"`: DataVersionBellatrix,
+	`"capella"`:   DataVersionCapella,
+	`"deneb"`:     DataVersionDeneb,
+	`"electra"`:   DataVersionElectra,
+	`"fulu"`:      DataVersionFulu,
+	`"eip7732"`:   DataVersionEIP7732,
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -55,32 +72,29 @@ func (d *DataVersion) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (d *DataVersion) UnmarshalJSON(input []byte) error {
-	var err error
-	switch strings.ToLower(string(input)) {
-	case `"phase0"`:
-		*d = DataVersionPhase0
-	case `"altair"`:
-		*d = DataVersionAltair
-	case `"bellatrix"`:
-		*d = DataVersionBellatrix
-	case `"capella"`:
-		*d = DataVersionCapella
-	case `"deneb"`:
-		*d = DataVersionDeneb
-	case `"electra"`:
-		*d = DataVersionElectra
-	default:
-		err = fmt.Errorf("unrecognised data version %s", string(input))
+	lower := strings.ToLower(string(input))
+	version, ok := dataVersionMap[lower]
+	if !ok {
+		return fmt.Errorf("unrecognised data version %s", string(input))
 	}
+	*d = version
 
-	return err
+	return nil
 }
 
 // String returns a string representation of the struct.
 func (d DataVersion) String() string {
-	if uint64(d) >= uint64(len(dataVersionStrings)) {
+	if int(d) >= len(dataVersionStrings) {
 		return "unknown"
 	}
 
 	return dataVersionStrings[d]
+}
+
+// DataVersionFromString turns a fork string into a DataVersion
+// returns an error if the fork is not recognized.
+func DataVersionFromString(fork string) (DataVersion, error) {
+	var version DataVersion
+
+	return version, version.UnmarshalJSON([]byte(fmt.Sprintf("\"%v\"", fork)))
 }

@@ -45,6 +45,8 @@ type VersionedProposal struct {
 	DenebBlinded     *apiv1deneb.BlindedBeaconBlock
 	Electra          *apiv1electra.BlockContents
 	ElectraBlinded   *apiv1electra.BlindedBeaconBlock
+	Fulu             *apiv1electra.BlockContents
+	FuluBlinded      *apiv1electra.BlindedBeaconBlock
 }
 
 // IsEmpty returns true if there is no proposal.
@@ -58,7 +60,9 @@ func (v *VersionedProposal) IsEmpty() bool {
 		v.Deneb == nil &&
 		v.DenebBlinded == nil &&
 		v.Electra == nil &&
-		v.ElectraBlinded == nil
+		v.ElectraBlinded == nil &&
+		v.Fulu == nil &&
+		v.FuluBlinded == nil
 }
 
 // BodyRoot returns the body root of the proposal.
@@ -96,6 +100,12 @@ func (v *VersionedProposal) BodyRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Block.Body.HashTreeRoot()
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.Body.HashTreeRoot()
+		}
+
+		return v.Fulu.Block.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -136,6 +146,12 @@ func (v *VersionedProposal) ParentRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Block.ParentRoot, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.ParentRoot, nil
+		}
+
+		return v.Fulu.Block.ParentRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -176,6 +192,12 @@ func (v *VersionedProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
 		}
 
 		return v.Electra.Block.ProposerIndex, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.ProposerIndex, nil
+		}
+
+		return v.Fulu.Block.ProposerIndex, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -216,6 +238,12 @@ func (v *VersionedProposal) Root() (phase0.Root, error) {
 		}
 
 		return v.Electra.Block.HashTreeRoot()
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.HashTreeRoot()
+		}
+
+		return v.Fulu.Block.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -256,6 +284,12 @@ func (v *VersionedProposal) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Electra.Block.Slot, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.Slot, nil
+		}
+
+		return v.Fulu.Block.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -296,6 +330,12 @@ func (v *VersionedProposal) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Electra.Block.StateRoot, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.StateRoot, nil
+		}
+
+		return v.Fulu.Block.StateRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -416,6 +456,28 @@ func (v *VersionedProposal) Attestations() ([]spec.VersionedAttestation, error) 
 		}
 
 		return versionedAttestations, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			versionedAttestations := make([]spec.VersionedAttestation, len(v.FuluBlinded.Body.Attestations))
+			for i, attestation := range v.FuluBlinded.Body.Attestations {
+				versionedAttestations[i] = spec.VersionedAttestation{
+					Version: spec.DataVersionFulu,
+					Fulu:    attestation,
+				}
+			}
+
+			return versionedAttestations, nil
+		}
+
+		versionedAttestations := make([]spec.VersionedAttestation, len(v.Fulu.Block.Body.Attestations))
+		for i, attestation := range v.Fulu.Block.Body.Attestations {
+			versionedAttestations[i] = spec.VersionedAttestation{
+				Version: spec.DataVersionFulu,
+				Fulu:    attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -456,6 +518,12 @@ func (v *VersionedProposal) Graffiti() ([32]byte, error) {
 		}
 
 		return v.Electra.Block.Body.Graffiti, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.Body.Graffiti, nil
+		}
+
+		return v.Fulu.Block.Body.Graffiti, nil
 	default:
 		return [32]byte{}, ErrUnsupportedVersion
 	}
@@ -496,6 +564,12 @@ func (v *VersionedProposal) RandaoReveal() (phase0.BLSSignature, error) {
 		}
 
 		return v.Electra.Block.Body.RANDAOReveal, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.Body.RANDAOReveal, nil
+		}
+
+		return v.Fulu.Block.Body.RANDAOReveal, nil
 	default:
 		return phase0.BLSSignature{}, ErrUnsupportedVersion
 	}
@@ -532,6 +606,12 @@ func (v *VersionedProposal) Transactions() ([]bellatrix.Transaction, error) {
 		}
 
 		return v.Electra.Block.Body.ExecutionPayload.Transactions, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return nil, ErrDataMissing
+		}
+
+		return v.Fulu.Block.Body.ExecutionPayload.Transactions, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -568,6 +648,12 @@ func (v *VersionedProposal) FeeRecipient() (bellatrix.ExecutionAddress, error) {
 		}
 
 		return v.Electra.Block.Body.ExecutionPayload.FeeRecipient, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.Body.ExecutionPayloadHeader.FeeRecipient, nil
+		}
+
+		return v.Fulu.Block.Body.ExecutionPayload.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, ErrUnsupportedVersion
 	}
@@ -604,6 +690,12 @@ func (v *VersionedProposal) Timestamp() (uint64, error) {
 		}
 
 		return v.Electra.Block.Body.ExecutionPayload.Timestamp, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.Body.ExecutionPayloadHeader.Timestamp, nil
+		}
+
+		return v.Fulu.Block.Body.ExecutionPayload.Timestamp, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -640,6 +732,12 @@ func (v *VersionedProposal) GasLimit() (uint64, error) {
 		}
 
 		return v.Electra.Block.Body.ExecutionPayload.GasLimit, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded.Body.ExecutionPayloadHeader.GasLimit, nil
+		}
+
+		return v.Fulu.Block.Body.ExecutionPayload.GasLimit, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -664,6 +762,12 @@ func (v *VersionedProposal) Blobs() ([]deneb.Blob, error) {
 		}
 
 		return v.Electra.Blobs, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return nil, ErrDataMissing
+		}
+
+		return v.Fulu.Blobs, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -688,6 +792,12 @@ func (v *VersionedProposal) KZGProofs() ([]deneb.KZGProof, error) {
 		}
 
 		return v.Electra.KZGProofs, nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return nil, ErrDataMissing
+		}
+
+		return v.Fulu.KZGProofs, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -745,6 +855,12 @@ func (v *VersionedProposal) String() string {
 		}
 
 		return v.Electra.String()
+	case spec.DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	default:
 		return "unknown version"
 	}
@@ -780,6 +896,12 @@ func (v *VersionedProposal) proposalPresent() bool {
 		}
 
 		return v.Electra.Block != nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded != nil
+		}
+
+		return v.Fulu.Block != nil
 	}
 
 	return false
@@ -815,11 +937,18 @@ func (v *VersionedProposal) bodyPresent() bool {
 		}
 
 		return v.Electra != nil && v.Electra.Block != nil && v.Electra.Block.Body != nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded != nil && v.FuluBlinded.Body != nil
+		}
+
+		return v.Fulu != nil && v.Fulu.Block != nil && v.Fulu.Block.Body != nil
 	}
 
 	return false
 }
 
+//nolint:gocyclo // ignore
 func (v *VersionedProposal) payloadPresent() bool {
 	switch v.Version {
 	case spec.DataVersionPhase0:
@@ -855,6 +984,12 @@ func (v *VersionedProposal) payloadPresent() bool {
 			v.Electra.Block != nil &&
 			v.Electra.Block.Body != nil &&
 			v.Electra.Block.Body.ExecutionPayload != nil
+	case spec.DataVersionFulu:
+		if v.Blinded {
+			return v.FuluBlinded != nil && v.FuluBlinded.Body != nil && v.FuluBlinded.Body.ExecutionPayloadHeader != nil
+		}
+
+		return v.Fulu != nil && v.Fulu.Block != nil && v.Fulu.Block.Body != nil && v.Fulu.Block.Body.ExecutionPayload != nil
 	}
 
 	return false

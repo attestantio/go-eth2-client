@@ -16,13 +16,13 @@ package mock
 import (
 	"context"
 
-	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 )
 
 // Events feeds requested events with the given topics to the supplied handler.
-func (s *Service) Events(ctx context.Context, topics []string, handler client.EventHandlerFunc) error {
+func (s *Service) Events(ctx context.Context, opts *api.EventsOpts) error {
 	if s.EventsFunc != nil {
-		return s.EventsFunc(ctx, topics, handler)
+		return s.EventsFunc(ctx, opts)
 	}
 
 	return nil

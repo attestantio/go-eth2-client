@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2024 Attestant Limited.
+// Copyright © 2020 - 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -35,7 +35,7 @@ import (
 )
 
 // defaultUserAgent is sent with requests if no other user agent has been supplied.
-const defaultUserAgent = "go-eth2-client/0.23.1"
+const defaultUserAgent = "go-eth2-client/0.26.0"
 
 // post sends an HTTP post request and returns the body.
 func (s *Service) post(ctx context.Context,
@@ -401,16 +401,16 @@ func populateHeaders(res *httpResponse, resp *http.Response) {
 }
 
 func populateContentType(res *httpResponse, resp *http.Response) error {
-	if len(res.body) == 0 {
-		// There's no body to decode.  Some servers don't send a content type in this
-		// situation, but it doesn't matter anyway; set it to JSON and return.
-		res.contentType = ContentTypeJSON
-
-		return nil
-	}
-
 	respContentTypes, exists := resp.Header["Content-Type"]
 	if !exists {
+		if len(res.body) == 0 {
+			// There's no body to decode.  Some servers don't send a content type in this
+			// situation, but it doesn't matter anyway; set it to JSON and return.
+			res.contentType = ContentTypeJSON
+
+			return nil
+		}
+
 		return errors.New("no content type supplied in response")
 	}
 	if len(respContentTypes) != 1 {

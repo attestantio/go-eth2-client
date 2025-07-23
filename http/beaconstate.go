@@ -19,7 +19,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/attestantio/go-eth2-client/spec/eip7732"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/fulu"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -145,6 +147,26 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode electra beacon state"), err)
 		}
+	case spec.DataVersionFulu:
+		response.Data.Fulu = &fulu.BeaconState{}
+		if s.customSpecSupport {
+			err = dynSSZ.UnmarshalSSZ(response.Data.Fulu, res.body)
+		} else {
+			err = response.Data.Fulu.UnmarshalSSZ(res.body)
+		}
+		if err != nil {
+			return nil, errors.Join(errors.New("failed to decode fulu beacon state"), err)
+		}
+	case spec.DataVersionEIP7732:
+		response.Data.EIP7732 = &eip7732.BeaconState{}
+		if s.customSpecSupport {
+			err = dynSSZ.UnmarshalSSZ(response.Data.EIP7732, res.body)
+		} else {
+			err = response.Data.EIP7732.UnmarshalSSZ(res.body)
+		}
+		if err != nil {
+			return nil, errors.Join(errors.New("failed to decode eip7732 beacon state"), err)
+		}
 	default:
 		return nil, fmt.Errorf("unhandled state version %s", res.consensusVersion)
 	}
@@ -173,6 +195,10 @@ func (*Service) beaconStateFromJSON(res *httpResponse) (*api.Response[*spec.Vers
 		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &deneb.BeaconState{})
 	case spec.DataVersionElectra:
 		response.Data.Electra, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &electra.BeaconState{})
+	case spec.DataVersionFulu:
+		response.Data.Fulu, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &fulu.BeaconState{})
+	case spec.DataVersionEIP7732:
+		response.Data.EIP7732, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &eip7732.BeaconState{})
 	default:
 		err = fmt.Errorf("unsupported version %s", res.consensusVersion)
 	}

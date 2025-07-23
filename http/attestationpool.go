@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2024 Attestant Limited.
+// Copyright © 2021 - 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,6 +22,8 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -29,7 +31,7 @@ import (
 func (s *Service) AttestationPool(ctx context.Context,
 	opts *api.AttestationPoolOpts,
 ) (
-	*api.Response[[]*phase0.Attestation],
+	*api.Response[[]*spec.VersionedAttestation],
 	error,
 ) {
 	if err := s.assertIsSynced(ctx); err != nil {
@@ -39,7 +41,7 @@ func (s *Service) AttestationPool(ctx context.Context,
 		return nil, client.ErrNoOptions
 	}
 
-	endpoint := "/eth/v1/beacon/pool/attestations"
+	endpoint := "/eth/v2/beacon/pool/attestations"
 	queryItems := make([]string, 0)
 	if opts.Slot != nil {
 		queryItems = append(queryItems, fmt.Sprintf("slot=%d", *opts.Slot))
@@ -64,10 +66,10 @@ func (*Service) attestationPoolFromJSON(_ context.Context,
 	opts *api.AttestationPoolOpts,
 	httpResponse *httpResponse,
 ) (
-	*api.Response[[]*phase0.Attestation],
+	*api.Response[[]*spec.VersionedAttestation],
 	error,
 ) {
-	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*phase0.Attestation{})
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*spec.VersionedAttestation{})
 	if err != nil {
 		return nil, err
 	}
@@ -76,21 +78,74 @@ func (*Service) attestationPoolFromJSON(_ context.Context,
 		return nil, err
 	}
 
-	return &api.Response[[]*phase0.Attestation]{
+	return &api.Response[[]*spec.VersionedAttestation]{
 		Metadata: metadata,
 		Data:     data,
 	}, nil
 }
 
-func verifyAttestationPool(opts *api.AttestationPoolOpts, data []*phase0.Attestation) error {
+func verifyAttestationPool(opts *api.AttestationPoolOpts, data []*spec.VersionedAttestation) error {
 	for _, datum := range data {
-		if opts.Slot != nil && datum.Data.Slot != *opts.Slot {
-			return errors.New("attestation data not for requested slot")
-		}
-		if opts.CommitteeIndex != nil && datum.Data.Index != *opts.CommitteeIndex {
-			return errors.New("attestation data not for requested committee index")
+		switch datum.Version {
+		case spec.DataVersionPhase0:
+			if err := verifyPhase0Attestation(opts, datum.Phase0); err != nil {
+				return err
+			}
+		case spec.DataVersionAltair:
+			if err := verifyPhase0Attestation(opts, datum.Altair); err != nil {
+				return err
+			}
+		case spec.DataVersionBellatrix:
+			if err := verifyPhase0Attestation(opts, datum.Bellatrix); err != nil {
+				return err
+			}
+		case spec.DataVersionCapella:
+			if err := verifyPhase0Attestation(opts, datum.Capella); err != nil {
+				return err
+			}
+		case spec.DataVersionDeneb:
+			if err := verifyPhase0Attestation(opts, datum.Deneb); err != nil {
+				return err
+			}
+		case spec.DataVersionElectra:
+			if err := verifyElectraAttestation(opts, datum.Electra); err != nil {
+				return err
+			}
+		case spec.DataVersionFulu:
+			if err := verifyElectraAttestation(opts, datum.Fulu); err != nil {
+				return err
+			}
+		default:
+			return errors.New("unsupported attestation version")
 		}
 	}
 
 	return nil
+}
+
+func verifyPhase0Attestation(opts *api.AttestationPoolOpts, data *phase0.Attestation) error {
+	if opts.Slot != nil && data.Data.Slot != *opts.Slot {
+		return errors.New("attestation data not for requested slot")
+	}
+	if opts.CommitteeIndex != nil && data.Data.Index != *opts.CommitteeIndex {
+		return errors.New("attestation data not for requested committee index")
+	}
+
+	return nil
+}
+
+func verifyElectraAttestation(opts *api.AttestationPoolOpts, data *electra.Attestation) error {
+	if opts.Slot != nil && data.Data.Slot != *opts.Slot {
+		return errors.New("attestation data not for requested slot")
+	}
+	if opts.CommitteeIndex != nil {
+		for _, committeeIndex := range data.CommitteeBits.BitIndices() {
+			if phase0.CommitteeIndex(committeeIndex) == *opts.CommitteeIndex {
+				// We have a match.
+				return nil
+			}
+		}
+	}
+
+	return errors.New("attestation data not for requested committee index")
 }
