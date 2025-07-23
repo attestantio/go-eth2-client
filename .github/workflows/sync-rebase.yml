@@ -65,7 +65,7 @@ jobs:
         if: (contains(steps.rebase.outputs.RESULT, 'error:') || contains(steps.rebase.outputs.RESULT, 'fatal:')) && !contains(steps.rebase.outputs.RESULT, 'Merge conflict in')
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_CHANNEL: kalo-webhook-test
+          SLACK_CHANNEL: #dev-stack-releases
           SLACK_COLOR: eb3d2c #red
           SLACK_ICON: https://obol.org/ObolIcon.png?ref=blog.obol.org
           SLACK_MESSAGE: "Failed to rebase branch obol on newly synced branch master due to error"
@@ -76,7 +76,7 @@ jobs:
         if: contains(steps.rebase.outputs.RESULT, 'Merge conflict in')
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_CHANNEL: kalo-webhook-test
+          SLACK_CHANNEL: #dev-stack-releases
           SLACK_COLOR: ecc926 #yellow
           SLACK_ICON: https://obol.org/ObolIcon.png?ref=blog.obol.org
           SLACK_MESSAGE: "Failed to rebase branch obol on newly synced branch master due to conflicts"
