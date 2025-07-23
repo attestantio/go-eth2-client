@@ -24,20 +24,18 @@ import (
 
 // DataColumnSidecarEvent is the data for the data column sidecar event.
 type DataColumnSidecarEvent struct {
-	BlockRoot       phase0.Root
-	Slot            phase0.Slot
-	Index           uint64
-	KZGCommitments  []deneb.KZGCommitment
-	VersionedHashes []deneb.VersionedHash
+	BlockRoot      phase0.Root
+	Slot           phase0.Slot
+	Index          uint64
+	KZGCommitments []deneb.KZGCommitment
 }
 
 // dataColumnSidecarEventJSON is the spec representation of the struct.
 type dataColumnSidecarEventJSON struct {
-	BlockRoot       string   `json:"block_root"`
-	Slot            string   `json:"slot"`
-	Index           string   `json:"index"`
-	KZGCommitments  []string `json:"kzg_commitments"`
-	VersionedHashes []string `json:"versioned_hashes"`
+	BlockRoot      string   `json:"block_root"`
+	Slot           string   `json:"slot"`
+	Index          string   `json:"index"`
+	KZGCommitments []string `json:"kzg_commitments"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -47,17 +45,11 @@ func (e *DataColumnSidecarEvent) MarshalJSON() ([]byte, error) {
 		commitments[i] = fmt.Sprintf("%#x", commitment)
 	}
 
-	hashes := make([]string, len(e.VersionedHashes))
-	for i, hash := range e.VersionedHashes {
-		hashes[i] = fmt.Sprintf("%#x", hash)
-	}
-
 	return json.Marshal(&dataColumnSidecarEventJSON{
-		BlockRoot:       fmt.Sprintf("%#x", e.BlockRoot),
-		Slot:            fmt.Sprintf("%d", e.Slot),
-		Index:           fmt.Sprintf("%d", e.Index),
-		KZGCommitments:  commitments,
-		VersionedHashes: hashes,
+		BlockRoot:      fmt.Sprintf("%#x", e.BlockRoot),
+		Slot:           fmt.Sprintf("%d", e.Slot),
+		Index:          fmt.Sprintf("%d", e.Index),
+		KZGCommitments: commitments,
 	})
 }
 
@@ -105,20 +97,6 @@ func (e *DataColumnSidecarEvent) UnmarshalJSON(input []byte) error {
 		err = e.KZGCommitments[i].UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, commitment)))
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for kzg_commitments[%d]", i))
-		}
-	}
-
-	if len(dataColumnSidecarEventJSON.VersionedHashes) == 0 {
-		return errors.New("versioned_hashes missing")
-	}
-	e.VersionedHashes = make([]deneb.VersionedHash, len(dataColumnSidecarEventJSON.VersionedHashes))
-	for i, hash := range dataColumnSidecarEventJSON.VersionedHashes {
-		if hash == "" {
-			return fmt.Errorf("versioned_hashes[%d] missing", i)
-		}
-		err = e.VersionedHashes[i].UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, hash)))
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("invalid value for versioned_hashes[%d]", i))
 		}
 	}
 
