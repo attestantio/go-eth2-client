@@ -1,0 +1,136 @@
+name: tag
+
+on:
+  schedule:
+    # scheduled at 09:00 every day
+    - cron: "0 9 * * *"
+
+permissions:
+  contents: write
+  deployments: write
+
+jobs:
+  fetch_latest_tag:
+    runs-on: ubuntu-latest
+    outputs:
+      has_new_tag: ${{ steps.get_latest_tag.outputs.HAS_NEW_TAG }}
+      latest_tag: ${{ steps.get_latest_tag.outputs.LATEST_TAG }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Fetch tags from upstream
+        id: fetch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Adding upstream repository"
+          git remote add upstream https://github.com/attestantio/go-eth2-client
+          echo $(git remote -v)
+          echo "Fetching tags locally from origin"
+          git fetch --tags
+          echo "Origin tags fetched successfully"
+          echo "Fetching tags locally from upstream"
+          {
+            echo "FETCH_RESULT<<EOF"
+            echo "$(git fetch --tags upstream 2>&1)"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "Upstream tags fetched successfully"
+
+      - name: Evaluate result
+        id: get_latest_tag
+        run: |
+          echo "${{ steps.fetch.outputs.FETCH_RESULT }}"
+          if [ -z "${{ steps.fetch.outputs.FETCH_RESULT }}" ]; then
+            echo "No new tag found in upstream 🫧"
+            echo "HAS_NEW_TAG='false'" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Work only with new tags, not branches
+          echo "Filter only new tags"
+          NEW_TAGS=$(echo "${{ steps.fetch.outputs.FETCH_RESULT }}" | grep "\[new tag\]") || grep_exit_code=$?; if [[ $grep_exit_code -ne 1 ]]; then (exit $grep_exit_code); fi
+          if [ -z "$NEW_TAGS" ]; then
+            echo "No new tag found in upstream 🫧"
+            echo "HAS_NEW_TAG='false'" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "New tags found!"
+          echo "$NEW_TAGS"
+          # Get latest tag, as there may be multiple new tags
+          echo "Get latest tag"
+          LATEST_TAG=$(echo "$NEW_TAGS" | grep -Eo 'v[0-9]{1,}.[0-9]{1,}.[0-9]{1,}' | tail -1)
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No new tag found in upstream 🫧"
+            echo "HAS_NEW_TAG=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "New latest tag found in upstream 📝"
+            echo "$LATEST_TAG"
+            echo "LATEST_TAG="${LATEST_TAG}"" >> "$GITHUB_OUTPUT"
+            echo "HAS_NEW_TAG=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sync upstream tags
+        run: |
+          echo "Pushing tags to origin"
+          git push --tags
+          echo "Successfully synced upstream tags with origin 🚀!"
+
+  tag_obol:
+    runs-on: ubuntu-latest
+    needs: fetch_latest_tag
+    if: needs.fetch_latest_tag.outputs.has_new_tag == 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: obol
+
+      - name: Rebase branch obol
+        id: rebase
+        run: |
+          echo "Rebasing branch obol on tag ${{ needs.fetch_latest_tag.outputs.latest_tag }}"
+          git fetch
+          {
+            echo "RESULT<<EOF"
+            echo $(git rebase ${{ needs.fetch_latest_tag.outputs.latest_tag }} 2>&1)
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "Rebase completed"
+
+      - name: Tag obolnetwork/go-eth2-client
+        if: contains(steps.rebase.outputs.RESULT, 'Successfully rebased and updated') || contains(steps.rebase.outputs.RESULT, 'is up to date.')
+        run: |
+          tag="${{ needs.fetch_latest_tag.outputs.latest_tag }}+obol"
+          echo "Tagging new obolnetwork/go-eth2-client $tag"
+          git tag $tag
+          echo "Pushing new obolnetwork/go-eth2-client $tag tag"
+          git push --tags
+          echo "$tag tagged 🚀!"
+
+      - name: Rebase failed error
+        if: (contains(steps.rebase.outputs.RESULT, 'error:') || contains(steps.rebase.outputs.RESULT, 'fatal:')) && !contains(steps.rebase.outputs.RESULT, 'Merge conflict in')
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: dev-stack-releases
+          SLACK_COLOR: eb3d2c #red
+          SLACK_ICON: https://obol.org/ObolIcon.png?ref=blog.obol.org
+          SLACK_MESSAGE: "Failed to rebase branch obol on newly tagged version ${{ needs.fetch_latest_tag.outputs.latest_tag }} due to error"
+          SLACK_TITLE: "go-eth2-client rebase failed - error"
+          SLACK_WEBHOOK: ${{ secrets.SLACK_DEV_STACK_RELEASES_WEBHOOK }}
+
+      - name: Rebase failed conflict
+        if: contains(steps.rebase.outputs.RESULT, 'Merge conflict in')
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: dev-stack-releases
+          SLACK_COLOR: ecc926 #yellow
+          SLACK_ICON: https://obol.org/ObolIcon.png?ref=blog.obol.org
+          SLACK_MESSAGE: "Failed to rebase branch obol on newly tagged version ${{ needs.fetch_latest_tag.outputs.latest_tag }} due to conflicts"
+          SLACK_TITLE: "go-eth2-client rebase failed - conflicts"
+          SLACK_WEBHOOK: ${{ secrets.SLACK_DEV_STACK_RELEASES_WEBHOOK }}
