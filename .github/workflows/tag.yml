@@ -74,6 +74,7 @@ jobs:
           fi
 
       - name: Sync upstream tags
+        if: steps.get_latest_tag.outputs.HAS_NEW_TAG == 'true'
         run: |
           echo "Pushing tags to origin"
           git push --tags
