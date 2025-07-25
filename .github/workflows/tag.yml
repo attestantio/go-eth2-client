@@ -107,7 +107,7 @@ jobs:
       - name: Tag obolnetwork/go-eth2-client
         if: contains(steps.rebase.outputs.RESULT, 'Successfully rebased and updated') || contains(steps.rebase.outputs.RESULT, 'is up to date.')
         run: |
-          tag="${{ needs.fetch_latest_tag.outputs.latest_tag }}+obol"
+          tag="${{ needs.fetch_latest_tag.outputs.latest_tag }}-obol"
           echo "Tagging new obolnetwork/go-eth2-client $tag"
           git tag $tag
           echo "Pushing new obolnetwork/go-eth2-client $tag tag"
