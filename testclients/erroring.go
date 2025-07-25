@@ -394,6 +394,24 @@ func (s *Erroring) BeaconBlockRoot(ctx context.Context,
 	return next.BeaconBlockRoot(ctx, opts)
 }
 
+// BeaconBlockAttestations fetches a block's attestations given a block ID.
+func (s *Erroring) BeaconBlockAttestations(ctx context.Context,
+	opts *api.BeaconBlockAttestationsOpts,
+) (
+	*api.Response[[]*spec.VersionedAttestation],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.BeaconBlockAttestationsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.BeaconBlockAttestations(ctx, opts)
+}
+
 // BeaconCommittees fetches all beacon committees for the epoch at the given state.
 func (s *Erroring) BeaconCommittees(ctx context.Context,
 	opts *api.BeaconCommitteesOpts,

@@ -56,6 +56,7 @@ type Service struct {
 	AttestationRewardsFunc        func(context.Context, *api.AttestationRewardsOpts) (*api.Response[*apiv1.AttestationRewards], error)
 	BeaconBlockHeaderFunc         func(context.Context, *api.BeaconBlockHeaderOpts) (*api.Response[*apiv1.BeaconBlockHeader], error)
 	BeaconBlockRootFunc           func(context.Context, *api.BeaconBlockRootOpts) (*api.Response[*phase0.Root], error)
+	BeaconBlockAttestationsFunc   func(context.Context, *api.BeaconBlockAttestationsOpts) (*api.Response[[]*spec.VersionedAttestation], error)
 	BeaconStateFunc               func(context.Context, *api.BeaconStateOpts) (*api.Response[*spec.VersionedBeaconState], error)
 	BeaconStateRandaoFunc         func(context.Context, *api.BeaconStateRandaoOpts) (*api.Response[*phase0.Root], error)
 	BeaconStateRootFunc           func(context.Context, *api.BeaconStateRootOpts) (*api.Response[*phase0.Root], error)

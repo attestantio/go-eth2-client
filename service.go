@@ -354,6 +354,17 @@ type BeaconBlockRootProvider interface {
 	)
 }
 
+// BeaconBlockAttestationsProvider is the interface for providing beacon block attestations.
+type BeaconBlockAttestationsProvider interface {
+	// BeaconBlockAttestations fetches a block's attestations given a set of options.
+	BeaconBlockAttestations(ctx context.Context,
+		opts *api.BeaconBlockAttestationsOpts,
+	) (
+		*api.Response[[]*spec.VersionedAttestation],
+		error,
+	)
+}
+
 // BeaconBlockSubmitter is the interface for submitting beacon blocks.
 type BeaconBlockSubmitter interface {
 	// SubmitBeaconBlock submits a beacon block.
