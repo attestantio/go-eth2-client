@@ -99,7 +99,7 @@ jobs:
           git fetch
           {
             echo "RESULT<<EOF"
-            echo $(git rebase ${{ needs.fetch_latest_tag.outputs.latest_tag }} 2>&1)
+            echo "$(git rebase --onto $(echo $(git log -n 1 --pretty=format:"%H" ${{ needs.fetch_latest_tag.outputs.latest_tag }} )) $(echo $(git log -n 1 --pretty=format:"%H" master)) obol 2>&1)"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
           echo "Rebase completed"
