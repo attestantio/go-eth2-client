@@ -154,6 +154,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.SyncCommitteeMessagesSubmitter)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteesProvider)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteeSubscriptionsSubmitter)(nil), s)
+	assert.Implements(t, (*client.SyncCommitteeSelectionsProvider)(nil), s)
 	assert.Implements(t, (*client.ValidatorBalancesProvider)(nil), s)
 	assert.Implements(t, (*client.ValidatorLivenessProvider)(nil), s)
 	assert.Implements(t, (*client.ValidatorsProvider)(nil), s)

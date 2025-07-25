@@ -336,6 +336,24 @@ func (s *Erroring) SubmitSyncCommitteeMessages(ctx context.Context, messages []*
 	return next.SubmitSyncCommitteeMessages(ctx, messages)
 }
 
+// SyncCommitteeSelections submits sync committee selections.
+func (s *Erroring) SyncCommitteeSelections(ctx context.Context,
+	opts *api.SyncCommitteeSelectionsOpts,
+) (
+	*api.Response[[]*apiv1.SyncCommitteeSelection],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.SyncCommitteeSelectionsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.SyncCommitteeSelections(ctx, opts)
+}
+
 // AttesterDuties obtains attester duties.
 // If validatorIndices is nil it will return all duties for the given epoch.
 func (s *Erroring) AttesterDuties(ctx context.Context,

@@ -310,6 +310,18 @@ type SyncCommitteeRewardsProvider interface {
 	)
 }
 
+// SyncCommitteeSelectionsProvider is the interface for submitting sync committee subnet selections requests.
+// Used by DV middleware clients.
+type SyncCommitteeSelectionsProvider interface {
+	// SyncCommitteeSelections submits sync committee selections.
+	SyncCommitteeSelections(ctx context.Context,
+		opts *api.SyncCommitteeSelectionsOpts,
+	) (
+		*api.Response[[]*apiv1.SyncCommitteeSelection],
+		error,
+	)
+}
+
 // BLSToExecutionChangesSubmitter is the interface for submitting BLS to execution address changes.
 type BLSToExecutionChangesSubmitter interface {
 	// SubmitBLSToExecutionChanges submits BLS to execution address change operations.
