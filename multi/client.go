@@ -191,6 +191,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		if aScore > bScore {
 			return -1
 		}
+
 		return 0
 	})
 
@@ -205,9 +206,11 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 			switch {
 			case errors.As(err, &apiErr) && statusCodeFamily(apiErr.StatusCode) == 4:
 				log.Trace().Err(err).Msg(fmt.Sprintf("Not failing over from client %s on user error", client.Address()))
+
 				return res, err
 			case errors.Is(err, context.Canceled):
 				log.Trace().Msg(fmt.Sprintf("Not failing over from client %s on canceled context", client.Address()))
+
 				return res, err
 			}
 
@@ -218,6 +221,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 			if failover {
 				log.Debug().Err(err).Msg(fmt.Sprintf("Failing over from client %s on error", client.Address()))
 				s.penalizeClient(client.Address())
+
 				continue
 			}
 
@@ -227,6 +231,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		if res == nil {
 			// No response from this client; try the next.
 			err = errors.New("empty response")
+
 			continue
 		}
 
