@@ -15,6 +15,7 @@ package multi
 
 import (
 	"context"
+	"fmt"
 	"slices"
 	"strings"
 	"time"
@@ -199,14 +200,14 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		log := log.With().Str("client", client.Name()).Str("address", client.Address()).Logger()
 		res, err = call(ctx, client)
 		if err != nil {
-			log.Trace().Err(err).Msg("Potentially deactivating client due to error")
+			log.Trace().Err(err).Msg(fmt.Sprintf("Potentially failing over from client %s due to error", client.Address()))
 			var apiErr *api.Error
 			switch {
 			case errors.As(err, &apiErr) && statusCodeFamily(apiErr.StatusCode) == 4:
-				log.Trace().Err(err).Msg("Not deactivating client on user error")
+				log.Trace().Err(err).Msg(fmt.Sprintf("Not failing over from client %s on user error", client.Address()))
 				return res, err
 			case errors.Is(err, context.Canceled):
-				log.Trace().Msg("Not deactivating client on canceled context")
+				log.Trace().Msg(fmt.Sprintf("Not failing over from client %s on canceled context", client.Address()))
 				return res, err
 			}
 
@@ -215,6 +216,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 				failover, err = errHandler(ctx, client, err)
 			}
 			if failover {
+				log.Debug().Err(err).Msg(fmt.Sprintf("Failing over from client %s on error", client.Address()))
 				s.penalizeClient(client.Address())
 				continue
 			}
