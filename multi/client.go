@@ -200,7 +200,12 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		res, err = call(ctx, client)
 		if err != nil {
 			log.Trace().Err(err).Msg("Potentially deactivating client due to error")
-			if errors.Is(err, context.Canceled) {
+			var apiErr *api.Error
+			switch {
+			case errors.As(err, &apiErr) && statusCodeFamily(apiErr.StatusCode) == 4:
+				log.Trace().Err(err).Msg("Not deactivating client on user error")
+				return res, err
+			case errors.Is(err, context.Canceled):
 				log.Trace().Msg("Not deactivating client on canceled context")
 				return res, err
 			}
