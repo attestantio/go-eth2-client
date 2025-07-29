@@ -16,7 +16,6 @@ package multi
 import (
 	"context"
 	"fmt"
-	"slices"
 	"strings"
 	"time"
 
@@ -174,24 +173,8 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		return nil, errors.New("no clients to which to make call")
 	}
 
-	// Sort active clients in desc order (clients with the highest scores come first).
-	// Deep-copy active clients so we can sort the underlying slice elements without
-	// having to worry about concurrent readers/writers.
-	activeClients = s.activeClientsCopy()
-	s.clientScoresMu.RLock()
-	slices.SortFunc(activeClients, func(a, b consensusclient.Service) int {
-		aScore := s.scoreClient(a.Address())
-		bScore := s.scoreClient(b.Address())
-		if aScore < bScore {
-			return 1
-		}
-		if aScore > bScore {
-			return -1
-		}
-
-		return 0
-	})
-	s.clientScoresMu.RUnlock()
+	// Get active clients sorted by their score (clients with the highest scores come first).
+	activeClients = s.activeClientsSortedByScore()
 
 	var err error
 	var res any
@@ -240,18 +223,6 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 	}
 
 	return nil, err
-}
-
-// activeClientsCopy returns deep-copy of activeClients slice.
-func (s *Service) activeClientsCopy() []consensusclient.Service {
-	s.clientsMu.RLock()
-	defer s.clientsMu.RUnlock()
-
-	result := make([]consensusclient.Service, 0, len(s.activeClients))
-	for _, client := range s.activeClients {
-		result = append(result, client)
-	}
-	return result
 }
 
 // providerInfo returns information on the provider.
