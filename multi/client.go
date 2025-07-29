@@ -135,17 +135,11 @@ func (s *Service) activateClient(ctx context.Context, client consensusclient.Ser
 
 // scoreClient returns client score.
 func (s *Service) scoreClient(clientAddr string) int {
-	s.clientScoresMu.RLock()
-	defer s.clientScoresMu.RUnlock()
-
 	return s.clientScores[clientAddr]
 }
 
 // penalizeClient client score.
 func (s *Service) penalizeClient(clientAddr string) {
-	s.clientScoresMu.Lock()
-	defer s.clientScoresMu.Unlock()
-
 	s.clientScores[clientAddr]--
 }
 
@@ -180,8 +174,11 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		return nil, errors.New("no clients to which to make call")
 	}
 
-	// Sort in desc order (clients with the highest scores come first), client-scores
-	// might change concurrently to sorting - but it's best to use the latest data anyway.
+	// Sort active clients in desc order (clients with the highest scores come first).
+	// Deep-copy active clients so we can sort the underlying slice elements without
+	// having to worry about concurrent readers/writers.
+	activeClients = s.activeClientsCopy()
+	s.clientScoresMu.RLock()
 	slices.SortFunc(activeClients, func(a, b consensusclient.Service) int {
 		aScore := s.scoreClient(a.Address())
 		bScore := s.scoreClient(b.Address())
@@ -194,6 +191,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 
 		return 0
 	})
+	s.clientScoresMu.RUnlock()
 
 	var err error
 	var res any
@@ -209,7 +207,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 
 				return res, err
 			case errors.Is(err, context.Canceled):
-				log.Trace().Msg(fmt.Sprintf("Not failing over from client %s on canceled context", client.Address()))
+				log.Trace().Msgf("Not failing over from client %s on canceled context", client.Address())
 
 				return res, err
 			}
@@ -220,7 +218,10 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 			}
 			if failover {
 				log.Debug().Err(err).Msg(fmt.Sprintf("Failing over from client %s on error", client.Address()))
+
+				s.clientScoresMu.Lock()
 				s.penalizeClient(client.Address())
+				s.clientScoresMu.Unlock()
 
 				continue
 			}
@@ -239,6 +240,18 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 	}
 
 	return nil, err
+}
+
+// activeClientsCopy returns deep-copy of activeClients slice.
+func (s *Service) activeClientsCopy() []consensusclient.Service {
+	s.clientsMu.RLock()
+	defer s.clientsMu.RUnlock()
+
+	result := make([]consensusclient.Service, 0, len(s.activeClients))
+	for _, client := range s.activeClients {
+		result = append(result, client)
+	}
+	return result
 }
 
 // providerInfo returns information on the provider.

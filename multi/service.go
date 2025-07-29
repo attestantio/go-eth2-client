@@ -39,7 +39,7 @@ type Service struct {
 	// clientScoresMu synchronizes access to clientScores.
 	clientScoresMu sync.RWMutex
 	// clientScores maps client-address to its reputation-score. Every time the client couldn't
-	// serve a request - its score gets decreased (with 0 being the "starting score", representing
+	// serve a request - its score gets decreased (with math.MaxInt being the "starting score", representing
 	// the highest score possible). This scoring mechanism allows for prioritizing stable clients
 	// over less stable ones, ensuring the best overall result multi-client can deliver.
 	clientScores map[string]int
