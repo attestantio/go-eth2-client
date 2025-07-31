@@ -23,7 +23,7 @@ import (
 )
 
 // NodePeerCount obtains the peer count of a node.
-func (s *Service) NodePeerCount(ctx context.Context, opts *api.NodePeerCountOpts) (*api.Response[[]*apiv1.Peer], error) {
+func (s *Service) NodePeerCount(ctx context.Context, opts *api.NodePeerCountOpts) (*api.Response[*apiv1.PeerCount], error) {
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
@@ -39,12 +39,12 @@ func (s *Service) NodePeerCount(ctx context.Context, opts *api.NodePeerCountOpts
 	if httpResponse.contentType != ContentTypeJSON {
 		return nil, fmt.Errorf("unexpected content type %v (expected JSON)", httpResponse.contentType)
 	}
-	data, meta, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*apiv1.Peer{})
+	data, meta, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), &apiv1.PeerCount{})
 	if err != nil {
 		return nil, err
 	}
 
-	return &api.Response[[]*apiv1.Peer]{
+	return &api.Response[*apiv1.PeerCount]{
 		Data:     data,
 		Metadata: meta,
 	}, nil
