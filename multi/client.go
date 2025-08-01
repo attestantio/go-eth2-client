@@ -15,7 +15,6 @@ package multi
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -137,7 +136,7 @@ func (s *Service) scoreClient(clientAddr string) int {
 	return s.clientScores[clientAddr]
 }
 
-// penalizeClient client score.
+// penalizeClient decreases client score.
 func (s *Service) penalizeClient(clientAddr string) {
 	s.clientScores[clientAddr]--
 }
@@ -182,11 +181,11 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		log := log.With().Str("client", client.Name()).Str("address", client.Address()).Logger()
 		res, err = call(ctx, client)
 		if err != nil {
-			log.Trace().Err(err).Msg(fmt.Sprintf("Potentially failing over from client %s due to error", client.Address()))
+			log.Trace().Err(err).Msgf("Potentially failing over from client %s due to error", client.Address())
 			var apiErr *api.Error
 			switch {
 			case errors.As(err, &apiErr) && statusCodeFamily(apiErr.StatusCode) == 4:
-				log.Trace().Err(err).Msg(fmt.Sprintf("Not failing over from client %s on user error", client.Address()))
+				log.Trace().Err(err).Msgf("Not failing over from client %s on user error", client.Address())
 
 				return res, err
 			case errors.Is(err, context.Canceled):
@@ -200,7 +199,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 				failover, err = errHandler(ctx, client, err)
 			}
 			if failover {
-				log.Debug().Err(err).Msg(fmt.Sprintf("Failing over from client %s on error", client.Address()))
+				log.Debug().Err(err).Msgf("Failing over from client %s on error", client.Address())
 
 				s.clientScoresMu.Lock()
 				s.penalizeClient(client.Address())
