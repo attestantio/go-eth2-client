@@ -23,6 +23,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -596,6 +597,39 @@ type VoluntaryExitPoolProvider interface {
 		opts *api.VoluntaryExitPoolOpts,
 	) (
 		*api.Response[[]*phase0.SignedVoluntaryExit],
+		error,
+	)
+}
+
+// PendingDepositProvider is the interface for providing pending deposit information.
+type PendingDepositProvider interface {
+	// PendingDeposits provides the pending deposits for a given state.
+	PendingDeposits(ctx context.Context,
+		opts *api.PendingDepositsOpts,
+	) (
+		*api.Response[[]*electra.PendingDeposit],
+		error,
+	)
+}
+
+// PendingConsolidationsProvider is the interface for providing pending consolidations.
+type PendingConsolidationsProvider interface {
+	// PendingConsolidations provides the pending consolidations for a given state.
+	PendingConsolidations(ctx context.Context,
+		opts *api.PendingConsolidationsOpts,
+	) (
+		*api.Response[[]*electra.PendingConsolidation],
+		error,
+	)
+}
+
+// PendingPartialWithdrawalsProvider is the interface for providing pending partial withdrawals.
+type PendingPartialWithdrawalsProvider interface {
+	// PendingPartialWithdrawals provides the pending partial withdrawals for a given state.
+	PendingPartialWithdrawals(ctx context.Context,
+		opts *api.PendingPartialWithdrawalsOpts,
+	) (
+		*api.Response[[]*electra.PendingPartialWithdrawal],
 		error,
 	)
 }
