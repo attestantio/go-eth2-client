@@ -18,6 +18,7 @@ import (
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
+	apiv1fulu "github.com/attestantio/go-eth2-client/api/v1/fulu"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -30,7 +31,7 @@ type VersionedBlindedBeaconBlock struct {
 	Capella   *apiv1capella.BlindedBeaconBlock
 	Deneb     *apiv1deneb.BlindedBeaconBlock
 	Electra   *apiv1electra.BlindedBeaconBlock
-	Fulu      *apiv1electra.BlindedBeaconBlock
+	Fulu      *apiv1fulu.BlindedBeaconBlock
 }
 
 // IsEmpty returns true if there is no block.

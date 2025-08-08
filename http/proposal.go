@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
+	apiv1fulu "github.com/attestantio/go-eth2-client/api/v1/fulu"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -236,14 +237,14 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context,
 		}
 	case spec.DataVersionFulu:
 		if response.Data.Blinded {
-			response.Data.FuluBlinded = &apiv1electra.BlindedBeaconBlock{}
+			response.Data.FuluBlinded = &apiv1fulu.BlindedBeaconBlock{}
 			if s.customSpecSupport {
 				err = dynSSZ.UnmarshalSSZ(response.Data.FuluBlinded, res.body)
 			} else {
 				err = response.Data.FuluBlinded.UnmarshalSSZ(res.body)
 			}
 		} else {
-			response.Data.Fulu = &apiv1electra.BlockContents{}
+			response.Data.Fulu = &apiv1fulu.BlockContents{}
 			if s.customSpecSupport {
 				err = dynSSZ.UnmarshalSSZ(response.Data.Fulu, res.body)
 			} else {
@@ -341,12 +342,12 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[
 		if response.Data.Blinded {
 			response.Data.FuluBlinded, response.Metadata, err = decodeJSONResponse(
 				bytes.NewReader(res.body),
-				&apiv1electra.BlindedBeaconBlock{},
+				&apiv1fulu.BlindedBeaconBlock{},
 			)
 		} else {
 			response.Data.Fulu, response.Metadata, err = decodeJSONResponse(
 				bytes.NewReader(res.body),
-				&apiv1electra.BlockContents{},
+				&apiv1fulu.BlockContents{},
 			)
 		}
 	default:

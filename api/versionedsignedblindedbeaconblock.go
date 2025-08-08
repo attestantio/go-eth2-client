@@ -18,6 +18,7 @@ import (
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
+	apiv1fulu "github.com/attestantio/go-eth2-client/api/v1/fulu"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -30,7 +31,7 @@ type VersionedSignedBlindedBeaconBlock struct {
 	Capella   *apiv1capella.SignedBlindedBeaconBlock
 	Deneb     *apiv1deneb.SignedBlindedBeaconBlock
 	Electra   *apiv1electra.SignedBlindedBeaconBlock
-	Fulu      *apiv1electra.SignedBlindedBeaconBlock
+	Fulu      *apiv1fulu.SignedBlindedBeaconBlock
 }
 
 // Slot returns the slot of the signed beacon block.
