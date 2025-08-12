@@ -38,7 +38,13 @@ type VersionedAttestation struct {
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedAttestation) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil
+	return v.Phase0 == nil &&
+		v.Altair == nil &&
+		v.Bellatrix == nil &&
+		v.Capella == nil &&
+		v.Deneb == nil &&
+		v.Electra == nil &&
+		v.Fulu == nil
 }
 
 // AggregationBits returns the aggregation bits of the attestation.
