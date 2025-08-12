@@ -34,7 +34,8 @@ type VersionedAttesterSlashing struct {
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedAttesterSlashing) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil &&
+		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil
 }
 
 // Attestation1 returns the first indexed attestation.
