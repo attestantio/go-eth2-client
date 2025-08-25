@@ -30,7 +30,7 @@ type VersionedAggregateAndProof struct {
 	Deneb     *phase0.AggregateAndProof
 	Electra   *electra.AggregateAndProof
 	Fulu      *electra.AggregateAndProof
-	EIP7732   *electra.AggregateAndProof
+	Glaos     *electra.AggregateAndProof
 }
 
 // AggregatorIndex returns the aggregator index of the aggregate.
@@ -78,12 +78,12 @@ func (v *VersionedAggregateAndProof) AggregatorIndex() (phase0.ValidatorIndex, e
 		}
 
 		return v.Fulu.AggregatorIndex, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return 0, errors.New("no EIP7732 aggregate and proof")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return 0, errors.New("no glaos aggregate and proof")
 		}
 
-		return v.EIP7732.AggregatorIndex, nil
+		return v.Glaos.AggregatorIndex, nil
 	default:
 		return 0, errors.New("unknown version for aggregate and proof")
 	}
@@ -134,12 +134,12 @@ func (v *VersionedAggregateAndProof) HashTreeRoot() ([32]byte, error) {
 		}
 
 		return v.Fulu.HashTreeRoot()
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return [32]byte{}, errors.New("no EIP7732 aggregate and proof")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return [32]byte{}, errors.New("no glaos aggregate and proof")
 		}
 
-		return v.EIP7732.HashTreeRoot()
+		return v.Glaos.HashTreeRoot()
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -148,7 +148,7 @@ func (v *VersionedAggregateAndProof) HashTreeRoot() ([32]byte, error) {
 // IsEmpty returns true if there is no aggregate and proof.
 func (v *VersionedAggregateAndProof) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
-		v.Electra == nil && v.Fulu == nil && v.EIP7732 == nil
+		v.Electra == nil && v.Fulu == nil && v.Glaos == nil
 }
 
 // String returns a string version of the structure.
@@ -196,12 +196,12 @@ func (v *VersionedAggregateAndProof) String() string {
 		}
 
 		return v.Fulu.String()
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
+	case DataVersionGlaos:
+		if v.Glaos == nil {
 			return ""
 		}
 
-		return v.EIP7732.String()
+		return v.Glaos.String()
 	default:
 		return "unknown version"
 	}
@@ -252,12 +252,12 @@ func (v *VersionedAggregateAndProof) SelectionProof() (phase0.BLSSignature, erro
 		}
 
 		return v.Fulu.SelectionProof, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.BLSSignature{}, errors.New("no EIP7732 aggregate and proof")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.BLSSignature{}, errors.New("no glaos aggregate and proof")
 		}
 
-		return v.EIP7732.SelectionProof, nil
+		return v.Glaos.SelectionProof, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}

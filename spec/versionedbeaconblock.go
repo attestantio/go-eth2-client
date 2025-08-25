@@ -22,7 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
-	"github.com/attestantio/go-eth2-client/spec/eip7732"
+	"github.com/attestantio/go-eth2-client/spec/glaos"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -36,13 +36,13 @@ type VersionedBeaconBlock struct {
 	Deneb     *deneb.BeaconBlock
 	Electra   *electra.BeaconBlock
 	Fulu      *electra.BeaconBlock
-	EIP7732   *eip7732.BeaconBlock
+	Glaos     *glaos.BeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBeaconBlock) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
-		v.Electra == nil && v.Fulu == nil && v.EIP7732 == nil
+		v.Electra == nil && v.Fulu == nil && v.Glaos == nil
 }
 
 // Slot returns the slot of the beacon block.
@@ -90,12 +90,12 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.Slot, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return 0, errors.New("no eip7732 block")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return 0, errors.New("no glaos block")
 		}
 
-		return v.EIP7732.Slot, nil
+		return v.Glaos.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -167,15 +167,15 @@ func (v *VersionedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
 		}
 
 		return v.Fulu.Body.RANDAOReveal, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.BLSSignature{}, errors.New("no eip7732 block")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.BLSSignature{}, errors.New("no glaos block")
 		}
-		if v.EIP7732.Body == nil {
-			return phase0.BLSSignature{}, errors.New("no eip7732 block body")
+		if v.Glaos.Body == nil {
+			return phase0.BLSSignature{}, errors.New("no glaos block body")
 		}
 
-		return v.EIP7732.Body.RANDAOReveal, nil
+		return v.Glaos.Body.RANDAOReveal, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -247,15 +247,15 @@ func (v *VersionedBeaconBlock) Graffiti() ([32]byte, error) {
 		}
 
 		return v.Fulu.Body.Graffiti, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return [32]byte{}, errors.New("no eip7732 block")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return [32]byte{}, errors.New("no glaos block")
 		}
-		if v.EIP7732.Body == nil {
-			return [32]byte{}, errors.New("no eip7732 block body")
+		if v.Glaos.Body == nil {
+			return [32]byte{}, errors.New("no glaos block body")
 		}
 
-		return v.EIP7732.Body.Graffiti, nil
+		return v.Glaos.Body.Graffiti, nil
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -306,12 +306,12 @@ func (v *VersionedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
 		}
 
 		return v.Fulu.ProposerIndex, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return 0, errors.New("no eip7732 block")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return 0, errors.New("no glaos block")
 		}
 
-		return v.EIP7732.ProposerIndex, nil
+		return v.Glaos.ProposerIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -362,12 +362,12 @@ func (v *VersionedBeaconBlock) Root() (phase0.Root, error) {
 		}
 
 		return v.Fulu.HashTreeRoot()
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.Root{}, errors.New("no eip7732 block")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.Root{}, errors.New("no glaos block")
 		}
 
-		return v.EIP7732.HashTreeRoot()
+		return v.Glaos.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -439,15 +439,15 @@ func (v *VersionedBeaconBlock) BodyRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.Body.HashTreeRoot()
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.Root{}, errors.New("no eip7732 block")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.Root{}, errors.New("no glaos block")
 		}
-		if v.EIP7732.Body == nil {
-			return phase0.Root{}, errors.New("no eip7732 block body")
+		if v.Glaos.Body == nil {
+			return phase0.Root{}, errors.New("no glaos block body")
 		}
 
-		return v.EIP7732.Body.HashTreeRoot()
+		return v.Glaos.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -498,12 +498,12 @@ func (v *VersionedBeaconBlock) ParentRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.ParentRoot, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.Root{}, errors.New("no eip7732 block")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.Root{}, errors.New("no glaos block")
 		}
 
-		return v.EIP7732.ParentRoot, nil
+		return v.Glaos.ParentRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -554,12 +554,12 @@ func (v *VersionedBeaconBlock) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.StateRoot, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.Root{}, errors.New("no eip7732 block")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.Root{}, errors.New("no glaos block")
 		}
 
-		return v.EIP7732.StateRoot, nil
+		return v.Glaos.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -666,16 +666,16 @@ func (v *VersionedBeaconBlock) Attestations() ([]VersionedAttestation, error) {
 		}
 
 		return versionedAttestations, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil || v.EIP7732.Body == nil {
-			return nil, errors.New("no eip7732 block")
+	case DataVersionGlaos:
+		if v.Glaos == nil || v.Glaos.Body == nil {
+			return nil, errors.New("no glaos block")
 		}
 
-		versionedAttestations := make([]VersionedAttestation, len(v.EIP7732.Body.Attestations))
-		for i, attestation := range v.EIP7732.Body.Attestations {
+		versionedAttestations := make([]VersionedAttestation, len(v.Glaos.Body.Attestations))
+		for i, attestation := range v.Glaos.Body.Attestations {
 			versionedAttestations[i] = VersionedAttestation{
-				Version: DataVersionEIP7732,
-				EIP7732: attestation,
+				Version: DataVersionGlaos,
+				Glaos:   attestation,
 			}
 		}
 
@@ -786,16 +786,16 @@ func (v *VersionedBeaconBlock) AttesterSlashings() ([]VersionedAttesterSlashing,
 		}
 
 		return versionedAttesterSlashings, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil || v.EIP7732.Body == nil {
-			return nil, errors.New("no eip7732 block")
+	case DataVersionGlaos:
+		if v.Glaos == nil || v.Glaos.Body == nil {
+			return nil, errors.New("no glaos block")
 		}
 
-		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.EIP7732.Body.AttesterSlashings))
-		for i, attesterSlashing := range v.EIP7732.Body.AttesterSlashings {
+		versionedAttesterSlashings := make([]VersionedAttesterSlashing, len(v.Glaos.Body.AttesterSlashings))
+		for i, attesterSlashing := range v.Glaos.Body.AttesterSlashings {
 			versionedAttesterSlashings[i] = VersionedAttesterSlashing{
-				Version: DataVersionEIP7732,
-				EIP7732: attesterSlashing,
+				Version: DataVersionGlaos,
+				Glaos:   attesterSlashing,
 			}
 		}
 
@@ -850,12 +850,12 @@ func (v *VersionedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlashing, 
 		}
 
 		return v.Fulu.Body.ProposerSlashings, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil || v.EIP7732.Body == nil {
-			return nil, errors.New("no eip7732 block")
+	case DataVersionGlaos:
+		if v.Glaos == nil || v.Glaos.Body == nil {
+			return nil, errors.New("no glaos block")
 		}
 
-		return v.EIP7732.Body.ProposerSlashings, nil
+		return v.Glaos.Body.ProposerSlashings, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -902,8 +902,8 @@ func (v *VersionedBeaconBlock) ExecutionPayload() (*VersionedExecutionPayload, e
 		}
 
 		versionedExecutionPayload.Fulu = v.Fulu.Body.ExecutionPayload
-	case DataVersionEIP7732:
-		return nil, errors.New("no execution payload in eip7732")
+	case DataVersionGlaos:
+		return nil, errors.New("no execution payload in glaos")
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -956,12 +956,12 @@ func (v *VersionedBeaconBlock) String() string {
 		}
 
 		return v.Fulu.String()
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
+	case DataVersionGlaos:
+		if v.Glaos == nil {
 			return ""
 		}
 
-		return v.EIP7732.String()
+		return v.Glaos.String()
 	default:
 		return "unknown version"
 	}

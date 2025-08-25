@@ -38,8 +38,8 @@ const (
 	DataVersionElectra
 	// DataVersionFulu is data applicable for the Fulu release of the beacon chain.
 	DataVersionFulu
-	// DataVersionEIP7732 is data applicable for the EIP-7732 release of the beacon chain.
-	DataVersionEIP7732
+	// DataVersionGlaos is data applicable for the Glaos release of the beacon chain.
+	DataVersionGlaos
 )
 
 var dataVersionStrings = [...]string{
@@ -51,7 +51,7 @@ var dataVersionStrings = [...]string{
 	"deneb",
 	"electra",
 	"fulu",
-	"eip7732",
+	"glaos",
 }
 
 var dataVersionMap = map[string]DataVersion{
@@ -62,7 +62,7 @@ var dataVersionMap = map[string]DataVersion{
 	`"deneb"`:     DataVersionDeneb,
 	`"electra"`:   DataVersionElectra,
 	`"fulu"`:      DataVersionFulu,
-	`"eip7732"`:   DataVersionEIP7732,
+	`"glaos"`:     DataVersionGlaos,
 }
 
 // MarshalJSON implements json.Marshaler.

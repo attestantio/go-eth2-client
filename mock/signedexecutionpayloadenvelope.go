@@ -20,24 +20,24 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
-	"github.com/attestantio/go-eth2-client/spec/eip7732"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/glaos"
 )
 
 // SignedExecutionPayloadEnvelope fetches a signed execution payload envelope given a block ID.
 func (s *Service) SignedExecutionPayloadEnvelope(ctx context.Context,
 	opts *api.SignedExecutionPayloadEnvelopeOpts,
 ) (
-	*api.Response[*eip7732.SignedExecutionPayloadEnvelope],
+	*api.Response[*glaos.SignedExecutionPayloadEnvelope],
 	error,
 ) {
 	if s.SignedExecutionPayloadEnvelopeFunc != nil {
 		return s.SignedExecutionPayloadEnvelopeFunc(ctx, opts)
 	}
 
-	return &api.Response[*eip7732.SignedExecutionPayloadEnvelope]{
-		Data: &eip7732.SignedExecutionPayloadEnvelope{
-			Message: &eip7732.ExecutionPayloadEnvelope{
+	return &api.Response[*glaos.SignedExecutionPayloadEnvelope]{
+		Data: &glaos.SignedExecutionPayloadEnvelope{
+			Message: &glaos.ExecutionPayloadEnvelope{
 				Payload: &deneb.ExecutionPayload{
 					Transactions: []bellatrix.Transaction{},
 					Withdrawals:  []*capella.Withdrawal{},

@@ -30,7 +30,7 @@ type VersionedSignedAggregateAndProof struct {
 	Deneb     *phase0.SignedAggregateAndProof
 	Electra   *electra.SignedAggregateAndProof
 	Fulu      *electra.SignedAggregateAndProof
-	EIP7732   *electra.SignedAggregateAndProof
+	Glaos     *electra.SignedAggregateAndProof
 }
 
 // AggregatorIndex returns the aggregator index of the aggregate.
@@ -78,12 +78,12 @@ func (v *VersionedSignedAggregateAndProof) AggregatorIndex() (phase0.ValidatorIn
 		}
 
 		return v.Fulu.Message.AggregatorIndex, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return 0, errors.New("no EIP7732 signed aggregate and proof")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return 0, errors.New("no Glaos signed aggregate and proof")
 		}
 
-		return v.EIP7732.Message.AggregatorIndex, nil
+		return v.Glaos.Message.AggregatorIndex, nil
 	default:
 		return 0, errors.New("unknown version for signed aggregate and proof")
 	}
@@ -92,7 +92,7 @@ func (v *VersionedSignedAggregateAndProof) AggregatorIndex() (phase0.ValidatorIn
 // IsEmpty returns true if there is no aggregate and proof.
 func (v *VersionedSignedAggregateAndProof) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
-		v.Electra == nil && v.Fulu == nil && v.EIP7732 == nil
+		v.Electra == nil && v.Fulu == nil && v.Glaos == nil
 }
 
 // SelectionProof returns the selection proof of the signed aggregate.
@@ -140,12 +140,12 @@ func (v *VersionedSignedAggregateAndProof) SelectionProof() (phase0.BLSSignature
 		}
 
 		return v.Fulu.Message.SelectionProof, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.BLSSignature{}, errors.New("no EIP7732 signed aggregate and proof")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.BLSSignature{}, errors.New("no Glaos signed aggregate and proof")
 		}
 
-		return v.EIP7732.Message.SelectionProof, nil
+		return v.Glaos.Message.SelectionProof, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -196,12 +196,12 @@ func (v *VersionedSignedAggregateAndProof) Signature() (phase0.BLSSignature, err
 		}
 
 		return v.Fulu.Signature, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.BLSSignature{}, errors.New("no EIP7732 signed aggregate and proof")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.BLSSignature{}, errors.New("no Glaos signed aggregate and proof")
 		}
 
-		return v.EIP7732.Signature, nil
+		return v.Glaos.Signature, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -252,12 +252,12 @@ func (v *VersionedSignedAggregateAndProof) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.Message.Aggregate.Data.Slot, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return 0, errors.New("no EIP7732 signed aggregate and proof")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return 0, errors.New("no Glaos signed aggregate and proof")
 		}
 
-		return v.EIP7732.Message.Aggregate.Data.Slot, nil
+		return v.Glaos.Message.Aggregate.Data.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -308,12 +308,12 @@ func (v *VersionedSignedAggregateAndProof) String() string {
 		}
 
 		return v.Fulu.String()
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
+	case DataVersionGlaos:
+		if v.Glaos == nil {
 			return ""
 		}
 
-		return v.EIP7732.String()
+		return v.Glaos.String()
 	default:
 		return "unknown version"
 	}

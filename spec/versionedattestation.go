@@ -34,13 +34,13 @@ type VersionedAttestation struct {
 	Deneb          *phase0.Attestation
 	Electra        *electra.Attestation
 	Fulu           *electra.Attestation
-	EIP7732        *electra.Attestation
+	Glaos          *electra.Attestation
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedAttestation) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
-		v.Electra == nil && v.Fulu == nil && v.EIP7732 == nil
+		v.Electra == nil && v.Fulu == nil && v.Glaos == nil
 }
 
 // AggregationBits returns the aggregation bits of the attestation.
@@ -88,12 +88,12 @@ func (v *VersionedAttestation) AggregationBits() (bitfield.Bitlist, error) {
 		}
 
 		return v.Fulu.AggregationBits, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return nil, errors.New("no EIP7732 attestation")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return nil, errors.New("no Glaos attestation")
 		}
 
-		return v.EIP7732.AggregationBits, nil
+		return v.Glaos.AggregationBits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -144,12 +144,12 @@ func (v *VersionedAttestation) Data() (*phase0.AttestationData, error) {
 		}
 
 		return v.Fulu.Data, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return nil, errors.New("no EIP7732 attestation")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return nil, errors.New("no Glaos attestation")
 		}
 
-		return v.EIP7732.Data, nil
+		return v.Glaos.Data, nil
 	default:
 		return nil, fmt.Errorf("unknown version: %d", v.Version)
 	}
@@ -172,12 +172,12 @@ func (v *VersionedAttestation) CommitteeBits() (bitfield.Bitvector64, error) {
 		}
 
 		return v.Fulu.CommitteeBits, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return nil, errors.New("no EIP7732 attestation")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return nil, errors.New("no Glaos attestation")
 		}
 
-		return v.EIP7732.CommitteeBits, nil
+		return v.Glaos.CommitteeBits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -228,12 +228,12 @@ func (v *VersionedAttestation) CommitteeIndex() (phase0.CommitteeIndex, error) {
 		}
 
 		return v.Fulu.CommitteeIndex()
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return 0, errors.New("no EIP7732 attestation")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return 0, errors.New("no Glaos attestation")
 		}
 
-		return v.EIP7732.CommitteeIndex()
+		return v.Glaos.CommitteeIndex()
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -283,12 +283,12 @@ func (v *VersionedAttestation) HashTreeRoot() ([32]byte, error) {
 		}
 
 		return v.Fulu.HashTreeRoot()
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return [32]byte{}, errors.New("no EIP7732 attestation")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return [32]byte{}, errors.New("no Glaos attestation")
 		}
 
-		return v.EIP7732.HashTreeRoot()
+		return v.Glaos.HashTreeRoot()
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -339,12 +339,12 @@ func (v *VersionedAttestation) Signature() (phase0.BLSSignature, error) {
 		}
 
 		return v.Fulu.Signature, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.BLSSignature{}, errors.New("no EIP7732 attestation")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.BLSSignature{}, errors.New("no Glaos attestation")
 		}
 
-		return v.EIP7732.Signature, nil
+		return v.Glaos.Signature, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -395,12 +395,12 @@ func (v *VersionedAttestation) String() string {
 		}
 
 		return v.Fulu.String()
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
+	case DataVersionGlaos:
+		if v.Glaos == nil {
 			return ""
 		}
 
-		return v.EIP7732.String()
+		return v.Glaos.String()
 	default:
 		return "unknown version"
 	}

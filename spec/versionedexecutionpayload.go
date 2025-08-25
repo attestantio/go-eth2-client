@@ -31,12 +31,12 @@ type VersionedExecutionPayload struct {
 	Deneb     *deneb.ExecutionPayload
 	Electra   *deneb.ExecutionPayload
 	Fulu      *deneb.ExecutionPayload
-	EIP7732   *deneb.ExecutionPayload
+	Glaos     *deneb.ExecutionPayload
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedExecutionPayload) IsEmpty() bool {
-	return v.Version < DataVersionBellatrix || (v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.EIP7732 == nil)
+	return v.Version < DataVersionBellatrix || (v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.Glaos == nil)
 }
 
 // ParentHash returns the parent hash of the execution payload.
@@ -76,12 +76,12 @@ func (v *VersionedExecutionPayload) ParentHash() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.ParentHash, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.Hash32{}, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.Hash32{}, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.ParentHash, nil
+		return v.Glaos.ParentHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -124,12 +124,12 @@ func (v *VersionedExecutionPayload) FeeRecipient() (bellatrix.ExecutionAddress, 
 		}
 
 		return v.Fulu.FeeRecipient, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return bellatrix.ExecutionAddress{}, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.FeeRecipient, nil
+		return v.Glaos.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, errors.New("unknown version")
 	}
@@ -172,12 +172,12 @@ func (v *VersionedExecutionPayload) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.StateRoot, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.Root{}, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.Root{}, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.StateRoot, nil
+		return v.Glaos.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -220,12 +220,12 @@ func (v *VersionedExecutionPayload) ReceiptsRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.ReceiptsRoot, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.Root{}, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.Root{}, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.ReceiptsRoot, nil
+		return v.Glaos.ReceiptsRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -268,12 +268,12 @@ func (v *VersionedExecutionPayload) LogsBloom() ([256]byte, error) {
 		}
 
 		return v.Fulu.LogsBloom, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return [256]byte{}, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return [256]byte{}, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.LogsBloom, nil
+		return v.Glaos.LogsBloom, nil
 	default:
 		return [256]byte{}, errors.New("unknown version")
 	}
@@ -316,12 +316,12 @@ func (v *VersionedExecutionPayload) PrevRandao() ([32]byte, error) {
 		}
 
 		return v.Fulu.PrevRandao, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return [32]byte{}, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return [32]byte{}, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.PrevRandao, nil
+		return v.Glaos.PrevRandao, nil
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -364,12 +364,12 @@ func (v *VersionedExecutionPayload) BlockNumber() (uint64, error) {
 		}
 
 		return v.Fulu.BlockNumber, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return 0, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return 0, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.BlockNumber, nil
+		return v.Glaos.BlockNumber, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -412,12 +412,12 @@ func (v *VersionedExecutionPayload) GasLimit() (uint64, error) {
 		}
 
 		return v.Fulu.GasLimit, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return 0, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return 0, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.GasLimit, nil
+		return v.Glaos.GasLimit, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -460,12 +460,12 @@ func (v *VersionedExecutionPayload) GasUsed() (uint64, error) {
 		}
 
 		return v.Fulu.GasUsed, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return 0, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return 0, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.GasUsed, nil
+		return v.Glaos.GasUsed, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -508,12 +508,12 @@ func (v *VersionedExecutionPayload) Timestamp() (uint64, error) {
 		}
 
 		return v.Fulu.Timestamp, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return 0, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return 0, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.Timestamp, nil
+		return v.Glaos.Timestamp, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -556,12 +556,12 @@ func (v *VersionedExecutionPayload) ExtraData() ([]byte, error) {
 		}
 
 		return v.Fulu.ExtraData, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return nil, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return nil, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.ExtraData, nil
+		return v.Glaos.ExtraData, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -604,12 +604,12 @@ func (v *VersionedExecutionPayload) BaseFeePerGas() (*uint256.Int, error) {
 		}
 
 		return v.Fulu.BaseFeePerGas, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return nil, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return nil, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.BaseFeePerGas, nil
+		return v.Glaos.BaseFeePerGas, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -652,12 +652,12 @@ func (v *VersionedExecutionPayload) BlockHash() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.BlockHash, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return phase0.Hash32{}, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return phase0.Hash32{}, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.BlockHash, nil
+		return v.Glaos.BlockHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -700,12 +700,12 @@ func (v *VersionedExecutionPayload) Transactions() ([]bellatrix.Transaction, err
 		}
 
 		return v.Fulu.Transactions, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return nil, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return nil, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.Transactions, nil
+		return v.Glaos.Transactions, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -744,12 +744,12 @@ func (v *VersionedExecutionPayload) Withdrawals() ([]*capella.Withdrawal, error)
 		}
 
 		return v.Fulu.Withdrawals, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return nil, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return nil, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.Withdrawals, nil
+		return v.Glaos.Withdrawals, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -784,12 +784,12 @@ func (v *VersionedExecutionPayload) BlobGasUsed() (uint64, error) {
 		}
 
 		return v.Fulu.BlobGasUsed, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return 0, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return 0, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.BlobGasUsed, nil
+		return v.Glaos.BlobGasUsed, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -824,12 +824,12 @@ func (v *VersionedExecutionPayload) ExcessBlobGas() (uint64, error) {
 		}
 
 		return v.Fulu.ExcessBlobGas, nil
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
-			return 0, errors.New("no eip7732 execution payload")
+	case DataVersionGlaos:
+		if v.Glaos == nil {
+			return 0, errors.New("no glaos execution payload")
 		}
 
-		return v.EIP7732.ExcessBlobGas, nil
+		return v.Glaos.ExcessBlobGas, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -872,12 +872,12 @@ func (v *VersionedExecutionPayload) String() string {
 		}
 
 		return v.Fulu.String()
-	case DataVersionEIP7732:
-		if v.EIP7732 == nil {
+	case DataVersionGlaos:
+		if v.Glaos == nil {
 			return ""
 		}
 
-		return v.EIP7732.String()
+		return v.Glaos.String()
 	default:
 		return "unknown version"
 	}
