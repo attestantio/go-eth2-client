@@ -69,8 +69,11 @@ type beaconStateJSON struct {
 	PendingDeposits               []*electra.PendingDeposit           `json:"pending_deposits"`
 	PendingPartialWithdrawals     []*electra.PendingPartialWithdrawal `json:"pending_partial_withdrawals"`
 	PendingConsolidations         []*electra.PendingConsolidation     `json:"pending_consolidations"`
+	ProposerLookahead             []string                            `json:"proposer_lookahead"`
+	ExecutionPayloadAvailability  []string                            `json:"execution_payload_availability"`
+	BuilderPendingPayments        []*BuilderPendingPayment            `json:"builder_pending_payments"`
+	BuilderPendingWithdrawals     []*BuilderPendingWithdrawal         `json:"builder_pending_withdrawals"`
 	LatestBlockHash               string                              `json:"latest_block_hash"`
-	LatestFullSlot                string                              `json:"latest_full_slot"`
 	LatestWithdrawalsRoot         string                              `json:"latest_withdrawals_root"`
 }
 
@@ -99,6 +102,14 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 	inactivityScores := make([]string, len(b.InactivityScores))
 	for i := range b.InactivityScores {
 		inactivityScores[i] = strconv.FormatUint(b.InactivityScores[i], 10)
+	}
+	proposerLookahead := make([]string, len(b.ProposerLookahead))
+	for i := range b.ProposerLookahead {
+		proposerLookahead[i] = fmt.Sprintf("%d", b.ProposerLookahead[i])
+	}
+	executionPayloadAvailability := make([]string, len(b.ExecutionPayloadAvailability))
+	for i := range b.ExecutionPayloadAvailability {
+		executionPayloadAvailability[i] = fmt.Sprintf("%d", b.ExecutionPayloadAvailability[i])
 	}
 
 	return json.Marshal(&beaconStateJSON{
@@ -139,8 +150,11 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 		PendingDeposits:               b.PendingDeposits,
 		PendingPartialWithdrawals:     b.PendingPartialWithdrawals,
 		PendingConsolidations:         b.PendingConsolidations,
+		ProposerLookahead:             proposerLookahead,
+		ExecutionPayloadAvailability:  executionPayloadAvailability,
+		BuilderPendingPayments:        b.BuilderPendingPayments,
+		BuilderPendingWithdrawals:     b.BuilderPendingWithdrawals,
 		LatestBlockHash:               fmt.Sprintf("%#x", b.LatestBlockHash),
-		LatestFullSlot:                fmt.Sprintf("%d", b.LatestFullSlot),
 		LatestWithdrawalsRoot:         fmt.Sprintf("%#x", b.LatestWithdrawalsRoot),
 	})
 }
@@ -355,6 +369,32 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 		}
 	}
 
+	if err := json.Unmarshal(raw["proposer_lookahead"], &b.ProposerLookahead); err != nil {
+		return errors.Wrap(err, "proposer_lookahead")
+	}
+
+	if err := json.Unmarshal(raw["execution_payload_availability"], &b.ExecutionPayloadAvailability); err != nil {
+		return errors.Wrap(err, "execution_payload_availability")
+	}
+
+	if err := json.Unmarshal(raw["builder_pending_payments"], &b.BuilderPendingPayments); err != nil {
+		return errors.Wrap(err, "builder_pending_payments")
+	}
+	for i := range b.BuilderPendingPayments {
+		if b.BuilderPendingPayments[i] == nil {
+			return fmt.Errorf("builder pending payments entry %d missing", i)
+		}
+	}
+
+	if err := json.Unmarshal(raw["builder_pending_withdrawals"], &b.BuilderPendingWithdrawals); err != nil {
+		return errors.Wrap(err, "builder_pending_withdrawals")
+	}
+	for i := range b.BuilderPendingWithdrawals {
+		if b.BuilderPendingWithdrawals[i] == nil {
+			return fmt.Errorf("builder pending withdrawals entry %d missing", i)
+		}
+	}
+
 	if raw["latest_block_hash"] == nil {
 		return errors.New("latest block hash missing")
 	}
@@ -365,13 +405,6 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "invalid latest block hash")
 	}
 	copy(b.LatestBlockHash[:], latestBlockHash)
-
-	latestFullSlot := string(bytes.Trim(raw["latest_full_slot"], `"`))
-	slot, err := strconv.ParseUint(latestFullSlot, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid latest full slot")
-	}
-	b.LatestFullSlot = phase0.Slot(slot)
 
 	if raw["latest_withdrawals_root"] == nil {
 		return errors.New("latest withdrawals root missing")

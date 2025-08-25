@@ -63,9 +63,12 @@ type BeaconState struct {
 	PendingDeposits               []*electra.PendingDeposit           `ssz-max:"134217728"`
 	PendingPartialWithdrawals     []*electra.PendingPartialWithdrawal `ssz-max:"134217728"`
 	PendingConsolidations         []*electra.PendingConsolidation     `ssz-max:"262144"`
+	ProposerLookahead             []phase0.ValidatorIndex             `dynssz-size:"(MIN_SEED_LOOKAHEAD+1)*SLOTS_PER_EPOCH" ssz-size:"64"`
+	ExecutionPayloadAvailability  []byte                              `dynssz-size:"SLOTS_PER_HISTORICAL_ROOT/8" ssz-size:"1024"`
+	BuilderPendingPayments        []*BuilderPendingPayment            `dynssz-size:"SLOTS_PER_EPOCH*2" ssz-size:"64"`
+	BuilderPendingWithdrawals     []*BuilderPendingWithdrawal         `dynssz-max:"BUILDER_PENDING_WITHDRAWALS_LIMIT" ssz-max:"1048576"`
 	LatestBlockHash               phase0.Hash32                       `ssz-size:"32"`
-	LatestFullSlot                phase0.Slot
-	LatestWithdrawalsRoot         phase0.Root `ssz-size:"32"`
+	LatestWithdrawalsRoot         phase0.Root                         `ssz-size:"32"`
 }
 
 // String returns a string version of the structure.

@@ -25,9 +25,10 @@ import (
 // MarshalYAML implements yaml.Marshaler.
 func (p *PayloadAttestationData) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&payloadAttestationDataJSON{
-		BeaconBlockRoot: fmt.Sprintf("%#x", p.BeaconBlockRoot),
-		Slot:            fmt.Sprintf("%d", p.Slot),
-		PayloadStatus:   fmt.Sprintf("%d", p.PayloadStatus),
+		BeaconBlockRoot:   fmt.Sprintf("%#x", p.BeaconBlockRoot),
+		Slot:              fmt.Sprintf("%d", p.Slot),
+		PayloadPresent:    p.PayloadPresent,
+		BlobDataAvailable: p.BlobDataAvailable,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

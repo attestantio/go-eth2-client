@@ -29,7 +29,7 @@ type ExecutionPayloadEnvelope struct {
 	BuilderIndex       phase0.ValidatorIndex
 	BeaconBlockRoot    phase0.Root `ssz-size:"32"`
 	Slot               phase0.Slot
-	BlobKZGCommitments []deneb.KZGCommitment `ssz-max:"4096" ssz-size:"?,48"`
+	BlobKZGCommitments []deneb.KZGCommitment `dynssz-max:"MAX_BLOB_COMMITMENTS_PER_BLOCK" ssz-max:"4096" ssz-size:"?,48"`
 	StateRoot          phase0.Root           `ssz-size:"32"`
 }
 

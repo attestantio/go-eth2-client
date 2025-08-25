@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,16 +20,14 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-// PayloadAttestationData represents payload attestation data.
-type PayloadAttestationData struct {
-	BeaconBlockRoot   phase0.Root `ssz-size:"32"`
-	Slot              phase0.Slot
-	PayloadPresent    bool
-	BlobDataAvailable bool
+// BuilderPendingPayment represents a builder pending payment.
+type BuilderPendingPayment struct {
+	Weight     phase0.Gwei
+	Withdrawal *BuilderPendingWithdrawal
 }
 
 // String returns a string version of the structure.
-func (p *PayloadAttestationData) String() string {
+func (p *BuilderPendingPayment) String() string {
 	data, err := yaml.Marshal(p)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)

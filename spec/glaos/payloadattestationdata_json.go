@@ -26,17 +26,19 @@ import (
 
 // payloadAttestationDataJSON is the spec representation of the struct.
 type payloadAttestationDataJSON struct {
-	BeaconBlockRoot string `json:"beacon_block_root"`
-	Slot            string `json:"slot"`
-	PayloadStatus   string `json:"payload_status"`
+	BeaconBlockRoot   string `json:"beacon_block_root"`
+	Slot              string `json:"slot"`
+	PayloadPresent    bool   `json:"payload_present"`
+	BlobDataAvailable bool   `json:"blob_data_available"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (p *PayloadAttestationData) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&payloadAttestationDataJSON{
-		BeaconBlockRoot: fmt.Sprintf("%#x", p.BeaconBlockRoot),
-		Slot:            fmt.Sprintf("%d", p.Slot),
-		PayloadStatus:   fmt.Sprintf("%d", p.PayloadStatus),
+		BeaconBlockRoot:   fmt.Sprintf("%#x", p.BeaconBlockRoot),
+		Slot:              fmt.Sprintf("%d", p.Slot),
+		PayloadPresent:    p.PayloadPresent,
+		BlobDataAvailable: p.BlobDataAvailable,
 	})
 }
 
@@ -62,11 +64,9 @@ func (p *PayloadAttestationData) UnmarshalJSON(input []byte) error {
 	}
 	p.Slot = phase0.Slot(slot)
 
-	status, err := strconv.ParseUint(data.PayloadStatus, 10, 8)
-	if err != nil {
-		return errors.Wrap(err, "invalid payload status")
-	}
-	p.PayloadStatus = uint8(status)
+	p.PayloadPresent = data.PayloadPresent
+
+	p.BlobDataAvailable = data.BlobDataAvailable
 
 	return nil
 }
