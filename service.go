@@ -24,7 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
-	"github.com/attestantio/go-eth2-client/spec/glaos"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -608,7 +608,7 @@ type ExecutionPayloadProvider interface {
 	SignedExecutionPayloadEnvelope(ctx context.Context,
 		opts *api.SignedExecutionPayloadEnvelopeOpts,
 	) (
-		*api.Response[*glaos.SignedExecutionPayloadEnvelope],
+		*api.Response[*gloas.SignedExecutionPayloadEnvelope],
 		error,
 	)
 }

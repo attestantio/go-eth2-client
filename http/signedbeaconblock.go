@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/attestantio/go-eth2-client/spec/electra"
-	"github.com/attestantio/go-eth2-client/spec/glaos"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -167,15 +167,15 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode fulu signed block contents"), err)
 		}
-	case spec.DataVersionGlaos:
-		response.Data.Glaos = &glaos.SignedBeaconBlock{}
+	case spec.DataVersionGloas:
+		response.Data.Gloas = &gloas.SignedBeaconBlock{}
 		if s.customSpecSupport {
-			err = dynSSZ.UnmarshalSSZ(response.Data.Glaos, res.body)
+			err = dynSSZ.UnmarshalSSZ(response.Data.Gloas, res.body)
 		} else {
-			err = response.Data.Glaos.UnmarshalSSZ(res.body)
+			err = response.Data.Gloas.UnmarshalSSZ(res.body)
 		}
 		if err != nil {
-			return nil, errors.Join(errors.New("failed to decode glaos signed block contents"), err)
+			return nil, errors.Join(errors.New("failed to decode gloas signed block contents"), err)
 		}
 	default:
 		return nil, fmt.Errorf("unhandled block version %s", res.consensusVersion)
@@ -221,9 +221,9 @@ func (*Service) signedBeaconBlockFromJSON(res *httpResponse) (*api.Response[*spe
 		response.Data.Fulu, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
 			&electra.SignedBeaconBlock{},
 		)
-	case spec.DataVersionGlaos:
-		response.Data.Glaos, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
-			&glaos.SignedBeaconBlock{},
+	case spec.DataVersionGloas:
+		response.Data.Gloas, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
+			&gloas.SignedBeaconBlock{},
 		)
 	default:
 		return nil, fmt.Errorf("unhandled version %s", res.consensusVersion)

@@ -30,13 +30,13 @@ type VersionedIndexedAttestation struct {
 	Deneb     *phase0.IndexedAttestation
 	Electra   *electra.IndexedAttestation
 	Fulu      *electra.IndexedAttestation
-	Glaos     *electra.IndexedAttestation
+	Gloas     *electra.IndexedAttestation
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedIndexedAttestation) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
-		v.Electra == nil && v.Fulu == nil && v.Glaos == nil
+		v.Electra == nil && v.Fulu == nil && v.Gloas == nil
 }
 
 // AttestingIndices returns the attesting indices of the indexed attestation.
@@ -84,12 +84,12 @@ func (v *VersionedIndexedAttestation) AttestingIndices() ([]uint64, error) {
 		}
 
 		return v.Fulu.AttestingIndices, nil
-	case DataVersionGlaos:
-		if v.Glaos == nil {
-			return nil, errors.New("no Glaos indexed attestation")
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas indexed attestation")
 		}
 
-		return v.Glaos.AttestingIndices, nil
+		return v.Gloas.AttestingIndices, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -140,12 +140,12 @@ func (v *VersionedIndexedAttestation) Data() (*phase0.AttestationData, error) {
 		}
 
 		return v.Fulu.Data, nil
-	case DataVersionGlaos:
-		if v.Glaos == nil {
-			return nil, errors.New("no Glaos indexed attestation")
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas indexed attestation")
 		}
 
-		return v.Glaos.Data, nil
+		return v.Gloas.Data, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -196,12 +196,12 @@ func (v *VersionedIndexedAttestation) Signature() (phase0.BLSSignature, error) {
 		}
 
 		return v.Fulu.Signature, nil
-	case DataVersionGlaos:
-		if v.Glaos == nil {
-			return phase0.BLSSignature{}, errors.New("no Glaos indexed attestation")
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.BLSSignature{}, errors.New("no Gloas indexed attestation")
 		}
 
-		return v.Glaos.Signature, nil
+		return v.Gloas.Signature, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -252,12 +252,12 @@ func (v *VersionedIndexedAttestation) String() string {
 		}
 
 		return v.Fulu.String()
-	case DataVersionGlaos:
-		if v.Glaos == nil {
+	case DataVersionGloas:
+		if v.Gloas == nil {
 			return ""
 		}
 
-		return v.Glaos.String()
+		return v.Gloas.String()
 	default:
 		return "unknown version"
 	}

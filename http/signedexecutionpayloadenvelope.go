@@ -19,7 +19,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/attestantio/go-eth2-client/spec/glaos"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -31,7 +31,7 @@ import (
 func (s *Service) SignedExecutionPayloadEnvelope(ctx context.Context,
 	opts *api.SignedExecutionPayloadEnvelopeOpts,
 ) (
-	*api.Response[*glaos.SignedExecutionPayloadEnvelope],
+	*api.Response[*gloas.SignedExecutionPayloadEnvelope],
 	error,
 ) {
 	if err := s.assertIsActive(ctx); err != nil {
@@ -50,7 +50,7 @@ func (s *Service) SignedExecutionPayloadEnvelope(ctx context.Context,
 		return nil, err
 	}
 
-	var response *api.Response[*glaos.SignedExecutionPayloadEnvelope]
+	var response *api.Response[*gloas.SignedExecutionPayloadEnvelope]
 	switch httpResponse.contentType {
 	case ContentTypeSSZ:
 		response, err = s.signedExecutionPayloadEnvelopeFromSSZ(ctx, httpResponse)
@@ -69,10 +69,10 @@ func (s *Service) SignedExecutionPayloadEnvelope(ctx context.Context,
 func (s *Service) signedExecutionPayloadEnvelopeFromSSZ(ctx context.Context,
 	res *httpResponse,
 ) (
-	*api.Response[*glaos.SignedExecutionPayloadEnvelope],
+	*api.Response[*gloas.SignedExecutionPayloadEnvelope],
 	error,
 ) {
-	response := &api.Response[*glaos.SignedExecutionPayloadEnvelope]{
+	response := &api.Response[*gloas.SignedExecutionPayloadEnvelope]{
 		Metadata: metadataFromHeaders(res.headers),
 	}
 
@@ -86,37 +86,37 @@ func (s *Service) signedExecutionPayloadEnvelopeFromSSZ(ctx context.Context,
 		dynSSZ = dynssz.NewDynSsz(specs.Data)
 	}
 
-	if res.consensusVersion != spec.DataVersionGlaos {
+	if res.consensusVersion != spec.DataVersionGloas {
 		return nil, fmt.Errorf("execution payload envelope not available for block version %s", res.consensusVersion)
 	}
 
 	var err error
-	response.Data = &glaos.SignedExecutionPayloadEnvelope{}
+	response.Data = &gloas.SignedExecutionPayloadEnvelope{}
 	if s.customSpecSupport {
 		err = dynSSZ.UnmarshalSSZ(response.Data, res.body)
 	} else {
 		err = response.Data.UnmarshalSSZ(res.body)
 	}
 	if err != nil {
-		return nil, errors.Join(errors.New("failed to decode glaos signed execution payload envelope contents"), err)
+		return nil, errors.Join(errors.New("failed to decode gloas signed execution payload envelope contents"), err)
 	}
 
 	return response, nil
 }
 
 func (*Service) signedExecutionPayloadEnvelopeFromJSON(res *httpResponse) (
-	*api.Response[*glaos.SignedExecutionPayloadEnvelope],
+	*api.Response[*gloas.SignedExecutionPayloadEnvelope],
 	error,
 ) {
-	response := &api.Response[*glaos.SignedExecutionPayloadEnvelope]{}
+	response := &api.Response[*gloas.SignedExecutionPayloadEnvelope]{}
 
-	if res.consensusVersion != spec.DataVersionGlaos {
+	if res.consensusVersion != spec.DataVersionGloas {
 		return nil, fmt.Errorf("execution payload envelope not available for block version %s", res.consensusVersion)
 	}
 
 	var err error
 	response.Data, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
-		&glaos.SignedExecutionPayloadEnvelope{},
+		&gloas.SignedExecutionPayloadEnvelope{},
 	)
 	if err != nil {
 		return nil, err
