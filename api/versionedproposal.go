@@ -16,11 +16,10 @@ package api
 import (
 	"math/big"
 
-	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
-
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
+	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
