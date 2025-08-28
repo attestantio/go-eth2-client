@@ -45,7 +45,7 @@ type VersionedSignedProposal struct {
 	DenebBlinded     *apiv1deneb.SignedBlindedBeaconBlock
 	Electra          *apiv1electra.SignedBlockContents
 	ElectraBlinded   *apiv1electra.SignedBlindedBeaconBlock
-	Fulu             *apiv1electra.SignedBlockContents
+	Fulu             *apiv1fulu.SignedBlockContents
 	FuluBlinded      *apiv1electra.SignedBlindedBeaconBlock
 }
 
