@@ -28,6 +28,7 @@ import (
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
+	apiv1fulu "github.com/attestantio/go-eth2-client/api/v1/fulu"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
@@ -243,7 +244,7 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context,
 				err = response.Data.FuluBlinded.UnmarshalSSZ(res.body)
 			}
 		} else {
-			response.Data.Fulu = &apiv1electra.BlockContents{}
+			response.Data.Fulu = &apiv1fulu.BlockContents{}
 			if s.customSpecSupport {
 				err = dynSSZ.UnmarshalSSZ(response.Data.Fulu, res.body)
 			} else {
@@ -346,7 +347,7 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[
 		} else {
 			response.Data.Fulu, response.Metadata, err = decodeJSONResponse(
 				bytes.NewReader(res.body),
-				&apiv1electra.BlockContents{},
+				&apiv1fulu.BlockContents{},
 			)
 		}
 	default:
