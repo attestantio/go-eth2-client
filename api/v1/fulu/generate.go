@@ -15,6 +15,6 @@ package fulu
 
 //nolint:revive
 // Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f blockcontents_ssz.go signedblindedbeaconblock_ssz.go signedblockcontents_ssz.go
-//go:generate sszgen --include ../../../spec/phase0,../../../spec/altair,../../../spec/bellatrix,../../../spec/capella,../../../spec/deneb,../../../spec/electra -path . --suffix ssz -objs BlockContents,SignedBlindedBeaconBlock,SignedBlockContents
-//go:generate goimports -w blockcontents_ssz.go signedblindedbeaconblock_ssz.go signedblockcontents_ssz.go
+//go:generate rm -f blockcontents_ssz.go signedblockcontents_ssz.go
+//go:generate sszgen --include ../../../spec/phase0,../../../spec/altair,../../../spec/bellatrix,../../../spec/capella,../../../spec/deneb,../../../spec/electra,../../../spec/fulu -path . --suffix ssz -objs BlockContents,SignedBlockContents
+//go:generate goimports -w blockcontents_ssz.go signedblockcontents_ssz.go
