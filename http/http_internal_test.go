@@ -96,6 +96,38 @@ func TestParseAddress(t *testing.T) {
 	}
 }
 
+func TestParseBasicAuth(t *testing.T) {
+	tests := []struct {
+		name       string
+		address    string
+		headers    map[string]string
+		expHeaders map[string]string
+		err        string
+	}{
+		{
+			name:       "Simple",
+			address:    "http://user:pass@foo.com",
+			expHeaders: map[string]string{"Authorization": "Basic dXNlcjpwYXNz"},
+		},
+		{
+			name:    "Invalid",
+			address: "http:// foo",
+			err:     "failed to parse address",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			newHeaders, err := parseBasicAuth(test.address, test.headers)
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, test.expHeaders, newHeaders)
+			}
+		})
+	}
+}
+
 func mustParseURL(input string) *url.URL {
 	base, _, err := parseAddress(input)
 	if err != nil {
