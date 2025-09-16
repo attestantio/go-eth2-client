@@ -43,6 +43,7 @@ var SupportedEventTopics = map[string]bool{
 	"bls_to_execution_change": true,
 	"chain_reorg":             true,
 	"contribution_and_proof":  true,
+	"data_column_sidecar":     true,
 	"finalized_checkpoint":    true,
 	"head":                    true,
 	"payload_attributes":      true,
@@ -108,6 +109,8 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		e.Data = &ChainReorgEvent{}
 	case "contribution_and_proof":
 		e.Data = &altair.SignedContributionAndProof{}
+	case "data_column_sidecar":
+		e.Data = &DataColumnSidecarEvent{}
 	case "finalized_checkpoint":
 		e.Data = &FinalizedCheckpointEvent{}
 	case "head":
