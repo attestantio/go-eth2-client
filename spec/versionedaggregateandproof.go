@@ -29,6 +29,7 @@ type VersionedAggregateAndProof struct {
 	Capella   *phase0.AggregateAndProof
 	Deneb     *phase0.AggregateAndProof
 	Electra   *electra.AggregateAndProof
+	Fulu      *electra.AggregateAndProof
 }
 
 // AggregatorIndex returns the aggregator index of the aggregate.
@@ -70,6 +71,12 @@ func (v *VersionedAggregateAndProof) AggregatorIndex() (phase0.ValidatorIndex, e
 		}
 
 		return v.Electra.AggregatorIndex, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return 0, errors.New("no fulu aggregate and proof")
+		}
+
+		return v.Fulu.AggregatorIndex, nil
 	default:
 		return 0, errors.New("unknown version for aggregate and proof")
 	}
@@ -114,6 +121,12 @@ func (v *VersionedAggregateAndProof) HashTreeRoot() ([32]byte, error) {
 		}
 
 		return v.Electra.HashTreeRoot()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return [32]byte{}, errors.New("no fulu aggregate and proof")
+		}
+
+		return v.Fulu.HashTreeRoot()
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -121,7 +134,8 @@ func (v *VersionedAggregateAndProof) HashTreeRoot() ([32]byte, error) {
 
 // IsEmpty returns true if there is no aggregate and proof.
 func (v *VersionedAggregateAndProof) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil &&
+		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil
 }
 
 // String returns a string version of the structure.
@@ -163,6 +177,12 @@ func (v *VersionedAggregateAndProof) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	default:
 		return "unknown version"
 	}
@@ -207,6 +227,12 @@ func (v *VersionedAggregateAndProof) SelectionProof() (phase0.BLSSignature, erro
 		}
 
 		return v.Electra.SelectionProof, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.BLSSignature{}, errors.New("no fulu aggregate and proof")
+		}
+
+		return v.Fulu.SelectionProof, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}

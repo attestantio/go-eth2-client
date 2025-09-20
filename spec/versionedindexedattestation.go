@@ -29,11 +29,13 @@ type VersionedIndexedAttestation struct {
 	Capella   *phase0.IndexedAttestation
 	Deneb     *phase0.IndexedAttestation
 	Electra   *electra.IndexedAttestation
+	Fulu      *electra.IndexedAttestation
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedIndexedAttestation) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil &&
+		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil
 }
 
 // AttestingIndices returns the attesting indices of the indexed attestation.
@@ -75,6 +77,12 @@ func (v *VersionedIndexedAttestation) AttestingIndices() ([]uint64, error) {
 		}
 
 		return v.Electra.AttestingIndices, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu indexed attestation")
+		}
+
+		return v.Fulu.AttestingIndices, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -119,6 +127,12 @@ func (v *VersionedIndexedAttestation) Data() (*phase0.AttestationData, error) {
 		}
 
 		return v.Electra.Data, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return nil, errors.New("no Fulu indexed attestation")
+		}
+
+		return v.Fulu.Data, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -163,6 +177,12 @@ func (v *VersionedIndexedAttestation) Signature() (phase0.BLSSignature, error) {
 		}
 
 		return v.Electra.Signature, nil
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return phase0.BLSSignature{}, errors.New("no Fulu indexed attestation")
+		}
+
+		return v.Fulu.Signature, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -207,6 +227,12 @@ func (v *VersionedIndexedAttestation) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
 	default:
 		return "unknown version"
 	}
