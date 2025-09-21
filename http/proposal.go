@@ -33,6 +33,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/eip7928"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	dynssz "github.com/pk910/dynamic-ssz"
 	"go.opentelemetry.io/otel"
@@ -251,6 +252,22 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context,
 				err = response.Data.Fulu.UnmarshalSSZ(res.body)
 			}
 		}
+	case spec.DataVersionEIP7928:
+		if response.Data.Blinded {
+			response.Data.EIP7928Blinded = &apiv1electra.BlindedBeaconBlock{}
+			if s.customSpecSupport {
+				err = dynSSZ.UnmarshalSSZ(response.Data.EIP7928Blinded, res.body)
+			} else {
+				err = response.Data.EIP7928Blinded.UnmarshalSSZ(res.body)
+			}
+		} else {
+			response.Data.EIP7928 = &eip7928.BeaconBlock{}
+			if s.customSpecSupport {
+				err = dynSSZ.UnmarshalSSZ(response.Data.EIP7928, res.body)
+			} else {
+				err = response.Data.EIP7928.UnmarshalSSZ(res.body)
+			}
+		}
 	default:
 		return nil, fmt.Errorf("unhandled block proposal version %s", res.consensusVersion)
 	}
@@ -348,6 +365,18 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[
 			response.Data.Fulu, response.Metadata, err = decodeJSONResponse(
 				bytes.NewReader(res.body),
 				&apiv1fulu.BlockContents{},
+			)
+		}
+	case spec.DataVersionEIP7928:
+		if response.Data.Blinded {
+			response.Data.EIP7928Blinded, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&apiv1electra.BlindedBeaconBlock{},
+			)
+		} else {
+			response.Data.EIP7928, response.Metadata, err = decodeJSONResponse(
+				bytes.NewReader(res.body),
+				&eip7928.BeaconBlock{},
 			)
 		}
 	default:

@@ -26,6 +26,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/eip7928"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -47,6 +48,8 @@ type VersionedSignedProposal struct {
 	ElectraBlinded   *apiv1electra.SignedBlindedBeaconBlock
 	Fulu             *apiv1fulu.SignedBlockContents
 	FuluBlinded      *apiv1electra.SignedBlindedBeaconBlock
+	EIP7928          *eip7928.SignedBeaconBlock
+	EIP7928Blinded   *apiv1electra.SignedBlindedBeaconBlock
 }
 
 // AssertPresent throws an error if the expected proposal
@@ -96,6 +99,13 @@ func (v *VersionedSignedProposal) AssertPresent() error {
 		if v.FuluBlinded == nil && v.Blinded {
 			return errors.New("blinded fulu proposal not present")
 		}
+	case spec.DataVersionEIP7928:
+		if v.EIP7928 == nil && !v.Blinded {
+			return errors.New("eip7928 proposal not present")
+		}
+		if v.EIP7928Blinded == nil && v.Blinded {
+			return errors.New("blinded eip7928 proposal not present")
+		}
 	default:
 		return errors.New("unsupported version")
 	}
@@ -144,6 +154,12 @@ func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.SignedBlock.Message.Slot, nil
+	case spec.DataVersionEIP7928:
+		if v.Blinded {
+			return v.EIP7928Blinded.Message.Slot, nil
+		}
+
+		return v.EIP7928.Message.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -190,6 +206,12 @@ func (v *VersionedSignedProposal) ProposerIndex() (phase0.ValidatorIndex, error)
 		}
 
 		return v.Fulu.SignedBlock.Message.ProposerIndex, nil
+	case spec.DataVersionEIP7928:
+		if v.Blinded {
+			return v.EIP7928Blinded.Message.ProposerIndex, nil
+		}
+
+		return v.EIP7928.Message.ProposerIndex, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -232,6 +254,12 @@ func (v *VersionedSignedProposal) ExecutionBlockHash() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.SignedBlock.Message.Body.ExecutionPayload.BlockHash, nil
+	case spec.DataVersionEIP7928:
+		if v.Blinded {
+			return v.EIP7928Blinded.Message.Body.ExecutionPayloadHeader.BlockHash, nil
+		}
+
+		return v.EIP7928.Message.Body.ExecutionPayload.BlockHash, nil
 	default:
 		return phase0.Hash32{}, ErrUnsupportedVersion
 	}
@@ -322,6 +350,20 @@ func (v *VersionedSignedProposal) String() string {
 		}
 
 		return v.Fulu.String()
+	case spec.DataVersionEIP7928:
+		if v.Blinded {
+			if v.EIP7928Blinded == nil {
+				return ""
+			}
+
+			return v.EIP7928Blinded.String()
+		}
+
+		if v.EIP7928 == nil {
+			return ""
+		}
+
+		return v.EIP7928.String()
 	default:
 		return "unsupported version"
 	}
@@ -333,6 +375,16 @@ func (v *VersionedSignedProposal) String() string {
 //nolint:gocyclo // ignore
 func (v *VersionedSignedProposal) assertMessagePresent() error {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil ||
+			v.Phase0.Message == nil {
+			return ErrDataMissing
+		}
+	case spec.DataVersionAltair:
+		if v.Altair == nil ||
+			v.Altair.Message == nil {
+			return ErrDataMissing
+		}
 	case spec.DataVersionBellatrix:
 		if v.Blinded {
 			if v.BellatrixBlinded == nil ||
@@ -393,6 +445,18 @@ func (v *VersionedSignedProposal) assertMessagePresent() error {
 			if v.Fulu == nil ||
 				v.Fulu.SignedBlock == nil ||
 				v.Fulu.SignedBlock.Message == nil {
+				return ErrDataMissing
+			}
+		}
+	case spec.DataVersionEIP7928:
+		if v.Blinded {
+			if v.EIP7928Blinded == nil ||
+				v.EIP7928Blinded.Message == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.EIP7928 == nil ||
+				v.EIP7928.Message == nil {
 				return ErrDataMissing
 			}
 		}
@@ -478,7 +542,9 @@ func (v *VersionedSignedProposal) assertExecutionPayloadPresent() error {
 	case spec.DataVersionFulu:
 		if v.Blinded {
 			if v.FuluBlinded == nil ||
-				v.FuluBlinded.Message == nil {
+				v.FuluBlinded.Message == nil ||
+				v.FuluBlinded.Message.Body == nil ||
+				v.FuluBlinded.Message.Body.ExecutionPayloadHeader == nil {
 				return ErrDataMissing
 			}
 		} else {
@@ -487,6 +553,22 @@ func (v *VersionedSignedProposal) assertExecutionPayloadPresent() error {
 				v.Fulu.SignedBlock.Message == nil ||
 				v.Fulu.SignedBlock.Message.Body == nil ||
 				v.Fulu.SignedBlock.Message.Body.ExecutionPayload == nil {
+				return ErrDataMissing
+			}
+		}
+	case spec.DataVersionEIP7928:
+		if v.Blinded {
+			if v.EIP7928Blinded == nil ||
+				v.EIP7928Blinded.Message == nil ||
+				v.EIP7928Blinded.Message.Body == nil ||
+				v.EIP7928Blinded.Message.Body.ExecutionPayloadHeader == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.EIP7928 == nil ||
+				v.EIP7928.Message == nil ||
+				v.EIP7928.Message.Body == nil ||
+				v.EIP7928.Message.Body.ExecutionPayload == nil {
 				return ErrDataMissing
 			}
 		}

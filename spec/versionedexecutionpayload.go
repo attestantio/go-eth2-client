@@ -19,6 +19,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/eip7928"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/holiman/uint256"
 )
@@ -31,12 +32,13 @@ type VersionedExecutionPayload struct {
 	Deneb     *deneb.ExecutionPayload
 	Electra   *deneb.ExecutionPayload
 	Fulu      *deneb.ExecutionPayload
+	EIP7928   *eip7928.ExecutionPayload
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedExecutionPayload) IsEmpty() bool {
 	return v.Version < DataVersionBellatrix || (v.Bellatrix == nil &&
-		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil)
+		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.EIP7928 == nil)
 }
 
 // ParentHash returns the parent hash of the execution payload.
@@ -76,6 +78,12 @@ func (v *VersionedExecutionPayload) ParentHash() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.ParentHash, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return phase0.Hash32{}, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.ParentHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -118,6 +126,12 @@ func (v *VersionedExecutionPayload) FeeRecipient() (bellatrix.ExecutionAddress, 
 		}
 
 		return v.Fulu.FeeRecipient, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, errors.New("unknown version")
 	}
@@ -160,6 +174,12 @@ func (v *VersionedExecutionPayload) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.StateRoot, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return phase0.Root{}, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -202,6 +222,12 @@ func (v *VersionedExecutionPayload) ReceiptsRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.ReceiptsRoot, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return phase0.Root{}, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.ReceiptsRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -244,6 +270,12 @@ func (v *VersionedExecutionPayload) LogsBloom() ([256]byte, error) {
 		}
 
 		return v.Fulu.LogsBloom, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return [256]byte{}, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.LogsBloom, nil
 	default:
 		return [256]byte{}, errors.New("unknown version")
 	}
@@ -286,6 +318,12 @@ func (v *VersionedExecutionPayload) PrevRandao() ([32]byte, error) {
 		}
 
 		return v.Fulu.PrevRandao, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return [32]byte{}, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.PrevRandao, nil
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -328,6 +366,12 @@ func (v *VersionedExecutionPayload) BlockNumber() (uint64, error) {
 		}
 
 		return v.Fulu.BlockNumber, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return 0, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.BlockNumber, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -370,6 +414,12 @@ func (v *VersionedExecutionPayload) GasLimit() (uint64, error) {
 		}
 
 		return v.Fulu.GasLimit, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return 0, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.GasLimit, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -412,6 +462,12 @@ func (v *VersionedExecutionPayload) GasUsed() (uint64, error) {
 		}
 
 		return v.Fulu.GasUsed, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return 0, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.GasUsed, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -454,6 +510,12 @@ func (v *VersionedExecutionPayload) Timestamp() (uint64, error) {
 		}
 
 		return v.Fulu.Timestamp, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return 0, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.Timestamp, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -496,6 +558,12 @@ func (v *VersionedExecutionPayload) ExtraData() ([]byte, error) {
 		}
 
 		return v.Fulu.ExtraData, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return nil, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.ExtraData, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -538,6 +606,12 @@ func (v *VersionedExecutionPayload) BaseFeePerGas() (*uint256.Int, error) {
 		}
 
 		return v.Fulu.BaseFeePerGas, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return nil, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.BaseFeePerGas, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -580,6 +654,12 @@ func (v *VersionedExecutionPayload) BlockHash() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.BlockHash, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return phase0.Hash32{}, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.BlockHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -622,6 +702,12 @@ func (v *VersionedExecutionPayload) Transactions() ([]bellatrix.Transaction, err
 		}
 
 		return v.Fulu.Transactions, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return nil, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.Transactions, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -660,6 +746,12 @@ func (v *VersionedExecutionPayload) Withdrawals() ([]*capella.Withdrawal, error)
 		}
 
 		return v.Fulu.Withdrawals, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return nil, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.Withdrawals, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -694,6 +786,12 @@ func (v *VersionedExecutionPayload) BlobGasUsed() (uint64, error) {
 		}
 
 		return v.Fulu.BlobGasUsed, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return 0, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.BlobGasUsed, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -728,6 +826,12 @@ func (v *VersionedExecutionPayload) ExcessBlobGas() (uint64, error) {
 		}
 
 		return v.Fulu.ExcessBlobGas, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return 0, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.ExcessBlobGas, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -770,6 +874,12 @@ func (v *VersionedExecutionPayload) String() string {
 		}
 
 		return v.Fulu.String()
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return ""
+		}
+
+		return v.EIP7928.String()
 	default:
 		return "unknown version"
 	}

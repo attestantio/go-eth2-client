@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/eip7928"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -35,12 +36,13 @@ type VersionedBeaconBlock struct {
 	Deneb     *deneb.BeaconBlock
 	Electra   *electra.BeaconBlock
 	Fulu      *electra.BeaconBlock
+	EIP7928   *eip7928.BeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBeaconBlock) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil &&
-		v.Deneb == nil && v.Electra == nil && v.Fulu == nil
+		v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.EIP7928 == nil
 }
 
 // Slot returns the slot of the beacon block.
@@ -88,6 +90,12 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.Slot, nil
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return 0, errors.New("no eip7928 block")
+		}
+
+		return v.EIP7928.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
