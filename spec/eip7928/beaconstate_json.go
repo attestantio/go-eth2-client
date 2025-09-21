@@ -1,4 +1,4 @@
-// Copyright © 2024 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -68,6 +68,7 @@ type beaconStateJSON struct {
 	PendingDeposits               []*electra.PendingDeposit           `json:"pending_deposits"`
 	PendingPartialWithdrawals     []*electra.PendingPartialWithdrawal `json:"pending_partial_withdrawals"`
 	PendingConsolidations         []*electra.PendingConsolidation     `json:"pending_consolidations"`
+	ProposerLookahead             []string                            `json:"proposer_lookahead"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -95,6 +96,10 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 	inactivityScores := make([]string, len(b.InactivityScores))
 	for i := range b.InactivityScores {
 		inactivityScores[i] = strconv.FormatUint(b.InactivityScores[i], 10)
+	}
+	proposerLookahead := make([]string, len(b.ProposerLookahead))
+	for i := range b.ProposerLookahead {
+		proposerLookahead[i] = fmt.Sprintf("%d", b.ProposerLookahead[i])
 	}
 
 	return json.Marshal(&beaconStateJSON{
@@ -135,6 +140,7 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 		PendingDeposits:               b.PendingDeposits,
 		PendingPartialWithdrawals:     b.PendingPartialWithdrawals,
 		PendingConsolidations:         b.PendingConsolidations,
+		ProposerLookahead:             proposerLookahead,
 	})
 }
 
@@ -346,6 +352,10 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 		if b.PendingConsolidations[i] == nil {
 			return fmt.Errorf("pending consolidations entry %d missing", i)
 		}
+	}
+
+	if err := json.Unmarshal(raw["proposer_lookahead"], &b.ProposerLookahead); err != nil {
+		return errors.Wrap(err, "proposer_lookahead")
 	}
 
 	return nil

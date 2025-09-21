@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -62,9 +62,10 @@ type BeaconState struct {
 	EarliestExitEpoch             phase0.Epoch
 	ConsolidationBalanceToConsume phase0.Gwei
 	EarliestConsolidationEpoch    phase0.Epoch
-	PendingDeposits               []*electra.PendingDeposit           `dynssz-max:"PENDING_DEPOSITS_LIMIT"            ssz-max:"134217728"`
-	PendingPartialWithdrawals     []*electra.PendingPartialWithdrawal `dynssz-max:"PENDING_PARTIAL_WITHDRAWALS_LIMIT" ssz-max:"134217728"`
-	PendingConsolidations         []*electra.PendingConsolidation     `dynssz-max:"PENDING_CONSOLIDATIONS_LIMIT"      ssz-max:"262144"`
+	PendingDeposits               []*electra.PendingDeposit           `dynssz-max:"PENDING_DEPOSITS_LIMIT"                  ssz-max:"134217728"`
+	PendingPartialWithdrawals     []*electra.PendingPartialWithdrawal `dynssz-max:"PENDING_PARTIAL_WITHDRAWALS_LIMIT"       ssz-max:"134217728"`
+	PendingConsolidations         []*electra.PendingConsolidation     `dynssz-max:"PENDING_CONSOLIDATIONS_LIMIT"            ssz-max:"262144"`
+	ProposerLookahead             []phase0.ValidatorIndex             `dynssz-size:"(MIN_SEED_LOOKAHEAD+1)*SLOTS_PER_EPOCH" ssz-size:"64"`
 }
 
 // String returns a string version of the structure.

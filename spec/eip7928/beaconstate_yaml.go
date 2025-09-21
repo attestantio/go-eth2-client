@@ -1,4 +1,4 @@
-// Copyright © 2024 Attestant Limited.
+// Copyright © 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -65,6 +65,7 @@ type beaconStateYAML struct {
 	PendingDeposits               []*electra.PendingDeposit           `yaml:"pending_deposits"`
 	PendingPartialWithdrawals     []*electra.PendingPartialWithdrawal `yaml:"pending_partial_withdrawals"`
 	PendingConsolidations         []*electra.PendingConsolidation     `yaml:"pending_consolidations"`
+	ProposerLookahead             []phase0.ValidatorIndex             `yaml:"proposer_lookahead"`
 }
 
 // MarshalYAML implements yaml.Marshaler.
@@ -107,6 +108,7 @@ func (b *BeaconState) MarshalYAML() ([]byte, error) {
 		PendingDeposits:               b.PendingDeposits,
 		PendingPartialWithdrawals:     b.PendingPartialWithdrawals,
 		PendingConsolidations:         b.PendingConsolidations,
+		ProposerLookahead:             b.ProposerLookahead,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
