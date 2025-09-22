@@ -51,7 +51,7 @@ var dataVersionStrings = [...]string{
 	"deneb",
 	"electra",
 	"fulu",
-	"eip7928",
+	"gloas",
 }
 
 var dataVersionMap = map[string]DataVersion{
@@ -62,7 +62,7 @@ var dataVersionMap = map[string]DataVersion{
 	`"deneb"`:     DataVersionDeneb,
 	`"electra"`:   DataVersionElectra,
 	`"fulu"`:      DataVersionFulu,
-	`"eip7928"`:   DataVersionEIP7928,
+	`"gloas"`:     DataVersionEIP7928,
 }
 
 // MarshalJSON implements json.Marshaler.

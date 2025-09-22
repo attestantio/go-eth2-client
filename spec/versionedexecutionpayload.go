@@ -837,7 +837,7 @@ func (v *VersionedExecutionPayload) ExcessBlobGas() (uint64, error) {
 	}
 }
 
-// BlobGasUsed returns the blob gas used of the execution payload.
+// BlockAccessList returns the block access list of the execution payload.
 func (v *VersionedExecutionPayload) BlockAccessList() (eip7928.BlockAccessList, error) {
 	switch v.Version {
 	case DataVersionPhase0:
