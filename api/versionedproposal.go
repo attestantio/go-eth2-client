@@ -16,11 +16,11 @@ package api
 import (
 	"math/big"
 
-	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
-
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
+	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
+	apiv1fulu "github.com/attestantio/go-eth2-client/api/v1/fulu"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
@@ -45,7 +45,7 @@ type VersionedProposal struct {
 	DenebBlinded     *apiv1deneb.BlindedBeaconBlock
 	Electra          *apiv1electra.BlockContents
 	ElectraBlinded   *apiv1electra.BlindedBeaconBlock
-	Fulu             *apiv1electra.BlockContents
+	Fulu             *apiv1fulu.BlockContents
 	FuluBlinded      *apiv1electra.BlindedBeaconBlock
 }
 

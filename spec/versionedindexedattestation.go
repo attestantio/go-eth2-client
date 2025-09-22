@@ -35,7 +35,9 @@ type VersionedIndexedAttestation struct {
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedIndexedAttestation) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Eip7805 == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil &&
+		v.Capella == nil && v.Deneb == nil && v.Electra == nil &&
+		v.Fulu == nil && v.Eip7805 == nil
 }
 
 // AttestingIndices returns the attesting indices of the indexed attestation.

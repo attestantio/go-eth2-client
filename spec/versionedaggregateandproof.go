@@ -147,7 +147,9 @@ func (v *VersionedAggregateAndProof) HashTreeRoot() ([32]byte, error) {
 
 // IsEmpty returns true if there is no aggregate and proof.
 func (v *VersionedAggregateAndProof) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Eip7805 == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil &&
+		v.Capella == nil && v.Deneb == nil && v.Electra == nil &&
+		v.Fulu == nil && v.Eip7805 == nil
 }
 
 // String returns a string version of the structure.
