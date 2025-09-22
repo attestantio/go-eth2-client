@@ -1,0 +1,70 @@
+package main
+
+import (
+	"log"
+	"path/filepath"
+	"reflect"
+	"runtime"
+
+	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/pk910/dynamic-ssz/codegen"
+)
+
+func main() {
+	// Create a code generator instance
+	generator := codegen.NewCodeGenerator(nil)
+
+	// Get the parent directory (where types are defined)
+	_, currentFile, _, _ := runtime.Caller(0)
+	currentDir := filepath.Dir(currentFile)
+	parentDir := filepath.Dir(currentDir)
+
+	// deneb
+	generator.BuildFile(
+		filepath.Join(parentDir, "beaconblockbody_ssz.go"),
+		codegen.WithType(reflect.TypeOf(&deneb.BeaconBlockBody{})),
+		codegen.WithCreateLegacyFn(),
+	)
+	generator.BuildFile(
+		filepath.Join(parentDir, "beaconblock_ssz.go"),
+		codegen.WithType(reflect.TypeOf(&deneb.BeaconBlock{})),
+		codegen.WithCreateLegacyFn(),
+	)
+	generator.BuildFile(
+		filepath.Join(parentDir, "beaconstate_ssz.go"),
+		codegen.WithType(reflect.TypeOf(&deneb.BeaconState{})),
+		codegen.WithCreateLegacyFn(),
+	)
+	generator.BuildFile(
+		filepath.Join(parentDir, "blobidentifier_ssz.go"),
+		codegen.WithType(reflect.TypeOf(&deneb.BlobIdentifier{})),
+		codegen.WithCreateLegacyFn(),
+	)
+	generator.BuildFile(
+		filepath.Join(parentDir, "blobsidecar_ssz.go"),
+		codegen.WithType(reflect.TypeOf(&deneb.BlobSidecar{})),
+		codegen.WithCreateLegacyFn(),
+	)
+	generator.BuildFile(
+		filepath.Join(parentDir, "executionpayload_ssz.go"),
+		codegen.WithType(reflect.TypeOf(&deneb.ExecutionPayload{})),
+		codegen.WithCreateLegacyFn(),
+	)
+	generator.BuildFile(
+		filepath.Join(parentDir, "executionpayloadheader_ssz.go"),
+		codegen.WithType(reflect.TypeOf(&deneb.ExecutionPayloadHeader{})),
+		codegen.WithCreateLegacyFn(),
+	)
+	generator.BuildFile(
+		filepath.Join(parentDir, "signedbeaconblock_ssz.go"),
+		codegen.WithType(reflect.TypeOf(&deneb.SignedBeaconBlock{})),
+		codegen.WithCreateLegacyFn(),
+	)
+
+	// Generate the code
+	if err := generator.Generate(); err != nil {
+		log.Fatal("Code generation failed:", err)
+	}
+
+	log.Println("Code generation completed successfully!")
+}

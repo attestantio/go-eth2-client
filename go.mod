@@ -1,6 +1,6 @@
 module github.com/attestantio/go-eth2-client
 
-go 1.21.0
+go 1.22.2
 
 toolchain go1.23.2
 
@@ -25,7 +25,9 @@ require (
 )
 
 require (
+	github.com/OffchainLabs/hashtree v0.2.1-0.20250530191054-577f0b75c7f7 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/casbin/govaluate v1.8.0 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/dot v1.6.4 // indirect
@@ -50,11 +52,12 @@ require (
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
-	gopkg.in/Knetic/govaluate.v3 v3.0.0 // indirect
 	gopkg.in/cenkalti/backoff.v1 v1.1.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/pk910/dynamic-ssz => ../dynamic-ssz
 
 retract (
 	v1.15.2 // Retraction for 1.15.1.

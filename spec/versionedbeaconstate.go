@@ -24,7 +24,6 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/fulu"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	proofutil "github.com/attestantio/go-eth2-client/util/proof"
-	ssz "github.com/ferranbt/fastssz"
 )
 
 // VersionedBeaconState contains a versioned beacon state.
@@ -470,6 +469,7 @@ func (v *VersionedBeaconState) ValidatorBalance(index phase0.ValidatorIndex) (ph
 }
 
 // GetTree returns the GetTree of the specific beacon state version.
+/* // TODO: implement this
 func (v *VersionedBeaconState) GetTree() (*ssz.Node, error) {
 	switch v.Version {
 	case DataVersionPhase0:
@@ -518,6 +518,7 @@ func (v *VersionedBeaconState) GetTree() (*ssz.Node, error) {
 		return nil, errors.New("unknown version")
 	}
 }
+*/
 
 // HashTreeRoot returns the HashTreeRoot of the specific beacon state version.
 func (v *VersionedBeaconState) HashTreeRoot() (phase0.Hash32, error) {
@@ -681,6 +682,7 @@ func (v *VersionedBeaconState) FieldGeneralizedIndex(name string) (int, error) {
 // Returns:
 //   - phase0.Hash32: The SSZ hash root of the field
 //   - error: If the field doesn't exist, the state is empty, or the field is not hash tree rootable
+/* // TODO: implement this
 func (v *VersionedBeaconState) FieldRoot(name string) (phase0.Hash32, error) {
 	fieldTree, err := v.FieldTree(name)
 	if err != nil {
@@ -691,8 +693,10 @@ func (v *VersionedBeaconState) FieldRoot(name string) (phase0.Hash32, error) {
 
 	return root, nil
 }
+*/
 
 // FieldTree returns the Merkle subtree for a specific field in the beacon state.
+/* // TODO: implement this
 func (v *VersionedBeaconState) FieldTree(name string) (*ssz.Node, error) {
 	stateTree, err := v.GetTree()
 	if err != nil {
@@ -706,6 +710,7 @@ func (v *VersionedBeaconState) FieldTree(name string) (*ssz.Node, error) {
 
 	return stateTree.Get(fieldGeneralizedIndex)
 }
+*/
 
 // ProveField generates a Merkle proof for a specific field against the beacon state root.
 // Parameters:
@@ -714,6 +719,7 @@ func (v *VersionedBeaconState) FieldTree(name string) (*ssz.Node, error) {
 // Returns:
 //   - []phase0.Hash32: The Merkle proof as a sequence of 32-byte hashes
 //   - error: If the field doesn't exist or there's an error generating the proof
+/* // TODO: implement this
 func (v *VersionedBeaconState) ProveField(name string) ([]phase0.Hash32, error) {
 	stateTree, err := v.GetTree()
 	if err != nil {
@@ -737,6 +743,7 @@ func (v *VersionedBeaconState) ProveField(name string) ([]phase0.Hash32, error) 
 
 	return proofBytes, nil
 }
+*/
 
 // VerifyFieldProof verifies a Merkle proof for a field against the beacon state root.
 // Parameters:
@@ -746,6 +753,7 @@ func (v *VersionedBeaconState) ProveField(name string) ([]phase0.Hash32, error) 
 // Returns:
 //   - bool: True if the proof is valid, false otherwise
 //   - error: If there's an error during verification
+/* // TODO: implement this
 func (v *VersionedBeaconState) VerifyFieldProof(proof []phase0.Hash32, name string) (bool, error) {
 	// Get the state root
 	stateRoot, err := v.HashTreeRoot()
@@ -781,6 +789,7 @@ func (v *VersionedBeaconState) VerifyFieldProof(proof []phase0.Hash32, name stri
 
 	return ssz.VerifyProof(stateRoot[:], sszProof)
 }
+*/
 
 // String returns a string version of the structure.
 func (v *VersionedBeaconState) String() string {
