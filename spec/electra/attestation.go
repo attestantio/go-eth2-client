@@ -28,14 +28,11 @@ import (
 )
 
 // Attestation is the Ethereum 2 attestation structure.
-//
-//nolint:tagalign
 type Attestation struct {
-	AggregationBits bitfield.Bitlist `ssz-max:"131072" dynssz-size:"MAX_VALIDATORS_PER_COMMITTEE*MAX_COMMITTEES_PER_SLOT"`
+	AggregationBits bitfield.Bitlist `dynssz-max:"MAX_VALIDATORS_PER_COMMITTEE*MAX_COMMITTEES_PER_SLOT" ssz-max:"131072"`
 	Data            *phase0.AttestationData
-	Signature       phase0.BLSSignature `ssz-size:"96"`
-	// bitfield.Bitvector64 is an 8 byte array so dynamic sizing doesn't make sense.
-	CommitteeBits bitfield.Bitvector64 `ssz-size:"8"`
+	Signature       phase0.BLSSignature  `ssz-size:"96"`
+	CommitteeBits   bitfield.Bitvector64 `dynssz-size:"MAX_COMMITTEES_PER_SLOT/8" ssz-size:"8"`
 }
 
 // attestationJSON is a raw representation of the struct.

@@ -31,6 +31,8 @@ type VersionedBeaconBlockBody struct {
 	Capella   *capella.BeaconBlockBody
 	Deneb     *deneb.BeaconBlockBody
 	Electra   *electra.BeaconBlockBody
+	Fulu      *electra.BeaconBlockBody
+	Eip7805   *electra.BeaconBlockBody
 }
 
 // String returns a string version of the structure.
@@ -72,6 +74,18 @@ func (v *VersionedBeaconBlockBody) String() string {
 		}
 
 		return v.Electra.String()
+	case DataVersionFulu:
+		if v.Fulu == nil {
+			return ""
+		}
+
+		return v.Fulu.String()
+	case DataVersionEip7805:
+		if v.Eip7805 == nil {
+			return ""
+		}
+
+		return v.Eip7805.String()
 	default:
 		return "unknown version"
 	}

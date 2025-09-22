@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2025 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,8 +17,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -41,10 +43,12 @@ var SupportedEventTopics = map[string]bool{
 	"bls_to_execution_change": true,
 	"chain_reorg":             true,
 	"contribution_and_proof":  true,
+	"data_column_sidecar":     true,
 	"finalized_checkpoint":    true,
 	"head":                    true,
 	"payload_attributes":      true,
 	"proposer_slashing":       true,
+	"single_attestation":      true,
 	"voluntary_exit":          true,
 	"inclusion_list":          true,
 }
@@ -91,7 +95,7 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 	}
 	switch eventJSON.Topic {
 	case "attestation":
-		e.Data = &phase0.Attestation{}
+		e.Data = &spec.VersionedAttestation{}
 	case "attester_slashing":
 		e.Data = &phase0.AttesterSlashing{}
 	case "blob_sidecar":
@@ -106,6 +110,8 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		e.Data = &ChainReorgEvent{}
 	case "contribution_and_proof":
 		e.Data = &altair.SignedContributionAndProof{}
+	case "data_column_sidecar":
+		e.Data = &DataColumnSidecarEvent{}
 	case "finalized_checkpoint":
 		e.Data = &FinalizedCheckpointEvent{}
 	case "head":
@@ -114,6 +120,8 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		e.Data = &PayloadAttributesEvent{}
 	case "proposer_slashing":
 		e.Data = &phase0.ProposerSlashing{}
+	case "single_attestation":
+		e.Data = &electra.SingleAttestation{}
 	case "voluntary_exit":
 		e.Data = &phase0.SignedVoluntaryExit{}
 	case "inclusion_list":

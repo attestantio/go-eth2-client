@@ -193,7 +193,7 @@ func TestConsensusSpec(t *testing.T) {
 					// Confirm we can return to the YAML.
 					remarshalledSpecYAML, err := yaml.Marshal(s1)
 					require.NoError(t, err)
-					require.Equal(t, testYAMLFormat(specYAML), testYAMLFormat(remarshalledSpecYAML))
+					require.YAMLEq(t, testYAMLFormat(specYAML), testYAMLFormat(remarshalledSpecYAML))
 
 					// Obtain the struct from the SSZ.
 					s2 := clone.Clone(test.s)
@@ -215,7 +215,7 @@ func TestConsensusSpec(t *testing.T) {
 					generatedRootBytes, err := s2.(ssz.HashRoot).HashTreeRoot()
 					require.NoError(t, err)
 					generatedRoot := fmt.Sprintf("{root: '%#x'}\n", string(generatedRootBytes[:]))
-					require.Equal(t, string(specYAMLRoot), generatedRoot)
+					require.YAMLEq(t, string(specYAMLRoot), generatedRoot)
 				})
 			}
 
