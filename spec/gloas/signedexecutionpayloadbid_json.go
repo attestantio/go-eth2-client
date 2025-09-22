@@ -22,23 +22,23 @@ import (
 	"github.com/pkg/errors"
 )
 
-// signedExecutionPayloadHeaderJSON is the spec representation of the struct.
-type signedExecutionPayloadHeaderJSON struct {
-	Message   *ExecutionPayloadHeader `json:"message"`
-	Signature string                  `json:"signature"`
+// signedExecutionPayloadBidJSON is the spec representation of the struct.
+type signedExecutionPayloadBidJSON struct {
+	Message   *ExecutionPayloadBid `json:"message"`
+	Signature string               `json:"signature"`
 }
 
 // MarshalJSON implements json.Marshaler.
-func (s *SignedExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&signedExecutionPayloadHeaderJSON{
+func (s *SignedExecutionPayloadBid) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&signedExecutionPayloadBidJSON{
 		Message:   s.Message,
 		Signature: fmt.Sprintf("%#x", s.Signature),
 	})
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (s *SignedExecutionPayloadHeader) UnmarshalJSON(input []byte) error {
-	var data signedExecutionPayloadHeaderJSON
+func (s *SignedExecutionPayloadBid) UnmarshalJSON(input []byte) error {
+	var data signedExecutionPayloadBidJSON
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}

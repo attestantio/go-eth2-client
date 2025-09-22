@@ -16,24 +16,26 @@ package gloas
 import (
 	"fmt"
 
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
 )
 
-// ExecutionPayloadHeader represents an execution payload header for EIP-7732.
-type ExecutionPayloadHeader struct {
-	ParentBlockHash        phase0.Hash32 `ssz-size:"32"`
-	ParentBlockRoot        phase0.Root   `ssz-size:"32"`
-	BlockHash              phase0.Hash32 `ssz-size:"32"`
+// ExecutionPayloadBid represents an execution payload bid for EIP-7732.
+type ExecutionPayloadBid struct {
+	ParentBlockHash        phase0.Hash32              `ssz-size:"32"`
+	ParentBlockRoot        phase0.Root                `ssz-size:"32"`
+	BlockHash              phase0.Hash32              `ssz-size:"32"`
+	FeeRecipient           bellatrix.ExecutionAddress `ssz-size:"20"`
 	GasLimit               uint64
 	BuilderIndex           phase0.ValidatorIndex
 	Slot                   phase0.Slot
-	Value                  uint64      // Gwei
+	Value                  phase0.Gwei
 	BlobKZGCommitmentsRoot phase0.Root `ssz-size:"32"`
 }
 
 // String returns a string version of the structure.
-func (e *ExecutionPayloadHeader) String() string {
+func (e *ExecutionPayloadBid) String() string {
 	data, err := yaml.Marshal(e)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)

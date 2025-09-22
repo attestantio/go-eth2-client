@@ -181,10 +181,10 @@ func (b *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 
 	// Field (24) 'LatestExecutionPayloadHeader'
-	if b.LatestExecutionPayloadHeader == nil {
-		b.LatestExecutionPayloadHeader = new(ExecutionPayloadHeader)
+	if b.LatestExecutionPayloadBid == nil {
+		b.LatestExecutionPayloadBid = new(ExecutionPayloadBid)
 	}
-	if dst, err = b.LatestExecutionPayloadHeader.MarshalSSZTo(dst); err != nil {
+	if dst, err = b.LatestExecutionPayloadBid.MarshalSSZTo(dst); err != nil {
 		return
 	}
 
@@ -525,10 +525,10 @@ func (b *BeaconState) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (24) 'LatestExecutionPayloadHeader'
-	if b.LatestExecutionPayloadHeader == nil {
-		b.LatestExecutionPayloadHeader = new(ExecutionPayloadHeader)
+	if b.LatestExecutionPayloadBid == nil {
+		b.LatestExecutionPayloadBid = new(ExecutionPayloadBid)
 	}
-	if err = b.LatestExecutionPayloadHeader.UnmarshalSSZ(buf[2736629:2736789]); err != nil {
+	if err = b.LatestExecutionPayloadBid.UnmarshalSSZ(buf[2736629:2736789]); err != nil {
 		return err
 	}
 
@@ -1076,10 +1076,10 @@ func (b *BeaconState) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	}
 
 	// Field (24) 'LatestExecutionPayloadHeader'
-	if b.LatestExecutionPayloadHeader == nil {
-		b.LatestExecutionPayloadHeader = new(ExecutionPayloadHeader)
+	if b.LatestExecutionPayloadBid == nil {
+		b.LatestExecutionPayloadBid = new(ExecutionPayloadBid)
 	}
-	if err = b.LatestExecutionPayloadHeader.HashTreeRootWith(hh); err != nil {
+	if err = b.LatestExecutionPayloadBid.HashTreeRootWith(hh); err != nil {
 		return
 	}
 

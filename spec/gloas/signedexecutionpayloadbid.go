@@ -20,14 +20,14 @@ import (
 	"github.com/goccy/go-yaml"
 )
 
-// SignedExecutionPayloadHeader represents a signed execution payload header.
-type SignedExecutionPayloadHeader struct {
-	Message   *ExecutionPayloadHeader
+// SignedExecutionPayloadBid represents a signed execution payload bid.
+type SignedExecutionPayloadBid struct {
+	Message   *ExecutionPayloadBid
 	Signature phase0.BLSSignature `ssz-size:"96"`
 }
 
 // String returns a string version of the structure.
-func (s *SignedExecutionPayloadHeader) String() string {
+func (s *SignedExecutionPayloadBid) String() string {
 	data, err := yaml.Marshal(s)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)

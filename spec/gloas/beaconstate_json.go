@@ -56,7 +56,7 @@ type beaconStateJSON struct {
 	InactivityScores              []string                            `json:"inactivity_scores"`
 	CurrentSyncCommittee          *altair.SyncCommittee               `json:"current_sync_committee"`
 	NextSyncCommittee             *altair.SyncCommittee               `json:"next_sync_committee"`
-	LatestExecutionPayloadHeader  *ExecutionPayloadHeader             `json:"latest_execution_payload_header"`
+	LatestExecutionPayloadBid     *ExecutionPayloadBid                `json:"latest_execution_payload_bid"`
 	NextWithdrawalIndex           string                              `json:"next_withdrawal_index"`
 	NextWithdrawalValidatorIndex  string                              `json:"next_withdrawal_validator_index"`
 	HistoricalSummaries           []*capella.HistoricalSummary        `json:"historical_summaries"`
@@ -137,7 +137,7 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 		InactivityScores:              inactivityScores,
 		CurrentSyncCommittee:          b.CurrentSyncCommittee,
 		NextSyncCommittee:             b.NextSyncCommittee,
-		LatestExecutionPayloadHeader:  b.LatestExecutionPayloadHeader,
+		LatestExecutionPayloadBid:     b.LatestExecutionPayloadBid,
 		NextWithdrawalIndex:           fmt.Sprintf("%d", b.NextWithdrawalIndex),
 		NextWithdrawalValidatorIndex:  fmt.Sprintf("%d", b.NextWithdrawalValidatorIndex),
 		HistoricalSummaries:           b.HistoricalSummaries,
@@ -295,9 +295,9 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "next_sync_committee")
 	}
 
-	b.LatestExecutionPayloadHeader = &ExecutionPayloadHeader{}
-	if err := b.LatestExecutionPayloadHeader.UnmarshalJSON(raw["latest_execution_payload_header"]); err != nil {
-		return errors.Wrap(err, "latest_execution_payload_header")
+	b.LatestExecutionPayloadBid = &ExecutionPayloadBid{}
+	if err := b.LatestExecutionPayloadBid.UnmarshalJSON(raw["latest_execution_payload_bid"]); err != nil {
+		return errors.Wrap(err, "latest_execution_payload_bid")
 	}
 
 	if err := b.NextWithdrawalIndex.UnmarshalJSON(raw["next_withdrawal_index"]); err != nil {

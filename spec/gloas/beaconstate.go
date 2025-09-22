@@ -50,7 +50,7 @@ type BeaconState struct {
 	InactivityScores              []uint64 `ssz-max:"1099511627776"`
 	CurrentSyncCommittee          *altair.SyncCommittee
 	NextSyncCommittee             *altair.SyncCommittee
-	LatestExecutionPayloadHeader  *ExecutionPayloadHeader
+	LatestExecutionPayloadBid     *ExecutionPayloadBid
 	NextWithdrawalIndex           capella.WithdrawalIndex
 	NextWithdrawalValidatorIndex  phase0.ValidatorIndex
 	HistoricalSummaries           []*capella.HistoricalSummary `ssz-max:"16777216"`

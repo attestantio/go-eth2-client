@@ -74,10 +74,10 @@ func (b *BeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset += len(b.BLSToExecutionChanges) * 172
 
 	// Field (10) 'SignedExecutionPayloadHeader'
-	if b.SignedExecutionPayloadHeader == nil {
-		b.SignedExecutionPayloadHeader = new(SignedExecutionPayloadHeader)
+	if b.SignedExecutionPayloadBid == nil {
+		b.SignedExecutionPayloadBid = new(SignedExecutionPayloadBid)
 	}
-	if dst, err = b.SignedExecutionPayloadHeader.MarshalSSZTo(dst); err != nil {
+	if dst, err = b.SignedExecutionPayloadBid.MarshalSSZTo(dst); err != nil {
 		return
 	}
 
@@ -257,10 +257,10 @@ func (b *BeaconBlockBody) UnmarshalSSZ(buf []byte) error {
 	}
 
 	// Field (10) 'SignedExecutionPayloadHeader'
-	if b.SignedExecutionPayloadHeader == nil {
-		b.SignedExecutionPayloadHeader = new(SignedExecutionPayloadHeader)
+	if b.SignedExecutionPayloadBid == nil {
+		b.SignedExecutionPayloadBid = new(SignedExecutionPayloadBid)
 	}
-	if err = b.SignedExecutionPayloadHeader.UnmarshalSSZ(buf[384:640]); err != nil {
+	if err = b.SignedExecutionPayloadBid.UnmarshalSSZ(buf[384:640]); err != nil {
 		return err
 	}
 
@@ -574,10 +574,10 @@ func (b *BeaconBlockBody) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	}
 
 	// Field (10) 'SignedExecutionPayloadHeader'
-	if b.SignedExecutionPayloadHeader == nil {
-		b.SignedExecutionPayloadHeader = new(SignedExecutionPayloadHeader)
+	if b.SignedExecutionPayloadBid == nil {
+		b.SignedExecutionPayloadBid = new(SignedExecutionPayloadBid)
 	}
-	if err = b.SignedExecutionPayloadHeader.HashTreeRootWith(hh); err != nil {
+	if err = b.SignedExecutionPayloadBid.HashTreeRootWith(hh); err != nil {
 		return
 	}
 

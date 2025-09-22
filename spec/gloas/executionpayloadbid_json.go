@@ -24,8 +24,8 @@ import (
 	"github.com/pkg/errors"
 )
 
-// executionPayloadHeaderJSON is the spec representation of the struct.
-type executionPayloadHeaderJSON struct {
+// executionPayloadBidJSON is the spec representation of the struct.
+type executionPayloadBidJSON struct {
 	ParentBlockHash        string `json:"parent_block_hash"`
 	ParentBlockRoot        string `json:"parent_block_root"`
 	BlockHash              string `json:"block_hash"`
@@ -37,8 +37,8 @@ type executionPayloadHeaderJSON struct {
 }
 
 // MarshalJSON implements json.Marshaler.
-func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&executionPayloadHeaderJSON{
+func (e *ExecutionPayloadBid) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&executionPayloadBidJSON{
 		ParentBlockHash:        fmt.Sprintf("%#x", e.ParentBlockHash),
 		ParentBlockRoot:        fmt.Sprintf("%#x", e.ParentBlockRoot),
 		BlockHash:              fmt.Sprintf("%#x", e.BlockHash),
@@ -51,8 +51,8 @@ func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
-func (e *ExecutionPayloadHeader) UnmarshalJSON(input []byte) error {
-	var data executionPayloadHeaderJSON
+func (e *ExecutionPayloadBid) UnmarshalJSON(input []byte) error {
+	var data executionPayloadBidJSON
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
@@ -125,7 +125,7 @@ func (e *ExecutionPayloadHeader) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid value")
 	}
-	e.Value = value
+	e.Value = phase0.Gwei(value)
 
 	// Blob KZG commitments root
 	if data.BlobKZGCommitmentsRoot == "" {

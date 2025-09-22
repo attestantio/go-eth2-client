@@ -28,35 +28,35 @@ import (
 
 // beaconBlockBodyJSON is the spec representation of the struct.
 type beaconBlockBodyJSON struct {
-	RANDAOReveal                 string                                `json:"randao_reveal"`
-	ETH1Data                     *phase0.ETH1Data                      `json:"eth1_data"`
-	Graffiti                     string                                `json:"graffiti"`
-	ProposerSlashings            []*phase0.ProposerSlashing            `json:"proposer_slashings"`
-	AttesterSlashings            []*electra.AttesterSlashing           `json:"attester_slashings"`
-	Attestations                 []*electra.Attestation                `json:"attestations"`
-	Deposits                     []*phase0.Deposit                     `json:"deposits"`
-	VoluntaryExits               []*phase0.SignedVoluntaryExit         `json:"voluntary_exits"`
-	SyncAggregate                *altair.SyncAggregate                 `json:"sync_aggregate"`
-	BLSToExecutionChanges        []*capella.SignedBLSToExecutionChange `json:"bls_to_execution_changes"`
-	SignedExecutionPayloadHeader *SignedExecutionPayloadHeader         `json:"signed_execution_payload_header"`
-	PayloadAttestations          []*PayloadAttestation                 `json:"payload_attestations"`
+	RANDAOReveal              string                                `json:"randao_reveal"`
+	ETH1Data                  *phase0.ETH1Data                      `json:"eth1_data"`
+	Graffiti                  string                                `json:"graffiti"`
+	ProposerSlashings         []*phase0.ProposerSlashing            `json:"proposer_slashings"`
+	AttesterSlashings         []*electra.AttesterSlashing           `json:"attester_slashings"`
+	Attestations              []*electra.Attestation                `json:"attestations"`
+	Deposits                  []*phase0.Deposit                     `json:"deposits"`
+	VoluntaryExits            []*phase0.SignedVoluntaryExit         `json:"voluntary_exits"`
+	SyncAggregate             *altair.SyncAggregate                 `json:"sync_aggregate"`
+	BLSToExecutionChanges     []*capella.SignedBLSToExecutionChange `json:"bls_to_execution_changes"`
+	SignedExecutionPayloadBid *SignedExecutionPayloadBid            `json:"signed_execution_payload_bid"`
+	PayloadAttestations       []*PayloadAttestation                 `json:"payload_attestations"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (b *BeaconBlockBody) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&beaconBlockBodyJSON{
-		RANDAOReveal:                 fmt.Sprintf("%#x", b.RANDAOReveal),
-		ETH1Data:                     b.ETH1Data,
-		Graffiti:                     fmt.Sprintf("%#x", b.Graffiti),
-		ProposerSlashings:            b.ProposerSlashings,
-		AttesterSlashings:            b.AttesterSlashings,
-		Attestations:                 b.Attestations,
-		Deposits:                     b.Deposits,
-		VoluntaryExits:               b.VoluntaryExits,
-		SyncAggregate:                b.SyncAggregate,
-		BLSToExecutionChanges:        b.BLSToExecutionChanges,
-		SignedExecutionPayloadHeader: b.SignedExecutionPayloadHeader,
-		PayloadAttestations:          b.PayloadAttestations,
+		RANDAOReveal:              fmt.Sprintf("%#x", b.RANDAOReveal),
+		ETH1Data:                  b.ETH1Data,
+		Graffiti:                  fmt.Sprintf("%#x", b.Graffiti),
+		ProposerSlashings:         b.ProposerSlashings,
+		AttesterSlashings:         b.AttesterSlashings,
+		Attestations:              b.Attestations,
+		Deposits:                  b.Deposits,
+		VoluntaryExits:            b.VoluntaryExits,
+		SyncAggregate:             b.SyncAggregate,
+		BLSToExecutionChanges:     b.BLSToExecutionChanges,
+		SignedExecutionPayloadBid: b.SignedExecutionPayloadBid,
+		PayloadAttestations:       b.PayloadAttestations,
 	})
 }
 
@@ -96,7 +96,7 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	b.VoluntaryExits = data.VoluntaryExits
 	b.SyncAggregate = data.SyncAggregate
 	b.BLSToExecutionChanges = data.BLSToExecutionChanges
-	b.SignedExecutionPayloadHeader = data.SignedExecutionPayloadHeader
+	b.SignedExecutionPayloadBid = data.SignedExecutionPayloadBid
 	b.PayloadAttestations = data.PayloadAttestations
 
 	return nil

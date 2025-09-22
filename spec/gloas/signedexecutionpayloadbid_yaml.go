@@ -23,16 +23,10 @@ import (
 )
 
 // MarshalYAML implements yaml.Marshaler.
-func (e *ExecutionPayloadHeader) MarshalYAML() ([]byte, error) {
-	yamlBytes, err := yaml.MarshalWithOptions(&executionPayloadHeaderJSON{
-		ParentBlockHash:        fmt.Sprintf("%#x", e.ParentBlockHash),
-		ParentBlockRoot:        fmt.Sprintf("%#x", e.ParentBlockRoot),
-		BlockHash:              fmt.Sprintf("%#x", e.BlockHash),
-		GasLimit:               fmt.Sprintf("%d", e.GasLimit),
-		BuilderIndex:           fmt.Sprintf("%d", e.BuilderIndex),
-		Slot:                   fmt.Sprintf("%d", e.Slot),
-		Value:                  fmt.Sprintf("%d", e.Value),
-		BlobKZGCommitmentsRoot: fmt.Sprintf("%#x", e.BlobKZGCommitmentsRoot),
+func (s *SignedExecutionPayloadBid) MarshalYAML() ([]byte, error) {
+	yamlBytes, err := yaml.MarshalWithOptions(&signedExecutionPayloadBidJSON{
+		Message:   s.Message,
+		Signature: fmt.Sprintf("%#x", s.Signature),
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err
@@ -42,8 +36,8 @@ func (e *ExecutionPayloadHeader) MarshalYAML() ([]byte, error) {
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
-func (e *ExecutionPayloadHeader) UnmarshalYAML(input []byte) error {
-	var data executionPayloadHeaderJSON
+func (s *SignedExecutionPayloadBid) UnmarshalYAML(input []byte) error {
+	var data signedExecutionPayloadBidJSON
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
@@ -52,5 +46,5 @@ func (e *ExecutionPayloadHeader) UnmarshalYAML(input []byte) error {
 		return errors.Wrap(err, "failed to marshal JSON")
 	}
 
-	return e.UnmarshalJSON(marshaled)
+	return s.UnmarshalJSON(marshaled)
 }

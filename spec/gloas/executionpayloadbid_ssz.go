@@ -8,13 +8,13 @@ import (
 	ssz "github.com/ferranbt/fastssz"
 )
 
-// MarshalSSZ ssz marshals the ExecutionPayloadHeader object
-func (e *ExecutionPayloadHeader) MarshalSSZ() ([]byte, error) {
+// MarshalSSZ ssz marshals the ExecutionPayloadBid object
+func (e *ExecutionPayloadBid) MarshalSSZ() ([]byte, error) {
 	return ssz.MarshalSSZ(e)
 }
 
-// MarshalSSZTo ssz marshals the ExecutionPayloadHeader object to a target array
-func (e *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error) {
+// MarshalSSZTo ssz marshals the ExecutionPayloadBid object to a target array
+func (e *ExecutionPayloadBid) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 
 	// Field (0) 'ParentBlockHash'
@@ -36,7 +36,7 @@ func (e *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error
 	dst = ssz.MarshalUint64(dst, uint64(e.Slot))
 
 	// Field (6) 'Value'
-	dst = ssz.MarshalUint64(dst, e.Value)
+	dst = ssz.MarshalUint64(dst, uint64(e.Value))
 
 	// Field (7) 'BlobKZGCommitmentsRoot'
 	dst = append(dst, e.BlobKZGCommitmentsRoot[:]...)
@@ -44,8 +44,8 @@ func (e *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error
 	return
 }
 
-// UnmarshalSSZ ssz unmarshals the ExecutionPayloadHeader object
-func (e *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) error {
+// UnmarshalSSZ ssz unmarshals the ExecutionPayloadBid object
+func (e *ExecutionPayloadBid) UnmarshalSSZ(buf []byte) error {
 	var err error
 	size := uint64(len(buf))
 	if size != 160 {
@@ -71,7 +71,7 @@ func (e *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) error {
 	e.Slot = phase0.Slot(ssz.UnmarshallUint64(buf[112:120]))
 
 	// Field (6) 'Value'
-	e.Value = ssz.UnmarshallUint64(buf[120:128])
+	e.Value = phase0.Gwei(ssz.UnmarshallUint64(buf[120:128]))
 
 	// Field (7) 'BlobKZGCommitmentsRoot'
 	copy(e.BlobKZGCommitmentsRoot[:], buf[128:160])
@@ -79,19 +79,19 @@ func (e *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) error {
 	return err
 }
 
-// SizeSSZ returns the ssz encoded size in bytes for the ExecutionPayloadHeader object
-func (e *ExecutionPayloadHeader) SizeSSZ() (size int) {
+// SizeSSZ returns the ssz encoded size in bytes for the ExecutionPayloadBid object
+func (e *ExecutionPayloadBid) SizeSSZ() (size int) {
 	size = 160
 	return
 }
 
-// HashTreeRoot ssz hashes the ExecutionPayloadHeader object
-func (e *ExecutionPayloadHeader) HashTreeRoot() ([32]byte, error) {
+// HashTreeRoot ssz hashes the ExecutionPayloadBid object
+func (e *ExecutionPayloadBid) HashTreeRoot() ([32]byte, error) {
 	return ssz.HashWithDefaultHasher(e)
 }
 
-// HashTreeRootWith ssz hashes the ExecutionPayloadHeader object with a hasher
-func (e *ExecutionPayloadHeader) HashTreeRootWith(hh ssz.HashWalker) (err error) {
+// HashTreeRootWith ssz hashes the ExecutionPayloadBid object with a hasher
+func (e *ExecutionPayloadBid) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 	indx := hh.Index()
 
 	// Field (0) 'ParentBlockHash'
@@ -113,7 +113,7 @@ func (e *ExecutionPayloadHeader) HashTreeRootWith(hh ssz.HashWalker) (err error)
 	hh.PutUint64(uint64(e.Slot))
 
 	// Field (6) 'Value'
-	hh.PutUint64(e.Value)
+	hh.PutUint64(uint64(e.Value))
 
 	// Field (7) 'BlobKZGCommitmentsRoot'
 	hh.PutBytes(e.BlobKZGCommitmentsRoot[:])
@@ -122,7 +122,7 @@ func (e *ExecutionPayloadHeader) HashTreeRootWith(hh ssz.HashWalker) (err error)
 	return
 }
 
-// GetTree ssz hashes the ExecutionPayloadHeader object
-func (e *ExecutionPayloadHeader) GetTree() (*ssz.Node, error) {
+// GetTree ssz hashes the ExecutionPayloadBid object
+func (e *ExecutionPayloadBid) GetTree() (*ssz.Node, error) {
 	return ssz.ProofTree(e)
 }

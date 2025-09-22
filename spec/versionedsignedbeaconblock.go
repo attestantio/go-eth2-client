@@ -197,12 +197,12 @@ func (v *VersionedSignedBeaconBlock) ExecutionBlockHash() (phase0.Hash32, error)
 		if v.Gloas == nil ||
 			v.Gloas.Message == nil ||
 			v.Gloas.Message.Body == nil ||
-			v.Gloas.Message.Body.SignedExecutionPayloadHeader == nil ||
-			v.Gloas.Message.Body.SignedExecutionPayloadHeader.Message == nil {
+			v.Gloas.Message.Body.SignedExecutionPayloadBid == nil ||
+			v.Gloas.Message.Body.SignedExecutionPayloadBid.Message == nil {
 			return phase0.Hash32{}, errors.New("no gloas block")
 		}
 
-		return v.Gloas.Message.Body.SignedExecutionPayloadHeader.Message.BlockHash, nil
+		return v.Gloas.Message.Body.SignedExecutionPayloadBid.Message.BlockHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}

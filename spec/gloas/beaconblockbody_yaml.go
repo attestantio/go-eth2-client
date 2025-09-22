@@ -25,18 +25,18 @@ import (
 // MarshalYAML implements yaml.Marshaler.
 func (b *BeaconBlockBody) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&beaconBlockBodyJSON{
-		RANDAOReveal:                 fmt.Sprintf("%#x", b.RANDAOReveal),
-		ETH1Data:                     b.ETH1Data,
-		Graffiti:                     fmt.Sprintf("%#x", b.Graffiti),
-		ProposerSlashings:            b.ProposerSlashings,
-		AttesterSlashings:            b.AttesterSlashings,
-		Attestations:                 b.Attestations,
-		Deposits:                     b.Deposits,
-		VoluntaryExits:               b.VoluntaryExits,
-		SyncAggregate:                b.SyncAggregate,
-		BLSToExecutionChanges:        b.BLSToExecutionChanges,
-		SignedExecutionPayloadHeader: b.SignedExecutionPayloadHeader,
-		PayloadAttestations:          b.PayloadAttestations,
+		RANDAOReveal:              fmt.Sprintf("%#x", b.RANDAOReveal),
+		ETH1Data:                  b.ETH1Data,
+		Graffiti:                  fmt.Sprintf("%#x", b.Graffiti),
+		ProposerSlashings:         b.ProposerSlashings,
+		AttesterSlashings:         b.AttesterSlashings,
+		Attestations:              b.Attestations,
+		Deposits:                  b.Deposits,
+		VoluntaryExits:            b.VoluntaryExits,
+		SyncAggregate:             b.SyncAggregate,
+		BLSToExecutionChanges:     b.BLSToExecutionChanges,
+		SignedExecutionPayloadBid: b.SignedExecutionPayloadBid,
+		PayloadAttestations:       b.PayloadAttestations,
 	}, yaml.Flow(true))
 	if err != nil {
 		return nil, err

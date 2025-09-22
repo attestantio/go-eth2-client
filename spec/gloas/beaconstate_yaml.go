@@ -52,7 +52,7 @@ type beaconStateYAML struct {
 	InactivityScores              []uint64                            `yaml:"inactivity_scores"`
 	CurrentSyncCommittee          *altair.SyncCommittee               `yaml:"current_sync_committee"`
 	NextSyncCommittee             *altair.SyncCommittee               `yaml:"next_sync_committee"`
-	LatestExecutionPayloadHeader  *ExecutionPayloadHeader             `yaml:"latest_execution_payload_header"`
+	LatestExecutionPayloadBid     *ExecutionPayloadBid                `yaml:"latest_execution_payload_bid"`
 	NextWithdrawalIndex           capella.WithdrawalIndex             `yaml:"next_withdrawal_index"`
 	NextWithdrawalValidatorIndex  phase0.ValidatorIndex               `yaml:"next_withdrawal_validator_index"`
 	HistoricalSummaries           []*capella.HistoricalSummary        `yaml:"historical_summaries"`
@@ -100,7 +100,7 @@ func (b *BeaconState) MarshalYAML() ([]byte, error) {
 		InactivityScores:              b.InactivityScores,
 		CurrentSyncCommittee:          b.CurrentSyncCommittee,
 		NextSyncCommittee:             b.NextSyncCommittee,
-		LatestExecutionPayloadHeader:  b.LatestExecutionPayloadHeader,
+		LatestExecutionPayloadBid:     b.LatestExecutionPayloadBid,
 		NextWithdrawalIndex:           b.NextWithdrawalIndex,
 		NextWithdrawalValidatorIndex:  b.NextWithdrawalValidatorIndex,
 		HistoricalSummaries:           b.HistoricalSummaries,
