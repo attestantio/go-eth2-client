@@ -837,6 +837,34 @@ func (v *VersionedExecutionPayload) ExcessBlobGas() (uint64, error) {
 	}
 }
 
+// BlobGasUsed returns the blob gas used of the execution payload.
+func (v *VersionedExecutionPayload) BlockAccessList() (eip7928.BlockAccessList, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return eip7928.BlockAccessList{}, errors.New("no execution payload in phase0")
+	case DataVersionAltair:
+		return eip7928.BlockAccessList{}, errors.New("no execution payload in altair")
+	case DataVersionBellatrix:
+		return eip7928.BlockAccessList{}, errors.New("no block access list in bellatrix")
+	case DataVersionCapella:
+		return eip7928.BlockAccessList{}, errors.New("no block access list in capella")
+	case DataVersionDeneb:
+		return eip7928.BlockAccessList{}, errors.New("no block access list in deneb")
+	case DataVersionElectra:
+		return eip7928.BlockAccessList{}, errors.New("no block access list in electra")
+	case DataVersionFulu:
+		return eip7928.BlockAccessList{}, errors.New("no block access list in fulu")
+	case DataVersionEIP7928:
+		if v.EIP7928 == nil {
+			return eip7928.BlockAccessList{}, errors.New("no eip7928 execution payload")
+		}
+
+		return v.EIP7928.BlockAccessList, nil
+	default:
+		return eip7928.BlockAccessList{}, errors.New("unknown version")
+	}
+}
+
 // String returns a string version of the structure.
 func (v *VersionedExecutionPayload) String() string {
 	switch v.Version {
