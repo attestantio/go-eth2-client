@@ -19,8 +19,8 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
-	"github.com/attestantio/go-eth2-client/spec/eip7928"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -32,7 +32,7 @@ type VersionedBlockRequest struct {
 	Deneb     *deneb.SignedBeaconBlock
 	Electra   *electra.SignedBeaconBlock
 	Fulu      *electra.SignedBeaconBlock
-	EIP7928   *eip7928.SignedBeaconBlock
+	Gloas     *gloas.SignedBeaconBlock
 }
 
 // Slot returns the slot of the signed beacon block.
@@ -73,13 +73,13 @@ func (v *VersionedBlockRequest) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.Message.Slot, nil
-	case spec.DataVersionEIP7928:
-		if v.EIP7928 == nil ||
-			v.EIP7928.Message == nil {
+	case spec.DataVersionGloas:
+		if v.Gloas == nil ||
+			v.Gloas.Message == nil {
 			return 0, ErrDataMissing
 		}
 
-		return v.EIP7928.Message.Slot, nil
+		return v.Gloas.Message.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -133,15 +133,15 @@ func (v *VersionedBlockRequest) ExecutionBlockHash() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.Message.Body.ExecutionPayload.BlockHash, nil
-	case spec.DataVersionEIP7928:
-		if v.EIP7928 == nil ||
-			v.EIP7928.Message == nil ||
-			v.EIP7928.Message.Body == nil ||
-			v.EIP7928.Message.Body.ExecutionPayload == nil {
+	case spec.DataVersionGloas:
+		if v.Gloas == nil ||
+			v.Gloas.Message == nil ||
+			v.Gloas.Message.Body == nil ||
+			v.Gloas.Message.Body.ExecutionPayload == nil {
 			return phase0.Hash32{}, ErrDataMissing
 		}
 
-		return v.EIP7928.Message.Body.ExecutionPayload.BlockHash, nil
+		return v.Gloas.Message.Body.ExecutionPayload.BlockHash, nil
 	default:
 		return phase0.Hash32{}, ErrUnsupportedVersion
 	}

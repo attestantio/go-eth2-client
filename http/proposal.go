@@ -33,7 +33,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/attestantio/go-eth2-client/spec/eip7928"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	dynssz "github.com/pk910/dynamic-ssz"
 	"go.opentelemetry.io/otel"
@@ -252,20 +252,20 @@ func (s *Service) beaconBlockProposalFromSSZ(ctx context.Context,
 				err = response.Data.Fulu.UnmarshalSSZ(res.body)
 			}
 		}
-	case spec.DataVersionEIP7928:
+	case spec.DataVersionGloas:
 		if response.Data.Blinded {
-			response.Data.EIP7928Blinded = &apiv1electra.BlindedBeaconBlock{}
+			response.Data.GloasBlinded = &apiv1electra.BlindedBeaconBlock{}
 			if s.customSpecSupport {
-				err = dynSSZ.UnmarshalSSZ(response.Data.EIP7928Blinded, res.body)
+				err = dynSSZ.UnmarshalSSZ(response.Data.GloasBlinded, res.body)
 			} else {
-				err = response.Data.EIP7928Blinded.UnmarshalSSZ(res.body)
+				err = response.Data.GloasBlinded.UnmarshalSSZ(res.body)
 			}
 		} else {
-			response.Data.EIP7928 = &eip7928.BeaconBlock{}
+			response.Data.Gloas = &gloas.BeaconBlock{}
 			if s.customSpecSupport {
-				err = dynSSZ.UnmarshalSSZ(response.Data.EIP7928, res.body)
+				err = dynSSZ.UnmarshalSSZ(response.Data.Gloas, res.body)
 			} else {
-				err = response.Data.EIP7928.UnmarshalSSZ(res.body)
+				err = response.Data.Gloas.UnmarshalSSZ(res.body)
 			}
 		}
 	default:
@@ -367,16 +367,16 @@ func (s *Service) beaconBlockProposalFromJSON(res *httpResponse) (*api.Response[
 				&apiv1fulu.BlockContents{},
 			)
 		}
-	case spec.DataVersionEIP7928:
+	case spec.DataVersionGloas:
 		if response.Data.Blinded {
-			response.Data.EIP7928Blinded, response.Metadata, err = decodeJSONResponse(
+			response.Data.GloasBlinded, response.Metadata, err = decodeJSONResponse(
 				bytes.NewReader(res.body),
 				&apiv1electra.BlindedBeaconBlock{},
 			)
 		} else {
-			response.Data.EIP7928, response.Metadata, err = decodeJSONResponse(
+			response.Data.Gloas, response.Metadata, err = decodeJSONResponse(
 				bytes.NewReader(res.body),
-				&eip7928.BeaconBlock{},
+				&gloas.BeaconBlock{},
 			)
 		}
 	default:

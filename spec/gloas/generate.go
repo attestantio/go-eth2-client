@@ -1,4 +1,4 @@
-// Copyright © 2024 Attestant Limited.
+// Copyright © 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,27 +11,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package eip7928
+package gloas
 
-import (
-	"fmt"
-
-	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/goccy/go-yaml"
-)
-
-// SignedBeaconBlock is a signed beacon block.
-type SignedBeaconBlock struct {
-	Message   *BeaconBlock
-	Signature phase0.BLSSignature `ssz-size:"96"`
-}
-
-// String returns a string version of the structure.
-func (s *SignedBeaconBlock) String() string {
-	data, err := yaml.Marshal(s)
-	if err != nil {
-		return fmt.Sprintf("ERR: %v", err)
-	}
-
-	return string(data)
-}
+//nolint:revive
+// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
+//go:generate rm -f beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go signedbeaconblock_ssz.go
+//go:generate sszgen --suffix=ssz --path . --include ../phase0,../altair,../bellatrix,../capella,../deneb,../electra --objs BeaconBlockBody,BeaconBlock,BeaconState,SignedBeaconBlock
+//go:generate goimports -w beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go signedbeaconblock_ssz.go

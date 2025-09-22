@@ -18,8 +18,8 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
-	"github.com/attestantio/go-eth2-client/spec/eip7928"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -33,7 +33,7 @@ type VersionedBeaconBlockBody struct {
 	Deneb     *deneb.BeaconBlockBody
 	Electra   *electra.BeaconBlockBody
 	Fulu      *electra.BeaconBlockBody
-	EIP7928   *eip7928.BeaconBlockBody
+	Gloas     *gloas.BeaconBlockBody
 }
 
 // String returns a string version of the structure.
@@ -81,12 +81,12 @@ func (v *VersionedBeaconBlockBody) String() string {
 		}
 
 		return v.Fulu.String()
-	case DataVersionEIP7928:
-		if v.EIP7928 == nil {
+	case DataVersionGloas:
+		if v.Gloas == nil {
 			return ""
 		}
 
-		return v.EIP7928.String()
+		return v.Gloas.String()
 	default:
 		return "unknown version"
 	}

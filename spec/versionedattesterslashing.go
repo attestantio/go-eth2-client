@@ -30,13 +30,13 @@ type VersionedAttesterSlashing struct {
 	Deneb     *phase0.AttesterSlashing
 	Electra   *electra.AttesterSlashing
 	Fulu      *electra.AttesterSlashing
-	EIP7928   *electra.AttesterSlashing
+	Gloas     *electra.AttesterSlashing
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedAttesterSlashing) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil &&
-		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.EIP7928 == nil
+		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.Gloas == nil
 }
 
 // Attestation1 returns the first indexed attestation.
@@ -119,14 +119,14 @@ func (v *VersionedAttesterSlashing) Attestation1() (*VersionedIndexedAttestation
 		}
 
 		return &versionedIndexedAttestation, nil
-	case DataVersionEIP7928:
-		if v.EIP7928 == nil {
-			return nil, errors.New("no EIP7928 indexed attestation")
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas indexed attestation")
 		}
 
 		versionedIndexedAttestation := VersionedIndexedAttestation{
-			Version: DataVersionEIP7928,
-			EIP7928: v.EIP7928.Attestation1,
+			Version: DataVersionGloas,
+			Gloas:   v.Gloas.Attestation1,
 		}
 
 		return &versionedIndexedAttestation, nil
@@ -215,14 +215,14 @@ func (v *VersionedAttesterSlashing) Attestation2() (*VersionedIndexedAttestation
 		}
 
 		return &versionedIndexedAttestation, nil
-	case DataVersionEIP7928:
-		if v.EIP7928 == nil {
-			return nil, errors.New("no EIP7928 indexed attestation")
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas indexed attestation")
 		}
 
 		versionedIndexedAttestation := VersionedIndexedAttestation{
-			Version: DataVersionEIP7928,
-			EIP7928: v.EIP7928.Attestation2,
+			Version: DataVersionGloas,
+			Gloas:   v.Gloas.Attestation2,
 		}
 
 		return &versionedIndexedAttestation, nil
@@ -276,12 +276,12 @@ func (v *VersionedAttesterSlashing) String() string {
 		}
 
 		return v.Fulu.String()
-	case DataVersionEIP7928:
-		if v.EIP7928 == nil {
+	case DataVersionGloas:
+		if v.Gloas == nil {
 			return ""
 		}
 
-		return v.EIP7928.String()
+		return v.Gloas.String()
 	default:
 		return "unknown version"
 	}
