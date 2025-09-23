@@ -42,6 +42,8 @@ jobs:
         id: rebase
         run: |
           echo "Rebasing branch obol on branch master"
+          git config user.name 'github-actions'
+          git config user.email 'github-actions@users.noreply.github.com'
           git fetch
           {
             echo "RESULT<<EOF"
@@ -64,7 +66,7 @@ jobs:
           SLACK_CHANNEL: dev-stack-releases
           SLACK_COLOR: eb3d2c #red
           SLACK_ICON: https://obol.org/ObolIcon.png?ref=blog.obol.org
-          SLACK_MESSAGE: "Failed to rebase branch obol on newly synced branch master due to error"
+          SLACK_MESSAGE: "Failed to rebase branch obol on newly synced branch master due to error: ${{steps.rebase.outputs.RESULT}}"
           SLACK_TITLE: "go-eth2-client rebase failed - error"
           SLACK_WEBHOOK: ${{ secrets.SLACK_DEV_STACK_RELEASES_WEBHOOK }}
 
