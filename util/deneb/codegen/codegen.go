@@ -23,6 +23,7 @@ func main() {
 	generator.BuildFile(
 		filepath.Join(parentDir, "blob_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&deneb.BeaconBlockBlob{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 

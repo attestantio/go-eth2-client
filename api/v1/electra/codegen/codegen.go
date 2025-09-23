@@ -23,26 +23,31 @@ func main() {
 	generator.BuildFile(
 		filepath.Join(parentDir, "blindedbeaconblock_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&electra.BlindedBeaconBlock{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "blindedbeaconblockbody_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&electra.BlindedBeaconBlockBody{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "blockcontents_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&electra.BlockContents{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedblindedbeaconblock_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&electra.SignedBlindedBeaconBlock{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedblockcontents_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&electra.SignedBlockContents{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 

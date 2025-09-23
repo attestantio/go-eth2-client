@@ -23,6 +23,7 @@ func main() {
 	generator.BuildFile(
 		filepath.Join(parentDir, "withdrawals_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&capella.ExecutionPayloadWithdrawals{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 

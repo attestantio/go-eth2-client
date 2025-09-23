@@ -23,16 +23,19 @@ func main() {
 	generator.BuildFile(
 		filepath.Join(parentDir, "versionedblindedbeaconblock_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&api.VersionedBlindedBeaconBlock{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "versionedsignedblindedbeaconblock_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&api.VersionedSignedBlindedBeaconBlock{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "versionedsignedvalidatorregistration_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&api.VersionedSignedValidatorRegistration{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 

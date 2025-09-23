@@ -23,6 +23,7 @@ func main() {
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconstate_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&fulu.BeaconState{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 

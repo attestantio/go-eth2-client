@@ -23,126 +23,151 @@ func main() {
 	generator.BuildFile(
 		filepath.Join(parentDir, "aggregateandproof_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.AggregateAndProof{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "attestation_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.Attestation{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "attestationdata_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.AttestationData{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "attesterslashing_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.AttesterSlashing{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconblockbody_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.BeaconBlockBody{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconblock_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.BeaconBlock{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconblockheader_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.BeaconBlockHeader{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconstate_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.BeaconState{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "checkpoint_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.Checkpoint{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "deposit_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.Deposit{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "depositdata_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.DepositData{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "depositmessage_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.DepositMessage{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "eth1data_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.ETH1Data{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "fork_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.Fork{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "forkdata_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.ForkData{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "indexedattestation_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.IndexedAttestation{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "pendingattestation_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.PendingAttestation{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "proposerslashing_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.ProposerSlashing{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedaggregateandproof_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.SignedAggregateAndProof{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedbeaconblock_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.SignedBeaconBlock{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedbeaconblockheader_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.SignedBeaconBlockHeader{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedvoluntaryexit_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.SignedVoluntaryExit{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signingdata_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.SigningData{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "validator_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.Validator{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "voluntaryexit_ssz.go"),
 		codegen.WithType(reflect.TypeOf(&phase0.VoluntaryExit{})),
+		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 
