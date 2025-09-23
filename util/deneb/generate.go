@@ -13,7 +13,6 @@
 
 package deneb
 
-//nolint:revive
 //go:generate rm -f blob_ssz.go
 //go:generate go run codegen/codegen.go
 //go:generate goimports -w blob_ssz.go

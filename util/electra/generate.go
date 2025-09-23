@@ -13,8 +13,6 @@
 
 package electra
 
-//nolint:revive
-// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
 //go:generate rm -f consolidation_requests_ssz.go depositrequests_ssz.go withdrawalrequests_ssz.go
 //go:generate go run codegen/codegen.go
 //go:generate goimports -w consolidation_requests_ssz.go depositrequests_ssz.go withdrawalrequests_ssz.go

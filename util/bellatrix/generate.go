@@ -13,7 +13,6 @@
 
 package bellatrix
 
-//nolint:revive
 //go:generate rm -f transactions_ssz.go
 //go:generate go run codegen/codegen.go
 //go:generate goimports -w transactions_ssz.go

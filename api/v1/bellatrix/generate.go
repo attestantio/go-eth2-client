@@ -13,7 +13,6 @@
 
 package bellatrix
 
-//nolint:revive
 //go:generate rm -f blindedbeaconblockbody_ssz.go blindedbeaconblock_ssz.go signedblindedbeaconblock_ssz.go
 //go:generate go run codegen/codegen.go
 //go:generate goimports -w blindedbeaconblockbody_ssz.go blindedbeaconblock_ssz.go signedblindedbeaconblock_ssz.go

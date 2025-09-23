@@ -13,7 +13,6 @@
 
 package capella
 
-//nolint:revive
 //go:generate rm -f withdrawals_ssz.go
 //go:generate go run codegen/codegen.go
 //go:generate goimports -w withdrawals_ssz.go

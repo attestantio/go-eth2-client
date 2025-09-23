@@ -13,8 +13,6 @@
 
 package fulu
 
-//nolint:revive
-// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
 //go:generate rm -f beaconstate_ssz.go
 //go:generate go run codegen/codegen.go
 //go:generate goimports -w beaconstate_ssz.go
