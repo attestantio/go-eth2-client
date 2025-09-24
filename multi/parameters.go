@@ -32,6 +32,7 @@ type parameters struct {
 	enforceJSON       bool
 	allowDelayedStart bool
 	name              string
+	elConnectionCheck bool
 }
 
 // Parameter is the interface for service parameters.
@@ -105,6 +106,13 @@ func WithExtraHeaders(headers map[string]string) Parameter {
 func WithName(name string) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.name = name
+	})
+}
+
+// WithELConnectionCheck enables making sure EL is not offline to consider the client synced.
+func WithELConnectionCheck(elConnectionCheck bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.elConnectionCheck = elConnectionCheck
 	})
 }
 
