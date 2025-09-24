@@ -27,11 +27,11 @@ type BlindedBeaconBlockBody struct {
 	RANDAOReveal           phase0.BLSSignature `ssz-size:"96"`
 	ETH1Data               *phase0.ETH1Data
 	Graffiti               [32]byte                      `ssz-size:"32"`
-	ProposerSlashings      []*phase0.ProposerSlashing    `ssz-max:"16"`
-	AttesterSlashings      []*phase0.AttesterSlashing    `ssz-max:"2"`
-	Attestations           []*phase0.Attestation         `ssz-max:"128"`
-	Deposits               []*phase0.Deposit             `ssz-max:"16"`
-	VoluntaryExits         []*phase0.SignedVoluntaryExit `ssz-max:"16"`
+	ProposerSlashings      []*phase0.ProposerSlashing    `dynssz-max:"MAX_PROPOSER_SLASHINGS" ssz-max:"16"`
+	AttesterSlashings      []*phase0.AttesterSlashing    `dynssz-max:"MAX_ATTESTER_SLASHINGS" ssz-max:"2"`
+	Attestations           []*phase0.Attestation         `dynssz-max:"MAX_ATTESTATIONS"       ssz-max:"128"`
+	Deposits               []*phase0.Deposit             `dynssz-max:"MAX_DEPOSITS"           ssz-max:"16"`
+	VoluntaryExits         []*phase0.SignedVoluntaryExit `dynssz-max:"MAX_VOLUNTARY_EXITS"    ssz-max:"16"`
 	SyncAggregate          *altair.SyncAggregate
 	ExecutionPayloadHeader *bellatrix.ExecutionPayloadHeader
 }
