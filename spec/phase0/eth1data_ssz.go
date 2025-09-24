@@ -51,9 +51,7 @@ func (t *ETH1Data) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'DepositRoot' (static)
 		buf := buf[0:32]
-		val1 := t.DepositRoot
-		copy(val1[:], buf)
-		t.DepositRoot = val1
+		copy(t.DepositRoot[:], buf)
 	}
 	{ // Field #1 'DepositCount' (static)
 		buf := buf[32:40]
@@ -61,14 +59,12 @@ func (t *ETH1Data) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #2 'BlockHash' (static)
 		buf := buf[40:72]
-		val2 := t.BlockHash
-		if(len(val2) < 32) {
-			val2 = make([]byte, 32)
-		} else if(len(val2) > 32) {
-			val2 = val2[:32]
+		if len(t.BlockHash) < 32 {
+			t.BlockHash = make([]byte, 32)
+		} else if len(t.BlockHash) > 32 {
+			t.BlockHash = t.BlockHash[:32]
 		}
-		copy(val2[:], buf)
-		t.BlockHash = val2
+		copy(t.BlockHash[:], buf)
 	}
 	return nil
 }

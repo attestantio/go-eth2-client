@@ -35,9 +35,7 @@ func (t *BeaconBlockBlob) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'Blob' (static)
 		buf := buf[0:131072]
-		val1 := t.Blob
-		copy(val1[:], buf)
-		t.Blob = val1
+		copy(t.Blob[:], buf)
 	}
 	return nil
 }

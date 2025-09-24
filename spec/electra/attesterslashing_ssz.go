@@ -41,8 +41,9 @@ func (t *AttesterSlashing) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *AttesterSlashing) SizeSSZ() (size int) {
-	size += 4 // Offset for field #0 'Attestation1'
-	size += 4 // Offset for field #1 'Attestation2'
+	// Field #0 'Attestation1' offset (4 bytes)
+	// Field #1 'Attestation2' offset (4 bytes)
+	size += 8
 	{ // Dynamic field #0 'Attestation1'
 		size += t.Attestation1.SizeSSZ()
 	}

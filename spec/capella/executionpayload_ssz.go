@@ -137,21 +137,22 @@ func (t *ExecutionPayload) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *ExecutionPayload) SizeSSZ() (size int) {
-	size += 32 // Field #0 'ParentHash'
-	size += 20 // Field #1 'FeeRecipient'
-	size += 32 // Field #2 'StateRoot'
-	size += 32 // Field #3 'ReceiptsRoot'
-	size += 256 // Field #4 'LogsBloom'
-	size += 32 // Field #5 'PrevRandao'
-	size += 8 // Field #6 'BlockNumber'
-	size += 8 // Field #7 'GasLimit'
-	size += 8 // Field #8 'GasUsed'
-	size += 8 // Field #9 'Timestamp'
-	size += 4 // Offset for field #10 'ExtraData'
-	size += 32 // Field #11 'BaseFeePerGas'
-	size += 32 // Field #12 'BlockHash'
-	size += 4 // Offset for field #13 'Transactions'
-	size += 4 // Offset for field #14 'Withdrawals'
+	// Field #0 'ParentHash' static (32 bytes)
+	// Field #1 'FeeRecipient' static (20 bytes)
+	// Field #2 'StateRoot' static (32 bytes)
+	// Field #3 'ReceiptsRoot' static (32 bytes)
+	// Field #4 'LogsBloom' static (256 bytes)
+	// Field #5 'PrevRandao' static (32 bytes)
+	// Field #6 'BlockNumber' static (8 bytes)
+	// Field #7 'GasLimit' static (8 bytes)
+	// Field #8 'GasUsed' static (8 bytes)
+	// Field #9 'Timestamp' static (8 bytes)
+	// Field #10 'ExtraData' offset (4 bytes)
+	// Field #11 'BaseFeePerGas' static (32 bytes)
+	// Field #12 'BlockHash' static (32 bytes)
+	// Field #13 'Transactions' offset (4 bytes)
+	// Field #14 'Withdrawals' offset (4 bytes)
+	size += 512
 	{ // Dynamic field #10 'ExtraData'
 		size += len(t.ExtraData)
 	}
@@ -177,39 +178,27 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'ParentHash' (static)
 		buf := buf[0:32]
-		val1 := t.ParentHash
-		copy(val1[:], buf)
-		t.ParentHash = val1
+		copy(t.ParentHash[:], buf)
 	}
 	{ // Field #1 'FeeRecipient' (static)
 		buf := buf[32:52]
-		val2 := t.FeeRecipient
-		copy(val2[:], buf)
-		t.FeeRecipient = val2
+		copy(t.FeeRecipient[:], buf)
 	}
 	{ // Field #2 'StateRoot' (static)
 		buf := buf[52:84]
-		val3 := t.StateRoot
-		copy(val3[:], buf)
-		t.StateRoot = val3
+		copy(t.StateRoot[:], buf)
 	}
 	{ // Field #3 'ReceiptsRoot' (static)
 		buf := buf[84:116]
-		val4 := t.ReceiptsRoot
-		copy(val4[:], buf)
-		t.ReceiptsRoot = val4
+		copy(t.ReceiptsRoot[:], buf)
 	}
 	{ // Field #4 'LogsBloom' (static)
 		buf := buf[116:372]
-		val5 := t.LogsBloom
-		copy(val5[:], buf)
-		t.LogsBloom = val5
+		copy(t.LogsBloom[:], buf)
 	}
 	{ // Field #5 'PrevRandao' (static)
 		buf := buf[372:404]
-		val6 := t.PrevRandao
-		copy(val6[:], buf)
-		t.PrevRandao = val6
+		copy(t.PrevRandao[:], buf)
 	}
 	{ // Field #6 'BlockNumber' (static)
 		buf := buf[404:412]
@@ -234,15 +223,11 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #11 'BaseFeePerGas' (static)
 		buf := buf[440:472]
-		val7 := t.BaseFeePerGas
-		copy(val7[:], buf)
-		t.BaseFeePerGas = val7
+		copy(t.BaseFeePerGas[:], buf)
 	}
 	{ // Field #12 'BlockHash' (static)
 		buf := buf[472:504]
-		val8 := t.BlockHash
-		copy(val8[:], buf)
-		t.BlockHash = val8
+		copy(t.BlockHash[:], buf)
 	}
 	// Field #13 'Transactions' (offset)
 	offset13 := int(sszutils.UnmarshallUint32(buf[504:508]))
@@ -256,19 +241,19 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #10 'ExtraData' (dynamic)
 		buf := buf[offset10:offset13]
-		val9 := t.ExtraData
+		val1 := t.ExtraData
 		limit := len(buf)
-		if(len(val9) < limit) {
-			val9 = make([]byte, limit)
-		} else if(len(val9) > limit) {
-			val9 = val9[:limit]
+		if len(val1) < limit {
+			val1 = make([]byte, limit)
+		} else if len(val1) > limit {
+			val1 = val1[:limit]
 		}
-		copy(val9[:], buf)
-		t.ExtraData = val9
+		copy(val1[:], buf)
+		t.ExtraData = val1
 	}
 	{ // Field #13 'Transactions' (dynamic)
 		buf := buf[offset13:offset14]
-		val10 := t.Transactions
+		val2 := t.Transactions
 		startOffset := int(0)
 		if len(buf) != 0 {
 			if len(buf) < 4 {
@@ -276,19 +261,19 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 			}
 			startOffset = int(sszutils.UnmarshallUint32(buf[0:4]))
 		}
-		itemCount := startOffset/4
+		itemCount := startOffset / 4
 		if startOffset%4 != 0 || len(buf) < startOffset {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val10) < itemCount) {
-			val10 = make([]bellatrix.Transaction, itemCount)
-		} else if(len(val10) > itemCount) {
-			val10 = val10[:itemCount]
+		if len(val2) < itemCount {
+			val2 = make([]bellatrix.Transaction, itemCount)
+		} else if len(val2) > itemCount {
+			val2 = val2[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
 			var endOffset int
 			if i < itemCount-1 {
-				endOffset = int(sszutils.UnmarshallUint32(buf[(i+1)*4:(i+2)*4]))
+				endOffset = int(sszutils.UnmarshallUint32(buf[(i+1)*4 : (i+2)*4]))
 			} else {
 				endOffset = len(buf)
 			}
@@ -297,42 +282,40 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 			}
 			buf := buf[startOffset:endOffset]
 			startOffset = endOffset
-			val11 := val10[i]
+			val3 := val2[i]
 			limit := len(buf)
-			if(len(val11) < limit) {
-				val11 = make(bellatrix.Transaction, limit)
-			} else if(len(val11) > limit) {
-				val11 = val11[:limit]
+			if len(val3) < limit {
+				val3 = make(bellatrix.Transaction, limit)
+			} else if len(val3) > limit {
+				val3 = val3[:limit]
 			}
-			copy(val11[:], buf)
-			val10[i] = val11
+			copy(val3[:], buf)
+			val2[i] = val3
 		}
-		t.Transactions = val10
+		t.Transactions = val2
 	}
 	{ // Field #14 'Withdrawals' (dynamic)
 		buf := buf[offset14:]
-		val12 := t.Withdrawals
-		itemCount := len(buf)/44
+		val4 := t.Withdrawals
+		itemCount := len(buf) / 44
 		if len(buf)%44 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val12) < itemCount) {
-			val12 = make([]*Withdrawal, itemCount)
-		} else if(len(val12) > itemCount) {
-			val12 = val12[:itemCount]
+		if len(val4) < itemCount {
+			val4 = make([]*Withdrawal, itemCount)
+		} else if len(val4) > itemCount {
+			val4 = val4[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val13 := val12[i]
-			if val13 == nil {
-				val13 = new(Withdrawal)
+			if val4[i] == nil {
+				val4[i] = new(Withdrawal)
 			}
-			buf := buf[44*i:44*(i+1)]
-			if err = val13.UnmarshalSSZ(buf); err != nil {
+			buf := buf[44*i : 44*(i+1)]
+			if err = val4[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val12[i] = val13
 		}
-		t.Withdrawals = val12
+		t.Withdrawals = val4
 	}
 	return nil
 }

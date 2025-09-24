@@ -41,20 +41,16 @@ func (t *SignedBLSToExecutionChange) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'Message' (static)
 		buf := buf[0:76]
-		val1 := t.Message
-		if val1 == nil {
-			val1 = new(BLSToExecutionChange)
+		if t.Message == nil {
+			t.Message = new(BLSToExecutionChange)
 		}
-		if err = val1.UnmarshalSSZ(buf); err != nil {
+		if err = t.Message.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Message = val1
 	}
 	{ // Field #1 'Signature' (static)
 		buf := buf[76:172]
-		val2 := t.Signature
-		copy(val2[:], buf)
-		t.Signature = val2
+		copy(t.Signature[:], buf)
 	}
 	return nil
 }

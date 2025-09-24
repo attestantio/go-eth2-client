@@ -69,43 +69,33 @@ func (t *BlobSidecar) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #1 'Blob' (static)
 		buf := buf[8:131080]
-		val1 := t.Blob
-		copy(val1[:], buf)
-		t.Blob = val1
+		copy(t.Blob[:], buf)
 	}
 	{ // Field #2 'KZGCommitment' (static)
 		buf := buf[131080:131128]
-		val2 := t.KZGCommitment
-		copy(val2[:], buf)
-		t.KZGCommitment = val2
+		copy(t.KZGCommitment[:], buf)
 	}
 	{ // Field #3 'KZGProof' (static)
 		buf := buf[131128:131176]
-		val3 := t.KZGProof
-		copy(val3[:], buf)
-		t.KZGProof = val3
+		copy(t.KZGProof[:], buf)
 	}
 	{ // Field #4 'SignedBlockHeader' (static)
 		buf := buf[131176:131384]
-		val4 := t.SignedBlockHeader
-		if val4 == nil {
-			val4 = new(phase0.SignedBeaconBlockHeader)
+		if t.SignedBlockHeader == nil {
+			t.SignedBlockHeader = new(phase0.SignedBeaconBlockHeader)
 		}
-		if err = val4.UnmarshalSSZ(buf); err != nil {
+		if err = t.SignedBlockHeader.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.SignedBlockHeader = val4
 	}
 	{ // Field #5 'KZGCommitmentInclusionProof' (static)
 		buf := buf[131384:131928]
-		val5 := t.KZGCommitmentInclusionProof
+		val1 := t.KZGCommitmentInclusionProof
 		for i := 0; i < 17; i++ {
-			val6 := val5[i]
-			buf := buf[32*i:32*(i+1)]
-			copy(val6[:], buf)
-			val5[i] = val6
+			buf := buf[32*i : 32*(i+1)]
+			copy(val1[i][:], buf)
 		}
-		t.KZGCommitmentInclusionProof = val5
+		t.KZGCommitmentInclusionProof = val1
 	}
 	return nil
 }

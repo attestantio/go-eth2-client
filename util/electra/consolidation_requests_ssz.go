@@ -41,7 +41,8 @@ func (t *ConsolidationRequests) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *ConsolidationRequests) SizeSSZ() (size int) {
-	size += 4 // Offset for field #0 'ConsolidationRequests'
+	// Field #0 'ConsolidationRequests' offset (4 bytes)
+	size += 4
 	{ // Dynamic field #0 'ConsolidationRequests'
 		vlen := len(t.ConsolidationRequests)
 		size += vlen * 116
@@ -62,25 +63,23 @@ func (t *ConsolidationRequests) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #0 'ConsolidationRequests' (dynamic)
 		buf := buf[offset0:]
 		val1 := t.ConsolidationRequests
-		itemCount := len(buf)/116
+		itemCount := len(buf) / 116
 		if len(buf)%116 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val1) < itemCount) {
+		if len(val1) < itemCount {
 			val1 = make([]*electra.ConsolidationRequest, itemCount)
-		} else if(len(val1) > itemCount) {
+		} else if len(val1) > itemCount {
 			val1 = val1[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val2 := val1[i]
-			if val2 == nil {
-				val2 = new(electra.ConsolidationRequest)
+			if val1[i] == nil {
+				val1[i] = new(electra.ConsolidationRequest)
 			}
-			buf := buf[116*i:116*(i+1)]
-			if err = val2.UnmarshalSSZ(buf); err != nil {
+			buf := buf[116*i : 116*(i+1)]
+			if err = val1[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val1[i] = val2
 		}
 		t.ConsolidationRequests = val1
 	}

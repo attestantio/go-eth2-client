@@ -41,7 +41,8 @@ func (t *WithdrawalRequests) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *WithdrawalRequests) SizeSSZ() (size int) {
-	size += 4 // Offset for field #0 'WithdrawalRequests'
+	// Field #0 'WithdrawalRequests' offset (4 bytes)
+	size += 4
 	{ // Dynamic field #0 'WithdrawalRequests'
 		vlen := len(t.WithdrawalRequests)
 		size += vlen * 76
@@ -62,25 +63,23 @@ func (t *WithdrawalRequests) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #0 'WithdrawalRequests' (dynamic)
 		buf := buf[offset0:]
 		val1 := t.WithdrawalRequests
-		itemCount := len(buf)/76
+		itemCount := len(buf) / 76
 		if len(buf)%76 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val1) < itemCount) {
+		if len(val1) < itemCount {
 			val1 = make([]*electra.WithdrawalRequest, itemCount)
-		} else if(len(val1) > itemCount) {
+		} else if len(val1) > itemCount {
 			val1 = val1[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val2 := val1[i]
-			if val2 == nil {
-				val2 = new(electra.WithdrawalRequest)
+			if val1[i] == nil {
+				val1[i] = new(electra.WithdrawalRequest)
 			}
-			buf := buf[76*i:76*(i+1)]
-			if err = val2.UnmarshalSSZ(buf); err != nil {
+			buf := buf[76*i : 76*(i+1)]
+			if err = val1[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val1[i] = val2
 		}
 		t.WithdrawalRequests = val1
 	}

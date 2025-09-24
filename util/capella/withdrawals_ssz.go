@@ -41,7 +41,8 @@ func (t *ExecutionPayloadWithdrawals) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *ExecutionPayloadWithdrawals) SizeSSZ() (size int) {
-	size += 4 // Offset for field #0 'Withdrawals'
+	// Field #0 'Withdrawals' offset (4 bytes)
+	size += 4
 	{ // Dynamic field #0 'Withdrawals'
 		vlen := len(t.Withdrawals)
 		size += vlen * 44
@@ -62,25 +63,23 @@ func (t *ExecutionPayloadWithdrawals) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #0 'Withdrawals' (dynamic)
 		buf := buf[offset0:]
 		val1 := t.Withdrawals
-		itemCount := len(buf)/44
+		itemCount := len(buf) / 44
 		if len(buf)%44 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val1) < itemCount) {
+		if len(val1) < itemCount {
 			val1 = make([]*capella.Withdrawal, itemCount)
-		} else if(len(val1) > itemCount) {
+		} else if len(val1) > itemCount {
 			val1 = val1[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val2 := val1[i]
-			if val2 == nil {
-				val2 = new(capella.Withdrawal)
+			if val1[i] == nil {
+				val1[i] = new(capella.Withdrawal)
 			}
-			buf := buf[44*i:44*(i+1)]
-			if err = val2.UnmarshalSSZ(buf); err != nil {
+			buf := buf[44*i : 44*(i+1)]
+			if err = val1[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val1[i] = val2
 		}
 		t.Withdrawals = val1
 	}

@@ -49,9 +49,7 @@ func (t *ValidatorRegistration) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'FeeRecipient' (static)
 		buf := buf[0:20]
-		val1 := t.FeeRecipient
-		copy(val1[:], buf)
-		t.FeeRecipient = val1
+		copy(t.FeeRecipient[:], buf)
 	}
 	{ // Field #1 'GasLimit' (static)
 		buf := buf[20:28]
@@ -63,9 +61,7 @@ func (t *ValidatorRegistration) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #3 'Pubkey' (static)
 		buf := buf[36:84]
-		val2 := t.Pubkey
-		copy(val2[:], buf)
-		t.Pubkey = val2
+		copy(t.Pubkey[:], buf)
 	}
 	return nil
 }

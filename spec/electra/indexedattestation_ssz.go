@@ -50,9 +50,10 @@ func (t *IndexedAttestation) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *IndexedAttestation) SizeSSZ() (size int) {
-	size += 4 // Offset for field #0 'AttestingIndices'
-	size += 128 // Field #1 'Data'
-	size += 96 // Field #2 'Signature'
+	// Field #0 'AttestingIndices' offset (4 bytes)
+	// Field #1 'Data' static (128 bytes)
+	// Field #2 'Signature' static (96 bytes)
+	size += 228
 	{ // Dynamic field #0 'AttestingIndices'
 		vlen := len(t.AttestingIndices)
 		size += vlen * 8
@@ -72,38 +73,34 @@ func (t *IndexedAttestation) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #1 'Data' (static)
 		buf := buf[4:132]
-		val1 := t.Data
-		if val1 == nil {
-			val1 = new(phase0.AttestationData)
+		if t.Data == nil {
+			t.Data = new(phase0.AttestationData)
 		}
-		if err = val1.UnmarshalSSZ(buf); err != nil {
+		if err = t.Data.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Data = val1
 	}
 	{ // Field #2 'Signature' (static)
 		buf := buf[132:228]
-		val2 := t.Signature
-		copy(val2[:], buf)
-		t.Signature = val2
+		copy(t.Signature[:], buf)
 	}
 	{ // Field #0 'AttestingIndices' (dynamic)
 		buf := buf[offset0:]
-		val3 := t.AttestingIndices
-		itemCount := len(buf)/8
+		val1 := t.AttestingIndices
+		itemCount := len(buf) / 8
 		if len(buf)%8 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val3) < itemCount) {
-			val3 = make([]uint64, itemCount)
-		} else if(len(val3) > itemCount) {
-			val3 = val3[:itemCount]
+		if len(val1) < itemCount {
+			val1 = make([]uint64, itemCount)
+		} else if len(val1) > itemCount {
+			val1 = val1[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			buf := buf[8*i:8*(i+1)]
-			val3[i] = uint64(sszutils.UnmarshallUint64(buf))
+			buf := buf[8*i : 8*(i+1)]
+			val1[i] = uint64(sszutils.UnmarshallUint64(buf))
 		}
-		t.AttestingIndices = val3
+		t.AttestingIndices = val1
 	}
 	return nil
 }

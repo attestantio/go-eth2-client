@@ -156,18 +156,17 @@ func (t *BeaconBlockBody) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *BeaconBlockBody) SizeSSZ() (size int) {
-	size += 96 // Field #0 'RANDAOReveal'
-	size += 72 // Field #1 'ETH1Data'
-	size += 32 // Field #2 'Graffiti'
-	size += 4 // Offset for field #3 'ProposerSlashings'
-	size += 4 // Offset for field #4 'AttesterSlashings'
-	size += 4 // Offset for field #5 'Attestations'
-	size += 4 // Offset for field #6 'Deposits'
-	size += 4 // Offset for field #7 'VoluntaryExits'
-	{ // Field #8 'SyncAggregate'
-		size += t.SyncAggregate.SizeSSZ()
-	}
-	size += 4 // Offset for field #9 'ExecutionPayload'
+	// Field #0 'RANDAOReveal' static (96 bytes)
+	// Field #1 'ETH1Data' static (72 bytes)
+	// Field #2 'Graffiti' static (32 bytes)
+	// Field #3 'ProposerSlashings' offset (4 bytes)
+	// Field #4 'AttesterSlashings' offset (4 bytes)
+	// Field #5 'Attestations' offset (4 bytes)
+	// Field #6 'Deposits' offset (4 bytes)
+	// Field #7 'VoluntaryExits' offset (4 bytes)
+	// Field #8 'SyncAggregate' static (160 bytes)
+	// Field #9 'ExecutionPayload' offset (4 bytes)
+	size += 384
 	{ // Dynamic field #3 'ProposerSlashings'
 		vlen := len(t.ProposerSlashings)
 		size += vlen * 416
@@ -203,37 +202,30 @@ func (t *BeaconBlockBody) SizeSSZ() (size int) {
 }
 
 func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
-	exproffset := 0
 	buflen := len(buf)
-	if buflen < 160+224 {
+	if buflen < 384 {
 		return sszutils.ErrUnexpectedEOF
 	}
 	{ // Field #0 'RANDAOReveal' (static)
 		buf := buf[0:96]
-		val1 := t.RANDAOReveal
-		copy(val1[:], buf)
-		t.RANDAOReveal = val1
+		copy(t.RANDAOReveal[:], buf)
 	}
 	{ // Field #1 'ETH1Data' (static)
 		buf := buf[96:168]
-		val2 := t.ETH1Data
-		if val2 == nil {
-			val2 = new(phase0.ETH1Data)
+		if t.ETH1Data == nil {
+			t.ETH1Data = new(phase0.ETH1Data)
 		}
-		if err = val2.UnmarshalSSZ(buf); err != nil {
+		if err = t.ETH1Data.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.ETH1Data = val2
 	}
 	{ // Field #2 'Graffiti' (static)
 		buf := buf[168:200]
-		val3 := t.Graffiti
-		copy(val3[:], buf)
-		t.Graffiti = val3
+		copy(t.Graffiti[:], buf)
 	}
 	// Field #3 'ProposerSlashings' (offset)
 	offset3 := int(sszutils.UnmarshallUint32(buf[200:204]))
-	if offset3 < 160+224 || offset3 > buflen {
+	if offset3 < 384 || offset3 > buflen {
 		return sszutils.ErrOffset
 	}
 	// Field #4 'AttesterSlashings' (offset)
@@ -257,50 +249,45 @@ func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 		return sszutils.ErrOffset
 	}
 	{ // Field #8 'SyncAggregate' (static)
-		buf := buf[220:160+220]
-		exproffset += int(160)
-		val4 := t.SyncAggregate
-		if val4 == nil {
-			val4 = new(altair.SyncAggregate)
+		buf := buf[220:380]
+		if t.SyncAggregate == nil {
+			t.SyncAggregate = new(altair.SyncAggregate)
 		}
-		if err = val4.UnmarshalSSZ(buf); err != nil {
+		if err = t.SyncAggregate.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.SyncAggregate = val4
 	}
 	// Field #9 'ExecutionPayload' (offset)
-	offset9 := int(sszutils.UnmarshallUint32(buf[exproffset+220:exproffset+224]))
+	offset9 := int(sszutils.UnmarshallUint32(buf[380:384]))
 	if offset9 < offset7 || offset9 > buflen {
 		return sszutils.ErrOffset
 	}
 	{ // Field #3 'ProposerSlashings' (dynamic)
 		buf := buf[offset3:offset4]
-		val5 := t.ProposerSlashings
-		itemCount := len(buf)/416
+		val1 := t.ProposerSlashings
+		itemCount := len(buf) / 416
 		if len(buf)%416 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val5) < itemCount) {
-			val5 = make([]*phase0.ProposerSlashing, itemCount)
-		} else if(len(val5) > itemCount) {
-			val5 = val5[:itemCount]
+		if len(val1) < itemCount {
+			val1 = make([]*phase0.ProposerSlashing, itemCount)
+		} else if len(val1) > itemCount {
+			val1 = val1[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val6 := val5[i]
-			if val6 == nil {
-				val6 = new(phase0.ProposerSlashing)
+			if val1[i] == nil {
+				val1[i] = new(phase0.ProposerSlashing)
 			}
-			buf := buf[416*i:416*(i+1)]
-			if err = val6.UnmarshalSSZ(buf); err != nil {
+			buf := buf[416*i : 416*(i+1)]
+			if err = val1[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val5[i] = val6
 		}
-		t.ProposerSlashings = val5
+		t.ProposerSlashings = val1
 	}
 	{ // Field #4 'AttesterSlashings' (dynamic)
 		buf := buf[offset4:offset5]
-		val7 := t.AttesterSlashings
+		val2 := t.AttesterSlashings
 		startOffset := int(0)
 		if len(buf) != 0 {
 			if len(buf) < 4 {
@@ -308,19 +295,19 @@ func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 			}
 			startOffset = int(sszutils.UnmarshallUint32(buf[0:4]))
 		}
-		itemCount := startOffset/4
+		itemCount := startOffset / 4
 		if startOffset%4 != 0 || len(buf) < startOffset {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val7) < itemCount) {
-			val7 = make([]*phase0.AttesterSlashing, itemCount)
-		} else if(len(val7) > itemCount) {
-			val7 = val7[:itemCount]
+		if len(val2) < itemCount {
+			val2 = make([]*phase0.AttesterSlashing, itemCount)
+		} else if len(val2) > itemCount {
+			val2 = val2[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
 			var endOffset int
 			if i < itemCount-1 {
-				endOffset = int(sszutils.UnmarshallUint32(buf[(i+1)*4:(i+2)*4]))
+				endOffset = int(sszutils.UnmarshallUint32(buf[(i+1)*4 : (i+2)*4]))
 			} else {
 				endOffset = len(buf)
 			}
@@ -329,20 +316,20 @@ func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 			}
 			buf := buf[startOffset:endOffset]
 			startOffset = endOffset
-			val8 := val7[i]
-			if val8 == nil {
-				val8 = new(phase0.AttesterSlashing)
+			val3 := val2[i]
+			if val3 == nil {
+				val3 = new(phase0.AttesterSlashing)
 			}
-			if err = val8.UnmarshalSSZ(buf); err != nil {
+			if err = val3.UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val7[i] = val8
+			val2[i] = val3
 		}
-		t.AttesterSlashings = val7
+		t.AttesterSlashings = val2
 	}
 	{ // Field #5 'Attestations' (dynamic)
 		buf := buf[offset5:offset6]
-		val9 := t.Attestations
+		val4 := t.Attestations
 		startOffset := int(0)
 		if len(buf) != 0 {
 			if len(buf) < 4 {
@@ -350,19 +337,19 @@ func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 			}
 			startOffset = int(sszutils.UnmarshallUint32(buf[0:4]))
 		}
-		itemCount := startOffset/4
+		itemCount := startOffset / 4
 		if startOffset%4 != 0 || len(buf) < startOffset {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val9) < itemCount) {
-			val9 = make([]*phase0.Attestation, itemCount)
-		} else if(len(val9) > itemCount) {
-			val9 = val9[:itemCount]
+		if len(val4) < itemCount {
+			val4 = make([]*phase0.Attestation, itemCount)
+		} else if len(val4) > itemCount {
+			val4 = val4[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
 			var endOffset int
 			if i < itemCount-1 {
-				endOffset = int(sszutils.UnmarshallUint32(buf[(i+1)*4:(i+2)*4]))
+				endOffset = int(sszutils.UnmarshallUint32(buf[(i+1)*4 : (i+2)*4]))
 			} else {
 				endOffset = len(buf)
 			}
@@ -371,77 +358,73 @@ func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 			}
 			buf := buf[startOffset:endOffset]
 			startOffset = endOffset
-			val10 := val9[i]
-			if val10 == nil {
-				val10 = new(phase0.Attestation)
+			val5 := val4[i]
+			if val5 == nil {
+				val5 = new(phase0.Attestation)
 			}
-			if err = val10.UnmarshalSSZ(buf); err != nil {
+			if err = val5.UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val9[i] = val10
+			val4[i] = val5
 		}
-		t.Attestations = val9
+		t.Attestations = val4
 	}
 	{ // Field #6 'Deposits' (dynamic)
 		buf := buf[offset6:offset7]
-		val11 := t.Deposits
-		itemCount := len(buf)/1240
+		val6 := t.Deposits
+		itemCount := len(buf) / 1240
 		if len(buf)%1240 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val11) < itemCount) {
-			val11 = make([]*phase0.Deposit, itemCount)
-		} else if(len(val11) > itemCount) {
-			val11 = val11[:itemCount]
+		if len(val6) < itemCount {
+			val6 = make([]*phase0.Deposit, itemCount)
+		} else if len(val6) > itemCount {
+			val6 = val6[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val12 := val11[i]
-			if val12 == nil {
-				val12 = new(phase0.Deposit)
+			if val6[i] == nil {
+				val6[i] = new(phase0.Deposit)
 			}
-			buf := buf[1240*i:1240*(i+1)]
-			if err = val12.UnmarshalSSZ(buf); err != nil {
+			buf := buf[1240*i : 1240*(i+1)]
+			if err = val6[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val11[i] = val12
 		}
-		t.Deposits = val11
+		t.Deposits = val6
 	}
 	{ // Field #7 'VoluntaryExits' (dynamic)
 		buf := buf[offset7:offset9]
-		val13 := t.VoluntaryExits
-		itemCount := len(buf)/112
+		val7 := t.VoluntaryExits
+		itemCount := len(buf) / 112
 		if len(buf)%112 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val13) < itemCount) {
-			val13 = make([]*phase0.SignedVoluntaryExit, itemCount)
-		} else if(len(val13) > itemCount) {
-			val13 = val13[:itemCount]
+		if len(val7) < itemCount {
+			val7 = make([]*phase0.SignedVoluntaryExit, itemCount)
+		} else if len(val7) > itemCount {
+			val7 = val7[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val14 := val13[i]
-			if val14 == nil {
-				val14 = new(phase0.SignedVoluntaryExit)
+			if val7[i] == nil {
+				val7[i] = new(phase0.SignedVoluntaryExit)
 			}
-			buf := buf[112*i:112*(i+1)]
-			if err = val14.UnmarshalSSZ(buf); err != nil {
+			buf := buf[112*i : 112*(i+1)]
+			if err = val7[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val13[i] = val14
 		}
-		t.VoluntaryExits = val13
+		t.VoluntaryExits = val7
 	}
 	{ // Field #9 'ExecutionPayload' (dynamic)
 		buf := buf[offset9:]
-		val15 := t.ExecutionPayload
-		if val15 == nil {
-			val15 = new(ExecutionPayload)
+		val8 := t.ExecutionPayload
+		if val8 == nil {
+			val8 = new(ExecutionPayload)
 		}
-		if err = val15.UnmarshalSSZ(buf); err != nil {
+		if err = val8.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.ExecutionPayload = val15
+		t.ExecutionPayload = val8
 	}
 	return nil
 }

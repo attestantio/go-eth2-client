@@ -53,9 +53,7 @@ func (t *SyncCommitteeMessage) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #1 'BeaconBlockRoot' (static)
 		buf := buf[8:40]
-		val1 := t.BeaconBlockRoot
-		copy(val1[:], buf)
-		t.BeaconBlockRoot = val1
+		copy(t.BeaconBlockRoot[:], buf)
 	}
 	{ // Field #2 'ValidatorIndex' (static)
 		buf := buf[40:48]
@@ -63,9 +61,7 @@ func (t *SyncCommitteeMessage) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #3 'Signature' (static)
 		buf := buf[48:144]
-		val2 := t.Signature
-		copy(val2[:], buf)
-		t.Signature = val2
+		copy(t.Signature[:], buf)
 	}
 	return nil
 }

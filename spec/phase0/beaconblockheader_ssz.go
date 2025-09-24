@@ -61,21 +61,15 @@ func (t *BeaconBlockHeader) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #2 'ParentRoot' (static)
 		buf := buf[16:48]
-		val1 := t.ParentRoot
-		copy(val1[:], buf)
-		t.ParentRoot = val1
+		copy(t.ParentRoot[:], buf)
 	}
 	{ // Field #3 'StateRoot' (static)
 		buf := buf[48:80]
-		val2 := t.StateRoot
-		copy(val2[:], buf)
-		t.StateRoot = val2
+		copy(t.StateRoot[:], buf)
 	}
 	{ // Field #4 'BodyRoot' (static)
 		buf := buf[80:112]
-		val3 := t.BodyRoot
-		copy(val3[:], buf)
-		t.BodyRoot = val3
+		copy(t.BodyRoot[:], buf)
 	}
 	return nil
 }

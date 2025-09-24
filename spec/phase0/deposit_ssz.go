@@ -53,44 +53,37 @@ func (t *Deposit) SizeSSZ() (size int) {
 }
 
 func (t *Deposit) UnmarshalSSZ(buf []byte) (err error) {
-	size1 := 32 * 33
-	exproffset := 0
 	buflen := len(buf)
-	if buflen < size1+184 {
+	if buflen < 1240 {
 		return sszutils.ErrUnexpectedEOF
 	}
 	{ // Field #0 'Proof' (static)
-		buf := buf[0:size1+0]
-		exproffset += int(size1)
+		buf := buf[0:1056]
 		val1 := t.Proof
-		if(len(val1) < 33) {
+		if len(val1) < 33 {
 			val1 = make([][]byte, 33)
-		} else if(len(val1) > 33) {
+		} else if len(val1) > 33 {
 			val1 = val1[:33]
 		}
 		for i := 0; i < 33; i++ {
-			val2 := val1[i]
-			buf := buf[32*i:32*(i+1)]
-			if(len(val2) < 32) {
-				val2 = make([]byte, 32)
-			} else if(len(val2) > 32) {
-				val2 = val2[:32]
+			buf := buf[32*i : 32*(i+1)]
+			if len(val1[i]) < 32 {
+				val1[i] = make([]byte, 32)
+			} else if len(val1[i]) > 32 {
+				val1[i] = val1[i][:32]
 			}
-			copy(val2[:], buf)
-			val1[i] = val2
+			copy(val1[i][:], buf)
 		}
 		t.Proof = val1
 	}
 	{ // Field #1 'Data' (static)
-		buf := buf[exproffset+0:exproffset+184]
-		val3 := t.Data
-		if val3 == nil {
-			val3 = new(DepositData)
+		buf := buf[1056:1240]
+		if t.Data == nil {
+			t.Data = new(DepositData)
 		}
-		if err = val3.UnmarshalSSZ(buf); err != nil {
+		if err = t.Data.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Data = val3
 	}
 	return nil
 }

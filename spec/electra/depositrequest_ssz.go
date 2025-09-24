@@ -61,20 +61,16 @@ func (t *DepositRequest) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'Pubkey' (static)
 		buf := buf[0:48]
-		val1 := t.Pubkey
-		copy(val1[:], buf)
-		t.Pubkey = val1
+		copy(t.Pubkey[:], buf)
 	}
 	{ // Field #1 'WithdrawalCredentials' (static)
 		buf := buf[48:80]
-		val2 := t.WithdrawalCredentials
-		if(len(val2) < 32) {
-			val2 = make([]byte, 32)
-		} else if(len(val2) > 32) {
-			val2 = val2[:32]
+		if len(t.WithdrawalCredentials) < 32 {
+			t.WithdrawalCredentials = make([]byte, 32)
+		} else if len(t.WithdrawalCredentials) > 32 {
+			t.WithdrawalCredentials = t.WithdrawalCredentials[:32]
 		}
-		copy(val2[:], buf)
-		t.WithdrawalCredentials = val2
+		copy(t.WithdrawalCredentials[:], buf)
 	}
 	{ // Field #2 'Amount' (static)
 		buf := buf[80:88]
@@ -82,9 +78,7 @@ func (t *DepositRequest) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #3 'Signature' (static)
 		buf := buf[88:184]
-		val3 := t.Signature
-		copy(val3[:], buf)
-		t.Signature = val3
+		copy(t.Signature[:], buf)
 	}
 	{ // Field #4 'Index' (static)
 		buf := buf[184:192]

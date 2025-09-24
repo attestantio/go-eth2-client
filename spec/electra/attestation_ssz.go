@@ -60,13 +60,11 @@ func (t *Attestation) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *Attestation) SizeSSZ() (size int) {
-	size += 4 // Offset for field #0 'AggregationBits'
-	size += 128 // Field #1 'Data'
-	size += 96 // Field #2 'Signature'
-	{ // Field #3 'CommitteeBits'
-		limit := 8
-		size += int(limit)
-	}
+	// Field #0 'AggregationBits' offset (4 bytes)
+	// Field #1 'Data' static (128 bytes)
+	// Field #2 'Signature' static (96 bytes)
+	// Field #3 'CommitteeBits' static (8 bytes)
+	size += 236
 	{ // Dynamic field #0 'AggregationBits'
 		size += len(t.AggregationBits)
 	}
@@ -74,57 +72,48 @@ func (t *Attestation) SizeSSZ() (size int) {
 }
 
 func (t *Attestation) UnmarshalSSZ(buf []byte) (err error) {
-	size1 := 1 * 8
-	exproffset := 0
 	buflen := len(buf)
-	if buflen < size1+228 {
+	if buflen < 236 {
 		return sszutils.ErrUnexpectedEOF
 	}
 	// Field #0 'AggregationBits' (offset)
 	offset0 := int(sszutils.UnmarshallUint32(buf[0:4]))
-	if offset0 < size1+228 || offset0 > buflen {
+	if offset0 < 236 || offset0 > buflen {
 		return sszutils.ErrOffset
 	}
 	{ // Field #1 'Data' (static)
 		buf := buf[4:132]
-		val1 := t.Data
-		if val1 == nil {
-			val1 = new(phase0.AttestationData)
+		if t.Data == nil {
+			t.Data = new(phase0.AttestationData)
 		}
-		if err = val1.UnmarshalSSZ(buf); err != nil {
+		if err = t.Data.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Data = val1
 	}
 	{ // Field #2 'Signature' (static)
 		buf := buf[132:228]
-		val2 := t.Signature
-		copy(val2[:], buf)
-		t.Signature = val2
+		copy(t.Signature[:], buf)
 	}
 	{ // Field #3 'CommitteeBits' (static)
-		buf := buf[228:size1+228]
-		exproffset += int(size1)
-		val3 := t.CommitteeBits
-		if(len(val3) < 8) {
-			val3 = make(go_bitfield.Bitvector64, 8)
-		} else if(len(val3) > 8) {
-			val3 = val3[:8]
+		buf := buf[228:236]
+		if len(t.CommitteeBits) < 8 {
+			t.CommitteeBits = make(go_bitfield.Bitvector64, 8)
+		} else if len(t.CommitteeBits) > 8 {
+			t.CommitteeBits = t.CommitteeBits[:8]
 		}
-		copy(val3[:], buf)
-		t.CommitteeBits = val3
+		copy(t.CommitteeBits[:], buf)
 	}
 	{ // Field #0 'AggregationBits' (dynamic)
 		buf := buf[offset0:]
-		val4 := t.AggregationBits
+		val1 := t.AggregationBits
 		limit := len(buf)
-		if(len(val4) < limit) {
-			val4 = make(go_bitfield.Bitlist, limit)
-		} else if(len(val4) > limit) {
-			val4 = val4[:limit]
+		if len(val1) < limit {
+			val1 = make(go_bitfield.Bitlist, limit)
+		} else if len(val1) > limit {
+			val1 = val1[:limit]
 		}
-		copy(val4[:], buf)
-		t.AggregationBits = val4
+		copy(val1[:], buf)
+		t.AggregationBits = val1
 	}
 	return nil
 }

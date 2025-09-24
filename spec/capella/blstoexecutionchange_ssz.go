@@ -49,15 +49,11 @@ func (t *BLSToExecutionChange) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #1 'FromBLSPubkey' (static)
 		buf := buf[8:56]
-		val1 := t.FromBLSPubkey
-		copy(val1[:], buf)
-		t.FromBLSPubkey = val1
+		copy(t.FromBLSPubkey[:], buf)
 	}
 	{ // Field #2 'ToExecutionAddress' (static)
 		buf := buf[56:76]
-		val2 := t.ToExecutionAddress
-		copy(val2[:], buf)
-		t.ToExecutionAddress = val2
+		copy(t.ToExecutionAddress[:], buf)
 	}
 	return nil
 }

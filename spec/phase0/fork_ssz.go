@@ -44,15 +44,11 @@ func (t *Fork) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'PreviousVersion' (static)
 		buf := buf[0:4]
-		val1 := t.PreviousVersion
-		copy(val1[:], buf)
-		t.PreviousVersion = val1
+		copy(t.PreviousVersion[:], buf)
 	}
 	{ // Field #1 'CurrentVersion' (static)
 		buf := buf[4:8]
-		val2 := t.CurrentVersion
-		copy(val2[:], buf)
-		t.CurrentVersion = val2
+		copy(t.CurrentVersion[:], buf)
 	}
 	{ // Field #2 'Epoch' (static)
 		buf := buf[8:16]

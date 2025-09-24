@@ -58,20 +58,16 @@ func (t *SingleAttestation) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #2 'Data' (static)
 		buf := buf[16:144]
-		val1 := t.Data
-		if val1 == nil {
-			val1 = new(phase0.AttestationData)
+		if t.Data == nil {
+			t.Data = new(phase0.AttestationData)
 		}
-		if err = val1.UnmarshalSSZ(buf); err != nil {
+		if err = t.Data.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Data = val1
 	}
 	{ // Field #3 'Signature' (static)
 		buf := buf[144:240]
-		val2 := t.Signature
-		copy(val2[:], buf)
-		t.Signature = val2
+		copy(t.Signature[:], buf)
 	}
 	return nil
 }

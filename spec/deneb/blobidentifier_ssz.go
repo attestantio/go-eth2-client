@@ -39,9 +39,7 @@ func (t *BlobIdentifier) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'BlockRoot' (static)
 		buf := buf[0:32]
-		val1 := t.BlockRoot
-		copy(val1[:], buf)
-		t.BlockRoot = val1
+		copy(t.BlockRoot[:], buf)
 	}
 	{ // Field #1 'Index' (static)
 		buf := buf[32:40]

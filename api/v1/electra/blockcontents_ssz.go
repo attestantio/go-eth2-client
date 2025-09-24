@@ -69,9 +69,10 @@ func (t *BlockContents) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *BlockContents) SizeSSZ() (size int) {
-	size += 4 // Offset for field #0 'Block'
-	size += 4 // Offset for field #1 'KZGProofs'
-	size += 4 // Offset for field #2 'Blobs'
+	// Field #0 'Block' offset (4 bytes)
+	// Field #1 'KZGProofs' offset (4 bytes)
+	// Field #2 'Blobs' offset (4 bytes)
+	size += 12
 	{ // Dynamic field #0 'Block'
 		size += t.Block.SizeSSZ()
 	}
@@ -120,42 +121,38 @@ func (t *BlockContents) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #1 'KZGProofs' (dynamic)
 		buf := buf[offset1:offset2]
 		val2 := t.KZGProofs
-		itemCount := len(buf)/48
+		itemCount := len(buf) / 48
 		if len(buf)%48 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val2) < itemCount) {
+		if len(val2) < itemCount {
 			val2 = make([]deneb.KZGProof, itemCount)
-		} else if(len(val2) > itemCount) {
+		} else if len(val2) > itemCount {
 			val2 = val2[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val3 := val2[i]
-			buf := buf[48*i:48*(i+1)]
-			copy(val3[:], buf)
-			val2[i] = val3
+			buf := buf[48*i : 48*(i+1)]
+			copy(val2[i][:], buf)
 		}
 		t.KZGProofs = val2
 	}
 	{ // Field #2 'Blobs' (dynamic)
 		buf := buf[offset2:]
-		val4 := t.Blobs
-		itemCount := len(buf)/131072
+		val3 := t.Blobs
+		itemCount := len(buf) / 131072
 		if len(buf)%131072 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val4) < itemCount) {
-			val4 = make([]deneb.Blob, itemCount)
-		} else if(len(val4) > itemCount) {
-			val4 = val4[:itemCount]
+		if len(val3) < itemCount {
+			val3 = make([]deneb.Blob, itemCount)
+		} else if len(val3) > itemCount {
+			val3 = val3[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val5 := val4[i]
-			buf := buf[131072*i:131072*(i+1)]
-			copy(val5[:], buf)
-			val4[i] = val5
+			buf := buf[131072*i : 131072*(i+1)]
+			copy(val3[i][:], buf)
 		}
-		t.Blobs = val4
+		t.Blobs = val3
 	}
 	return nil
 }

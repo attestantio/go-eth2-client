@@ -36,8 +36,9 @@ func (t *SignedBlindedBeaconBlock) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *SignedBlindedBeaconBlock) SizeSSZ() (size int) {
-	size += 4 // Offset for field #0 'Message'
-	size += 96 // Field #1 'Signature'
+	// Field #0 'Message' offset (4 bytes)
+	// Field #1 'Signature' static (96 bytes)
+	size += 100
 	{ // Dynamic field #0 'Message'
 		size += t.Message.SizeSSZ()
 	}
@@ -56,20 +57,18 @@ func (t *SignedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #1 'Signature' (static)
 		buf := buf[4:100]
-		val1 := t.Signature
-		copy(val1[:], buf)
-		t.Signature = val1
+		copy(t.Signature[:], buf)
 	}
 	{ // Field #0 'Message' (dynamic)
 		buf := buf[offset0:]
-		val2 := t.Message
-		if val2 == nil {
-			val2 = new(BlindedBeaconBlock)
+		val1 := t.Message
+		if val1 == nil {
+			val1 = new(BlindedBeaconBlock)
 		}
-		if err = val2.UnmarshalSSZ(buf); err != nil {
+		if err = val1.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Message = val2
+		t.Message = val1
 	}
 	return nil
 }

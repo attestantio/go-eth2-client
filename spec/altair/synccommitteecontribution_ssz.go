@@ -56,10 +56,8 @@ func (t *SyncCommitteeContribution) SizeSSZ() (size int) {
 }
 
 func (t *SyncCommitteeContribution) UnmarshalSSZ(buf []byte) (err error) {
-	size1 := 1 * 16
-	exproffset := 0
 	buflen := len(buf)
-	if buflen < size1+144 {
+	if buflen < 160 {
 		return sszutils.ErrUnexpectedEOF
 	}
 	{ // Field #0 'Slot' (static)
@@ -68,31 +66,24 @@ func (t *SyncCommitteeContribution) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #1 'BeaconBlockRoot' (static)
 		buf := buf[8:40]
-		val1 := t.BeaconBlockRoot
-		copy(val1[:], buf)
-		t.BeaconBlockRoot = val1
+		copy(t.BeaconBlockRoot[:], buf)
 	}
 	{ // Field #2 'SubcommitteeIndex' (static)
 		buf := buf[40:48]
 		t.SubcommitteeIndex = uint64(sszutils.UnmarshallUint64(buf))
 	}
 	{ // Field #3 'AggregationBits' (static)
-		buf := buf[48:size1+48]
-		exproffset += int(size1)
-		val2 := t.AggregationBits
-		if(len(val2) < 16) {
-			val2 = make(go_bitfield.Bitvector128, 16)
-		} else if(len(val2) > 16) {
-			val2 = val2[:16]
+		buf := buf[48:64]
+		if len(t.AggregationBits) < 16 {
+			t.AggregationBits = make(go_bitfield.Bitvector128, 16)
+		} else if len(t.AggregationBits) > 16 {
+			t.AggregationBits = t.AggregationBits[:16]
 		}
-		copy(val2[:], buf)
-		t.AggregationBits = val2
+		copy(t.AggregationBits[:], buf)
 	}
 	{ // Field #4 'Signature' (static)
-		buf := buf[exproffset+48:exproffset+144]
-		val3 := t.Signature
-		copy(val3[:], buf)
-		t.Signature = val3
+		buf := buf[64:160]
+		copy(t.Signature[:], buf)
 	}
 	return nil
 }

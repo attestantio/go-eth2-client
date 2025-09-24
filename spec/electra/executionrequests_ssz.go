@@ -78,9 +78,10 @@ func (t *ExecutionRequests) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *ExecutionRequests) SizeSSZ() (size int) {
-	size += 4 // Offset for field #0 'Deposits'
-	size += 4 // Offset for field #1 'Withdrawals'
-	size += 4 // Offset for field #2 'Consolidations'
+	// Field #0 'Deposits' offset (4 bytes)
+	// Field #1 'Withdrawals' offset (4 bytes)
+	// Field #2 'Consolidations' offset (4 bytes)
+	size += 12
 	{ // Dynamic field #0 'Deposits'
 		vlen := len(t.Deposits)
 		size += vlen * 192
@@ -119,77 +120,71 @@ func (t *ExecutionRequests) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #0 'Deposits' (dynamic)
 		buf := buf[offset0:offset1]
 		val1 := t.Deposits
-		itemCount := len(buf)/192
+		itemCount := len(buf) / 192
 		if len(buf)%192 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val1) < itemCount) {
+		if len(val1) < itemCount {
 			val1 = make([]*DepositRequest, itemCount)
-		} else if(len(val1) > itemCount) {
+		} else if len(val1) > itemCount {
 			val1 = val1[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val2 := val1[i]
-			if val2 == nil {
-				val2 = new(DepositRequest)
+			if val1[i] == nil {
+				val1[i] = new(DepositRequest)
 			}
-			buf := buf[192*i:192*(i+1)]
-			if err = val2.UnmarshalSSZ(buf); err != nil {
+			buf := buf[192*i : 192*(i+1)]
+			if err = val1[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val1[i] = val2
 		}
 		t.Deposits = val1
 	}
 	{ // Field #1 'Withdrawals' (dynamic)
 		buf := buf[offset1:offset2]
-		val3 := t.Withdrawals
-		itemCount := len(buf)/76
+		val2 := t.Withdrawals
+		itemCount := len(buf) / 76
 		if len(buf)%76 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val3) < itemCount) {
-			val3 = make([]*WithdrawalRequest, itemCount)
-		} else if(len(val3) > itemCount) {
-			val3 = val3[:itemCount]
+		if len(val2) < itemCount {
+			val2 = make([]*WithdrawalRequest, itemCount)
+		} else if len(val2) > itemCount {
+			val2 = val2[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val4 := val3[i]
-			if val4 == nil {
-				val4 = new(WithdrawalRequest)
+			if val2[i] == nil {
+				val2[i] = new(WithdrawalRequest)
 			}
-			buf := buf[76*i:76*(i+1)]
-			if err = val4.UnmarshalSSZ(buf); err != nil {
+			buf := buf[76*i : 76*(i+1)]
+			if err = val2[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val3[i] = val4
 		}
-		t.Withdrawals = val3
+		t.Withdrawals = val2
 	}
 	{ // Field #2 'Consolidations' (dynamic)
 		buf := buf[offset2:]
-		val5 := t.Consolidations
-		itemCount := len(buf)/116
+		val3 := t.Consolidations
+		itemCount := len(buf) / 116
 		if len(buf)%116 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val5) < itemCount) {
-			val5 = make([]*ConsolidationRequest, itemCount)
-		} else if(len(val5) > itemCount) {
-			val5 = val5[:itemCount]
+		if len(val3) < itemCount {
+			val3 = make([]*ConsolidationRequest, itemCount)
+		} else if len(val3) > itemCount {
+			val3 = val3[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val6 := val5[i]
-			if val6 == nil {
-				val6 = new(ConsolidationRequest)
+			if val3[i] == nil {
+				val3[i] = new(ConsolidationRequest)
 			}
-			buf := buf[116*i:116*(i+1)]
-			if err = val6.UnmarshalSSZ(buf); err != nil {
+			buf := buf[116*i : 116*(i+1)]
+			if err = val3[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val5[i] = val6
 		}
-		t.Consolidations = val5
+		t.Consolidations = val3
 	}
 	return nil
 }

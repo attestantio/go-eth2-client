@@ -63,31 +63,25 @@ func (t *AttestationData) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #2 'BeaconBlockRoot' (static)
 		buf := buf[16:48]
-		val1 := t.BeaconBlockRoot
-		copy(val1[:], buf)
-		t.BeaconBlockRoot = val1
+		copy(t.BeaconBlockRoot[:], buf)
 	}
 	{ // Field #3 'Source' (static)
 		buf := buf[48:88]
-		val2 := t.Source
-		if val2 == nil {
-			val2 = new(Checkpoint)
+		if t.Source == nil {
+			t.Source = new(Checkpoint)
 		}
-		if err = val2.UnmarshalSSZ(buf); err != nil {
+		if err = t.Source.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Source = val2
 	}
 	{ // Field #4 'Target' (static)
 		buf := buf[88:128]
-		val3 := t.Target
-		if val3 == nil {
-			val3 = new(Checkpoint)
+		if t.Target == nil {
+			t.Target = new(Checkpoint)
 		}
-		if err = val3.UnmarshalSSZ(buf); err != nil {
+		if err = t.Target.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Target = val3
 	}
 	return nil
 }

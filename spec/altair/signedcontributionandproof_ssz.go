@@ -35,28 +35,22 @@ func (t *SignedContributionAndProof) SizeSSZ() (size int) {
 }
 
 func (t *SignedContributionAndProof) UnmarshalSSZ(buf []byte) (err error) {
-	exproffset := 0
 	buflen := len(buf)
-	if buflen < 264+96 {
+	if buflen < 360 {
 		return sszutils.ErrUnexpectedEOF
 	}
 	{ // Field #0 'Message' (static)
-		buf := buf[0:264+0]
-		exproffset += int(264)
-		val1 := t.Message
-		if val1 == nil {
-			val1 = new(ContributionAndProof)
+		buf := buf[0:264]
+		if t.Message == nil {
+			t.Message = new(ContributionAndProof)
 		}
-		if err = val1.UnmarshalSSZ(buf); err != nil {
+		if err = t.Message.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Message = val1
 	}
 	{ // Field #1 'Signature' (static)
-		buf := buf[exproffset+0:exproffset+96]
-		val2 := t.Signature
-		copy(val2[:], buf)
-		t.Signature = val2
+		buf := buf[264:360]
+		copy(t.Signature[:], buf)
 	}
 	return nil
 }

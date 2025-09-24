@@ -40,9 +40,8 @@ func (t *ContributionAndProof) SizeSSZ() (size int) {
 }
 
 func (t *ContributionAndProof) UnmarshalSSZ(buf []byte) (err error) {
-	exproffset := 0
 	buflen := len(buf)
-	if buflen < 160+104 {
+	if buflen < 264 {
 		return sszutils.ErrUnexpectedEOF
 	}
 	{ // Field #0 'AggregatorIndex' (static)
@@ -50,22 +49,17 @@ func (t *ContributionAndProof) UnmarshalSSZ(buf []byte) (err error) {
 		t.AggregatorIndex = phase0.ValidatorIndex(sszutils.UnmarshallUint64(buf))
 	}
 	{ // Field #1 'Contribution' (static)
-		buf := buf[8:160+8]
-		exproffset += int(160)
-		val1 := t.Contribution
-		if val1 == nil {
-			val1 = new(SyncCommitteeContribution)
+		buf := buf[8:168]
+		if t.Contribution == nil {
+			t.Contribution = new(SyncCommitteeContribution)
 		}
-		if err = val1.UnmarshalSSZ(buf); err != nil {
+		if err = t.Contribution.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Contribution = val1
 	}
 	{ // Field #2 'SelectionProof' (static)
-		buf := buf[exproffset+8:exproffset+104]
-		val2 := t.SelectionProof
-		copy(val2[:], buf)
-		t.SelectionProof = val2
+		buf := buf[168:264]
+		copy(t.SelectionProof[:], buf)
 	}
 	return nil
 }

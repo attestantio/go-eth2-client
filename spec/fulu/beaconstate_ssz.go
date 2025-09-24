@@ -424,63 +424,45 @@ func (t *BeaconState) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *BeaconState) SizeSSZ() (size int) {
-	size += 8 // Field #0 'GenesisTime'
-	size += 32 // Field #1 'GenesisValidatorsRoot'
-	size += 8 // Field #2 'Slot'
-	size += 16 // Field #3 'Fork'
-	size += 112 // Field #4 'LatestBlockHeader'
-	{ // Field #5 'BlockRoots'
-		limit := 8192
-		size += int(limit) * 32
-	}
-	{ // Field #6 'StateRoots'
-		limit := 8192
-		size += int(limit) * 32
-	}
-	size += 4 // Offset for field #7 'HistoricalRoots'
-	size += 72 // Field #8 'ETH1Data'
-	size += 4 // Offset for field #9 'ETH1DataVotes'
-	size += 8 // Field #10 'ETH1DepositIndex'
-	size += 4 // Offset for field #11 'Validators'
-	size += 4 // Offset for field #12 'Balances'
-	{ // Field #13 'RANDAOMixes'
-		limit := 65536
-		size += int(limit) * 32
-	}
-	{ // Field #14 'Slashings'
-		limit := 8192
-		size += int(limit) * 8
-	}
-	size += 4 // Offset for field #15 'PreviousEpochParticipation'
-	size += 4 // Offset for field #16 'CurrentEpochParticipation'
-	size += 1 // Field #17 'JustificationBits'
-	size += 40 // Field #18 'PreviousJustifiedCheckpoint'
-	size += 40 // Field #19 'CurrentJustifiedCheckpoint'
-	size += 40 // Field #20 'FinalizedCheckpoint'
-	size += 4 // Offset for field #21 'InactivityScores'
-	{ // Field #22 'CurrentSyncCommittee'
-		size += t.CurrentSyncCommittee.SizeSSZ()
-	}
-	{ // Field #23 'NextSyncCommittee'
-		size += t.NextSyncCommittee.SizeSSZ()
-	}
-	size += 4 // Offset for field #24 'LatestExecutionPayloadHeader'
-	size += 8 // Field #25 'NextWithdrawalIndex'
-	size += 8 // Field #26 'NextWithdrawalValidatorIndex'
-	size += 4 // Offset for field #27 'HistoricalSummaries'
-	size += 8 // Field #28 'DepositRequestsStartIndex'
-	size += 8 // Field #29 'DepositBalanceToConsume'
-	size += 8 // Field #30 'ExitBalanceToConsume'
-	size += 8 // Field #31 'EarliestExitEpoch'
-	size += 8 // Field #32 'ConsolidationBalanceToConsume'
-	size += 8 // Field #33 'EarliestConsolidationEpoch'
-	size += 4 // Offset for field #34 'PendingDeposits'
-	size += 4 // Offset for field #35 'PendingPartialWithdrawals'
-	size += 4 // Offset for field #36 'PendingConsolidations'
-	{ // Field #37 'ProposerLookahead'
-		limit := 64
-		size += int(limit) * 8
-	}
+	// Field #0 'GenesisTime' static (8 bytes)
+	// Field #1 'GenesisValidatorsRoot' static (32 bytes)
+	// Field #2 'Slot' static (8 bytes)
+	// Field #3 'Fork' static (16 bytes)
+	// Field #4 'LatestBlockHeader' static (112 bytes)
+	// Field #5 'BlockRoots' static (262144 bytes)
+	// Field #6 'StateRoots' static (262144 bytes)
+	// Field #7 'HistoricalRoots' offset (4 bytes)
+	// Field #8 'ETH1Data' static (72 bytes)
+	// Field #9 'ETH1DataVotes' offset (4 bytes)
+	// Field #10 'ETH1DepositIndex' static (8 bytes)
+	// Field #11 'Validators' offset (4 bytes)
+	// Field #12 'Balances' offset (4 bytes)
+	// Field #13 'RANDAOMixes' static (2097152 bytes)
+	// Field #14 'Slashings' static (65536 bytes)
+	// Field #15 'PreviousEpochParticipation' offset (4 bytes)
+	// Field #16 'CurrentEpochParticipation' offset (4 bytes)
+	// Field #17 'JustificationBits' static (1 bytes)
+	// Field #18 'PreviousJustifiedCheckpoint' static (40 bytes)
+	// Field #19 'CurrentJustifiedCheckpoint' static (40 bytes)
+	// Field #20 'FinalizedCheckpoint' static (40 bytes)
+	// Field #21 'InactivityScores' offset (4 bytes)
+	// Field #22 'CurrentSyncCommittee' static (24624 bytes)
+	// Field #23 'NextSyncCommittee' static (24624 bytes)
+	// Field #24 'LatestExecutionPayloadHeader' offset (4 bytes)
+	// Field #25 'NextWithdrawalIndex' static (8 bytes)
+	// Field #26 'NextWithdrawalValidatorIndex' static (8 bytes)
+	// Field #27 'HistoricalSummaries' offset (4 bytes)
+	// Field #28 'DepositRequestsStartIndex' static (8 bytes)
+	// Field #29 'DepositBalanceToConsume' static (8 bytes)
+	// Field #30 'ExitBalanceToConsume' static (8 bytes)
+	// Field #31 'EarliestExitEpoch' static (8 bytes)
+	// Field #32 'ConsolidationBalanceToConsume' static (8 bytes)
+	// Field #33 'EarliestConsolidationEpoch' static (8 bytes)
+	// Field #34 'PendingDeposits' offset (4 bytes)
+	// Field #35 'PendingPartialWithdrawals' offset (4 bytes)
+	// Field #36 'PendingConsolidations' offset (4 bytes)
+	// Field #37 'ProposerLookahead' static (512 bytes)
+	size += 2737225
 	{ // Dynamic field #7 'HistoricalRoots'
 		vlen := len(t.HistoricalRoots)
 		size += vlen * 32
@@ -532,14 +514,8 @@ func (t *BeaconState) SizeSSZ() (size int) {
 }
 
 func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
-	size1 := 32 * 8192
-	size2 := 32 * 8192
-	size3 := 32 * 65536
-	size4 := 8 * 8192
-	size5 := 8 * 64
-	exproffset := 0
 	buflen := len(buf)
-	if buflen < size1+size2+size3+size4+24624+24624+size5+489 {
+	if buflen < 2737225 {
 		return sszutils.ErrUnexpectedEOF
 	}
 	{ // Field #0 'GenesisTime' (static)
@@ -548,9 +524,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #1 'GenesisValidatorsRoot' (static)
 		buf := buf[8:40]
-		val1 := t.GenesisValidatorsRoot
-		copy(val1[:], buf)
-		t.GenesisValidatorsRoot = val1
+		copy(t.GenesisValidatorsRoot[:], buf)
 	}
 	{ // Field #2 'Slot' (static)
 		buf := buf[40:48]
@@ -558,534 +532,483 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #3 'Fork' (static)
 		buf := buf[48:64]
-		val2 := t.Fork
-		if val2 == nil {
-			val2 = new(phase0.Fork)
+		if t.Fork == nil {
+			t.Fork = new(phase0.Fork)
 		}
-		if err = val2.UnmarshalSSZ(buf); err != nil {
+		if err = t.Fork.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Fork = val2
 	}
 	{ // Field #4 'LatestBlockHeader' (static)
 		buf := buf[64:176]
-		val3 := t.LatestBlockHeader
-		if val3 == nil {
-			val3 = new(phase0.BeaconBlockHeader)
+		if t.LatestBlockHeader == nil {
+			t.LatestBlockHeader = new(phase0.BeaconBlockHeader)
 		}
-		if err = val3.UnmarshalSSZ(buf); err != nil {
+		if err = t.LatestBlockHeader.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.LatestBlockHeader = val3
 	}
 	{ // Field #5 'BlockRoots' (static)
-		buf := buf[176:size1+176]
-		exproffset += int(size1)
-		val4 := t.BlockRoots
-		if(len(val4) < 8192) {
-			val4 = make([]phase0.Root, 8192)
-		} else if(len(val4) > 8192) {
-			val4 = val4[:8192]
+		buf := buf[176:262320]
+		val1 := t.BlockRoots
+		if len(val1) < 8192 {
+			val1 = make([]phase0.Root, 8192)
+		} else if len(val1) > 8192 {
+			val1 = val1[:8192]
 		}
 		for i := 0; i < 8192; i++ {
-			val5 := val4[i]
-			buf := buf[32*i:32*(i+1)]
-			copy(val5[:], buf)
-			val4[i] = val5
+			buf := buf[32*i : 32*(i+1)]
+			copy(val1[i][:], buf)
 		}
-		t.BlockRoots = val4
+		t.BlockRoots = val1
 	}
 	{ // Field #6 'StateRoots' (static)
-		buf := buf[exproffset+176:exproffset+size2+176]
-		exproffset += int(size2)
-		val6 := t.StateRoots
-		if(len(val6) < 8192) {
-			val6 = make([]phase0.Root, 8192)
-		} else if(len(val6) > 8192) {
-			val6 = val6[:8192]
+		buf := buf[262320:524464]
+		val2 := t.StateRoots
+		if len(val2) < 8192 {
+			val2 = make([]phase0.Root, 8192)
+		} else if len(val2) > 8192 {
+			val2 = val2[:8192]
 		}
 		for i := 0; i < 8192; i++ {
-			val7 := val6[i]
-			buf := buf[32*i:32*(i+1)]
-			copy(val7[:], buf)
-			val6[i] = val7
+			buf := buf[32*i : 32*(i+1)]
+			copy(val2[i][:], buf)
 		}
-		t.StateRoots = val6
+		t.StateRoots = val2
 	}
 	// Field #7 'HistoricalRoots' (offset)
-	offset7 := int(sszutils.UnmarshallUint32(buf[exproffset+176:exproffset+180]))
-	if offset7 < size1+size2+size3+size4+24624+24624+size5+489 || offset7 > buflen {
+	offset7 := int(sszutils.UnmarshallUint32(buf[524464:524468]))
+	if offset7 < 2737225 || offset7 > buflen {
 		return sszutils.ErrOffset
 	}
 	{ // Field #8 'ETH1Data' (static)
-		buf := buf[exproffset+180:exproffset+252]
-		val8 := t.ETH1Data
-		if val8 == nil {
-			val8 = new(phase0.ETH1Data)
+		buf := buf[524468:524540]
+		if t.ETH1Data == nil {
+			t.ETH1Data = new(phase0.ETH1Data)
 		}
-		if err = val8.UnmarshalSSZ(buf); err != nil {
+		if err = t.ETH1Data.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.ETH1Data = val8
 	}
 	// Field #9 'ETH1DataVotes' (offset)
-	offset9 := int(sszutils.UnmarshallUint32(buf[exproffset+252:exproffset+256]))
+	offset9 := int(sszutils.UnmarshallUint32(buf[524540:524544]))
 	if offset9 < offset7 || offset9 > buflen {
 		return sszutils.ErrOffset
 	}
 	{ // Field #10 'ETH1DepositIndex' (static)
-		buf := buf[exproffset+256:exproffset+264]
+		buf := buf[524544:524552]
 		t.ETH1DepositIndex = uint64(sszutils.UnmarshallUint64(buf))
 	}
 	// Field #11 'Validators' (offset)
-	offset11 := int(sszutils.UnmarshallUint32(buf[exproffset+264:exproffset+268]))
+	offset11 := int(sszutils.UnmarshallUint32(buf[524552:524556]))
 	if offset11 < offset9 || offset11 > buflen {
 		return sszutils.ErrOffset
 	}
 	// Field #12 'Balances' (offset)
-	offset12 := int(sszutils.UnmarshallUint32(buf[exproffset+268:exproffset+272]))
+	offset12 := int(sszutils.UnmarshallUint32(buf[524556:524560]))
 	if offset12 < offset11 || offset12 > buflen {
 		return sszutils.ErrOffset
 	}
 	{ // Field #13 'RANDAOMixes' (static)
-		buf := buf[exproffset+272:exproffset+size3+272]
-		exproffset += int(size3)
-		val9 := t.RANDAOMixes
-		if(len(val9) < 65536) {
-			val9 = make([]phase0.Root, 65536)
-		} else if(len(val9) > 65536) {
-			val9 = val9[:65536]
+		buf := buf[524560:2621712]
+		val3 := t.RANDAOMixes
+		if len(val3) < 65536 {
+			val3 = make([]phase0.Root, 65536)
+		} else if len(val3) > 65536 {
+			val3 = val3[:65536]
 		}
 		for i := 0; i < 65536; i++ {
-			val10 := val9[i]
-			buf := buf[32*i:32*(i+1)]
-			copy(val10[:], buf)
-			val9[i] = val10
+			buf := buf[32*i : 32*(i+1)]
+			copy(val3[i][:], buf)
 		}
-		t.RANDAOMixes = val9
+		t.RANDAOMixes = val3
 	}
 	{ // Field #14 'Slashings' (static)
-		buf := buf[exproffset+272:exproffset+size4+272]
-		exproffset += int(size4)
-		val11 := t.Slashings
-		if(len(val11) < 8192) {
-			val11 = make([]phase0.Gwei, 8192)
-		} else if(len(val11) > 8192) {
-			val11 = val11[:8192]
+		buf := buf[2621712:2687248]
+		val4 := t.Slashings
+		if len(val4) < 8192 {
+			val4 = make([]phase0.Gwei, 8192)
+		} else if len(val4) > 8192 {
+			val4 = val4[:8192]
 		}
 		for i := 0; i < 8192; i++ {
-			buf := buf[8*i:8*(i+1)]
-			val11[i] = phase0.Gwei(sszutils.UnmarshallUint64(buf))
+			buf := buf[8*i : 8*(i+1)]
+			val4[i] = phase0.Gwei(sszutils.UnmarshallUint64(buf))
 		}
-		t.Slashings = val11
+		t.Slashings = val4
 	}
 	// Field #15 'PreviousEpochParticipation' (offset)
-	offset15 := int(sszutils.UnmarshallUint32(buf[exproffset+272:exproffset+276]))
+	offset15 := int(sszutils.UnmarshallUint32(buf[2687248:2687252]))
 	if offset15 < offset12 || offset15 > buflen {
 		return sszutils.ErrOffset
 	}
 	// Field #16 'CurrentEpochParticipation' (offset)
-	offset16 := int(sszutils.UnmarshallUint32(buf[exproffset+276:exproffset+280]))
+	offset16 := int(sszutils.UnmarshallUint32(buf[2687252:2687256]))
 	if offset16 < offset15 || offset16 > buflen {
 		return sszutils.ErrOffset
 	}
 	{ // Field #17 'JustificationBits' (static)
-		buf := buf[exproffset+280:exproffset+281]
-		val12 := t.JustificationBits
-		if(len(val12) < 1) {
-			val12 = make(go_bitfield.Bitvector4, 1)
-		} else if(len(val12) > 1) {
-			val12 = val12[:1]
+		buf := buf[2687256:2687257]
+		if len(t.JustificationBits) < 1 {
+			t.JustificationBits = make(go_bitfield.Bitvector4, 1)
+		} else if len(t.JustificationBits) > 1 {
+			t.JustificationBits = t.JustificationBits[:1]
 		}
-		copy(val12[:], buf)
-		t.JustificationBits = val12
+		copy(t.JustificationBits[:], buf)
 	}
 	{ // Field #18 'PreviousJustifiedCheckpoint' (static)
-		buf := buf[exproffset+281:exproffset+321]
-		val13 := t.PreviousJustifiedCheckpoint
-		if val13 == nil {
-			val13 = new(phase0.Checkpoint)
+		buf := buf[2687257:2687297]
+		if t.PreviousJustifiedCheckpoint == nil {
+			t.PreviousJustifiedCheckpoint = new(phase0.Checkpoint)
 		}
-		if err = val13.UnmarshalSSZ(buf); err != nil {
+		if err = t.PreviousJustifiedCheckpoint.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.PreviousJustifiedCheckpoint = val13
 	}
 	{ // Field #19 'CurrentJustifiedCheckpoint' (static)
-		buf := buf[exproffset+321:exproffset+361]
-		val14 := t.CurrentJustifiedCheckpoint
-		if val14 == nil {
-			val14 = new(phase0.Checkpoint)
+		buf := buf[2687297:2687337]
+		if t.CurrentJustifiedCheckpoint == nil {
+			t.CurrentJustifiedCheckpoint = new(phase0.Checkpoint)
 		}
-		if err = val14.UnmarshalSSZ(buf); err != nil {
+		if err = t.CurrentJustifiedCheckpoint.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.CurrentJustifiedCheckpoint = val14
 	}
 	{ // Field #20 'FinalizedCheckpoint' (static)
-		buf := buf[exproffset+361:exproffset+401]
-		val15 := t.FinalizedCheckpoint
-		if val15 == nil {
-			val15 = new(phase0.Checkpoint)
+		buf := buf[2687337:2687377]
+		if t.FinalizedCheckpoint == nil {
+			t.FinalizedCheckpoint = new(phase0.Checkpoint)
 		}
-		if err = val15.UnmarshalSSZ(buf); err != nil {
+		if err = t.FinalizedCheckpoint.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.FinalizedCheckpoint = val15
 	}
 	// Field #21 'InactivityScores' (offset)
-	offset21 := int(sszutils.UnmarshallUint32(buf[exproffset+401:exproffset+405]))
+	offset21 := int(sszutils.UnmarshallUint32(buf[2687377:2687381]))
 	if offset21 < offset16 || offset21 > buflen {
 		return sszutils.ErrOffset
 	}
 	{ // Field #22 'CurrentSyncCommittee' (static)
-		buf := buf[exproffset+405:exproffset+24624+405]
-		exproffset += int(24624)
-		val16 := t.CurrentSyncCommittee
-		if val16 == nil {
-			val16 = new(altair.SyncCommittee)
+		buf := buf[2687381:2712005]
+		if t.CurrentSyncCommittee == nil {
+			t.CurrentSyncCommittee = new(altair.SyncCommittee)
 		}
-		if err = val16.UnmarshalSSZ(buf); err != nil {
+		if err = t.CurrentSyncCommittee.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.CurrentSyncCommittee = val16
 	}
 	{ // Field #23 'NextSyncCommittee' (static)
-		buf := buf[exproffset+405:exproffset+24624+405]
-		exproffset += int(24624)
-		val17 := t.NextSyncCommittee
-		if val17 == nil {
-			val17 = new(altair.SyncCommittee)
+		buf := buf[2712005:2736629]
+		if t.NextSyncCommittee == nil {
+			t.NextSyncCommittee = new(altair.SyncCommittee)
 		}
-		if err = val17.UnmarshalSSZ(buf); err != nil {
+		if err = t.NextSyncCommittee.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.NextSyncCommittee = val17
 	}
 	// Field #24 'LatestExecutionPayloadHeader' (offset)
-	offset24 := int(sszutils.UnmarshallUint32(buf[exproffset+405:exproffset+409]))
+	offset24 := int(sszutils.UnmarshallUint32(buf[2736629:2736633]))
 	if offset24 < offset21 || offset24 > buflen {
 		return sszutils.ErrOffset
 	}
 	{ // Field #25 'NextWithdrawalIndex' (static)
-		buf := buf[exproffset+409:exproffset+417]
+		buf := buf[2736633:2736641]
 		t.NextWithdrawalIndex = capella.WithdrawalIndex(sszutils.UnmarshallUint64(buf))
 	}
 	{ // Field #26 'NextWithdrawalValidatorIndex' (static)
-		buf := buf[exproffset+417:exproffset+425]
+		buf := buf[2736641:2736649]
 		t.NextWithdrawalValidatorIndex = phase0.ValidatorIndex(sszutils.UnmarshallUint64(buf))
 	}
 	// Field #27 'HistoricalSummaries' (offset)
-	offset27 := int(sszutils.UnmarshallUint32(buf[exproffset+425:exproffset+429]))
+	offset27 := int(sszutils.UnmarshallUint32(buf[2736649:2736653]))
 	if offset27 < offset24 || offset27 > buflen {
 		return sszutils.ErrOffset
 	}
 	{ // Field #28 'DepositRequestsStartIndex' (static)
-		buf := buf[exproffset+429:exproffset+437]
+		buf := buf[2736653:2736661]
 		t.DepositRequestsStartIndex = uint64(sszutils.UnmarshallUint64(buf))
 	}
 	{ // Field #29 'DepositBalanceToConsume' (static)
-		buf := buf[exproffset+437:exproffset+445]
+		buf := buf[2736661:2736669]
 		t.DepositBalanceToConsume = phase0.Gwei(sszutils.UnmarshallUint64(buf))
 	}
 	{ // Field #30 'ExitBalanceToConsume' (static)
-		buf := buf[exproffset+445:exproffset+453]
+		buf := buf[2736669:2736677]
 		t.ExitBalanceToConsume = phase0.Gwei(sszutils.UnmarshallUint64(buf))
 	}
 	{ // Field #31 'EarliestExitEpoch' (static)
-		buf := buf[exproffset+453:exproffset+461]
+		buf := buf[2736677:2736685]
 		t.EarliestExitEpoch = phase0.Epoch(sszutils.UnmarshallUint64(buf))
 	}
 	{ // Field #32 'ConsolidationBalanceToConsume' (static)
-		buf := buf[exproffset+461:exproffset+469]
+		buf := buf[2736685:2736693]
 		t.ConsolidationBalanceToConsume = phase0.Gwei(sszutils.UnmarshallUint64(buf))
 	}
 	{ // Field #33 'EarliestConsolidationEpoch' (static)
-		buf := buf[exproffset+469:exproffset+477]
+		buf := buf[2736693:2736701]
 		t.EarliestConsolidationEpoch = phase0.Epoch(sszutils.UnmarshallUint64(buf))
 	}
 	// Field #34 'PendingDeposits' (offset)
-	offset34 := int(sszutils.UnmarshallUint32(buf[exproffset+477:exproffset+481]))
+	offset34 := int(sszutils.UnmarshallUint32(buf[2736701:2736705]))
 	if offset34 < offset27 || offset34 > buflen {
 		return sszutils.ErrOffset
 	}
 	// Field #35 'PendingPartialWithdrawals' (offset)
-	offset35 := int(sszutils.UnmarshallUint32(buf[exproffset+481:exproffset+485]))
+	offset35 := int(sszutils.UnmarshallUint32(buf[2736705:2736709]))
 	if offset35 < offset34 || offset35 > buflen {
 		return sszutils.ErrOffset
 	}
 	// Field #36 'PendingConsolidations' (offset)
-	offset36 := int(sszutils.UnmarshallUint32(buf[exproffset+485:exproffset+489]))
+	offset36 := int(sszutils.UnmarshallUint32(buf[2736709:2736713]))
 	if offset36 < offset35 || offset36 > buflen {
 		return sszutils.ErrOffset
 	}
 	{ // Field #37 'ProposerLookahead' (static)
-		buf := buf[exproffset+489:exproffset+size5+489]
-		exproffset += int(size5)
-		val18 := t.ProposerLookahead
-		if(len(val18) < 64) {
-			val18 = make([]phase0.ValidatorIndex, 64)
-		} else if(len(val18) > 64) {
-			val18 = val18[:64]
+		buf := buf[2736713:2737225]
+		val5 := t.ProposerLookahead
+		if len(val5) < 64 {
+			val5 = make([]phase0.ValidatorIndex, 64)
+		} else if len(val5) > 64 {
+			val5 = val5[:64]
 		}
 		for i := 0; i < 64; i++ {
-			buf := buf[8*i:8*(i+1)]
-			val18[i] = phase0.ValidatorIndex(sszutils.UnmarshallUint64(buf))
+			buf := buf[8*i : 8*(i+1)]
+			val5[i] = phase0.ValidatorIndex(sszutils.UnmarshallUint64(buf))
 		}
-		t.ProposerLookahead = val18
+		t.ProposerLookahead = val5
 	}
 	{ // Field #7 'HistoricalRoots' (dynamic)
 		buf := buf[offset7:offset9]
-		val19 := t.HistoricalRoots
-		itemCount := len(buf)/32
+		val6 := t.HistoricalRoots
+		itemCount := len(buf) / 32
 		if len(buf)%32 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val19) < itemCount) {
-			val19 = make([]phase0.Root, itemCount)
-		} else if(len(val19) > itemCount) {
-			val19 = val19[:itemCount]
+		if len(val6) < itemCount {
+			val6 = make([]phase0.Root, itemCount)
+		} else if len(val6) > itemCount {
+			val6 = val6[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val20 := val19[i]
-			buf := buf[32*i:32*(i+1)]
-			copy(val20[:], buf)
-			val19[i] = val20
+			buf := buf[32*i : 32*(i+1)]
+			copy(val6[i][:], buf)
 		}
-		t.HistoricalRoots = val19
+		t.HistoricalRoots = val6
 	}
 	{ // Field #9 'ETH1DataVotes' (dynamic)
 		buf := buf[offset9:offset11]
-		val21 := t.ETH1DataVotes
-		itemCount := len(buf)/72
+		val7 := t.ETH1DataVotes
+		itemCount := len(buf) / 72
 		if len(buf)%72 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val21) < itemCount) {
-			val21 = make([]*phase0.ETH1Data, itemCount)
-		} else if(len(val21) > itemCount) {
-			val21 = val21[:itemCount]
+		if len(val7) < itemCount {
+			val7 = make([]*phase0.ETH1Data, itemCount)
+		} else if len(val7) > itemCount {
+			val7 = val7[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val22 := val21[i]
-			if val22 == nil {
-				val22 = new(phase0.ETH1Data)
+			if val7[i] == nil {
+				val7[i] = new(phase0.ETH1Data)
 			}
-			buf := buf[72*i:72*(i+1)]
-			if err = val22.UnmarshalSSZ(buf); err != nil {
+			buf := buf[72*i : 72*(i+1)]
+			if err = val7[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val21[i] = val22
 		}
-		t.ETH1DataVotes = val21
+		t.ETH1DataVotes = val7
 	}
 	{ // Field #11 'Validators' (dynamic)
 		buf := buf[offset11:offset12]
-		val23 := t.Validators
-		itemCount := len(buf)/121
+		val8 := t.Validators
+		itemCount := len(buf) / 121
 		if len(buf)%121 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val23) < itemCount) {
-			val23 = make([]*phase0.Validator, itemCount)
-		} else if(len(val23) > itemCount) {
-			val23 = val23[:itemCount]
+		if len(val8) < itemCount {
+			val8 = make([]*phase0.Validator, itemCount)
+		} else if len(val8) > itemCount {
+			val8 = val8[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val24 := val23[i]
-			if val24 == nil {
-				val24 = new(phase0.Validator)
+			if val8[i] == nil {
+				val8[i] = new(phase0.Validator)
 			}
-			buf := buf[121*i:121*(i+1)]
-			if err = val24.UnmarshalSSZ(buf); err != nil {
+			buf := buf[121*i : 121*(i+1)]
+			if err = val8[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val23[i] = val24
 		}
-		t.Validators = val23
+		t.Validators = val8
 	}
 	{ // Field #12 'Balances' (dynamic)
 		buf := buf[offset12:offset15]
-		val25 := t.Balances
-		itemCount := len(buf)/8
+		val9 := t.Balances
+		itemCount := len(buf) / 8
 		if len(buf)%8 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val25) < itemCount) {
-			val25 = make([]phase0.Gwei, itemCount)
-		} else if(len(val25) > itemCount) {
-			val25 = val25[:itemCount]
+		if len(val9) < itemCount {
+			val9 = make([]phase0.Gwei, itemCount)
+		} else if len(val9) > itemCount {
+			val9 = val9[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			buf := buf[8*i:8*(i+1)]
-			val25[i] = phase0.Gwei(sszutils.UnmarshallUint64(buf))
+			buf := buf[8*i : 8*(i+1)]
+			val9[i] = phase0.Gwei(sszutils.UnmarshallUint64(buf))
 		}
-		t.Balances = val25
+		t.Balances = val9
 	}
 	{ // Field #15 'PreviousEpochParticipation' (dynamic)
 		buf := buf[offset15:offset16]
-		val26 := t.PreviousEpochParticipation
-		itemCount := len(buf)/1
-		if len(buf)%1 != 0 {
-			return sszutils.ErrUnexpectedEOF
-		}
-		if(len(val26) < itemCount) {
-			val26 = make([]altair.ParticipationFlags, itemCount)
-		} else if(len(val26) > itemCount) {
-			val26 = val26[:itemCount]
+		val10 := t.PreviousEpochParticipation
+		itemCount := len(buf)
+		if len(val10) < itemCount {
+			val10 = make([]altair.ParticipationFlags, itemCount)
+		} else if len(val10) > itemCount {
+			val10 = val10[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			buf := buf[1*i:1*(i+1)]
-			val26[i] = altair.ParticipationFlags(sszutils.UnmarshallUint8(buf))
+			buf := buf[1*i : 1*(i+1)]
+			val10[i] = altair.ParticipationFlags(sszutils.UnmarshallUint8(buf))
 		}
-		t.PreviousEpochParticipation = val26
+		t.PreviousEpochParticipation = val10
 	}
 	{ // Field #16 'CurrentEpochParticipation' (dynamic)
 		buf := buf[offset16:offset21]
-		val27 := t.CurrentEpochParticipation
-		itemCount := len(buf)/1
-		if len(buf)%1 != 0 {
-			return sszutils.ErrUnexpectedEOF
-		}
-		if(len(val27) < itemCount) {
-			val27 = make([]altair.ParticipationFlags, itemCount)
-		} else if(len(val27) > itemCount) {
-			val27 = val27[:itemCount]
+		val11 := t.CurrentEpochParticipation
+		itemCount := len(buf)
+		if len(val11) < itemCount {
+			val11 = make([]altair.ParticipationFlags, itemCount)
+		} else if len(val11) > itemCount {
+			val11 = val11[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			buf := buf[1*i:1*(i+1)]
-			val27[i] = altair.ParticipationFlags(sszutils.UnmarshallUint8(buf))
+			buf := buf[1*i : 1*(i+1)]
+			val11[i] = altair.ParticipationFlags(sszutils.UnmarshallUint8(buf))
 		}
-		t.CurrentEpochParticipation = val27
+		t.CurrentEpochParticipation = val11
 	}
 	{ // Field #21 'InactivityScores' (dynamic)
 		buf := buf[offset21:offset24]
-		val28 := t.InactivityScores
-		itemCount := len(buf)/8
+		val12 := t.InactivityScores
+		itemCount := len(buf) / 8
 		if len(buf)%8 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val28) < itemCount) {
-			val28 = make([]uint64, itemCount)
-		} else if(len(val28) > itemCount) {
-			val28 = val28[:itemCount]
+		if len(val12) < itemCount {
+			val12 = make([]uint64, itemCount)
+		} else if len(val12) > itemCount {
+			val12 = val12[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			buf := buf[8*i:8*(i+1)]
-			val28[i] = uint64(sszutils.UnmarshallUint64(buf))
+			buf := buf[8*i : 8*(i+1)]
+			val12[i] = uint64(sszutils.UnmarshallUint64(buf))
 		}
-		t.InactivityScores = val28
+		t.InactivityScores = val12
 	}
 	{ // Field #24 'LatestExecutionPayloadHeader' (dynamic)
 		buf := buf[offset24:offset27]
-		val29 := t.LatestExecutionPayloadHeader
-		if val29 == nil {
-			val29 = new(deneb.ExecutionPayloadHeader)
+		val13 := t.LatestExecutionPayloadHeader
+		if val13 == nil {
+			val13 = new(deneb.ExecutionPayloadHeader)
 		}
-		if err = val29.UnmarshalSSZ(buf); err != nil {
+		if err = val13.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.LatestExecutionPayloadHeader = val29
+		t.LatestExecutionPayloadHeader = val13
 	}
 	{ // Field #27 'HistoricalSummaries' (dynamic)
 		buf := buf[offset27:offset34]
-		val30 := t.HistoricalSummaries
-		itemCount := len(buf)/64
+		val14 := t.HistoricalSummaries
+		itemCount := len(buf) / 64
 		if len(buf)%64 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val30) < itemCount) {
-			val30 = make([]*capella.HistoricalSummary, itemCount)
-		} else if(len(val30) > itemCount) {
-			val30 = val30[:itemCount]
+		if len(val14) < itemCount {
+			val14 = make([]*capella.HistoricalSummary, itemCount)
+		} else if len(val14) > itemCount {
+			val14 = val14[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val31 := val30[i]
-			if val31 == nil {
-				val31 = new(capella.HistoricalSummary)
+			if val14[i] == nil {
+				val14[i] = new(capella.HistoricalSummary)
 			}
-			buf := buf[64*i:64*(i+1)]
-			if err = val31.UnmarshalSSZ(buf); err != nil {
+			buf := buf[64*i : 64*(i+1)]
+			if err = val14[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val30[i] = val31
 		}
-		t.HistoricalSummaries = val30
+		t.HistoricalSummaries = val14
 	}
 	{ // Field #34 'PendingDeposits' (dynamic)
 		buf := buf[offset34:offset35]
-		val32 := t.PendingDeposits
-		itemCount := len(buf)/192
+		val15 := t.PendingDeposits
+		itemCount := len(buf) / 192
 		if len(buf)%192 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val32) < itemCount) {
-			val32 = make([]*electra.PendingDeposit, itemCount)
-		} else if(len(val32) > itemCount) {
-			val32 = val32[:itemCount]
+		if len(val15) < itemCount {
+			val15 = make([]*electra.PendingDeposit, itemCount)
+		} else if len(val15) > itemCount {
+			val15 = val15[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val33 := val32[i]
-			if val33 == nil {
-				val33 = new(electra.PendingDeposit)
+			if val15[i] == nil {
+				val15[i] = new(electra.PendingDeposit)
 			}
-			buf := buf[192*i:192*(i+1)]
-			if err = val33.UnmarshalSSZ(buf); err != nil {
+			buf := buf[192*i : 192*(i+1)]
+			if err = val15[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val32[i] = val33
 		}
-		t.PendingDeposits = val32
+		t.PendingDeposits = val15
 	}
 	{ // Field #35 'PendingPartialWithdrawals' (dynamic)
 		buf := buf[offset35:offset36]
-		val34 := t.PendingPartialWithdrawals
-		itemCount := len(buf)/24
+		val16 := t.PendingPartialWithdrawals
+		itemCount := len(buf) / 24
 		if len(buf)%24 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val34) < itemCount) {
-			val34 = make([]*electra.PendingPartialWithdrawal, itemCount)
-		} else if(len(val34) > itemCount) {
-			val34 = val34[:itemCount]
+		if len(val16) < itemCount {
+			val16 = make([]*electra.PendingPartialWithdrawal, itemCount)
+		} else if len(val16) > itemCount {
+			val16 = val16[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val35 := val34[i]
-			if val35 == nil {
-				val35 = new(electra.PendingPartialWithdrawal)
+			if val16[i] == nil {
+				val16[i] = new(electra.PendingPartialWithdrawal)
 			}
-			buf := buf[24*i:24*(i+1)]
-			if err = val35.UnmarshalSSZ(buf); err != nil {
+			buf := buf[24*i : 24*(i+1)]
+			if err = val16[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val34[i] = val35
 		}
-		t.PendingPartialWithdrawals = val34
+		t.PendingPartialWithdrawals = val16
 	}
 	{ // Field #36 'PendingConsolidations' (dynamic)
 		buf := buf[offset36:]
-		val36 := t.PendingConsolidations
-		itemCount := len(buf)/16
+		val17 := t.PendingConsolidations
+		itemCount := len(buf) / 16
 		if len(buf)%16 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val36) < itemCount) {
-			val36 = make([]*electra.PendingConsolidation, itemCount)
-		} else if(len(val36) > itemCount) {
-			val36 = val36[:itemCount]
+		if len(val17) < itemCount {
+			val17 = make([]*electra.PendingConsolidation, itemCount)
+		} else if len(val17) > itemCount {
+			val17 = val17[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val37 := val36[i]
-			if val37 == nil {
-				val37 = new(electra.PendingConsolidation)
+			if val17[i] == nil {
+				val17[i] = new(electra.PendingConsolidation)
 			}
-			buf := buf[16*i:16*(i+1)]
-			if err = val37.UnmarshalSSZ(buf); err != nil {
+			buf := buf[16*i : 16*(i+1)]
+			if err = val17[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val36[i] = val37
 		}
-		t.PendingConsolidations = val36
+		t.PendingConsolidations = val17
 	}
 	return nil
 }

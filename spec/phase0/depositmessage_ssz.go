@@ -51,20 +51,16 @@ func (t *DepositMessage) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'PublicKey' (static)
 		buf := buf[0:48]
-		val1 := t.PublicKey
-		copy(val1[:], buf)
-		t.PublicKey = val1
+		copy(t.PublicKey[:], buf)
 	}
 	{ // Field #1 'WithdrawalCredentials' (static)
 		buf := buf[48:80]
-		val2 := t.WithdrawalCredentials
-		if(len(val2) < 32) {
-			val2 = make([]byte, 32)
-		} else if(len(val2) > 32) {
-			val2 = val2[:32]
+		if len(t.WithdrawalCredentials) < 32 {
+			t.WithdrawalCredentials = make([]byte, 32)
+		} else if len(t.WithdrawalCredentials) > 32 {
+			t.WithdrawalCredentials = t.WithdrawalCredentials[:32]
 		}
-		copy(val2[:], buf)
-		t.WithdrawalCredentials = val2
+		copy(t.WithdrawalCredentials[:], buf)
 	}
 	{ // Field #2 'Amount' (static)
 		buf := buf[80:88]

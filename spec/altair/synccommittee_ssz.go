@@ -46,34 +46,27 @@ func (t *SyncCommittee) SizeSSZ() (size int) {
 }
 
 func (t *SyncCommittee) UnmarshalSSZ(buf []byte) (err error) {
-	size1 := 48 * 512
-	exproffset := 0
 	buflen := len(buf)
-	if buflen < size1+48 {
+	if buflen < 24624 {
 		return sszutils.ErrUnexpectedEOF
 	}
 	{ // Field #0 'Pubkeys' (static)
-		buf := buf[0:size1+0]
-		exproffset += int(size1)
+		buf := buf[0:24576]
 		val1 := t.Pubkeys
-		if(len(val1) < 512) {
+		if len(val1) < 512 {
 			val1 = make([]phase0.BLSPubKey, 512)
-		} else if(len(val1) > 512) {
+		} else if len(val1) > 512 {
 			val1 = val1[:512]
 		}
 		for i := 0; i < 512; i++ {
-			val2 := val1[i]
-			buf := buf[48*i:48*(i+1)]
-			copy(val2[:], buf)
-			val1[i] = val2
+			buf := buf[48*i : 48*(i+1)]
+			copy(val1[i][:], buf)
 		}
 		t.Pubkeys = val1
 	}
 	{ // Field #1 'AggregatePubkey' (static)
-		buf := buf[exproffset+0:exproffset+48]
-		val3 := t.AggregatePubkey
-		copy(val3[:], buf)
-		t.AggregatePubkey = val3
+		buf := buf[24576:24624]
+		copy(t.AggregatePubkey[:], buf)
 	}
 	return nil
 }

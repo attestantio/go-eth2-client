@@ -43,9 +43,7 @@ func (t *Checkpoint) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #1 'Root' (static)
 		buf := buf[8:40]
-		val1 := t.Root
-		copy(val1[:], buf)
-		t.Root = val1
+		copy(t.Root[:], buf)
 	}
 	return nil
 }

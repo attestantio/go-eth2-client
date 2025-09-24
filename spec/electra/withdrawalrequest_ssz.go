@@ -45,15 +45,11 @@ func (t *WithdrawalRequest) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'SourceAddress' (static)
 		buf := buf[0:20]
-		val1 := t.SourceAddress
-		copy(val1[:], buf)
-		t.SourceAddress = val1
+		copy(t.SourceAddress[:], buf)
 	}
 	{ // Field #1 'ValidatorPubkey' (static)
 		buf := buf[20:68]
-		val2 := t.ValidatorPubkey
-		copy(val2[:], buf)
-		t.ValidatorPubkey = val2
+		copy(t.ValidatorPubkey[:], buf)
 	}
 	{ // Field #2 'Amount' (static)
 		buf := buf[68:76]

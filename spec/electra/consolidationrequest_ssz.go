@@ -45,21 +45,15 @@ func (t *ConsolidationRequest) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'SourceAddress' (static)
 		buf := buf[0:20]
-		val1 := t.SourceAddress
-		copy(val1[:], buf)
-		t.SourceAddress = val1
+		copy(t.SourceAddress[:], buf)
 	}
 	{ // Field #1 'SourcePubkey' (static)
 		buf := buf[20:68]
-		val2 := t.SourcePubkey
-		copy(val2[:], buf)
-		t.SourcePubkey = val2
+		copy(t.SourcePubkey[:], buf)
 	}
 	{ // Field #2 'TargetPubkey' (static)
 		buf := buf[68:116]
-		val3 := t.TargetPubkey
-		copy(val3[:], buf)
-		t.TargetPubkey = val3
+		copy(t.TargetPubkey[:], buf)
 	}
 	return nil
 }

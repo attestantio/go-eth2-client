@@ -41,7 +41,8 @@ func (t *DepositRequests) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *DepositRequests) SizeSSZ() (size int) {
-	size += 4 // Offset for field #0 'DepositRequests'
+	// Field #0 'DepositRequests' offset (4 bytes)
+	size += 4
 	{ // Dynamic field #0 'DepositRequests'
 		vlen := len(t.DepositRequests)
 		size += vlen * 192
@@ -62,25 +63,23 @@ func (t *DepositRequests) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #0 'DepositRequests' (dynamic)
 		buf := buf[offset0:]
 		val1 := t.DepositRequests
-		itemCount := len(buf)/192
+		itemCount := len(buf) / 192
 		if len(buf)%192 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val1) < itemCount) {
+		if len(val1) < itemCount {
 			val1 = make([]*electra.DepositRequest, itemCount)
-		} else if(len(val1) > itemCount) {
+		} else if len(val1) > itemCount {
 			val1 = val1[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val2 := val1[i]
-			if val2 == nil {
-				val2 = new(electra.DepositRequest)
+			if val1[i] == nil {
+				val1[i] = new(electra.DepositRequest)
 			}
-			buf := buf[192*i:192*(i+1)]
-			if err = val2.UnmarshalSSZ(buf); err != nil {
+			buf := buf[192*i : 192*(i+1)]
+			if err = val1[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val1[i] = val2
 		}
 		t.DepositRequests = val1
 	}

@@ -138,14 +138,15 @@ func (t *BeaconBlockBody) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *BeaconBlockBody) SizeSSZ() (size int) {
-	size += 96 // Field #0 'RANDAOReveal'
-	size += 72 // Field #1 'ETH1Data'
-	size += 32 // Field #2 'Graffiti'
-	size += 4 // Offset for field #3 'ProposerSlashings'
-	size += 4 // Offset for field #4 'AttesterSlashings'
-	size += 4 // Offset for field #5 'Attestations'
-	size += 4 // Offset for field #6 'Deposits'
-	size += 4 // Offset for field #7 'VoluntaryExits'
+	// Field #0 'RANDAOReveal' static (96 bytes)
+	// Field #1 'ETH1Data' static (72 bytes)
+	// Field #2 'Graffiti' static (32 bytes)
+	// Field #3 'ProposerSlashings' offset (4 bytes)
+	// Field #4 'AttesterSlashings' offset (4 bytes)
+	// Field #5 'Attestations' offset (4 bytes)
+	// Field #6 'Deposits' offset (4 bytes)
+	// Field #7 'VoluntaryExits' offset (4 bytes)
+	size += 220
 	{ // Dynamic field #3 'ProposerSlashings'
 		vlen := len(t.ProposerSlashings)
 		size += vlen * 416
@@ -184,26 +185,20 @@ func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'RANDAOReveal' (static)
 		buf := buf[0:96]
-		val1 := t.RANDAOReveal
-		copy(val1[:], buf)
-		t.RANDAOReveal = val1
+		copy(t.RANDAOReveal[:], buf)
 	}
 	{ // Field #1 'ETH1Data' (static)
 		buf := buf[96:168]
-		val2 := t.ETH1Data
-		if val2 == nil {
-			val2 = new(ETH1Data)
+		if t.ETH1Data == nil {
+			t.ETH1Data = new(ETH1Data)
 		}
-		if err = val2.UnmarshalSSZ(buf); err != nil {
+		if err = t.ETH1Data.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.ETH1Data = val2
 	}
 	{ // Field #2 'Graffiti' (static)
 		buf := buf[168:200]
-		val3 := t.Graffiti
-		copy(val3[:], buf)
-		t.Graffiti = val3
+		copy(t.Graffiti[:], buf)
 	}
 	// Field #3 'ProposerSlashings' (offset)
 	offset3 := int(sszutils.UnmarshallUint32(buf[200:204]))
@@ -232,162 +227,156 @@ func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #3 'ProposerSlashings' (dynamic)
 		buf := buf[offset3:offset4]
-		val4 := t.ProposerSlashings
-		itemCount := len(buf)/416
+		val1 := t.ProposerSlashings
+		itemCount := len(buf) / 416
 		if len(buf)%416 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val4) < itemCount) {
-			val4 = make([]*ProposerSlashing, itemCount)
-		} else if(len(val4) > itemCount) {
+		if len(val1) < itemCount {
+			val1 = make([]*ProposerSlashing, itemCount)
+		} else if len(val1) > itemCount {
+			val1 = val1[:itemCount]
+		}
+		for i := 0; i < itemCount; i++ {
+			if val1[i] == nil {
+				val1[i] = new(ProposerSlashing)
+			}
+			buf := buf[416*i : 416*(i+1)]
+			if err = val1[i].UnmarshalSSZ(buf); err != nil {
+				return err
+			}
+		}
+		t.ProposerSlashings = val1
+	}
+	{ // Field #4 'AttesterSlashings' (dynamic)
+		buf := buf[offset4:offset5]
+		val2 := t.AttesterSlashings
+		startOffset := int(0)
+		if len(buf) != 0 {
+			if len(buf) < 4 {
+				return sszutils.ErrUnexpectedEOF
+			}
+			startOffset = int(sszutils.UnmarshallUint32(buf[0:4]))
+		}
+		itemCount := startOffset / 4
+		if startOffset%4 != 0 || len(buf) < startOffset {
+			return sszutils.ErrUnexpectedEOF
+		}
+		if len(val2) < itemCount {
+			val2 = make([]*AttesterSlashing, itemCount)
+		} else if len(val2) > itemCount {
+			val2 = val2[:itemCount]
+		}
+		for i := 0; i < itemCount; i++ {
+			var endOffset int
+			if i < itemCount-1 {
+				endOffset = int(sszutils.UnmarshallUint32(buf[(i+1)*4 : (i+2)*4]))
+			} else {
+				endOffset = len(buf)
+			}
+			if endOffset < startOffset || endOffset > len(buf) {
+				return sszutils.ErrOffset
+			}
+			buf := buf[startOffset:endOffset]
+			startOffset = endOffset
+			val3 := val2[i]
+			if val3 == nil {
+				val3 = new(AttesterSlashing)
+			}
+			if err = val3.UnmarshalSSZ(buf); err != nil {
+				return err
+			}
+			val2[i] = val3
+		}
+		t.AttesterSlashings = val2
+	}
+	{ // Field #5 'Attestations' (dynamic)
+		buf := buf[offset5:offset6]
+		val4 := t.Attestations
+		startOffset := int(0)
+		if len(buf) != 0 {
+			if len(buf) < 4 {
+				return sszutils.ErrUnexpectedEOF
+			}
+			startOffset = int(sszutils.UnmarshallUint32(buf[0:4]))
+		}
+		itemCount := startOffset / 4
+		if startOffset%4 != 0 || len(buf) < startOffset {
+			return sszutils.ErrUnexpectedEOF
+		}
+		if len(val4) < itemCount {
+			val4 = make([]*Attestation, itemCount)
+		} else if len(val4) > itemCount {
 			val4 = val4[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
+			var endOffset int
+			if i < itemCount-1 {
+				endOffset = int(sszutils.UnmarshallUint32(buf[(i+1)*4 : (i+2)*4]))
+			} else {
+				endOffset = len(buf)
+			}
+			if endOffset < startOffset || endOffset > len(buf) {
+				return sszutils.ErrOffset
+			}
+			buf := buf[startOffset:endOffset]
+			startOffset = endOffset
 			val5 := val4[i]
 			if val5 == nil {
-				val5 = new(ProposerSlashing)
+				val5 = new(Attestation)
 			}
-			buf := buf[416*i:416*(i+1)]
 			if err = val5.UnmarshalSSZ(buf); err != nil {
 				return err
 			}
 			val4[i] = val5
 		}
-		t.ProposerSlashings = val4
-	}
-	{ // Field #4 'AttesterSlashings' (dynamic)
-		buf := buf[offset4:offset5]
-		val6 := t.AttesterSlashings
-		startOffset := int(0)
-		if len(buf) != 0 {
-			if len(buf) < 4 {
-				return sszutils.ErrUnexpectedEOF
-			}
-			startOffset = int(sszutils.UnmarshallUint32(buf[0:4]))
-		}
-		itemCount := startOffset/4
-		if startOffset%4 != 0 || len(buf) < startOffset {
-			return sszutils.ErrUnexpectedEOF
-		}
-		if(len(val6) < itemCount) {
-			val6 = make([]*AttesterSlashing, itemCount)
-		} else if(len(val6) > itemCount) {
-			val6 = val6[:itemCount]
-		}
-		for i := 0; i < itemCount; i++ {
-			var endOffset int
-			if i < itemCount-1 {
-				endOffset = int(sszutils.UnmarshallUint32(buf[(i+1)*4:(i+2)*4]))
-			} else {
-				endOffset = len(buf)
-			}
-			if endOffset < startOffset || endOffset > len(buf) {
-				return sszutils.ErrOffset
-			}
-			buf := buf[startOffset:endOffset]
-			startOffset = endOffset
-			val7 := val6[i]
-			if val7 == nil {
-				val7 = new(AttesterSlashing)
-			}
-			if err = val7.UnmarshalSSZ(buf); err != nil {
-				return err
-			}
-			val6[i] = val7
-		}
-		t.AttesterSlashings = val6
-	}
-	{ // Field #5 'Attestations' (dynamic)
-		buf := buf[offset5:offset6]
-		val8 := t.Attestations
-		startOffset := int(0)
-		if len(buf) != 0 {
-			if len(buf) < 4 {
-				return sszutils.ErrUnexpectedEOF
-			}
-			startOffset = int(sszutils.UnmarshallUint32(buf[0:4]))
-		}
-		itemCount := startOffset/4
-		if startOffset%4 != 0 || len(buf) < startOffset {
-			return sszutils.ErrUnexpectedEOF
-		}
-		if(len(val8) < itemCount) {
-			val8 = make([]*Attestation, itemCount)
-		} else if(len(val8) > itemCount) {
-			val8 = val8[:itemCount]
-		}
-		for i := 0; i < itemCount; i++ {
-			var endOffset int
-			if i < itemCount-1 {
-				endOffset = int(sszutils.UnmarshallUint32(buf[(i+1)*4:(i+2)*4]))
-			} else {
-				endOffset = len(buf)
-			}
-			if endOffset < startOffset || endOffset > len(buf) {
-				return sszutils.ErrOffset
-			}
-			buf := buf[startOffset:endOffset]
-			startOffset = endOffset
-			val9 := val8[i]
-			if val9 == nil {
-				val9 = new(Attestation)
-			}
-			if err = val9.UnmarshalSSZ(buf); err != nil {
-				return err
-			}
-			val8[i] = val9
-		}
-		t.Attestations = val8
+		t.Attestations = val4
 	}
 	{ // Field #6 'Deposits' (dynamic)
 		buf := buf[offset6:offset7]
-		val10 := t.Deposits
-		itemCount := len(buf)/1240
+		val6 := t.Deposits
+		itemCount := len(buf) / 1240
 		if len(buf)%1240 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val10) < itemCount) {
-			val10 = make([]*Deposit, itemCount)
-		} else if(len(val10) > itemCount) {
-			val10 = val10[:itemCount]
+		if len(val6) < itemCount {
+			val6 = make([]*Deposit, itemCount)
+		} else if len(val6) > itemCount {
+			val6 = val6[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val11 := val10[i]
-			if val11 == nil {
-				val11 = new(Deposit)
+			if val6[i] == nil {
+				val6[i] = new(Deposit)
 			}
-			buf := buf[1240*i:1240*(i+1)]
-			if err = val11.UnmarshalSSZ(buf); err != nil {
+			buf := buf[1240*i : 1240*(i+1)]
+			if err = val6[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val10[i] = val11
 		}
-		t.Deposits = val10
+		t.Deposits = val6
 	}
 	{ // Field #7 'VoluntaryExits' (dynamic)
 		buf := buf[offset7:]
-		val12 := t.VoluntaryExits
-		itemCount := len(buf)/112
+		val7 := t.VoluntaryExits
+		itemCount := len(buf) / 112
 		if len(buf)%112 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val12) < itemCount) {
-			val12 = make([]*SignedVoluntaryExit, itemCount)
-		} else if(len(val12) > itemCount) {
-			val12 = val12[:itemCount]
+		if len(val7) < itemCount {
+			val7 = make([]*SignedVoluntaryExit, itemCount)
+		} else if len(val7) > itemCount {
+			val7 = val7[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
-			val13 := val12[i]
-			if val13 == nil {
-				val13 = new(SignedVoluntaryExit)
+			if val7[i] == nil {
+				val7[i] = new(SignedVoluntaryExit)
 			}
-			buf := buf[112*i:112*(i+1)]
-			if err = val13.UnmarshalSSZ(buf); err != nil {
+			buf := buf[112*i : 112*(i+1)]
+			if err = val7[i].UnmarshalSSZ(buf); err != nil {
 				return err
 			}
-			val12[i] = val13
 		}
-		t.VoluntaryExits = val12
+		t.VoluntaryExits = val7
 	}
 	return nil
 }

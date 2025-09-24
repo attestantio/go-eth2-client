@@ -41,9 +41,10 @@ func (t *AggregateAndProof) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *AggregateAndProof) SizeSSZ() (size int) {
-	size += 8 // Field #0 'AggregatorIndex'
-	size += 4 // Offset for field #1 'Aggregate'
-	size += 96 // Field #2 'SelectionProof'
+	// Field #0 'AggregatorIndex' static (8 bytes)
+	// Field #1 'Aggregate' offset (4 bytes)
+	// Field #2 'SelectionProof' static (96 bytes)
+	size += 108
 	{ // Dynamic field #1 'Aggregate'
 		size += t.Aggregate.SizeSSZ()
 	}
@@ -66,20 +67,18 @@ func (t *AggregateAndProof) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #2 'SelectionProof' (static)
 		buf := buf[12:108]
-		val1 := t.SelectionProof
-		copy(val1[:], buf)
-		t.SelectionProof = val1
+		copy(t.SelectionProof[:], buf)
 	}
 	{ // Field #1 'Aggregate' (dynamic)
 		buf := buf[offset1:]
-		val2 := t.Aggregate
-		if val2 == nil {
-			val2 = new(Attestation)
+		val1 := t.Aggregate
+		if val1 == nil {
+			val1 = new(Attestation)
 		}
-		if err = val2.UnmarshalSSZ(buf); err != nil {
+		if err = val1.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Aggregate = val2
+		t.Aggregate = val1
 	}
 	return nil
 }

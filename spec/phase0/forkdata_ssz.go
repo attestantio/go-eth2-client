@@ -40,15 +40,11 @@ func (t *ForkData) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'CurrentVersion' (static)
 		buf := buf[0:4]
-		val1 := t.CurrentVersion
-		copy(val1[:], buf)
-		t.CurrentVersion = val1
+		copy(t.CurrentVersion[:], buf)
 	}
 	{ // Field #1 'GenesisValidatorsRoot' (static)
 		buf := buf[4:36]
-		val2 := t.GenesisValidatorsRoot
-		copy(val2[:], buf)
-		t.GenesisValidatorsRoot = val2
+		copy(t.GenesisValidatorsRoot[:], buf)
 	}
 	return nil
 }

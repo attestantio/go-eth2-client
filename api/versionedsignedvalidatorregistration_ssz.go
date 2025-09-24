@@ -46,14 +46,12 @@ func (t *VersionedSignedValidatorRegistration) UnmarshalSSZ(buf []byte) (err err
 	}
 	{ // Field #1 'V1' (static)
 		buf := buf[8:188]
-		val1 := t.V1
-		if val1 == nil {
-			val1 = new(v1.SignedValidatorRegistration)
+		if t.V1 == nil {
+			t.V1 = new(v1.SignedValidatorRegistration)
 		}
-		if err = val1.UnmarshalSSZ(buf); err != nil {
+		if err = t.V1.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.V1 = val1
 	}
 	return nil
 }

@@ -42,25 +42,21 @@ func (t *ProposerSlashing) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'SignedHeader1' (static)
 		buf := buf[0:208]
-		val1 := t.SignedHeader1
-		if val1 == nil {
-			val1 = new(SignedBeaconBlockHeader)
+		if t.SignedHeader1 == nil {
+			t.SignedHeader1 = new(SignedBeaconBlockHeader)
 		}
-		if err = val1.UnmarshalSSZ(buf); err != nil {
+		if err = t.SignedHeader1.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.SignedHeader1 = val1
 	}
 	{ // Field #1 'SignedHeader2' (static)
 		buf := buf[208:416]
-		val2 := t.SignedHeader2
-		if val2 == nil {
-			val2 = new(SignedBeaconBlockHeader)
+		if t.SignedHeader2 == nil {
+			t.SignedHeader2 = new(SignedBeaconBlockHeader)
 		}
-		if err = val2.UnmarshalSSZ(buf); err != nil {
+		if err = t.SignedHeader2.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.SignedHeader2 = val2
 	}
 	return nil
 }

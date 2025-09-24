@@ -47,9 +47,10 @@ func (t *Attestation) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *Attestation) SizeSSZ() (size int) {
-	size += 4 // Offset for field #0 'AggregationBits'
-	size += 128 // Field #1 'Data'
-	size += 96 // Field #2 'Signature'
+	// Field #0 'AggregationBits' offset (4 bytes)
+	// Field #1 'Data' static (128 bytes)
+	// Field #2 'Signature' static (96 bytes)
+	size += 228
 	{ // Dynamic field #0 'AggregationBits'
 		size += len(t.AggregationBits)
 	}
@@ -68,32 +69,28 @@ func (t *Attestation) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #1 'Data' (static)
 		buf := buf[4:132]
-		val1 := t.Data
-		if val1 == nil {
-			val1 = new(AttestationData)
+		if t.Data == nil {
+			t.Data = new(AttestationData)
 		}
-		if err = val1.UnmarshalSSZ(buf); err != nil {
+		if err = t.Data.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Data = val1
 	}
 	{ // Field #2 'Signature' (static)
 		buf := buf[132:228]
-		val2 := t.Signature
-		copy(val2[:], buf)
-		t.Signature = val2
+		copy(t.Signature[:], buf)
 	}
 	{ // Field #0 'AggregationBits' (dynamic)
 		buf := buf[offset0:]
-		val3 := t.AggregationBits
+		val1 := t.AggregationBits
 		limit := len(buf)
-		if(len(val3) < limit) {
-			val3 = make(go_bitfield.Bitlist, limit)
-		} else if(len(val3) > limit) {
-			val3 = val3[:limit]
+		if len(val1) < limit {
+			val1 = make(go_bitfield.Bitlist, limit)
+		} else if len(val1) > limit {
+			val1 = val1[:limit]
 		}
-		copy(val3[:], buf)
-		t.AggregationBits = val3
+		copy(val1[:], buf)
+		t.AggregationBits = val1
 	}
 	return nil
 }

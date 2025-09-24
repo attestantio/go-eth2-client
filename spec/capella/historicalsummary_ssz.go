@@ -40,15 +40,11 @@ func (t *HistoricalSummary) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'BlockSummaryRoot' (static)
 		buf := buf[0:32]
-		val1 := t.BlockSummaryRoot
-		copy(val1[:], buf)
-		t.BlockSummaryRoot = val1
+		copy(t.BlockSummaryRoot[:], buf)
 	}
 	{ // Field #1 'StateSummaryRoot' (static)
 		buf := buf[32:64]
-		val2 := t.StateSummaryRoot
-		copy(val2[:], buf)
-		t.StateSummaryRoot = val2
+		copy(t.StateSummaryRoot[:], buf)
 	}
 	return nil
 }

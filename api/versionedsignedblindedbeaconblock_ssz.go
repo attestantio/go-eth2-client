@@ -80,12 +80,13 @@ func (t *VersionedSignedBlindedBeaconBlock) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *VersionedSignedBlindedBeaconBlock) SizeSSZ() (size int) {
-	size += 8 // Field #0 'Version'
-	size += 4 // Offset for field #1 'Bellatrix'
-	size += 4 // Offset for field #2 'Capella'
-	size += 4 // Offset for field #3 'Deneb'
-	size += 4 // Offset for field #4 'Electra'
-	size += 4 // Offset for field #5 'Fulu'
+	// Field #0 'Version' static (8 bytes)
+	// Field #1 'Bellatrix' offset (4 bytes)
+	// Field #2 'Capella' offset (4 bytes)
+	// Field #3 'Deneb' offset (4 bytes)
+	// Field #4 'Electra' offset (4 bytes)
+	// Field #5 'Fulu' offset (4 bytes)
+	size += 28
 	{ // Dynamic field #1 'Bellatrix'
 		size += t.Bellatrix.SizeSSZ()
 	}

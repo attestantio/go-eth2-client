@@ -96,20 +96,21 @@ func (t *ExecutionPayloadHeader) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *ExecutionPayloadHeader) SizeSSZ() (size int) {
-	size += 32 // Field #0 'ParentHash'
-	size += 20 // Field #1 'FeeRecipient'
-	size += 32 // Field #2 'StateRoot'
-	size += 32 // Field #3 'ReceiptsRoot'
-	size += 256 // Field #4 'LogsBloom'
-	size += 32 // Field #5 'PrevRandao'
-	size += 8 // Field #6 'BlockNumber'
-	size += 8 // Field #7 'GasLimit'
-	size += 8 // Field #8 'GasUsed'
-	size += 8 // Field #9 'Timestamp'
-	size += 4 // Offset for field #10 'ExtraData'
-	size += 32 // Field #11 'BaseFeePerGas'
-	size += 32 // Field #12 'BlockHash'
-	size += 32 // Field #13 'TransactionsRoot'
+	// Field #0 'ParentHash' static (32 bytes)
+	// Field #1 'FeeRecipient' static (20 bytes)
+	// Field #2 'StateRoot' static (32 bytes)
+	// Field #3 'ReceiptsRoot' static (32 bytes)
+	// Field #4 'LogsBloom' static (256 bytes)
+	// Field #5 'PrevRandao' static (32 bytes)
+	// Field #6 'BlockNumber' static (8 bytes)
+	// Field #7 'GasLimit' static (8 bytes)
+	// Field #8 'GasUsed' static (8 bytes)
+	// Field #9 'Timestamp' static (8 bytes)
+	// Field #10 'ExtraData' offset (4 bytes)
+	// Field #11 'BaseFeePerGas' static (32 bytes)
+	// Field #12 'BlockHash' static (32 bytes)
+	// Field #13 'TransactionsRoot' static (32 bytes)
+	size += 536
 	{ // Dynamic field #10 'ExtraData'
 		size += len(t.ExtraData)
 	}
@@ -123,39 +124,27 @@ func (t *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'ParentHash' (static)
 		buf := buf[0:32]
-		val1 := t.ParentHash
-		copy(val1[:], buf)
-		t.ParentHash = val1
+		copy(t.ParentHash[:], buf)
 	}
 	{ // Field #1 'FeeRecipient' (static)
 		buf := buf[32:52]
-		val2 := t.FeeRecipient
-		copy(val2[:], buf)
-		t.FeeRecipient = val2
+		copy(t.FeeRecipient[:], buf)
 	}
 	{ // Field #2 'StateRoot' (static)
 		buf := buf[52:84]
-		val3 := t.StateRoot
-		copy(val3[:], buf)
-		t.StateRoot = val3
+		copy(t.StateRoot[:], buf)
 	}
 	{ // Field #3 'ReceiptsRoot' (static)
 		buf := buf[84:116]
-		val4 := t.ReceiptsRoot
-		copy(val4[:], buf)
-		t.ReceiptsRoot = val4
+		copy(t.ReceiptsRoot[:], buf)
 	}
 	{ // Field #4 'LogsBloom' (static)
 		buf := buf[116:372]
-		val5 := t.LogsBloom
-		copy(val5[:], buf)
-		t.LogsBloom = val5
+		copy(t.LogsBloom[:], buf)
 	}
 	{ // Field #5 'PrevRandao' (static)
 		buf := buf[372:404]
-		val6 := t.PrevRandao
-		copy(val6[:], buf)
-		t.PrevRandao = val6
+		copy(t.PrevRandao[:], buf)
 	}
 	{ // Field #6 'BlockNumber' (static)
 		buf := buf[404:412]
@@ -180,33 +169,27 @@ func (t *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #11 'BaseFeePerGas' (static)
 		buf := buf[440:472]
-		val7 := t.BaseFeePerGas
-		copy(val7[:], buf)
-		t.BaseFeePerGas = val7
+		copy(t.BaseFeePerGas[:], buf)
 	}
 	{ // Field #12 'BlockHash' (static)
 		buf := buf[472:504]
-		val8 := t.BlockHash
-		copy(val8[:], buf)
-		t.BlockHash = val8
+		copy(t.BlockHash[:], buf)
 	}
 	{ // Field #13 'TransactionsRoot' (static)
 		buf := buf[504:536]
-		val9 := t.TransactionsRoot
-		copy(val9[:], buf)
-		t.TransactionsRoot = val9
+		copy(t.TransactionsRoot[:], buf)
 	}
 	{ // Field #10 'ExtraData' (dynamic)
 		buf := buf[offset10:]
-		val10 := t.ExtraData
+		val1 := t.ExtraData
 		limit := len(buf)
-		if(len(val10) < limit) {
-			val10 = make([]byte, limit)
-		} else if(len(val10) > limit) {
-			val10 = val10[:limit]
+		if len(val1) < limit {
+			val1 = make([]byte, limit)
+		} else if len(val1) > limit {
+			val1 = val1[:limit]
 		}
-		copy(val10[:], buf)
-		t.ExtraData = val10
+		copy(val1[:], buf)
+		t.ExtraData = val1
 	}
 	return nil
 }

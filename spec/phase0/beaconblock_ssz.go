@@ -49,11 +49,12 @@ func (t *BeaconBlock) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *BeaconBlock) SizeSSZ() (size int) {
-	size += 8 // Field #0 'Slot'
-	size += 8 // Field #1 'ProposerIndex'
-	size += 32 // Field #2 'ParentRoot'
-	size += 32 // Field #3 'StateRoot'
-	size += 4 // Offset for field #4 'Body'
+	// Field #0 'Slot' static (8 bytes)
+	// Field #1 'ProposerIndex' static (8 bytes)
+	// Field #2 'ParentRoot' static (32 bytes)
+	// Field #3 'StateRoot' static (32 bytes)
+	// Field #4 'Body' offset (4 bytes)
+	size += 84
 	{ // Dynamic field #4 'Body'
 		size += t.Body.SizeSSZ()
 	}
@@ -75,15 +76,11 @@ func (t *BeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #2 'ParentRoot' (static)
 		buf := buf[16:48]
-		val1 := t.ParentRoot
-		copy(val1[:], buf)
-		t.ParentRoot = val1
+		copy(t.ParentRoot[:], buf)
 	}
 	{ // Field #3 'StateRoot' (static)
 		buf := buf[48:80]
-		val2 := t.StateRoot
-		copy(val2[:], buf)
-		t.StateRoot = val2
+		copy(t.StateRoot[:], buf)
 	}
 	// Field #4 'Body' (offset)
 	offset4 := int(sszutils.UnmarshallUint32(buf[80:84]))
@@ -92,14 +89,14 @@ func (t *BeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #4 'Body' (dynamic)
 		buf := buf[offset4:]
-		val3 := t.Body
-		if val3 == nil {
-			val3 = new(BeaconBlockBody)
+		val1 := t.Body
+		if val1 == nil {
+			val1 = new(BeaconBlockBody)
 		}
-		if err = val3.UnmarshalSSZ(buf); err != nil {
+		if err = val1.UnmarshalSSZ(buf); err != nil {
 			return err
 		}
-		t.Body = val3
+		t.Body = val1
 	}
 	return nil
 }

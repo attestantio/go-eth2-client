@@ -56,9 +56,7 @@ func (t *Withdrawal) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #2 'Address' (static)
 		buf := buf[16:36]
-		val1 := t.Address
-		copy(val1[:], buf)
-		t.Address = val1
+		copy(t.Address[:], buf)
 	}
 	{ // Field #3 'Amount' (static)
 		buf := buf[36:44]

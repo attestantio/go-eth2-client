@@ -42,29 +42,22 @@ func (t *SyncAggregate) SizeSSZ() (size int) {
 }
 
 func (t *SyncAggregate) UnmarshalSSZ(buf []byte) (err error) {
-	size1 := 1 * 64
-	exproffset := 0
 	buflen := len(buf)
-	if buflen < size1+96 {
+	if buflen < 160 {
 		return sszutils.ErrUnexpectedEOF
 	}
 	{ // Field #0 'SyncCommitteeBits' (static)
-		buf := buf[0:size1+0]
-		exproffset += int(size1)
-		val1 := t.SyncCommitteeBits
-		if(len(val1) < 64) {
-			val1 = make(go_bitfield.Bitvector512, 64)
-		} else if(len(val1) > 64) {
-			val1 = val1[:64]
+		buf := buf[0:64]
+		if len(t.SyncCommitteeBits) < 64 {
+			t.SyncCommitteeBits = make(go_bitfield.Bitvector512, 64)
+		} else if len(t.SyncCommitteeBits) > 64 {
+			t.SyncCommitteeBits = t.SyncCommitteeBits[:64]
 		}
-		copy(val1[:], buf)
-		t.SyncCommitteeBits = val1
+		copy(t.SyncCommitteeBits[:], buf)
 	}
 	{ // Field #1 'SyncCommitteeSignature' (static)
-		buf := buf[exproffset+0:exproffset+96]
-		val2 := t.SyncCommitteeSignature
-		copy(val2[:], buf)
-		t.SyncCommitteeSignature = val2
+		buf := buf[64:160]
+		copy(t.SyncCommitteeSignature[:], buf)
 	}
 	return nil
 }

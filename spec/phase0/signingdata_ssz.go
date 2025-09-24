@@ -40,15 +40,11 @@ func (t *SigningData) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'ObjectRoot' (static)
 		buf := buf[0:32]
-		val1 := t.ObjectRoot
-		copy(val1[:], buf)
-		t.ObjectRoot = val1
+		copy(t.ObjectRoot[:], buf)
 	}
 	{ // Field #1 'Domain' (static)
 		buf := buf[32:64]
-		val2 := t.Domain
-		copy(val2[:], buf)
-		t.Domain = val2
+		copy(t.Domain[:], buf)
 	}
 	return nil
 }

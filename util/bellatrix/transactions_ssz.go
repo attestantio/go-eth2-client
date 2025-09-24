@@ -48,7 +48,8 @@ func (t *ExecutionPayloadTransactions) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *ExecutionPayloadTransactions) SizeSSZ() (size int) {
-	size += 4 // Offset for field #0 'Transactions'
+	// Field #0 'Transactions' offset (4 bytes)
+	size += 4
 	{ // Dynamic field #0 'Transactions'
 		vlen := len(t.Transactions)
 		size += vlen * 4 // Offsets
@@ -80,19 +81,19 @@ func (t *ExecutionPayloadTransactions) UnmarshalSSZ(buf []byte) (err error) {
 			}
 			startOffset = int(sszutils.UnmarshallUint32(buf[0:4]))
 		}
-		itemCount := startOffset/4
+		itemCount := startOffset / 4
 		if startOffset%4 != 0 || len(buf) < startOffset {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if(len(val1) < itemCount) {
+		if len(val1) < itemCount {
 			val1 = make([]bellatrix.Transaction, itemCount)
-		} else if(len(val1) > itemCount) {
+		} else if len(val1) > itemCount {
 			val1 = val1[:itemCount]
 		}
 		for i := 0; i < itemCount; i++ {
 			var endOffset int
 			if i < itemCount-1 {
-				endOffset = int(sszutils.UnmarshallUint32(buf[(i+1)*4:(i+2)*4]))
+				endOffset = int(sszutils.UnmarshallUint32(buf[(i+1)*4 : (i+2)*4]))
 			} else {
 				endOffset = len(buf)
 			}
@@ -103,9 +104,9 @@ func (t *ExecutionPayloadTransactions) UnmarshalSSZ(buf []byte) (err error) {
 			startOffset = endOffset
 			val2 := val1[i]
 			limit := len(buf)
-			if(len(val2) < limit) {
+			if len(val2) < limit {
 				val2 = make(bellatrix.Transaction, limit)
-			} else if(len(val2) > limit) {
+			} else if len(val2) > limit {
 				val2 = val2[:limit]
 			}
 			copy(val2[:], buf)
