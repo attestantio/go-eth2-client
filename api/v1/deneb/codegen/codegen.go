@@ -35,31 +35,31 @@ func main() {
 	// deneb
 	generator.BuildFile(
 		filepath.Join(parentDir, "blindedbeaconblock_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&deneb.BlindedBeaconBlock{})),
+		codegen.WithReflectType(reflect.TypeOf(&deneb.BlindedBeaconBlock{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "blindedbeaconblockbody_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&deneb.BlindedBeaconBlockBody{})),
+		codegen.WithReflectType(reflect.TypeOf(&deneb.BlindedBeaconBlockBody{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "blockcontents_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&deneb.BlockContents{})),
+		codegen.WithReflectType(reflect.TypeOf(&deneb.BlockContents{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedblindedbeaconblock_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&deneb.SignedBlindedBeaconBlock{})),
+		codegen.WithReflectType(reflect.TypeOf(&deneb.SignedBlindedBeaconBlock{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedblockcontents_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&deneb.SignedBlockContents{})),
+		codegen.WithReflectType(reflect.TypeOf(&deneb.SignedBlockContents{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)

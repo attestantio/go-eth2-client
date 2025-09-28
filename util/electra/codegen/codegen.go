@@ -35,19 +35,19 @@ func main() {
 	// electra
 	generator.BuildFile(
 		filepath.Join(parentDir, "consolidation_requests_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.ConsolidationRequests{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.ConsolidationRequests{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "depositrequests_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.DepositRequests{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.DepositRequests{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "withdrawalrequests_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.WithdrawalRequests{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.WithdrawalRequests{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)

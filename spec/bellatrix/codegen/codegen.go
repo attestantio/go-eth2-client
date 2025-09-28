@@ -35,37 +35,37 @@ func main() {
 	// bellatrix
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconblockbody_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&bellatrix.BeaconBlockBody{})),
+		codegen.WithReflectType(reflect.TypeOf(&bellatrix.BeaconBlockBody{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconblock_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&bellatrix.BeaconBlock{})),
+		codegen.WithReflectType(reflect.TypeOf(&bellatrix.BeaconBlock{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconstate_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&bellatrix.BeaconState{})),
+		codegen.WithReflectType(reflect.TypeOf(&bellatrix.BeaconState{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "executionpayload_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&bellatrix.ExecutionPayload{})),
+		codegen.WithReflectType(reflect.TypeOf(&bellatrix.ExecutionPayload{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "executionpayloadheader_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&bellatrix.ExecutionPayloadHeader{})),
+		codegen.WithReflectType(reflect.TypeOf(&bellatrix.ExecutionPayloadHeader{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedbeaconblock_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&bellatrix.SignedBeaconBlock{})),
+		codegen.WithReflectType(reflect.TypeOf(&bellatrix.SignedBeaconBlock{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)

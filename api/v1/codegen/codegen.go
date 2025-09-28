@@ -35,13 +35,13 @@ func main() {
 	// v1
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedvalidatorregistration_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&apiv1.SignedValidatorRegistration{})),
+		codegen.WithReflectType(reflect.TypeOf(&apiv1.SignedValidatorRegistration{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "validatorregistration_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&apiv1.ValidatorRegistration{})),
+		codegen.WithReflectType(reflect.TypeOf(&apiv1.ValidatorRegistration{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)

@@ -35,103 +35,103 @@ func main() {
 	// electra
 	generator.BuildFile(
 		filepath.Join(parentDir, "aggregateandproof_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.AggregateAndProof{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.AggregateAndProof{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "attestation_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.Attestation{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.Attestation{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "attesterslashing_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.AttesterSlashing{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.AttesterSlashing{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconblockbody_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.BeaconBlockBody{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.BeaconBlockBody{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconblock_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.BeaconBlock{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.BeaconBlock{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconstate_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.BeaconState{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.BeaconState{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "consolidation_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.Consolidation{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.Consolidation{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "consolidationrequest_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.ConsolidationRequest{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.ConsolidationRequest{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "depositrequest_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.DepositRequest{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.DepositRequest{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "executionrequests_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.ExecutionRequests{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.ExecutionRequests{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "indexedattestation_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.IndexedAttestation{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.IndexedAttestation{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "pendingconsolidation_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.PendingConsolidation{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.PendingConsolidation{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "pendingdeposit_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.PendingDeposit{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.PendingDeposit{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "pendingpartialwithdrawal_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.PendingPartialWithdrawal{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.PendingPartialWithdrawal{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedbeaconblock_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.SignedBeaconBlock{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.SignedBeaconBlock{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "singleattestation_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.SingleAttestation{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.SingleAttestation{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "withdrawalrequest_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&electra.WithdrawalRequest{})),
+		codegen.WithReflectType(reflect.TypeOf(&electra.WithdrawalRequest{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)

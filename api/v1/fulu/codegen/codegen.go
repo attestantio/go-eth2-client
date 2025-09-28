@@ -35,13 +35,13 @@ func main() {
 	// fulu
 	generator.BuildFile(
 		filepath.Join(parentDir, "blockcontents_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&fulu.BlockContents{})),
+		codegen.WithReflectType(reflect.TypeOf(&fulu.BlockContents{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedblockcontents_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&fulu.SignedBlockContents{})),
+		codegen.WithReflectType(reflect.TypeOf(&fulu.SignedBlockContents{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)

@@ -35,67 +35,67 @@ func main() {
 	// altair
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconblockbody_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&altair.BeaconBlockBody{})),
+		codegen.WithReflectType(reflect.TypeOf(&altair.BeaconBlockBody{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconblock_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&altair.BeaconBlock{})),
+		codegen.WithReflectType(reflect.TypeOf(&altair.BeaconBlock{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconstate_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&altair.BeaconState{})),
+		codegen.WithReflectType(reflect.TypeOf(&altair.BeaconState{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "contributionandproof_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&altair.ContributionAndProof{})),
+		codegen.WithReflectType(reflect.TypeOf(&altair.ContributionAndProof{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedbeaconblock_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&altair.SignedBeaconBlock{})),
+		codegen.WithReflectType(reflect.TypeOf(&altair.SignedBeaconBlock{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "signedcontributionandproof_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&altair.SignedContributionAndProof{})),
+		codegen.WithReflectType(reflect.TypeOf(&altair.SignedContributionAndProof{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "syncaggregate_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&altair.SyncAggregate{})),
+		codegen.WithReflectType(reflect.TypeOf(&altair.SyncAggregate{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "syncaggregatorselectiondata_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&altair.SyncAggregatorSelectionData{})),
+		codegen.WithReflectType(reflect.TypeOf(&altair.SyncAggregatorSelectionData{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "synccommittee_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&altair.SyncCommittee{})),
+		codegen.WithReflectType(reflect.TypeOf(&altair.SyncCommittee{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "synccommitteecontribution_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&altair.SyncCommitteeContribution{})),
+		codegen.WithReflectType(reflect.TypeOf(&altair.SyncCommitteeContribution{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
 	generator.BuildFile(
 		filepath.Join(parentDir, "synccommitteemessage_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&altair.SyncCommitteeMessage{})),
+		codegen.WithReflectType(reflect.TypeOf(&altair.SyncCommitteeMessage{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)

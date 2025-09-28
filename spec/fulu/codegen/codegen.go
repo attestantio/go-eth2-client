@@ -35,7 +35,7 @@ func main() {
 	// fulu
 	generator.BuildFile(
 		filepath.Join(parentDir, "beaconstate_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&fulu.BeaconState{})),
+		codegen.WithReflectType(reflect.TypeOf(&fulu.BeaconState{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)

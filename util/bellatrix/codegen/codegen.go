@@ -35,7 +35,7 @@ func main() {
 	// bellatrix
 	generator.BuildFile(
 		filepath.Join(parentDir, "transactions_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&bellatrix.ExecutionPayloadTransactions{})),
+		codegen.WithReflectType(reflect.TypeOf(&bellatrix.ExecutionPayloadTransactions{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)

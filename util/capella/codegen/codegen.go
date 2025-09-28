@@ -35,7 +35,7 @@ func main() {
 	// capella
 	generator.BuildFile(
 		filepath.Join(parentDir, "withdrawals_ssz.go"),
-		codegen.WithType(reflect.TypeOf(&capella.ExecutionPayloadWithdrawals{})),
+		codegen.WithReflectType(reflect.TypeOf(&capella.ExecutionPayloadWithdrawals{})),
 		codegen.WithoutDynamicExpressions(),
 		codegen.WithCreateLegacyFn(),
 	)
