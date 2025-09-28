@@ -14,5 +14,4 @@
 package bellatrix
 
 //go:generate rm -f blindedbeaconblockbody_ssz.go blindedbeaconblock_ssz.go signedblindedbeaconblock_ssz.go
-//go:generate go run codegen/codegen.go
-//go:generate goimports -w blindedbeaconblockbody_ssz.go blindedbeaconblock_ssz.go signedblindedbeaconblock_ssz.go
+//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types BlindedBeaconBlockBody:blindedbeaconblockbody_ssz.go,BlindedBeaconBlock:blindedbeaconblock_ssz.go,SignedBlindedBeaconBlock:signedblindedbeaconblock_ssz.go

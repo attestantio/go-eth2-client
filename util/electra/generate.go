@@ -14,5 +14,4 @@
 package electra
 
 //go:generate rm -f consolidation_requests_ssz.go depositrequests_ssz.go withdrawalrequests_ssz.go
-//go:generate go run codegen/codegen.go
-//go:generate goimports -w consolidation_requests_ssz.go depositrequests_ssz.go withdrawalrequests_ssz.go
+//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types ConsolidationRequests:consolidation_requests_ssz.go,DepositRequests:depositrequests_ssz.go,WithdrawalRequests:withdrawalrequests_ssz.go

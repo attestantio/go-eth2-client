@@ -13,6 +13,7 @@
 
 package fulu
 
+//nolint:revive
+// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
 //go:generate rm -f blockcontents_ssz.go signedblockcontents_ssz.go
-//go:generate go run codegen/codegen.go
-//go:generate goimports -w blockcontents_ssz.go signedblockcontents_ssz.go
+//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types BlockContents:blockcontents_ssz.go,SignedBlockContents:signedblockcontents_ssz.go

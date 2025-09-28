@@ -14,5 +14,4 @@
 package bellatrix
 
 //go:generate rm -f transactions_ssz.go
-//go:generate go run codegen/codegen.go
-//go:generate goimports -w transactions_ssz.go
+//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types ExecutionPayloadTransactions:transactions_ssz.go

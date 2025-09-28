@@ -14,7 +14,6 @@
 package deneb
 
 //nolint:revive
-// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go blobidentifier_ssz.go blobsidecar_ssz.go executionpayload_ssz.go executionpayloadheader_ssz.go signedbeaconblock_ssz.go signedblobsidecar_ssz.go
-//go:generate go run codegen/codegen.go
-//go:generate goimports -w beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go blobidentifier_ssz.go blobsidecar_ssz.go executionpayload_ssz.go executionpayloadheader_ssz.go signedbeaconblock_ssz.go signedblobsidecar_ssz.go
+// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
+//go:generate rm -f beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go blobidentifier_ssz.go blobsidecar_ssz.go executionpayload_ssz.go executionpayloadheader_ssz.go signedbeaconblock_ssz.go
+//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types BeaconBlockBody:beaconblockbody_ssz.go,BeaconBlock:beaconblock_ssz.go,BeaconState:beaconstate_ssz.go,BlobIdentifier:blobidentifier_ssz.go,BlobSidecar:blobsidecar_ssz.go,ExecutionPayload:executionpayload_ssz.go,ExecutionPayloadHeader:executionpayloadheader_ssz.go,SignedBeaconBlock:signedbeaconblock_ssz.go
