@@ -9,7 +9,7 @@ require (
 	github.com/holiman/uint256 v1.3.2
 	github.com/huandu/go-clone v1.6.0
 	github.com/huandu/go-clone/generic v1.6.0
-	github.com/pk910/dynamic-ssz v1.0.1
+	github.com/pk910/dynamic-ssz v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.16.0
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20240618144021-706c95b2dd15
@@ -60,7 +60,3 @@ retract (
 	v1.15.2 // Retraction for 1.15.1.
 	v1.15.1 // Incorrect release number.
 )
-
-replace github.com/pk910/dynamic-ssz => ../dynamic-ssz
-
-replace github.com/pk910/dynamic-ssz/dynssz-gen => ../dynamic-ssz/dynssz-gen
