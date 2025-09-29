@@ -1,3 +1,6 @@
+0.27.1:
+  - set max possible blob count to 72
+
 0.27.0:
   - support fulu
     - introduce data column sidecar event api and corresponding event handler
