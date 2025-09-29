@@ -24,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -597,6 +598,17 @@ type VoluntaryExitPoolProvider interface {
 		opts *api.VoluntaryExitPoolOpts,
 	) (
 		*api.Response[[]*phase0.SignedVoluntaryExit],
+		error,
+	)
+}
+
+// ExecutionPayloadProvider is the interface for providing execution payloads.
+type ExecutionPayloadProvider interface {
+	// SignedBeaconBlock fetches a signed beacon block given a block ID.
+	SignedExecutionPayloadEnvelope(ctx context.Context,
+		opts *api.SignedExecutionPayloadEnvelopeOpts,
+	) (
+		*api.Response[*gloas.SignedExecutionPayloadEnvelope],
 		error,
 	)
 }
