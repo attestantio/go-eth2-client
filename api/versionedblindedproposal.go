@@ -31,11 +31,12 @@ type VersionedBlindedProposal struct {
 	Deneb     *apiv1deneb.BlindedBeaconBlock
 	Electra   *apiv1electra.BlindedBeaconBlock
 	Fulu      *apiv1electra.BlindedBeaconBlock
+	Gloas     *apiv1electra.BlindedBeaconBlock
 }
 
 // IsEmpty returns true if there is no proposal.
 func (v *VersionedBlindedProposal) IsEmpty() bool {
-	return v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil
+	return v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.Gloas == nil
 }
 
 // Slot returns the slot of the blinded proposal.
@@ -71,6 +72,12 @@ func (v *VersionedBlindedProposal) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.Slot, nil
+	case spec.DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Gloas.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -109,6 +116,12 @@ func (v *VersionedBlindedProposal) ProposerIndex() (phase0.ValidatorIndex, error
 		}
 
 		return v.Fulu.ProposerIndex, nil
+	case spec.DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Gloas.ProposerIndex, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -152,6 +165,13 @@ func (v *VersionedBlindedProposal) RandaoReveal() (phase0.BLSSignature, error) {
 		}
 
 		return v.Fulu.Body.RANDAOReveal, nil
+	case spec.DataVersionGloas:
+		if v.Gloas == nil ||
+			v.Gloas.Body == nil {
+			return phase0.BLSSignature{}, ErrDataMissing
+		}
+
+		return v.Gloas.Body.RANDAOReveal, nil
 	default:
 		return phase0.BLSSignature{}, ErrUnsupportedVersion
 	}
@@ -195,6 +215,13 @@ func (v *VersionedBlindedProposal) Graffiti() ([32]byte, error) {
 		}
 
 		return v.Fulu.Body.Graffiti, nil
+	case spec.DataVersionGloas:
+		if v.Gloas == nil ||
+			v.Gloas.Body == nil {
+			return [32]byte{}, ErrDataMissing
+		}
+
+		return v.Gloas.Body.Graffiti, nil
 	default:
 		return [32]byte{}, ErrUnsupportedVersion
 	}
@@ -273,6 +300,20 @@ func (v *VersionedBlindedProposal) Attestations() ([]spec.VersionedAttestation, 
 		}
 
 		return versionedAttestations, nil
+	case spec.DataVersionGloas:
+		if v.Gloas == nil || v.Gloas.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		versionedAttestations := make([]spec.VersionedAttestation, len(v.Gloas.Body.Attestations))
+		for i, attestation := range v.Gloas.Body.Attestations {
+			versionedAttestations[i] = spec.VersionedAttestation{
+				Version: spec.DataVersionGloas,
+				Gloas:   attestation,
+			}
+		}
+
+		return versionedAttestations, nil
 	default:
 		return nil, ErrUnsupportedVersion
 	}
@@ -311,6 +352,12 @@ func (v *VersionedBlindedProposal) Root() (phase0.Root, error) {
 		}
 
 		return v.Fulu.HashTreeRoot()
+	case spec.DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Gloas.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -354,6 +401,13 @@ func (v *VersionedBlindedProposal) BodyRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.Body.HashTreeRoot()
+	case spec.DataVersionGloas:
+		if v.Gloas == nil ||
+			v.Gloas.Body == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Gloas.Body.HashTreeRoot()
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -392,6 +446,12 @@ func (v *VersionedBlindedProposal) ParentRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.ParentRoot, nil
+	case spec.DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Gloas.ParentRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -430,6 +490,12 @@ func (v *VersionedBlindedProposal) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.StateRoot, nil
+	case spec.DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Gloas.StateRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -478,6 +544,14 @@ func (v *VersionedBlindedProposal) TransactionsRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.Body.ExecutionPayloadHeader.TransactionsRoot, nil
+	case spec.DataVersionGloas:
+		if v.Gloas == nil ||
+			v.Gloas.Body == nil ||
+			v.Gloas.Body.ExecutionPayloadHeader == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Gloas.Body.ExecutionPayloadHeader.TransactionsRoot, nil
 	default:
 		return phase0.Root{}, ErrUnsupportedVersion
 	}
@@ -526,6 +600,14 @@ func (v *VersionedBlindedProposal) FeeRecipient() (bellatrix.ExecutionAddress, e
 		}
 
 		return v.Fulu.Body.ExecutionPayloadHeader.FeeRecipient, nil
+	case spec.DataVersionGloas:
+		if v.Gloas == nil ||
+			v.Gloas.Body == nil ||
+			v.Gloas.Body.ExecutionPayloadHeader == nil {
+			return bellatrix.ExecutionAddress{}, ErrDataMissing
+		}
+
+		return v.Gloas.Body.ExecutionPayloadHeader.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, ErrUnsupportedVersion
 	}
@@ -574,6 +656,14 @@ func (v *VersionedBlindedProposal) Timestamp() (uint64, error) {
 		}
 
 		return v.Fulu.Body.ExecutionPayloadHeader.Timestamp, nil
+	case spec.DataVersionGloas:
+		if v.Gloas == nil ||
+			v.Gloas.Body == nil ||
+			v.Gloas.Body.ExecutionPayloadHeader == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Gloas.Body.ExecutionPayloadHeader.Timestamp, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -612,6 +702,12 @@ func (v *VersionedBlindedProposal) String() string {
 		}
 
 		return v.Fulu.String()
+	case spec.DataVersionGloas:
+		if v.Gloas == nil {
+			return ""
+		}
+
+		return v.Gloas.String()
 	default:
 		return "unknown version"
 	}
