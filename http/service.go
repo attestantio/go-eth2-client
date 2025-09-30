@@ -74,6 +74,7 @@ type Service struct {
 	connectedToDVTMiddleware bool
 	reducedMemoryUsage       bool
 	customSpecSupport        bool
+	elConnectionCheck        bool
 }
 
 // New creates a new Ethereum 2 client service, connecting with a standard HTTP.
@@ -131,6 +132,7 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		hooks:               parameters.hooks,
 		reducedMemoryUsage:  parameters.reducedMemoryUsage,
 		customSpecSupport:   parameters.customSpecSupport,
+		elConnectionCheck:   parameters.elConnectionCheck,
 	}
 
 	// Ping the client to see if it is ready to serve requests.
@@ -259,25 +261,9 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 	wasSynced := s.connectionSynced
 	s.connectionMu.Unlock()
 
-	var active bool
-	var synced bool
-
-	acquired := s.pingSem.TryAcquire(1)
-	if !acquired {
-		// Means there is another ping running, just use current info.
-		active = wasActive
-		synced = wasSynced
-	} else {
-		response, err := s.NodeSyncing(ctx, &api.NodeSyncingOpts{})
-		if err != nil {
-			log.Debug().Err(err).Msg("Failed to obtain sync state from node")
-			active = false
-			synced = false
-		} else {
-			active = true
-			synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
-		}
-		s.pingSem.Release(1)
+	active, synced, err := s.checkClientStatus(ctx, wasActive, wasSynced)
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to obtain sync state from node")
 	}
 
 	if !wasActive && active {
@@ -339,6 +325,41 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 	if (wasSynced && !synced) && s.hooks.OnDesynced != nil {
 		go s.hooks.OnDesynced(ctx, s)
 	}
+}
+
+//nolint:nonamedreturns
+func (s *Service) checkClientStatus(ctx context.Context, wasActive, wasSynced bool) (active, synced bool, err error) {
+	acquired := s.pingSem.TryAcquire(1)
+	if !acquired {
+		// Means there is another ping running, just use current info.
+		return wasActive, wasSynced, nil
+	}
+
+	defer s.pingSem.Release(1)
+
+	response, err := s.NodeSyncing(ctx, &api.NodeSyncingOpts{})
+	if err != nil {
+		return false, false, err
+	}
+
+	if s.elConnectionCheck && response.Data.ELOffline {
+		// If checking EL connection, and it's offline, then we consider node active and not synced.
+		return true, false, nil
+	}
+
+	if !response.Data.IsSyncing {
+		// If node is not syncing, then we consider node active and synced.
+		return true, true, nil
+	}
+
+	if response.Data.HeadSlot == 0 {
+		// If node is syncing and the sync process started from slot 0, then we consider node active.
+		// We consider it synced if its SyncDistance is 0 or 1.
+		return true, response.Data.SyncDistance <= 1, nil
+	}
+
+	// If node is syncing and the sync process started not from scratch, then we consider node active but not synced.
+	return true, false, nil
 }
 
 // IsActive returns true if the client is active.
