@@ -410,9 +410,6 @@ func (p *PayloadAttributesV4) unpack(data *payloadAttributesV4JSON) error {
 	}
 	copy(p.ParentBeaconBlockRoot[:], parentBeaconBlockRoot)
 
-	if data.DepositRequests == nil {
-		return errors.New("payload attributes deposit requests missing")
-	}
 	for i := range data.DepositRequests {
 		if data.DepositRequests[i] == nil {
 			return fmt.Errorf("deposit requests entry %d missing", i)
@@ -420,9 +417,6 @@ func (p *PayloadAttributesV4) unpack(data *payloadAttributesV4JSON) error {
 	}
 	p.DepositRequests = data.DepositRequests
 
-	if data.WithdrawalRequests == nil {
-		return errors.New("payload attributes withdraw requests missing")
-	}
 	for i := range data.WithdrawalRequests {
 		if data.WithdrawalRequests[i] == nil {
 			return fmt.Errorf("withdraw requests entry %d missing", i)
@@ -430,9 +424,6 @@ func (p *PayloadAttributesV4) unpack(data *payloadAttributesV4JSON) error {
 	}
 	p.WithdrawalRequests = data.WithdrawalRequests
 
-	if data.ConsolidationRequests == nil {
-		return errors.New("payload attributes consolidation requests missing")
-	}
 	for i := range data.ConsolidationRequests {
 		if data.ConsolidationRequests[i] == nil {
 			return fmt.Errorf("consolidation requests entry %d missing", i)
