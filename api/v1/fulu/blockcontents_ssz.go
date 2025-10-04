@@ -15,6 +15,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *BlockContents) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(BlockContents)
+	}
 	dstlen := len(dst)
 	// Offset #0 'Block'
 	offset0 := len(dst)
@@ -28,6 +31,9 @@ func (t *BlockContents) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #0 'Block'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.Block
+		if t == nil {
+			t = new(electra.BeaconBlock)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -35,31 +41,25 @@ func (t *BlockContents) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #1 'KZGProofs'
 		sszutils.UpdateOffset(dst[offset1:offset1+4], len(dst)-dstlen)
 		t := t.KZGProofs
-		max := 33554432
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 33554432 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
-			limit := 48
-			dst = append(dst, []byte(t[:limit])...)
+			dst = append(dst, []byte(t[:48])...)
 		}
 	}
 	{ // Dynamic Field #2 'Blobs'
 		sszutils.UpdateOffset(dst[offset2:offset2+4], len(dst)-dstlen)
 		t := t.Blobs
-		max := 4096
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 4096 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
-			limit := 131072
-			dst = append(dst, []byte(t[:limit])...)
+			dst = append(dst, []byte(t[:131072])...)
 		}
 	}
 	return dst, nil
@@ -69,11 +69,17 @@ func (t *BlockContents) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *BlockContents) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(BlockContents)
+	}
 	// Field #0 'Block' offset (4 bytes)
 	// Field #1 'KZGProofs' offset (4 bytes)
 	// Field #2 'Blobs' offset (4 bytes)
 	size += 12
 	{ // Dynamic field #0 'Block'
+		if t.Block == nil {
+			t.Block = new(electra.BeaconBlock)
+		}
 		size += t.Block.SizeSSZ()
 	}
 	{ // Dynamic field #1 'KZGProofs'
@@ -158,35 +164,43 @@ func (t *BlockContents) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *BlockContents) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(BlockContents)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Block'
 		t := t.Block
+		if t == nil {
+			t = new(electra.BeaconBlock)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #1 'KZGProofs'
 		t := t.KZGProofs
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 33554432 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
-			idx := hh.Index()
-			hh.PutBytes(t[:])
-			hh.Merkleize(idx)
+			hh.PutBytes(t[:48])
 		}
 		limit := sszutils.CalculateLimit(33554432, vlen, 32)
 		hh.MerkleizeWithMixin(idx, vlen, limit)
 	}
 	{ // Field #2 'Blobs'
 		t := t.Blobs
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 4096 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
-			idx := hh.Index()
-			hh.PutBytes(t[:])
-			hh.Merkleize(idx)
+			hh.PutBytes(t[:131072])
 		}
 		limit := sszutils.CalculateLimit(4096, vlen, 32)
 		hh.MerkleizeWithMixin(idx, vlen, limit)

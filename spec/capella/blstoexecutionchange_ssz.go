@@ -14,19 +14,20 @@ var _ = sszutils.ErrListTooBig
 
 func (t *BLSToExecutionChange) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(BLSToExecutionChange)
+	}
 	{ // Field #0 'ValidatorIndex'
 		t := t.ValidatorIndex
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	{ // Field #1 'FromBLSPubkey'
 		t := t.FromBLSPubkey
-		limit := 48
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #2 'ToExecutionAddress'
 		t := t.ToExecutionAddress
-		limit := 20
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:20])...)
 	}
 	return dst, nil
 }
@@ -59,6 +60,9 @@ func (t *BLSToExecutionChange) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *BLSToExecutionChange) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(BLSToExecutionChange)
+	}
 	idx := hh.Index()
 	{ // Field #0 'ValidatorIndex'
 		t := t.ValidatorIndex
@@ -66,15 +70,11 @@ func (t *BLSToExecutionChange) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #1 'FromBLSPubkey'
 		t := t.FromBLSPubkey
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:48])
 	}
 	{ // Field #2 'ToExecutionAddress'
 		t := t.ToExecutionAddress
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:20])
 	}
 	hh.Merkleize(idx)
 	return nil

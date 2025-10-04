@@ -13,15 +13,16 @@ var _ = sszutils.ErrListTooBig
 
 func (t *HistoricalSummary) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(HistoricalSummary)
+	}
 	{ // Field #0 'BlockSummaryRoot'
 		t := t.BlockSummaryRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #1 'StateSummaryRoot'
 		t := t.StateSummaryRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	return dst, nil
 }
@@ -50,18 +51,17 @@ func (t *HistoricalSummary) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *HistoricalSummary) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(HistoricalSummary)
+	}
 	idx := hh.Index()
 	{ // Field #0 'BlockSummaryRoot'
 		t := t.BlockSummaryRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #1 'StateSummaryRoot'
 		t := t.StateSummaryRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	hh.Merkleize(idx)
 	return nil

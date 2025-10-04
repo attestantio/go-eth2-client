@@ -13,21 +13,22 @@ var _ = sszutils.ErrListTooBig
 
 func (t *DepositData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(DepositData)
+	}
 	{ // Field #0 'PublicKey'
 		t := t.PublicKey
-		limit := 48
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #1 'WithdrawalCredentials'
 		t := t.WithdrawalCredentials
-		limit := 32
 		vlen := len(t)
-		if vlen > int(limit) {
-			return dst, sszutils.ErrListTooBig
+		if vlen > 32 {
+			return dst, sszutils.ErrVectorLength
 		}
-		dst = append(dst, []byte(t[:limit])...)
-		if vlen < int(limit) {
-			dst = sszutils.AppendZeroPadding(dst, (int(limit)-vlen)*1)
+		dst = append(dst, []byte(t[:vlen])...)
+		if vlen < 32 {
+			dst = sszutils.AppendZeroPadding(dst, (32-vlen)*1)
 		}
 	}
 	{ // Field #2 'Amount'
@@ -36,8 +37,7 @@ func (t *DepositData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	{ // Field #3 'Signature'
 		t := t.Signature
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
 }
@@ -79,22 +79,25 @@ func (t *DepositData) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *DepositData) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(DepositData)
+	}
 	idx := hh.Index()
 	{ // Field #0 'PublicKey'
 		t := t.PublicKey
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:48])
 	}
 	{ // Field #1 'WithdrawalCredentials'
 		t := t.WithdrawalCredentials
-		idx := hh.Index()
 		vlen := len(t)
 		if vlen > 32 {
 			return sszutils.ErrVectorLength
 		}
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		val := t[:]
+		if vlen < 32 {
+			val = sszutils.AppendZeroPadding(val, (32-vlen)*1)
+		}
+		hh.PutBytes(val[:32])
 	}
 	{ // Field #2 'Amount'
 		t := t.Amount
@@ -102,9 +105,7 @@ func (t *DepositData) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #3 'Signature'
 		t := t.Signature
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

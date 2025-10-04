@@ -15,40 +15,42 @@ var _ = sszutils.ErrListTooBig
 
 func (t *Attestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(Attestation)
+	}
 	dstlen := len(dst)
 	// Offset #0 'AggregationBits'
 	offset0 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #1 'Data'
 		t := t.Data
+		if t == nil {
+			t = new(phase0.AttestationData)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #2 'Signature'
 		t := t.Signature
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	{ // Field #3 'CommitteeBits'
 		t := t.CommitteeBits
-		limit := 8
 		vlen := len(t)
-		if vlen > int(limit) {
-			return dst, sszutils.ErrListTooBig
+		if vlen > 8 {
+			return dst, sszutils.ErrVectorLength
 		}
-		dst = append(dst, []byte(t[:limit])...)
-		if vlen < int(limit) {
-			dst = sszutils.AppendZeroPadding(dst, (int(limit)-vlen)*1)
+		dst = append(dst, []byte(t[:vlen])...)
+		if vlen < 8 {
+			dst = sszutils.AppendZeroPadding(dst, (8-vlen)*1)
 		}
 	}
 	{ // Dynamic Field #0 'AggregationBits'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.AggregationBits
-		max := 131072
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 131072 {
 			return dst, sszutils.ErrListTooBig
 		}
 		dst = append(dst, []byte(t[:])...)
@@ -60,6 +62,9 @@ func (t *Attestation) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *Attestation) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(Attestation)
+	}
 	// Field #0 'AggregationBits' offset (4 bytes)
 	// Field #1 'Data' static (128 bytes)
 	// Field #2 'Signature' static (96 bytes)
@@ -119,6 +124,9 @@ func (t *Attestation) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *Attestation) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(Attestation)
+	}
 	idx := hh.Index()
 	{ // Field #0 'AggregationBits'
 		t := t.AggregationBits
@@ -138,25 +146,28 @@ func (t *Attestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #1 'Data'
 		t := t.Data
+		if t == nil {
+			t = new(phase0.AttestationData)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #2 'Signature'
 		t := t.Signature
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	{ // Field #3 'CommitteeBits'
 		t := t.CommitteeBits
-		idx := hh.Index()
 		vlen := len(t)
 		if vlen > 8 {
 			return sszutils.ErrVectorLength
 		}
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		val := t[:]
+		if vlen < 8 {
+			val = sszutils.AppendZeroPadding(val, (8-vlen)*1)
+		}
+		hh.PutBytes(val[:8])
 	}
 	hh.Merkleize(idx)
 	return nil

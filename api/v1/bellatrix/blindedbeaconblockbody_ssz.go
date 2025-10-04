@@ -16,22 +16,26 @@ var _ = sszutils.ErrListTooBig
 
 func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(BlindedBeaconBlockBody)
+	}
 	dstlen := len(dst)
 	{ // Field #0 'RANDAOReveal'
 		t := t.RANDAOReveal
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	{ // Field #1 'ETH1Data'
 		t := t.ETH1Data
+		if t == nil {
+			t = new(phase0.ETH1Data)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #2 'Graffiti'
 		t := t.Graffiti
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	// Offset #3 'ProposerSlashings'
 	offset3 := len(dst)
@@ -50,6 +54,9 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #8 'SyncAggregate'
 		t := t.SyncAggregate
+		if t == nil {
+			t = new(altair.SyncAggregate)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -60,14 +67,15 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 	{ // Dynamic Field #3 'ProposerSlashings'
 		sszutils.UpdateOffset(dst[offset3:offset3+4], len(dst)-dstlen)
 		t := t.ProposerSlashings
-		max := 16
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 16 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
+			if t == nil {
+				t = new(phase0.ProposerSlashing)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -76,10 +84,8 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 	{ // Dynamic Field #4 'AttesterSlashings'
 		sszutils.UpdateOffset(dst[offset4:offset4+4], len(dst)-dstlen)
 		t := t.AttesterSlashings
-		max := 2
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 2 {
 			return dst, sszutils.ErrListTooBig
 		}
 		dstlen := len(dst)
@@ -87,6 +93,9 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 		for i := 0; i < vlen; i++ {
 			sszutils.UpdateOffset(dst[dstlen+(i*4):dstlen+((i+1)*4)], len(dst)-dstlen)
 			t := t[i]
+			if t == nil {
+				t = new(phase0.AttesterSlashing)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -95,10 +104,8 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 	{ // Dynamic Field #5 'Attestations'
 		sszutils.UpdateOffset(dst[offset5:offset5+4], len(dst)-dstlen)
 		t := t.Attestations
-		max := 128
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 128 {
 			return dst, sszutils.ErrListTooBig
 		}
 		dstlen := len(dst)
@@ -106,6 +113,9 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 		for i := 0; i < vlen; i++ {
 			sszutils.UpdateOffset(dst[dstlen+(i*4):dstlen+((i+1)*4)], len(dst)-dstlen)
 			t := t[i]
+			if t == nil {
+				t = new(phase0.Attestation)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -114,14 +124,15 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 	{ // Dynamic Field #6 'Deposits'
 		sszutils.UpdateOffset(dst[offset6:offset6+4], len(dst)-dstlen)
 		t := t.Deposits
-		max := 16
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 16 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
+			if t == nil {
+				t = new(phase0.Deposit)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -130,14 +141,15 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 	{ // Dynamic Field #7 'VoluntaryExits'
 		sszutils.UpdateOffset(dst[offset7:offset7+4], len(dst)-dstlen)
 		t := t.VoluntaryExits
-		max := 16
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 16 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
+			if t == nil {
+				t = new(phase0.SignedVoluntaryExit)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -146,6 +158,9 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 	{ // Dynamic Field #9 'ExecutionPayloadHeader'
 		sszutils.UpdateOffset(dst[offset9:offset9+4], len(dst)-dstlen)
 		t := t.ExecutionPayloadHeader
+		if t == nil {
+			t = new(bellatrix.ExecutionPayloadHeader)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -157,6 +172,9 @@ func (t *BlindedBeaconBlockBody) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *BlindedBeaconBlockBody) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(BlindedBeaconBlockBody)
+	}
 	// Field #0 'RANDAOReveal' static (96 bytes)
 	// Field #1 'ETH1Data' static (72 bytes)
 	// Field #2 'Graffiti' static (32 bytes)
@@ -177,6 +195,9 @@ func (t *BlindedBeaconBlockBody) SizeSSZ() (size int) {
 		size += vlen * 4 // Offsets
 		for i := 0; i < vlen; i++ {
 			t := t.AttesterSlashings[i]
+			if t == nil {
+				t = new(phase0.AttesterSlashing)
+			}
 			size += t.SizeSSZ()
 		}
 	}
@@ -185,6 +206,9 @@ func (t *BlindedBeaconBlockBody) SizeSSZ() (size int) {
 		size += vlen * 4 // Offsets
 		for i := 0; i < vlen; i++ {
 			t := t.Attestations[i]
+			if t == nil {
+				t = new(phase0.Attestation)
+			}
 			size += t.SizeSSZ()
 		}
 	}
@@ -197,6 +221,9 @@ func (t *BlindedBeaconBlockBody) SizeSSZ() (size int) {
 		size += vlen * 112
 	}
 	{ // Dynamic field #9 'ExecutionPayloadHeader'
+		if t.ExecutionPayloadHeader == nil {
+			t.ExecutionPayloadHeader = new(bellatrix.ExecutionPayloadHeader)
+		}
 		size += t.ExecutionPayloadHeader.SizeSSZ()
 	}
 	return size
@@ -431,31 +458,39 @@ func (t *BlindedBeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(BlindedBeaconBlockBody)
+	}
 	idx := hh.Index()
 	{ // Field #0 'RANDAOReveal'
 		t := t.RANDAOReveal
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	{ // Field #1 'ETH1Data'
 		t := t.ETH1Data
+		if t == nil {
+			t = new(phase0.ETH1Data)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #2 'Graffiti'
 		t := t.Graffiti
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #3 'ProposerSlashings'
 		t := t.ProposerSlashings
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 16 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(phase0.ProposerSlashing)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}
@@ -465,10 +500,16 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 	}
 	{ // Field #4 'AttesterSlashings'
 		t := t.AttesterSlashings
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 2 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(phase0.AttesterSlashing)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}
@@ -478,10 +519,16 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 	}
 	{ // Field #5 'Attestations'
 		t := t.Attestations
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 128 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(phase0.Attestation)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}
@@ -491,10 +538,16 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 	}
 	{ // Field #6 'Deposits'
 		t := t.Deposits
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 16 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(phase0.Deposit)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}
@@ -504,10 +557,16 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 	}
 	{ // Field #7 'VoluntaryExits'
 		t := t.VoluntaryExits
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 16 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(phase0.SignedVoluntaryExit)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}
@@ -517,12 +576,18 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 	}
 	{ // Field #8 'SyncAggregate'
 		t := t.SyncAggregate
+		if t == nil {
+			t = new(altair.SyncAggregate)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #9 'ExecutionPayloadHeader'
 		t := t.ExecutionPayloadHeader
+		if t == nil {
+			t = new(bellatrix.ExecutionPayloadHeader)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}

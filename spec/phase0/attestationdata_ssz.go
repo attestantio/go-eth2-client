@@ -13,6 +13,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *AttestationData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(AttestationData)
+	}
 	{ // Field #0 'Slot'
 		t := t.Slot
 		dst = sszutils.MarshalUint64(dst, uint64(t))
@@ -23,17 +26,22 @@ func (t *AttestationData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	{ // Field #2 'BeaconBlockRoot'
 		t := t.BeaconBlockRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #3 'Source'
 		t := t.Source
+		if t == nil {
+			t = new(Checkpoint)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #4 'Target'
 		t := t.Target
+		if t == nil {
+			t = new(Checkpoint)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -87,6 +95,9 @@ func (t *AttestationData) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *AttestationData) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(AttestationData)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Slot'
 		t := t.Slot
@@ -98,18 +109,22 @@ func (t *AttestationData) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #2 'BeaconBlockRoot'
 		t := t.BeaconBlockRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #3 'Source'
 		t := t.Source
+		if t == nil {
+			t = new(Checkpoint)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #4 'Target'
 		t := t.Target
+		if t == nil {
+			t = new(Checkpoint)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}

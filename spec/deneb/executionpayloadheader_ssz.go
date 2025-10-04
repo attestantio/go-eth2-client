@@ -14,36 +14,33 @@ var _ = sszutils.ErrListTooBig
 
 func (t *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(ExecutionPayloadHeader)
+	}
 	dstlen := len(dst)
 	{ // Field #0 'ParentHash'
 		t := t.ParentHash
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #1 'FeeRecipient'
 		t := t.FeeRecipient
-		limit := 20
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:20])...)
 	}
 	{ // Field #2 'StateRoot'
 		t := t.StateRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #3 'ReceiptsRoot'
 		t := t.ReceiptsRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #4 'LogsBloom'
 		t := t.LogsBloom
-		limit := 256
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:256])...)
 	}
 	{ // Field #5 'PrevRandao'
 		t := t.PrevRandao
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #6 'BlockNumber'
 		t := t.BlockNumber
@@ -66,26 +63,25 @@ func (t *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #11 'BaseFeePerGas'
 		t := t.BaseFeePerGas
-		limit := 4
-		for i := 0; i < limit; i++ {
+		if t == nil {
+			t = new(uint256.Int)
+		}
+		for i := 0; i < 4; i++ {
 			t := t[i]
 			dst = sszutils.MarshalUint64(dst, uint64(t))
 		}
 	}
 	{ // Field #12 'BlockHash'
 		t := t.BlockHash
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #13 'TransactionsRoot'
 		t := t.TransactionsRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #14 'WithdrawalsRoot'
 		t := t.WithdrawalsRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #15 'BlobGasUsed'
 		t := t.BlobGasUsed
@@ -98,10 +94,8 @@ func (t *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error
 	{ // Dynamic Field #10 'ExtraData'
 		sszutils.UpdateOffset(dst[offset10:offset10+4], len(dst)-dstlen)
 		t := t.ExtraData
-		max := 32
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 32 {
 			return dst, sszutils.ErrListTooBig
 		}
 		dst = append(dst, []byte(t[:])...)
@@ -113,6 +107,9 @@ func (t *ExecutionPayloadHeader) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *ExecutionPayloadHeader) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(ExecutionPayloadHeader)
+	}
 	// Field #0 'ParentHash' static (32 bytes)
 	// Field #1 'FeeRecipient' static (20 bytes)
 	// Field #2 'StateRoot' static (32 bytes)
@@ -235,42 +232,33 @@ func (t *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *ExecutionPayloadHeader) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(ExecutionPayloadHeader)
+	}
 	idx := hh.Index()
 	{ // Field #0 'ParentHash'
 		t := t.ParentHash
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #1 'FeeRecipient'
 		t := t.FeeRecipient
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:20])
 	}
 	{ // Field #2 'StateRoot'
 		t := t.StateRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #3 'ReceiptsRoot'
 		t := t.ReceiptsRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #4 'LogsBloom'
 		t := t.LogsBloom
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:256])
 	}
 	{ // Field #5 'PrevRandao'
 		t := t.PrevRandao
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #6 'BlockNumber'
 		t := t.BlockNumber
@@ -290,18 +278,23 @@ func (t *ExecutionPayloadHeader) HashTreeRootWith(hh sszutils.HashWalker) error 
 	}
 	{ // Field #10 'ExtraData'
 		t := t.ExtraData
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 32 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		hh.PutBytes(t[:])
 		limit := sszutils.CalculateLimit(32, vlen, 1)
 		hh.MerkleizeWithMixin(idx, vlen, limit)
 	}
 	{ // Field #11 'BaseFeePerGas'
 		t := t.BaseFeePerGas
-		vlen := len(t)
+		if t == nil {
+			t = new(uint256.Int)
+		}
 		for i := 0; i < 4; i++ {
 			var val1 uint64
-			if i < vlen {
+			if i < 4 {
 				val1 = t[i]
 			}
 			hh.AppendUint64(uint64(val1))
@@ -309,21 +302,15 @@ func (t *ExecutionPayloadHeader) HashTreeRootWith(hh sszutils.HashWalker) error 
 	}
 	{ // Field #12 'BlockHash'
 		t := t.BlockHash
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #13 'TransactionsRoot'
 		t := t.TransactionsRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #14 'WithdrawalsRoot'
 		t := t.WithdrawalsRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #15 'BlobGasUsed'
 		t := t.BlobGasUsed

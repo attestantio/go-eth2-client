@@ -14,15 +14,16 @@ var _ = sszutils.ErrListTooBig
 
 func (t *WithdrawalRequest) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(WithdrawalRequest)
+	}
 	{ // Field #0 'SourceAddress'
 		t := t.SourceAddress
-		limit := 20
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:20])...)
 	}
 	{ // Field #1 'ValidatorPubkey'
 		t := t.ValidatorPubkey
-		limit := 48
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #2 'Amount'
 		t := t.Amount
@@ -59,18 +60,17 @@ func (t *WithdrawalRequest) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *WithdrawalRequest) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(WithdrawalRequest)
+	}
 	idx := hh.Index()
 	{ // Field #0 'SourceAddress'
 		t := t.SourceAddress
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:20])
 	}
 	{ // Field #1 'ValidatorPubkey'
 		t := t.ValidatorPubkey
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:48])
 	}
 	{ // Field #2 'Amount'
 		t := t.Amount

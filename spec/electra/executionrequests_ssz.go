@@ -13,6 +13,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *ExecutionRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(ExecutionRequests)
+	}
 	dstlen := len(dst)
 	// Offset #0 'Deposits'
 	offset0 := len(dst)
@@ -26,14 +29,15 @@ func (t *ExecutionRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #0 'Deposits'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.Deposits
-		max := 8192
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 8192 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
+			if t == nil {
+				t = new(DepositRequest)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -42,14 +46,15 @@ func (t *ExecutionRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #1 'Withdrawals'
 		sszutils.UpdateOffset(dst[offset1:offset1+4], len(dst)-dstlen)
 		t := t.Withdrawals
-		max := 16
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 16 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
+			if t == nil {
+				t = new(WithdrawalRequest)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -58,14 +63,15 @@ func (t *ExecutionRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #2 'Consolidations'
 		sszutils.UpdateOffset(dst[offset2:offset2+4], len(dst)-dstlen)
 		t := t.Consolidations
-		max := 2
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 2 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
+			if t == nil {
+				t = new(ConsolidationRequest)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -78,6 +84,9 @@ func (t *ExecutionRequests) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *ExecutionRequests) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(ExecutionRequests)
+	}
 	// Field #0 'Deposits' offset (4 bytes)
 	// Field #1 'Withdrawals' offset (4 bytes)
 	// Field #2 'Consolidations' offset (4 bytes)
@@ -190,13 +199,22 @@ func (t *ExecutionRequests) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *ExecutionRequests) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(ExecutionRequests)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Deposits'
 		t := t.Deposits
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 8192 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(DepositRequest)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}
@@ -206,10 +224,16 @@ func (t *ExecutionRequests) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #1 'Withdrawals'
 		t := t.Withdrawals
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 16 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(WithdrawalRequest)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}
@@ -219,10 +243,16 @@ func (t *ExecutionRequests) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #2 'Consolidations'
 		t := t.Consolidations
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 2 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(ConsolidationRequest)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}

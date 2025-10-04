@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(BeaconState)
+	}
 	dstlen := len(dst)
 	{ // Field #0 'GenesisTime'
 		t := t.GenesisTime
@@ -21,8 +24,7 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	{ // Field #1 'GenesisValidatorsRoot'
 		t := t.GenesisValidatorsRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #2 'Slot'
 		t := t.Slot
@@ -30,46 +32,48 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	{ // Field #3 'Fork'
 		t := t.Fork
+		if t == nil {
+			t = new(Fork)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #4 'LatestBlockHeader'
 		t := t.LatestBlockHeader
+		if t == nil {
+			t = new(BeaconBlockHeader)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #5 'BlockRoots'
 		t := t.BlockRoots
-		limit := 8192
 		vlen := len(t)
-		if vlen > int(limit) {
-			return dst, sszutils.ErrListTooBig
+		if vlen > 8192 {
+			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
-			limit := 32
-			dst = append(dst, []byte(t[:limit])...)
+			dst = append(dst, []byte(t[:32])...)
 		}
-		if vlen < int(limit) {
-			dst = sszutils.AppendZeroPadding(dst, (int(limit)-vlen)*32)
+		if vlen < 8192 {
+			dst = sszutils.AppendZeroPadding(dst, (8192-vlen)*32)
 		}
 	}
 	{ // Field #6 'StateRoots'
 		t := t.StateRoots
-		limit := 8192
 		vlen := len(t)
-		if vlen > int(limit) {
-			return dst, sszutils.ErrListTooBig
+		if vlen > 8192 {
+			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
-			limit := 32
-			dst = append(dst, []byte(t[:limit])...)
+			dst = append(dst, []byte(t[:32])...)
 		}
-		if vlen < int(limit) {
-			dst = sszutils.AppendZeroPadding(dst, (int(limit)-vlen)*32)
+		if vlen < 8192 {
+			dst = sszutils.AppendZeroPadding(dst, (8192-vlen)*32)
 		}
 	}
 	// Offset #7 'HistoricalRoots'
@@ -77,6 +81,9 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #8 'ETH1Data'
 		t := t.ETH1Data
+		if t == nil {
+			t = new(ETH1Data)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -96,33 +103,30 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #13 'RANDAOMixes'
 		t := t.RANDAOMixes
-		limit := 65536
 		vlen := len(t)
-		if vlen > int(limit) {
-			return dst, sszutils.ErrListTooBig
+		if vlen > 65536 {
+			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
-			limit := 32
-			dst = append(dst, []byte(t[:limit])...)
+			dst = append(dst, []byte(t[:32])...)
 		}
-		if vlen < int(limit) {
-			dst = sszutils.AppendZeroPadding(dst, (int(limit)-vlen)*32)
+		if vlen < 65536 {
+			dst = sszutils.AppendZeroPadding(dst, (65536-vlen)*32)
 		}
 	}
 	{ // Field #14 'Slashings'
 		t := t.Slashings
-		limit := 8192
 		vlen := len(t)
-		if vlen > int(limit) {
-			return dst, sszutils.ErrListTooBig
+		if vlen > 8192 {
+			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
 			dst = sszutils.MarshalUint64(dst, uint64(t))
 		}
-		if vlen < int(limit) {
-			dst = sszutils.AppendZeroPadding(dst, (int(limit)-vlen)*8)
+		if vlen < 8192 {
+			dst = sszutils.AppendZeroPadding(dst, (8192-vlen)*8)
 		}
 	}
 	// Offset #15 'PreviousEpochAttestations'
@@ -133,30 +137,38 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #17 'JustificationBits'
 		t := t.JustificationBits
-		limit := 1
 		vlen := len(t)
-		if vlen > int(limit) {
-			return dst, sszutils.ErrListTooBig
+		if vlen > 1 {
+			return dst, sszutils.ErrVectorLength
 		}
-		dst = append(dst, []byte(t[:limit])...)
-		if vlen < int(limit) {
-			dst = sszutils.AppendZeroPadding(dst, (int(limit)-vlen)*1)
+		dst = append(dst, []byte(t[:vlen])...)
+		if vlen < 1 {
+			dst = sszutils.AppendZeroPadding(dst, (1-vlen)*1)
 		}
 	}
 	{ // Field #18 'PreviousJustifiedCheckpoint'
 		t := t.PreviousJustifiedCheckpoint
+		if t == nil {
+			t = new(Checkpoint)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #19 'CurrentJustifiedCheckpoint'
 		t := t.CurrentJustifiedCheckpoint
+		if t == nil {
+			t = new(Checkpoint)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #20 'FinalizedCheckpoint'
 		t := t.FinalizedCheckpoint
+		if t == nil {
+			t = new(Checkpoint)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -164,29 +176,27 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #7 'HistoricalRoots'
 		sszutils.UpdateOffset(dst[offset7:offset7+4], len(dst)-dstlen)
 		t := t.HistoricalRoots
-		max := 16777216
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 16777216 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
-			limit := 32
-			dst = append(dst, []byte(t[:limit])...)
+			dst = append(dst, []byte(t[:32])...)
 		}
 	}
 	{ // Dynamic Field #9 'ETH1DataVotes'
 		sszutils.UpdateOffset(dst[offset9:offset9+4], len(dst)-dstlen)
 		t := t.ETH1DataVotes
-		max := 2048
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 2048 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
+			if t == nil {
+				t = new(ETH1Data)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -195,14 +205,15 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #11 'Validators'
 		sszutils.UpdateOffset(dst[offset11:offset11+4], len(dst)-dstlen)
 		t := t.Validators
-		max := 1099511627776
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 1099511627776 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
+			if t == nil {
+				t = new(Validator)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -211,10 +222,8 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #12 'Balances'
 		sszutils.UpdateOffset(dst[offset12:offset12+4], len(dst)-dstlen)
 		t := t.Balances
-		max := 1099511627776
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 1099511627776 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
@@ -225,10 +234,8 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #15 'PreviousEpochAttestations'
 		sszutils.UpdateOffset(dst[offset15:offset15+4], len(dst)-dstlen)
 		t := t.PreviousEpochAttestations
-		max := 4096
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 4096 {
 			return dst, sszutils.ErrListTooBig
 		}
 		dstlen := len(dst)
@@ -236,6 +243,9 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		for i := 0; i < vlen; i++ {
 			sszutils.UpdateOffset(dst[dstlen+(i*4):dstlen+((i+1)*4)], len(dst)-dstlen)
 			t := t[i]
+			if t == nil {
+				t = new(PendingAttestation)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -244,10 +254,8 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #16 'CurrentEpochAttestations'
 		sszutils.UpdateOffset(dst[offset16:offset16+4], len(dst)-dstlen)
 		t := t.CurrentEpochAttestations
-		max := 4096
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 4096 {
 			return dst, sszutils.ErrListTooBig
 		}
 		dstlen := len(dst)
@@ -255,6 +263,9 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		for i := 0; i < vlen; i++ {
 			sszutils.UpdateOffset(dst[dstlen+(i*4):dstlen+((i+1)*4)], len(dst)-dstlen)
 			t := t[i]
+			if t == nil {
+				t = new(PendingAttestation)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -267,6 +278,9 @@ func (t *BeaconState) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *BeaconState) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(BeaconState)
+	}
 	// Field #0 'GenesisTime' static (8 bytes)
 	// Field #1 'GenesisValidatorsRoot' static (32 bytes)
 	// Field #2 'Slot' static (8 bytes)
@@ -310,6 +324,9 @@ func (t *BeaconState) SizeSSZ() (size int) {
 		size += vlen * 4 // Offsets
 		for i := 0; i < vlen; i++ {
 			t := t.PreviousEpochAttestations[i]
+			if t == nil {
+				t = new(PendingAttestation)
+			}
 			size += t.SizeSSZ()
 		}
 	}
@@ -318,6 +335,9 @@ func (t *BeaconState) SizeSSZ() (size int) {
 		size += vlen * 4 // Offsets
 		for i := 0; i < vlen; i++ {
 			t := t.CurrentEpochAttestations[i]
+			if t == nil {
+				t = new(PendingAttestation)
+			}
 			size += t.SizeSSZ()
 		}
 	}
@@ -664,6 +684,9 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(BeaconState)
+	}
 	idx := hh.Index()
 	{ // Field #0 'GenesisTime'
 		t := t.GenesisTime
@@ -671,9 +694,7 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #1 'GenesisValidatorsRoot'
 		t := t.GenesisValidatorsRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #2 'Slot'
 		t := t.Slot
@@ -681,77 +702,89 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #3 'Fork'
 		t := t.Fork
+		if t == nil {
+			t = new(Fork)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #4 'LatestBlockHeader'
 		t := t.LatestBlockHeader
+		if t == nil {
+			t = new(BeaconBlockHeader)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #5 'BlockRoots'
 		t := t.BlockRoots
-		idx := hh.Index()
 		vlen := len(t)
 		if vlen > 8192 {
 			return sszutils.ErrVectorLength
 		}
+		idx := hh.Index()
 		for i := 0; i < 8192; i++ {
 			var val1 Root
 			if i < vlen {
 				val1 = t[i]
 			}
-			idx := hh.Index()
-			hh.PutBytes(val1[:])
-			hh.Merkleize(idx)
+			hh.PutBytes(val1[:32])
 		}
 		hh.Merkleize(idx)
 	}
 	{ // Field #6 'StateRoots'
 		t := t.StateRoots
-		idx := hh.Index()
 		vlen := len(t)
 		if vlen > 8192 {
 			return sszutils.ErrVectorLength
 		}
+		idx := hh.Index()
 		for i := 0; i < 8192; i++ {
 			var val2 Root
 			if i < vlen {
 				val2 = t[i]
 			}
-			idx := hh.Index()
-			hh.PutBytes(val2[:])
-			hh.Merkleize(idx)
+			hh.PutBytes(val2[:32])
 		}
 		hh.Merkleize(idx)
 	}
 	{ // Field #7 'HistoricalRoots'
 		t := t.HistoricalRoots
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 16777216 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
-			idx := hh.Index()
-			hh.PutBytes(t[:])
-			hh.Merkleize(idx)
+			hh.PutBytes(t[:32])
 		}
 		limit := sszutils.CalculateLimit(16777216, vlen, 32)
 		hh.MerkleizeWithMixin(idx, vlen, limit)
 	}
 	{ // Field #8 'ETH1Data'
 		t := t.ETH1Data
+		if t == nil {
+			t = new(ETH1Data)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #9 'ETH1DataVotes'
 		t := t.ETH1DataVotes
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 2048 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(ETH1Data)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}
@@ -765,10 +798,16 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #11 'Validators'
 		t := t.Validators
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 1099511627776 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(Validator)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}
@@ -778,40 +817,42 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #12 'Balances'
 		t := t.Balances
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 1099511627776 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
 			hh.AppendUint64(uint64(t))
 		}
+		hh.FillUpTo32()
 		limit := sszutils.CalculateLimit(1099511627776, vlen, 8)
 		hh.MerkleizeWithMixin(idx, vlen, limit)
 	}
 	{ // Field #13 'RANDAOMixes'
 		t := t.RANDAOMixes
-		idx := hh.Index()
 		vlen := len(t)
 		if vlen > 65536 {
 			return sszutils.ErrVectorLength
 		}
+		idx := hh.Index()
 		for i := 0; i < 65536; i++ {
 			var val3 Root
 			if i < vlen {
 				val3 = t[i]
 			}
-			idx := hh.Index()
-			hh.PutBytes(val3[:])
-			hh.Merkleize(idx)
+			hh.PutBytes(val3[:32])
 		}
 		hh.Merkleize(idx)
 	}
 	{ // Field #14 'Slashings'
 		t := t.Slashings
-		idx := hh.Index()
 		vlen := len(t)
 		if vlen > 8192 {
 			return sszutils.ErrVectorLength
 		}
+		idx := hh.Index()
 		for i := 0; i < 8192; i++ {
 			var val4 Gwei
 			if i < vlen {
@@ -819,14 +860,21 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 			}
 			hh.AppendUint64(uint64(val4))
 		}
+		hh.FillUpTo32()
 		hh.Merkleize(idx)
 	}
 	{ // Field #15 'PreviousEpochAttestations'
 		t := t.PreviousEpochAttestations
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 4096 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(PendingAttestation)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}
@@ -836,10 +884,16 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #16 'CurrentEpochAttestations'
 		t := t.CurrentEpochAttestations
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 4096 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(PendingAttestation)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}
@@ -849,28 +903,39 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #17 'JustificationBits'
 		t := t.JustificationBits
-		idx := hh.Index()
 		vlen := len(t)
 		if vlen > 1 {
 			return sszutils.ErrVectorLength
 		}
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		val := t[:]
+		if vlen < 1 {
+			val = sszutils.AppendZeroPadding(val, (1-vlen)*1)
+		}
+		hh.PutBytes(val[:1])
 	}
 	{ // Field #18 'PreviousJustifiedCheckpoint'
 		t := t.PreviousJustifiedCheckpoint
+		if t == nil {
+			t = new(Checkpoint)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #19 'CurrentJustifiedCheckpoint'
 		t := t.CurrentJustifiedCheckpoint
+		if t == nil {
+			t = new(Checkpoint)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #20 'FinalizedCheckpoint'
 		t := t.FinalizedCheckpoint
+		if t == nil {
+			t = new(Checkpoint)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}

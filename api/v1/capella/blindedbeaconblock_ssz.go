@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *BlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(BlindedBeaconBlock)
+	}
 	dstlen := len(dst)
 	{ // Field #0 'Slot'
 		t := t.Slot
@@ -25,13 +28,11 @@ func (t *BlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	{ // Field #2 'ParentRoot'
 		t := t.ParentRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #3 'StateRoot'
 		t := t.StateRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	// Offset #4 'Body'
 	offset4 := len(dst)
@@ -39,6 +40,9 @@ func (t *BlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #4 'Body'
 		sszutils.UpdateOffset(dst[offset4:offset4+4], len(dst)-dstlen)
 		t := t.Body
+		if t == nil {
+			t = new(BlindedBeaconBlockBody)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -50,6 +54,9 @@ func (t *BlindedBeaconBlock) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *BlindedBeaconBlock) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(BlindedBeaconBlock)
+	}
 	// Field #0 'Slot' static (8 bytes)
 	// Field #1 'ProposerIndex' static (8 bytes)
 	// Field #2 'ParentRoot' static (32 bytes)
@@ -57,6 +64,9 @@ func (t *BlindedBeaconBlock) SizeSSZ() (size int) {
 	// Field #4 'Body' offset (4 bytes)
 	size += 84
 	{ // Dynamic field #4 'Body'
+		if t.Body == nil {
+			t.Body = new(BlindedBeaconBlockBody)
+		}
 		size += t.Body.SizeSSZ()
 	}
 	return size
@@ -103,6 +113,9 @@ func (t *BlindedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *BlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(BlindedBeaconBlock)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Slot'
 		t := t.Slot
@@ -114,18 +127,17 @@ func (t *BlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #2 'ParentRoot'
 		t := t.ParentRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #3 'StateRoot'
 		t := t.StateRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #4 'Body'
 		t := t.Body
+		if t == nil {
+			t = new(BlindedBeaconBlockBody)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}

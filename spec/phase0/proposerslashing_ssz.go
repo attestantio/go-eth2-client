@@ -13,14 +13,23 @@ var _ = sszutils.ErrListTooBig
 
 func (t *ProposerSlashing) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(ProposerSlashing)
+	}
 	{ // Field #0 'SignedHeader1'
 		t := t.SignedHeader1
+		if t == nil {
+			t = new(SignedBeaconBlockHeader)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #1 'SignedHeader2'
 		t := t.SignedHeader2
+		if t == nil {
+			t = new(SignedBeaconBlockHeader)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -62,15 +71,24 @@ func (t *ProposerSlashing) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *ProposerSlashing) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(ProposerSlashing)
+	}
 	idx := hh.Index()
 	{ // Field #0 'SignedHeader1'
 		t := t.SignedHeader1
+		if t == nil {
+			t = new(SignedBeaconBlockHeader)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #1 'SignedHeader2'
 		t := t.SignedHeader2
+		if t == nil {
+			t = new(SignedBeaconBlockHeader)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}

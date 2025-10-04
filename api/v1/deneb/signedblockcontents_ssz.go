@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *SignedBlockContents) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(SignedBlockContents)
+	}
 	dstlen := len(dst)
 	// Offset #0 'SignedBlock'
 	offset0 := len(dst)
@@ -27,6 +30,9 @@ func (t *SignedBlockContents) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #0 'SignedBlock'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.SignedBlock
+		if t == nil {
+			t = new(deneb.SignedBeaconBlock)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -34,31 +40,25 @@ func (t *SignedBlockContents) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #1 'KZGProofs'
 		sszutils.UpdateOffset(dst[offset1:offset1+4], len(dst)-dstlen)
 		t := t.KZGProofs
-		max := 4096
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 4096 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
-			limit := 48
-			dst = append(dst, []byte(t[:limit])...)
+			dst = append(dst, []byte(t[:48])...)
 		}
 	}
 	{ // Dynamic Field #2 'Blobs'
 		sszutils.UpdateOffset(dst[offset2:offset2+4], len(dst)-dstlen)
 		t := t.Blobs
-		max := 4096
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 4096 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
-			limit := 131072
-			dst = append(dst, []byte(t[:limit])...)
+			dst = append(dst, []byte(t[:131072])...)
 		}
 	}
 	return dst, nil
@@ -68,11 +68,17 @@ func (t *SignedBlockContents) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *SignedBlockContents) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(SignedBlockContents)
+	}
 	// Field #0 'SignedBlock' offset (4 bytes)
 	// Field #1 'KZGProofs' offset (4 bytes)
 	// Field #2 'Blobs' offset (4 bytes)
 	size += 12
 	{ // Dynamic field #0 'SignedBlock'
+		if t.SignedBlock == nil {
+			t.SignedBlock = new(deneb.SignedBeaconBlock)
+		}
 		size += t.SignedBlock.SizeSSZ()
 	}
 	{ // Dynamic field #1 'KZGProofs'
@@ -157,35 +163,43 @@ func (t *SignedBlockContents) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *SignedBlockContents) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(SignedBlockContents)
+	}
 	idx := hh.Index()
 	{ // Field #0 'SignedBlock'
 		t := t.SignedBlock
+		if t == nil {
+			t = new(deneb.SignedBeaconBlock)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #1 'KZGProofs'
 		t := t.KZGProofs
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 4096 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
-			idx := hh.Index()
-			hh.PutBytes(t[:])
-			hh.Merkleize(idx)
+			hh.PutBytes(t[:48])
 		}
 		limit := sszutils.CalculateLimit(4096, vlen, 32)
 		hh.MerkleizeWithMixin(idx, vlen, limit)
 	}
 	{ // Field #2 'Blobs'
 		t := t.Blobs
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 4096 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
-			idx := hh.Index()
-			hh.PutBytes(t[:])
-			hh.Merkleize(idx)
+			hh.PutBytes(t[:131072])
 		}
 		limit := sszutils.CalculateLimit(4096, vlen, 32)
 		hh.MerkleizeWithMixin(idx, vlen, limit)

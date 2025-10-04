@@ -14,26 +14,26 @@ var _ = sszutils.ErrListTooBig
 
 func (t *SyncCommittee) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(SyncCommittee)
+	}
 	{ // Field #0 'Pubkeys'
 		t := t.Pubkeys
-		limit := 512
 		vlen := len(t)
-		if vlen > int(limit) {
-			return dst, sszutils.ErrListTooBig
+		if vlen > 512 {
+			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
-			limit := 48
-			dst = append(dst, []byte(t[:limit])...)
+			dst = append(dst, []byte(t[:48])...)
 		}
-		if vlen < int(limit) {
-			dst = sszutils.AppendZeroPadding(dst, (int(limit)-vlen)*48)
+		if vlen < 512 {
+			dst = sszutils.AppendZeroPadding(dst, (512-vlen)*48)
 		}
 	}
 	{ // Field #1 'AggregatePubkey'
 		t := t.AggregatePubkey
-		limit := 48
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:48])...)
 	}
 	return dst, nil
 }
@@ -72,30 +72,29 @@ func (t *SyncCommittee) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *SyncCommittee) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(SyncCommittee)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Pubkeys'
 		t := t.Pubkeys
-		idx := hh.Index()
 		vlen := len(t)
 		if vlen > 512 {
 			return sszutils.ErrVectorLength
 		}
+		idx := hh.Index()
 		for i := 0; i < 512; i++ {
 			var val1 phase0.BLSPubKey
 			if i < vlen {
 				val1 = t[i]
 			}
-			idx := hh.Index()
-			hh.PutBytes(val1[:])
-			hh.Merkleize(idx)
+			hh.PutBytes(val1[:48])
 		}
 		hh.Merkleize(idx)
 	}
 	{ // Field #1 'AggregatePubkey'
 		t := t.AggregatePubkey
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:48])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -14,20 +14,25 @@ var _ = sszutils.ErrListTooBig
 
 func (t *ContributionAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(ContributionAndProof)
+	}
 	{ // Field #0 'AggregatorIndex'
 		t := t.AggregatorIndex
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	{ // Field #1 'Contribution'
 		t := t.Contribution
+		if t == nil {
+			t = new(SyncCommitteeContribution)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #2 'SelectionProof'
 		t := t.SelectionProof
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
 }
@@ -65,6 +70,9 @@ func (t *ContributionAndProof) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *ContributionAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(ContributionAndProof)
+	}
 	idx := hh.Index()
 	{ // Field #0 'AggregatorIndex'
 		t := t.AggregatorIndex
@@ -72,15 +80,16 @@ func (t *ContributionAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #1 'Contribution'
 		t := t.Contribution
+		if t == nil {
+			t = new(SyncCommitteeContribution)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #2 'SelectionProof'
 		t := t.SelectionProof
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

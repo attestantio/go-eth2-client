@@ -13,15 +13,16 @@ var _ = sszutils.ErrListTooBig
 
 func (t *Fork) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(Fork)
+	}
 	{ // Field #0 'PreviousVersion'
 		t := t.PreviousVersion
-		limit := 4
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:4])...)
 	}
 	{ // Field #1 'CurrentVersion'
 		t := t.CurrentVersion
-		limit := 4
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:4])...)
 	}
 	{ // Field #2 'Epoch'
 		t := t.Epoch
@@ -58,18 +59,17 @@ func (t *Fork) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *Fork) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(Fork)
+	}
 	idx := hh.Index()
 	{ // Field #0 'PreviousVersion'
 		t := t.PreviousVersion
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:4])
 	}
 	{ // Field #1 'CurrentVersion'
 		t := t.CurrentVersion
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:4])
 	}
 	{ // Field #2 'Epoch'
 		t := t.Epoch

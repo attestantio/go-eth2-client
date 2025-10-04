@@ -14,38 +14,39 @@ var _ = sszutils.ErrListTooBig
 
 func (t *BlobSidecar) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(BlobSidecar)
+	}
 	{ // Field #0 'Index'
 		t := t.Index
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	{ // Field #1 'Blob'
 		t := t.Blob
-		limit := 131072
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:131072])...)
 	}
 	{ // Field #2 'KZGCommitment'
 		t := t.KZGCommitment
-		limit := 48
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #3 'KZGProof'
 		t := t.KZGProof
-		limit := 48
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #4 'SignedBlockHeader'
 		t := t.SignedBlockHeader
+		if t == nil {
+			t = new(phase0.SignedBeaconBlockHeader)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #5 'KZGCommitmentInclusionProof'
 		t := t.KZGCommitmentInclusionProof
-		limit := 17
-		for i := 0; i < limit; i++ {
+		for i := 0; i < 17; i++ {
 			t := t[i]
-			limit := 32
-			dst = append(dst, []byte(t[:limit])...)
+			dst = append(dst, []byte(t[:32])...)
 		}
 	}
 	return dst, nil
@@ -101,6 +102,9 @@ func (t *BlobSidecar) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *BlobSidecar) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(BlobSidecar)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Index'
 		t := t.Index
@@ -108,24 +112,21 @@ func (t *BlobSidecar) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #1 'Blob'
 		t := t.Blob
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:131072])
 	}
 	{ // Field #2 'KZGCommitment'
 		t := t.KZGCommitment
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:48])
 	}
 	{ // Field #3 'KZGProof'
 		t := t.KZGProof
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:48])
 	}
 	{ // Field #4 'SignedBlockHeader'
 		t := t.SignedBlockHeader
+		if t == nil {
+			t = new(phase0.SignedBeaconBlockHeader)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
@@ -133,15 +134,12 @@ func (t *BlobSidecar) HashTreeRootWith(hh sszutils.HashWalker) error {
 	{ // Field #5 'KZGCommitmentInclusionProof'
 		t := t.KZGCommitmentInclusionProof
 		idx := hh.Index()
-		vlen := len(t)
 		for i := 0; i < 17; i++ {
 			var val1 KZGCommitmentInclusionProofElement
-			if i < vlen {
+			if i < 17 {
 				val1 = t[i]
 			}
-			idx := hh.Index()
-			hh.PutBytes(val1[:])
-			hh.Merkleize(idx)
+			hh.PutBytes(val1[:32])
 		}
 		hh.Merkleize(idx)
 	}

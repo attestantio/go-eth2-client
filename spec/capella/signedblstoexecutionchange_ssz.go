@@ -13,16 +13,21 @@ var _ = sszutils.ErrListTooBig
 
 func (t *SignedBLSToExecutionChange) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(SignedBLSToExecutionChange)
+	}
 	{ // Field #0 'Message'
 		t := t.Message
+		if t == nil {
+			t = new(BLSToExecutionChange)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #1 'Signature'
 		t := t.Signature
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
 }
@@ -56,18 +61,22 @@ func (t *SignedBLSToExecutionChange) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *SignedBLSToExecutionChange) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(SignedBLSToExecutionChange)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Message'
 		t := t.Message
+		if t == nil {
+			t = new(BLSToExecutionChange)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #1 'Signature'
 		t := t.Signature
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -13,6 +13,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *AttesterSlashing) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(AttesterSlashing)
+	}
 	dstlen := len(dst)
 	// Offset #0 'Attestation1'
 	offset0 := len(dst)
@@ -23,6 +26,9 @@ func (t *AttesterSlashing) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #0 'Attestation1'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.Attestation1
+		if t == nil {
+			t = new(IndexedAttestation)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -30,6 +36,9 @@ func (t *AttesterSlashing) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #1 'Attestation2'
 		sszutils.UpdateOffset(dst[offset1:offset1+4], len(dst)-dstlen)
 		t := t.Attestation2
+		if t == nil {
+			t = new(IndexedAttestation)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -41,13 +50,22 @@ func (t *AttesterSlashing) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *AttesterSlashing) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(AttesterSlashing)
+	}
 	// Field #0 'Attestation1' offset (4 bytes)
 	// Field #1 'Attestation2' offset (4 bytes)
 	size += 8
 	{ // Dynamic field #0 'Attestation1'
+		if t.Attestation1 == nil {
+			t.Attestation1 = new(IndexedAttestation)
+		}
 		size += t.Attestation1.SizeSSZ()
 	}
 	{ // Dynamic field #1 'Attestation2'
+		if t.Attestation2 == nil {
+			t.Attestation2 = new(IndexedAttestation)
+		}
 		size += t.Attestation2.SizeSSZ()
 	}
 	return size
@@ -94,15 +112,24 @@ func (t *AttesterSlashing) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *AttesterSlashing) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(AttesterSlashing)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Attestation1'
 		t := t.Attestation1
+		if t == nil {
+			t = new(IndexedAttestation)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #1 'Attestation2'
 		t := t.Attestation2
+		if t == nil {
+			t = new(IndexedAttestation)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}

@@ -13,10 +13,12 @@ var _ = sszutils.ErrListTooBig
 
 func (t *BeaconBlockBlob) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(BeaconBlockBlob)
+	}
 	{ // Field #0 'Blob'
 		t := t.Blob
-		limit := 131072
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:131072])...)
 	}
 	return dst, nil
 }
@@ -41,12 +43,13 @@ func (t *BeaconBlockBlob) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *BeaconBlockBlob) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(BeaconBlockBlob)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Blob'
 		t := t.Blob
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:131072])
 	}
 	hh.Merkleize(idx)
 	return nil

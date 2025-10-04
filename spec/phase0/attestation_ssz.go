@@ -14,28 +14,31 @@ var _ = sszutils.ErrListTooBig
 
 func (t *Attestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(Attestation)
+	}
 	dstlen := len(dst)
 	// Offset #0 'AggregationBits'
 	offset0 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #1 'Data'
 		t := t.Data
+		if t == nil {
+			t = new(AttestationData)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #2 'Signature'
 		t := t.Signature
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	{ // Dynamic Field #0 'AggregationBits'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.AggregationBits
-		max := 2048
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 2048 {
 			return dst, sszutils.ErrListTooBig
 		}
 		dst = append(dst, []byte(t[:])...)
@@ -47,6 +50,9 @@ func (t *Attestation) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *Attestation) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(Attestation)
+	}
 	// Field #0 'AggregationBits' offset (4 bytes)
 	// Field #1 'Data' static (128 bytes)
 	// Field #2 'Signature' static (96 bytes)
@@ -96,6 +102,9 @@ func (t *Attestation) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *Attestation) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(Attestation)
+	}
 	idx := hh.Index()
 	{ // Field #0 'AggregationBits'
 		t := t.AggregationBits
@@ -115,15 +124,16 @@ func (t *Attestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #1 'Data'
 		t := t.Data
+		if t == nil {
+			t = new(AttestationData)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #2 'Signature'
 		t := t.Signature
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

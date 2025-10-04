@@ -13,6 +13,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *BeaconBlockHeader) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(BeaconBlockHeader)
+	}
 	{ // Field #0 'Slot'
 		t := t.Slot
 		dst = sszutils.MarshalUint64(dst, uint64(t))
@@ -23,18 +26,15 @@ func (t *BeaconBlockHeader) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	{ // Field #2 'ParentRoot'
 		t := t.ParentRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #3 'StateRoot'
 		t := t.StateRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #4 'BodyRoot'
 		t := t.BodyRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	return dst, nil
 }
@@ -75,6 +75,9 @@ func (t *BeaconBlockHeader) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *BeaconBlockHeader) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(BeaconBlockHeader)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Slot'
 		t := t.Slot
@@ -86,21 +89,15 @@ func (t *BeaconBlockHeader) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #2 'ParentRoot'
 		t := t.ParentRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #3 'StateRoot'
 		t := t.StateRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #4 'BodyRoot'
 		t := t.BodyRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	hh.Merkleize(idx)
 	return nil

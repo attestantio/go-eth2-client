@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *ExecutionPayloadTransactions) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(ExecutionPayloadTransactions)
+	}
 	dstlen := len(dst)
 	// Offset #0 'Transactions'
 	offset0 := len(dst)
@@ -21,10 +24,8 @@ func (t *ExecutionPayloadTransactions) MarshalSSZTo(buf []byte) (dst []byte, err
 	{ // Dynamic Field #0 'Transactions'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.Transactions
-		max := 1048576
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 1048576 {
 			return dst, sszutils.ErrListTooBig
 		}
 		dstlen := len(dst)
@@ -32,10 +33,8 @@ func (t *ExecutionPayloadTransactions) MarshalSSZTo(buf []byte) (dst []byte, err
 		for i := 0; i < vlen; i++ {
 			sszutils.UpdateOffset(dst[dstlen+(i*4):dstlen+((i+1)*4)], len(dst)-dstlen)
 			t := t[i]
-			max := 1073741824
-			hasMax := true
 			vlen := len(t)
-			if hasMax && vlen > int(max) {
+			if vlen > 1073741824 {
 				return dst, sszutils.ErrListTooBig
 			}
 			dst = append(dst, []byte(t[:])...)
@@ -48,6 +47,9 @@ func (t *ExecutionPayloadTransactions) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *ExecutionPayloadTransactions) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(ExecutionPayloadTransactions)
+	}
 	// Field #0 'Transactions' offset (4 bytes)
 	size += 4
 	{ // Dynamic field #0 'Transactions'
@@ -118,15 +120,24 @@ func (t *ExecutionPayloadTransactions) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *ExecutionPayloadTransactions) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(ExecutionPayloadTransactions)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Transactions'
 		t := t.Transactions
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 1048576 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
-			idx := hh.Index()
 			vlen := uint64(len(t))
+			if vlen > 1073741824 {
+				return sszutils.ErrListTooBig
+			}
+			idx := hh.Index()
 			hh.PutBytes(t[:])
 			limit := sszutils.CalculateLimit(1073741824, vlen, 1)
 			hh.MerkleizeWithMixin(idx, vlen, limit)

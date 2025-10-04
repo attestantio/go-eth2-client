@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *PendingPartialWithdrawal) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(PendingPartialWithdrawal)
+	}
 	{ // Field #0 'ValidatorIndex'
 		t := t.ValidatorIndex
 		dst = sszutils.MarshalUint64(dst, uint64(t))
@@ -57,6 +60,9 @@ func (t *PendingPartialWithdrawal) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *PendingPartialWithdrawal) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(PendingPartialWithdrawal)
+	}
 	idx := hh.Index()
 	{ // Field #0 'ValidatorIndex'
 		t := t.ValidatorIndex

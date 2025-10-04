@@ -13,20 +13,20 @@ var _ = sszutils.ErrListTooBig
 
 func (t *ConsolidationRequest) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(ConsolidationRequest)
+	}
 	{ // Field #0 'SourceAddress'
 		t := t.SourceAddress
-		limit := 20
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:20])...)
 	}
 	{ // Field #1 'SourcePubkey'
 		t := t.SourcePubkey
-		limit := 48
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #2 'TargetPubkey'
 		t := t.TargetPubkey
-		limit := 48
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:48])...)
 	}
 	return dst, nil
 }
@@ -59,24 +59,21 @@ func (t *ConsolidationRequest) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *ConsolidationRequest) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(ConsolidationRequest)
+	}
 	idx := hh.Index()
 	{ // Field #0 'SourceAddress'
 		t := t.SourceAddress
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:20])
 	}
 	{ // Field #1 'SourcePubkey'
 		t := t.SourcePubkey
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:48])
 	}
 	{ // Field #2 'TargetPubkey'
 		t := t.TargetPubkey
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:48])
 	}
 	hh.Merkleize(idx)
 	return nil

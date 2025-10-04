@@ -13,15 +13,16 @@ var _ = sszutils.ErrListTooBig
 
 func (t *ForkData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(ForkData)
+	}
 	{ // Field #0 'CurrentVersion'
 		t := t.CurrentVersion
-		limit := 4
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:4])...)
 	}
 	{ // Field #1 'GenesisValidatorsRoot'
 		t := t.GenesisValidatorsRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	return dst, nil
 }
@@ -50,18 +51,17 @@ func (t *ForkData) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *ForkData) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(ForkData)
+	}
 	idx := hh.Index()
 	{ // Field #0 'CurrentVersion'
 		t := t.CurrentVersion
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:4])
 	}
 	{ // Field #1 'GenesisValidatorsRoot'
 		t := t.GenesisValidatorsRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	hh.Merkleize(idx)
 	return nil

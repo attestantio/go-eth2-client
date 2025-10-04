@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *SingleAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(SingleAttestation)
+	}
 	{ // Field #0 'CommitteeIndex'
 		t := t.CommitteeIndex
 		dst = sszutils.MarshalUint64(dst, uint64(t))
@@ -24,14 +27,16 @@ func (t *SingleAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	{ // Field #2 'Data'
 		t := t.Data
+		if t == nil {
+			t = new(phase0.AttestationData)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #3 'Signature'
 		t := t.Signature
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
 }
@@ -73,6 +78,9 @@ func (t *SingleAttestation) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *SingleAttestation) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(SingleAttestation)
+	}
 	idx := hh.Index()
 	{ // Field #0 'CommitteeIndex'
 		t := t.CommitteeIndex
@@ -84,15 +92,16 @@ func (t *SingleAttestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #2 'Data'
 		t := t.Data
+		if t == nil {
+			t = new(phase0.AttestationData)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #3 'Signature'
 		t := t.Signature
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *Consolidation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(Consolidation)
+	}
 	{ // Field #0 'SourceIndex'
 		t := t.SourceIndex
 		dst = sszutils.MarshalUint64(dst, uint64(t))
@@ -57,6 +60,9 @@ func (t *Consolidation) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *Consolidation) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(Consolidation)
+	}
 	idx := hh.Index()
 	{ // Field #0 'SourceIndex'
 		t := t.SourceIndex

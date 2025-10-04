@@ -15,12 +15,18 @@ var _ = sszutils.ErrListTooBig
 
 func (t *VersionedSignedValidatorRegistration) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(VersionedSignedValidatorRegistration)
+	}
 	{ // Field #0 'Version'
 		t := t.Version
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	{ // Field #1 'V1'
 		t := t.V1
+		if t == nil {
+			t = new(v1.SignedValidatorRegistration)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -57,6 +63,9 @@ func (t *VersionedSignedValidatorRegistration) UnmarshalSSZ(buf []byte) (err err
 }
 
 func (t *VersionedSignedValidatorRegistration) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(VersionedSignedValidatorRegistration)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Version'
 		t := t.Version
@@ -64,6 +73,9 @@ func (t *VersionedSignedValidatorRegistration) HashTreeRootWith(hh sszutils.Hash
 	}
 	{ // Field #1 'V1'
 		t := t.V1
+		if t == nil {
+			t = new(v1.SignedValidatorRegistration)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}

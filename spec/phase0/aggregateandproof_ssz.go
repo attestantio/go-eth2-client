@@ -13,6 +13,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *AggregateAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(AggregateAndProof)
+	}
 	dstlen := len(dst)
 	{ // Field #0 'AggregatorIndex'
 		t := t.AggregatorIndex
@@ -23,12 +26,14 @@ func (t *AggregateAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #2 'SelectionProof'
 		t := t.SelectionProof
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	{ // Dynamic Field #1 'Aggregate'
 		sszutils.UpdateOffset(dst[offset1:offset1+4], len(dst)-dstlen)
 		t := t.Aggregate
+		if t == nil {
+			t = new(Attestation)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -40,11 +45,17 @@ func (t *AggregateAndProof) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *AggregateAndProof) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(AggregateAndProof)
+	}
 	// Field #0 'AggregatorIndex' static (8 bytes)
 	// Field #1 'Aggregate' offset (4 bytes)
 	// Field #2 'SelectionProof' static (96 bytes)
 	size += 108
 	{ // Dynamic field #1 'Aggregate'
+		if t.Aggregate == nil {
+			t.Aggregate = new(Attestation)
+		}
 		size += t.Aggregate.SizeSSZ()
 	}
 	return size
@@ -83,6 +94,9 @@ func (t *AggregateAndProof) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *AggregateAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(AggregateAndProof)
+	}
 	idx := hh.Index()
 	{ // Field #0 'AggregatorIndex'
 		t := t.AggregatorIndex
@@ -90,15 +104,16 @@ func (t *AggregateAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #1 'Aggregate'
 		t := t.Aggregate
+		if t == nil {
+			t = new(Attestation)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #2 'SelectionProof'
 		t := t.SelectionProof
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

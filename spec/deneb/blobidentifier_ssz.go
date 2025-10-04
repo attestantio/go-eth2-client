@@ -13,10 +13,12 @@ var _ = sszutils.ErrListTooBig
 
 func (t *BlobIdentifier) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(BlobIdentifier)
+	}
 	{ // Field #0 'BlockRoot'
 		t := t.BlockRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #1 'Index'
 		t := t.Index
@@ -49,12 +51,13 @@ func (t *BlobIdentifier) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *BlobIdentifier) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(BlobIdentifier)
+	}
 	idx := hh.Index()
 	{ // Field #0 'BlockRoot'
 		t := t.BlockRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #1 'Index'
 		t := t.Index

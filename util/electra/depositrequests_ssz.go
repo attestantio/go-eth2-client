@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *DepositRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(DepositRequests)
+	}
 	dstlen := len(dst)
 	// Offset #0 'DepositRequests'
 	offset0 := len(dst)
@@ -21,14 +24,15 @@ func (t *DepositRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #0 'DepositRequests'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.DepositRequests
-		max := 8192
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 8192 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
+			if t == nil {
+				t = new(electra.DepositRequest)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -41,6 +45,9 @@ func (t *DepositRequests) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *DepositRequests) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(DepositRequests)
+	}
 	// Field #0 'DepositRequests' offset (4 bytes)
 	size += 4
 	{ // Dynamic field #0 'DepositRequests'
@@ -87,13 +94,22 @@ func (t *DepositRequests) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *DepositRequests) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(DepositRequests)
+	}
 	idx := hh.Index()
 	{ // Field #0 'DepositRequests'
 		t := t.DepositRequests
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 8192 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(electra.DepositRequest)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}

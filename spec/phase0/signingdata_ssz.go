@@ -13,15 +13,16 @@ var _ = sszutils.ErrListTooBig
 
 func (t *SigningData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(SigningData)
+	}
 	{ // Field #0 'ObjectRoot'
 		t := t.ObjectRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #1 'Domain'
 		t := t.Domain
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	return dst, nil
 }
@@ -50,18 +51,17 @@ func (t *SigningData) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *SigningData) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(SigningData)
+	}
 	idx := hh.Index()
 	{ // Field #0 'ObjectRoot'
 		t := t.ObjectRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #1 'Domain'
 		t := t.Domain
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -13,6 +13,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *VoluntaryExit) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(VoluntaryExit)
+	}
 	{ // Field #0 'Epoch'
 		t := t.Epoch
 		dst = sszutils.MarshalUint64(dst, uint64(t))
@@ -48,6 +51,9 @@ func (t *VoluntaryExit) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *VoluntaryExit) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(VoluntaryExit)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Epoch'
 		t := t.Epoch

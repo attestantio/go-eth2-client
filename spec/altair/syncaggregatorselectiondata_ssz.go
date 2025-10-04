@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *SyncAggregatorSelectionData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(SyncAggregatorSelectionData)
+	}
 	{ // Field #0 'Slot'
 		t := t.Slot
 		dst = sszutils.MarshalUint64(dst, uint64(t))
@@ -49,6 +52,9 @@ func (t *SyncAggregatorSelectionData) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *SyncAggregatorSelectionData) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(SyncAggregatorSelectionData)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Slot'
 		t := t.Slot

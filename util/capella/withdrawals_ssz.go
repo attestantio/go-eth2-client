@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *ExecutionPayloadWithdrawals) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(ExecutionPayloadWithdrawals)
+	}
 	dstlen := len(dst)
 	// Offset #0 'Withdrawals'
 	offset0 := len(dst)
@@ -21,14 +24,15 @@ func (t *ExecutionPayloadWithdrawals) MarshalSSZTo(buf []byte) (dst []byte, err 
 	{ // Dynamic Field #0 'Withdrawals'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.Withdrawals
-		max := 16
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 16 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
+			if t == nil {
+				t = new(capella.Withdrawal)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -41,6 +45,9 @@ func (t *ExecutionPayloadWithdrawals) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *ExecutionPayloadWithdrawals) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(ExecutionPayloadWithdrawals)
+	}
 	// Field #0 'Withdrawals' offset (4 bytes)
 	size += 4
 	{ // Dynamic field #0 'Withdrawals'
@@ -87,13 +94,22 @@ func (t *ExecutionPayloadWithdrawals) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *ExecutionPayloadWithdrawals) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(ExecutionPayloadWithdrawals)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Withdrawals'
 		t := t.Withdrawals
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 16 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(capella.Withdrawal)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}

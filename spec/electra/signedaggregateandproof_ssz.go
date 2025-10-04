@@ -13,18 +13,23 @@ var _ = sszutils.ErrListTooBig
 
 func (t *SignedAggregateAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(SignedAggregateAndProof)
+	}
 	dstlen := len(dst)
 	// Offset #0 'Message'
 	offset0 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #1 'Signature'
 		t := t.Signature
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	{ // Dynamic Field #0 'Message'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.Message
+		if t == nil {
+			t = new(AggregateAndProof)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -36,10 +41,16 @@ func (t *SignedAggregateAndProof) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *SignedAggregateAndProof) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(SignedAggregateAndProof)
+	}
 	// Field #0 'Message' offset (4 bytes)
 	// Field #1 'Signature' static (96 bytes)
 	size += 100
 	{ // Dynamic field #0 'Message'
+		if t.Message == nil {
+			t.Message = new(AggregateAndProof)
+		}
 		size += t.Message.SizeSSZ()
 	}
 	return size
@@ -74,18 +85,22 @@ func (t *SignedAggregateAndProof) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *SignedAggregateAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(SignedAggregateAndProof)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Message'
 		t := t.Message
+		if t == nil {
+			t = new(AggregateAndProof)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #1 'Signature'
 		t := t.Signature
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -14,12 +14,18 @@ var _ = sszutils.ErrListTooBig
 
 func (t *PendingAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(PendingAttestation)
+	}
 	dstlen := len(dst)
 	// Offset #0 'AggregationBits'
 	offset0 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #1 'Data'
 		t := t.Data
+		if t == nil {
+			t = new(AttestationData)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -35,10 +41,8 @@ func (t *PendingAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #0 'AggregationBits'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.AggregationBits
-		max := 2048
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 2048 {
 			return dst, sszutils.ErrListTooBig
 		}
 		dst = append(dst, []byte(t[:])...)
@@ -50,6 +54,9 @@ func (t *PendingAttestation) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *PendingAttestation) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(PendingAttestation)
+	}
 	// Field #0 'AggregationBits' offset (4 bytes)
 	// Field #1 'Data' static (128 bytes)
 	// Field #2 'InclusionDelay' static (8 bytes)
@@ -104,6 +111,9 @@ func (t *PendingAttestation) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *PendingAttestation) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(PendingAttestation)
+	}
 	idx := hh.Index()
 	{ // Field #0 'AggregationBits'
 		t := t.AggregationBits
@@ -123,6 +133,9 @@ func (t *PendingAttestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #1 'Data'
 		t := t.Data
+		if t == nil {
+			t = new(AttestationData)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}

@@ -14,22 +14,23 @@ var _ = sszutils.ErrListTooBig
 
 func (t *SyncAggregate) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(SyncAggregate)
+	}
 	{ // Field #0 'SyncCommitteeBits'
 		t := t.SyncCommitteeBits
-		limit := 64
 		vlen := len(t)
-		if vlen > int(limit) {
-			return dst, sszutils.ErrListTooBig
+		if vlen > 64 {
+			return dst, sszutils.ErrVectorLength
 		}
-		dst = append(dst, []byte(t[:limit])...)
-		if vlen < int(limit) {
-			dst = sszutils.AppendZeroPadding(dst, (int(limit)-vlen)*1)
+		dst = append(dst, []byte(t[:vlen])...)
+		if vlen < 64 {
+			dst = sszutils.AppendZeroPadding(dst, (64-vlen)*1)
 		}
 	}
 	{ // Field #1 'SyncCommitteeSignature'
 		t := t.SyncCommitteeSignature
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
 }
@@ -63,22 +64,25 @@ func (t *SyncAggregate) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *SyncAggregate) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(SyncAggregate)
+	}
 	idx := hh.Index()
 	{ // Field #0 'SyncCommitteeBits'
 		t := t.SyncCommitteeBits
-		idx := hh.Index()
 		vlen := len(t)
 		if vlen > 64 {
 			return sszutils.ErrVectorLength
 		}
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		val := t[:]
+		if vlen < 64 {
+			val = sszutils.AppendZeroPadding(val, (64-vlen)*1)
+		}
+		hh.PutBytes(val[:64])
 	}
 	{ // Field #1 'SyncCommitteeSignature'
 		t := t.SyncCommitteeSignature
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

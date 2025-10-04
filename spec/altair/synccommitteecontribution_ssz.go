@@ -15,14 +15,16 @@ var _ = sszutils.ErrListTooBig
 
 func (t *SyncCommitteeContribution) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(SyncCommitteeContribution)
+	}
 	{ // Field #0 'Slot'
 		t := t.Slot
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	{ // Field #1 'BeaconBlockRoot'
 		t := t.BeaconBlockRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #2 'SubcommitteeIndex'
 		t := t.SubcommitteeIndex
@@ -30,20 +32,18 @@ func (t *SyncCommitteeContribution) MarshalSSZTo(buf []byte) (dst []byte, err er
 	}
 	{ // Field #3 'AggregationBits'
 		t := t.AggregationBits
-		limit := 16
 		vlen := len(t)
-		if vlen > int(limit) {
-			return dst, sszutils.ErrListTooBig
+		if vlen > 16 {
+			return dst, sszutils.ErrVectorLength
 		}
-		dst = append(dst, []byte(t[:limit])...)
-		if vlen < int(limit) {
-			dst = sszutils.AppendZeroPadding(dst, (int(limit)-vlen)*1)
+		dst = append(dst, []byte(t[:vlen])...)
+		if vlen < 16 {
+			dst = sszutils.AppendZeroPadding(dst, (16-vlen)*1)
 		}
 	}
 	{ // Field #4 'Signature'
 		t := t.Signature
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
 }
@@ -89,6 +89,9 @@ func (t *SyncCommitteeContribution) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *SyncCommitteeContribution) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(SyncCommitteeContribution)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Slot'
 		t := t.Slot
@@ -96,9 +99,7 @@ func (t *SyncCommitteeContribution) HashTreeRootWith(hh sszutils.HashWalker) err
 	}
 	{ // Field #1 'BeaconBlockRoot'
 		t := t.BeaconBlockRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #2 'SubcommitteeIndex'
 		t := t.SubcommitteeIndex
@@ -106,19 +107,19 @@ func (t *SyncCommitteeContribution) HashTreeRootWith(hh sszutils.HashWalker) err
 	}
 	{ // Field #3 'AggregationBits'
 		t := t.AggregationBits
-		idx := hh.Index()
 		vlen := len(t)
 		if vlen > 16 {
 			return sszutils.ErrVectorLength
 		}
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		val := t[:]
+		if vlen < 16 {
+			val = sszutils.AppendZeroPadding(val, (16-vlen)*1)
+		}
+		hh.PutBytes(val[:16])
 	}
 	{ // Field #4 'Signature'
 		t := t.Signature
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

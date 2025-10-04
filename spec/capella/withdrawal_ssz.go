@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *Withdrawal) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(Withdrawal)
+	}
 	{ // Field #0 'Index'
 		t := t.Index
 		dst = sszutils.MarshalUint64(dst, uint64(t))
@@ -24,8 +27,7 @@ func (t *Withdrawal) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	{ // Field #2 'Address'
 		t := t.Address
-		limit := 20
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:20])...)
 	}
 	{ // Field #3 'Amount'
 		t := t.Amount
@@ -66,6 +68,9 @@ func (t *Withdrawal) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *Withdrawal) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(Withdrawal)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Index'
 		t := t.Index
@@ -77,9 +82,7 @@ func (t *Withdrawal) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #2 'Address'
 		t := t.Address
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:20])
 	}
 	{ // Field #3 'Amount'
 		t := t.Amount

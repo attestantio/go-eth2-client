@@ -13,36 +13,33 @@ var _ = sszutils.ErrListTooBig
 
 func (t *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(ExecutionPayload)
+	}
 	dstlen := len(dst)
 	{ // Field #0 'ParentHash'
 		t := t.ParentHash
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #1 'FeeRecipient'
 		t := t.FeeRecipient
-		limit := 20
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:20])...)
 	}
 	{ // Field #2 'StateRoot'
 		t := t.StateRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #3 'ReceiptsRoot'
 		t := t.ReceiptsRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #4 'LogsBloom'
 		t := t.LogsBloom
-		limit := 256
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:256])...)
 	}
 	{ // Field #5 'PrevRandao'
 		t := t.PrevRandao
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #6 'BlockNumber'
 		t := t.BlockNumber
@@ -65,13 +62,11 @@ func (t *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #11 'BaseFeePerGas'
 		t := t.BaseFeePerGas
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #12 'BlockHash'
 		t := t.BlockHash
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	// Offset #13 'Transactions'
 	offset13 := len(dst)
@@ -79,10 +74,8 @@ func (t *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #10 'ExtraData'
 		sszutils.UpdateOffset(dst[offset10:offset10+4], len(dst)-dstlen)
 		t := t.ExtraData
-		max := 32
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 32 {
 			return dst, sszutils.ErrListTooBig
 		}
 		dst = append(dst, []byte(t[:])...)
@@ -90,10 +83,8 @@ func (t *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #13 'Transactions'
 		sszutils.UpdateOffset(dst[offset13:offset13+4], len(dst)-dstlen)
 		t := t.Transactions
-		max := 1048576
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 1048576 {
 			return dst, sszutils.ErrListTooBig
 		}
 		dstlen := len(dst)
@@ -101,10 +92,8 @@ func (t *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		for i := 0; i < vlen; i++ {
 			sszutils.UpdateOffset(dst[dstlen+(i*4):dstlen+((i+1)*4)], len(dst)-dstlen)
 			t := t[i]
-			max := 1073741824
-			hasMax := true
 			vlen := len(t)
-			if hasMax && vlen > int(max) {
+			if vlen > 1073741824 {
 				return dst, sszutils.ErrListTooBig
 			}
 			dst = append(dst, []byte(t[:])...)
@@ -117,6 +106,9 @@ func (t *ExecutionPayload) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *ExecutionPayload) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(ExecutionPayload)
+	}
 	// Field #0 'ParentHash' static (32 bytes)
 	// Field #1 'FeeRecipient' static (20 bytes)
 	// Field #2 'StateRoot' static (32 bytes)
@@ -268,42 +260,33 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *ExecutionPayload) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(ExecutionPayload)
+	}
 	idx := hh.Index()
 	{ // Field #0 'ParentHash'
 		t := t.ParentHash
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #1 'FeeRecipient'
 		t := t.FeeRecipient
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:20])
 	}
 	{ // Field #2 'StateRoot'
 		t := t.StateRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #3 'ReceiptsRoot'
 		t := t.ReceiptsRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #4 'LogsBloom'
 		t := t.LogsBloom
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:256])
 	}
 	{ // Field #5 'PrevRandao'
 		t := t.PrevRandao
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #6 'BlockNumber'
 		t := t.BlockNumber
@@ -323,32 +306,37 @@ func (t *ExecutionPayload) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #10 'ExtraData'
 		t := t.ExtraData
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 32 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		hh.PutBytes(t[:])
 		limit := sszutils.CalculateLimit(32, vlen, 1)
 		hh.MerkleizeWithMixin(idx, vlen, limit)
 	}
 	{ // Field #11 'BaseFeePerGas'
 		t := t.BaseFeePerGas
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #12 'BlockHash'
 		t := t.BlockHash
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #13 'Transactions'
 		t := t.Transactions
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 1048576 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
-			idx := hh.Index()
 			vlen := uint64(len(t))
+			if vlen > 1073741824 {
+				return sszutils.ErrListTooBig
+			}
+			idx := hh.Index()
 			hh.PutBytes(t[:])
 			limit := sszutils.CalculateLimit(1073741824, vlen, 1)
 			hh.MerkleizeWithMixin(idx, vlen, limit)

@@ -14,14 +14,16 @@ var _ = sszutils.ErrListTooBig
 
 func (t *SyncCommitteeMessage) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(SyncCommitteeMessage)
+	}
 	{ // Field #0 'Slot'
 		t := t.Slot
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	{ // Field #1 'BeaconBlockRoot'
 		t := t.BeaconBlockRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #2 'ValidatorIndex'
 		t := t.ValidatorIndex
@@ -29,8 +31,7 @@ func (t *SyncCommitteeMessage) MarshalSSZTo(buf []byte) (dst []byte, err error) 
 	}
 	{ // Field #3 'Signature'
 		t := t.Signature
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
 }
@@ -67,6 +68,9 @@ func (t *SyncCommitteeMessage) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *SyncCommitteeMessage) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(SyncCommitteeMessage)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Slot'
 		t := t.Slot
@@ -74,9 +78,7 @@ func (t *SyncCommitteeMessage) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #1 'BeaconBlockRoot'
 		t := t.BeaconBlockRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #2 'ValidatorIndex'
 		t := t.ValidatorIndex
@@ -84,9 +86,7 @@ func (t *SyncCommitteeMessage) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #3 'Signature'
 		t := t.Signature
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *WithdrawalRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(WithdrawalRequests)
+	}
 	dstlen := len(dst)
 	// Offset #0 'WithdrawalRequests'
 	offset0 := len(dst)
@@ -21,14 +24,15 @@ func (t *WithdrawalRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #0 'WithdrawalRequests'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.WithdrawalRequests
-		max := 16
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 16 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
+			if t == nil {
+				t = new(electra.WithdrawalRequest)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -41,6 +45,9 @@ func (t *WithdrawalRequests) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *WithdrawalRequests) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(WithdrawalRequests)
+	}
 	// Field #0 'WithdrawalRequests' offset (4 bytes)
 	size += 4
 	{ // Dynamic field #0 'WithdrawalRequests'
@@ -87,13 +94,22 @@ func (t *WithdrawalRequests) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *WithdrawalRequests) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(WithdrawalRequests)
+	}
 	idx := hh.Index()
 	{ // Field #0 'WithdrawalRequests'
 		t := t.WithdrawalRequests
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 16 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(electra.WithdrawalRequest)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}

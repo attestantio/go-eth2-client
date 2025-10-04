@@ -14,10 +14,12 @@ var _ = sszutils.ErrListTooBig
 
 func (t *ValidatorRegistration) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(ValidatorRegistration)
+	}
 	{ // Field #0 'FeeRecipient'
 		t := t.FeeRecipient
-		limit := 20
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:20])...)
 	}
 	{ // Field #1 'GasLimit'
 		t := t.GasLimit
@@ -29,8 +31,7 @@ func (t *ValidatorRegistration) MarshalSSZTo(buf []byte) (dst []byte, err error)
 	}
 	{ // Field #3 'Pubkey'
 		t := t.Pubkey
-		limit := 48
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:48])...)
 	}
 	return dst, nil
 }
@@ -67,12 +68,13 @@ func (t *ValidatorRegistration) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *ValidatorRegistration) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(ValidatorRegistration)
+	}
 	idx := hh.Index()
 	{ // Field #0 'FeeRecipient'
 		t := t.FeeRecipient
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:20])
 	}
 	{ // Field #1 'GasLimit'
 		t := t.GasLimit
@@ -84,9 +86,7 @@ func (t *ValidatorRegistration) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #3 'Pubkey'
 		t := t.Pubkey
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:48])
 	}
 	hh.Merkleize(idx)
 	return nil

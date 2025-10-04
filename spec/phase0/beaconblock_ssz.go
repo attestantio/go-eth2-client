@@ -13,6 +13,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *BeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(BeaconBlock)
+	}
 	dstlen := len(dst)
 	{ // Field #0 'Slot'
 		t := t.Slot
@@ -24,13 +27,11 @@ func (t *BeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	{ // Field #2 'ParentRoot'
 		t := t.ParentRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #3 'StateRoot'
 		t := t.StateRoot
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	// Offset #4 'Body'
 	offset4 := len(dst)
@@ -38,6 +39,9 @@ func (t *BeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Dynamic Field #4 'Body'
 		sszutils.UpdateOffset(dst[offset4:offset4+4], len(dst)-dstlen)
 		t := t.Body
+		if t == nil {
+			t = new(BeaconBlockBody)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -49,6 +53,9 @@ func (t *BeaconBlock) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *BeaconBlock) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(BeaconBlock)
+	}
 	// Field #0 'Slot' static (8 bytes)
 	// Field #1 'ProposerIndex' static (8 bytes)
 	// Field #2 'ParentRoot' static (32 bytes)
@@ -56,6 +63,9 @@ func (t *BeaconBlock) SizeSSZ() (size int) {
 	// Field #4 'Body' offset (4 bytes)
 	size += 84
 	{ // Dynamic field #4 'Body'
+		if t.Body == nil {
+			t.Body = new(BeaconBlockBody)
+		}
 		size += t.Body.SizeSSZ()
 	}
 	return size
@@ -102,6 +112,9 @@ func (t *BeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *BeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(BeaconBlock)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Slot'
 		t := t.Slot
@@ -113,18 +126,17 @@ func (t *BeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #2 'ParentRoot'
 		t := t.ParentRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #3 'StateRoot'
 		t := t.StateRoot
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	{ // Field #4 'Body'
 		t := t.Body
+		if t == nil {
+			t = new(BeaconBlockBody)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}

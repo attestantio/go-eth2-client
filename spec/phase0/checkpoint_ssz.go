@@ -13,14 +13,16 @@ var _ = sszutils.ErrListTooBig
 
 func (t *Checkpoint) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(Checkpoint)
+	}
 	{ // Field #0 'Epoch'
 		t := t.Epoch
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	{ // Field #1 'Root'
 		t := t.Root
-		limit := 32
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:32])...)
 	}
 	return dst, nil
 }
@@ -49,6 +51,9 @@ func (t *Checkpoint) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *Checkpoint) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(Checkpoint)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Epoch'
 		t := t.Epoch
@@ -56,9 +61,7 @@ func (t *Checkpoint) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	{ // Field #1 'Root'
 		t := t.Root
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:32])
 	}
 	hh.Merkleize(idx)
 	return nil

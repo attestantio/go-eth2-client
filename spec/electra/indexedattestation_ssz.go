@@ -14,28 +14,31 @@ var _ = sszutils.ErrListTooBig
 
 func (t *IndexedAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(IndexedAttestation)
+	}
 	dstlen := len(dst)
 	// Offset #0 'AttestingIndices'
 	offset0 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #1 'Data'
 		t := t.Data
+		if t == nil {
+			t = new(phase0.AttestationData)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
 	}
 	{ // Field #2 'Signature'
 		t := t.Signature
-		limit := 96
-		dst = append(dst, []byte(t[:limit])...)
+		dst = append(dst, []byte(t[:96])...)
 	}
 	{ // Dynamic Field #0 'AttestingIndices'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.AttestingIndices
-		max := 131072
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 131072 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
@@ -50,6 +53,9 @@ func (t *IndexedAttestation) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *IndexedAttestation) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(IndexedAttestation)
+	}
 	// Field #0 'AttestingIndices' offset (4 bytes)
 	// Field #1 'Data' static (128 bytes)
 	// Field #2 'Signature' static (96 bytes)
@@ -106,29 +112,37 @@ func (t *IndexedAttestation) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *IndexedAttestation) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(IndexedAttestation)
+	}
 	idx := hh.Index()
 	{ // Field #0 'AttestingIndices'
 		t := t.AttestingIndices
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 131072 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
 			hh.AppendUint64(uint64(t))
 		}
+		hh.FillUpTo32()
 		limit := sszutils.CalculateLimit(131072, vlen, 8)
 		hh.MerkleizeWithMixin(idx, vlen, limit)
 	}
 	{ // Field #1 'Data'
 		t := t.Data
+		if t == nil {
+			t = new(phase0.AttestationData)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #2 'Signature'
 		t := t.Signature
-		idx := hh.Index()
-		hh.PutBytes(t[:])
-		hh.Merkleize(idx)
+		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -14,6 +14,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *ConsolidationRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(ConsolidationRequests)
+	}
 	dstlen := len(dst)
 	// Offset #0 'ConsolidationRequests'
 	offset0 := len(dst)
@@ -21,14 +24,15 @@ func (t *ConsolidationRequests) MarshalSSZTo(buf []byte) (dst []byte, err error)
 	{ // Dynamic Field #0 'ConsolidationRequests'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
 		t := t.ConsolidationRequests
-		max := 1
-		hasMax := true
 		vlen := len(t)
-		if hasMax && vlen > int(max) {
+		if vlen > 1 {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
+			if t == nil {
+				t = new(electra.ConsolidationRequest)
+			}
 			if dst, err = t.MarshalSSZTo(dst); err != nil {
 				return dst, err
 			}
@@ -41,6 +45,9 @@ func (t *ConsolidationRequests) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *ConsolidationRequests) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(ConsolidationRequests)
+	}
 	// Field #0 'ConsolidationRequests' offset (4 bytes)
 	size += 4
 	{ // Dynamic field #0 'ConsolidationRequests'
@@ -87,13 +94,22 @@ func (t *ConsolidationRequests) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *ConsolidationRequests) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(ConsolidationRequests)
+	}
 	idx := hh.Index()
 	{ // Field #0 'ConsolidationRequests'
 		t := t.ConsolidationRequests
-		idx := hh.Index()
 		vlen := uint64(len(t))
+		if vlen > 1 {
+			return sszutils.ErrListTooBig
+		}
+		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
 			t := t[i]
+			if t == nil {
+				t = new(electra.ConsolidationRequest)
+			}
 			if err := t.HashTreeRootWith(hh); err != nil {
 				return err
 			}

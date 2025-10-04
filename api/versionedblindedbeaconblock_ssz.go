@@ -18,6 +18,9 @@ var _ = sszutils.ErrListTooBig
 
 func (t *VersionedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(VersionedBlindedBeaconBlock)
+	}
 	dstlen := len(dst)
 	{ // Field #0 'Version'
 		t := t.Version
@@ -41,6 +44,9 @@ func (t *VersionedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err 
 	{ // Dynamic Field #1 'Bellatrix'
 		sszutils.UpdateOffset(dst[offset1:offset1+4], len(dst)-dstlen)
 		t := t.Bellatrix
+		if t == nil {
+			t = new(bellatrix.BlindedBeaconBlock)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -48,6 +54,9 @@ func (t *VersionedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err 
 	{ // Dynamic Field #2 'Capella'
 		sszutils.UpdateOffset(dst[offset2:offset2+4], len(dst)-dstlen)
 		t := t.Capella
+		if t == nil {
+			t = new(capella.BlindedBeaconBlock)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -55,6 +64,9 @@ func (t *VersionedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err 
 	{ // Dynamic Field #3 'Deneb'
 		sszutils.UpdateOffset(dst[offset3:offset3+4], len(dst)-dstlen)
 		t := t.Deneb
+		if t == nil {
+			t = new(deneb.BlindedBeaconBlock)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -62,6 +74,9 @@ func (t *VersionedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err 
 	{ // Dynamic Field #4 'Electra'
 		sszutils.UpdateOffset(dst[offset4:offset4+4], len(dst)-dstlen)
 		t := t.Electra
+		if t == nil {
+			t = new(electra.BlindedBeaconBlock)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -69,6 +84,9 @@ func (t *VersionedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err 
 	{ // Dynamic Field #5 'Fulu'
 		sszutils.UpdateOffset(dst[offset5:offset5+4], len(dst)-dstlen)
 		t := t.Fulu
+		if t == nil {
+			t = new(electra.BlindedBeaconBlock)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -80,6 +98,9 @@ func (t *VersionedBlindedBeaconBlock) MarshalSSZ() ([]byte, error) {
 	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
 }
 func (t *VersionedBlindedBeaconBlock) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(VersionedBlindedBeaconBlock)
+	}
 	// Field #0 'Version' static (8 bytes)
 	// Field #1 'Bellatrix' offset (4 bytes)
 	// Field #2 'Capella' offset (4 bytes)
@@ -88,18 +109,33 @@ func (t *VersionedBlindedBeaconBlock) SizeSSZ() (size int) {
 	// Field #5 'Fulu' offset (4 bytes)
 	size += 28
 	{ // Dynamic field #1 'Bellatrix'
+		if t.Bellatrix == nil {
+			t.Bellatrix = new(bellatrix.BlindedBeaconBlock)
+		}
 		size += t.Bellatrix.SizeSSZ()
 	}
 	{ // Dynamic field #2 'Capella'
+		if t.Capella == nil {
+			t.Capella = new(capella.BlindedBeaconBlock)
+		}
 		size += t.Capella.SizeSSZ()
 	}
 	{ // Dynamic field #3 'Deneb'
+		if t.Deneb == nil {
+			t.Deneb = new(deneb.BlindedBeaconBlock)
+		}
 		size += t.Deneb.SizeSSZ()
 	}
 	{ // Dynamic field #4 'Electra'
+		if t.Electra == nil {
+			t.Electra = new(electra.BlindedBeaconBlock)
+		}
 		size += t.Electra.SizeSSZ()
 	}
 	{ // Dynamic field #5 'Fulu'
+		if t.Fulu == nil {
+			t.Fulu = new(electra.BlindedBeaconBlock)
+		}
 		size += t.Fulu.SizeSSZ()
 	}
 	return size
@@ -198,6 +234,9 @@ func (t *VersionedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *VersionedBlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(VersionedBlindedBeaconBlock)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Version'
 		t := t.Version
@@ -205,30 +244,45 @@ func (t *VersionedBlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) e
 	}
 	{ // Field #1 'Bellatrix'
 		t := t.Bellatrix
+		if t == nil {
+			t = new(bellatrix.BlindedBeaconBlock)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #2 'Capella'
 		t := t.Capella
+		if t == nil {
+			t = new(capella.BlindedBeaconBlock)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #3 'Deneb'
 		t := t.Deneb
+		if t == nil {
+			t = new(deneb.BlindedBeaconBlock)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #4 'Electra'
 		t := t.Electra
+		if t == nil {
+			t = new(electra.BlindedBeaconBlock)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
 	}
 	{ // Field #5 'Fulu'
 		t := t.Fulu
+		if t == nil {
+			t = new(electra.BlindedBeaconBlock)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}

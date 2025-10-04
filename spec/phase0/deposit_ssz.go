@@ -13,31 +13,35 @@ var _ = sszutils.ErrListTooBig
 
 func (t *Deposit) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
+	if t == nil {
+		t = new(Deposit)
+	}
 	{ // Field #0 'Proof'
 		t := t.Proof
-		limit := 33
 		vlen := len(t)
-		if vlen > int(limit) {
-			return dst, sszutils.ErrListTooBig
+		if vlen > 33 {
+			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
 			t := t[i]
-			limit := 32
 			vlen := len(t)
-			if vlen > int(limit) {
-				return dst, sszutils.ErrListTooBig
+			if vlen > 32 {
+				return dst, sszutils.ErrVectorLength
 			}
-			dst = append(dst, []byte(t[:limit])...)
-			if vlen < int(limit) {
-				dst = sszutils.AppendZeroPadding(dst, (int(limit)-vlen)*1)
+			dst = append(dst, []byte(t[:vlen])...)
+			if vlen < 32 {
+				dst = sszutils.AppendZeroPadding(dst, (32-vlen)*1)
 			}
 		}
-		if vlen < int(limit) {
-			dst = sszutils.AppendZeroPadding(dst, (int(limit)-vlen)*32)
+		if vlen < 33 {
+			dst = sszutils.AppendZeroPadding(dst, (33-vlen)*32)
 		}
 	}
 	{ // Field #1 'Data'
 		t := t.Data
+		if t == nil {
+			t = new(DepositData)
+		}
 		if dst, err = t.MarshalSSZTo(dst); err != nil {
 			return dst, err
 		}
@@ -89,31 +93,39 @@ func (t *Deposit) UnmarshalSSZ(buf []byte) (err error) {
 }
 
 func (t *Deposit) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(Deposit)
+	}
 	idx := hh.Index()
 	{ // Field #0 'Proof'
 		t := t.Proof
-		idx := hh.Index()
 		vlen := len(t)
 		if vlen > 33 {
 			return sszutils.ErrVectorLength
 		}
+		idx := hh.Index()
 		for i := 0; i < 33; i++ {
 			var val1 []byte
 			if i < vlen {
 				val1 = t[i]
 			}
-			idx := hh.Index()
 			vlen := len(val1)
 			if vlen > 32 {
 				return sszutils.ErrVectorLength
 			}
-			hh.PutBytes(val1[:])
-			hh.Merkleize(idx)
+			val := val1[:]
+			if vlen < 32 {
+				val = sszutils.AppendZeroPadding(val, (32-vlen)*1)
+			}
+			hh.PutBytes(val[:32])
 		}
 		hh.Merkleize(idx)
 	}
 	{ // Field #1 'Data'
 		t := t.Data
+		if t == nil {
+			t = new(DepositData)
+		}
 		if err := t.HashTreeRootWith(hh); err != nil {
 			return err
 		}
