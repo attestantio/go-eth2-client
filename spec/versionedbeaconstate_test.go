@@ -24,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/fulu"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/stretchr/testify/require"
 )
 
@@ -79,7 +80,6 @@ func readVersionedBeaconState(t *testing.T, fileName string, version spec.DataVe
 	}
 }
 
-/* // TODO: implement this
 func TestStateTree(t *testing.T) {
 	state, err := readVersionedBeaconState(t, "holesky_beaconstate_2595934.ssz", spec.DataVersionDeneb)
 	if err != nil {
@@ -142,7 +142,7 @@ func TestFieldRoot(t *testing.T) {
 	fieldRoot, err := state.FieldRoot("Validators")
 	require.NoError(t, err)
 
-	stateTree, err := state.Deneb.GetTree()
+	stateTree, err := dynssz.GetGlobalDynSsz().GetTree(state.Deneb)
 	require.NoError(t, err)
 
 	validatorGeneralizedIndex, err := state.FieldGeneralizedIndex("Validators")
@@ -174,7 +174,6 @@ func TestProveField(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, valid)
 }
-*/
 
 func TestInvalidValidatorIndex(t *testing.T) {
 	state, err := readVersionedBeaconState(t, "holesky_beaconstate_2649079.ssz", spec.DataVersionDeneb)
