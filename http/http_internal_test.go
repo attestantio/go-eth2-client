@@ -102,28 +102,45 @@ func TestParseBasicAuth(t *testing.T) {
 		address    string
 		headers    map[string]string
 		expHeaders map[string]string
-		err        string
 	}{
+		{
+			name:       "No Scheme",
+			address:    "127.0.0.1:5051",
+			expHeaders: nil,
+		},
+		{
+			name:       "With Scheme",
+			address:    "http://127.0.0.1:5051",
+			expHeaders: nil,
+		},
 		{
 			name:       "Simple",
 			address:    "http://user:pass@foo.com",
 			expHeaders: map[string]string{"Authorization": "Basic dXNlcjpwYXNz"},
 		},
 		{
-			name:    "Invalid",
-			address: "http:// foo",
-			err:     "failed to parse address",
+			name:       "Missing user",
+			address:    "http://:pass@foo.com",
+			expHeaders: map[string]string{"Authorization": "Basic OnBhc3M="},
+		},
+		{
+			name:       "Missing pass",
+			address:    "http://user:@foo.com",
+			expHeaders: map[string]string{"Authorization": "Basic dXNlcjo="},
+		},
+		{
+			name:       "Missing user and pass",
+			address:    "http://:@foo.com",
+			expHeaders: map[string]string{"Authorization": "Basic Og=="},
 		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			newHeaders, err := parseBasicAuth(test.address, test.headers)
-			if test.err != "" {
-				require.EqualError(t, err, test.err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, test.expHeaders, newHeaders)
-			}
+			base, _, err := parseAddress(test.address)
+			require.NoError(t, err)
+			newHeaders := parseBasicAuth(base, test.headers)
+			require.NoError(t, err)
+			require.Equal(t, test.expHeaders, newHeaders)
 		})
 	}
 }

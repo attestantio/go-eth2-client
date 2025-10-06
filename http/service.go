@@ -114,15 +114,12 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		}
 	}
 
-	extraHeaders, err := parseBasicAuth(parameters.address, parameters.extraHeaders)
-	if err != nil {
-		return nil, err
-	}
-
 	base, address, err := parseAddress(parameters.address)
 	if err != nil {
 		return nil, err
 	}
+
+	extraHeaders := parseBasicAuth(base, parameters.extraHeaders)
 
 	s := &Service{
 		log:                 log,
@@ -451,20 +448,16 @@ func parseAddress(address string) (*url.URL, *url.URL, error) {
 
 // parseBasicAuth adds an HTTP Basic Authorization header to a copy of the provided headers map if the address contains credentials.
 // If no credentials are present, it returns the original headers.
-func parseBasicAuth(address string, headers map[string]string) (map[string]string, error) {
-	parsedURL, err := url.Parse(address)
-	if err != nil {
-		return nil, errors.New("failed to parse address")
-	}
-	if parsedURL.User == nil {
-		return headers, nil
+func parseBasicAuth(address *url.URL, headers map[string]string) map[string]string {
+	if address.User == nil {
+		return headers
 	}
 
 	headersWithAuth := make(map[string]string, len(headers)+1)
 	maps.Copy(headersWithAuth, headers)
 
-	password, _ := parsedURL.User.Password()
-	headersWithAuth["Authorization"] = "Basic " + base64.StdEncoding.EncodeToString([]byte(parsedURL.User.Username()+":"+password))
+	password, _ := address.User.Password()
+	headersWithAuth["Authorization"] = "Basic " + base64.StdEncoding.EncodeToString([]byte(address.User.Username()+":"+password))
 
-	return headersWithAuth, nil
+	return headersWithAuth
 }
