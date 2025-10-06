@@ -56,11 +56,7 @@ func (t *ETH1Data) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #2 'BlockHash' (static)
 		buf := buf[40:72]
-		if len(t.BlockHash) < 32 {
-			t.BlockHash = make([]byte, 32)
-		} else if len(t.BlockHash) > 32 {
-			t.BlockHash = t.BlockHash[:32]
-		}
+		t.BlockHash = sszutils.ExpandSlice(t.BlockHash, 32)
 		copy(t.BlockHash[:], buf)
 	}
 	return nil

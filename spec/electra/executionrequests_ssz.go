@@ -110,11 +110,7 @@ func (t *ExecutionRequests) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%192 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val1) < itemCount {
-			val1 = make([]*DepositRequest, itemCount)
-		} else if len(val1) > itemCount {
-			val1 = val1[:itemCount]
-		}
+		val1 = sszutils.ExpandSlice(val1, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val1[i] == nil {
 				val1[i] = new(DepositRequest)
@@ -133,11 +129,7 @@ func (t *ExecutionRequests) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%76 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val2) < itemCount {
-			val2 = make([]*WithdrawalRequest, itemCount)
-		} else if len(val2) > itemCount {
-			val2 = val2[:itemCount]
-		}
+		val2 = sszutils.ExpandSlice(val2, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val2[i] == nil {
 				val2[i] = new(WithdrawalRequest)
@@ -156,11 +148,7 @@ func (t *ExecutionRequests) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%116 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val3) < itemCount {
-			val3 = make([]*ConsolidationRequest, itemCount)
-		} else if len(val3) > itemCount {
-			val3 = val3[:itemCount]
-		}
+		val3 = sszutils.ExpandSlice(val3, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val3[i] == nil {
 				val3[i] = new(ConsolidationRequest)

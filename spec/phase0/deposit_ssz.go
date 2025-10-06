@@ -60,18 +60,10 @@ func (t *Deposit) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #0 'Proof' (static)
 		buf := buf[0:1056]
 		val1 := t.Proof
-		if len(val1) < 33 {
-			val1 = make([][]byte, 33)
-		} else if len(val1) > 33 {
-			val1 = val1[:33]
-		}
+		val1 = sszutils.ExpandSlice(val1, 33)
 		for i := 0; i < 33; i++ {
 			buf := buf[32*i : 32*(i+1)]
-			if len(val1[i]) < 32 {
-				val1[i] = make([]byte, 32)
-			} else if len(val1[i]) > 32 {
-				val1[i] = val1[i][:32]
-			}
+			val1[i] = sszutils.ExpandSlice(val1[i], 32)
 			copy(val1[i][:], buf)
 		}
 		t.Proof = val1

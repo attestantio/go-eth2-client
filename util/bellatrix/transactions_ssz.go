@@ -4,7 +4,6 @@
 package bellatrix
 
 import (
-	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/pk910/dynamic-ssz/hasher"
 	"github.com/pk910/dynamic-ssz/sszutils"
@@ -70,11 +69,7 @@ func (t *ExecutionPayloadTransactions) UnmarshalSSZ(buf []byte) (err error) {
 		if startOffset%4 != 0 || len(buf) < startOffset {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val1) < itemCount {
-			val1 = make([]bellatrix.Transaction, itemCount)
-		} else if len(val1) > itemCount {
-			val1 = val1[:itemCount]
-		}
+		val1 = sszutils.ExpandSlice(val1, itemCount)
 		for i := 0; i < itemCount; i++ {
 			var endOffset int
 			if i < itemCount-1 {
@@ -88,12 +83,7 @@ func (t *ExecutionPayloadTransactions) UnmarshalSSZ(buf []byte) (err error) {
 			buf := buf[startOffset:endOffset]
 			startOffset = endOffset
 			val2 := val1[i]
-			limit := len(buf)
-			if len(val2) < limit {
-				val2 = make(bellatrix.Transaction, limit)
-			} else if len(val2) > limit {
-				val2 = val2[:limit]
-			}
+			val2 = sszutils.ExpandSlice(val2, len(buf))
 			copy(val2[:], buf)
 			val1[i] = val2
 		}

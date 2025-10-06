@@ -7,7 +7,6 @@ import (
 	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/pk910/dynamic-ssz/hasher"
 	"github.com/pk910/dynamic-ssz/sszutils"
-	go_bitfield "github.com/prysmaticlabs/go-bitfield"
 )
 
 var _ = sszutils.ErrListTooBig
@@ -45,11 +44,7 @@ func (t *SyncAggregate) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #0 'SyncCommitteeBits' (static)
 		buf := buf[0:64]
-		if len(t.SyncCommitteeBits) < 64 {
-			t.SyncCommitteeBits = make(go_bitfield.Bitvector512, 64)
-		} else if len(t.SyncCommitteeBits) > 64 {
-			t.SyncCommitteeBits = t.SyncCommitteeBits[:64]
-		}
+		t.SyncCommitteeBits = sszutils.ExpandSlice(t.SyncCommitteeBits, 64)
 		copy(t.SyncCommitteeBits[:], buf)
 	}
 	{ // Field #1 'SyncCommitteeSignature' (static)

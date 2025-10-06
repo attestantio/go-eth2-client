@@ -4,7 +4,6 @@
 package electra
 
 import (
-	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/pk910/dynamic-ssz/hasher"
@@ -106,11 +105,7 @@ func (t *SignedBlockContents) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%48 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val2) < itemCount {
-			val2 = make([]deneb.KZGProof, itemCount)
-		} else if len(val2) > itemCount {
-			val2 = val2[:itemCount]
-		}
+		val2 = sszutils.ExpandSlice(val2, itemCount)
 		for i := 0; i < itemCount; i++ {
 			buf := buf[48*i : 48*(i+1)]
 			copy(val2[i][:], buf)
@@ -124,11 +119,7 @@ func (t *SignedBlockContents) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%131072 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val3) < itemCount {
-			val3 = make([]deneb.Blob, itemCount)
-		} else if len(val3) > itemCount {
-			val3 = val3[:itemCount]
-		}
+		val3 = sszutils.ExpandSlice(val3, itemCount)
 		for i := 0; i < itemCount; i++ {
 			buf := buf[131072*i : 131072*(i+1)]
 			copy(val3[i][:], buf)

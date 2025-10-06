@@ -4,7 +4,6 @@
 package deneb
 
 import (
-	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/holiman/uint256"
 	dynssz "github.com/pk910/dynamic-ssz"
@@ -229,12 +228,7 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #10 'ExtraData' (dynamic)
 		buf := buf[offset10:offset13]
 		val2 := t.ExtraData
-		limit := len(buf)
-		if len(val2) < limit {
-			val2 = make([]byte, limit)
-		} else if len(val2) > limit {
-			val2 = val2[:limit]
-		}
+		val2 = sszutils.ExpandSlice(val2, len(buf))
 		copy(val2[:], buf)
 		t.ExtraData = val2
 	}
@@ -252,11 +246,7 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 		if startOffset%4 != 0 || len(buf) < startOffset {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val3) < itemCount {
-			val3 = make([]bellatrix.Transaction, itemCount)
-		} else if len(val3) > itemCount {
-			val3 = val3[:itemCount]
-		}
+		val3 = sszutils.ExpandSlice(val3, itemCount)
 		for i := 0; i < itemCount; i++ {
 			var endOffset int
 			if i < itemCount-1 {
@@ -270,12 +260,7 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 			buf := buf[startOffset:endOffset]
 			startOffset = endOffset
 			val4 := val3[i]
-			limit := len(buf)
-			if len(val4) < limit {
-				val4 = make(bellatrix.Transaction, limit)
-			} else if len(val4) > limit {
-				val4 = val4[:limit]
-			}
+			val4 = sszutils.ExpandSlice(val4, len(buf))
 			copy(val4[:], buf)
 			val3[i] = val4
 		}
@@ -288,11 +273,7 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%44 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val5) < itemCount {
-			val5 = make([]*capella.Withdrawal, itemCount)
-		} else if len(val5) > itemCount {
-			val5 = val5[:itemCount]
-		}
+		val5 = sszutils.ExpandSlice(val5, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val5[i] == nil {
 				val5[i] = new(capella.Withdrawal)

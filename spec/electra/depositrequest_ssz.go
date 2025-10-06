@@ -61,11 +61,7 @@ func (t *DepositRequest) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #1 'WithdrawalCredentials' (static)
 		buf := buf[48:80]
-		if len(t.WithdrawalCredentials) < 32 {
-			t.WithdrawalCredentials = make([]byte, 32)
-		} else if len(t.WithdrawalCredentials) > 32 {
-			t.WithdrawalCredentials = t.WithdrawalCredentials[:32]
-		}
+		t.WithdrawalCredentials = sszutils.ExpandSlice(t.WithdrawalCredentials, 32)
 		copy(t.WithdrawalCredentials[:], buf)
 	}
 	{ // Field #2 'Amount' (static)

@@ -81,11 +81,7 @@ func (t *IndexedAttestation) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%8 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val1) < itemCount {
-			val1 = make([]uint64, itemCount)
-		} else if len(val1) > itemCount {
-			val1 = val1[:itemCount]
-		}
+		val1 = sszutils.ExpandSlice(val1, itemCount)
 		for i := 0; i < itemCount; i++ {
 			buf := buf[8*i : 8*(i+1)]
 			val1[i] = uint64(sszutils.UnmarshallUint64(buf))

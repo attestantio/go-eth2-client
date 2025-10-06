@@ -49,11 +49,7 @@ func (t *SyncCommittee) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #0 'Pubkeys' (static)
 		buf := buf[0:24576]
 		val1 := t.Pubkeys
-		if len(val1) < 512 {
-			val1 = make([]phase0.BLSPubKey, 512)
-		} else if len(val1) > 512 {
-			val1 = val1[:512]
-		}
+		val1 = sszutils.ExpandSlice(val1, 512)
 		for i := 0; i < 512; i++ {
 			buf := buf[48*i : 48*(i+1)]
 			copy(val1[i][:], buf)

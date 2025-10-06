@@ -11,7 +11,6 @@ import (
 	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/pk910/dynamic-ssz/hasher"
 	"github.com/pk910/dynamic-ssz/sszutils"
-	go_bitfield "github.com/prysmaticlabs/go-bitfield"
 )
 
 var _ = sszutils.ErrListTooBig
@@ -461,11 +460,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #5 'BlockRoots' (static)
 		buf := buf[176:262320]
 		val1 := t.BlockRoots
-		if len(val1) < 8192 {
-			val1 = make([]phase0.Root, 8192)
-		} else if len(val1) > 8192 {
-			val1 = val1[:8192]
-		}
+		val1 = sszutils.ExpandSlice(val1, 8192)
 		for i := 0; i < 8192; i++ {
 			buf := buf[32*i : 32*(i+1)]
 			copy(val1[i][:], buf)
@@ -475,11 +470,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #6 'StateRoots' (static)
 		buf := buf[262320:524464]
 		val2 := t.StateRoots
-		if len(val2) < 8192 {
-			val2 = make([]phase0.Root, 8192)
-		} else if len(val2) > 8192 {
-			val2 = val2[:8192]
-		}
+		val2 = sszutils.ExpandSlice(val2, 8192)
 		for i := 0; i < 8192; i++ {
 			buf := buf[32*i : 32*(i+1)]
 			copy(val2[i][:], buf)
@@ -522,11 +513,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #13 'RANDAOMixes' (static)
 		buf := buf[524560:2621712]
 		val3 := t.RANDAOMixes
-		if len(val3) < 65536 {
-			val3 = make([]phase0.Root, 65536)
-		} else if len(val3) > 65536 {
-			val3 = val3[:65536]
-		}
+		val3 = sszutils.ExpandSlice(val3, 65536)
 		for i := 0; i < 65536; i++ {
 			buf := buf[32*i : 32*(i+1)]
 			copy(val3[i][:], buf)
@@ -536,11 +523,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #14 'Slashings' (static)
 		buf := buf[2621712:2687248]
 		val4 := t.Slashings
-		if len(val4) < 8192 {
-			val4 = make([]phase0.Gwei, 8192)
-		} else if len(val4) > 8192 {
-			val4 = val4[:8192]
-		}
+		val4 = sszutils.ExpandSlice(val4, 8192)
 		for i := 0; i < 8192; i++ {
 			buf := buf[8*i : 8*(i+1)]
 			val4[i] = phase0.Gwei(sszutils.UnmarshallUint64(buf))
@@ -559,11 +542,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	{ // Field #17 'JustificationBits' (static)
 		buf := buf[2687256:2687257]
-		if len(t.JustificationBits) < 1 {
-			t.JustificationBits = make(go_bitfield.Bitvector4, 1)
-		} else if len(t.JustificationBits) > 1 {
-			t.JustificationBits = t.JustificationBits[:1]
-		}
+		t.JustificationBits = sszutils.ExpandSlice(t.JustificationBits, 1)
 		copy(t.JustificationBits[:], buf)
 	}
 	{ // Field #18 'PreviousJustifiedCheckpoint' (static)
@@ -680,11 +659,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%32 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val5) < itemCount {
-			val5 = make([]phase0.Root, itemCount)
-		} else if len(val5) > itemCount {
-			val5 = val5[:itemCount]
-		}
+		val5 = sszutils.ExpandSlice(val5, itemCount)
 		for i := 0; i < itemCount; i++ {
 			buf := buf[32*i : 32*(i+1)]
 			copy(val5[i][:], buf)
@@ -698,11 +673,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%72 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val6) < itemCount {
-			val6 = make([]*phase0.ETH1Data, itemCount)
-		} else if len(val6) > itemCount {
-			val6 = val6[:itemCount]
-		}
+		val6 = sszutils.ExpandSlice(val6, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val6[i] == nil {
 				val6[i] = new(phase0.ETH1Data)
@@ -721,11 +692,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%121 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val7) < itemCount {
-			val7 = make([]*phase0.Validator, itemCount)
-		} else if len(val7) > itemCount {
-			val7 = val7[:itemCount]
-		}
+		val7 = sszutils.ExpandSlice(val7, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val7[i] == nil {
 				val7[i] = new(phase0.Validator)
@@ -744,11 +711,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%8 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val8) < itemCount {
-			val8 = make([]phase0.Gwei, itemCount)
-		} else if len(val8) > itemCount {
-			val8 = val8[:itemCount]
-		}
+		val8 = sszutils.ExpandSlice(val8, itemCount)
 		for i := 0; i < itemCount; i++ {
 			buf := buf[8*i : 8*(i+1)]
 			val8[i] = phase0.Gwei(sszutils.UnmarshallUint64(buf))
@@ -759,11 +722,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 		buf := buf[offset15:offset16]
 		val9 := t.PreviousEpochParticipation
 		itemCount := len(buf)
-		if len(val9) < itemCount {
-			val9 = make([]altair.ParticipationFlags, itemCount)
-		} else if len(val9) > itemCount {
-			val9 = val9[:itemCount]
-		}
+		val9 = sszutils.ExpandSlice(val9, itemCount)
 		for i := 0; i < itemCount; i++ {
 			buf := buf[1*i : 1*(i+1)]
 			val9[i] = altair.ParticipationFlags(sszutils.UnmarshallUint8(buf))
@@ -774,11 +733,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 		buf := buf[offset16:offset21]
 		val10 := t.CurrentEpochParticipation
 		itemCount := len(buf)
-		if len(val10) < itemCount {
-			val10 = make([]altair.ParticipationFlags, itemCount)
-		} else if len(val10) > itemCount {
-			val10 = val10[:itemCount]
-		}
+		val10 = sszutils.ExpandSlice(val10, itemCount)
 		for i := 0; i < itemCount; i++ {
 			buf := buf[1*i : 1*(i+1)]
 			val10[i] = altair.ParticipationFlags(sszutils.UnmarshallUint8(buf))
@@ -792,11 +747,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%8 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val11) < itemCount {
-			val11 = make([]uint64, itemCount)
-		} else if len(val11) > itemCount {
-			val11 = val11[:itemCount]
-		}
+		val11 = sszutils.ExpandSlice(val11, itemCount)
 		for i := 0; i < itemCount; i++ {
 			buf := buf[8*i : 8*(i+1)]
 			val11[i] = uint64(sszutils.UnmarshallUint64(buf))
@@ -821,11 +772,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%64 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val13) < itemCount {
-			val13 = make([]*capella.HistoricalSummary, itemCount)
-		} else if len(val13) > itemCount {
-			val13 = val13[:itemCount]
-		}
+		val13 = sszutils.ExpandSlice(val13, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val13[i] == nil {
 				val13[i] = new(capella.HistoricalSummary)
@@ -844,11 +791,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%192 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val14) < itemCount {
-			val14 = make([]*PendingDeposit, itemCount)
-		} else if len(val14) > itemCount {
-			val14 = val14[:itemCount]
-		}
+		val14 = sszutils.ExpandSlice(val14, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val14[i] == nil {
 				val14[i] = new(PendingDeposit)
@@ -867,11 +810,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%24 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val15) < itemCount {
-			val15 = make([]*PendingPartialWithdrawal, itemCount)
-		} else if len(val15) > itemCount {
-			val15 = val15[:itemCount]
-		}
+		val15 = sszutils.ExpandSlice(val15, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val15[i] == nil {
 				val15[i] = new(PendingPartialWithdrawal)
@@ -890,11 +829,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%16 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val16) < itemCount {
-			val16 = make([]*PendingConsolidation, itemCount)
-		} else if len(val16) > itemCount {
-			val16 = val16[:itemCount]
-		}
+		val16 = sszutils.ExpandSlice(val16, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val16[i] == nil {
 				val16[i] = new(PendingConsolidation)

@@ -61,11 +61,7 @@ func (t *ExecutionPayloadWithdrawals) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%44 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val1) < itemCount {
-			val1 = make([]*capella.Withdrawal, itemCount)
-		} else if len(val1) > itemCount {
-			val1 = val1[:itemCount]
-		}
+		val1 = sszutils.ExpandSlice(val1, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val1[i] == nil {
 				val1[i] = new(capella.Withdrawal)

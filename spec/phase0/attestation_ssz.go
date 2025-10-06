@@ -7,7 +7,6 @@ import (
 	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/pk910/dynamic-ssz/hasher"
 	"github.com/pk910/dynamic-ssz/sszutils"
-	go_bitfield "github.com/prysmaticlabs/go-bitfield"
 )
 
 var _ = sszutils.ErrListTooBig
@@ -75,12 +74,7 @@ func (t *Attestation) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #0 'AggregationBits' (dynamic)
 		buf := buf[offset0:]
 		val1 := t.AggregationBits
-		limit := len(buf)
-		if len(val1) < limit {
-			val1 = make(go_bitfield.Bitlist, limit)
-		} else if len(val1) > limit {
-			val1 = val1[:limit]
-		}
+		val1 = sszutils.ExpandSlice(val1, len(buf))
 		copy(val1[:], buf)
 		t.AggregationBits = val1
 	}

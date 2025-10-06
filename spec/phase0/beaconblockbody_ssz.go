@@ -200,11 +200,7 @@ func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%416 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val1) < itemCount {
-			val1 = make([]*ProposerSlashing, itemCount)
-		} else if len(val1) > itemCount {
-			val1 = val1[:itemCount]
-		}
+		val1 = sszutils.ExpandSlice(val1, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val1[i] == nil {
 				val1[i] = new(ProposerSlashing)
@@ -230,11 +226,7 @@ func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 		if startOffset%4 != 0 || len(buf) < startOffset {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val2) < itemCount {
-			val2 = make([]*AttesterSlashing, itemCount)
-		} else if len(val2) > itemCount {
-			val2 = val2[:itemCount]
-		}
+		val2 = sszutils.ExpandSlice(val2, itemCount)
 		for i := 0; i < itemCount; i++ {
 			var endOffset int
 			if i < itemCount-1 {
@@ -272,11 +264,7 @@ func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 		if startOffset%4 != 0 || len(buf) < startOffset {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val4) < itemCount {
-			val4 = make([]*Attestation, itemCount)
-		} else if len(val4) > itemCount {
-			val4 = val4[:itemCount]
-		}
+		val4 = sszutils.ExpandSlice(val4, itemCount)
 		for i := 0; i < itemCount; i++ {
 			var endOffset int
 			if i < itemCount-1 {
@@ -307,11 +295,7 @@ func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%1240 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val6) < itemCount {
-			val6 = make([]*Deposit, itemCount)
-		} else if len(val6) > itemCount {
-			val6 = val6[:itemCount]
-		}
+		val6 = sszutils.ExpandSlice(val6, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val6[i] == nil {
 				val6[i] = new(Deposit)
@@ -330,11 +314,7 @@ func (t *BeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 		if len(buf)%112 != 0 {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val7) < itemCount {
-			val7 = make([]*SignedVoluntaryExit, itemCount)
-		} else if len(val7) > itemCount {
-			val7 = val7[:itemCount]
-		}
+		val7 = sszutils.ExpandSlice(val7, itemCount)
 		for i := 0; i < itemCount; i++ {
 			if val7[i] == nil {
 				val7[i] = new(SignedVoluntaryExit)

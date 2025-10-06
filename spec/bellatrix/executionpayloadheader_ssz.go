@@ -152,12 +152,7 @@ func (t *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #10 'ExtraData' (dynamic)
 		buf := buf[offset10:]
 		val1 := t.ExtraData
-		limit := len(buf)
-		if len(val1) < limit {
-			val1 = make([]byte, limit)
-		} else if len(val1) > limit {
-			val1 = val1[:limit]
-		}
+		val1 = sszutils.ExpandSlice(val1, len(buf))
 		copy(val1[:], buf)
 		t.ExtraData = val1
 	}

@@ -73,8 +73,8 @@ github.com/minio/sha256-simd v1.0.1 h1:6kaan5IFmwTNynnKKpDHe6FWHohJOHhCPchzK49dz
 github.com/minio/sha256-simd v1.0.1/go.mod h1:Pz6AKMiUdngCLpeTL/RJY1M9rUuPMYujV5xJjtbRSN8=
 github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyuac5Z2hdY=
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
-github.com/pk910/dynamic-ssz v1.1.1-0.20251004172051-b8b4d9892e0c h1:HKxB7GqvGmn0575JehwhWOmG0pAjaiAheO5nJ/C3LNs=
-github.com/pk910/dynamic-ssz v1.1.1-0.20251004172051-b8b4d9892e0c/go.mod h1:Kk+cqNoN3z0DCaqII4JLt8W0N2lneDGoUFSeaIku3Uo=
+github.com/pk910/dynamic-ssz v1.1.1-0.20251006021408-d7c6c5e77bfa h1:Vm8IguRACPjQolHg0q1k6HuoIIvvInmUZZ6aepozBlQ=
+github.com/pk910/dynamic-ssz v1.1.1-0.20251006021408-d7c6c5e77bfa/go.mod h1:Kk+cqNoN3z0DCaqII4JLt8W0N2lneDGoUFSeaIku3Uo=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=

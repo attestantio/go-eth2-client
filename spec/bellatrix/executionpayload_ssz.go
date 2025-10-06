@@ -171,12 +171,7 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 	{ // Field #10 'ExtraData' (dynamic)
 		buf := buf[offset10:offset13]
 		val1 := t.ExtraData
-		limit := len(buf)
-		if len(val1) < limit {
-			val1 = make([]byte, limit)
-		} else if len(val1) > limit {
-			val1 = val1[:limit]
-		}
+		val1 = sszutils.ExpandSlice(val1, len(buf))
 		copy(val1[:], buf)
 		t.ExtraData = val1
 	}
@@ -194,11 +189,7 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 		if startOffset%4 != 0 || len(buf) < startOffset {
 			return sszutils.ErrUnexpectedEOF
 		}
-		if len(val2) < itemCount {
-			val2 = make([]Transaction, itemCount)
-		} else if len(val2) > itemCount {
-			val2 = val2[:itemCount]
-		}
+		val2 = sszutils.ExpandSlice(val2, itemCount)
 		for i := 0; i < itemCount; i++ {
 			var endOffset int
 			if i < itemCount-1 {
@@ -212,12 +203,7 @@ func (t *ExecutionPayload) UnmarshalSSZ(buf []byte) (err error) {
 			buf := buf[startOffset:endOffset]
 			startOffset = endOffset
 			val3 := val2[i]
-			limit := len(buf)
-			if len(val3) < limit {
-				val3 = make(Transaction, limit)
-			} else if len(val3) > limit {
-				val3 = val3[:limit]
-			}
+			val3 = sszutils.ExpandSlice(val3, len(buf))
 			copy(val3[:], buf)
 			val2[i] = val3
 		}
