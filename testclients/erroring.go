@@ -859,6 +859,24 @@ func (s *Erroring) SignedBeaconBlock(ctx context.Context,
 	return next.SignedBeaconBlock(ctx, opts)
 }
 
+// Blobs fetches the blobs given a block ID.
+func (s *Erroring) Blobs(ctx context.Context,
+	opts *api.BlobsOpts,
+) (
+	*api.Response[apiv1.Blobs],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.BlobsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.Blobs(ctx, opts)
+}
+
 // BlobSidecars fetches the blobs given a block ID.
 func (s *Erroring) BlobSidecars(ctx context.Context,
 	opts *api.BlobSidecarsOpts,
