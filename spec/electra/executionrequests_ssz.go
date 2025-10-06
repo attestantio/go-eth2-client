@@ -92,16 +92,13 @@ func (t *ExecutionRequests) SizeSSZ() (size int) {
 	// Field #2 'Consolidations' offset (4 bytes)
 	size += 12
 	{ // Dynamic field #0 'Deposits'
-		vlen := len(t.Deposits)
-		size += vlen * 192
+		size += len(t.Deposits) * 192
 	}
 	{ // Dynamic field #1 'Withdrawals'
-		vlen := len(t.Withdrawals)
-		size += vlen * 76
+		size += len(t.Withdrawals) * 76
 	}
 	{ // Dynamic field #2 'Consolidations'
-		vlen := len(t.Consolidations)
-		size += vlen * 116
+		size += len(t.Consolidations) * 116
 	}
 	return size
 }

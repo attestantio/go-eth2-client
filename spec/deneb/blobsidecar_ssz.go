@@ -22,15 +22,15 @@ func (t *BlobSidecar) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	{ // Field #1 'Blob'
-		t := t.Blob
+		t := &t.Blob
 		dst = append(dst, []byte(t[:131072])...)
 	}
 	{ // Field #2 'KZGCommitment'
-		t := t.KZGCommitment
+		t := &t.KZGCommitment
 		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #3 'KZGProof'
-		t := t.KZGProof
+		t := &t.KZGProof
 		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #4 'SignedBlockHeader'
@@ -43,7 +43,7 @@ func (t *BlobSidecar) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	{ // Field #5 'KZGCommitmentInclusionProof'
-		t := t.KZGCommitmentInclusionProof
+		t := &t.KZGCommitmentInclusionProof
 		for i := 0; i < 17; i++ {
 			t := t[i]
 			dst = append(dst, []byte(t[:32])...)
@@ -111,15 +111,15 @@ func (t *BlobSidecar) HashTreeRootWith(hh sszutils.HashWalker) error {
 		hh.PutUint64(uint64(t))
 	}
 	{ // Field #1 'Blob'
-		t := t.Blob
+		t := &t.Blob
 		hh.PutBytes(t[:131072])
 	}
 	{ // Field #2 'KZGCommitment'
-		t := t.KZGCommitment
+		t := &t.KZGCommitment
 		hh.PutBytes(t[:48])
 	}
 	{ // Field #3 'KZGProof'
-		t := t.KZGProof
+		t := &t.KZGProof
 		hh.PutBytes(t[:48])
 	}
 	{ // Field #4 'SignedBlockHeader'
@@ -132,7 +132,7 @@ func (t *BlobSidecar) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #5 'KZGCommitmentInclusionProof'
-		t := t.KZGCommitmentInclusionProof
+		t := &t.KZGCommitmentInclusionProof
 		idx := hh.Index()
 		for i := 0; i < 17; i++ {
 			var val1 KZGCommitmentInclusionProofElement

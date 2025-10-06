@@ -22,7 +22,7 @@ func (t *WithdrawalRequest) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		dst = append(dst, []byte(t[:20])...)
 	}
 	{ // Field #1 'ValidatorPubkey'
-		t := t.ValidatorPubkey
+		t := &t.ValidatorPubkey
 		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #2 'Amount'
@@ -69,7 +69,7 @@ func (t *WithdrawalRequest) HashTreeRootWith(hh sszutils.HashWalker) error {
 		hh.PutBytes(t[:20])
 	}
 	{ // Field #1 'ValidatorPubkey'
-		t := t.ValidatorPubkey
+		t := &t.ValidatorPubkey
 		hh.PutBytes(t[:48])
 	}
 	{ // Field #2 'Amount'

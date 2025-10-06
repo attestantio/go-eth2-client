@@ -325,32 +325,25 @@ func (t *BeaconState) SizeSSZ() (size int) {
 	// Field #23 'NextSyncCommittee' static (24624 bytes)
 	size += 2736629
 	{ // Dynamic field #7 'HistoricalRoots'
-		vlen := len(t.HistoricalRoots)
-		size += vlen * 32
+		size += len(t.HistoricalRoots) * 32
 	}
 	{ // Dynamic field #9 'ETH1DataVotes'
-		vlen := len(t.ETH1DataVotes)
-		size += vlen * 72
+		size += len(t.ETH1DataVotes) * 72
 	}
 	{ // Dynamic field #11 'Validators'
-		vlen := len(t.Validators)
-		size += vlen * 121
+		size += len(t.Validators) * 121
 	}
 	{ // Dynamic field #12 'Balances'
-		vlen := len(t.Balances)
-		size += vlen * 8
+		size += len(t.Balances) * 8
 	}
 	{ // Dynamic field #15 'PreviousEpochParticipation'
-		vlen := len(t.PreviousEpochParticipation)
-		size += vlen * 1
+		size += len(t.PreviousEpochParticipation)
 	}
 	{ // Dynamic field #16 'CurrentEpochParticipation'
-		vlen := len(t.CurrentEpochParticipation)
-		size += vlen * 1
+		size += len(t.CurrentEpochParticipation)
 	}
 	{ // Dynamic field #21 'InactivityScores'
-		vlen := len(t.InactivityScores)
-		size += vlen * 8
+		size += len(t.InactivityScores) * 8
 	}
 	return size
 }

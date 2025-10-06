@@ -31,7 +31,7 @@ func (t *ContributionAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) 
 		}
 	}
 	{ // Field #2 'SelectionProof'
-		t := t.SelectionProof
+		t := &t.SelectionProof
 		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
@@ -88,7 +88,7 @@ func (t *ContributionAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #2 'SelectionProof'
-		t := t.SelectionProof
+		t := &t.SelectionProof
 		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)

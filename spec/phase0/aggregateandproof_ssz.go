@@ -25,7 +25,7 @@ func (t *AggregateAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset1 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #2 'SelectionProof'
-		t := t.SelectionProof
+		t := &t.SelectionProof
 		dst = append(dst, []byte(t[:96])...)
 	}
 	{ // Dynamic Field #1 'Aggregate'
@@ -53,9 +53,6 @@ func (t *AggregateAndProof) SizeSSZ() (size int) {
 	// Field #2 'SelectionProof' static (96 bytes)
 	size += 108
 	{ // Dynamic field #1 'Aggregate'
-		if t.Aggregate == nil {
-			t.Aggregate = new(Attestation)
-		}
 		size += t.Aggregate.SizeSSZ()
 	}
 	return size
@@ -112,7 +109,7 @@ func (t *AggregateAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #2 'SelectionProof'
-		t := t.SelectionProof
+		t := &t.SelectionProof
 		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)

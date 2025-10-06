@@ -42,7 +42,7 @@ func (t *SyncCommitteeContribution) MarshalSSZTo(buf []byte) (dst []byte, err er
 		}
 	}
 	{ // Field #4 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
@@ -118,7 +118,7 @@ func (t *SyncCommitteeContribution) HashTreeRootWith(hh sszutils.HashWalker) err
 		hh.PutBytes(val[:16])
 	}
 	{ // Field #4 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)

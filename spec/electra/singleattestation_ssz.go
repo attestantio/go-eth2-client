@@ -35,7 +35,7 @@ func (t *SingleAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	{ // Field #3 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
@@ -100,7 +100,7 @@ func (t *SingleAttestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #3 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)

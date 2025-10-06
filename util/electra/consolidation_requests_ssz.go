@@ -51,8 +51,7 @@ func (t *ConsolidationRequests) SizeSSZ() (size int) {
 	// Field #0 'ConsolidationRequests' offset (4 bytes)
 	size += 4
 	{ // Dynamic field #0 'ConsolidationRequests'
-		vlen := len(t.ConsolidationRequests)
-		size += vlen * 116
+		size += len(t.ConsolidationRequests) * 116
 	}
 	return size
 }

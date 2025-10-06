@@ -21,7 +21,7 @@ func (t *SignedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err err
 	offset0 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #1 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		dst = append(dst, []byte(t[:96])...)
 	}
 	{ // Dynamic Field #0 'Message'
@@ -48,9 +48,6 @@ func (t *SignedBlindedBeaconBlock) SizeSSZ() (size int) {
 	// Field #1 'Signature' static (96 bytes)
 	size += 100
 	{ // Dynamic field #0 'Message'
-		if t.Message == nil {
-			t.Message = new(BlindedBeaconBlock)
-		}
 		size += t.Message.SizeSSZ()
 	}
 	return size
@@ -99,7 +96,7 @@ func (t *SignedBlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) erro
 		}
 	}
 	{ // Field #1 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)

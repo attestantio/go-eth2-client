@@ -57,15 +57,9 @@ func (t *AttesterSlashing) SizeSSZ() (size int) {
 	// Field #1 'Attestation2' offset (4 bytes)
 	size += 8
 	{ // Dynamic field #0 'Attestation1'
-		if t.Attestation1 == nil {
-			t.Attestation1 = new(IndexedAttestation)
-		}
 		size += t.Attestation1.SizeSSZ()
 	}
 	{ // Dynamic field #1 'Attestation2'
-		if t.Attestation2 == nil {
-			t.Attestation2 = new(IndexedAttestation)
-		}
 		size += t.Attestation2.SizeSSZ()
 	}
 	return size

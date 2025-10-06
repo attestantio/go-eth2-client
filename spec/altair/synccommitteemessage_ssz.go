@@ -30,7 +30,7 @@ func (t *SyncCommitteeMessage) MarshalSSZTo(buf []byte) (dst []byte, err error) 
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	{ // Field #3 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
@@ -85,7 +85,7 @@ func (t *SyncCommitteeMessage) HashTreeRootWith(hh sszutils.HashWalker) error {
 		hh.PutUint64(uint64(t))
 	}
 	{ // Field #3 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)

@@ -51,8 +51,7 @@ func (t *ExecutionPayloadWithdrawals) SizeSSZ() (size int) {
 	// Field #0 'Withdrawals' offset (4 bytes)
 	size += 4
 	{ // Dynamic field #0 'Withdrawals'
-		vlen := len(t.Withdrawals)
-		size += vlen * 44
+		size += len(t.Withdrawals) * 44
 	}
 	return size
 }

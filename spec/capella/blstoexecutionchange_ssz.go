@@ -22,7 +22,7 @@ func (t *BLSToExecutionChange) MarshalSSZTo(buf []byte) (dst []byte, err error) 
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	{ // Field #1 'FromBLSPubkey'
-		t := t.FromBLSPubkey
+		t := &t.FromBLSPubkey
 		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #2 'ToExecutionAddress'
@@ -69,7 +69,7 @@ func (t *BLSToExecutionChange) HashTreeRootWith(hh sszutils.HashWalker) error {
 		hh.PutUint64(uint64(t))
 	}
 	{ // Field #1 'FromBLSPubkey'
-		t := t.FromBLSPubkey
+		t := &t.FromBLSPubkey
 		hh.PutBytes(t[:48])
 	}
 	{ // Field #2 'ToExecutionAddress'

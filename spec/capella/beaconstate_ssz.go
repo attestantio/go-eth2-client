@@ -371,42 +371,31 @@ func (t *BeaconState) SizeSSZ() (size int) {
 	// Field #27 'HistoricalSummaries' offset (4 bytes)
 	size += 2736653
 	{ // Dynamic field #7 'HistoricalRoots'
-		vlen := len(t.HistoricalRoots)
-		size += vlen * 32
+		size += len(t.HistoricalRoots) * 32
 	}
 	{ // Dynamic field #9 'ETH1DataVotes'
-		vlen := len(t.ETH1DataVotes)
-		size += vlen * 72
+		size += len(t.ETH1DataVotes) * 72
 	}
 	{ // Dynamic field #11 'Validators'
-		vlen := len(t.Validators)
-		size += vlen * 121
+		size += len(t.Validators) * 121
 	}
 	{ // Dynamic field #12 'Balances'
-		vlen := len(t.Balances)
-		size += vlen * 8
+		size += len(t.Balances) * 8
 	}
 	{ // Dynamic field #15 'PreviousEpochParticipation'
-		vlen := len(t.PreviousEpochParticipation)
-		size += vlen * 1
+		size += len(t.PreviousEpochParticipation)
 	}
 	{ // Dynamic field #16 'CurrentEpochParticipation'
-		vlen := len(t.CurrentEpochParticipation)
-		size += vlen * 1
+		size += len(t.CurrentEpochParticipation)
 	}
 	{ // Dynamic field #21 'InactivityScores'
-		vlen := len(t.InactivityScores)
-		size += vlen * 8
+		size += len(t.InactivityScores) * 8
 	}
 	{ // Dynamic field #24 'LatestExecutionPayloadHeader'
-		if t.LatestExecutionPayloadHeader == nil {
-			t.LatestExecutionPayloadHeader = new(ExecutionPayloadHeader)
-		}
 		size += t.LatestExecutionPayloadHeader.SizeSSZ()
 	}
 	{ // Dynamic field #27 'HistoricalSummaries'
-		vlen := len(t.HistoricalSummaries)
-		size += vlen * 64
+		size += len(t.HistoricalSummaries) * 64
 	}
 	return size
 }

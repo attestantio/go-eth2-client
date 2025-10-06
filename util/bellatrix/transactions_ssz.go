@@ -53,11 +53,11 @@ func (t *ExecutionPayloadTransactions) SizeSSZ() (size int) {
 	// Field #0 'Transactions' offset (4 bytes)
 	size += 4
 	{ // Dynamic field #0 'Transactions'
-		vlen := len(t.Transactions)
+		t := t.Transactions
+		vlen := len(t)
 		size += vlen * 4 // Offsets
-		for i := 0; i < vlen; i++ {
-			t := t.Transactions[i]
-			size += len(t)
+		for i1 := 0; i1 < vlen; i1++ {
+			size += len(t[i1])
 		}
 	}
 	return size

@@ -26,11 +26,11 @@ func (t *ValidatorRegistration) MarshalSSZTo(buf []byte) (dst []byte, err error)
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	{ // Field #2 'Timestamp'
-		t := t.Timestamp
+		t := &t.Timestamp
 		dst = sszutils.MarshalUint64(dst, uint64(t.Unix()))
 	}
 	{ // Field #3 'Pubkey'
-		t := t.Pubkey
+		t := &t.Pubkey
 		dst = append(dst, []byte(t[:48])...)
 	}
 	return dst, nil
@@ -81,11 +81,11 @@ func (t *ValidatorRegistration) HashTreeRootWith(hh sszutils.HashWalker) error {
 		hh.PutUint64(uint64(t))
 	}
 	{ // Field #2 'Timestamp'
-		t := t.Timestamp
+		t := &t.Timestamp
 		hh.PutUint64(uint64(t.Unix()))
 	}
 	{ // Field #3 'Pubkey'
-		t := t.Pubkey
+		t := &t.Pubkey
 		hh.PutBytes(t[:48])
 	}
 	hh.Merkleize(idx)

@@ -34,7 +34,7 @@ func (t *ExecutionPayload) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #4 'LogsBloom'
-		t := t.LogsBloom
+		t := &t.LogsBloom
 		dst = append(dst, []byte(t[:256])...)
 	}
 	{ // Field #5 'PrevRandao'
@@ -128,11 +128,11 @@ func (t *ExecutionPayload) SizeSSZ() (size int) {
 		size += len(t.ExtraData)
 	}
 	{ // Dynamic field #13 'Transactions'
-		vlen := len(t.Transactions)
+		t := t.Transactions
+		vlen := len(t)
 		size += vlen * 4 // Offsets
-		for i := 0; i < vlen; i++ {
-			t := t.Transactions[i]
-			size += len(t)
+		for i1 := 0; i1 < vlen; i1++ {
+			size += len(t[i1])
 		}
 	}
 	return size
@@ -281,7 +281,7 @@ func (t *ExecutionPayload) HashTreeRootWith(hh sszutils.HashWalker) error {
 		hh.PutBytes(t[:32])
 	}
 	{ // Field #4 'LogsBloom'
-		t := t.LogsBloom
+		t := &t.LogsBloom
 		hh.PutBytes(t[:256])
 	}
 	{ // Field #5 'PrevRandao'

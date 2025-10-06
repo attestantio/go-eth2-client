@@ -304,41 +304,31 @@ func (t *BeaconState) SizeSSZ() (size int) {
 	// Field #20 'FinalizedCheckpoint' static (40 bytes)
 	size += 2687377
 	{ // Dynamic field #7 'HistoricalRoots'
-		vlen := len(t.HistoricalRoots)
-		size += vlen * 32
+		size += len(t.HistoricalRoots) * 32
 	}
 	{ // Dynamic field #9 'ETH1DataVotes'
-		vlen := len(t.ETH1DataVotes)
-		size += vlen * 72
+		size += len(t.ETH1DataVotes) * 72
 	}
 	{ // Dynamic field #11 'Validators'
-		vlen := len(t.Validators)
-		size += vlen * 121
+		size += len(t.Validators) * 121
 	}
 	{ // Dynamic field #12 'Balances'
-		vlen := len(t.Balances)
-		size += vlen * 8
+		size += len(t.Balances) * 8
 	}
 	{ // Dynamic field #15 'PreviousEpochAttestations'
-		vlen := len(t.PreviousEpochAttestations)
+		t := t.PreviousEpochAttestations
+		vlen := len(t)
 		size += vlen * 4 // Offsets
-		for i := 0; i < vlen; i++ {
-			t := t.PreviousEpochAttestations[i]
-			if t == nil {
-				t = new(PendingAttestation)
-			}
-			size += t.SizeSSZ()
+		for i1 := 0; i1 < vlen; i1++ {
+			size += t[i1].SizeSSZ()
 		}
 	}
 	{ // Dynamic field #16 'CurrentEpochAttestations'
-		vlen := len(t.CurrentEpochAttestations)
+		t := t.CurrentEpochAttestations
+		vlen := len(t)
 		size += vlen * 4 // Offsets
-		for i := 0; i < vlen; i++ {
-			t := t.CurrentEpochAttestations[i]
-			if t == nil {
-				t = new(PendingAttestation)
-			}
-			size += t.SizeSSZ()
+		for i2 := 0; i2 < vlen; i2++ {
+			size += t[i2].SizeSSZ()
 		}
 	}
 	return size

@@ -19,7 +19,7 @@ func (t *BeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	dstlen := len(dst)
 	{ // Field #0 'RANDAOReveal'
-		t := t.RANDAOReveal
+		t := &t.RANDAOReveal
 		dst = append(dst, []byte(t[:96])...)
 	}
 	{ // Field #1 'ETH1Data'
@@ -171,38 +171,29 @@ func (t *BeaconBlockBody) SizeSSZ() (size int) {
 	// Field #8 'SyncAggregate' static (160 bytes)
 	size += 380
 	{ // Dynamic field #3 'ProposerSlashings'
-		vlen := len(t.ProposerSlashings)
-		size += vlen * 416
+		size += len(t.ProposerSlashings) * 416
 	}
 	{ // Dynamic field #4 'AttesterSlashings'
-		vlen := len(t.AttesterSlashings)
+		t := t.AttesterSlashings
+		vlen := len(t)
 		size += vlen * 4 // Offsets
-		for i := 0; i < vlen; i++ {
-			t := t.AttesterSlashings[i]
-			if t == nil {
-				t = new(phase0.AttesterSlashing)
-			}
-			size += t.SizeSSZ()
+		for i1 := 0; i1 < vlen; i1++ {
+			size += t[i1].SizeSSZ()
 		}
 	}
 	{ // Dynamic field #5 'Attestations'
-		vlen := len(t.Attestations)
+		t := t.Attestations
+		vlen := len(t)
 		size += vlen * 4 // Offsets
-		for i := 0; i < vlen; i++ {
-			t := t.Attestations[i]
-			if t == nil {
-				t = new(phase0.Attestation)
-			}
-			size += t.SizeSSZ()
+		for i2 := 0; i2 < vlen; i2++ {
+			size += t[i2].SizeSSZ()
 		}
 	}
 	{ // Dynamic field #6 'Deposits'
-		vlen := len(t.Deposits)
-		size += vlen * 1240
+		size += len(t.Deposits) * 1240
 	}
 	{ // Dynamic field #7 'VoluntaryExits'
-		vlen := len(t.VoluntaryExits)
-		size += vlen * 112
+		size += len(t.VoluntaryExits) * 112
 	}
 	return size
 }
@@ -425,7 +416,7 @@ func (t *BeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'RANDAOReveal'
-		t := t.RANDAOReveal
+		t := &t.RANDAOReveal
 		hh.PutBytes(t[:96])
 	}
 	{ // Field #1 'ETH1Data'

@@ -109,33 +109,18 @@ func (t *VersionedSignedBlindedBeaconBlock) SizeSSZ() (size int) {
 	// Field #5 'Fulu' offset (4 bytes)
 	size += 28
 	{ // Dynamic field #1 'Bellatrix'
-		if t.Bellatrix == nil {
-			t.Bellatrix = new(bellatrix.SignedBlindedBeaconBlock)
-		}
 		size += t.Bellatrix.SizeSSZ()
 	}
 	{ // Dynamic field #2 'Capella'
-		if t.Capella == nil {
-			t.Capella = new(capella.SignedBlindedBeaconBlock)
-		}
 		size += t.Capella.SizeSSZ()
 	}
 	{ // Dynamic field #3 'Deneb'
-		if t.Deneb == nil {
-			t.Deneb = new(deneb.SignedBlindedBeaconBlock)
-		}
 		size += t.Deneb.SizeSSZ()
 	}
 	{ // Dynamic field #4 'Electra'
-		if t.Electra == nil {
-			t.Electra = new(electra.SignedBlindedBeaconBlock)
-		}
 		size += t.Electra.SizeSSZ()
 	}
 	{ // Dynamic field #5 'Fulu'
-		if t.Fulu == nil {
-			t.Fulu = new(electra.SignedBlindedBeaconBlock)
-		}
 		size += t.Fulu.SizeSSZ()
 	}
 	return size

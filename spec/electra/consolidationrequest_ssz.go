@@ -21,11 +21,11 @@ func (t *ConsolidationRequest) MarshalSSZTo(buf []byte) (dst []byte, err error) 
 		dst = append(dst, []byte(t[:20])...)
 	}
 	{ // Field #1 'SourcePubkey'
-		t := t.SourcePubkey
+		t := &t.SourcePubkey
 		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #2 'TargetPubkey'
-		t := t.TargetPubkey
+		t := &t.TargetPubkey
 		dst = append(dst, []byte(t[:48])...)
 	}
 	return dst, nil
@@ -68,11 +68,11 @@ func (t *ConsolidationRequest) HashTreeRootWith(hh sszutils.HashWalker) error {
 		hh.PutBytes(t[:20])
 	}
 	{ // Field #1 'SourcePubkey'
-		t := t.SourcePubkey
+		t := &t.SourcePubkey
 		hh.PutBytes(t[:48])
 	}
 	{ // Field #2 'TargetPubkey'
-		t := t.TargetPubkey
+		t := &t.TargetPubkey
 		hh.PutBytes(t[:48])
 	}
 	hh.Merkleize(idx)

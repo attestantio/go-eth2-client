@@ -18,7 +18,7 @@ func (t *PendingDeposit) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(PendingDeposit)
 	}
 	{ // Field #0 'Pubkey'
-		t := t.Pubkey
+		t := &t.Pubkey
 		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #1 'WithdrawalCredentials'
@@ -37,7 +37,7 @@ func (t *PendingDeposit) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	{ // Field #3 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		dst = append(dst, []byte(t[:96])...)
 	}
 	{ // Field #4 'Slot'
@@ -93,7 +93,7 @@ func (t *PendingDeposit) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'Pubkey'
-		t := t.Pubkey
+		t := &t.Pubkey
 		hh.PutBytes(t[:48])
 	}
 	{ // Field #1 'WithdrawalCredentials'
@@ -113,7 +113,7 @@ func (t *PendingDeposit) HashTreeRootWith(hh sszutils.HashWalker) error {
 		hh.PutUint64(uint64(t))
 	}
 	{ // Field #3 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		hh.PutBytes(t[:96])
 	}
 	{ // Field #4 'Slot'

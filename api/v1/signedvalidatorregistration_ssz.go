@@ -26,7 +26,7 @@ func (t *SignedValidatorRegistration) MarshalSSZTo(buf []byte) (dst []byte, err 
 		}
 	}
 	{ // Field #1 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
@@ -75,7 +75,7 @@ func (t *SignedValidatorRegistration) HashTreeRootWith(hh sszutils.HashWalker) e
 		}
 	}
 	{ // Field #1 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)

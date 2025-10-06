@@ -17,7 +17,7 @@ func (t *DepositMessage) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(DepositMessage)
 	}
 	{ // Field #0 'PublicKey'
-		t := t.PublicKey
+		t := &t.PublicKey
 		dst = append(dst, []byte(t[:48])...)
 	}
 	{ // Field #1 'WithdrawalCredentials'
@@ -76,7 +76,7 @@ func (t *DepositMessage) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'PublicKey'
-		t := t.PublicKey
+		t := &t.PublicKey
 		hh.PutBytes(t[:48])
 	}
 	{ // Field #1 'WithdrawalCredentials'

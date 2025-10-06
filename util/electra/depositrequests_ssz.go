@@ -51,8 +51,7 @@ func (t *DepositRequests) SizeSSZ() (size int) {
 	// Field #0 'DepositRequests' offset (4 bytes)
 	size += 4
 	{ // Dynamic field #0 'DepositRequests'
-		vlen := len(t.DepositRequests)
-		size += vlen * 192
+		size += len(t.DepositRequests) * 192
 	}
 	return size
 }

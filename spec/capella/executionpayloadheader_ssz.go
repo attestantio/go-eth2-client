@@ -34,7 +34,7 @@ func (t *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error
 		dst = append(dst, []byte(t[:32])...)
 	}
 	{ // Field #4 'LogsBloom'
-		t := t.LogsBloom
+		t := &t.LogsBloom
 		dst = append(dst, []byte(t[:256])...)
 	}
 	{ // Field #5 'PrevRandao'
@@ -220,7 +220,7 @@ func (t *ExecutionPayloadHeader) HashTreeRootWith(hh sszutils.HashWalker) error 
 		hh.PutBytes(t[:32])
 	}
 	{ // Field #4 'LogsBloom'
-		t := t.LogsBloom
+		t := &t.LogsBloom
 		hh.PutBytes(t[:256])
 	}
 	{ // Field #5 'PrevRandao'

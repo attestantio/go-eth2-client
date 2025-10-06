@@ -32,7 +32,7 @@ func (t *Attestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	{ // Field #2 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		dst = append(dst, []byte(t[:96])...)
 	}
 	{ // Field #3 'CommitteeBits'
@@ -154,7 +154,7 @@ func (t *Attestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #2 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		hh.PutBytes(t[:96])
 	}
 	{ // Field #3 'CommitteeBits'

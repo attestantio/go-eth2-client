@@ -30,7 +30,7 @@ func (t *IndexedAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	{ // Field #2 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		dst = append(dst, []byte(t[:96])...)
 	}
 	{ // Dynamic Field #0 'AttestingIndices'
@@ -60,8 +60,7 @@ func (t *IndexedAttestation) SizeSSZ() (size int) {
 	// Field #2 'Signature' static (96 bytes)
 	size += 228
 	{ // Dynamic field #0 'AttestingIndices'
-		vlen := len(t.AttestingIndices)
-		size += vlen * 8
+		size += len(t.AttestingIndices) * 8
 	}
 	return size
 }
@@ -140,7 +139,7 @@ func (t *IndexedAttestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #2 'Signature'
-		t := t.Signature
+		t := &t.Signature
 		hh.PutBytes(t[:96])
 	}
 	hh.Merkleize(idx)

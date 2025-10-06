@@ -46,7 +46,7 @@ func (t *SignedBlockContents) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
+			t := &t[i]
 			dst = append(dst, []byte(t[:48])...)
 		}
 	}
@@ -58,7 +58,7 @@ func (t *SignedBlockContents) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
+			t := &t[i]
 			dst = append(dst, []byte(t[:131072])...)
 		}
 	}
@@ -77,18 +77,13 @@ func (t *SignedBlockContents) SizeSSZ() (size int) {
 	// Field #2 'Blobs' offset (4 bytes)
 	size += 12
 	{ // Dynamic field #0 'SignedBlock'
-		if t.SignedBlock == nil {
-			t.SignedBlock = new(electra.SignedBeaconBlock)
-		}
 		size += t.SignedBlock.SizeSSZ()
 	}
 	{ // Dynamic field #1 'KZGProofs'
-		vlen := len(t.KZGProofs)
-		size += vlen * 48
+		size += len(t.KZGProofs) * 48
 	}
 	{ // Dynamic field #2 'Blobs'
-		vlen := len(t.Blobs)
-		size += vlen * 131072
+		size += len(t.Blobs) * 131072
 	}
 	return size
 }
@@ -185,7 +180,7 @@ func (t *SignedBlockContents) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
-			t := t[i]
+			t := &t[i]
 			hh.PutBytes(t[:48])
 		}
 		limit := sszutils.CalculateLimit(33554432, vlen, 32)
@@ -199,7 +194,7 @@ func (t *SignedBlockContents) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
-			t := t[i]
+			t := &t[i]
 			hh.PutBytes(t[:131072])
 		}
 		limit := sszutils.CalculateLimit(4096, vlen, 32)

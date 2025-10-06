@@ -63,9 +63,6 @@ func (t *BeaconBlock) SizeSSZ() (size int) {
 	// Field #4 'Body' offset (4 bytes)
 	size += 84
 	{ // Dynamic field #4 'Body'
-		if t.Body == nil {
-			t.Body = new(BeaconBlockBody)
-		}
 		size += t.Body.SizeSSZ()
 	}
 	return size

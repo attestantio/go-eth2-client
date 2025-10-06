@@ -24,7 +24,7 @@ func (t *SyncCommittee) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
+			t := &t[i]
 			dst = append(dst, []byte(t[:48])...)
 		}
 		if vlen < 512 {
@@ -32,7 +32,7 @@ func (t *SyncCommittee) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	{ // Field #1 'AggregatePubkey'
-		t := t.AggregatePubkey
+		t := &t.AggregatePubkey
 		dst = append(dst, []byte(t[:48])...)
 	}
 	return dst, nil
@@ -84,16 +84,16 @@ func (t *SyncCommittee) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 		idx := hh.Index()
 		for i := 0; i < 512; i++ {
-			var val1 phase0.BLSPubKey
+			var val1 *phase0.BLSPubKey
 			if i < vlen {
-				val1 = t[i]
+				val1 = &t[i]
 			}
 			hh.PutBytes(val1[:48])
 		}
 		hh.Merkleize(idx)
 	}
 	{ // Field #1 'AggregatePubkey'
-		t := t.AggregatePubkey
+		t := &t.AggregatePubkey
 		hh.PutBytes(t[:48])
 	}
 	hh.Merkleize(idx)

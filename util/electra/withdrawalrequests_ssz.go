@@ -51,8 +51,7 @@ func (t *WithdrawalRequests) SizeSSZ() (size int) {
 	// Field #0 'WithdrawalRequests' offset (4 bytes)
 	size += 4
 	{ // Dynamic field #0 'WithdrawalRequests'
-		vlen := len(t.WithdrawalRequests)
-		size += vlen * 76
+		size += len(t.WithdrawalRequests) * 76
 	}
 	return size
 }
