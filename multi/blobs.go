@@ -18,13 +18,13 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	v1 "github.com/attestantio/go-eth2-client/api/v1"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // Blobs fetches the blobs given options.
 func (s *Service) Blobs(ctx context.Context,
 	opts *api.BlobsOpts,
-) (*api.Response[v1.Blobs],
+) (*api.Response[apiv1.Blobs],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
@@ -39,7 +39,7 @@ func (s *Service) Blobs(ctx context.Context,
 		return nil, err
 	}
 
-	response, isResponse := res.(*api.Response[v1.Blobs])
+	response, isResponse := res.(*api.Response[apiv1.Blobs])
 	if !isResponse {
 		return nil, ErrIncorrectType
 	}

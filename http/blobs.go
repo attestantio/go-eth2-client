@@ -21,14 +21,14 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	v1 "github.com/attestantio/go-eth2-client/api/v1"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // Blobs fetches the blobs given options.
 func (s *Service) Blobs(ctx context.Context,
 	opts *api.BlobsOpts,
 ) (
-	*api.Response[v1.Blobs],
+	*api.Response[apiv1.Blobs],
 	error,
 ) {
 	if err := s.assertIsActive(ctx); err != nil {
@@ -47,7 +47,7 @@ func (s *Service) Blobs(ctx context.Context,
 		return nil, err
 	}
 
-	var response *api.Response[v1.Blobs]
+	var response *api.Response[apiv1.Blobs]
 	switch httpResponse.contentType {
 	case ContentTypeSSZ:
 		response, err = s.blobsFromSSZ(httpResponse)
@@ -63,12 +63,12 @@ func (s *Service) Blobs(ctx context.Context,
 	return response, nil
 }
 
-func (*Service) blobsFromSSZ(res *httpResponse) (*api.Response[v1.Blobs], error) {
-	response := &api.Response[v1.Blobs]{}
+func (*Service) blobsFromSSZ(res *httpResponse) (*api.Response[apiv1.Blobs], error) {
+	response := &api.Response[apiv1.Blobs]{}
 
 	if len(res.body) == 0 {
 		// This is a valid response when there are no blobs for the request.
-		response.Data = make(v1.Blobs, 0)
+		response.Data = make(apiv1.Blobs, 0)
 		response.Metadata = make(map[string]any)
 
 		return response, nil
@@ -81,11 +81,11 @@ func (*Service) blobsFromSSZ(res *httpResponse) (*api.Response[v1.Blobs], error)
 	return response, nil
 }
 
-func (*Service) blobsFromJSON(res *httpResponse) (*api.Response[v1.Blobs], error) {
-	response := &api.Response[v1.Blobs]{}
+func (*Service) blobsFromJSON(res *httpResponse) (*api.Response[apiv1.Blobs], error) {
+	response := &api.Response[apiv1.Blobs]{}
 
 	var err error
-	response.Data, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), v1.Blobs{})
+	response.Data, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), apiv1.Blobs{})
 	if err != nil {
 		return nil, err
 	}
