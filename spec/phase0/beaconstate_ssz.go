@@ -333,7 +333,7 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	// Field #7 'HistoricalRoots' (offset)
 	offset7 := int(sszutils.UnmarshallUint32(buf[524464:524468]))
-	if offset7 < 2687377 || offset7 > buflen {
+	if offset7 != 2687377 {
 		return sszutils.ErrOffset
 	}
 	{ // Field #8 'ETH1Data' (static)

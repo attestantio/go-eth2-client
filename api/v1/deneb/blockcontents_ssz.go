@@ -74,7 +74,7 @@ func (t *BlockContents) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	// Field #0 'Block' (offset)
 	offset0 := int(sszutils.UnmarshallUint32(buf[0:4]))
-	if offset0 < 12 || offset0 > buflen {
+	if offset0 != 12 {
 		return sszutils.ErrOffset
 	}
 	// Field #1 'KZGProofs' (offset)

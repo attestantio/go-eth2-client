@@ -108,7 +108,7 @@ func (t *VersionedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	// Field #1 'Bellatrix' (offset)
 	offset1 := int(sszutils.UnmarshallUint32(buf[8:12]))
-	if offset1 < 28 || offset1 > buflen {
+	if offset1 != 28 {
 		return sszutils.ErrOffset
 	}
 	// Field #2 'Capella' (offset)

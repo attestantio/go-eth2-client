@@ -47,7 +47,7 @@ func (t *SignedAggregateAndProof) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	// Field #0 'Message' (offset)
 	offset0 := int(sszutils.UnmarshallUint32(buf[0:4]))
-	if offset0 < 100 || offset0 > buflen {
+	if offset0 != 100 {
 		return sszutils.ErrOffset
 	}
 	{ // Field #1 'Signature' (static)

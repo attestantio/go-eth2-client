@@ -76,7 +76,7 @@ func (t *BlindedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	// Field #4 'Body' (offset)
 	offset4 := int(sszutils.UnmarshallUint32(buf[80:84]))
-	if offset4 < 84 || offset4 > buflen {
+	if offset4 != 84 {
 		return sszutils.ErrOffset
 	}
 	{ // Field #4 'Body' (dynamic)

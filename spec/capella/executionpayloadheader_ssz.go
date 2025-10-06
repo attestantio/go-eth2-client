@@ -138,7 +138,7 @@ func (t *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	// Field #10 'ExtraData' (offset)
 	offset10 := int(sszutils.UnmarshallUint32(buf[436:440]))
-	if offset10 < 568 || offset10 > buflen {
+	if offset10 != 568 {
 		return sszutils.ErrOffset
 	}
 	{ // Field #11 'BaseFeePerGas' (static)

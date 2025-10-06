@@ -56,7 +56,7 @@ func (t *AggregateAndProof) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	// Field #1 'Aggregate' (offset)
 	offset1 := int(sszutils.UnmarshallUint32(buf[8:12]))
-	if offset1 < 108 || offset1 > buflen {
+	if offset1 != 108 {
 		return sszutils.ErrOffset
 	}
 	{ // Field #2 'SelectionProof' (static)

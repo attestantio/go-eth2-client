@@ -231,7 +231,7 @@ func (t *BlindedBeaconBlockBody) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	// Field #3 'ProposerSlashings' (offset)
 	offset3 := int(sszutils.UnmarshallUint32(buf[200:204]))
-	if offset3 < 392 || offset3 > buflen {
+	if offset3 != 392 {
 		return sszutils.ErrOffset
 	}
 	// Field #4 'AttesterSlashings' (offset)

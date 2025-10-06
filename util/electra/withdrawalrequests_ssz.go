@@ -51,7 +51,7 @@ func (t *WithdrawalRequests) UnmarshalSSZ(buf []byte) (err error) {
 	}
 	// Field #0 'WithdrawalRequests' (offset)
 	offset0 := int(sszutils.UnmarshallUint32(buf[0:4]))
-	if offset0 < 4 || offset0 > buflen {
+	if offset0 != 4 {
 		return sszutils.ErrOffset
 	}
 	{ // Field #0 'WithdrawalRequests' (dynamic)
