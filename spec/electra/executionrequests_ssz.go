@@ -11,6 +11,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *ExecutionRequests) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *ExecutionRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -78,29 +81,6 @@ func (t *ExecutionRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	return dst, nil
-}
-
-func (t *ExecutionRequests) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *ExecutionRequests) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(ExecutionRequests)
-	}
-	// Field #0 'Deposits' offset (4 bytes)
-	// Field #1 'Withdrawals' offset (4 bytes)
-	// Field #2 'Consolidations' offset (4 bytes)
-	size += 12
-	{ // Dynamic field #0 'Deposits'
-		size += len(t.Deposits) * 192
-	}
-	{ // Dynamic field #1 'Withdrawals'
-		size += len(t.Withdrawals) * 76
-	}
-	{ // Dynamic field #2 'Consolidations'
-		size += len(t.Consolidations) * 116
-	}
-	return size
 }
 
 func (t *ExecutionRequests) UnmarshalSSZ(buf []byte) (err error) {
@@ -195,6 +175,38 @@ func (t *ExecutionRequests) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *ExecutionRequests) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(ExecutionRequests)
+	}
+	// Field #0 'Deposits' offset (4 bytes)
+	// Field #1 'Withdrawals' offset (4 bytes)
+	// Field #2 'Consolidations' offset (4 bytes)
+	size += 12
+	{ // Dynamic field #0 'Deposits'
+		size += len(t.Deposits) * 192
+	}
+	{ // Dynamic field #1 'Withdrawals'
+		size += len(t.Withdrawals) * 76
+	}
+	{ // Dynamic field #2 'Consolidations'
+		size += len(t.Consolidations) * 116
+	}
+	return size
+}
+
+func (t *ExecutionRequests) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *ExecutionRequests) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(ExecutionRequests)
@@ -261,15 +273,3 @@ func (t *ExecutionRequests) HashTreeRootWith(hh sszutils.HashWalker) error {
 	return nil
 }
 
-func (t *ExecutionRequests) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

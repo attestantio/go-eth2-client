@@ -12,6 +12,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *ExecutionPayloadWithdrawals) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *ExecutionPayloadWithdrawals) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -39,21 +42,6 @@ func (t *ExecutionPayloadWithdrawals) MarshalSSZTo(buf []byte) (dst []byte, err 
 		}
 	}
 	return dst, nil
-}
-
-func (t *ExecutionPayloadWithdrawals) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *ExecutionPayloadWithdrawals) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(ExecutionPayloadWithdrawals)
-	}
-	// Field #0 'Withdrawals' offset (4 bytes)
-	size += 4
-	{ // Dynamic field #0 'Withdrawals'
-		size += len(t.Withdrawals) * 44
-	}
-	return size
 }
 
 func (t *ExecutionPayloadWithdrawals) UnmarshalSSZ(buf []byte) (err error) {
@@ -92,6 +80,30 @@ func (t *ExecutionPayloadWithdrawals) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *ExecutionPayloadWithdrawals) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(ExecutionPayloadWithdrawals)
+	}
+	// Field #0 'Withdrawals' offset (4 bytes)
+	size += 4
+	{ // Dynamic field #0 'Withdrawals'
+		size += len(t.Withdrawals) * 44
+	}
+	return size
+}
+
+func (t *ExecutionPayloadWithdrawals) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *ExecutionPayloadWithdrawals) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(ExecutionPayloadWithdrawals)
@@ -120,15 +132,3 @@ func (t *ExecutionPayloadWithdrawals) HashTreeRootWith(hh sszutils.HashWalker) e
 	return nil
 }
 
-func (t *ExecutionPayloadWithdrawals) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

@@ -12,6 +12,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *WithdrawalRequests) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *WithdrawalRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -39,21 +42,6 @@ func (t *WithdrawalRequests) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	return dst, nil
-}
-
-func (t *WithdrawalRequests) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *WithdrawalRequests) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(WithdrawalRequests)
-	}
-	// Field #0 'WithdrawalRequests' offset (4 bytes)
-	size += 4
-	{ // Dynamic field #0 'WithdrawalRequests'
-		size += len(t.WithdrawalRequests) * 76
-	}
-	return size
 }
 
 func (t *WithdrawalRequests) UnmarshalSSZ(buf []byte) (err error) {
@@ -92,6 +80,30 @@ func (t *WithdrawalRequests) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *WithdrawalRequests) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(WithdrawalRequests)
+	}
+	// Field #0 'WithdrawalRequests' offset (4 bytes)
+	size += 4
+	{ // Dynamic field #0 'WithdrawalRequests'
+		size += len(t.WithdrawalRequests) * 76
+	}
+	return size
+}
+
+func (t *WithdrawalRequests) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *WithdrawalRequests) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(WithdrawalRequests)
@@ -120,15 +132,3 @@ func (t *WithdrawalRequests) HashTreeRootWith(hh sszutils.HashWalker) error {
 	return nil
 }
 
-func (t *WithdrawalRequests) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

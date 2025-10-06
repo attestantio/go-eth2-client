@@ -11,6 +11,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *SignedValidatorRegistration) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *SignedValidatorRegistration) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -30,13 +33,6 @@ func (t *SignedValidatorRegistration) MarshalSSZTo(buf []byte) (dst []byte, err 
 		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
-}
-
-func (t *SignedValidatorRegistration) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *SignedValidatorRegistration) SizeSSZ() (size int) {
-	return 180
 }
 
 func (t *SignedValidatorRegistration) UnmarshalSSZ(buf []byte) (err error) {
@@ -60,6 +56,22 @@ func (t *SignedValidatorRegistration) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *SignedValidatorRegistration) SizeSSZ() (size int) {
+	return 180
+}
+
+func (t *SignedValidatorRegistration) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *SignedValidatorRegistration) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(SignedValidatorRegistration)
@@ -82,15 +94,3 @@ func (t *SignedValidatorRegistration) HashTreeRootWith(hh sszutils.HashWalker) e
 	return nil
 }
 
-func (t *SignedValidatorRegistration) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

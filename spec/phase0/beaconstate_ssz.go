@@ -12,6 +12,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *BeaconState) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -272,66 +275,6 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	return dst, nil
-}
-
-func (t *BeaconState) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *BeaconState) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(BeaconState)
-	}
-	// Field #0 'GenesisTime' static (8 bytes)
-	// Field #1 'GenesisValidatorsRoot' static (32 bytes)
-	// Field #2 'Slot' static (8 bytes)
-	// Field #3 'Fork' static (16 bytes)
-	// Field #4 'LatestBlockHeader' static (112 bytes)
-	// Field #5 'BlockRoots' static (262144 bytes)
-	// Field #6 'StateRoots' static (262144 bytes)
-	// Field #7 'HistoricalRoots' offset (4 bytes)
-	// Field #8 'ETH1Data' static (72 bytes)
-	// Field #9 'ETH1DataVotes' offset (4 bytes)
-	// Field #10 'ETH1DepositIndex' static (8 bytes)
-	// Field #11 'Validators' offset (4 bytes)
-	// Field #12 'Balances' offset (4 bytes)
-	// Field #13 'RANDAOMixes' static (2097152 bytes)
-	// Field #14 'Slashings' static (65536 bytes)
-	// Field #15 'PreviousEpochAttestations' offset (4 bytes)
-	// Field #16 'CurrentEpochAttestations' offset (4 bytes)
-	// Field #17 'JustificationBits' static (1 bytes)
-	// Field #18 'PreviousJustifiedCheckpoint' static (40 bytes)
-	// Field #19 'CurrentJustifiedCheckpoint' static (40 bytes)
-	// Field #20 'FinalizedCheckpoint' static (40 bytes)
-	size += 2687377
-	{ // Dynamic field #7 'HistoricalRoots'
-		size += len(t.HistoricalRoots) * 32
-	}
-	{ // Dynamic field #9 'ETH1DataVotes'
-		size += len(t.ETH1DataVotes) * 72
-	}
-	{ // Dynamic field #11 'Validators'
-		size += len(t.Validators) * 121
-	}
-	{ // Dynamic field #12 'Balances'
-		size += len(t.Balances) * 8
-	}
-	{ // Dynamic field #15 'PreviousEpochAttestations'
-		t := t.PreviousEpochAttestations
-		vlen := len(t)
-		size += vlen * 4 // Offsets
-		for i1 := 0; i1 < vlen; i1++ {
-			size += t[i1].SizeSSZ()
-		}
-	}
-	{ // Dynamic field #16 'CurrentEpochAttestations'
-		t := t.CurrentEpochAttestations
-		vlen := len(t)
-		size += vlen * 4 // Offsets
-		for i2 := 0; i2 < vlen; i2++ {
-			size += t[i2].SizeSSZ()
-		}
-	}
-	return size
 }
 
 func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
@@ -673,6 +616,75 @@ func (t *BeaconState) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *BeaconState) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(BeaconState)
+	}
+	// Field #0 'GenesisTime' static (8 bytes)
+	// Field #1 'GenesisValidatorsRoot' static (32 bytes)
+	// Field #2 'Slot' static (8 bytes)
+	// Field #3 'Fork' static (16 bytes)
+	// Field #4 'LatestBlockHeader' static (112 bytes)
+	// Field #5 'BlockRoots' static (262144 bytes)
+	// Field #6 'StateRoots' static (262144 bytes)
+	// Field #7 'HistoricalRoots' offset (4 bytes)
+	// Field #8 'ETH1Data' static (72 bytes)
+	// Field #9 'ETH1DataVotes' offset (4 bytes)
+	// Field #10 'ETH1DepositIndex' static (8 bytes)
+	// Field #11 'Validators' offset (4 bytes)
+	// Field #12 'Balances' offset (4 bytes)
+	// Field #13 'RANDAOMixes' static (2097152 bytes)
+	// Field #14 'Slashings' static (65536 bytes)
+	// Field #15 'PreviousEpochAttestations' offset (4 bytes)
+	// Field #16 'CurrentEpochAttestations' offset (4 bytes)
+	// Field #17 'JustificationBits' static (1 bytes)
+	// Field #18 'PreviousJustifiedCheckpoint' static (40 bytes)
+	// Field #19 'CurrentJustifiedCheckpoint' static (40 bytes)
+	// Field #20 'FinalizedCheckpoint' static (40 bytes)
+	size += 2687377
+	{ // Dynamic field #7 'HistoricalRoots'
+		size += len(t.HistoricalRoots) * 32
+	}
+	{ // Dynamic field #9 'ETH1DataVotes'
+		size += len(t.ETH1DataVotes) * 72
+	}
+	{ // Dynamic field #11 'Validators'
+		size += len(t.Validators) * 121
+	}
+	{ // Dynamic field #12 'Balances'
+		size += len(t.Balances) * 8
+	}
+	{ // Dynamic field #15 'PreviousEpochAttestations'
+		t := t.PreviousEpochAttestations
+		vlen := len(t)
+		size += vlen * 4 // Offsets
+		for i1 := 0; i1 < vlen; i1++ {
+			size += t[i1].SizeSSZ()
+		}
+	}
+	{ // Dynamic field #16 'CurrentEpochAttestations'
+		t := t.CurrentEpochAttestations
+		vlen := len(t)
+		size += vlen * 4 // Offsets
+		for i2 := 0; i2 < vlen; i2++ {
+			size += t[i2].SizeSSZ()
+		}
+	}
+	return size
+}
+
+func (t *BeaconState) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(BeaconState)
@@ -934,15 +946,3 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 	return nil
 }
 
-func (t *BeaconState) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

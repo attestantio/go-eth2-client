@@ -12,6 +12,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *AggregateAndProof) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *AggregateAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -40,23 +43,6 @@ func (t *AggregateAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	return dst, nil
-}
-
-func (t *AggregateAndProof) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *AggregateAndProof) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(AggregateAndProof)
-	}
-	// Field #0 'AggregatorIndex' static (8 bytes)
-	// Field #1 'Aggregate' offset (4 bytes)
-	// Field #2 'SelectionProof' static (96 bytes)
-	size += 108
-	{ // Dynamic field #1 'Aggregate'
-		size += t.Aggregate.SizeSSZ()
-	}
-	return size
 }
 
 func (t *AggregateAndProof) UnmarshalSSZ(buf []byte) (err error) {
@@ -91,6 +77,32 @@ func (t *AggregateAndProof) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *AggregateAndProof) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(AggregateAndProof)
+	}
+	// Field #0 'AggregatorIndex' static (8 bytes)
+	// Field #1 'Aggregate' offset (4 bytes)
+	// Field #2 'SelectionProof' static (96 bytes)
+	size += 108
+	{ // Dynamic field #1 'Aggregate'
+		size += t.Aggregate.SizeSSZ()
+	}
+	return size
+}
+
+func (t *AggregateAndProof) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *AggregateAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(AggregateAndProof)
@@ -117,15 +129,3 @@ func (t *AggregateAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
 	return nil
 }
 
-func (t *AggregateAndProof) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

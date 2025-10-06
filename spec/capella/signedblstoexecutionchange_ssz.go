@@ -11,6 +11,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *SignedBLSToExecutionChange) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *SignedBLSToExecutionChange) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -30,13 +33,6 @@ func (t *SignedBLSToExecutionChange) MarshalSSZTo(buf []byte) (dst []byte, err e
 		dst = append(dst, []byte(t[:96])...)
 	}
 	return dst, nil
-}
-
-func (t *SignedBLSToExecutionChange) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *SignedBLSToExecutionChange) SizeSSZ() (size int) {
-	return 172
 }
 
 func (t *SignedBLSToExecutionChange) UnmarshalSSZ(buf []byte) (err error) {
@@ -60,6 +56,22 @@ func (t *SignedBLSToExecutionChange) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *SignedBLSToExecutionChange) SizeSSZ() (size int) {
+	return 172
+}
+
+func (t *SignedBLSToExecutionChange) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *SignedBLSToExecutionChange) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(SignedBLSToExecutionChange)
@@ -82,15 +94,3 @@ func (t *SignedBLSToExecutionChange) HashTreeRootWith(hh sszutils.HashWalker) er
 	return nil
 }
 
-func (t *SignedBLSToExecutionChange) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

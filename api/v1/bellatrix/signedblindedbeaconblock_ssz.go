@@ -11,6 +11,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *SignedBlindedBeaconBlock) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *SignedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -35,22 +38,6 @@ func (t *SignedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err err
 		}
 	}
 	return dst, nil
-}
-
-func (t *SignedBlindedBeaconBlock) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *SignedBlindedBeaconBlock) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(SignedBlindedBeaconBlock)
-	}
-	// Field #0 'Message' offset (4 bytes)
-	// Field #1 'Signature' static (96 bytes)
-	size += 100
-	{ // Dynamic field #0 'Message'
-		size += t.Message.SizeSSZ()
-	}
-	return size
 }
 
 func (t *SignedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
@@ -81,6 +68,31 @@ func (t *SignedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *SignedBlindedBeaconBlock) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(SignedBlindedBeaconBlock)
+	}
+	// Field #0 'Message' offset (4 bytes)
+	// Field #1 'Signature' static (96 bytes)
+	size += 100
+	{ // Dynamic field #0 'Message'
+		size += t.Message.SizeSSZ()
+	}
+	return size
+}
+
+func (t *SignedBlindedBeaconBlock) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *SignedBlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(SignedBlindedBeaconBlock)
@@ -103,15 +115,3 @@ func (t *SignedBlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) erro
 	return nil
 }
 
-func (t *SignedBlindedBeaconBlock) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

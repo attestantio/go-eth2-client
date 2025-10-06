@@ -11,6 +11,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *Validator) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *Validator) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -58,13 +61,6 @@ func (t *Validator) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	return dst, nil
 }
 
-func (t *Validator) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *Validator) SizeSSZ() (size int) {
-	return 121
-}
-
 func (t *Validator) UnmarshalSSZ(buf []byte) (err error) {
 	buflen := len(buf)
 	if buflen < 121 {
@@ -110,6 +106,22 @@ func (t *Validator) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *Validator) SizeSSZ() (size int) {
+	return 121
+}
+
+func (t *Validator) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *Validator) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(Validator)
@@ -159,15 +171,3 @@ func (t *Validator) HashTreeRootWith(hh sszutils.HashWalker) error {
 	return nil
 }
 
-func (t *Validator) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

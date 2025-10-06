@@ -11,6 +11,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *BeaconBlockBlob) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *BeaconBlockBlob) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -21,13 +24,6 @@ func (t *BeaconBlockBlob) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		dst = append(dst, []byte(t[:131072])...)
 	}
 	return dst, nil
-}
-
-func (t *BeaconBlockBlob) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *BeaconBlockBlob) SizeSSZ() (size int) {
-	return 131072
 }
 
 func (t *BeaconBlockBlob) UnmarshalSSZ(buf []byte) (err error) {
@@ -42,17 +38,8 @@ func (t *BeaconBlockBlob) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
-func (t *BeaconBlockBlob) HashTreeRootWith(hh sszutils.HashWalker) error {
-	if t == nil {
-		t = new(BeaconBlockBlob)
-	}
-	idx := hh.Index()
-	{ // Field #0 'Blob'
-		t := &t.Blob
-		hh.PutBytes(t[:131072])
-	}
-	hh.Merkleize(idx)
-	return nil
+func (t *BeaconBlockBlob) SizeSSZ() (size int) {
+	return 131072
 }
 
 func (t *BeaconBlockBlob) HashTreeRoot() ([32]byte, error) {
@@ -67,3 +54,16 @@ func (t *BeaconBlockBlob) HashTreeRoot() ([32]byte, error) {
 	r, _ := hh.HashRoot()
 	return r, nil
 }
+func (t *BeaconBlockBlob) HashTreeRootWith(hh sszutils.HashWalker) error {
+	if t == nil {
+		t = new(BeaconBlockBlob)
+	}
+	idx := hh.Index()
+	{ // Field #0 'Blob'
+		t := &t.Blob
+		hh.PutBytes(t[:131072])
+	}
+	hh.Merkleize(idx)
+	return nil
+}
+

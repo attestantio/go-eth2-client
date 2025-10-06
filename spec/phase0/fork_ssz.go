@@ -11,6 +11,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *Fork) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *Fork) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -29,13 +32,6 @@ func (t *Fork) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		dst = sszutils.MarshalUint64(dst, uint64(t))
 	}
 	return dst, nil
-}
-
-func (t *Fork) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *Fork) SizeSSZ() (size int) {
-	return 16
 }
 
 func (t *Fork) UnmarshalSSZ(buf []byte) (err error) {
@@ -58,6 +54,22 @@ func (t *Fork) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *Fork) SizeSSZ() (size int) {
+	return 16
+}
+
+func (t *Fork) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *Fork) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(Fork)
@@ -79,15 +91,3 @@ func (t *Fork) HashTreeRootWith(hh sszutils.HashWalker) error {
 	return nil
 }
 
-func (t *Fork) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

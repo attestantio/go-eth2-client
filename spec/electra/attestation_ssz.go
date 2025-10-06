@@ -13,6 +13,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *Attestation) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *Attestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -56,24 +59,6 @@ func (t *Attestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		dst = append(dst, []byte(t[:])...)
 	}
 	return dst, nil
-}
-
-func (t *Attestation) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *Attestation) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(Attestation)
-	}
-	// Field #0 'AggregationBits' offset (4 bytes)
-	// Field #1 'Data' static (128 bytes)
-	// Field #2 'Signature' static (96 bytes)
-	// Field #3 'CommitteeBits' static (8 bytes)
-	size += 236
-	{ // Dynamic field #0 'AggregationBits'
-		size += len(t.AggregationBits)
-	}
-	return size
 }
 
 func (t *Attestation) UnmarshalSSZ(buf []byte) (err error) {
@@ -123,6 +108,33 @@ func (t *Attestation) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *Attestation) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(Attestation)
+	}
+	// Field #0 'AggregationBits' offset (4 bytes)
+	// Field #1 'Data' static (128 bytes)
+	// Field #2 'Signature' static (96 bytes)
+	// Field #3 'CommitteeBits' static (8 bytes)
+	size += 236
+	{ // Dynamic field #0 'AggregationBits'
+		size += len(t.AggregationBits)
+	}
+	return size
+}
+
+func (t *Attestation) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *Attestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(Attestation)
@@ -173,15 +185,3 @@ func (t *Attestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 	return nil
 }
 
-func (t *Attestation) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

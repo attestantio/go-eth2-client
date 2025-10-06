@@ -13,6 +13,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *SignedBlockContents) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *SignedBlockContents) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -63,29 +66,6 @@ func (t *SignedBlockContents) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	return dst, nil
-}
-
-func (t *SignedBlockContents) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *SignedBlockContents) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(SignedBlockContents)
-	}
-	// Field #0 'SignedBlock' offset (4 bytes)
-	// Field #1 'KZGProofs' offset (4 bytes)
-	// Field #2 'Blobs' offset (4 bytes)
-	size += 12
-	{ // Dynamic field #0 'SignedBlock'
-		size += t.SignedBlock.SizeSSZ()
-	}
-	{ // Dynamic field #1 'KZGProofs'
-		size += len(t.KZGProofs) * 48
-	}
-	{ // Dynamic field #2 'Blobs'
-		size += len(t.Blobs) * 131072
-	}
-	return size
 }
 
 func (t *SignedBlockContents) UnmarshalSSZ(buf []byte) (err error) {
@@ -158,6 +138,38 @@ func (t *SignedBlockContents) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *SignedBlockContents) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(SignedBlockContents)
+	}
+	// Field #0 'SignedBlock' offset (4 bytes)
+	// Field #1 'KZGProofs' offset (4 bytes)
+	// Field #2 'Blobs' offset (4 bytes)
+	size += 12
+	{ // Dynamic field #0 'SignedBlock'
+		size += t.SignedBlock.SizeSSZ()
+	}
+	{ // Dynamic field #1 'KZGProofs'
+		size += len(t.KZGProofs) * 48
+	}
+	{ // Dynamic field #2 'Blobs'
+		size += len(t.Blobs) * 131072
+	}
+	return size
+}
+
+func (t *SignedBlockContents) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *SignedBlockContents) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(SignedBlockContents)
@@ -204,15 +216,3 @@ func (t *SignedBlockContents) HashTreeRootWith(hh sszutils.HashWalker) error {
 	return nil
 }
 
-func (t *SignedBlockContents) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

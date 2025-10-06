@@ -11,6 +11,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *Deposit) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *Deposit) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -49,13 +52,6 @@ func (t *Deposit) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	return dst, nil
 }
 
-func (t *Deposit) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *Deposit) SizeSSZ() (size int) {
-	return 1240
-}
-
 func (t *Deposit) UnmarshalSSZ(buf []byte) (err error) {
 	buflen := len(buf)
 	if buflen < 1240 {
@@ -92,6 +88,22 @@ func (t *Deposit) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *Deposit) SizeSSZ() (size int) {
+	return 1240
+}
+
+func (t *Deposit) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *Deposit) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(Deposit)
@@ -134,15 +146,3 @@ func (t *Deposit) HashTreeRootWith(hh sszutils.HashWalker) error {
 	return nil
 }
 
-func (t *Deposit) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

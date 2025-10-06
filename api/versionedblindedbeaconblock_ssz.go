@@ -16,6 +16,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *VersionedBlindedBeaconBlock) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *VersionedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -92,38 +95,6 @@ func (t *VersionedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err 
 		}
 	}
 	return dst, nil
-}
-
-func (t *VersionedBlindedBeaconBlock) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *VersionedBlindedBeaconBlock) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(VersionedBlindedBeaconBlock)
-	}
-	// Field #0 'Version' static (8 bytes)
-	// Field #1 'Bellatrix' offset (4 bytes)
-	// Field #2 'Capella' offset (4 bytes)
-	// Field #3 'Deneb' offset (4 bytes)
-	// Field #4 'Electra' offset (4 bytes)
-	// Field #5 'Fulu' offset (4 bytes)
-	size += 28
-	{ // Dynamic field #1 'Bellatrix'
-		size += t.Bellatrix.SizeSSZ()
-	}
-	{ // Dynamic field #2 'Capella'
-		size += t.Capella.SizeSSZ()
-	}
-	{ // Dynamic field #3 'Deneb'
-		size += t.Deneb.SizeSSZ()
-	}
-	{ // Dynamic field #4 'Electra'
-		size += t.Electra.SizeSSZ()
-	}
-	{ // Dynamic field #5 'Fulu'
-		size += t.Fulu.SizeSSZ()
-	}
-	return size
 }
 
 func (t *VersionedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
@@ -218,6 +189,47 @@ func (t *VersionedBlindedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *VersionedBlindedBeaconBlock) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(VersionedBlindedBeaconBlock)
+	}
+	// Field #0 'Version' static (8 bytes)
+	// Field #1 'Bellatrix' offset (4 bytes)
+	// Field #2 'Capella' offset (4 bytes)
+	// Field #3 'Deneb' offset (4 bytes)
+	// Field #4 'Electra' offset (4 bytes)
+	// Field #5 'Fulu' offset (4 bytes)
+	size += 28
+	{ // Dynamic field #1 'Bellatrix'
+		size += t.Bellatrix.SizeSSZ()
+	}
+	{ // Dynamic field #2 'Capella'
+		size += t.Capella.SizeSSZ()
+	}
+	{ // Dynamic field #3 'Deneb'
+		size += t.Deneb.SizeSSZ()
+	}
+	{ // Dynamic field #4 'Electra'
+		size += t.Electra.SizeSSZ()
+	}
+	{ // Dynamic field #5 'Fulu'
+		size += t.Fulu.SizeSSZ()
+	}
+	return size
+}
+
+func (t *VersionedBlindedBeaconBlock) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *VersionedBlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(VersionedBlindedBeaconBlock)
@@ -276,15 +288,3 @@ func (t *VersionedBlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) e
 	return nil
 }
 
-func (t *VersionedBlindedBeaconBlock) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

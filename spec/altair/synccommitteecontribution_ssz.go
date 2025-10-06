@@ -13,6 +13,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *SyncCommitteeContribution) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *SyncCommitteeContribution) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -48,13 +51,6 @@ func (t *SyncCommitteeContribution) MarshalSSZTo(buf []byte) (dst []byte, err er
 	return dst, nil
 }
 
-func (t *SyncCommitteeContribution) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *SyncCommitteeContribution) SizeSSZ() (size int) {
-	return 160
-}
-
 func (t *SyncCommitteeContribution) UnmarshalSSZ(buf []byte) (err error) {
 	buflen := len(buf)
 	if buflen < 160 {
@@ -88,6 +84,22 @@ func (t *SyncCommitteeContribution) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *SyncCommitteeContribution) SizeSSZ() (size int) {
+	return 160
+}
+
+func (t *SyncCommitteeContribution) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *SyncCommitteeContribution) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(SyncCommitteeContribution)
@@ -125,15 +137,3 @@ func (t *SyncCommitteeContribution) HashTreeRootWith(hh sszutils.HashWalker) err
 	return nil
 }
 
-func (t *SyncCommitteeContribution) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

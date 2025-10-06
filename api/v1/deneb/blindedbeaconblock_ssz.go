@@ -12,6 +12,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *BlindedBeaconBlock) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *BlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -48,25 +51,6 @@ func (t *BlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	return dst, nil
-}
-
-func (t *BlindedBeaconBlock) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *BlindedBeaconBlock) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(BlindedBeaconBlock)
-	}
-	// Field #0 'Slot' static (8 bytes)
-	// Field #1 'ProposerIndex' static (8 bytes)
-	// Field #2 'ParentRoot' static (32 bytes)
-	// Field #3 'StateRoot' static (32 bytes)
-	// Field #4 'Body' offset (4 bytes)
-	size += 84
-	{ // Dynamic field #4 'Body'
-		size += t.Body.SizeSSZ()
-	}
-	return size
 }
 
 func (t *BlindedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
@@ -109,6 +93,34 @@ func (t *BlindedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *BlindedBeaconBlock) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(BlindedBeaconBlock)
+	}
+	// Field #0 'Slot' static (8 bytes)
+	// Field #1 'ProposerIndex' static (8 bytes)
+	// Field #2 'ParentRoot' static (32 bytes)
+	// Field #3 'StateRoot' static (32 bytes)
+	// Field #4 'Body' offset (4 bytes)
+	size += 84
+	{ // Dynamic field #4 'Body'
+		size += t.Body.SizeSSZ()
+	}
+	return size
+}
+
+func (t *BlindedBeaconBlock) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *BlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(BlindedBeaconBlock)
@@ -143,15 +155,3 @@ func (t *BlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) error {
 	return nil
 }
 
-func (t *BlindedBeaconBlock) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

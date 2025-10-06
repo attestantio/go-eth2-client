@@ -11,6 +11,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *SignedBeaconBlock) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *SignedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -35,22 +38,6 @@ func (t *SignedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	return dst, nil
-}
-
-func (t *SignedBeaconBlock) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *SignedBeaconBlock) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(SignedBeaconBlock)
-	}
-	// Field #0 'Message' offset (4 bytes)
-	// Field #1 'Signature' static (96 bytes)
-	size += 100
-	{ // Dynamic field #0 'Message'
-		size += t.Message.SizeSSZ()
-	}
-	return size
 }
 
 func (t *SignedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
@@ -81,6 +68,31 @@ func (t *SignedBeaconBlock) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *SignedBeaconBlock) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(SignedBeaconBlock)
+	}
+	// Field #0 'Message' offset (4 bytes)
+	// Field #1 'Signature' static (96 bytes)
+	size += 100
+	{ // Dynamic field #0 'Message'
+		size += t.Message.SizeSSZ()
+	}
+	return size
+}
+
+func (t *SignedBeaconBlock) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *SignedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(SignedBeaconBlock)
@@ -103,15 +115,3 @@ func (t *SignedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) error {
 	return nil
 }
 
-func (t *SignedBeaconBlock) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

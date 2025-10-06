@@ -12,6 +12,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *ExecutionPayloadTransactions) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *ExecutionPayloadTransactions) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -41,26 +44,6 @@ func (t *ExecutionPayloadTransactions) MarshalSSZTo(buf []byte) (dst []byte, err
 		}
 	}
 	return dst, nil
-}
-
-func (t *ExecutionPayloadTransactions) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *ExecutionPayloadTransactions) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(ExecutionPayloadTransactions)
-	}
-	// Field #0 'Transactions' offset (4 bytes)
-	size += 4
-	{ // Dynamic field #0 'Transactions'
-		t := t.Transactions
-		vlen := len(t)
-		size += vlen * 4 // Offsets
-		for i1 := 0; i1 < vlen; i1++ {
-			size += len(t[i1])
-		}
-	}
-	return size
 }
 
 func (t *ExecutionPayloadTransactions) UnmarshalSSZ(buf []byte) (err error) {
@@ -119,6 +102,35 @@ func (t *ExecutionPayloadTransactions) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *ExecutionPayloadTransactions) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(ExecutionPayloadTransactions)
+	}
+	// Field #0 'Transactions' offset (4 bytes)
+	size += 4
+	{ // Dynamic field #0 'Transactions'
+		t := t.Transactions
+		vlen := len(t)
+		size += vlen * 4 // Offsets
+		for i1 := 0; i1 < vlen; i1++ {
+			size += len(t[i1])
+		}
+	}
+	return size
+}
+
+func (t *ExecutionPayloadTransactions) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *ExecutionPayloadTransactions) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(ExecutionPayloadTransactions)
@@ -149,15 +161,3 @@ func (t *ExecutionPayloadTransactions) HashTreeRootWith(hh sszutils.HashWalker) 
 	return nil
 }
 
-func (t *ExecutionPayloadTransactions) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}

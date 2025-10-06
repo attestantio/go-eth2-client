@@ -11,6 +11,9 @@ import (
 
 var _ = sszutils.ErrListTooBig
 
+func (t *ExecutionPayloadHeader) MarshalSSZ() ([]byte, error) {
+	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
+}
 func (t *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	dst = buf
 	if t == nil {
@@ -86,35 +89,6 @@ func (t *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error
 		dst = append(dst, []byte(t[:])...)
 	}
 	return dst, nil
-}
-
-func (t *ExecutionPayloadHeader) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(t)
-}
-func (t *ExecutionPayloadHeader) SizeSSZ() (size int) {
-	if t == nil {
-		t = new(ExecutionPayloadHeader)
-	}
-	// Field #0 'ParentHash' static (32 bytes)
-	// Field #1 'FeeRecipient' static (20 bytes)
-	// Field #2 'StateRoot' static (32 bytes)
-	// Field #3 'ReceiptsRoot' static (32 bytes)
-	// Field #4 'LogsBloom' static (256 bytes)
-	// Field #5 'PrevRandao' static (32 bytes)
-	// Field #6 'BlockNumber' static (8 bytes)
-	// Field #7 'GasLimit' static (8 bytes)
-	// Field #8 'GasUsed' static (8 bytes)
-	// Field #9 'Timestamp' static (8 bytes)
-	// Field #10 'ExtraData' offset (4 bytes)
-	// Field #11 'BaseFeePerGas' static (32 bytes)
-	// Field #12 'BlockHash' static (32 bytes)
-	// Field #13 'TransactionsRoot' static (32 bytes)
-	// Field #14 'WithdrawalsRoot' static (32 bytes)
-	size += 568
-	{ // Dynamic field #10 'ExtraData'
-		size += len(t.ExtraData)
-	}
-	return size
 }
 
 func (t *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) (err error) {
@@ -198,6 +172,44 @@ func (t *ExecutionPayloadHeader) UnmarshalSSZ(buf []byte) (err error) {
 	return nil
 }
 
+func (t *ExecutionPayloadHeader) SizeSSZ() (size int) {
+	if t == nil {
+		t = new(ExecutionPayloadHeader)
+	}
+	// Field #0 'ParentHash' static (32 bytes)
+	// Field #1 'FeeRecipient' static (20 bytes)
+	// Field #2 'StateRoot' static (32 bytes)
+	// Field #3 'ReceiptsRoot' static (32 bytes)
+	// Field #4 'LogsBloom' static (256 bytes)
+	// Field #5 'PrevRandao' static (32 bytes)
+	// Field #6 'BlockNumber' static (8 bytes)
+	// Field #7 'GasLimit' static (8 bytes)
+	// Field #8 'GasUsed' static (8 bytes)
+	// Field #9 'Timestamp' static (8 bytes)
+	// Field #10 'ExtraData' offset (4 bytes)
+	// Field #11 'BaseFeePerGas' static (32 bytes)
+	// Field #12 'BlockHash' static (32 bytes)
+	// Field #13 'TransactionsRoot' static (32 bytes)
+	// Field #14 'WithdrawalsRoot' static (32 bytes)
+	size += 568
+	{ // Dynamic field #10 'ExtraData'
+		size += len(t.ExtraData)
+	}
+	return size
+}
+
+func (t *ExecutionPayloadHeader) HashTreeRoot() ([32]byte, error) {
+	pool := &hasher.FastHasherPool
+	hh := pool.Get()
+	defer func() {
+		pool.Put(hh)
+	}()
+	if err := t.HashTreeRootWith(hh); err != nil {
+		return [32]byte{}, err
+	}
+	r, _ := hh.HashRoot()
+	return r, nil
+}
 func (t *ExecutionPayloadHeader) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
 		t = new(ExecutionPayloadHeader)
@@ -274,15 +286,3 @@ func (t *ExecutionPayloadHeader) HashTreeRootWith(hh sszutils.HashWalker) error 
 	return nil
 }
 
-func (t *ExecutionPayloadHeader) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
-}
