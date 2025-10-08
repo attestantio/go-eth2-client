@@ -28,12 +28,12 @@ func (s *Service) Blobs(ctx context.Context,
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		blobSidecars, err := client.(consensusclient.BlobsProvider).Blobs(ctx, opts)
+		blobs, err := client.(consensusclient.BlobsProvider).Blobs(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
 
-		return blobSidecars, nil
+		return blobs, nil
 	}, nil)
 	if err != nil {
 		return nil, err

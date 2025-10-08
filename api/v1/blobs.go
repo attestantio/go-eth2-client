@@ -20,7 +20,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 )
 
-// Genesis provides information about the genesis of a chain.
+// Blobs represents a list of blobs.
 type Blobs []*deneb.Blob
 
 // String returns a string version of the structure.
