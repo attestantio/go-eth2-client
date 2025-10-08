@@ -118,6 +118,16 @@ type SignedBeaconBlockProvider interface {
 	)
 }
 
+// BlobsProvider is the interface for providing blobs for a given beacon block.
+type BlobsProvider interface {
+	// Blobs fetches the blobs given a block ID.
+	Blobs(ctx context.Context,
+		opts *api.BlobsOpts,
+	) (
+		*api.Response[apiv1.Blobs],
+		error)
+}
+
 // BlobSidecarsProvider is the interface for providing blobs for a given beacon block.
 type BlobSidecarsProvider interface {
 	// BlobSidecars fetches the blobs given a block ID.

@@ -627,6 +627,22 @@ func (s *Sleepy) ForkChoice(ctx context.Context,
 	return next.ForkChoice(ctx, opts)
 }
 
+// Blobs fetches the blobs given a block ID.
+func (s *Sleepy) Blobs(ctx context.Context,
+	opts *api.BlobsOpts,
+) (
+	*api.Response[apiv1.Blobs],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.BlobsProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.Blobs(ctx, opts)
+}
+
 // BlobSidecars fetches the blobs sidecars given options.
 func (s *Sleepy) BlobSidecars(ctx context.Context,
 	opts *api.BlobSidecarsOpts,
