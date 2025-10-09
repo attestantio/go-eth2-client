@@ -155,6 +155,7 @@ formatters:
     - gofmt      # Standard Go formatter
     - gofumpt    # Stricter Go formatter
     - goimports  # Import organization and formatting
+    - gci        # Go import grouping and sorting formatter
   exclusions:
     # Exclude generated files from formatting
     generated: lax
