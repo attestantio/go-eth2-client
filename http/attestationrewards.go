@@ -40,9 +40,11 @@ func (s *Service) AttestationRewards(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	span.SetAttributes(attribute.Int("validators", len(opts.Indices)+len(opts.PubKeys)))
 
 	endpoint := fmt.Sprintf("/eth/v1/beacon/rewards/attestations/%d", opts.Epoch)
@@ -53,6 +55,7 @@ func (s *Service) AttestationRewards(ctx context.Context,
 	for i := range opts.Indices {
 		body = append(body, fmt.Sprintf("%d", opts.Indices[i]))
 	}
+
 	for i := range opts.PubKeys {
 		body = append(body, opts.PubKeys[i].String())
 	}

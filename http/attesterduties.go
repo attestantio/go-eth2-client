@@ -35,9 +35,11 @@ func (s *Service) AttesterDuties(ctx context.Context,
 	if err := s.assertIsSynced(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	if len(opts.Indices) == 0 {
 		return nil, errors.Join(errors.New("no validator indices specified"), client.ErrInvalidOptions)
 	}
@@ -46,16 +48,19 @@ func (s *Service) AttesterDuties(ctx context.Context,
 	if _, err := reqBodyReader.WriteString(`[`); err != nil {
 		return nil, errors.Join(errors.New("failed to write validator index array start"), err)
 	}
+
 	for i := range opts.Indices {
 		if _, err := reqBodyReader.WriteString(fmt.Sprintf(`"%d"`, opts.Indices[i])); err != nil {
 			return nil, errors.Join(errors.New("failed to write index"), err)
 		}
+
 		if i != len(opts.Indices)-1 {
 			if _, err := reqBodyReader.WriteString(`,`); err != nil {
 				return nil, errors.Join(errors.New("failed to write separator"), err)
 			}
 		}
 	}
+
 	if _, err := reqBodyReader.WriteString(`]`); err != nil {
 		return nil, errors.Join(errors.New("failed to write end of validator index array"), err)
 	}
@@ -85,7 +90,9 @@ func (s *Service) AttesterDuties(ctx context.Context,
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to obtain slots per epoch"), err)
 	}
+
 	startSlot := phase0.Slot(uint64(opts.Epoch) * slotsPerEpoch)
+
 	endSlot := phase0.Slot(uint64(opts.Epoch)*slotsPerEpoch + slotsPerEpoch - 1)
 	for _, duty := range data {
 		if duty.Slot < startSlot || duty.Slot > endSlot {

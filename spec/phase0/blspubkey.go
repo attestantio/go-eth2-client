@@ -58,6 +58,7 @@ func (p BLSPubKey) Format(state fmt.State, v rune) {
 		if state.Flag('#') {
 			format = "#" + format
 		}
+
 		fmt.Fprintf(state, "%"+format, p[:])
 	default:
 		fmt.Fprintf(state, "%"+format, p[:])
@@ -73,9 +74,11 @@ func (p *BLSPubKey) UnmarshalJSON(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'"', '0', 'x'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'"'}) {
 		return errors.New("invalid suffix")
 	}
+
 	if len(input) != 1+2+PublicKeyLength*2+1 {
 		return errors.New("incorrect length")
 	}
@@ -106,9 +109,11 @@ func (p *BLSPubKey) UnmarshalYAML(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'\'', '0', 'x'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'\''}) {
 		return errors.New("invalid suffix")
 	}
+
 	if len(input) != 1+2+PublicKeyLength*2+1 {
 		return errors.New("incorrect length")
 	}

@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
@@ -73,40 +72,6 @@ func (i *IndexedAttestation) UnmarshalJSON(input []byte) error {
 	return i.unpack(&indexedAttestationJSON)
 }
 
-func (i *IndexedAttestation) unpack(indexedAttestationJSON *indexedAttestationJSON) error {
-	var err error
-	// Spec tests contain indexed attestations with empty attesting indices.
-	// if indexedAttestationJSON.AttestingIndices == nil {
-	// 	return errors.New("attesting indices missing")
-	// }
-	// if len(indexedAttestationJSON.AttestingIndices) == 0 {
-	// 	return errors.New("attesting indices missing")
-	// }
-	i.AttestingIndices = make([]uint64, len(indexedAttestationJSON.AttestingIndices))
-	for j := range indexedAttestationJSON.AttestingIndices {
-		if i.AttestingIndices[j], err = strconv.ParseUint(indexedAttestationJSON.AttestingIndices[j], 10, 64); err != nil {
-			return errors.Wrap(err, "failed to parse attesting index")
-		}
-	}
-	if indexedAttestationJSON.Data == nil {
-		return errors.New("data missing")
-	}
-	i.Data = indexedAttestationJSON.Data
-	if indexedAttestationJSON.Signature == "" {
-		return errors.New("signature missing")
-	}
-	signature, err := hex.DecodeString(strings.TrimPrefix(indexedAttestationJSON.Signature, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for signature")
-	}
-	if len(signature) != phase0.SignatureLength {
-		return errors.New("incorrect length for signature")
-	}
-	copy(i.Signature[:], signature)
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (i *IndexedAttestation) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&indexedAttestationYAML{
@@ -140,4 +105,43 @@ func (i *IndexedAttestation) String() string {
 	}
 
 	return string(data)
+}
+
+func (i *IndexedAttestation) unpack(indexedAttestationJSON *indexedAttestationJSON) error {
+	var err error
+	// Spec tests contain indexed attestations with empty attesting indices.
+	// if indexedAttestationJSON.AttestingIndices == nil {
+	// 	return errors.New("attesting indices missing")
+	// }
+	// if len(indexedAttestationJSON.AttestingIndices) == 0 {
+	// 	return errors.New("attesting indices missing")
+	// }
+	i.AttestingIndices = make([]uint64, len(indexedAttestationJSON.AttestingIndices))
+	for j := range indexedAttestationJSON.AttestingIndices {
+		if i.AttestingIndices[j], err = strconv.ParseUint(indexedAttestationJSON.AttestingIndices[j], 10, 64); err != nil {
+			return errors.Wrap(err, "failed to parse attesting index")
+		}
+	}
+
+	if indexedAttestationJSON.Data == nil {
+		return errors.New("data missing")
+	}
+
+	i.Data = indexedAttestationJSON.Data
+	if indexedAttestationJSON.Signature == "" {
+		return errors.New("signature missing")
+	}
+
+	signature, err := hex.DecodeString(strings.TrimPrefix(indexedAttestationJSON.Signature, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for signature")
+	}
+
+	if len(signature) != phase0.SignatureLength {
+		return errors.New("incorrect length for signature")
+	}
+
+	copy(i.Signature[:], signature)
+
+	return nil
 }

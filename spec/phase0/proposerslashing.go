@@ -58,19 +58,6 @@ func (p *ProposerSlashing) UnmarshalJSON(input []byte) error {
 	return p.unpack(&proposerSlashingJSON)
 }
 
-func (p *ProposerSlashing) unpack(proposerSlashingJSON *proposerSlashingJSON) error {
-	if proposerSlashingJSON.SignedHeader1 == nil {
-		return errors.New("signed header 1 missing")
-	}
-	p.SignedHeader1 = proposerSlashingJSON.SignedHeader1
-	if proposerSlashingJSON.SignedHeader2 == nil {
-		return errors.New("signed header 2 missing")
-	}
-	p.SignedHeader2 = proposerSlashingJSON.SignedHeader2
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (p *ProposerSlashing) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&proposerSlashingYAML{
@@ -103,4 +90,19 @@ func (p *ProposerSlashing) String() string {
 	}
 
 	return string(data)
+}
+
+func (p *ProposerSlashing) unpack(proposerSlashingJSON *proposerSlashingJSON) error {
+	if proposerSlashingJSON.SignedHeader1 == nil {
+		return errors.New("signed header 1 missing")
+	}
+
+	p.SignedHeader1 = proposerSlashingJSON.SignedHeader1
+	if proposerSlashingJSON.SignedHeader2 == nil {
+		return errors.New("signed header 2 missing")
+	}
+
+	p.SignedHeader2 = proposerSlashingJSON.SignedHeader2
+
+	return nil
 }

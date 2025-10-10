@@ -30,6 +30,7 @@ func (s *Service) SlotDuration(ctx context.Context) (time.Duration, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		if duration == 0 {
 			return nil, errors.New("zero duration not a valid response")
 		}

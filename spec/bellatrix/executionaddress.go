@@ -47,6 +47,7 @@ func (a ExecutionAddress) String() string {
 		} else {
 			hashByte &= 0xf
 		}
+
 		if data[i] > '9' && hashByte > 7 {
 			data[i] -= 32
 		}
@@ -65,6 +66,7 @@ func (a ExecutionAddress) Format(state fmt.State, v rune) {
 		if state.Flag('#') {
 			format = "#" + format
 		}
+
 		fmt.Fprintf(state, "%"+format, a[:])
 	default:
 		fmt.Fprintf(state, "%"+format, a[:])
@@ -80,9 +82,11 @@ func (a *ExecutionAddress) UnmarshalJSON(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'"', '0', 'x'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'"'}) {
 		return errors.New("invalid suffix")
 	}
+
 	if len(input) != 1+2+ExecutionAddressLength*2+1 {
 		return errors.New("incorrect length")
 	}
@@ -113,9 +117,11 @@ func (a *ExecutionAddress) UnmarshalYAML(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'\'', '0', 'x'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'\''}) {
 		return errors.New("invalid suffix")
 	}
+
 	if len(input) != 1+2+ExecutionAddressLength*2+1 {
 		return errors.New("incorrect length")
 	}

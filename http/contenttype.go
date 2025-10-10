@@ -45,6 +45,7 @@ func (c *ContentType) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (c *ContentType) UnmarshalJSON(input []byte) error {
 	var err error
+
 	switch strings.ToUpper(string(input)) {
 	case `"SSZ"`:
 		*c = ContentTypeSSZ

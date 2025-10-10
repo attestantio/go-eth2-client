@@ -70,28 +70,34 @@ func (s *SyncCommittee) unpack(syncCommitteeJSON *syncCommitteeJSON) error {
 	if len(syncCommitteeJSON.Pubkeys) == 0 {
 		return errors.New("public keys missing")
 	}
+
 	s.Pubkeys = make([]phase0.BLSPubKey, len(syncCommitteeJSON.Pubkeys))
 	for i := range syncCommitteeJSON.Pubkeys {
 		pubKey, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeJSON.Pubkeys[i], "0x"))
 		if err != nil {
 			return errors.Wrap(err, "invalid value for public key")
 		}
+
 		if len(pubKey) != phase0.PublicKeyLength {
 			return errors.New("incorrect length for public key")
 		}
+
 		copy(s.Pubkeys[i][:], pubKey)
 	}
 
 	if syncCommitteeJSON.AggregatePubkey == "" {
 		return errors.New("aggregate public key missing")
 	}
+
 	aggregatePubKey, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeJSON.AggregatePubkey, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for aggregate public key")
 	}
+
 	if len(aggregatePubKey) != phase0.PublicKeyLength {
 		return errors.New("incorrect length for aggregate public key")
 	}
+
 	copy(s.AggregatePubkey[:], aggregatePubKey)
 
 	return nil

@@ -74,62 +74,83 @@ func (a *AttesterDuty) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &attesterDutyJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if attesterDutyJSON.PubKey == "" {
 		return errors.New("public key missing")
 	}
+
 	pubKey, err := hex.DecodeString(strings.TrimPrefix(attesterDutyJSON.PubKey, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for public key")
 	}
+
 	if len(pubKey) != publicKeyLength {
 		return errors.New("incorrect length for public key")
 	}
+
 	copy(a.PubKey[:], pubKey)
+
 	if attesterDutyJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
+
 	slot, err := strconv.ParseUint(attesterDutyJSON.Slot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+
 	a.Slot = phase0.Slot(slot)
+
 	if attesterDutyJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
+
 	validatorIndex, err := strconv.ParseUint(attesterDutyJSON.ValidatorIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+
 	a.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
+
 	if attesterDutyJSON.CommitteeIndex == "" {
 		return errors.New("committee index missing")
 	}
+
 	committeeIndex, err := strconv.ParseUint(attesterDutyJSON.CommitteeIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for committee index")
 	}
+
 	a.CommitteeIndex = phase0.CommitteeIndex(committeeIndex)
+
 	if attesterDutyJSON.CommitteeLength == "" {
 		return errors.New("committee length missing")
 	}
+
 	if a.CommitteeLength, err = strconv.ParseUint(attesterDutyJSON.CommitteeLength, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for committee length")
 	}
+
 	if a.CommitteeLength == 0 {
 		return errors.New("committee length cannot be 0")
 	}
+
 	if attesterDutyJSON.CommitteesAtSlot == "" {
 		return errors.New("committees at slot missing")
 	}
+
 	if a.CommitteesAtSlot, err = strconv.ParseUint(attesterDutyJSON.CommitteesAtSlot, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for committees at slot")
 	}
+
 	if a.CommitteesAtSlot == 0 {
 		return errors.New("committees at slot cannot be 0")
 	}
+
 	if attesterDutyJSON.ValidatorCommitteeIndex == "" {
 		return errors.New("validator committee index missing")
 	}
+
 	if a.ValidatorCommitteeIndex, err = strconv.ParseUint(attesterDutyJSON.ValidatorCommitteeIndex, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for validator committee index")
 	}

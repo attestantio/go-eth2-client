@@ -44,6 +44,7 @@ func (b *BroadcastValidation) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *BroadcastValidation) UnmarshalJSON(input []byte) error {
 	var err error
+
 	switch strings.ToLower(string(input)) {
 	case `"gossip"`:
 		*b = BroadcastValidationGossip

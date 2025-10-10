@@ -77,37 +77,45 @@ func (i *IdealAttestationRewards) UnmarshalJSON(input []byte) error {
 	if data.EffectiveBalance == "" {
 		return errors.New("effective balance missing")
 	}
+
 	effectiveBalance, err := strconv.ParseUint(data.EffectiveBalance, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for effective balance")
 	}
+
 	i.EffectiveBalance = phase0.Gwei(effectiveBalance)
 
 	if data.Head == "" {
 		return errors.New("head missing")
 	}
+
 	head, err := strconv.ParseUint(data.Head, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for head")
 	}
+
 	i.Head = phase0.Gwei(head)
 
 	if data.Target == "" {
 		return errors.New("target missing")
 	}
+
 	target, err := strconv.ParseUint(data.Target, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for target")
 	}
+
 	i.Target = phase0.Gwei(target)
 
 	if data.Source == "" {
 		return errors.New("source missing")
 	}
+
 	source, err := strconv.ParseInt(data.Source, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for source")
 	}
+
 	i.Source = phase0.Gwei(source)
 
 	if data.InclusionDelay != "" {
@@ -115,6 +123,7 @@ func (i *IdealAttestationRewards) UnmarshalJSON(input []byte) error {
 		if err != nil {
 			return errors.Wrap(err, "invalid value for inclusion delay")
 		}
+
 		tmp := phase0.Gwei(inclusionDelay)
 		i.InclusionDelay = &tmp
 	}
@@ -122,10 +131,12 @@ func (i *IdealAttestationRewards) UnmarshalJSON(input []byte) error {
 	if data.Inactivity == "" {
 		return errors.New("inactivity missing")
 	}
+
 	inactivity, err := strconv.ParseUint(data.Inactivity, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for inactivity")
 	}
+
 	i.Inactivity = phase0.Gwei(inactivity)
 
 	return nil
@@ -192,24 +203,29 @@ func (v *ValidatorAttestationRewards) UnmarshalJSON(input []byte) error {
 	if data.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
+
 	validatorIndex, err := strconv.ParseUint(data.ValidatorIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+
 	v.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
 
 	if data.Head == "" {
 		return errors.New("head missing")
 	}
+
 	head, err := strconv.ParseUint(data.Head, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for head")
 	}
+
 	v.Head = phase0.Gwei(head)
 
 	if data.Target == "" {
 		return errors.New("target missing")
 	}
+
 	v.Target, err = strconv.ParseInt(data.Target, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for target")
@@ -218,6 +234,7 @@ func (v *ValidatorAttestationRewards) UnmarshalJSON(input []byte) error {
 	if data.Source == "" {
 		return errors.New("source missing")
 	}
+
 	v.Source, err = strconv.ParseInt(data.Source, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for source")
@@ -228,6 +245,7 @@ func (v *ValidatorAttestationRewards) UnmarshalJSON(input []byte) error {
 		if err != nil {
 			return errors.Wrap(err, "invalid value for inclusion delay")
 		}
+
 		tmp := phase0.Gwei(inclusionDelay)
 		v.InclusionDelay = &tmp
 	}
@@ -235,10 +253,12 @@ func (v *ValidatorAttestationRewards) UnmarshalJSON(input []byte) error {
 	if data.Inactivity == "" {
 		return errors.New("inactivity missing")
 	}
+
 	inactivity, err := strconv.ParseUint(data.Inactivity, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for inactivity")
 	}
+
 	v.Inactivity = phase0.Gwei(inactivity)
 
 	return nil

@@ -57,21 +57,26 @@ func (p *PendingDeposit) unpack(pendingDeposit *pendingDepositJSON) error {
 	if pendingDeposit.Pubkey == "" {
 		return errors.New("public key missing")
 	}
+
 	pubkey, err := hex.DecodeString(strings.TrimPrefix(pendingDeposit.Pubkey, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for public key")
 	}
+
 	if len(pubkey) != phase0.PublicKeyLength {
 		return errors.New("incorrect length for public key")
 	}
+
 	copy(p.Pubkey[:], pubkey)
 
 	if pendingDeposit.WithdrawalCredentials == "" {
 		return errors.New("withdrawal credentials missing")
 	}
+
 	if p.WithdrawalCredentials, err = hex.DecodeString(strings.TrimPrefix(pendingDeposit.WithdrawalCredentials, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for withdrawal credentials")
 	}
+
 	if len(p.WithdrawalCredentials) != phase0.HashLength {
 		return errors.New("incorrect length for withdrawal credentials")
 	}
@@ -81,13 +86,16 @@ func (p *PendingDeposit) unpack(pendingDeposit *pendingDepositJSON) error {
 	if pendingDeposit.Signature == "" {
 		return errors.New("signature missing")
 	}
+
 	signature, err := hex.DecodeString(strings.TrimPrefix(pendingDeposit.Signature, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
+
 	if len(signature) != phase0.SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
+
 	copy(p.Signature[:], signature)
 
 	p.Slot = pendingDeposit.Slot

@@ -58,6 +58,7 @@ func (e *HeadEvent) MarshalJSON() ([]byte, error) {
 	if !bytes.Equal(zeroRoot[:], e.CurrentDutyDependentRoot[:]) {
 		data.CurrentDutyDependentRoot = fmt.Sprintf("%#x", e.CurrentDutyDependentRoot)
 	}
+
 	if !bytes.Equal(zeroRoot[:], e.PreviousDutyDependentRoot[:]) {
 		data.PreviousDutyDependentRoot = fmt.Sprintf("%#x", e.PreviousDutyDependentRoot)
 	}
@@ -73,35 +74,46 @@ func (e *HeadEvent) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &headEventJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if headEventJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
+
 	slot, err := strconv.ParseUint(headEventJSON.Slot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+
 	e.Slot = phase0.Slot(slot)
+
 	if headEventJSON.Block == "" {
 		return errors.New("block missing")
 	}
+
 	block, err := hex.DecodeString(strings.TrimPrefix(headEventJSON.Block, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for block")
 	}
+
 	if len(block) != rootLength {
 		return fmt.Errorf("incorrect length %d for block", len(block))
 	}
+
 	copy(e.Block[:], block)
+
 	if headEventJSON.State == "" {
 		return errors.New("state missing")
 	}
+
 	state, err := hex.DecodeString(strings.TrimPrefix(headEventJSON.State, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for state")
 	}
+
 	if len(state) != rootLength {
 		return fmt.Errorf("incorrect length %d for state", len(state))
 	}
+
 	copy(e.State[:], state)
 	e.EpochTransition = headEventJSON.EpochTransition
 	// CurrentDutyDependentRoot only has partial coverage so do not complain if not present.
@@ -110,9 +122,11 @@ func (e *HeadEvent) UnmarshalJSON(input []byte) error {
 		if err != nil {
 			return errors.Wrap(err, "invalid value for current duty dependent root")
 		}
+
 		if len(currentDutyDependentRoot) != rootLength {
 			return fmt.Errorf("incorrect length %d for current duty dependent root", len(currentDutyDependentRoot))
 		}
+
 		copy(e.CurrentDutyDependentRoot[:], currentDutyDependentRoot)
 	}
 	// PreviousDutyDependentRoot only has partial coverage so do not complain if not present.
@@ -121,9 +135,11 @@ func (e *HeadEvent) UnmarshalJSON(input []byte) error {
 		if err != nil {
 			return errors.Wrap(err, "invalid value for previous duty dependent root")
 		}
+
 		if len(previousDutyDependentRoot) != rootLength {
 			return fmt.Errorf("incorrect length %d for previous duty dependent root", len(previousDutyDependentRoot))
 		}
+
 		copy(e.PreviousDutyDependentRoot[:], previousDutyDependentRoot)
 	}
 

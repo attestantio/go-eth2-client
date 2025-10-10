@@ -42,6 +42,7 @@ func (k KZGCommitmentInclusionProofElement) Format(state fmt.State, v rune) {
 		if state.Flag('#') {
 			format = "#" + format
 		}
+
 		fmt.Fprintf(state, "%"+format, k[:])
 	default:
 		fmt.Fprintf(state, "%"+format, k[:])
@@ -57,9 +58,11 @@ func (k *KZGCommitmentInclusionProofElement) UnmarshalJSON(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'"', '0', 'x'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'"'}) {
 		return errors.New("invalid suffix")
 	}
+
 	if len(input) != 1+2+kzgCommitmentProofElementLength*2+1 {
 		return errors.New("incorrect length")
 	}
@@ -90,9 +93,11 @@ func (k *KZGCommitmentInclusionProofElement) UnmarshalYAML(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'\'', '0', 'x'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'\''}) {
 		return errors.New("invalid suffix")
 	}
+
 	if len(input) != 1+2+kzgCommitmentProofElementLength*2+1 {
 		return errors.New("incorrect length")
 	}

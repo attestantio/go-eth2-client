@@ -10,11 +10,11 @@ run:
   # Options: readonly, vendor, mod, sum
   # readonly: prevents automatic go.mod updates (recommended for CI)
   modules-download-mode: readonly
-  
+
   # Include test files in linting analysis
   # Default: true, but disabled for this project to focus on main code
   tests: false
-  
+
   # Allow multiple parallel golangci-lint instances running
   # Useful for CI environments with multiple jobs
   allow-parallel-runners: true
@@ -28,7 +28,7 @@ output:
 linters:
   # Enable all available linters by default
   default: all
-  
+
   # Disable specific linters that are too strict or generate false positives
   disable:
     - cyclop
@@ -54,6 +54,8 @@ linters:
     - varnamelen
     - wrapcheck
     - wsl
+    - noinlineerr
+    - funcorder
   # Linter-specific settings and configurations
   settings:
     # goheader: License header validation
@@ -107,6 +109,8 @@ linters:
           disabled: true
         - name: package-comments
           disabled: true
+        - name: package-directory-mismatch
+          disabled: true
         # Configure specific rules
         - name: confusing-results
         - name: line-length-limit
@@ -145,23 +149,23 @@ linters:
       - std-error-handling
     # Exclude specific file patterns
     paths:
-      - .*_ssz\.go$    # Exclude SSZ generated files
-      - third_party$   # Exclude third party code
-      - builtin$       # Exclude builtin code
-      - examples$      # Exclude example code
+      - .*_ssz\.go$ # Exclude SSZ generated files
+      - third_party$ # Exclude third party code
+      - builtin$ # Exclude builtin code
+      - examples$ # Exclude example code
 # Formatters: Code formatting tools
 formatters:
   enable:
-    - gofmt      # Standard Go formatter
-    - gofumpt    # Stricter Go formatter
-    - goimports  # Import organization and formatting
-    - gci        # Go import grouping and sorting formatter
+    - gofmt # Standard Go formatter
+    - gofumpt # Stricter Go formatter
+    - goimports # Import organization and formatting
+    - gci # Go import grouping and sorting formatter
   exclusions:
     # Exclude generated files from formatting
     generated: lax
     # Exclude specific file patterns from formatting
     paths:
-      - .*_ssz\.go$    # Exclude SSZ generated files
-      - third_party$   # Exclude third party code
-      - builtin$       # Exclude builtin code
-      - examples$      # Exclude example code
+      - .*_ssz\.go$ # Exclude SSZ generated files
+      - third_party$ # Exclude third party code
+      - builtin$ # Exclude builtin code
+      - examples$ # Exclude example code

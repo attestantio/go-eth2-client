@@ -36,6 +36,7 @@ func (s *Service) Proposal(ctx context.Context,
 
 	// Create a few attestations.
 	attestations := make([]*phase0.Attestation, 4)
+
 	for i := uint64(0); i < 4; i++ {
 		aggregationBits := bitfield.NewBitlist(128)
 		aggregationBits.SetBitAt(i, true)

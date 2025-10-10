@@ -64,6 +64,7 @@ func (s BLSSignature) Format(state fmt.State, v rune) {
 		if state.Flag('#') {
 			format = "#" + format
 		}
+
 		fmt.Fprintf(state, "%"+format, s[:])
 	default:
 		fmt.Fprintf(state, "%"+format, s[:])
@@ -79,9 +80,11 @@ func (s *BLSSignature) UnmarshalJSON(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'"', '0', 'x'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'"'}) {
 		return errors.New("invalid suffix")
 	}
+
 	if len(input) != 1+2+SignatureLength*2+1 {
 		return errors.New("incorrect length")
 	}
@@ -112,9 +115,11 @@ func (s *BLSSignature) UnmarshalYAML(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'\'', '0', 'x'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'\''}) {
 		return errors.New("invalid suffix")
 	}
+
 	if len(input) != 1+2+SignatureLength*2+1 {
 		return errors.New("incorrect length")
 	}

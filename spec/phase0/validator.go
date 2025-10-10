@@ -89,64 +89,85 @@ func (v *Validator) unpack(validatorJSON *validatorJSON) error {
 	if validatorJSON.PublicKey == "" {
 		return errors.New("public key missing")
 	}
+
 	publicKey, err := hex.DecodeString(strings.TrimPrefix(validatorJSON.PublicKey, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for public key")
 	}
+
 	if len(publicKey) != PublicKeyLength {
 		return fmt.Errorf("incorrect length %d for public key", len(publicKey))
 	}
+
 	copy(v.PublicKey[:], publicKey)
+
 	if validatorJSON.WithdrawalCredentials == "" {
 		return errors.New("withdrawal credentials missing")
 	}
+
 	v.WithdrawalCredentials, err = hex.DecodeString(strings.TrimPrefix(validatorJSON.WithdrawalCredentials, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for withdrawal credentials")
 	}
+
 	if len(v.WithdrawalCredentials) != HashLength {
 		return fmt.Errorf("incorrect length %d for withdrawal credentials", len(v.WithdrawalCredentials))
 	}
+
 	if validatorJSON.EffectiveBalance == "" {
 		return errors.New("effective balance missing")
 	}
+
 	effectiveBalance, err := strconv.ParseUint(validatorJSON.EffectiveBalance, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for effective balance")
 	}
+
 	v.EffectiveBalance = Gwei(effectiveBalance)
+
 	v.Slashed = validatorJSON.Slashed
 	if validatorJSON.ActivationEligibilityEpoch == "" {
 		return errors.New("activation eligibility epoch missing")
 	}
+
 	activationEligibilityEpoch, err := strconv.ParseUint(validatorJSON.ActivationEligibilityEpoch, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for activation eligibility epoch")
 	}
+
 	v.ActivationEligibilityEpoch = Epoch(activationEligibilityEpoch)
+
 	if validatorJSON.ActivationEpoch == "" {
 		return errors.New("activation epoch missing")
 	}
+
 	activationEpoch, err := strconv.ParseUint(validatorJSON.ActivationEpoch, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for activation epoch")
 	}
+
 	v.ActivationEpoch = Epoch(activationEpoch)
+
 	if validatorJSON.ExitEpoch == "" {
 		return errors.New("exit epoch missing")
 	}
+
 	exitEpoch, err := strconv.ParseUint(validatorJSON.ExitEpoch, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for exit epoch")
 	}
+
 	v.ExitEpoch = Epoch(exitEpoch)
+
 	if validatorJSON.WithdrawableEpoch == "" {
 		return errors.New("withdrawable epoch missing")
 	}
+
 	withdrawableEpoch, err := strconv.ParseUint(validatorJSON.WithdrawableEpoch, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for withdrawable epoch")
 	}
+
 	v.WithdrawableEpoch = Epoch(withdrawableEpoch)
 
 	return nil

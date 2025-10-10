@@ -54,6 +54,7 @@ func (s *Service) NodePeers(ctx context.Context, opts *api.NodePeersOpts) (*api.
 	if httpResponse.contentType != ContentTypeJSON {
 		return nil, fmt.Errorf("unexpected content type %v (expected JSON)", httpResponse.contentType)
 	}
+
 	data, meta, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*apiv1.Peer{})
 	if err != nil {
 		return nil, err

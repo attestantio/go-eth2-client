@@ -58,39 +58,13 @@ func (a *Attestation) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (a *Attestation) UnmarshalJSON(input []byte) error {
 	var attestationJSON attestationJSON
+
 	err := json.Unmarshal(input, &attestationJSON)
 	if err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
 
 	return a.unpack(&attestationJSON)
-}
-
-func (a *Attestation) unpack(attestationJSON *attestationJSON) error {
-	var err error
-	if attestationJSON.AggregationBits == "" {
-		return errors.New("aggregation bits missing")
-	}
-	if a.AggregationBits, err = hex.DecodeString(strings.TrimPrefix(attestationJSON.AggregationBits, "0x")); err != nil {
-		return errors.Wrap(err, "invalid value for beacon block root")
-	}
-	a.Data = attestationJSON.Data
-	if a.Data == nil {
-		return errors.New("data missing")
-	}
-	if attestationJSON.Signature == "" {
-		return errors.New("signature missing")
-	}
-	signature, err := hex.DecodeString(strings.TrimPrefix(attestationJSON.Signature, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for signature")
-	}
-	if len(signature) != SignatureLength {
-		return errors.New("incorrect length for signature")
-	}
-	copy(a.Signature[:], signature)
-
-	return nil
 }
 
 // MarshalYAML implements yaml.Marshaler.
@@ -126,4 +100,38 @@ func (a *Attestation) String() string {
 	}
 
 	return string(data)
+}
+
+func (a *Attestation) unpack(attestationJSON *attestationJSON) error {
+	var err error
+
+	if attestationJSON.AggregationBits == "" {
+		return errors.New("aggregation bits missing")
+	}
+
+	if a.AggregationBits, err = hex.DecodeString(strings.TrimPrefix(attestationJSON.AggregationBits, "0x")); err != nil {
+		return errors.Wrap(err, "invalid value for beacon block root")
+	}
+
+	a.Data = attestationJSON.Data
+	if a.Data == nil {
+		return errors.New("data missing")
+	}
+
+	if attestationJSON.Signature == "" {
+		return errors.New("signature missing")
+	}
+
+	signature, err := hex.DecodeString(strings.TrimPrefix(attestationJSON.Signature, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for signature")
+	}
+
+	if len(signature) != SignatureLength {
+		return errors.New("incorrect length for signature")
+	}
+
+	copy(a.Signature[:], signature)
+
+	return nil
 }

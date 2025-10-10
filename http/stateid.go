@@ -27,6 +27,7 @@ import (
 // SlotFromStateID parses the state ID and returns the relevant slot.
 func (*Service) SlotFromStateID(_ context.Context, stateID string) (phase0.Slot, error) {
 	var slot phase0.Slot
+
 	switch {
 	case stateID == "genesis":
 		slot = 0
@@ -44,6 +45,7 @@ func (*Service) SlotFromStateID(_ context.Context, stateID string) (phase0.Slot,
 		if err != nil {
 			return 0, errors.Join(fmt.Errorf("failed to parse state %s as a slot", stateID), err)
 		}
+
 		slot = phase0.Slot(tmp)
 	}
 
@@ -53,6 +55,7 @@ func (*Service) SlotFromStateID(_ context.Context, stateID string) (phase0.Slot,
 // EpochFromStateID parses the state ID and returns the relevant epoch.
 func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (phase0.Epoch, error) {
 	var epoch phase0.Epoch
+
 	switch {
 	case stateID == "genesis":
 		epoch = 0
@@ -61,12 +64,14 @@ func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (phase0.
 		if err != nil {
 			return 0, errors.Join(errors.New("failed to obtain finality for justified epoch"), err)
 		}
+
 		epoch = response.Data.Justified.Epoch
 	case stateID == "finalized":
 		response, err := s.Finality(ctx, &api.FinalityOpts{State: stateID})
 		if err != nil {
 			return 0, errors.Join(errors.New("failed to obtain finality for finalized epoch"), err)
 		}
+
 		epoch = response.Data.Justified.Epoch
 	case stateID == "head":
 		return 0, errors.New("epoch from head not implemented")
@@ -78,10 +83,12 @@ func (s *Service) EpochFromStateID(ctx context.Context, stateID string) (phase0.
 		if err != nil {
 			return 0, errors.Join(fmt.Errorf("failed to parse state %s as a slot", stateID), err)
 		}
+
 		slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
 		if err != nil {
 			return 0, errors.Join(errors.New("failed to obtain slots per epoch"), err)
 		}
+
 		epoch = phase0.Epoch(tmp / slotsPerEpoch)
 	}
 

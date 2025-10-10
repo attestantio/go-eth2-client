@@ -55,32 +55,42 @@ func (p *ProposerDuty) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &proposerDutyJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if proposerDutyJSON.PubKey == "" {
 		return errors.New("public key missing")
 	}
+
 	pubKey, err := hex.DecodeString(strings.TrimPrefix(proposerDutyJSON.PubKey, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for public key")
 	}
+
 	if len(pubKey) != publicKeyLength {
 		return fmt.Errorf("incorrect length %d for public key", len(pubKey))
 	}
+
 	copy(p.PubKey[:], pubKey)
+
 	if proposerDutyJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
+
 	slot, err := strconv.ParseUint(proposerDutyJSON.Slot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+
 	p.Slot = phase0.Slot(slot)
+
 	if proposerDutyJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
+
 	validatorIndex, err := strconv.ParseUint(proposerDutyJSON.ValidatorIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+
 	p.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
 
 	return nil

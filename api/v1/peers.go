@@ -50,6 +50,7 @@ func (p *Peer) MarshalJSON() ([]byte, error) {
 	if !exists {
 		return nil, fmt.Errorf("invalid value for peer direction: %s", p.Direction)
 	}
+
 	_, exists = validPeerStates[p.State]
 	if !exists {
 		return nil, fmt.Errorf("invalid value for peer state: %s", p.State)
@@ -71,15 +72,19 @@ func (p *Peer) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &peerJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	_, ok := validPeerStates[peerJSON.State]
 	if !ok {
 		return fmt.Errorf("invalid value for peer state: %s", peerJSON.State)
 	}
+
 	p.State = peerJSON.State
+
 	_, ok = validPeerDirections[peerJSON.Direction]
 	if !ok {
 		return fmt.Errorf("invalid value for peer direction: %s", peerJSON.Direction)
 	}
+
 	p.Direction = peerJSON.Direction
 	p.Enr = peerJSON.Enr
 	p.PeerID = peerJSON.PeerID

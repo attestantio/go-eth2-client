@@ -38,14 +38,17 @@ func (s *Service) BeaconBlockRoot(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	if opts.Block == "" {
 		return nil, errors.Join(errors.New("no block specified"), client.ErrInvalidOptions)
 	}
 
 	endpoint := fmt.Sprintf("/eth/v1/beacon/blocks/%s/root", opts.Block)
+
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, err

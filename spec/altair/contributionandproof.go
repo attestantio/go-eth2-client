@@ -70,25 +70,32 @@ func (a *ContributionAndProof) unpack(contributionAndProofJSON *contributionAndP
 	if contributionAndProofJSON.AggregatorIndex == "" {
 		return errors.New("aggregator index missing")
 	}
+
 	aggregatorIndex, err := strconv.ParseUint(contributionAndProofJSON.AggregatorIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for aggregator index")
 	}
+
 	a.AggregatorIndex = phase0.ValidatorIndex(aggregatorIndex)
+
 	if contributionAndProofJSON.Contribution == nil {
 		return errors.New("contribution missing")
 	}
+
 	a.Contribution = contributionAndProofJSON.Contribution
 	if contributionAndProofJSON.SelectionProof == "" {
 		return errors.New("selection proof missing")
 	}
+
 	selectionProof, err := hex.DecodeString(strings.TrimPrefix(contributionAndProofJSON.SelectionProof, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for selection proof")
 	}
+
 	if len(selectionProof) != phase0.SignatureLength {
 		return errors.New("incorrect length for selection proof")
 	}
+
 	copy(a.SelectionProof[:], selectionProof)
 
 	return nil

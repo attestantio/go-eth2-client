@@ -59,6 +59,7 @@ func (s *Service) calculateDomain(ctx context.Context,
 	} else {
 		forkVersion = fork.CurrentVersion
 	}
+
 	if len(forkVersion) != 4 {
 		return phase0.Domain{}, errors.New("fork version is invalid")
 	}
@@ -105,6 +106,7 @@ func (s *Service) forkAtEpoch(ctx context.Context, epoch phase0.Epoch) (*phase0.
 		if response.Data[i].Epoch > epoch {
 			break
 		}
+
 		currentFork = response.Data[i]
 	}
 

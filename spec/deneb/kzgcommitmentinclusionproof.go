@@ -58,6 +58,7 @@ func (k *KZGCommitmentInclusionProof) unmarshalElementJSON(element int, input []
 	if !bytes.HasPrefix(input, []byte{'"', '0', 'x'}) {
 		return errors.New("invalid element prefix")
 	}
+
 	if len(input) != 1+2+kzgCommitmentProofElementLength*2+1 {
 		return errors.New("incorrect element length")
 	}

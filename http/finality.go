@@ -33,11 +33,13 @@ func (s *Service) Finality(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
 
 	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/finality_checkpoints", opts.State)
+
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, err

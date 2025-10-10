@@ -74,40 +74,53 @@ func (s *SyncCommitteeMessage) unpack(syncCommitteeMessageJSON *syncCommitteeMes
 	if syncCommitteeMessageJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
+
 	slot, err := strconv.ParseUint(syncCommitteeMessageJSON.Slot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+
 	s.Slot = phase0.Slot(slot)
+
 	if syncCommitteeMessageJSON.BeaconBlockRoot == "" {
 		return errors.New("beacon block root missing")
 	}
+
 	beaconBlockRoot, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeMessageJSON.BeaconBlockRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for beacon block root")
 	}
+
 	if len(beaconBlockRoot) != phase0.RootLength {
 		return errors.New("incorrect length for beacon block root")
 	}
+
 	copy(s.BeaconBlockRoot[:], beaconBlockRoot)
+
 	if syncCommitteeMessageJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
+
 	validatorIndex, err := strconv.ParseUint(syncCommitteeMessageJSON.ValidatorIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+
 	s.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
+
 	if syncCommitteeMessageJSON.Signature == "" {
 		return errors.New("signature missing")
 	}
+
 	signature, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeMessageJSON.Signature, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
+
 	if len(signature) != phase0.SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
+
 	copy(s.Signature[:], signature)
 
 	return nil

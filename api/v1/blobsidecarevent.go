@@ -63,34 +63,43 @@ func (e *BlobSidecarEvent) UnmarshalJSON(input []byte) error {
 	if blobSidecarEventJSON.BlockRoot == "" {
 		return errors.New("block_root missing")
 	}
+
 	err = e.BlockRoot.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, blobSidecarEventJSON.BlockRoot)))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for block_root")
 	}
+
 	if blobSidecarEventJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
+
 	err = e.Slot.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, blobSidecarEventJSON.Slot)))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+
 	if blobSidecarEventJSON.Index == "" {
 		return errors.New("index missing")
 	}
+
 	err = e.Index.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, blobSidecarEventJSON.Index)))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for index")
 	}
+
 	if blobSidecarEventJSON.KZGCommitment == "" {
 		return errors.New("kzg_commitment missing")
 	}
+
 	err = e.KZGCommitment.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, blobSidecarEventJSON.KZGCommitment)))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for kzg_commitment")
 	}
+
 	if blobSidecarEventJSON.VersionedHash == "" {
 		return errors.New("versioned_hash missing")
 	}
+
 	err = e.VersionedHash.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, blobSidecarEventJSON.VersionedHash)))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for versioned_hash")
