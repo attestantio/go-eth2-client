@@ -31,31 +31,31 @@ linters:
 
   # Disable specific linters that are too strict or generate false positives
   disable:
-    - cyclop
-    - depguard
-    - dupl
-    - err113
-    - exhaustive
-    - exhaustruct
-    - forcetypeassert
-    - funlen
-    - gochecknoglobals
-    - gochecknoinits
-    - gocognit
-    - goconst
-    - intrange
-    - ireturn
-    - lll
-    - maintidx
-    - mnd
-    - musttag
-    - perfsprint
-    - recvcheck
-    - varnamelen
-    - wrapcheck
-    - wsl
-    - noinlineerr
-    - funcorder
+    - cyclop           # Disable cyclomatic complexity check
+    - depguard         # Disable dependency guard check
+    - dupl             # Disable duplicate code check
+    - err113           # Disable error 113 check
+    - exhaustive       # Disable exhaustive check
+    - exhaustruct      # Disable exhaustruct check
+    - forcetypeassert  # Disable force type assert check
+    - funlen           # Disable function length check
+    - gochecknoglobals # Disable global variable check
+    - gochecknoinits   # Disable global variable check
+    - gocognit         # Disable cognitive complexity check
+    - goconst          # Disable constant check
+    - intrange         # Disable integer range check
+    - ireturn          # Disable return check
+    - lll              # Disable line length check
+    - maintidx         # Disable maintainability index check
+    - mnd              # Disable magic number check
+    - musttag          # Disable must tag check
+    - perfsprint       # Disable performance sprint check
+    - recvcheck        # Disable receive check
+    - varnamelen       # Disable variable name length check
+    - wrapcheck        # Disable wrap check
+    - wsl              # Disable whitespace check for line length
+    - noinlineerr      # Disable inline error check
+    - funcorder        # Disable function order check
   # Linter-specific settings and configurations
   settings:
     # goheader: License header validation
