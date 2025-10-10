@@ -33,8 +33,7 @@ func (t *Attestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	{ // Field #2 'Signature'
-		t := &t.Signature
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.Signature[:96])...)
 	}
 	{ // Dynamic Field #0 'AggregationBits'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
@@ -138,8 +137,7 @@ func (t *Attestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #2 'Signature'
-		t := &t.Signature
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.Signature[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

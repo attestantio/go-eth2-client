@@ -48,8 +48,7 @@ func (t *BlockContents) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
-			t := &t[i]
-			dst = append(dst, []byte(t[:48])...)
+			dst = append(dst, []byte(t[i][:48])...)
 		}
 	}
 	{ // Dynamic Field #2 'Blobs'
@@ -60,8 +59,7 @@ func (t *BlockContents) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
-			t := &t[i]
-			dst = append(dst, []byte(t[:131072])...)
+			dst = append(dst, []byte(t[i][:131072])...)
 		}
 	}
 	return dst, nil
@@ -183,11 +181,9 @@ func (t *BlockContents) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
-			t := &t[i]
-			hh.PutBytes(t[:48])
+			hh.PutBytes(t[i][:48])
 		}
-		limit := sszutils.CalculateLimit(33554432, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(33554432, vlen, 32))
 	}
 	{ // Field #2 'Blobs'
 		t := t.Blobs
@@ -197,11 +193,9 @@ func (t *BlockContents) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
-			t := &t[i]
-			hh.PutBytes(t[:131072])
+			hh.PutBytes(t[i][:131072])
 		}
-		limit := sszutils.CalculateLimit(4096, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(4096, vlen, 32))
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -33,8 +33,7 @@ func (t *IndexedAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	{ // Field #2 'Signature'
-		t := &t.Signature
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.Signature[:96])...)
 	}
 	{ // Dynamic Field #0 'AttestingIndices'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
@@ -44,8 +43,7 @@ func (t *IndexedAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
-			dst = sszutils.MarshalUint64(dst, uint64(t))
+			dst = sszutils.MarshalUint64(dst, uint64(t[i]))
 		}
 	}
 	return dst, nil
@@ -130,12 +128,10 @@ func (t *IndexedAttestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
-			t := t[i]
-			hh.AppendUint64(uint64(t))
+			hh.AppendUint64(uint64(t[i]))
 		}
 		hh.FillUpTo32()
-		limit := sszutils.CalculateLimit(2048, vlen, 8)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(2048, vlen, 8))
 	}
 	{ // Field #1 'Data'
 		t := t.Data
@@ -147,8 +143,7 @@ func (t *IndexedAttestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #2 'Signature'
-		t := &t.Signature
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.Signature[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

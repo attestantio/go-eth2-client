@@ -26,8 +26,7 @@ func (t *VersionedBlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err 
 	}
 	dstlen := len(dst)
 	{ // Field #0 'Version'
-		t := t.Version
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Version))
 	}
 	// Offset #1 'Bellatrix'
 	offset1 := len(dst)
@@ -236,8 +235,7 @@ func (t *VersionedBlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) e
 	}
 	idx := hh.Index()
 	{ // Field #0 'Version'
-		t := t.Version
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Version))
 	}
 	{ // Field #1 'Bellatrix'
 		t := t.Bellatrix

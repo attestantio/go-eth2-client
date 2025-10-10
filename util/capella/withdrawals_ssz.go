@@ -121,8 +121,7 @@ func (t *ExecutionPayloadWithdrawals) HashTreeRootWith(hh sszutils.HashWalker) e
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(16, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(16, vlen, 32))
 	}
 	hh.Merkleize(idx)
 	return nil

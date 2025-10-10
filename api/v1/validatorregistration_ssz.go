@@ -21,20 +21,16 @@ func (t *ValidatorRegistration) MarshalSSZTo(buf []byte) (dst []byte, err error)
 		t = new(ValidatorRegistration)
 	}
 	{ // Field #0 'FeeRecipient'
-		t := t.FeeRecipient
-		dst = append(dst, []byte(t[:20])...)
+		dst = append(dst, []byte(t.FeeRecipient[:20])...)
 	}
 	{ // Field #1 'GasLimit'
-		t := t.GasLimit
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.GasLimit))
 	}
 	{ // Field #2 'Timestamp'
-		t := &t.Timestamp
-		dst = sszutils.MarshalUint64(dst, uint64(t.Unix()))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Timestamp.Unix()))
 	}
 	{ // Field #3 'Pubkey'
-		t := &t.Pubkey
-		dst = append(dst, []byte(t[:48])...)
+		dst = append(dst, []byte(t.Pubkey[:48])...)
 	}
 	return dst, nil
 }
@@ -85,20 +81,16 @@ func (t *ValidatorRegistration) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'FeeRecipient'
-		t := t.FeeRecipient
-		hh.PutBytes(t[:20])
+		hh.PutBytes(t.FeeRecipient[:20])
 	}
 	{ // Field #1 'GasLimit'
-		t := t.GasLimit
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.GasLimit))
 	}
 	{ // Field #2 'Timestamp'
-		t := &t.Timestamp
-		hh.PutUint64(uint64(t.Unix()))
+		hh.PutUint64(uint64(t.Timestamp.Unix()))
 	}
 	{ // Field #3 'Pubkey'
-		t := &t.Pubkey
-		hh.PutBytes(t[:48])
+		hh.PutBytes(t.Pubkey[:48])
 	}
 	hh.Merkleize(idx)
 	return nil

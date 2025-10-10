@@ -20,16 +20,13 @@ func (t *AttestationData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(AttestationData)
 	}
 	{ // Field #0 'Slot'
-		t := t.Slot
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Slot))
 	}
 	{ // Field #1 'Index'
-		t := t.Index
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Index))
 	}
 	{ // Field #2 'BeaconBlockRoot'
-		t := t.BeaconBlockRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.BeaconBlockRoot[:32])...)
 	}
 	{ // Field #3 'Source'
 		t := t.Source
@@ -112,16 +109,13 @@ func (t *AttestationData) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'Slot'
-		t := t.Slot
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Slot))
 	}
 	{ // Field #1 'Index'
-		t := t.Index
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Index))
 	}
 	{ // Field #2 'BeaconBlockRoot'
-		t := t.BeaconBlockRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.BeaconBlockRoot[:32])
 	}
 	{ // Field #3 'Source'
 		t := t.Source

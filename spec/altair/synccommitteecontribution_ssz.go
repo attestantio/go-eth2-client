@@ -21,31 +21,26 @@ func (t *SyncCommitteeContribution) MarshalSSZTo(buf []byte) (dst []byte, err er
 		t = new(SyncCommitteeContribution)
 	}
 	{ // Field #0 'Slot'
-		t := t.Slot
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Slot))
 	}
 	{ // Field #1 'BeaconBlockRoot'
-		t := t.BeaconBlockRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.BeaconBlockRoot[:32])...)
 	}
 	{ // Field #2 'SubcommitteeIndex'
-		t := t.SubcommitteeIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.SubcommitteeIndex))
 	}
 	{ // Field #3 'AggregationBits'
-		t := t.AggregationBits
-		vlen := len(t)
+		vlen := len(t.AggregationBits)
 		if vlen > 16 {
 			return dst, sszutils.ErrVectorLength
 		}
-		dst = append(dst, []byte(t[:vlen])...)
+		dst = append(dst, []byte(t.AggregationBits[:vlen])...)
 		if vlen < 16 {
 			dst = sszutils.AppendZeroPadding(dst, (16-vlen)*1)
 		}
 	}
 	{ // Field #4 'Signature'
-		t := &t.Signature
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.Signature[:96])...)
 	}
 	return dst, nil
 }
@@ -101,32 +96,27 @@ func (t *SyncCommitteeContribution) HashTreeRootWith(hh sszutils.HashWalker) err
 	}
 	idx := hh.Index()
 	{ // Field #0 'Slot'
-		t := t.Slot
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Slot))
 	}
 	{ // Field #1 'BeaconBlockRoot'
-		t := t.BeaconBlockRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.BeaconBlockRoot[:32])
 	}
 	{ // Field #2 'SubcommitteeIndex'
-		t := t.SubcommitteeIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.SubcommitteeIndex))
 	}
 	{ // Field #3 'AggregationBits'
-		t := t.AggregationBits
-		vlen := len(t)
+		vlen := len(t.AggregationBits)
 		if vlen > 16 {
 			return sszutils.ErrVectorLength
 		}
-		val := t[:]
+		val := t.AggregationBits[:]
 		if vlen < 16 {
 			val = sszutils.AppendZeroPadding(val, (16-vlen)*1)
 		}
 		hh.PutBytes(val[:16])
 	}
 	{ // Field #4 'Signature'
-		t := &t.Signature
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.Signature[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

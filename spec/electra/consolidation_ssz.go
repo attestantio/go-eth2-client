@@ -21,16 +21,13 @@ func (t *Consolidation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(Consolidation)
 	}
 	{ // Field #0 'SourceIndex'
-		t := t.SourceIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.SourceIndex))
 	}
 	{ // Field #1 'TargetIndex'
-		t := t.TargetIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.TargetIndex))
 	}
 	{ // Field #2 'Epoch'
-		t := t.Epoch
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Epoch))
 	}
 	return dst, nil
 }
@@ -77,16 +74,13 @@ func (t *Consolidation) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'SourceIndex'
-		t := t.SourceIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.SourceIndex))
 	}
 	{ // Field #1 'TargetIndex'
-		t := t.TargetIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.TargetIndex))
 	}
 	{ // Field #2 'Epoch'
-		t := t.Epoch
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Epoch))
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -26,12 +26,11 @@ func (t *Deposit) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
-			vlen := len(t)
+			vlen := len(t[i])
 			if vlen > 32 {
 				return dst, sszutils.ErrVectorLength
 			}
-			dst = append(dst, []byte(t[:vlen])...)
+			dst = append(dst, []byte(t[i][:vlen])...)
 			if vlen < 32 {
 				dst = sszutils.AppendZeroPadding(dst, (32-vlen)*1)
 			}
@@ -108,10 +107,12 @@ func (t *Deposit) HashTreeRootWith(hh sszutils.HashWalker) error {
 			return sszutils.ErrVectorLength
 		}
 		idx := hh.Index()
+		var val1, val1Empty []byte
 		for i := 0; i < 33; i++ {
-			var val1 []byte
 			if i < vlen {
 				val1 = t[i]
+			} else if i == vlen {
+				val1 = val1Empty
 			}
 			vlen := len(val1)
 			if vlen > 32 {

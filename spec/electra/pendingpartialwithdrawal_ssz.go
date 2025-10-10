@@ -21,16 +21,13 @@ func (t *PendingPartialWithdrawal) MarshalSSZTo(buf []byte) (dst []byte, err err
 		t = new(PendingPartialWithdrawal)
 	}
 	{ // Field #0 'ValidatorIndex'
-		t := t.ValidatorIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.ValidatorIndex))
 	}
 	{ // Field #1 'Amount'
-		t := t.Amount
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Amount))
 	}
 	{ // Field #2 'WithdrawableEpoch'
-		t := t.WithdrawableEpoch
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.WithdrawableEpoch))
 	}
 	return dst, nil
 }
@@ -77,16 +74,13 @@ func (t *PendingPartialWithdrawal) HashTreeRootWith(hh sszutils.HashWalker) erro
 	}
 	idx := hh.Index()
 	{ // Field #0 'ValidatorIndex'
-		t := t.ValidatorIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.ValidatorIndex))
 	}
 	{ // Field #1 'Amount'
-		t := t.Amount
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Amount))
 	}
 	{ // Field #2 'WithdrawableEpoch'
-		t := t.WithdrawableEpoch
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.WithdrawableEpoch))
 	}
 	hh.Merkleize(idx)
 	return nil

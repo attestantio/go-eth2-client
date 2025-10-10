@@ -26,8 +26,7 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 	}
 	dstlen := len(dst)
 	{ // Field #0 'RANDAOReveal'
-		t := &t.RANDAOReveal
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.RANDAOReveal[:96])...)
 	}
 	{ // Field #1 'ETH1Data'
 		t := t.ETH1Data
@@ -39,8 +38,7 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 		}
 	}
 	{ // Field #2 'Graffiti'
-		t := t.Graffiti
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.Graffiti[:32])...)
 	}
 	// Offset #3 'ProposerSlashings'
 	offset3 := len(dst)
@@ -204,8 +202,7 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
-			t := &t[i]
-			dst = append(dst, []byte(t[:48])...)
+			dst = append(dst, []byte(t[i][:48])...)
 		}
 	}
 	{ // Dynamic Field #12 'ExecutionRequests'
@@ -564,8 +561,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 	}
 	idx := hh.Index()
 	{ // Field #0 'RANDAOReveal'
-		t := &t.RANDAOReveal
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.RANDAOReveal[:96])
 	}
 	{ // Field #1 'ETH1Data'
 		t := t.ETH1Data
@@ -577,8 +573,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 		}
 	}
 	{ // Field #2 'Graffiti'
-		t := t.Graffiti
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.Graffiti[:32])
 	}
 	{ // Field #3 'ProposerSlashings'
 		t := t.ProposerSlashings
@@ -596,8 +591,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(16, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(16, vlen, 32))
 	}
 	{ // Field #4 'AttesterSlashings'
 		t := t.AttesterSlashings
@@ -615,8 +609,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(1, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(1, vlen, 32))
 	}
 	{ // Field #5 'Attestations'
 		t := t.Attestations
@@ -634,8 +627,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(8, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(8, vlen, 32))
 	}
 	{ // Field #6 'Deposits'
 		t := t.Deposits
@@ -653,8 +645,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(16, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(16, vlen, 32))
 	}
 	{ // Field #7 'VoluntaryExits'
 		t := t.VoluntaryExits
@@ -672,8 +663,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(16, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(16, vlen, 32))
 	}
 	{ // Field #8 'SyncAggregate'
 		t := t.SyncAggregate
@@ -709,8 +699,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(16, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(16, vlen, 32))
 	}
 	{ // Field #11 'BlobKZGCommitments'
 		t := t.BlobKZGCommitments
@@ -720,11 +709,9 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 		}
 		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
-			t := &t[i]
-			hh.PutBytes(t[:48])
+			hh.PutBytes(t[i][:48])
 		}
-		limit := sszutils.CalculateLimit(4096, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(4096, vlen, 32))
 	}
 	{ // Field #12 'ExecutionRequests'
 		t := t.ExecutionRequests

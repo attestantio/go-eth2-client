@@ -24,8 +24,7 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 	}
 	dstlen := len(dst)
 	{ // Field #0 'RANDAOReveal'
-		t := &t.RANDAOReveal
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.RANDAOReveal[:96])...)
 	}
 	{ // Field #1 'ETH1Data'
 		t := t.ETH1Data
@@ -37,8 +36,7 @@ func (t *BlindedBeaconBlockBody) MarshalSSZTo(buf []byte) (dst []byte, err error
 		}
 	}
 	{ // Field #2 'Graffiti'
-		t := t.Graffiti
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.Graffiti[:32])...)
 	}
 	// Offset #3 'ProposerSlashings'
 	offset3 := len(dst)
@@ -491,8 +489,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 	}
 	idx := hh.Index()
 	{ // Field #0 'RANDAOReveal'
-		t := &t.RANDAOReveal
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.RANDAOReveal[:96])
 	}
 	{ // Field #1 'ETH1Data'
 		t := t.ETH1Data
@@ -504,8 +501,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 		}
 	}
 	{ // Field #2 'Graffiti'
-		t := t.Graffiti
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.Graffiti[:32])
 	}
 	{ // Field #3 'ProposerSlashings'
 		t := t.ProposerSlashings
@@ -523,8 +519,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(16, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(16, vlen, 32))
 	}
 	{ // Field #4 'AttesterSlashings'
 		t := t.AttesterSlashings
@@ -542,8 +537,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(2, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(2, vlen, 32))
 	}
 	{ // Field #5 'Attestations'
 		t := t.Attestations
@@ -561,8 +555,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(128, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(128, vlen, 32))
 	}
 	{ // Field #6 'Deposits'
 		t := t.Deposits
@@ -580,8 +573,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(16, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(16, vlen, 32))
 	}
 	{ // Field #7 'VoluntaryExits'
 		t := t.VoluntaryExits
@@ -599,8 +591,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(16, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(16, vlen, 32))
 	}
 	{ // Field #8 'SyncAggregate'
 		t := t.SyncAggregate
@@ -636,8 +627,7 @@ func (t *BlindedBeaconBlockBody) HashTreeRootWith(hh sszutils.HashWalker) error 
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(16, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(16, vlen, 32))
 	}
 	hh.Merkleize(idx)
 	return nil

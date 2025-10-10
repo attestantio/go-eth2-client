@@ -34,16 +34,14 @@ func (t *Attestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	{ // Field #2 'Signature'
-		t := &t.Signature
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.Signature[:96])...)
 	}
 	{ // Field #3 'CommitteeBits'
-		t := t.CommitteeBits
-		vlen := len(t)
+		vlen := len(t.CommitteeBits)
 		if vlen > 8 {
 			return dst, sszutils.ErrVectorLength
 		}
-		dst = append(dst, []byte(t[:vlen])...)
+		dst = append(dst, []byte(t.CommitteeBits[:vlen])...)
 		if vlen < 8 {
 			dst = sszutils.AppendZeroPadding(dst, (8-vlen)*1)
 		}
@@ -156,16 +154,14 @@ func (t *Attestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #2 'Signature'
-		t := &t.Signature
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.Signature[:96])
 	}
 	{ // Field #3 'CommitteeBits'
-		t := t.CommitteeBits
-		vlen := len(t)
+		vlen := len(t.CommitteeBits)
 		if vlen > 8 {
 			return sszutils.ErrVectorLength
 		}
-		val := t[:]
+		val := t.CommitteeBits[:]
 		if vlen < 8 {
 			val = sszutils.AppendZeroPadding(val, (8-vlen)*1)
 		}

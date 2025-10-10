@@ -21,12 +21,10 @@ func (t *SyncAggregatorSelectionData) MarshalSSZTo(buf []byte) (dst []byte, err 
 		t = new(SyncAggregatorSelectionData)
 	}
 	{ // Field #0 'Slot'
-		t := t.Slot
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Slot))
 	}
 	{ // Field #1 'SubcommitteeIndex'
-		t := t.SubcommitteeIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.SubcommitteeIndex))
 	}
 	return dst, nil
 }
@@ -69,12 +67,10 @@ func (t *SyncAggregatorSelectionData) HashTreeRootWith(hh sszutils.HashWalker) e
 	}
 	idx := hh.Index()
 	{ // Field #0 'Slot'
-		t := t.Slot
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Slot))
 	}
 	{ // Field #1 'SubcommitteeIndex'
-		t := t.SubcommitteeIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.SubcommitteeIndex))
 	}
 	hh.Merkleize(idx)
 	return nil

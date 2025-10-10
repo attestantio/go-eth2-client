@@ -27,16 +27,14 @@ func (t *SyncCommittee) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
-			t := &t[i]
-			dst = append(dst, []byte(t[:48])...)
+			dst = append(dst, []byte(t[i][:48])...)
 		}
 		if vlen < 512 {
 			dst = sszutils.AppendZeroPadding(dst, (512-vlen)*48)
 		}
 	}
 	{ // Field #1 'AggregatePubkey'
-		t := &t.AggregatePubkey
-		dst = append(dst, []byte(t[:48])...)
+		dst = append(dst, []byte(t.AggregatePubkey[:48])...)
 	}
 	return dst, nil
 }
@@ -91,18 +89,19 @@ func (t *SyncCommittee) HashTreeRootWith(hh sszutils.HashWalker) error {
 			return sszutils.ErrVectorLength
 		}
 		idx := hh.Index()
+		var val1 *phase0.BLSPubKey
 		for i := 0; i < 512; i++ {
-			var val1 *phase0.BLSPubKey
 			if i < vlen {
 				val1 = &t[i]
+			} else if i == vlen {
+				val1 = new(phase0.BLSPubKey)
 			}
 			hh.PutBytes(val1[:48])
 		}
 		hh.Merkleize(idx)
 	}
 	{ // Field #1 'AggregatePubkey'
-		t := &t.AggregatePubkey
-		hh.PutBytes(t[:48])
+		hh.PutBytes(t.AggregatePubkey[:48])
 	}
 	hh.Merkleize(idx)
 	return nil

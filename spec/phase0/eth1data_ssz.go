@@ -20,20 +20,17 @@ func (t *ETH1Data) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(ETH1Data)
 	}
 	{ // Field #0 'DepositRoot'
-		t := t.DepositRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.DepositRoot[:32])...)
 	}
 	{ // Field #1 'DepositCount'
-		t := t.DepositCount
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.DepositCount))
 	}
 	{ // Field #2 'BlockHash'
-		t := t.BlockHash
-		vlen := len(t)
+		vlen := len(t.BlockHash)
 		if vlen > 32 {
 			return dst, sszutils.ErrVectorLength
 		}
-		dst = append(dst, []byte(t[:vlen])...)
+		dst = append(dst, []byte(t.BlockHash[:vlen])...)
 		if vlen < 32 {
 			dst = sszutils.AppendZeroPadding(dst, (32-vlen)*1)
 		}
@@ -84,20 +81,17 @@ func (t *ETH1Data) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'DepositRoot'
-		t := t.DepositRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.DepositRoot[:32])
 	}
 	{ // Field #1 'DepositCount'
-		t := t.DepositCount
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.DepositCount))
 	}
 	{ // Field #2 'BlockHash'
-		t := t.BlockHash
-		vlen := len(t)
+		vlen := len(t.BlockHash)
 		if vlen > 32 {
 			return sszutils.ErrVectorLength
 		}
-		val := t[:]
+		val := t.BlockHash[:]
 		if vlen < 32 {
 			val = sszutils.AppendZeroPadding(val, (32-vlen)*1)
 		}

@@ -21,16 +21,13 @@ func (t *WithdrawalRequest) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(WithdrawalRequest)
 	}
 	{ // Field #0 'SourceAddress'
-		t := t.SourceAddress
-		dst = append(dst, []byte(t[:20])...)
+		dst = append(dst, []byte(t.SourceAddress[:20])...)
 	}
 	{ // Field #1 'ValidatorPubkey'
-		t := &t.ValidatorPubkey
-		dst = append(dst, []byte(t[:48])...)
+		dst = append(dst, []byte(t.ValidatorPubkey[:48])...)
 	}
 	{ // Field #2 'Amount'
-		t := t.Amount
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Amount))
 	}
 	return dst, nil
 }
@@ -77,16 +74,13 @@ func (t *WithdrawalRequest) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'SourceAddress'
-		t := t.SourceAddress
-		hh.PutBytes(t[:20])
+		hh.PutBytes(t.SourceAddress[:20])
 	}
 	{ // Field #1 'ValidatorPubkey'
-		t := &t.ValidatorPubkey
-		hh.PutBytes(t[:48])
+		hh.PutBytes(t.ValidatorPubkey[:48])
 	}
 	{ // Field #2 'Amount'
-		t := t.Amount
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Amount))
 	}
 	hh.Merkleize(idx)
 	return nil

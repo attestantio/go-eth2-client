@@ -20,16 +20,13 @@ func (t *ConsolidationRequest) MarshalSSZTo(buf []byte) (dst []byte, err error) 
 		t = new(ConsolidationRequest)
 	}
 	{ // Field #0 'SourceAddress'
-		t := t.SourceAddress
-		dst = append(dst, []byte(t[:20])...)
+		dst = append(dst, []byte(t.SourceAddress[:20])...)
 	}
 	{ // Field #1 'SourcePubkey'
-		t := &t.SourcePubkey
-		dst = append(dst, []byte(t[:48])...)
+		dst = append(dst, []byte(t.SourcePubkey[:48])...)
 	}
 	{ // Field #2 'TargetPubkey'
-		t := &t.TargetPubkey
-		dst = append(dst, []byte(t[:48])...)
+		dst = append(dst, []byte(t.TargetPubkey[:48])...)
 	}
 	return dst, nil
 }
@@ -76,16 +73,13 @@ func (t *ConsolidationRequest) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'SourceAddress'
-		t := t.SourceAddress
-		hh.PutBytes(t[:20])
+		hh.PutBytes(t.SourceAddress[:20])
 	}
 	{ // Field #1 'SourcePubkey'
-		t := &t.SourcePubkey
-		hh.PutBytes(t[:48])
+		hh.PutBytes(t.SourcePubkey[:48])
 	}
 	{ // Field #2 'TargetPubkey'
-		t := &t.TargetPubkey
-		hh.PutBytes(t[:48])
+		hh.PutBytes(t.TargetPubkey[:48])
 	}
 	hh.Merkleize(idx)
 	return nil

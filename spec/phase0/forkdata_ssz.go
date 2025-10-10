@@ -20,12 +20,10 @@ func (t *ForkData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(ForkData)
 	}
 	{ // Field #0 'CurrentVersion'
-		t := t.CurrentVersion
-		dst = append(dst, []byte(t[:4])...)
+		dst = append(dst, []byte(t.CurrentVersion[:4])...)
 	}
 	{ // Field #1 'GenesisValidatorsRoot'
-		t := t.GenesisValidatorsRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.GenesisValidatorsRoot[:32])...)
 	}
 	return dst, nil
 }
@@ -68,12 +66,10 @@ func (t *ForkData) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'CurrentVersion'
-		t := t.CurrentVersion
-		hh.PutBytes(t[:4])
+		hh.PutBytes(t.CurrentVersion[:4])
 	}
 	{ // Field #1 'GenesisValidatorsRoot'
-		t := t.GenesisValidatorsRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.GenesisValidatorsRoot[:32])
 	}
 	hh.Merkleize(idx)
 	return nil

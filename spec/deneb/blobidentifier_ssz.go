@@ -20,12 +20,10 @@ func (t *BlobIdentifier) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(BlobIdentifier)
 	}
 	{ // Field #0 'BlockRoot'
-		t := t.BlockRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.BlockRoot[:32])...)
 	}
 	{ // Field #1 'Index'
-		t := t.Index
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Index))
 	}
 	return dst, nil
 }
@@ -68,12 +66,10 @@ func (t *BlobIdentifier) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'BlockRoot'
-		t := t.BlockRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.BlockRoot[:32])
 	}
 	{ // Field #1 'Index'
-		t := t.Index
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Index))
 	}
 	hh.Merkleize(idx)
 	return nil

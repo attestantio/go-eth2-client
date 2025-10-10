@@ -21,20 +21,16 @@ func (t *Withdrawal) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(Withdrawal)
 	}
 	{ // Field #0 'Index'
-		t := t.Index
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Index))
 	}
 	{ // Field #1 'ValidatorIndex'
-		t := t.ValidatorIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.ValidatorIndex))
 	}
 	{ // Field #2 'Address'
-		t := t.Address
-		dst = append(dst, []byte(t[:20])...)
+		dst = append(dst, []byte(t.Address[:20])...)
 	}
 	{ // Field #3 'Amount'
-		t := t.Amount
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Amount))
 	}
 	return dst, nil
 }
@@ -85,20 +81,16 @@ func (t *Withdrawal) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'Index'
-		t := t.Index
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Index))
 	}
 	{ // Field #1 'ValidatorIndex'
-		t := t.ValidatorIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.ValidatorIndex))
 	}
 	{ // Field #2 'Address'
-		t := t.Address
-		hh.PutBytes(t[:20])
+		hh.PutBytes(t.Address[:20])
 	}
 	{ // Field #3 'Amount'
-		t := t.Amount
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Amount))
 	}
 	hh.Merkleize(idx)
 	return nil

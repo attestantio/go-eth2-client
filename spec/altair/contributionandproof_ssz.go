@@ -21,8 +21,7 @@ func (t *ContributionAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) 
 		t = new(ContributionAndProof)
 	}
 	{ // Field #0 'AggregatorIndex'
-		t := t.AggregatorIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.AggregatorIndex))
 	}
 	{ // Field #1 'Contribution'
 		t := t.Contribution
@@ -34,8 +33,7 @@ func (t *ContributionAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) 
 		}
 	}
 	{ // Field #2 'SelectionProof'
-		t := &t.SelectionProof
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.SelectionProof[:96])...)
 	}
 	return dst, nil
 }
@@ -87,8 +85,7 @@ func (t *ContributionAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'AggregatorIndex'
-		t := t.AggregatorIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.AggregatorIndex))
 	}
 	{ // Field #1 'Contribution'
 		t := t.Contribution
@@ -100,8 +97,7 @@ func (t *ContributionAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #2 'SelectionProof'
-		t := &t.SelectionProof
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.SelectionProof[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

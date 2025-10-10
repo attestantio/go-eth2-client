@@ -20,12 +20,10 @@ func (t *Checkpoint) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(Checkpoint)
 	}
 	{ // Field #0 'Epoch'
-		t := t.Epoch
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Epoch))
 	}
 	{ // Field #1 'Root'
-		t := t.Root
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.Root[:32])...)
 	}
 	return dst, nil
 }
@@ -68,12 +66,10 @@ func (t *Checkpoint) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'Epoch'
-		t := t.Epoch
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Epoch))
 	}
 	{ // Field #1 'Root'
-		t := t.Root
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.Root[:32])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -22,20 +22,16 @@ func (t *BlindedBeaconBlock) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	dstlen := len(dst)
 	{ // Field #0 'Slot'
-		t := t.Slot
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Slot))
 	}
 	{ // Field #1 'ProposerIndex'
-		t := t.ProposerIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.ProposerIndex))
 	}
 	{ // Field #2 'ParentRoot'
-		t := t.ParentRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.ParentRoot[:32])...)
 	}
 	{ // Field #3 'StateRoot'
-		t := t.StateRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.StateRoot[:32])...)
 	}
 	// Offset #4 'Body'
 	offset4 := len(dst)
@@ -127,20 +123,16 @@ func (t *BlindedBeaconBlock) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'Slot'
-		t := t.Slot
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Slot))
 	}
 	{ // Field #1 'ProposerIndex'
-		t := t.ProposerIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.ProposerIndex))
 	}
 	{ // Field #2 'ParentRoot'
-		t := t.ParentRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.ParentRoot[:32])
 	}
 	{ // Field #3 'StateRoot'
-		t := t.StateRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.StateRoot[:32])
 	}
 	{ // Field #4 'Body'
 		t := t.Body

@@ -21,72 +21,57 @@ func (t *ExecutionPayloadHeader) MarshalSSZTo(buf []byte) (dst []byte, err error
 	}
 	dstlen := len(dst)
 	{ // Field #0 'ParentHash'
-		t := t.ParentHash
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.ParentHash[:32])...)
 	}
 	{ // Field #1 'FeeRecipient'
-		t := t.FeeRecipient
-		dst = append(dst, []byte(t[:20])...)
+		dst = append(dst, []byte(t.FeeRecipient[:20])...)
 	}
 	{ // Field #2 'StateRoot'
-		t := t.StateRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.StateRoot[:32])...)
 	}
 	{ // Field #3 'ReceiptsRoot'
-		t := t.ReceiptsRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.ReceiptsRoot[:32])...)
 	}
 	{ // Field #4 'LogsBloom'
-		t := &t.LogsBloom
-		dst = append(dst, []byte(t[:256])...)
+		dst = append(dst, []byte(t.LogsBloom[:256])...)
 	}
 	{ // Field #5 'PrevRandao'
-		t := t.PrevRandao
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.PrevRandao[:32])...)
 	}
 	{ // Field #6 'BlockNumber'
-		t := t.BlockNumber
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.BlockNumber))
 	}
 	{ // Field #7 'GasLimit'
-		t := t.GasLimit
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.GasLimit))
 	}
 	{ // Field #8 'GasUsed'
-		t := t.GasUsed
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.GasUsed))
 	}
 	{ // Field #9 'Timestamp'
-		t := t.Timestamp
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Timestamp))
 	}
 	// Offset #10 'ExtraData'
 	offset10 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #11 'BaseFeePerGas'
-		t := t.BaseFeePerGas
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.BaseFeePerGas[:32])...)
 	}
 	{ // Field #12 'BlockHash'
-		t := t.BlockHash
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.BlockHash[:32])...)
 	}
 	{ // Field #13 'TransactionsRoot'
-		t := t.TransactionsRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.TransactionsRoot[:32])...)
 	}
 	{ // Field #14 'WithdrawalsRoot'
-		t := t.WithdrawalsRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.WithdrawalsRoot[:32])...)
 	}
 	{ // Dynamic Field #10 'ExtraData'
 		sszutils.UpdateOffset(dst[offset10:offset10+4], len(dst)-dstlen)
-		t := t.ExtraData
-		vlen := len(t)
+		vlen := len(t.ExtraData)
 		if vlen > 32 {
 			return dst, sszutils.ErrListTooBig
 		}
-		dst = append(dst, []byte(t[:])...)
+		dst = append(dst, []byte(t.ExtraData[:])...)
 	}
 	return dst, nil
 }
@@ -211,71 +196,55 @@ func (t *ExecutionPayloadHeader) HashTreeRootWith(hh sszutils.HashWalker) error 
 	}
 	idx := hh.Index()
 	{ // Field #0 'ParentHash'
-		t := t.ParentHash
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.ParentHash[:32])
 	}
 	{ // Field #1 'FeeRecipient'
-		t := t.FeeRecipient
-		hh.PutBytes(t[:20])
+		hh.PutBytes(t.FeeRecipient[:20])
 	}
 	{ // Field #2 'StateRoot'
-		t := t.StateRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.StateRoot[:32])
 	}
 	{ // Field #3 'ReceiptsRoot'
-		t := t.ReceiptsRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.ReceiptsRoot[:32])
 	}
 	{ // Field #4 'LogsBloom'
-		t := &t.LogsBloom
-		hh.PutBytes(t[:256])
+		hh.PutBytes(t.LogsBloom[:256])
 	}
 	{ // Field #5 'PrevRandao'
-		t := t.PrevRandao
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.PrevRandao[:32])
 	}
 	{ // Field #6 'BlockNumber'
-		t := t.BlockNumber
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.BlockNumber))
 	}
 	{ // Field #7 'GasLimit'
-		t := t.GasLimit
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.GasLimit))
 	}
 	{ // Field #8 'GasUsed'
-		t := t.GasUsed
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.GasUsed))
 	}
 	{ // Field #9 'Timestamp'
-		t := t.Timestamp
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Timestamp))
 	}
 	{ // Field #10 'ExtraData'
-		t := t.ExtraData
-		vlen := uint64(len(t))
+		vlen := uint64(len(t.ExtraData))
 		if vlen > 32 {
 			return sszutils.ErrListTooBig
 		}
 		idx := hh.Index()
-		hh.PutBytes(t[:])
-		limit := sszutils.CalculateLimit(32, vlen, 1)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.PutBytes(t.ExtraData[:])
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(32, vlen, 1))
 	}
 	{ // Field #11 'BaseFeePerGas'
-		t := t.BaseFeePerGas
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.BaseFeePerGas[:32])
 	}
 	{ // Field #12 'BlockHash'
-		t := t.BlockHash
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.BlockHash[:32])
 	}
 	{ // Field #13 'TransactionsRoot'
-		t := t.TransactionsRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.TransactionsRoot[:32])
 	}
 	{ // Field #14 'WithdrawalsRoot'
-		t := t.WithdrawalsRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.WithdrawalsRoot[:32])
 	}
 	hh.Merkleize(idx)
 	return nil

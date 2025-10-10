@@ -29,8 +29,7 @@ func (t *SignedBeaconBlockHeader) MarshalSSZTo(buf []byte) (dst []byte, err erro
 		}
 	}
 	{ // Field #1 'Signature'
-		t := &t.Signature
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.Signature[:96])...)
 	}
 	return dst, nil
 }
@@ -87,8 +86,7 @@ func (t *SignedBeaconBlockHeader) HashTreeRootWith(hh sszutils.HashWalker) error
 		}
 	}
 	{ // Field #1 'Signature'
-		t := &t.Signature
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.Signature[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

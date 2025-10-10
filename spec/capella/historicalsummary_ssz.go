@@ -20,12 +20,10 @@ func (t *HistoricalSummary) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(HistoricalSummary)
 	}
 	{ // Field #0 'BlockSummaryRoot'
-		t := t.BlockSummaryRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.BlockSummaryRoot[:32])...)
 	}
 	{ // Field #1 'StateSummaryRoot'
-		t := t.StateSummaryRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.StateSummaryRoot[:32])...)
 	}
 	return dst, nil
 }
@@ -68,12 +66,10 @@ func (t *HistoricalSummary) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'BlockSummaryRoot'
-		t := t.BlockSummaryRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.BlockSummaryRoot[:32])
 	}
 	{ // Field #1 'StateSummaryRoot'
-		t := t.StateSummaryRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.StateSummaryRoot[:32])
 	}
 	hh.Merkleize(idx)
 	return nil

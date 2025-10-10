@@ -121,8 +121,7 @@ func (t *ConsolidationRequests) HashTreeRootWith(hh sszutils.HashWalker) error {
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(1, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(1, vlen, 32))
 	}
 	hh.Merkleize(idx)
 	return nil

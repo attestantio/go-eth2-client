@@ -21,20 +21,16 @@ func (t *SyncCommitteeMessage) MarshalSSZTo(buf []byte) (dst []byte, err error) 
 		t = new(SyncCommitteeMessage)
 	}
 	{ // Field #0 'Slot'
-		t := t.Slot
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Slot))
 	}
 	{ // Field #1 'BeaconBlockRoot'
-		t := t.BeaconBlockRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.BeaconBlockRoot[:32])...)
 	}
 	{ // Field #2 'ValidatorIndex'
-		t := t.ValidatorIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.ValidatorIndex))
 	}
 	{ // Field #3 'Signature'
-		t := &t.Signature
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.Signature[:96])...)
 	}
 	return dst, nil
 }
@@ -85,20 +81,16 @@ func (t *SyncCommitteeMessage) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'Slot'
-		t := t.Slot
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Slot))
 	}
 	{ // Field #1 'BeaconBlockRoot'
-		t := t.BeaconBlockRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.BeaconBlockRoot[:32])
 	}
 	{ // Field #2 'ValidatorIndex'
-		t := t.ValidatorIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.ValidatorIndex))
 	}
 	{ // Field #3 'Signature'
-		t := &t.Signature
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.Signature[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

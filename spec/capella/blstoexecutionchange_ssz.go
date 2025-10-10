@@ -21,16 +21,13 @@ func (t *BLSToExecutionChange) MarshalSSZTo(buf []byte) (dst []byte, err error) 
 		t = new(BLSToExecutionChange)
 	}
 	{ // Field #0 'ValidatorIndex'
-		t := t.ValidatorIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.ValidatorIndex))
 	}
 	{ // Field #1 'FromBLSPubkey'
-		t := &t.FromBLSPubkey
-		dst = append(dst, []byte(t[:48])...)
+		dst = append(dst, []byte(t.FromBLSPubkey[:48])...)
 	}
 	{ // Field #2 'ToExecutionAddress'
-		t := t.ToExecutionAddress
-		dst = append(dst, []byte(t[:20])...)
+		dst = append(dst, []byte(t.ToExecutionAddress[:20])...)
 	}
 	return dst, nil
 }
@@ -77,16 +74,13 @@ func (t *BLSToExecutionChange) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'ValidatorIndex'
-		t := t.ValidatorIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.ValidatorIndex))
 	}
 	{ // Field #1 'FromBLSPubkey'
-		t := &t.FromBLSPubkey
-		hh.PutBytes(t[:48])
+		hh.PutBytes(t.FromBLSPubkey[:48])
 	}
 	{ // Field #2 'ToExecutionAddress'
-		t := t.ToExecutionAddress
-		hh.PutBytes(t[:20])
+		hh.PutBytes(t.ToExecutionAddress[:20])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -20,16 +20,13 @@ func (t *Fork) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(Fork)
 	}
 	{ // Field #0 'PreviousVersion'
-		t := t.PreviousVersion
-		dst = append(dst, []byte(t[:4])...)
+		dst = append(dst, []byte(t.PreviousVersion[:4])...)
 	}
 	{ // Field #1 'CurrentVersion'
-		t := t.CurrentVersion
-		dst = append(dst, []byte(t[:4])...)
+		dst = append(dst, []byte(t.CurrentVersion[:4])...)
 	}
 	{ // Field #2 'Epoch'
-		t := t.Epoch
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Epoch))
 	}
 	return dst, nil
 }
@@ -76,16 +73,13 @@ func (t *Fork) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'PreviousVersion'
-		t := t.PreviousVersion
-		hh.PutBytes(t[:4])
+		hh.PutBytes(t.PreviousVersion[:4])
 	}
 	{ // Field #1 'CurrentVersion'
-		t := t.CurrentVersion
-		hh.PutBytes(t[:4])
+		hh.PutBytes(t.CurrentVersion[:4])
 	}
 	{ // Field #2 'Epoch'
-		t := t.Epoch
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Epoch))
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -20,12 +20,10 @@ func (t *VoluntaryExit) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(VoluntaryExit)
 	}
 	{ // Field #0 'Epoch'
-		t := t.Epoch
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Epoch))
 	}
 	{ // Field #1 'ValidatorIndex'
-		t := t.ValidatorIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.ValidatorIndex))
 	}
 	return dst, nil
 }
@@ -68,12 +66,10 @@ func (t *VoluntaryExit) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'Epoch'
-		t := t.Epoch
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Epoch))
 	}
 	{ // Field #1 'ValidatorIndex'
-		t := t.ValidatorIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.ValidatorIndex))
 	}
 	hh.Merkleize(idx)
 	return nil

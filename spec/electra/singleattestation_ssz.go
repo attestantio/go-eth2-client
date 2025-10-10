@@ -21,12 +21,10 @@ func (t *SingleAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(SingleAttestation)
 	}
 	{ // Field #0 'CommitteeIndex'
-		t := t.CommitteeIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.CommitteeIndex))
 	}
 	{ // Field #1 'AttesterIndex'
-		t := t.AttesterIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.AttesterIndex))
 	}
 	{ // Field #2 'Data'
 		t := t.Data
@@ -38,8 +36,7 @@ func (t *SingleAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	{ // Field #3 'Signature'
-		t := &t.Signature
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.Signature[:96])...)
 	}
 	return dst, nil
 }
@@ -95,12 +92,10 @@ func (t *SingleAttestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'CommitteeIndex'
-		t := t.CommitteeIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.CommitteeIndex))
 	}
 	{ // Field #1 'AttesterIndex'
-		t := t.AttesterIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.AttesterIndex))
 	}
 	{ // Field #2 'Data'
 		t := t.Data
@@ -112,8 +107,7 @@ func (t *SingleAttestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #3 'Signature'
-		t := &t.Signature
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.Signature[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -33,12 +33,10 @@ func (t *PendingAttestation) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		}
 	}
 	{ // Field #2 'InclusionDelay'
-		t := t.InclusionDelay
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.InclusionDelay))
 	}
 	{ // Field #3 'ProposerIndex'
-		t := t.ProposerIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.ProposerIndex))
 	}
 	{ // Dynamic Field #0 'AggregationBits'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
@@ -147,12 +145,10 @@ func (t *PendingAttestation) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #2 'InclusionDelay'
-		t := t.InclusionDelay
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.InclusionDelay))
 	}
 	{ // Field #3 'ProposerIndex'
-		t := t.ProposerIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.ProposerIndex))
 	}
 	hh.Merkleize(idx)
 	return nil

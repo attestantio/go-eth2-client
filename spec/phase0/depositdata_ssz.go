@@ -20,27 +20,23 @@ func (t *DepositData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(DepositData)
 	}
 	{ // Field #0 'PublicKey'
-		t := &t.PublicKey
-		dst = append(dst, []byte(t[:48])...)
+		dst = append(dst, []byte(t.PublicKey[:48])...)
 	}
 	{ // Field #1 'WithdrawalCredentials'
-		t := t.WithdrawalCredentials
-		vlen := len(t)
+		vlen := len(t.WithdrawalCredentials)
 		if vlen > 32 {
 			return dst, sszutils.ErrVectorLength
 		}
-		dst = append(dst, []byte(t[:vlen])...)
+		dst = append(dst, []byte(t.WithdrawalCredentials[:vlen])...)
 		if vlen < 32 {
 			dst = sszutils.AppendZeroPadding(dst, (32-vlen)*1)
 		}
 	}
 	{ // Field #2 'Amount'
-		t := t.Amount
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Amount))
 	}
 	{ // Field #3 'Signature'
-		t := &t.Signature
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.Signature[:96])...)
 	}
 	return dst, nil
 }
@@ -92,28 +88,24 @@ func (t *DepositData) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'PublicKey'
-		t := &t.PublicKey
-		hh.PutBytes(t[:48])
+		hh.PutBytes(t.PublicKey[:48])
 	}
 	{ // Field #1 'WithdrawalCredentials'
-		t := t.WithdrawalCredentials
-		vlen := len(t)
+		vlen := len(t.WithdrawalCredentials)
 		if vlen > 32 {
 			return sszutils.ErrVectorLength
 		}
-		val := t[:]
+		val := t.WithdrawalCredentials[:]
 		if vlen < 32 {
 			val = sszutils.AppendZeroPadding(val, (32-vlen)*1)
 		}
 		hh.PutBytes(val[:32])
 	}
 	{ // Field #2 'Amount'
-		t := t.Amount
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Amount))
 	}
 	{ // Field #3 'Signature'
-		t := &t.Signature
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.Signature[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -21,20 +21,16 @@ func (t *BlobSidecar) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(BlobSidecar)
 	}
 	{ // Field #0 'Index'
-		t := t.Index
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Index))
 	}
 	{ // Field #1 'Blob'
-		t := &t.Blob
-		dst = append(dst, []byte(t[:131072])...)
+		dst = append(dst, []byte(t.Blob[:131072])...)
 	}
 	{ // Field #2 'KZGCommitment'
-		t := &t.KZGCommitment
-		dst = append(dst, []byte(t[:48])...)
+		dst = append(dst, []byte(t.KZGCommitment[:48])...)
 	}
 	{ // Field #3 'KZGProof'
-		t := &t.KZGProof
-		dst = append(dst, []byte(t[:48])...)
+		dst = append(dst, []byte(t.KZGProof[:48])...)
 	}
 	{ // Field #4 'SignedBlockHeader'
 		t := t.SignedBlockHeader
@@ -48,8 +44,7 @@ func (t *BlobSidecar) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	{ // Field #5 'KZGCommitmentInclusionProof'
 		t := &t.KZGCommitmentInclusionProof
 		for i := 0; i < 17; i++ {
-			t := t[i]
-			dst = append(dst, []byte(t[:32])...)
+			dst = append(dst, []byte(t[i][:32])...)
 		}
 	}
 	return dst, nil
@@ -119,20 +114,16 @@ func (t *BlobSidecar) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'Index'
-		t := t.Index
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Index))
 	}
 	{ // Field #1 'Blob'
-		t := &t.Blob
-		hh.PutBytes(t[:131072])
+		hh.PutBytes(t.Blob[:131072])
 	}
 	{ // Field #2 'KZGCommitment'
-		t := &t.KZGCommitment
-		hh.PutBytes(t[:48])
+		hh.PutBytes(t.KZGCommitment[:48])
 	}
 	{ // Field #3 'KZGProof'
-		t := &t.KZGProof
-		hh.PutBytes(t[:48])
+		hh.PutBytes(t.KZGProof[:48])
 	}
 	{ // Field #4 'SignedBlockHeader'
 		t := t.SignedBlockHeader
@@ -146,10 +137,12 @@ func (t *BlobSidecar) HashTreeRootWith(hh sszutils.HashWalker) error {
 	{ // Field #5 'KZGCommitmentInclusionProof'
 		t := &t.KZGCommitmentInclusionProof
 		idx := hh.Index()
+		var val1 *KZGCommitmentInclusionProofElement
 		for i := 0; i < 17; i++ {
-			var val1 KZGCommitmentInclusionProofElement
 			if i < 17 {
-				val1 = t[i]
+				val1 = &t[i]
+			} else if i == 17 {
+				val1 = new(KZGCommitmentInclusionProofElement)
 			}
 			hh.PutBytes(val1[:32])
 		}

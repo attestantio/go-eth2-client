@@ -24,16 +24,13 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	dstlen := len(dst)
 	{ // Field #0 'GenesisTime'
-		t := t.GenesisTime
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.GenesisTime))
 	}
 	{ // Field #1 'GenesisValidatorsRoot'
-		t := t.GenesisValidatorsRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.GenesisValidatorsRoot[:32])...)
 	}
 	{ // Field #2 'Slot'
-		t := t.Slot
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Slot))
 	}
 	{ // Field #3 'Fork'
 		t := t.Fork
@@ -60,8 +57,7 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
-			dst = append(dst, []byte(t[:32])...)
+			dst = append(dst, []byte(t[i][:32])...)
 		}
 		if vlen < 8192 {
 			dst = sszutils.AppendZeroPadding(dst, (8192-vlen)*32)
@@ -74,8 +70,7 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
-			dst = append(dst, []byte(t[:32])...)
+			dst = append(dst, []byte(t[i][:32])...)
 		}
 		if vlen < 8192 {
 			dst = sszutils.AppendZeroPadding(dst, (8192-vlen)*32)
@@ -97,8 +92,7 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset9 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #10 'ETH1DepositIndex'
-		t := t.ETH1DepositIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.ETH1DepositIndex))
 	}
 	// Offset #11 'Validators'
 	offset11 := len(dst)
@@ -113,8 +107,7 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
-			dst = append(dst, []byte(t[:32])...)
+			dst = append(dst, []byte(t[i][:32])...)
 		}
 		if vlen < 65536 {
 			dst = sszutils.AppendZeroPadding(dst, (65536-vlen)*32)
@@ -127,8 +120,7 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrVectorLength
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
-			dst = sszutils.MarshalUint64(dst, uint64(t))
+			dst = sszutils.MarshalUint64(dst, uint64(t[i]))
 		}
 		if vlen < 8192 {
 			dst = sszutils.AppendZeroPadding(dst, (8192-vlen)*8)
@@ -141,12 +133,11 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset16 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #17 'JustificationBits'
-		t := t.JustificationBits
-		vlen := len(t)
+		vlen := len(t.JustificationBits)
 		if vlen > 1 {
 			return dst, sszutils.ErrVectorLength
 		}
-		dst = append(dst, []byte(t[:vlen])...)
+		dst = append(dst, []byte(t.JustificationBits[:vlen])...)
 		if vlen < 1 {
 			dst = sszutils.AppendZeroPadding(dst, (1-vlen)*1)
 		}
@@ -203,12 +194,10 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	offset24 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #25 'NextWithdrawalIndex'
-		t := t.NextWithdrawalIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.NextWithdrawalIndex))
 	}
 	{ // Field #26 'NextWithdrawalValidatorIndex'
-		t := t.NextWithdrawalValidatorIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.NextWithdrawalValidatorIndex))
 	}
 	// Offset #27 'HistoricalSummaries'
 	offset27 := len(dst)
@@ -221,8 +210,7 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
-			dst = append(dst, []byte(t[:32])...)
+			dst = append(dst, []byte(t[i][:32])...)
 		}
 	}
 	{ // Dynamic Field #9 'ETH1DataVotes'
@@ -267,8 +255,7 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
-			dst = sszutils.MarshalUint64(dst, uint64(t))
+			dst = sszutils.MarshalUint64(dst, uint64(t[i]))
 		}
 	}
 	{ // Dynamic Field #15 'PreviousEpochParticipation'
@@ -279,8 +266,7 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
-			dst = sszutils.MarshalUint8(dst, uint8(t))
+			dst = sszutils.MarshalUint8(dst, uint8(t[i]))
 		}
 	}
 	{ // Dynamic Field #16 'CurrentEpochParticipation'
@@ -291,8 +277,7 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
-			dst = sszutils.MarshalUint8(dst, uint8(t))
+			dst = sszutils.MarshalUint8(dst, uint8(t[i]))
 		}
 	}
 	{ // Dynamic Field #21 'InactivityScores'
@@ -303,8 +288,7 @@ func (t *BeaconState) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 			return dst, sszutils.ErrListTooBig
 		}
 		for i := 0; i < vlen; i++ {
-			t := t[i]
-			dst = sszutils.MarshalUint64(dst, uint64(t))
+			dst = sszutils.MarshalUint64(dst, uint64(t[i]))
 		}
 	}
 	{ // Dynamic Field #24 'LatestExecutionPayloadHeader'
@@ -744,16 +728,13 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'GenesisTime'
-		t := t.GenesisTime
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.GenesisTime))
 	}
 	{ // Field #1 'GenesisValidatorsRoot'
-		t := t.GenesisValidatorsRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.GenesisValidatorsRoot[:32])
 	}
 	{ // Field #2 'Slot'
-		t := t.Slot
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Slot))
 	}
 	{ // Field #3 'Fork'
 		t := t.Fork
@@ -780,10 +761,12 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 			return sszutils.ErrVectorLength
 		}
 		idx := hh.Index()
+		var val1 *phase0.Root
 		for i := 0; i < 8192; i++ {
-			var val1 phase0.Root
 			if i < vlen {
-				val1 = t[i]
+				val1 = &t[i]
+			} else if i == vlen {
+				val1 = new(phase0.Root)
 			}
 			hh.PutBytes(val1[:32])
 		}
@@ -796,10 +779,12 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 			return sszutils.ErrVectorLength
 		}
 		idx := hh.Index()
+		var val2 *phase0.Root
 		for i := 0; i < 8192; i++ {
-			var val2 phase0.Root
 			if i < vlen {
-				val2 = t[i]
+				val2 = &t[i]
+			} else if i == vlen {
+				val2 = new(phase0.Root)
 			}
 			hh.PutBytes(val2[:32])
 		}
@@ -813,11 +798,9 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
-			t := t[i]
-			hh.PutBytes(t[:32])
+			hh.PutBytes(t[i][:32])
 		}
-		limit := sszutils.CalculateLimit(16777216, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(16777216, vlen, 32))
 	}
 	{ // Field #8 'ETH1Data'
 		t := t.ETH1Data
@@ -844,12 +827,10 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(2048, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(2048, vlen, 32))
 	}
 	{ // Field #10 'ETH1DepositIndex'
-		t := t.ETH1DepositIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.ETH1DepositIndex))
 	}
 	{ // Field #11 'Validators'
 		t := t.Validators
@@ -867,8 +848,7 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(1099511627776, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(1099511627776, vlen, 32))
 	}
 	{ // Field #12 'Balances'
 		t := t.Balances
@@ -878,12 +858,10 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
-			t := t[i]
-			hh.AppendUint64(uint64(t))
+			hh.AppendUint64(uint64(t[i]))
 		}
 		hh.FillUpTo32()
-		limit := sszutils.CalculateLimit(1099511627776, vlen, 8)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(1099511627776, vlen, 8))
 	}
 	{ // Field #13 'RANDAOMixes'
 		t := t.RANDAOMixes
@@ -892,10 +870,12 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 			return sszutils.ErrVectorLength
 		}
 		idx := hh.Index()
+		var val3 *phase0.Root
 		for i := 0; i < 65536; i++ {
-			var val3 phase0.Root
 			if i < vlen {
-				val3 = t[i]
+				val3 = &t[i]
+			} else if i == vlen {
+				val3 = new(phase0.Root)
 			}
 			hh.PutBytes(val3[:32])
 		}
@@ -908,10 +888,12 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 			return sszutils.ErrVectorLength
 		}
 		idx := hh.Index()
+		var val4, val4Empty phase0.Gwei
 		for i := 0; i < 8192; i++ {
-			var val4 phase0.Gwei
 			if i < vlen {
 				val4 = t[i]
+			} else if i == vlen {
+				val4 = val4Empty
 			}
 			hh.AppendUint64(uint64(val4))
 		}
@@ -926,12 +908,10 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
-			t := t[i]
-			hh.AppendUint8(uint8(t))
+			hh.AppendUint8(uint8(t[i]))
 		}
 		hh.FillUpTo32()
-		limit := sszutils.CalculateLimit(1099511627776, vlen, 1)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(1099511627776, vlen, 1))
 	}
 	{ // Field #16 'CurrentEpochParticipation'
 		t := t.CurrentEpochParticipation
@@ -941,20 +921,17 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
-			t := t[i]
-			hh.AppendUint8(uint8(t))
+			hh.AppendUint8(uint8(t[i]))
 		}
 		hh.FillUpTo32()
-		limit := sszutils.CalculateLimit(1099511627776, vlen, 1)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(1099511627776, vlen, 1))
 	}
 	{ // Field #17 'JustificationBits'
-		t := t.JustificationBits
-		vlen := len(t)
+		vlen := len(t.JustificationBits)
 		if vlen > 1 {
 			return sszutils.ErrVectorLength
 		}
-		val := t[:]
+		val := t.JustificationBits[:]
 		if vlen < 1 {
 			val = sszutils.AppendZeroPadding(val, (1-vlen)*1)
 		}
@@ -995,12 +972,10 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
-			t := t[i]
-			hh.AppendUint64(uint64(t))
+			hh.AppendUint64(uint64(t[i]))
 		}
 		hh.FillUpTo32()
-		limit := sszutils.CalculateLimit(1099511627776, vlen, 8)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(1099511627776, vlen, 8))
 	}
 	{ // Field #22 'CurrentSyncCommittee'
 		t := t.CurrentSyncCommittee
@@ -1030,12 +1005,10 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #25 'NextWithdrawalIndex'
-		t := t.NextWithdrawalIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.NextWithdrawalIndex))
 	}
 	{ // Field #26 'NextWithdrawalValidatorIndex'
-		t := t.NextWithdrawalValidatorIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.NextWithdrawalValidatorIndex))
 	}
 	{ // Field #27 'HistoricalSummaries'
 		t := t.HistoricalSummaries
@@ -1053,8 +1026,7 @@ func (t *BeaconState) HashTreeRootWith(hh sszutils.HashWalker) error {
 				return err
 			}
 		}
-		limit := sszutils.CalculateLimit(16777216, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(16777216, vlen, 32))
 	}
 	hh.Merkleize(idx)
 	return nil

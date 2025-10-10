@@ -24,8 +24,7 @@ func (t *SignedAggregateAndProof) MarshalSSZTo(buf []byte) (dst []byte, err erro
 	offset0 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #1 'Signature'
-		t := &t.Signature
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.Signature[:96])...)
 	}
 	{ // Dynamic Field #0 'Message'
 		sszutils.UpdateOffset(dst[offset0:offset0+4], len(dst)-dstlen)
@@ -108,8 +107,7 @@ func (t *SignedAggregateAndProof) HashTreeRootWith(hh sszutils.HashWalker) error
 		}
 	}
 	{ // Field #1 'Signature'
-		t := &t.Signature
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.Signature[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

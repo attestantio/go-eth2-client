@@ -34,12 +34,11 @@ func (t *ExecutionPayloadTransactions) MarshalSSZTo(buf []byte) (dst []byte, err
 		dst = sszutils.AppendZeroPadding(dst, vlen*4)
 		for i := 0; i < vlen; i++ {
 			sszutils.UpdateOffset(dst[dstlen+(i*4):dstlen+((i+1)*4)], len(dst)-dstlen)
-			t := t[i]
-			vlen := len(t)
+			vlen := len(t[i])
 			if vlen > 1073741824 {
 				return dst, sszutils.ErrListTooBig
 			}
-			dst = append(dst, []byte(t[:])...)
+			dst = append(dst, []byte(t[i][:])...)
 		}
 	}
 	return dst, nil
@@ -134,18 +133,15 @@ func (t *ExecutionPayloadTransactions) HashTreeRootWith(hh sszutils.HashWalker) 
 		}
 		idx := hh.Index()
 		for i := 0; i < int(vlen); i++ {
-			t := t[i]
-			vlen := uint64(len(t))
+			vlen := uint64(len(t[i]))
 			if vlen > 1073741824 {
 				return sszutils.ErrListTooBig
 			}
 			idx := hh.Index()
-			hh.PutBytes(t[:])
-			limit := sszutils.CalculateLimit(1073741824, vlen, 1)
-			hh.MerkleizeWithMixin(idx, vlen, limit)
+			hh.PutBytes(t[i][:])
+			hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(1073741824, vlen, 1))
 		}
-		limit := sszutils.CalculateLimit(1048576, vlen, 32)
-		hh.MerkleizeWithMixin(idx, vlen, limit)
+		hh.MerkleizeWithMixin(idx, vlen, sszutils.CalculateLimit(1048576, vlen, 32))
 	}
 	hh.Merkleize(idx)
 	return nil

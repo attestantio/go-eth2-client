@@ -22,8 +22,7 @@ func (t *VersionedSignedValidatorRegistration) MarshalSSZTo(buf []byte) (dst []b
 		t = new(VersionedSignedValidatorRegistration)
 	}
 	{ // Field #0 'Version'
-		t := t.Version
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.Version))
 	}
 	{ // Field #1 'V1'
 		t := t.V1
@@ -80,8 +79,7 @@ func (t *VersionedSignedValidatorRegistration) HashTreeRootWith(hh sszutils.Hash
 	}
 	idx := hh.Index()
 	{ // Field #0 'Version'
-		t := t.Version
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.Version))
 	}
 	{ // Field #1 'V1'
 		t := t.V1

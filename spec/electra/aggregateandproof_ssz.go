@@ -22,15 +22,13 @@ func (t *AggregateAndProof) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 	}
 	dstlen := len(dst)
 	{ // Field #0 'AggregatorIndex'
-		t := t.AggregatorIndex
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.AggregatorIndex))
 	}
 	// Offset #1 'Aggregate'
 	offset1 := len(dst)
 	dst = sszutils.MarshalOffset(dst, 0)
 	{ // Field #2 'SelectionProof'
-		t := &t.SelectionProof
-		dst = append(dst, []byte(t[:96])...)
+		dst = append(dst, []byte(t.SelectionProof[:96])...)
 	}
 	{ // Dynamic Field #1 'Aggregate'
 		sszutils.UpdateOffset(dst[offset1:offset1+4], len(dst)-dstlen)
@@ -109,8 +107,7 @@ func (t *AggregateAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'AggregatorIndex'
-		t := t.AggregatorIndex
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.AggregatorIndex))
 	}
 	{ // Field #1 'Aggregate'
 		t := t.Aggregate
@@ -122,8 +119,7 @@ func (t *AggregateAndProof) HashTreeRootWith(hh sszutils.HashWalker) error {
 		}
 	}
 	{ // Field #2 'SelectionProof'
-		t := &t.SelectionProof
-		hh.PutBytes(t[:96])
+		hh.PutBytes(t.SelectionProof[:96])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -20,12 +20,10 @@ func (t *SigningData) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(SigningData)
 	}
 	{ // Field #0 'ObjectRoot'
-		t := t.ObjectRoot
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.ObjectRoot[:32])...)
 	}
 	{ // Field #1 'Domain'
-		t := t.Domain
-		dst = append(dst, []byte(t[:32])...)
+		dst = append(dst, []byte(t.Domain[:32])...)
 	}
 	return dst, nil
 }
@@ -68,12 +66,10 @@ func (t *SigningData) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'ObjectRoot'
-		t := t.ObjectRoot
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.ObjectRoot[:32])
 	}
 	{ // Field #1 'Domain'
-		t := t.Domain
-		hh.PutBytes(t[:32])
+		hh.PutBytes(t.Domain[:32])
 	}
 	hh.Merkleize(idx)
 	return nil

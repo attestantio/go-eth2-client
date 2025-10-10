@@ -20,8 +20,7 @@ func (t *BeaconBlockBlob) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(BeaconBlockBlob)
 	}
 	{ // Field #0 'Blob'
-		t := &t.Blob
-		dst = append(dst, []byte(t[:131072])...)
+		dst = append(dst, []byte(t.Blob[:131072])...)
 	}
 	return dst, nil
 }
@@ -60,8 +59,7 @@ func (t *BeaconBlockBlob) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'Blob'
-		t := &t.Blob
-		hh.PutBytes(t[:131072])
+		hh.PutBytes(t.Blob[:131072])
 	}
 	hh.Merkleize(idx)
 	return nil

@@ -20,43 +20,35 @@ func (t *Validator) MarshalSSZTo(buf []byte) (dst []byte, err error) {
 		t = new(Validator)
 	}
 	{ // Field #0 'PublicKey'
-		t := &t.PublicKey
-		dst = append(dst, []byte(t[:48])...)
+		dst = append(dst, []byte(t.PublicKey[:48])...)
 	}
 	{ // Field #1 'WithdrawalCredentials'
-		t := t.WithdrawalCredentials
-		vlen := len(t)
+		vlen := len(t.WithdrawalCredentials)
 		if vlen > 32 {
 			return dst, sszutils.ErrVectorLength
 		}
-		dst = append(dst, []byte(t[:vlen])...)
+		dst = append(dst, []byte(t.WithdrawalCredentials[:vlen])...)
 		if vlen < 32 {
 			dst = sszutils.AppendZeroPadding(dst, (32-vlen)*1)
 		}
 	}
 	{ // Field #2 'EffectiveBalance'
-		t := t.EffectiveBalance
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.EffectiveBalance))
 	}
 	{ // Field #3 'Slashed'
-		t := t.Slashed
-		dst = sszutils.MarshalBool(dst, bool(t))
+		dst = sszutils.MarshalBool(dst, bool(t.Slashed))
 	}
 	{ // Field #4 'ActivationEligibilityEpoch'
-		t := t.ActivationEligibilityEpoch
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.ActivationEligibilityEpoch))
 	}
 	{ // Field #5 'ActivationEpoch'
-		t := t.ActivationEpoch
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.ActivationEpoch))
 	}
 	{ // Field #6 'ExitEpoch'
-		t := t.ExitEpoch
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.ExitEpoch))
 	}
 	{ // Field #7 'WithdrawableEpoch'
-		t := t.WithdrawableEpoch
-		dst = sszutils.MarshalUint64(dst, uint64(t))
+		dst = sszutils.MarshalUint64(dst, uint64(t.WithdrawableEpoch))
 	}
 	return dst, nil
 }
@@ -124,44 +116,36 @@ func (t *Validator) HashTreeRootWith(hh sszutils.HashWalker) error {
 	}
 	idx := hh.Index()
 	{ // Field #0 'PublicKey'
-		t := &t.PublicKey
-		hh.PutBytes(t[:48])
+		hh.PutBytes(t.PublicKey[:48])
 	}
 	{ // Field #1 'WithdrawalCredentials'
-		t := t.WithdrawalCredentials
-		vlen := len(t)
+		vlen := len(t.WithdrawalCredentials)
 		if vlen > 32 {
 			return sszutils.ErrVectorLength
 		}
-		val := t[:]
+		val := t.WithdrawalCredentials[:]
 		if vlen < 32 {
 			val = sszutils.AppendZeroPadding(val, (32-vlen)*1)
 		}
 		hh.PutBytes(val[:32])
 	}
 	{ // Field #2 'EffectiveBalance'
-		t := t.EffectiveBalance
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.EffectiveBalance))
 	}
 	{ // Field #3 'Slashed'
-		t := t.Slashed
-		hh.PutBool(t)
+		hh.PutBool(t.Slashed)
 	}
 	{ // Field #4 'ActivationEligibilityEpoch'
-		t := t.ActivationEligibilityEpoch
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.ActivationEligibilityEpoch))
 	}
 	{ // Field #5 'ActivationEpoch'
-		t := t.ActivationEpoch
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.ActivationEpoch))
 	}
 	{ // Field #6 'ExitEpoch'
-		t := t.ExitEpoch
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.ExitEpoch))
 	}
 	{ // Field #7 'WithdrawableEpoch'
-		t := t.WithdrawableEpoch
-		hh.PutUint64(uint64(t))
+		hh.PutUint64(uint64(t.WithdrawableEpoch))
 	}
 	hh.Merkleize(idx)
 	return nil
