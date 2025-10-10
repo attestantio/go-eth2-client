@@ -47,6 +47,7 @@ func NewSleepy(_ context.Context,
 	if next == nil {
 		return nil, errors.New("no next service supplied")
 	}
+
 	if maxSleep < minSleep {
 		return nil, errors.New("max sleep less than min sleep")
 	}
@@ -95,6 +96,7 @@ func (s *Sleepy) sleep(_ context.Context) {
 // Deprecated: use chaintime.
 func (s *Sleepy) EpochFromStateID(ctx context.Context, stateID string) (phase0.Epoch, error) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.EpochFromStateIDProvider)
 	if !isNext {
 		return 0, errors.New("next does not support this call")
@@ -108,6 +110,7 @@ func (s *Sleepy) EpochFromStateID(ctx context.Context, stateID string) (phase0.E
 // Deprecated: use chaintime.
 func (s *Sleepy) SlotFromStateID(ctx context.Context, stateID string) (phase0.Slot, error) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.SlotFromStateIDProvider)
 	if !isNext {
 		return 0, errors.New("next does not support this call")
@@ -124,6 +127,7 @@ func (s *Sleepy) NodeVersion(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.NodeVersionProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -137,6 +141,7 @@ func (s *Sleepy) NodeVersion(ctx context.Context,
 // Deprecated: use Spec().
 func (s *Sleepy) SlotDuration(ctx context.Context) (time.Duration, error) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.SlotDurationProvider)
 	if !isNext {
 		return 0, errors.New("next does not support this call")
@@ -150,6 +155,7 @@ func (s *Sleepy) SlotDuration(ctx context.Context) (time.Duration, error) {
 // Deprecated: use Spec().
 func (s *Sleepy) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.SlotsPerEpochProvider)
 	if !isNext {
 		return 0, errors.New("next does not support this call")
@@ -161,6 +167,7 @@ func (s *Sleepy) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 // FarFutureEpoch provides the far future epoch of the chain.
 func (s *Sleepy) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.FarFutureEpochProvider)
 	if !isNext {
 		return 0, errors.New("next does not support this call")
@@ -174,6 +181,7 @@ func (s *Sleepy) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 // Deprecated: use Spec().
 func (s *Sleepy) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, error) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.TargetAggregatorsPerCommitteeProvider)
 	if !isNext {
 		return 0, errors.New("next does not support this call")
@@ -190,6 +198,7 @@ func (s *Sleepy) AggregateAttestation(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.AggregateAttestationProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -201,6 +210,7 @@ func (s *Sleepy) AggregateAttestation(ctx context.Context,
 // SubmitAggregateAttestations submits aggregate attestations.
 func (s *Sleepy) SubmitAggregateAttestations(ctx context.Context, opts *api.SubmitAggregateAttestationsOpts) error {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.AggregateAttestationsSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
@@ -217,6 +227,7 @@ func (s *Sleepy) AttestationData(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.AttestationDataProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -233,6 +244,7 @@ func (s *Sleepy) AttestationPool(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.AttestationPoolProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -244,6 +256,7 @@ func (s *Sleepy) AttestationPool(ctx context.Context,
 // SubmitAttestations submits attestations.
 func (s *Sleepy) SubmitAttestations(ctx context.Context, attestations *api.SubmitAttestationsOpts) error {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.AttestationsSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
@@ -261,6 +274,7 @@ func (s *Sleepy) AttesterDuties(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.AttesterDutiesProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -277,6 +291,7 @@ func (s *Sleepy) BeaconBlockHeader(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.BeaconBlockHeadersProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -293,6 +308,7 @@ func (s *Sleepy) Proposal(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.ProposalProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -306,6 +322,7 @@ func (s *Sleepy) Proposal(ctx context.Context,
 // Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitProposal() instead.
 func (s *Sleepy) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.BeaconBlockSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
@@ -317,6 +334,7 @@ func (s *Sleepy) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSig
 // SubmitBeaconCommitteeSubscriptions subscribes to beacon committees.
 func (s *Sleepy) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*apiv1.BeaconCommitteeSubscription) error {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.BeaconCommitteeSubscriptionsSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
@@ -328,6 +346,7 @@ func (s *Sleepy) SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscri
 // SubmitProposalPreparations submits proposal preparations.
 func (s *Sleepy) SubmitProposalPreparations(ctx context.Context, preparations []*apiv1.ProposalPreparation) error {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.ProposalPreparationsSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
@@ -341,6 +360,7 @@ func (s *Sleepy) SubmitProposalPreparations(ctx context.Context, preparations []
 // Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitBlindedProposal() instead.
 func (s *Sleepy) SubmitBlindedBeaconBlock(ctx context.Context, block *api.VersionedSignedBlindedBeaconBlock) error {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.BlindedBeaconBlockSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
@@ -354,6 +374,7 @@ func (s *Sleepy) SubmitValidatorRegistrations(ctx context.Context,
 	registrations []*api.VersionedSignedValidatorRegistration,
 ) error {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.ValidatorRegistrationsSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
@@ -370,6 +391,7 @@ func (s *Sleepy) BeaconState(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.BeaconStateProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -381,6 +403,7 @@ func (s *Sleepy) BeaconState(ctx context.Context,
 // Events feeds requested events with the given topics to the supplied handler.
 func (s *Sleepy) Events(ctx context.Context, opts *api.EventsOpts) error {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.EventsProvider)
 	if !isNext {
 		return errors.New("next does not support this call")
@@ -397,6 +420,7 @@ func (s *Sleepy) Finality(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.FinalityProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -413,6 +437,7 @@ func (s *Sleepy) Fork(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.ForkProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -429,6 +454,7 @@ func (s *Sleepy) ForkSchedule(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.ForkScheduleProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -445,6 +471,7 @@ func (s *Sleepy) Genesis(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.GenesisProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -461,6 +488,7 @@ func (s *Sleepy) NodeSyncing(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.NodeSyncingProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -477,6 +505,7 @@ func (s *Sleepy) NodePeers(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.NodePeersProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -493,6 +522,7 @@ func (s *Sleepy) ProposerDuties(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.ProposerDutiesProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -509,6 +539,7 @@ func (s *Sleepy) Spec(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.SpecProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -525,6 +556,7 @@ func (s *Sleepy) ValidatorBalances(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.ValidatorBalancesProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -541,6 +573,7 @@ func (s *Sleepy) Validators(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.ValidatorsProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -552,6 +585,7 @@ func (s *Sleepy) Validators(ctx context.Context,
 // SubmitVoluntaryExit submits a voluntary exit.
 func (s *Sleepy) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.VoluntaryExitSubmitter)
 	if !isNext {
 		return errors.New("next does not support this call")
@@ -568,6 +602,7 @@ func (s *Sleepy) VoluntaryExitPool(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.VoluntaryExitPoolProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -579,6 +614,7 @@ func (s *Sleepy) VoluntaryExitPool(ctx context.Context,
 // Domain provides a domain for a given domain type at a given epoch.
 func (s *Sleepy) Domain(ctx context.Context, domainType phase0.DomainType, epoch phase0.Epoch) (phase0.Domain, error) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.DomainProvider)
 	if !isNext {
 		return phase0.Domain{}, errors.New("next does not support this call")
@@ -590,6 +626,7 @@ func (s *Sleepy) Domain(ctx context.Context, domainType phase0.DomainType, epoch
 // GenesisDomain provides a domain for a given domain type at genesis.
 func (s *Sleepy) GenesisDomain(ctx context.Context, domainType phase0.DomainType) (phase0.Domain, error) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.DomainProvider)
 	if !isNext {
 		return phase0.Domain{}, errors.New("next does not support this call")
@@ -603,6 +640,7 @@ func (s *Sleepy) GenesisDomain(ctx context.Context, domainType phase0.DomainType
 // Deprecated: use Genesis().
 func (s *Sleepy) GenesisTime(ctx context.Context) (time.Time, error) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.GenesisTimeProvider)
 	if !isNext {
 		return time.Time{}, errors.New("next does not support this call")
@@ -619,6 +657,7 @@ func (s *Sleepy) ForkChoice(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.ForkChoiceProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -635,6 +674,7 @@ func (s *Sleepy) BlobSidecars(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.BlobSidecarsProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -651,6 +691,7 @@ func (s *Sleepy) AttestationRewards(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.AttestationRewardsProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -667,6 +708,7 @@ func (s *Sleepy) BlockRewards(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.BlockRewardsProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -683,6 +725,7 @@ func (s *Sleepy) SyncCommitteeRewards(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.SyncCommitteeRewardsProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -699,6 +742,7 @@ func (s *Sleepy) ValidatorLiveness(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.ValidatorLivenessProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -715,6 +759,7 @@ func (s *Sleepy) PendingDeposits(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.PendingDepositProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -731,6 +776,7 @@ func (s *Sleepy) PendingConsolidations(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.PendingConsolidationsProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
@@ -747,6 +793,7 @@ func (s *Sleepy) PendingPartialWithdrawals(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.PendingPartialWithdrawalsProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")

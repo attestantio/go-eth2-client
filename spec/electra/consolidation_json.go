@@ -47,9 +47,11 @@ func (c *Consolidation) UnmarshalJSON(input []byte) error {
 	if err := c.SourceIndex.UnmarshalJSON(raw["source_index"]); err != nil {
 		return errors.Wrap(err, "source_index")
 	}
+
 	if err := c.TargetIndex.UnmarshalJSON(raw["target_index"]); err != nil {
 		return errors.Wrap(err, "target_index")
 	}
+
 	if err := c.Epoch.UnmarshalJSON(raw["epoch"]); err != nil {
 		return errors.Wrap(err, "epoch")
 	}

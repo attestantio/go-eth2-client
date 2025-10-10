@@ -33,14 +33,18 @@ func RawJSON(b any, input []byte) (map[string]json.RawMessage, error) {
 
 	// Ensure all values are present.
 	elem := reflect.TypeOf(b).Elem()
+
 	fields := elem.NumField()
 	for i := 0; i < fields; i++ {
 		jsonTags, present := elem.Field(i).Tag.Lookup("json")
 		if !present {
 			return nil, fmt.Errorf("no json tags for field %d", i)
 		}
+
 		tags := strings.Split(jsonTags, ",")
+
 		var emptyAllowed bool
+
 		for i := range tags {
 			if tags[i] == "allowempty" {
 				// This can be omitted.
@@ -49,9 +53,11 @@ func RawJSON(b any, input []byte) (map[string]json.RawMessage, error) {
 				break
 			}
 		}
+
 		if emptyAllowed {
 			continue
 		}
+
 		if _, exists := base[tags[0]]; !exists {
 			// This should be present but is not.
 			return nil, fmt.Errorf("%s: missing", tags[0])

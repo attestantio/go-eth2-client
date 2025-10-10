@@ -32,11 +32,13 @@ func (s *Service) DepositContract(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
 
 	s.depositContractMutex.RLock()
+
 	if s.depositContract != nil {
 		defer s.depositContractMutex.RUnlock()
 
@@ -45,10 +47,12 @@ func (s *Service) DepositContract(ctx context.Context,
 			Metadata: map[string]any{},
 		}, nil
 	}
+
 	s.depositContractMutex.RUnlock()
 
 	s.depositContractMutex.Lock()
 	defer s.depositContractMutex.Unlock()
+
 	if s.depositContract != nil {
 		// Someone else fetched this whilst we were waiting for the lock.
 		return &api.Response[*apiv1.DepositContract]{
@@ -59,6 +63,7 @@ func (s *Service) DepositContract(ctx context.Context,
 
 	// Up to us to fetch the information.
 	endpoint := "/eth/v1/config/deposit_contract"
+
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, err

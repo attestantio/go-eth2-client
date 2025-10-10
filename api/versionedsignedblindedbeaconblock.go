@@ -663,13 +663,7 @@ func (v *VersionedSignedBlindedBeaconBlock) ExecutionBlockNumber() (uint64, erro
 // BlobKZGCommitments returns the blob KZG commitments of the beacon block.
 func (v *VersionedSignedBlindedBeaconBlock) BlobKZGCommitments() ([]deneb.KZGCommitment, error) {
 	switch v.Version {
-	case spec.DataVersionPhase0:
-		return nil, ErrDataMissing
-	case spec.DataVersionAltair:
-		return nil, ErrDataMissing
-	case spec.DataVersionBellatrix:
-		return nil, ErrDataMissing
-	case spec.DataVersionCapella:
+	case spec.DataVersionPhase0, spec.DataVersionAltair, spec.DataVersionBellatrix, spec.DataVersionCapella:
 		return nil, ErrDataMissing
 	case spec.DataVersionDeneb:
 		if v.Deneb == nil || v.Deneb.Message == nil || v.Deneb.Message.Body == nil {

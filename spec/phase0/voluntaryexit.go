@@ -52,6 +52,7 @@ func (v *VoluntaryExit) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (v *VoluntaryExit) UnmarshalJSON(input []byte) error {
 	var voluntaryExitJSON voluntaryExitJSON
+
 	err := json.Unmarshal(input, &voluntaryExitJSON)
 	if err != nil {
 		return errors.Wrap(err, "invalid JSON")
@@ -64,18 +65,23 @@ func (v *VoluntaryExit) unpack(voluntaryExitJSON *voluntaryExitJSON) error {
 	if voluntaryExitJSON.Epoch == "" {
 		return errors.New("epoch missing")
 	}
+
 	epoch, err := strconv.ParseUint(voluntaryExitJSON.Epoch, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for epoch")
 	}
+
 	v.Epoch = Epoch(epoch)
+
 	if voluntaryExitJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
+
 	validatorIndex, err := strconv.ParseUint(voluntaryExitJSON.ValidatorIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+
 	v.ValidatorIndex = ValidatorIndex(validatorIndex)
 
 	return nil

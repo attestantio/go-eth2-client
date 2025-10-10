@@ -38,6 +38,7 @@ func (d *BuilderVersion) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (d *BuilderVersion) UnmarshalJSON(input []byte) error {
 	var err error
+
 	switch strings.ToLower(string(input)) {
 	case `"v1"`:
 		*d = BuilderVersionV1

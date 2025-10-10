@@ -163,76 +163,15 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 }
 
 // periodicUpdateConnectionState periodically pings the client to update its active and synced status.
-func (s *Service) periodicUpdateConnectionState(ctx context.Context) {
-	go func(s *Service, ctx context.Context) {
-		// Refresh every 30 seconds.
-		refreshTicker := time.NewTicker(30 * time.Second)
-		defer refreshTicker.Stop()
-		for {
-			select {
-			case <-refreshTicker.C:
-				s.CheckConnectionState(ctx)
-			case <-ctx.Done():
-				return
-			}
-		}
-	}(s, ctx)
-}
 
 // periodicClearStaticValues periodically sets static values to nil so they are
 // refetched the next time they are required.
-func (s *Service) periodicClearStaticValues(ctx context.Context) {
-	go func(s *Service, ctx context.Context) {
-		// Refresh every 5 minutes.
-		refreshTicker := time.NewTicker(5 * time.Minute)
-		defer refreshTicker.Stop()
-		for {
-			select {
-			case <-refreshTicker.C:
-				s.clearStaticValues()
-			case <-ctx.Done():
-				return
-			}
-		}
-	}(s, ctx)
-}
 
 // clearStaticValues periodically sets static values to nil so they are
 // refetched the next time they are required.
-func (s *Service) clearStaticValues() {
-	s.genesisMutex.Lock()
-	s.genesis = nil
-	s.genesisMutex.Unlock()
-	s.specMutex.Lock()
-	s.spec = nil
-	s.specMutex.Unlock()
-	s.depositContractMutex.Lock()
-	s.depositContract = nil
-	s.depositContractMutex.Unlock()
-	s.forkScheduleMutex.Lock()
-	s.forkSchedule = nil
-	s.forkScheduleMutex.Unlock()
-	s.nodeVersionMutex.Lock()
-	s.nodeVersion = ""
-	s.nodeVersionMutex.Unlock()
-}
 
 // checkDVT checks if connected to DVT middleware and sets
 // internal flags appropriately.
-func (s *Service) checkDVT(ctx context.Context) error {
-	response, err := s.NodeVersion(ctx, &api.NodeVersionOpts{})
-	if err != nil {
-		return errors.Join(errors.New("failed to obtain node version for DVT check"), err)
-	}
-
-	version := strings.ToLower(response.Data)
-
-	if strings.Contains(version, "charon") {
-		s.connectedToDVTMiddleware = true
-	}
-
-	return nil
-}
 
 // Name provides the name of the service.
 func (*Service) Name() string {
@@ -245,8 +184,6 @@ func (s *Service) Address() string {
 }
 
 // close closes the service, freeing up resources.
-func (*Service) close() {
-}
 
 // CheckConnectionState checks the connection state for the client, potentially updating
 // its activation and sync states.
@@ -259,8 +196,10 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 	wasSynced := s.connectionSynced
 	s.connectionMu.Unlock()
 
-	var active bool
-	var synced bool
+	var (
+		active bool
+		synced bool
+	)
 
 	acquired := s.pingSem.TryAcquire(1)
 	if !acquired {
@@ -271,12 +210,14 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 		response, err := s.NodeSyncing(ctx, &api.NodeSyncingOpts{})
 		if err != nil {
 			log.Debug().Err(err).Msg("Failed to obtain sync state from node")
+
 			active = false
 			synced = false
 		} else {
 			active = true
 			synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
 		}
+
 		s.pingSem.Release(1)
 	}
 
@@ -286,6 +227,7 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 		// Check connection to DVT middleware.
 		if err := s.checkDVT(ctx); err != nil {
 			log.Error().Err(err).Msg("Failed to check DVT connection on client activation; returning to inactive")
+
 			active = false
 		}
 	}
@@ -330,12 +272,15 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 	if (!wasActive && active) && s.hooks.OnActive != nil {
 		go s.hooks.OnActive(ctx, s)
 	}
+
 	if (wasActive && !active) && s.hooks.OnInactive != nil {
 		go s.hooks.OnInactive(ctx, s)
 	}
+
 	if (!wasSynced && synced) && s.hooks.OnSynced != nil {
 		go s.hooks.OnSynced(ctx, s)
 	}
+
 	if (wasSynced && !synced) && s.hooks.OnDesynced != nil {
 		go s.hooks.OnDesynced(ctx, s)
 	}
@@ -359,6 +304,76 @@ func (s *Service) IsSynced() bool {
 	return synced
 }
 
+func (s *Service) periodicUpdateConnectionState(ctx context.Context) {
+	go func(s *Service, ctx context.Context) {
+		// Refresh every 30 seconds.
+		refreshTicker := time.NewTicker(30 * time.Second)
+		defer refreshTicker.Stop()
+
+		for {
+			select {
+			case <-refreshTicker.C:
+				s.CheckConnectionState(ctx)
+			case <-ctx.Done():
+				return
+			}
+		}
+	}(s, ctx)
+}
+
+func (s *Service) periodicClearStaticValues(ctx context.Context) {
+	go func(s *Service, ctx context.Context) {
+		// Refresh every 5 minutes.
+		refreshTicker := time.NewTicker(5 * time.Minute)
+		defer refreshTicker.Stop()
+
+		for {
+			select {
+			case <-refreshTicker.C:
+				s.clearStaticValues()
+			case <-ctx.Done():
+				return
+			}
+		}
+	}(s, ctx)
+}
+
+func (s *Service) clearStaticValues() {
+	s.genesisMutex.Lock()
+	s.genesis = nil
+	s.genesisMutex.Unlock()
+	s.specMutex.Lock()
+	s.spec = nil
+	s.specMutex.Unlock()
+	s.depositContractMutex.Lock()
+	s.depositContract = nil
+	s.depositContractMutex.Unlock()
+	s.forkScheduleMutex.Lock()
+	s.forkSchedule = nil
+	s.forkScheduleMutex.Unlock()
+	s.nodeVersionMutex.Lock()
+	s.nodeVersion = ""
+	s.nodeVersionMutex.Unlock()
+}
+
+func (s *Service) checkDVT(ctx context.Context) error {
+	response, err := s.NodeVersion(ctx, &api.NodeVersionOpts{})
+	if err != nil {
+		return errors.Join(errors.New("failed to obtain node version for DVT check"), err)
+	}
+
+	version := strings.ToLower(response.Data)
+
+	if strings.Contains(version, "charon") {
+		s.connectedToDVTMiddleware = true
+	}
+
+	return nil
+}
+
+func (*Service) close() {
+}
+
 func (s *Service) assertIsActive(ctx context.Context) error {
 	active := s.IsActive()
 	if active {
@@ -366,6 +381,7 @@ func (s *Service) assertIsActive(ctx context.Context) error {
 	}
 
 	s.CheckConnectionState(ctx)
+
 	active = s.IsActive()
 	if !active {
 		return client.ErrNotActive
@@ -381,6 +397,7 @@ func (s *Service) assertIsSynced(ctx context.Context) error {
 	}
 
 	s.CheckConnectionState(ctx)
+
 	active := s.IsActive()
 	if !active {
 		return client.ErrNotActive
@@ -399,6 +416,7 @@ func parseAddress(address string) (*url.URL, *url.URL, error) {
 	if !strings.HasPrefix(address, "http") {
 		address = fmt.Sprintf("http://%s", address)
 	}
+
 	base, err := url.Parse(address)
 	if err != nil {
 		return nil, nil, errors.Join(errors.New("invalid URL"), err)
@@ -413,10 +431,12 @@ func parseAddress(address string) (*url.URL, *url.URL, error) {
 		user := baseAddress.User.Username()
 		baseAddress.User = url.UserPassword(user, "xxxxx")
 	}
+
 	if baseAddress.Path != "" {
 		// Mask the path.
 		baseAddress.Path = "xxxxx"
 	}
+
 	if baseAddress.RawQuery != "" {
 		// Mask all query values.
 		sensitiveRegex := regexp.MustCompile("=([^&]*)(&)?")

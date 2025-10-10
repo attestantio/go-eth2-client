@@ -45,6 +45,7 @@ func (a *SingleAttestation) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (a *SingleAttestation) UnmarshalJSON(input []byte) error {
 	var singleAttestationJSON singleAttestationJSON
+
 	err := json.Unmarshal(input, &singleAttestationJSON)
 	if err != nil {
 		return errors.Wrap(err, "invalid JSON")
@@ -55,36 +56,47 @@ func (a *SingleAttestation) UnmarshalJSON(input []byte) error {
 
 func (a *SingleAttestation) unpack(singleAttestationJSON *singleAttestationJSON) error {
 	var err error
+
 	if singleAttestationJSON.CommitteeIndex == "" {
 		return errors.New("committee index missing")
 	}
+
 	committeeIndex, err := strconv.ParseUint(singleAttestationJSON.CommitteeIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for committee index")
 	}
+
 	a.CommitteeIndex = phase0.CommitteeIndex(committeeIndex)
+
 	if singleAttestationJSON.AttesterIndex == "" {
 		return errors.New("attester index missing")
 	}
+
 	attesterIndex, err := strconv.ParseUint(singleAttestationJSON.AttesterIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for attester index")
 	}
+
 	a.AttesterIndex = phase0.ValidatorIndex(attesterIndex)
+
 	a.Data = singleAttestationJSON.Data
 	if a.Data == nil {
 		return errors.New("data missing")
 	}
+
 	if singleAttestationJSON.Signature == "" {
 		return errors.New("signature missing")
 	}
+
 	signature, err := hex.DecodeString(strings.TrimPrefix(singleAttestationJSON.Signature, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
+
 	if len(signature) != phase0.SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
+
 	copy(a.Signature[:], signature)
 
 	return nil

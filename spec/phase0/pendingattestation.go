@@ -70,38 +70,6 @@ func (p *PendingAttestation) UnmarshalJSON(input []byte) error {
 	return p.unpack(&pendingAttestationJSON)
 }
 
-func (p *PendingAttestation) unpack(pendingAttestationJSON *pendingAttestationJSON) error {
-	var err error
-	if pendingAttestationJSON.AggregationBits == "" {
-		return errors.New("aggregation bits missing")
-	}
-	if p.AggregationBits, err = hex.DecodeString(strings.TrimPrefix(pendingAttestationJSON.AggregationBits, "0x")); err != nil {
-		return errors.Wrap(err, "invalid value for aggregation bits")
-	}
-	p.Data = pendingAttestationJSON.Data
-	if p.Data == nil {
-		return errors.New("data missing")
-	}
-	if pendingAttestationJSON.InclusionDelay == "" {
-		return errors.New("inclusion delay missing")
-	}
-	inclusionDelay, err := strconv.ParseUint(pendingAttestationJSON.InclusionDelay, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for inclusion delay")
-	}
-	p.InclusionDelay = Slot(inclusionDelay)
-	if pendingAttestationJSON.ProposerIndex == "" {
-		return errors.New("proposer index missing")
-	}
-	proposerIndex, err := strconv.ParseUint(pendingAttestationJSON.ProposerIndex, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for proposer index")
-	}
-	p.ProposerIndex = ValidatorIndex(proposerIndex)
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (p *PendingAttestation) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&pendingAttestationYAML{
@@ -136,4 +104,45 @@ func (p *PendingAttestation) String() string {
 	}
 
 	return string(data)
+}
+
+func (p *PendingAttestation) unpack(pendingAttestationJSON *pendingAttestationJSON) error {
+	var err error
+
+	if pendingAttestationJSON.AggregationBits == "" {
+		return errors.New("aggregation bits missing")
+	}
+
+	if p.AggregationBits, err = hex.DecodeString(strings.TrimPrefix(pendingAttestationJSON.AggregationBits, "0x")); err != nil {
+		return errors.Wrap(err, "invalid value for aggregation bits")
+	}
+
+	p.Data = pendingAttestationJSON.Data
+	if p.Data == nil {
+		return errors.New("data missing")
+	}
+
+	if pendingAttestationJSON.InclusionDelay == "" {
+		return errors.New("inclusion delay missing")
+	}
+
+	inclusionDelay, err := strconv.ParseUint(pendingAttestationJSON.InclusionDelay, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for inclusion delay")
+	}
+
+	p.InclusionDelay = Slot(inclusionDelay)
+
+	if pendingAttestationJSON.ProposerIndex == "" {
+		return errors.New("proposer index missing")
+	}
+
+	proposerIndex, err := strconv.ParseUint(pendingAttestationJSON.ProposerIndex, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for proposer index")
+	}
+
+	p.ProposerIndex = ValidatorIndex(proposerIndex)
+
+	return nil
 }

@@ -65,41 +65,6 @@ func (d *DepositMessage) UnmarshalJSON(input []byte) error {
 	return d.unpack(&depositMessageJSON)
 }
 
-func (d *DepositMessage) unpack(depositMessageJSON *depositMessageJSON) error {
-	if depositMessageJSON.PublicKey == "" {
-		return errors.New("public key missing")
-	}
-	publicKey, err := hex.DecodeString(strings.TrimPrefix(depositMessageJSON.PublicKey, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for public key")
-	}
-	if len(publicKey) != PublicKeyLength {
-		return errors.New("incorrect length for public key")
-	}
-	copy(d.PublicKey[:], publicKey)
-	if depositMessageJSON.WithdrawalCredentials == "" {
-		return errors.New("withdrawal credentials missing")
-	}
-	if d.WithdrawalCredentials, err = hex.DecodeString(
-		strings.TrimPrefix(depositMessageJSON.WithdrawalCredentials, "0x"),
-	); err != nil {
-		return errors.Wrap(err, "invalid value for withdrawal credentials")
-	}
-	if len(d.WithdrawalCredentials) != HashLength {
-		return errors.New("incorrect length for withdrawal credentials")
-	}
-	if depositMessageJSON.Amount == "" {
-		return errors.New("amount missing")
-	}
-	amount, err := strconv.ParseUint(depositMessageJSON.Amount, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for amount")
-	}
-	d.Amount = Gwei(amount)
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (d *DepositMessage) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&depositMessageYAML{
@@ -133,4 +98,48 @@ func (d *DepositMessage) String() string {
 	}
 
 	return string(data)
+}
+
+func (d *DepositMessage) unpack(depositMessageJSON *depositMessageJSON) error {
+	if depositMessageJSON.PublicKey == "" {
+		return errors.New("public key missing")
+	}
+
+	publicKey, err := hex.DecodeString(strings.TrimPrefix(depositMessageJSON.PublicKey, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for public key")
+	}
+
+	if len(publicKey) != PublicKeyLength {
+		return errors.New("incorrect length for public key")
+	}
+
+	copy(d.PublicKey[:], publicKey)
+
+	if depositMessageJSON.WithdrawalCredentials == "" {
+		return errors.New("withdrawal credentials missing")
+	}
+
+	if d.WithdrawalCredentials, err = hex.DecodeString(
+		strings.TrimPrefix(depositMessageJSON.WithdrawalCredentials, "0x"),
+	); err != nil {
+		return errors.Wrap(err, "invalid value for withdrawal credentials")
+	}
+
+	if len(d.WithdrawalCredentials) != HashLength {
+		return errors.New("incorrect length for withdrawal credentials")
+	}
+
+	if depositMessageJSON.Amount == "" {
+		return errors.New("amount missing")
+	}
+
+	amount, err := strconv.ParseUint(depositMessageJSON.Amount, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for amount")
+	}
+
+	d.Amount = Gwei(amount)
+
+	return nil
 }

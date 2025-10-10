@@ -60,26 +60,6 @@ func (s *SignedAggregateAndProof) UnmarshalJSON(input []byte) error {
 	return s.unpack(&signedAggregateAndProofJSON)
 }
 
-func (s *SignedAggregateAndProof) unpack(signedAggregateAndProofJSON *signedAggregateAndProofJSON) error {
-	if signedAggregateAndProofJSON.Message == nil {
-		return errors.New("message missing")
-	}
-	s.Message = signedAggregateAndProofJSON.Message
-	if signedAggregateAndProofJSON.Signature == "" {
-		return errors.New("signature missing")
-	}
-	signature, err := hex.DecodeString(strings.TrimPrefix(signedAggregateAndProofJSON.Signature, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for signature")
-	}
-	if len(signature) != SignatureLength {
-		return errors.New("incorrect length for signature")
-	}
-	copy(s.Signature[:], signature)
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (s *SignedAggregateAndProof) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&signedAggregateAndProofYAML{
@@ -112,4 +92,28 @@ func (s *SignedAggregateAndProof) String() string {
 	}
 
 	return string(data)
+}
+
+func (s *SignedAggregateAndProof) unpack(signedAggregateAndProofJSON *signedAggregateAndProofJSON) error {
+	if signedAggregateAndProofJSON.Message == nil {
+		return errors.New("message missing")
+	}
+
+	s.Message = signedAggregateAndProofJSON.Message
+	if signedAggregateAndProofJSON.Signature == "" {
+		return errors.New("signature missing")
+	}
+
+	signature, err := hex.DecodeString(strings.TrimPrefix(signedAggregateAndProofJSON.Signature, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for signature")
+	}
+
+	if len(signature) != SignatureLength {
+		return errors.New("incorrect length for signature")
+	}
+
+	copy(s.Signature[:], signature)
+
+	return nil
 }

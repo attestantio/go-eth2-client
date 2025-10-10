@@ -34,9 +34,11 @@ func (s *Service) SyncCommitteeContribution(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	if opts.BeaconBlockRoot.IsZero() {
 		return nil, errors.Join(errors.New("no beacon block root specified"), client.ErrInvalidOptions)
 	}
@@ -47,6 +49,7 @@ func (s *Service) SyncCommitteeContribution(ctx context.Context,
 		opts.SubcommitteeIndex,
 		opts.BeaconBlockRoot,
 	)
+
 	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
 	if err != nil {
 		return nil, err

@@ -32,9 +32,11 @@ func (s *Service) SubmitProposal(ctx context.Context,
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
 	}
+
 	if opts == nil {
 		return client.ErrNoOptions
 	}
+
 	if opts.Proposal == nil {
 		return errors.Join(errors.New("no proposal supplied"), client.ErrInvalidOptions)
 	}
@@ -45,6 +47,7 @@ func (s *Service) SubmitProposal(ctx context.Context,
 	}
 
 	endpoint := "/eth/v2/beacon/blocks"
+
 	query := ""
 	if opts.BroadcastValidation != nil {
 		query = "broadcast_validation=" + opts.BroadcastValidation.String()
@@ -52,6 +55,7 @@ func (s *Service) SubmitProposal(ctx context.Context,
 
 	headers := make(map[string]string)
 	headers["Eth-Consensus-Version"] = strings.ToLower(opts.Proposal.Version.String())
+
 	_, err = s.post(ctx, endpoint, query, &opts.Common, bytes.NewBuffer(body), contentType, headers)
 	if err != nil {
 		return errors.Join(errors.New("failed to submit proposal"), err)
@@ -67,9 +71,11 @@ func (s *Service) submitProposalData(ctx context.Context,
 	ContentType,
 	error,
 ) {
-	var body []byte
-	var contentType ContentType
-	var err error
+	var (
+		body        []byte
+		contentType ContentType
+		err         error
+	)
 
 	if s.enforceJSON {
 		contentType = ContentTypeJSON
@@ -92,9 +98,10 @@ func (*Service) submitProposalJSON(_ context.Context,
 	[]byte,
 	error,
 ) {
-	var specJSON []byte
-	var err error
-
+	var (
+		specJSON []byte
+		err      error
+	)
 	if err := proposal.AssertPresent(); err != nil {
 		return nil, err
 	}
@@ -117,6 +124,7 @@ func (*Service) submitProposalJSON(_ context.Context,
 	default:
 		err = errors.New("unknown proposal version")
 	}
+
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to marshal JSON"), err)
 	}
@@ -130,9 +138,10 @@ func (*Service) submitProposalSSZ(_ context.Context,
 	[]byte,
 	error,
 ) {
-	var specSSZ []byte
-	var err error
-
+	var (
+		specSSZ []byte
+		err     error
+	)
 	if err := proposal.AssertPresent(); err != nil {
 		return nil, err
 	}
@@ -155,6 +164,7 @@ func (*Service) submitProposalSSZ(_ context.Context,
 	default:
 		err = errors.New("unknown proposal version")
 	}
+
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to marshal SSZ"), err)
 	}

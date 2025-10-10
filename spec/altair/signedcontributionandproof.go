@@ -65,17 +65,21 @@ func (s *SignedContributionAndProof) unpack(signedContributionAndProofJSON *sign
 	if signedContributionAndProofJSON.Message == nil {
 		return errors.New("message missing")
 	}
+
 	s.Message = signedContributionAndProofJSON.Message
 	if signedContributionAndProofJSON.Signature == "" {
 		return errors.New("signature missing")
 	}
+
 	signature, err := hex.DecodeString(strings.TrimPrefix(signedContributionAndProofJSON.Signature, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
+
 	if len(signature) != phase0.SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
+
 	copy(s.Signature[:], signature)
 
 	return nil

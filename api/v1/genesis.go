@@ -60,34 +60,42 @@ func (g *Genesis) UnmarshalJSON(input []byte) error {
 	if genesisJSON.GenesisTime == "" {
 		return errors.New("genesis time missing")
 	}
+
 	genesisTime, err := strconv.ParseInt(genesisJSON.GenesisTime, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for genesis time")
 	}
+
 	g.GenesisTime = time.Unix(genesisTime, 0)
 
 	if genesisJSON.GenesisValidatorsRoot == "" {
 		return errors.New("genesis validators root missing")
 	}
+
 	genesisValidatorsRoot, err := hex.DecodeString(strings.TrimPrefix(genesisJSON.GenesisValidatorsRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for genesis validators root")
 	}
+
 	if len(genesisValidatorsRoot) != rootLength {
 		return fmt.Errorf("incorrect length %d for genesis validators root", len(genesisValidatorsRoot))
 	}
+
 	copy(g.GenesisValidatorsRoot[:], genesisValidatorsRoot)
 
 	if genesisJSON.GenesisForkVersion == "" {
 		return errors.New("genesis fork version missing")
 	}
+
 	genesisForkVersion, err := hex.DecodeString(strings.TrimPrefix(genesisJSON.GenesisForkVersion, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for genesis fork version")
 	}
+
 	if len(genesisForkVersion) != forkLength {
 		return fmt.Errorf("incorrect length %d for genesis fork version", len(genesisForkVersion))
 	}
+
 	copy(g.GenesisForkVersion[:], genesisForkVersion)
 
 	return nil

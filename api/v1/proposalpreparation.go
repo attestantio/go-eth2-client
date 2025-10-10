@@ -59,19 +59,23 @@ func (p *ProposalPreparation) UnmarshalJSON(input []byte) error {
 	if data.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
+
 	validatorIndex, err := strconv.ParseUint(data.ValidatorIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+
 	p.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
 
 	if data.FeeRecipient == "" {
 		return errors.New("fee recipient is missing")
 	}
+
 	feeRecipient, err := hex.DecodeString(strings.TrimPrefix(data.FeeRecipient, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for fee recipient")
 	}
+
 	copy(p.FeeRecipient[:], feeRecipient)
 
 	return nil

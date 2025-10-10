@@ -80,81 +80,102 @@ func (b *BlindedBeaconBlockBody) unpack(data *blindedBeaconBlockBodyJSON) error 
 	if data.RANDAOReveal == "" {
 		return errors.New("RANDAO reveal missing")
 	}
+
 	randaoReveal, err := hex.DecodeString(strings.TrimPrefix(data.RANDAOReveal, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for RANDAO reveal")
 	}
+
 	if len(randaoReveal) != phase0.SignatureLength {
 		return errors.New("incorrect length for RANDAO reveal")
 	}
+
 	copy(b.RANDAOReveal[:], randaoReveal)
+
 	if data.ETH1Data == nil {
 		return errors.New("ETH1 data missing")
 	}
+
 	b.ETH1Data = data.ETH1Data
 	if data.Graffiti == "" {
 		return errors.New("graffiti missing")
 	}
+
 	graffiti, err := hex.DecodeString(strings.TrimPrefix(data.Graffiti, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for graffiti")
 	}
+
 	if len(graffiti) != phase0.GraffitiLength {
 		return errors.New("incorrect length for graffiti")
 	}
+
 	copy(b.Graffiti[:], graffiti)
+
 	if data.ProposerSlashings == nil {
 		return errors.New("proposer slashings missing")
 	}
+
 	for i := range data.ProposerSlashings {
 		if data.ProposerSlashings[i] == nil {
 			return fmt.Errorf("proposer slashings entry %d missing", i)
 		}
 	}
+
 	b.ProposerSlashings = data.ProposerSlashings
 	if data.AttesterSlashings == nil {
 		return errors.New("attester slashings missing")
 	}
+
 	for i := range data.AttesterSlashings {
 		if data.AttesterSlashings[i] == nil {
 			return fmt.Errorf("attester slashings entry %d missing", i)
 		}
 	}
+
 	b.AttesterSlashings = data.AttesterSlashings
 	if data.Attestations == nil {
 		return errors.New("attestations missing")
 	}
+
 	for i := range data.Attestations {
 		if data.Attestations[i] == nil {
 			return fmt.Errorf("attestations entry %d missing", i)
 		}
 	}
+
 	b.Attestations = data.Attestations
 	if data.Deposits == nil {
 		return errors.New("deposits missing")
 	}
+
 	for i := range data.Deposits {
 		if data.Deposits[i] == nil {
 			return fmt.Errorf("deposits entry %d missing", i)
 		}
 	}
+
 	b.Deposits = data.Deposits
 	if data.VoluntaryExits == nil {
 		return errors.New("voluntary exits missing")
 	}
+
 	for i := range data.VoluntaryExits {
 		if data.VoluntaryExits[i] == nil {
 			return fmt.Errorf("voluntary exits entry %d missing", i)
 		}
 	}
+
 	b.VoluntaryExits = data.VoluntaryExits
 	if data.SyncAggregate == nil {
 		return errors.New("sync aggregate missing")
 	}
+
 	b.SyncAggregate = data.SyncAggregate
 	if data.ExecutionPayloadHeader == nil {
 		return errors.New("execution payload header missing")
 	}
+
 	b.ExecutionPayloadHeader = data.ExecutionPayloadHeader
 	if data.BLSToExecutionChanges == nil {
 		b.BLSToExecutionChanges = make([]*capella.SignedBLSToExecutionChange, 0)
@@ -164,25 +185,31 @@ func (b *BlindedBeaconBlockBody) unpack(data *blindedBeaconBlockBodyJSON) error 
 				return fmt.Errorf("bls to execution changes entry %d missing", i)
 			}
 		}
+
 		b.BLSToExecutionChanges = data.BLSToExecutionChanges
 	}
+
 	if data.BlobKZGCommitments == nil {
 		return errors.New("blob KZG commitments missing")
 	}
+
 	for i := range data.BlobKZGCommitments {
 		if data.BlobKZGCommitments[i] == "" {
 			return fmt.Errorf("blob KZG commitments entry %d missing", i)
 		}
 	}
+
 	b.BlobKZGCommitments = make([]deneb.KZGCommitment, len(data.BlobKZGCommitments))
 	for i := range data.BlobKZGCommitments {
 		data, err := hex.DecodeString(strings.TrimPrefix(data.BlobKZGCommitments[i], "0x"))
 		if err != nil {
 			return errors.Wrap(err, "failed to parse blob KZG commitment")
 		}
+
 		if len(data) != deneb.KZGCommitmentLength {
 			return errors.New("incorrect length for blob KZG commitment")
 		}
+
 		copy(b.BlobKZGCommitments[i][:], data)
 	}
 

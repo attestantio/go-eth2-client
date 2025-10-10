@@ -60,49 +60,13 @@ func (b *BLSToExecutionChange) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (b *BLSToExecutionChange) UnmarshalJSON(input []byte) error {
 	var data blsToExecutionChangeJSON
+
 	err := json.Unmarshal(input, &data)
 	if err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
 
 	return b.unpack(&data)
-}
-
-func (b *BLSToExecutionChange) unpack(data *blsToExecutionChangeJSON) error {
-	if data.ValidatorIndex == "" {
-		return errors.New("validator index missing")
-	}
-	validatorIndex, err := strconv.ParseUint(data.ValidatorIndex, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for validator index")
-	}
-	b.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
-
-	if data.FromBLSPubkey == "" {
-		return errors.New("from BLS public key missing")
-	}
-	fromBLSPubkey, err := hex.DecodeString(strings.TrimPrefix(data.FromBLSPubkey, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for from BLS public key")
-	}
-	if len(fromBLSPubkey) != phase0.PublicKeyLength {
-		return errors.New("incorrect length for from BLS public key")
-	}
-	copy(b.FromBLSPubkey[:], fromBLSPubkey)
-
-	if data.ToExecutionAddress == "" {
-		return errors.New("to execution address missing")
-	}
-	toExecutionAddress, err := hex.DecodeString(strings.TrimPrefix(data.ToExecutionAddress, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for to execution address")
-	}
-	if len(toExecutionAddress) != bellatrix.ExecutionAddressLength {
-		return errors.New("incorrect length for to execution address")
-	}
-	copy(b.ToExecutionAddress[:], toExecutionAddress)
-
-	return nil
 }
 
 // MarshalYAML implements yaml.Marshaler.
@@ -138,4 +102,49 @@ func (b *BLSToExecutionChange) String() string {
 	}
 
 	return string(data)
+}
+
+func (b *BLSToExecutionChange) unpack(data *blsToExecutionChangeJSON) error {
+	if data.ValidatorIndex == "" {
+		return errors.New("validator index missing")
+	}
+
+	validatorIndex, err := strconv.ParseUint(data.ValidatorIndex, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for validator index")
+	}
+
+	b.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
+
+	if data.FromBLSPubkey == "" {
+		return errors.New("from BLS public key missing")
+	}
+
+	fromBLSPubkey, err := hex.DecodeString(strings.TrimPrefix(data.FromBLSPubkey, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for from BLS public key")
+	}
+
+	if len(fromBLSPubkey) != phase0.PublicKeyLength {
+		return errors.New("incorrect length for from BLS public key")
+	}
+
+	copy(b.FromBLSPubkey[:], fromBLSPubkey)
+
+	if data.ToExecutionAddress == "" {
+		return errors.New("to execution address missing")
+	}
+
+	toExecutionAddress, err := hex.DecodeString(strings.TrimPrefix(data.ToExecutionAddress, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for to execution address")
+	}
+
+	if len(toExecutionAddress) != bellatrix.ExecutionAddressLength {
+		return errors.New("incorrect length for to execution address")
+	}
+
+	copy(b.ToExecutionAddress[:], toExecutionAddress)
+
+	return nil
 }

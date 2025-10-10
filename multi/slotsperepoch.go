@@ -29,6 +29,7 @@ func (s *Service) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		if slotsPerEpoch == 0 {
 			return nil, errors.New("zero value not a valid response")
 		}

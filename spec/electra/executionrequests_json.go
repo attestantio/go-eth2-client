@@ -47,6 +47,7 @@ func (e *ExecutionRequests) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["deposits"], &e.Deposits); err != nil {
 		return errors.Wrap(err, "deposits")
 	}
+
 	for i := range e.Deposits {
 		if e.Deposits[i] == nil {
 			return fmt.Errorf("deposits entry %d missing", i)
@@ -56,6 +57,7 @@ func (e *ExecutionRequests) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["withdrawals"], &e.Withdrawals); err != nil {
 		return errors.Wrap(err, "withdrawals")
 	}
+
 	for i := range e.Withdrawals {
 		if e.Withdrawals[i] == nil {
 			return fmt.Errorf("withdrawals entry %d missing", i)
@@ -65,6 +67,7 @@ func (e *ExecutionRequests) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["consolidations"], &e.Consolidations); err != nil {
 		return errors.Wrap(err, "consolidations")
 	}
+
 	for i := range e.Consolidations {
 		if e.Consolidations[i] == nil {
 			return fmt.Errorf("consolidation requests entry %d missing", i)

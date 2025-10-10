@@ -64,55 +64,13 @@ func (w *Withdrawal) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (w *Withdrawal) UnmarshalJSON(input []byte) error {
 	var data withdrawalJSON
+
 	err := json.Unmarshal(input, &data)
 	if err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
 
 	return w.unpack(&data)
-}
-
-func (w *Withdrawal) unpack(data *withdrawalJSON) error {
-	if data.Index == "" {
-		return errors.New("index missing")
-	}
-	index, err := strconv.ParseUint(data.Index, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for index")
-	}
-	w.Index = WithdrawalIndex(index)
-
-	if data.ValidatorIndex == "" {
-		return errors.New("validator index missing")
-	}
-	validatorIndex, err := strconv.ParseUint(data.ValidatorIndex, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for validator index")
-	}
-	w.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
-
-	if data.Address == "" {
-		return errors.New("address missing")
-	}
-	address, err := hex.DecodeString(strings.TrimPrefix(data.Address, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for address")
-	}
-	if len(address) != bellatrix.ExecutionAddressLength {
-		return errors.New("incorrect length for address")
-	}
-	copy(w.Address[:], address)
-
-	if data.Amount == "" {
-		return errors.New("amount missing")
-	}
-	amount, err := strconv.ParseUint(data.Amount, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for amount")
-	}
-	w.Amount = phase0.Gwei(amount)
-
-	return nil
 }
 
 // MarshalYAML implements yaml.Marshaler.
@@ -149,4 +107,56 @@ func (w *Withdrawal) String() string {
 	}
 
 	return string(data)
+}
+
+func (w *Withdrawal) unpack(data *withdrawalJSON) error {
+	if data.Index == "" {
+		return errors.New("index missing")
+	}
+
+	index, err := strconv.ParseUint(data.Index, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for index")
+	}
+
+	w.Index = WithdrawalIndex(index)
+
+	if data.ValidatorIndex == "" {
+		return errors.New("validator index missing")
+	}
+
+	validatorIndex, err := strconv.ParseUint(data.ValidatorIndex, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for validator index")
+	}
+
+	w.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
+
+	if data.Address == "" {
+		return errors.New("address missing")
+	}
+
+	address, err := hex.DecodeString(strings.TrimPrefix(data.Address, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for address")
+	}
+
+	if len(address) != bellatrix.ExecutionAddressLength {
+		return errors.New("incorrect length for address")
+	}
+
+	copy(w.Address[:], address)
+
+	if data.Amount == "" {
+		return errors.New("amount missing")
+	}
+
+	amount, err := strconv.ParseUint(data.Amount, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for amount")
+	}
+
+	w.Amount = phase0.Gwei(amount)
+
+	return nil
 }

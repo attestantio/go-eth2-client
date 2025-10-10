@@ -61,34 +61,44 @@ func (b *BeaconCommittee) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &beaconCommitteeJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if beaconCommitteeJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
+
 	slot, err := strconv.ParseUint(beaconCommitteeJSON.Slot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+
 	b.Slot = phase0.Slot(slot)
+
 	if beaconCommitteeJSON.Index == "" {
 		return errors.New("index missing")
 	}
+
 	index, err := strconv.ParseUint(beaconCommitteeJSON.Index, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for index")
 	}
+
 	b.Index = phase0.CommitteeIndex(index)
+
 	if beaconCommitteeJSON.Validators == nil {
 		return errors.New("validators missing")
 	}
+
 	if len(beaconCommitteeJSON.Validators) == 0 {
 		return errors.New("validators length cannot be 0")
 	}
+
 	b.Validators = make([]phase0.ValidatorIndex, len(beaconCommitteeJSON.Validators))
 	for i := range beaconCommitteeJSON.Validators {
 		validator, err := strconv.ParseUint(beaconCommitteeJSON.Validators[i], 10, 64)
 		if err != nil {
 			return errors.Wrap(err, "invalid value for validator")
 		}
+
 		b.Validators[i] = phase0.ValidatorIndex(validator)
 	}
 

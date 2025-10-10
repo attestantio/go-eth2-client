@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 	bitfield "github.com/prysmaticlabs/go-bitfield"
@@ -64,6 +63,7 @@ func (a *Attestation) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (a *Attestation) UnmarshalJSON(input []byte) error {
 	var attestationJSON attestationJSON
+
 	err := json.Unmarshal(input, &attestationJSON)
 	if err != nil {
 		return errors.Wrap(err, "invalid JSON")
@@ -74,30 +74,39 @@ func (a *Attestation) UnmarshalJSON(input []byte) error {
 
 func (a *Attestation) unpack(attestationJSON *attestationJSON) error {
 	var err error
+
 	if attestationJSON.AggregationBits == "" {
 		return errors.New("aggregation bits missing")
 	}
+
 	if a.AggregationBits, err = hex.DecodeString(strings.TrimPrefix(attestationJSON.AggregationBits, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for aggregation bits")
 	}
+
 	a.Data = attestationJSON.Data
 	if a.Data == nil {
 		return errors.New("data missing")
 	}
+
 	if attestationJSON.Signature == "" {
 		return errors.New("signature missing")
 	}
+
 	signature, err := hex.DecodeString(strings.TrimPrefix(attestationJSON.Signature, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
+
 	if len(signature) != phase0.SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
+
 	copy(a.Signature[:], signature)
+
 	if attestationJSON.CommitteeBits == "" {
 		return errors.New("committee bits missing")
 	}
+
 	if a.CommitteeBits, err = hex.DecodeString(strings.TrimPrefix(attestationJSON.CommitteeBits, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for committee bits")
 	}
@@ -147,9 +156,11 @@ func (a *Attestation) CommitteeIndex() (phase0.CommitteeIndex, error) {
 	if len(bits.BitIndices()) == 0 {
 		return 0, errors.New("no committee index found in committee bits")
 	}
+
 	if len(bits.BitIndices()) > 1 {
 		return 0, errors.New("multiple committee indices found in committee bits")
 	}
+
 	foundIndex := phase0.CommitteeIndex(bits.BitIndices()[0])
 
 	return foundIndex, nil
@@ -161,9 +172,11 @@ func (a *Attestation) AggregateValidatorIndex() (phase0.ValidatorIndex, error) {
 	if len(bits.BitIndices()) == 0 {
 		return 0, errors.New("no validator index found in aggregation bits")
 	}
+
 	if len(bits.BitIndices()) > 1 {
 		return 0, errors.New("multiple validator indices found in aggregation bits")
 	}
+
 	foundIndex := phase0.ValidatorIndex(bits.BitIndices()[0])
 
 	return foundIndex, nil
@@ -174,10 +187,12 @@ func (a *Attestation) ToSingleAttestation(validatorIndex *phase0.ValidatorIndex)
 	if validatorIndex == nil {
 		return nil, errors.New("validator index is nil")
 	}
+
 	committeeIndex, err := a.CommitteeIndex()
 	if err != nil {
 		return nil, err
 	}
+
 	singleAttestation := SingleAttestation{
 		CommitteeIndex: committeeIndex,
 		AttesterIndex:  *validatorIndex,

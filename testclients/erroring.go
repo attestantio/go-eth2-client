@@ -44,9 +44,11 @@ func NewErroring(_ context.Context,
 	if next == nil {
 		return nil, errors.New("no next service supplied")
 	}
+
 	if errorRate < 0 {
 		return nil, errors.New("error rate cannot be less than 0")
 	}
+
 	if errorRate > 1 {
 		return nil, errors.New("error rate cannot be more than 1")
 	}
@@ -99,6 +101,7 @@ func (s *Erroring) EpochFromStateID(ctx context.Context, stateID string) (phase0
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
 	}
+
 	next, isNext := s.next.(consensusclient.EpochFromStateIDProvider)
 	if !isNext {
 		return 0, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -114,6 +117,7 @@ func (s *Erroring) SlotFromStateID(ctx context.Context, stateID string) (phase0.
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
 	}
+
 	next, isNext := s.next.(consensusclient.SlotFromStateIDProvider)
 	if !isNext {
 		return 0, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -132,6 +136,7 @@ func (s *Erroring) NodeVersion(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.NodeVersionProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -147,6 +152,7 @@ func (s *Erroring) SlotDuration(ctx context.Context) (time.Duration, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
 	}
+
 	next, isNext := s.next.(consensusclient.SlotDurationProvider)
 	if !isNext {
 		return 0, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -162,6 +168,7 @@ func (s *Erroring) SlotsPerEpoch(ctx context.Context) (uint64, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
 	}
+
 	next, isNext := s.next.(consensusclient.SlotsPerEpochProvider)
 	if !isNext {
 		return 0, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -175,6 +182,7 @@ func (s *Erroring) FarFutureEpoch(ctx context.Context) (phase0.Epoch, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
 	}
+
 	next, isNext := s.next.(consensusclient.FarFutureEpochProvider)
 	if !isNext {
 		return 0, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -190,6 +198,7 @@ func (s *Erroring) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, e
 	if err := s.maybeError(ctx); err != nil {
 		return 0, err
 	}
+
 	next, isNext := s.next.(consensusclient.TargetAggregatorsPerCommitteeProvider)
 	if !isNext {
 		return 0, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -208,6 +217,7 @@ func (s *Erroring) AggregateAttestation(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.AggregateAttestationProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -221,6 +231,7 @@ func (s *Erroring) SubmitAggregateAttestations(ctx context.Context, opts *api.Su
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
+
 	next, isNext := s.next.(consensusclient.AggregateAttestationsSubmitter)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -239,6 +250,7 @@ func (s *Erroring) AttestationData(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.AttestationDataProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -257,6 +269,7 @@ func (s *Erroring) AttestationPool(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.AttestationPoolProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -270,6 +283,7 @@ func (s *Erroring) SubmitAttestations(ctx context.Context, attestations *api.Sub
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
+
 	next, isNext := s.next.(consensusclient.AttestationsSubmitter)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -283,6 +297,7 @@ func (s *Erroring) SubmitProposalPreparations(ctx context.Context, preparations 
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
+
 	next, isNext := s.next.(consensusclient.ProposalPreparationsSubmitter)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -298,6 +313,7 @@ func (s *Erroring) SubmitSyncCommitteeContributions(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
+
 	next, isNext := s.next.(consensusclient.SyncCommitteeContributionsSubmitter)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -311,6 +327,7 @@ func (s *Erroring) SubmitSyncCommitteeMessages(ctx context.Context, messages []*
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
+
 	next, isNext := s.next.(consensusclient.SyncCommitteeMessagesSubmitter)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -330,6 +347,7 @@ func (s *Erroring) AttesterDuties(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.AttesterDutiesProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -348,6 +366,7 @@ func (s *Erroring) BeaconBlockHeader(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.BeaconBlockHeadersProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -366,6 +385,7 @@ func (s *Erroring) BeaconBlockRoot(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.BeaconBlockRootProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -384,6 +404,7 @@ func (s *Erroring) BeaconCommittees(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.BeaconCommitteesProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -402,6 +423,7 @@ func (s *Erroring) Proposal(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.ProposalProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -417,6 +439,7 @@ func (s *Erroring) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedS
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
+
 	next, isNext := s.next.(consensusclient.BeaconBlockSubmitter)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -432,6 +455,7 @@ func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
+
 	next, isNext := s.next.(consensusclient.BeaconCommitteeSubscriptionsSubmitter)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -449,6 +473,7 @@ func (s *Erroring) SubmitBlindedBeaconBlock(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
+
 	next, isNext := s.next.(consensusclient.BlindedBeaconBlockSubmitter)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -464,6 +489,7 @@ func (s *Erroring) SubmitValidatorRegistrations(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
+
 	next, isNext := s.next.(consensusclient.ValidatorRegistrationsSubmitter)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -477,6 +503,7 @@ func (s *Erroring) SubmitSyncCommitteeSubscriptions(ctx context.Context, subscri
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
+
 	next, isNext := s.next.(consensusclient.SyncCommitteeSubscriptionsSubmitter)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -495,6 +522,7 @@ func (s *Erroring) BeaconState(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.BeaconStateProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -508,6 +536,7 @@ func (s *Erroring) Events(ctx context.Context, opts *api.EventsOpts) error {
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
+
 	next, isNext := s.next.(consensusclient.EventsProvider)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -526,6 +555,7 @@ func (s *Erroring) Finality(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.FinalityProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -544,6 +574,7 @@ func (s *Erroring) Fork(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.ForkProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -562,6 +593,7 @@ func (s *Erroring) ForkSchedule(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.ForkScheduleProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -580,6 +612,7 @@ func (s *Erroring) Genesis(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.GenesisProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -598,6 +631,7 @@ func (s *Erroring) NodeSyncing(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.NodeSyncingProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -616,6 +650,7 @@ func (s *Erroring) NodePeers(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.NodePeersProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -634,6 +669,7 @@ func (s *Erroring) ProposerDuties(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.ProposerDutiesProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -652,6 +688,7 @@ func (s *Erroring) SyncCommittee(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.SyncCommitteesProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -670,6 +707,7 @@ func (s *Erroring) SyncCommitteeContribution(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.SyncCommitteeContributionProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -689,6 +727,7 @@ func (s *Erroring) SyncCommitteeDuties(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.SyncCommitteeDutiesProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -707,6 +746,7 @@ func (s *Erroring) Spec(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.SpecProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -725,6 +765,7 @@ func (s *Erroring) ValidatorBalances(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.ValidatorBalancesProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -743,6 +784,7 @@ func (s *Erroring) Validators(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.ValidatorsProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -756,6 +798,7 @@ func (s *Erroring) SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase
 	if err := s.maybeError(ctx); err != nil {
 		return err
 	}
+
 	next, isNext := s.next.(consensusclient.VoluntaryExitSubmitter)
 	if !isNext {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -774,6 +817,7 @@ func (s *Erroring) VoluntaryExitPool(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.VoluntaryExitPoolProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -787,6 +831,7 @@ func (s *Erroring) Domain(ctx context.Context, domainType phase0.DomainType, epo
 	if err := s.maybeError(ctx); err != nil {
 		return phase0.Domain{}, err
 	}
+
 	next, isNext := s.next.(consensusclient.DomainProvider)
 	if !isNext {
 		return phase0.Domain{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -800,6 +845,7 @@ func (s *Erroring) GenesisDomain(ctx context.Context, domainType phase0.DomainTy
 	if err := s.maybeError(ctx); err != nil {
 		return phase0.Domain{}, err
 	}
+
 	next, isNext := s.next.(consensusclient.DomainProvider)
 	if !isNext {
 		return phase0.Domain{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -815,6 +861,7 @@ func (s *Erroring) GenesisTime(ctx context.Context) (time.Time, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return time.Time{}, err
 	}
+
 	next, isNext := s.next.(consensusclient.GenesisTimeProvider)
 	if !isNext {
 		return time.Time{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -833,6 +880,7 @@ func (s *Erroring) DepositContract(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.DepositContractProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -851,6 +899,7 @@ func (s *Erroring) SignedBeaconBlock(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.SignedBeaconBlockProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -869,6 +918,7 @@ func (s *Erroring) BlobSidecars(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.BlobSidecarsProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -887,6 +937,7 @@ func (s *Erroring) BeaconStateRoot(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.BeaconStateRootProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -905,6 +956,7 @@ func (s *Erroring) ForkChoice(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.ForkChoiceProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -923,6 +975,7 @@ func (s *Erroring) AttestationRewards(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.AttestationRewardsProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -941,6 +994,7 @@ func (s *Erroring) BlockRewards(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.BlockRewardsProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -959,6 +1013,7 @@ func (s *Erroring) SyncCommitteeRewards(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.SyncCommitteeRewardsProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -977,6 +1032,7 @@ func (s *Erroring) ValidatorLiveness(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.ValidatorLivenessProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
@@ -995,6 +1051,7 @@ func (s *Erroring) PendingDeposits(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.PendingDepositProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())

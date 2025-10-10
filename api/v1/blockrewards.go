@@ -66,55 +66,67 @@ func (b *BlockRewards) UnmarshalJSON(input []byte) error {
 	if data.ProposerIndex == "" {
 		return errors.New("proposer index missing")
 	}
+
 	proposerIndex, err := strconv.ParseUint(data.ProposerIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for proposer index")
 	}
+
 	b.ProposerIndex = phase0.ValidatorIndex(proposerIndex)
 
 	if data.Total == "" {
 		return errors.New("total missing")
 	}
+
 	total, err := strconv.ParseUint(data.Total, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for total")
 	}
+
 	b.Total = phase0.Gwei(total)
 
 	if data.Attestations == "" {
 		return errors.New("attestations missing")
 	}
+
 	attestations, err := strconv.ParseUint(data.Attestations, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for attestations")
 	}
+
 	b.Attestations = phase0.Gwei(attestations)
 
 	if data.SyncAggregate == "" {
 		return errors.New("sync aggregate missing")
 	}
+
 	syncAggregate, err := strconv.ParseUint(data.SyncAggregate, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for sync aggregate")
 	}
+
 	b.SyncAggregate = phase0.Gwei(syncAggregate)
 
 	if data.ProposerSlashings == "" {
 		return errors.New("proposer slashings missing")
 	}
+
 	proposerSlashings, err := strconv.ParseUint(data.ProposerSlashings, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for proposer slashings")
 	}
+
 	b.ProposerSlashings = phase0.Gwei(proposerSlashings)
 
 	if data.AttesterSlashings == "" {
 		return errors.New("attester slashings missing")
 	}
+
 	attesterSlashings, err := strconv.ParseUint(data.AttesterSlashings, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for attester slashings")
 	}
+
 	b.AttesterSlashings = phase0.Gwei(attesterSlashings)
 
 	return nil

@@ -32,15 +32,19 @@ func (s *Service) SubmitBlindedProposal(ctx context.Context,
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
 	}
+
 	if opts == nil {
 		return client.ErrNoOptions
 	}
+
 	if opts.Proposal == nil {
 		return errors.Join(errors.New("no proposal supplied"), client.ErrInvalidOptions)
 	}
 
-	var specJSON []byte
-	var err error
+	var (
+		specJSON []byte
+		err      error
+	)
 
 	switch opts.Proposal.Version {
 	case spec.DataVersionPhase0:
@@ -60,11 +64,13 @@ func (s *Service) SubmitBlindedProposal(ctx context.Context,
 	default:
 		err = errors.New("unknown proposal version")
 	}
+
 	if err != nil {
 		return errors.Join(errors.New("failed to marshal JSON"), err)
 	}
 
 	endpoint := "/eth/v2/beacon/blinded_blocks"
+
 	query := ""
 	if opts.BroadcastValidation != nil {
 		query = "broadcast_validation=" + opts.BroadcastValidation.String()
@@ -72,6 +78,7 @@ func (s *Service) SubmitBlindedProposal(ctx context.Context,
 
 	headers := make(map[string]string)
 	headers["Eth-Consensus-Version"] = strings.ToLower(opts.Proposal.Version.String())
+
 	_, err = s.post(ctx, endpoint, query, &opts.Common, bytes.NewBuffer(specJSON), ContentTypeJSON, headers)
 	if err != nil {
 		return errors.Join(errors.New("failed to submit blinded proposal"), err)

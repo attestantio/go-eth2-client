@@ -60,21 +60,27 @@ func (s *SyncState) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &syncStateJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if syncStateJSON.HeadSlot == "" {
 		return errors.New("head slot missing")
 	}
+
 	headSlot, err := strconv.ParseUint(syncStateJSON.HeadSlot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for head slot")
 	}
+
 	s.HeadSlot = phase0.Slot(headSlot)
+
 	if syncStateJSON.SyncDistance == "" {
 		return errors.New("sync distance missing")
 	}
+
 	syncDistance, err := strconv.ParseUint(syncStateJSON.SyncDistance, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for sync distance")
 	}
+
 	s.SyncDistance = phase0.Slot(syncDistance)
 	s.IsOptimistic = syncStateJSON.IsOptimistic
 	s.IsSyncing = syncStateJSON.IsSyncing

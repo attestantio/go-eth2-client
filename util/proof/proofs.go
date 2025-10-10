@@ -85,6 +85,7 @@ func NumFields(o any) int {
 	if o == nil {
 		return 0
 	}
+
 	t := reflect.TypeOf(o)
 
 	// If it's a pointer, get the underlying type
@@ -106,6 +107,7 @@ func FieldIndex(o any, fieldName string) (int, error) {
 	if o == nil {
 		return 0, errors.New("nil object")
 	}
+
 	t := reflect.TypeOf(o)
 
 	// If it's a pointer, get the underlying type

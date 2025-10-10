@@ -69,52 +69,6 @@ func (d *DepositData) UnmarshalJSON(input []byte) error {
 	return d.unpack(&depositDataJSON)
 }
 
-func (d *DepositData) unpack(depositDataJSON *depositDataJSON) error {
-	if depositDataJSON.PublicKey == "" {
-		return errors.New("public key missing")
-	}
-	publicKey, err := hex.DecodeString(strings.TrimPrefix(depositDataJSON.PublicKey, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for public key")
-	}
-	if len(publicKey) != PublicKeyLength {
-		return errors.New("incorrect length for public key")
-	}
-	copy(d.PublicKey[:], publicKey)
-	if depositDataJSON.WithdrawalCredentials == "" {
-		return errors.New("withdrawal credentials missing")
-	}
-	if d.WithdrawalCredentials, err = hex.DecodeString(
-		strings.TrimPrefix(depositDataJSON.WithdrawalCredentials, "0x"),
-	); err != nil {
-		return errors.Wrap(err, "invalid value for withdrawal credentials")
-	}
-	if len(d.WithdrawalCredentials) != HashLength {
-		return errors.New("incorrect length for withdrawal credentials")
-	}
-	if depositDataJSON.Amount == "" {
-		return errors.New("amount missing")
-	}
-	amount, err := strconv.ParseUint(depositDataJSON.Amount, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for amount")
-	}
-	d.Amount = Gwei(amount)
-	if depositDataJSON.Signature == "" {
-		return errors.New("signature missing")
-	}
-	signature, err := hex.DecodeString(strings.TrimPrefix(depositDataJSON.Signature, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for signature")
-	}
-	if len(signature) != SignatureLength {
-		return errors.New("incorrect length for signature")
-	}
-	copy(d.Signature[:], signature)
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (d *DepositData) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&depositDataYAML{
@@ -149,4 +103,63 @@ func (d *DepositData) String() string {
 	}
 
 	return string(data)
+}
+
+func (d *DepositData) unpack(depositDataJSON *depositDataJSON) error {
+	if depositDataJSON.PublicKey == "" {
+		return errors.New("public key missing")
+	}
+
+	publicKey, err := hex.DecodeString(strings.TrimPrefix(depositDataJSON.PublicKey, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for public key")
+	}
+
+	if len(publicKey) != PublicKeyLength {
+		return errors.New("incorrect length for public key")
+	}
+
+	copy(d.PublicKey[:], publicKey)
+
+	if depositDataJSON.WithdrawalCredentials == "" {
+		return errors.New("withdrawal credentials missing")
+	}
+
+	if d.WithdrawalCredentials, err = hex.DecodeString(
+		strings.TrimPrefix(depositDataJSON.WithdrawalCredentials, "0x"),
+	); err != nil {
+		return errors.Wrap(err, "invalid value for withdrawal credentials")
+	}
+
+	if len(d.WithdrawalCredentials) != HashLength {
+		return errors.New("incorrect length for withdrawal credentials")
+	}
+
+	if depositDataJSON.Amount == "" {
+		return errors.New("amount missing")
+	}
+
+	amount, err := strconv.ParseUint(depositDataJSON.Amount, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for amount")
+	}
+
+	d.Amount = Gwei(amount)
+
+	if depositDataJSON.Signature == "" {
+		return errors.New("signature missing")
+	}
+
+	signature, err := hex.DecodeString(strings.TrimPrefix(depositDataJSON.Signature, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for signature")
+	}
+
+	if len(signature) != SignatureLength {
+		return errors.New("incorrect length for signature")
+	}
+
+	copy(d.Signature[:], signature)
+
+	return nil
 }

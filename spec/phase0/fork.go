@@ -68,41 +68,6 @@ func (f *Fork) UnmarshalJSON(input []byte) error {
 	return f.unpack(&forkJSON)
 }
 
-func (f *Fork) unpack(forkJSON *forkJSON) error {
-	if forkJSON.PreviousVersion == "" {
-		return errors.New("previous version missing")
-	}
-	previousVersion, err := hex.DecodeString(strings.TrimPrefix(forkJSON.PreviousVersion, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for previous version")
-	}
-	if len(previousVersion) != ForkVersionLength {
-		return errors.New("incorrect length for previous version")
-	}
-	copy(f.PreviousVersion[:], previousVersion)
-	if forkJSON.CurrentVersion == "" {
-		return errors.New("current version missing")
-	}
-	currentVersion, err := hex.DecodeString(strings.TrimPrefix(forkJSON.CurrentVersion, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for current version")
-	}
-	if len(currentVersion) != ForkVersionLength {
-		return errors.New("incorrect length for current version")
-	}
-	copy(f.CurrentVersion[:], currentVersion)
-	if forkJSON.Epoch == "" {
-		return errors.New("epoch missing")
-	}
-	epoch, err := strconv.ParseUint(forkJSON.Epoch, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for epoch")
-	}
-	f.Epoch = Epoch(epoch)
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (f *Fork) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&forkYAML{
@@ -136,4 +101,49 @@ func (f *Fork) String() string {
 	}
 
 	return string(data)
+}
+
+func (f *Fork) unpack(forkJSON *forkJSON) error {
+	if forkJSON.PreviousVersion == "" {
+		return errors.New("previous version missing")
+	}
+
+	previousVersion, err := hex.DecodeString(strings.TrimPrefix(forkJSON.PreviousVersion, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for previous version")
+	}
+
+	if len(previousVersion) != ForkVersionLength {
+		return errors.New("incorrect length for previous version")
+	}
+
+	copy(f.PreviousVersion[:], previousVersion)
+
+	if forkJSON.CurrentVersion == "" {
+		return errors.New("current version missing")
+	}
+
+	currentVersion, err := hex.DecodeString(strings.TrimPrefix(forkJSON.CurrentVersion, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for current version")
+	}
+
+	if len(currentVersion) != ForkVersionLength {
+		return errors.New("incorrect length for current version")
+	}
+
+	copy(f.CurrentVersion[:], currentVersion)
+
+	if forkJSON.Epoch == "" {
+		return errors.New("epoch missing")
+	}
+
+	epoch, err := strconv.ParseUint(forkJSON.Epoch, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for epoch")
+	}
+
+	f.Epoch = Epoch(epoch)
+
+	return nil
 }

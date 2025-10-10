@@ -50,21 +50,27 @@ func (v *ValidatorBalance) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &validatorBalanceJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if validatorBalanceJSON.Index == "" {
 		return errors.New("index missing")
 	}
+
 	index, err := strconv.ParseUint(validatorBalanceJSON.Index, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for index")
 	}
+
 	v.Index = phase0.ValidatorIndex(index)
+
 	if validatorBalanceJSON.Balance == "" {
 		return errors.New("balance missing")
 	}
+
 	balance, err := strconv.ParseUint(validatorBalanceJSON.Balance, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for balance")
 	}
+
 	v.Balance = phase0.Gwei(balance)
 
 	return nil

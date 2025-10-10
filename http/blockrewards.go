@@ -38,9 +38,11 @@ func (s *Service) BlockRewards(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	if opts.Block == "" {
 		return nil, errors.Join(errors.New("no block specified"), client.ErrInvalidOptions)
 	}

@@ -60,34 +60,42 @@ func (s *BeaconState) MarshalYAML() ([]byte, error) {
 	for i := range s.BlockRoots {
 		blockRoots[i] = fmt.Sprintf("%#x", s.BlockRoots[i])
 	}
+
 	stateRoots := make([]string, len(s.StateRoots))
 	for i := range s.StateRoots {
 		stateRoots[i] = fmt.Sprintf("%#x", s.StateRoots[i])
 	}
+
 	historicalRoots := make([]string, len(s.HistoricalRoots))
 	for i := range s.HistoricalRoots {
 		historicalRoots[i] = fmt.Sprintf("%#x", s.HistoricalRoots[i])
 	}
+
 	balances := make([]uint64, len(s.Balances))
 	for i := range s.Balances {
 		balances[i] = uint64(s.Balances[i])
 	}
+
 	randaoMixes := make([]string, len(s.RANDAOMixes))
 	for i := range s.RANDAOMixes {
 		randaoMixes[i] = fmt.Sprintf("%#x", s.RANDAOMixes[i])
 	}
+
 	slashings := make([]uint64, len(s.Slashings))
 	for i := range s.Slashings {
 		slashings[i] = uint64(s.Slashings[i])
 	}
+
 	previousEpochParticipation := make([]uint8, len(s.PreviousEpochParticipation))
 	for i := range s.PreviousEpochParticipation {
 		previousEpochParticipation[i] = uint8(s.PreviousEpochParticipation[i])
 	}
+
 	currentEpochParticipation := make([]uint8, len(s.CurrentEpochParticipation))
 	for i := range s.CurrentEpochParticipation {
 		currentEpochParticipation[i] = uint8(s.CurrentEpochParticipation[i])
 	}
+
 	yamlBytes, err := yaml.MarshalWithOptions(&beaconStateYAML{
 		GenesisTime:                  s.GenesisTime,
 		GenesisValidatorsRoot:        fmt.Sprintf("%#x", s.GenesisValidatorsRoot),

@@ -34,12 +34,14 @@ func (s *Service) AttestationData(ctx context.Context,
 	if err := s.assertIsSynced(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
 
 	endpoint := "/eth/v1/validator/attestation_data"
 	query := fmt.Sprintf("slot=%d&committee_index=%d", opts.Slot, opts.CommitteeIndex)
+
 	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
 	if err != nil {
 		return nil, err
@@ -93,6 +95,7 @@ func (s *Service) verifyAttestationData(ctx context.Context, opts *api.Attestati
 	if opts.Slot >= electraSlot {
 		index = 0
 	}
+
 	if data.Index != index {
 		return errors.Join(
 			fmt.Errorf("attestation data for committee index %d; expected %d", data.Index, index),
@@ -108,6 +111,7 @@ func (s *Service) calculateElectraSlot(ctx context.Context) (phase0.Slot, error)
 	if err != nil {
 		return 0, err
 	}
+
 	slotsPerEpoch, isCorrectType := response.Data["SLOTS_PER_EPOCH"].(uint64)
 	if !isCorrectType {
 		return 0, ErrIncorrectType

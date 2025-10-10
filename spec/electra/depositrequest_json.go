@@ -58,21 +58,26 @@ func (d *DepositRequest) unpack(depositReceipt *depositRequestJSON) error {
 	if depositReceipt.Pubkey == "" {
 		return errors.New("public key missing")
 	}
+
 	pubkey, err := hex.DecodeString(strings.TrimPrefix(depositReceipt.Pubkey, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for public key")
 	}
+
 	if len(pubkey) != phase0.PublicKeyLength {
 		return errors.New("incorrect length for public key")
 	}
+
 	copy(d.Pubkey[:], pubkey)
 
 	if depositReceipt.WithdrawalCredentials == "" {
 		return errors.New("withdrawal credentials missing")
 	}
+
 	if d.WithdrawalCredentials, err = hex.DecodeString(strings.TrimPrefix(depositReceipt.WithdrawalCredentials, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for withdrawal credentials")
 	}
+
 	if len(d.WithdrawalCredentials) != phase0.HashLength {
 		return errors.New("incorrect length for withdrawal credentials")
 	}
@@ -80,31 +85,38 @@ func (d *DepositRequest) unpack(depositReceipt *depositRequestJSON) error {
 	if depositReceipt.Amount == "" {
 		return errors.New("amount missing")
 	}
+
 	amount, err := strconv.ParseUint(depositReceipt.Amount, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for amount")
 	}
+
 	d.Amount = phase0.Gwei(amount)
 
 	if depositReceipt.Signature == "" {
 		return errors.New("signature missing")
 	}
+
 	signature, err := hex.DecodeString(strings.TrimPrefix(depositReceipt.Signature, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
+
 	if len(signature) != phase0.SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
+
 	copy(d.Signature[:], signature)
 
 	if depositReceipt.Index == "" {
 		return errors.New("index missing")
 	}
+
 	index, err := strconv.ParseUint(depositReceipt.Index, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for index")
 	}
+
 	d.Index = index
 
 	return nil
