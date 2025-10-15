@@ -147,17 +147,15 @@ func (t *BlockContents) SizeSSZ() (size int) {
 	return size
 }
 
-func (t *BlockContents) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
+func (t *BlockContents) HashTreeRoot() (root [32]byte, err error) {
+	err = hasher.WithDefaultHasher(func(hh sszutils.HashWalker) (err error) {
+		err = t.HashTreeRootWith(hh)
+		if err == nil {
+			root, err = hh.HashRoot()
+		}
+		return
+	})
+	return
 }
 func (t *BlockContents) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {

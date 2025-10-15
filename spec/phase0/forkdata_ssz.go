@@ -48,17 +48,15 @@ func (t *ForkData) SizeSSZ() (size int) {
 	return 36
 }
 
-func (t *ForkData) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
+func (t *ForkData) HashTreeRoot() (root [32]byte, err error) {
+	err = hasher.WithDefaultHasher(func(hh sszutils.HashWalker) (err error) {
+		err = t.HashTreeRootWith(hh)
+		if err == nil {
+			root, err = hh.HashRoot()
+		}
+		return
+	})
+	return
 }
 func (t *ForkData) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {

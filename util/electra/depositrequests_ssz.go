@@ -88,17 +88,15 @@ func (t *DepositRequests) SizeSSZ() (size int) {
 	return size
 }
 
-func (t *DepositRequests) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
+func (t *DepositRequests) HashTreeRoot() (root [32]byte, err error) {
+	err = hasher.WithDefaultHasher(func(hh sszutils.HashWalker) (err error) {
+		err = t.HashTreeRootWith(hh)
+		if err == nil {
+			root, err = hh.HashRoot()
+		}
+		return
+	})
+	return
 }
 func (t *DepositRequests) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {

@@ -70,17 +70,15 @@ func (t *DepositData) SizeSSZ() (size int) {
 	return 184
 }
 
-func (t *DepositData) HashTreeRoot() ([32]byte, error) {
-	pool := &hasher.FastHasherPool
-	hh := pool.Get()
-	defer func() {
-		pool.Put(hh)
-	}()
-	if err := t.HashTreeRootWith(hh); err != nil {
-		return [32]byte{}, err
-	}
-	r, _ := hh.HashRoot()
-	return r, nil
+func (t *DepositData) HashTreeRoot() (root [32]byte, err error) {
+	err = hasher.WithDefaultHasher(func(hh sszutils.HashWalker) (err error) {
+		err = t.HashTreeRootWith(hh)
+		if err == nil {
+			root, err = hh.HashRoot()
+		}
+		return
+	})
+	return
 }
 func (t *DepositData) HashTreeRootWith(hh sszutils.HashWalker) error {
 	if t == nil {
