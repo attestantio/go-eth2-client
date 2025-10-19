@@ -24,7 +24,8 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/fulu"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	proofutil "github.com/attestantio/go-eth2-client/util/proof"
-	ssz "github.com/ferranbt/fastssz"
+	dynssz "github.com/pk910/dynamic-ssz"
+	"github.com/pk910/dynamic-ssz/treeproof"
 )
 
 // VersionedBeaconState contains a versioned beacon state.
@@ -470,50 +471,50 @@ func (v *VersionedBeaconState) ValidatorBalance(index phase0.ValidatorIndex) (ph
 }
 
 // GetTree returns the GetTree of the specific beacon state version.
-func (v *VersionedBeaconState) GetTree() (*ssz.Node, error) {
+func (v *VersionedBeaconState) GetTree() (*treeproof.Node, error) {
 	switch v.Version {
 	case DataVersionPhase0:
 		if v.Phase0 == nil {
 			return nil, errors.New("no Phase0 state")
 		}
 
-		return v.Phase0.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Phase0)
 	case DataVersionAltair:
 		if v.Altair == nil {
 			return nil, errors.New("no Altair state")
 		}
 
-		return v.Altair.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Altair)
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return nil, errors.New("no Bellatrix state")
 		}
 
-		return v.Bellatrix.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Bellatrix)
 	case DataVersionCapella:
 		if v.Capella == nil {
 			return nil, errors.New("no Capella state")
 		}
 
-		return v.Capella.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Capella)
 	case DataVersionDeneb:
 		if v.Deneb == nil {
 			return nil, errors.New("no Deneb state")
 		}
 
-		return v.Deneb.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Deneb)
 	case DataVersionElectra:
 		if v.Electra == nil {
 			return nil, errors.New("no Electra state")
 		}
 
-		return v.Electra.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Electra)
 	case DataVersionFulu:
 		if v.Fulu == nil {
 			return nil, errors.New("no Fulu state")
 		}
 
-		return v.Fulu.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Fulu)
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -693,7 +694,7 @@ func (v *VersionedBeaconState) FieldRoot(name string) (phase0.Hash32, error) {
 }
 
 // FieldTree returns the Merkle subtree for a specific field in the beacon state.
-func (v *VersionedBeaconState) FieldTree(name string) (*ssz.Node, error) {
+func (v *VersionedBeaconState) FieldTree(name string) (*treeproof.Node, error) {
 	stateTree, err := v.GetTree()
 	if err != nil {
 		return nil, err
@@ -773,13 +774,13 @@ func (v *VersionedBeaconState) VerifyFieldProof(proof []phase0.Hash32, name stri
 	}
 
 	// Create and verify the proof
-	sszProof := &ssz.Proof{
+	sszProof := &treeproof.Proof{
 		Index:  fieldGeneralizedIndex,
 		Leaf:   fieldRoot[:],
 		Hashes: proofHashes,
 	}
 
-	return ssz.VerifyProof(stateRoot[:], sszProof)
+	return treeproof.VerifyProof(stateRoot[:], sszProof)
 }
 
 // String returns a string version of the structure.

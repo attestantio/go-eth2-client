@@ -14,7 +14,6 @@
 package fulu
 
 //nolint:revive
-// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
+// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
 //go:generate rm -f blockcontents_ssz.go signedblockcontents_ssz.go
-//go:generate sszgen --include ../../../spec/phase0,../../../spec/altair,../../../spec/bellatrix,../../../spec/capella,../../../spec/deneb,../../../spec/electra,../../../spec/fulu -path . --suffix ssz -objs BlockContents,SignedBlockContents
-//go:generate goimports -w blockcontents_ssz.go signedblockcontents_ssz.go
+//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types BlockContents:blockcontents_ssz.go,SignedBlockContents:signedblockcontents_ssz.go

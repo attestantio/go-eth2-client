@@ -14,8 +14,9 @@
 package electra_test
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -155,6 +156,19 @@ func TestAttestation_SSZ(t *testing.T) {
 	attestation := electra.Attestation{
 		AggregationBits: aggregateBits,
 		CommitteeBits:   committeeBits,
+		Data: &phase0.AttestationData{
+			Slot:            1,
+			Index:           1,
+			BeaconBlockRoot: phase0.Root{},
+			Source: &phase0.Checkpoint{
+				Epoch: 1,
+				Root:  phase0.Root{},
+			},
+			Target: &phase0.Checkpoint{
+				Epoch: 2,
+				Root:  phase0.Root{},
+			},
+		},
 	}
 	// Set a bit beyond the bit list.
 	aggregateBits.SetBitAt(aggregateSize, true)

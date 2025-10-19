@@ -27,7 +27,7 @@ type BlobSidecar struct {
 	KZGCommitment               KZGCommitment `ssz-size:"48"`
 	KZGProof                    KZGProof      `ssz-size:"48"`
 	SignedBlockHeader           *phase0.SignedBeaconBlockHeader
-	KZGCommitmentInclusionProof KZGCommitmentInclusionProof `ssz-size:"544"`
+	KZGCommitmentInclusionProof KZGCommitmentInclusionProof `ssz-size:"17"`
 }
 
 // String returns a string version of the structure.

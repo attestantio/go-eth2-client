@@ -24,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/fulu"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/stretchr/testify/require"
 )
 
@@ -141,7 +142,7 @@ func TestFieldRoot(t *testing.T) {
 	fieldRoot, err := state.FieldRoot("Validators")
 	require.NoError(t, err)
 
-	stateTree, err := state.Deneb.GetTree()
+	stateTree, err := dynssz.GetGlobalDynSsz().GetTree(state.Deneb)
 	require.NoError(t, err)
 
 	validatorGeneralizedIndex, err := state.FieldGeneralizedIndex("Validators")
