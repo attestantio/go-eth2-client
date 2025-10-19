@@ -9,7 +9,7 @@ require (
 	github.com/holiman/uint256 v1.3.2
 	github.com/huandu/go-clone v1.6.0
 	github.com/huandu/go-clone/generic v1.6.0
-	github.com/pk910/dynamic-ssz v1.1.1-0.20251015012956-c7ff02512b4a
+	github.com/pk910/dynamic-ssz v1.1.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.16.0
 	github.com/prysmaticlabs/go-bitfield v0.0.0-20240618144021-706c95b2dd15
