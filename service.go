@@ -15,6 +15,7 @@ package client
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"github.com/attestantio/go-eth2-client/api"
@@ -718,4 +719,10 @@ type GenesisTimeProvider interface {
 type NodeClientProvider interface {
 	// NodeClient provides the client for the node.
 	NodeClient(ctx context.Context) (*api.Response[string], error)
+}
+
+// ProxyProvider provides a proxy for HTTP requests.
+type ProxyProvider interface {
+	// Proxy performs an HTTP proxy request and returns the response.
+	Proxy(ctx context.Context, req *http.Request) (*http.Response, error)
 }
