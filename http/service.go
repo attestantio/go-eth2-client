@@ -162,17 +162,6 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 	return s, nil
 }
 
-// periodicUpdateConnectionState periodically pings the client to update its active and synced status.
-
-// periodicClearStaticValues periodically sets static values to nil so they are
-// refetched the next time they are required.
-
-// clearStaticValues periodically sets static values to nil so they are
-// refetched the next time they are required.
-
-// checkDVT checks if connected to DVT middleware and sets
-// internal flags appropriately.
-
 // Name provides the name of the service.
 func (*Service) Name() string {
 	return "Standard (HTTP)"
@@ -304,6 +293,7 @@ func (s *Service) IsSynced() bool {
 	return synced
 }
 
+// periodicUpdateConnectionState periodically pings the client to update its active and synced status.
 func (s *Service) periodicUpdateConnectionState(ctx context.Context) {
 	go func(s *Service, ctx context.Context) {
 		// Refresh every 30 seconds.
@@ -321,6 +311,8 @@ func (s *Service) periodicUpdateConnectionState(ctx context.Context) {
 	}(s, ctx)
 }
 
+// periodicClearStaticValues periodically sets static values to nil so they are
+// refetched the next time they are required.
 func (s *Service) periodicClearStaticValues(ctx context.Context) {
 	go func(s *Service, ctx context.Context) {
 		// Refresh every 5 minutes.
@@ -338,6 +330,8 @@ func (s *Service) periodicClearStaticValues(ctx context.Context) {
 	}(s, ctx)
 }
 
+// clearStaticValues periodically sets static values to nil so they are
+// refetched the next time they are required.
 func (s *Service) clearStaticValues() {
 	s.genesisMutex.Lock()
 	s.genesis = nil
@@ -356,6 +350,8 @@ func (s *Service) clearStaticValues() {
 	s.nodeVersionMutex.Unlock()
 }
 
+// checkDVT checks if connected to DVT middleware and sets
+// internal flags appropriately.
 func (s *Service) checkDVT(ctx context.Context) error {
 	response, err := s.NodeVersion(ctx, &api.NodeVersionOpts{})
 	if err != nil {
