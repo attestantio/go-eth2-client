@@ -150,6 +150,8 @@ func (s *Service) IsSynced() bool {
 	return s.SyncDistance == 0
 }
 
+// fetchStaticValues fetches values that never change.
+// This caches the values, avoiding future API calls.
 func (s *Service) fetchStaticValues(ctx context.Context) error {
 	if _, err := s.Genesis(ctx, &api.GenesisOpts{}); err != nil {
 		return errors.Wrap(err, "failed to fetch genesis")
