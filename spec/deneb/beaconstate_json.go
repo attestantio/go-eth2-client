@@ -66,22 +66,27 @@ func (b *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range b.Balances {
 		balances[i] = fmt.Sprintf("%d", b.Balances[i])
 	}
+
 	randaoMixes := make([]string, len(b.RANDAOMixes))
 	for i := range b.RANDAOMixes {
 		randaoMixes[i] = fmt.Sprintf("%#x", b.RANDAOMixes[i])
 	}
+
 	slashings := make([]string, len(b.Slashings))
 	for i := range b.Slashings {
 		slashings[i] = fmt.Sprintf("%d", b.Slashings[i])
 	}
+
 	previousEpochParticipation := make([]string, len(b.PreviousEpochParticipation))
 	for i := range b.PreviousEpochParticipation {
 		previousEpochParticipation[i] = fmt.Sprintf("%d", b.PreviousEpochParticipation[i])
 	}
+
 	currentEpochParticipation := make([]string, len(b.CurrentEpochParticipation))
 	for i := range b.CurrentEpochParticipation {
 		currentEpochParticipation[i] = fmt.Sprintf("%d", b.CurrentEpochParticipation[i])
 	}
+
 	inactivityScores := make([]string, len(b.InactivityScores))
 	for i := range b.InactivityScores {
 		inactivityScores[i] = strconv.FormatUint(b.InactivityScores[i], 10)
@@ -171,6 +176,7 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["eth1_data_votes"], &b.ETH1DataVotes); err != nil {
 		return errors.Wrap(err, "eth1_data_votes")
 	}
+
 	for i := range b.ETH1DataVotes {
 		if b.ETH1DataVotes[i] == nil {
 			return fmt.Errorf("eth1 data votes entry %d missing", i)
@@ -185,6 +191,7 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["validators"], &b.Validators); err != nil {
 		return errors.Wrap(err, "validators")
 	}
+
 	for i := range b.Validators {
 		if b.Validators[i] == nil {
 			return fmt.Errorf("validators entry %d missing", i)
@@ -235,11 +242,13 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["inactivity_scores"], &inactivityScores); err != nil {
 		return errors.Wrap(err, "inactivity_scores")
 	}
+
 	b.InactivityScores = make([]uint64, len(inactivityScores))
 	for i := range inactivityScores {
 		if inactivityScores[i] == "" {
 			return fmt.Errorf("inactivity score %d missing", i)
 		}
+
 		if b.InactivityScores[i], err = strconv.ParseUint(inactivityScores[i], 10, 64); err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for inactivity score %d", i))
 		}
@@ -271,6 +280,7 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["historical_summaries"], &b.HistoricalSummaries); err != nil {
 		return errors.Wrap(err, "historical_summaries")
 	}
+
 	for i := range b.HistoricalSummaries {
 		if b.HistoricalSummaries[i] == nil {
 			return fmt.Errorf("historical summaries entry %d missing", i)

@@ -74,53 +74,6 @@ func (b *BeaconBlock) UnmarshalJSON(input []byte) error {
 	return b.unpack(&data)
 }
 
-func (b *BeaconBlock) unpack(data *beaconBlockJSON) error {
-	if data.Slot == "" {
-		return errors.New("slot missing")
-	}
-	slot, err := strconv.ParseUint(data.Slot, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for slot")
-	}
-	b.Slot = phase0.Slot(slot)
-	if data.ProposerIndex == "" {
-		return errors.New("proposer index missing")
-	}
-	proposerIndex, err := strconv.ParseUint(data.ProposerIndex, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for proposer index")
-	}
-	b.ProposerIndex = phase0.ValidatorIndex(proposerIndex)
-	if data.ParentRoot == "" {
-		return errors.New("parent root missing")
-	}
-	parentRoot, err := hex.DecodeString(strings.TrimPrefix(data.ParentRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for parent root")
-	}
-	if len(parentRoot) != phase0.RootLength {
-		return errors.New("incorrect length for parent root")
-	}
-	copy(b.ParentRoot[:], parentRoot)
-	if data.StateRoot == "" {
-		return errors.New("state root missing")
-	}
-	stateRoot, err := hex.DecodeString(strings.TrimPrefix(data.StateRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for state root")
-	}
-	if len(stateRoot) != phase0.RootLength {
-		return errors.New("incorrect length for state root")
-	}
-	copy(b.StateRoot[:], stateRoot)
-	if data.Body == nil {
-		return errors.New("body missing")
-	}
-	b.Body = data.Body
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (b *BeaconBlock) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&beaconBlockYAML{
@@ -156,4 +109,66 @@ func (b *BeaconBlock) String() string {
 	}
 
 	return string(data)
+}
+
+func (b *BeaconBlock) unpack(data *beaconBlockJSON) error {
+	if data.Slot == "" {
+		return errors.New("slot missing")
+	}
+
+	slot, err := strconv.ParseUint(data.Slot, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for slot")
+	}
+
+	b.Slot = phase0.Slot(slot)
+
+	if data.ProposerIndex == "" {
+		return errors.New("proposer index missing")
+	}
+
+	proposerIndex, err := strconv.ParseUint(data.ProposerIndex, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for proposer index")
+	}
+
+	b.ProposerIndex = phase0.ValidatorIndex(proposerIndex)
+
+	if data.ParentRoot == "" {
+		return errors.New("parent root missing")
+	}
+
+	parentRoot, err := hex.DecodeString(strings.TrimPrefix(data.ParentRoot, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for parent root")
+	}
+
+	if len(parentRoot) != phase0.RootLength {
+		return errors.New("incorrect length for parent root")
+	}
+
+	copy(b.ParentRoot[:], parentRoot)
+
+	if data.StateRoot == "" {
+		return errors.New("state root missing")
+	}
+
+	stateRoot, err := hex.DecodeString(strings.TrimPrefix(data.StateRoot, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for state root")
+	}
+
+	if len(stateRoot) != phase0.RootLength {
+		return errors.New("incorrect length for state root")
+	}
+
+	copy(b.StateRoot[:], stateRoot)
+
+	if data.Body == nil {
+		return errors.New("body missing")
+	}
+
+	b.Body = data.Body
+
+	return nil
 }

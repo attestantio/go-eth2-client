@@ -79,6 +79,7 @@ func (s *Service) Events(ctx context.Context,
 
 			continue
 		}
+
 		log.Trace().Str("address", ah.address).Strs("topics", opts.Topics).Msg("Events handler active")
 	}
 
@@ -101,6 +102,7 @@ func (s *Service) Events(ctx context.Context,
 
 					return
 				}
+
 				syncResponse, err := provider.NodeSyncing(ctx, &api.NodeSyncingOpts{})
 				if err != nil {
 					ah.log.Error().
@@ -111,6 +113,7 @@ func (s *Service) Events(ctx context.Context,
 
 					return
 				}
+
 				if !syncResponse.Data.IsSyncing {
 					// Client is now synced, set up the events call.
 					if err := c.(consensusclient.EventsProvider).Events(ctx, opts); err != nil {
@@ -124,6 +127,7 @@ func (s *Service) Events(ctx context.Context,
 					// Return either way.
 					return
 				}
+
 				time.Sleep(5 * time.Second)
 			}
 		}(inactiveClient, ah)

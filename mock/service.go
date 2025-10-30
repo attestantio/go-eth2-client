@@ -129,22 +129,6 @@ func New(ctx context.Context, params ...Parameter) (*Service, error) {
 
 // fetchStaticValues fetches values that never change.
 // This caches the values, avoiding future API calls.
-func (s *Service) fetchStaticValues(ctx context.Context) error {
-	if _, err := s.Genesis(ctx, &api.GenesisOpts{}); err != nil {
-		return errors.Wrap(err, "failed to fetch genesis")
-	}
-	//	if _, err := s.Spec(ctx); err != nil {
-	//		return errors.Wrap(err, "failed to fetch spec")
-	//	}
-	//	if _, err := s.DepositContract(ctx); err != nil {
-	//		return errors.Wrap(err, "failed to fetch deposit contract")
-	//	}
-	//	if _, err := s.ForkSchedule(ctx); err != nil {
-	//		return errors.Wrap(err, "failed to fetch fork schedule")
-	//	}
-
-	return nil
-}
 
 // Name provides the name of the service.
 func (*Service) Name() string {
@@ -164,6 +148,25 @@ func (*Service) IsActive() bool {
 // IsSynced returns true if the client is synced.
 func (s *Service) IsSynced() bool {
 	return s.SyncDistance == 0
+}
+
+// fetchStaticValues fetches values that never change.
+// This caches the values, avoiding future API calls.
+func (s *Service) fetchStaticValues(ctx context.Context) error {
+	if _, err := s.Genesis(ctx, &api.GenesisOpts{}); err != nil {
+		return errors.Wrap(err, "failed to fetch genesis")
+	}
+	//	if _, err := s.Spec(ctx); err != nil {
+	//		return errors.Wrap(err, "failed to fetch spec")
+	//	}
+	//	if _, err := s.DepositContract(ctx); err != nil {
+	//		return errors.Wrap(err, "failed to fetch deposit contract")
+	//	}
+	//	if _, err := s.ForkSchedule(ctx); err != nil {
+	//		return errors.Wrap(err, "failed to fetch fork schedule")
+	//	}
+
+	return nil
 }
 
 // close closes the service, freeing up resources.

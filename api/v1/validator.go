@@ -57,26 +57,34 @@ func (v *Validator) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &validatorJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if validatorJSON.Index == "" {
 		return errors.New("index missing")
 	}
+
 	index, err := strconv.ParseUint(validatorJSON.Index, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for index")
 	}
+
 	v.Index = phase0.ValidatorIndex(index)
+
 	if validatorJSON.Balance == "" {
 		return errors.New("balance missing")
 	}
+
 	balance, err := strconv.ParseUint(validatorJSON.Balance, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for balance")
 	}
+
 	v.Balance = phase0.Gwei(balance)
+
 	v.Status = validatorJSON.Status
 	if validatorJSON.Validator == nil {
 		return errors.New("validator missing")
 	}
+
 	v.Validator = validatorJSON.Validator
 
 	return nil

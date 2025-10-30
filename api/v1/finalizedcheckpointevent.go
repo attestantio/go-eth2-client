@@ -55,35 +55,46 @@ func (e *FinalizedCheckpointEvent) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &finalizedCheckpointEventJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if finalizedCheckpointEventJSON.Block == "" {
 		return errors.New("block missing")
 	}
+
 	block, err := hex.DecodeString(strings.TrimPrefix(finalizedCheckpointEventJSON.Block, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for block")
 	}
+
 	if len(block) != rootLength {
 		return fmt.Errorf("incorrect length %d for block", len(block))
 	}
+
 	copy(e.Block[:], block)
+
 	if finalizedCheckpointEventJSON.State == "" {
 		return errors.New("state missing")
 	}
+
 	state, err := hex.DecodeString(strings.TrimPrefix(finalizedCheckpointEventJSON.State, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for state")
 	}
+
 	if len(state) != rootLength {
 		return fmt.Errorf("incorrect length %d for state", len(state))
 	}
+
 	copy(e.State[:], state)
+
 	if finalizedCheckpointEventJSON.Epoch == "" {
 		return errors.New("epoch missing")
 	}
+
 	epoch, err := strconv.ParseUint(finalizedCheckpointEventJSON.Epoch, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for epoch")
 	}
+
 	e.Epoch = phase0.Epoch(epoch)
 
 	return nil

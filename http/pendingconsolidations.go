@@ -38,9 +38,11 @@ func (s *Service) PendingConsolidations(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	if opts.State == "" {
 		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}

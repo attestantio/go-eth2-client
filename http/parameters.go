@@ -155,6 +155,7 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 		allowDelayedStart: false,
 		hooks:             &Hooks{},
 	}
+
 	for _, p := range params {
 		if params != nil {
 			p.apply(&parameters)
@@ -164,15 +165,19 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	if parameters.address == "" {
 		return nil, errors.New("no address specified")
 	}
+
 	if parameters.timeout == 0 {
 		return nil, errors.New("no timeout specified")
 	}
+
 	if parameters.indexChunkSize == 0 {
 		return nil, errors.New("no index chunk size specified")
 	}
+
 	if parameters.pubKeyChunkSize == 0 {
 		return nil, errors.New("no public key chunk size specified")
 	}
+
 	if parameters.hooks == nil {
 		return nil, errors.New("no hooks specified")
 	}

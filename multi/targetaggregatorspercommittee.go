@@ -29,6 +29,7 @@ func (s *Service) TargetAggregatorsPerCommittee(ctx context.Context) (uint64, er
 		if err != nil {
 			return nil, err
 		}
+
 		if aggregators == 0 {
 			return nil, errors.New("zero value not a valid response")
 		}

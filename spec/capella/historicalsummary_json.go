@@ -51,25 +51,31 @@ func (h *HistoricalSummary) unpack(data *historicalSummaryJSON) error {
 	if data.BlockSummaryRoot == "" {
 		return errors.New("block summary root missing")
 	}
+
 	blockSummaryRoot, err := hex.DecodeString(strings.TrimPrefix(data.BlockSummaryRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for block summary root")
 	}
+
 	if len(blockSummaryRoot) != phase0.RootLength {
 		return errors.New("incorrect length for block summary root")
 	}
+
 	copy(h.BlockSummaryRoot[:], blockSummaryRoot)
 
 	if data.StateSummaryRoot == "" {
 		return errors.New("state summary root missing")
 	}
+
 	stateSummaryRoot, err := hex.DecodeString(strings.TrimPrefix(data.StateSummaryRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for state summary root")
 	}
+
 	if len(stateSummaryRoot) != phase0.RootLength {
 		return errors.New("incorrect length for state summary root")
 	}
+
 	copy(h.StateSummaryRoot[:], stateSummaryRoot)
 
 	return nil

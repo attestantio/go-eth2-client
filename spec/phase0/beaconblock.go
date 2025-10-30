@@ -77,44 +77,59 @@ func (b *BeaconBlock) unpack(beaconBlockJSON *beaconBlockJSON) error {
 	if beaconBlockJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
+
 	slot, err := strconv.ParseUint(beaconBlockJSON.Slot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+
 	b.Slot = Slot(slot)
+
 	if beaconBlockJSON.ProposerIndex == "" {
 		return errors.New("proposer index missing")
 	}
+
 	proposerIndex, err := strconv.ParseUint(beaconBlockJSON.ProposerIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for proposer index")
 	}
+
 	b.ProposerIndex = ValidatorIndex(proposerIndex)
+
 	if beaconBlockJSON.ParentRoot == "" {
 		return errors.New("parent root missing")
 	}
+
 	parentRoot, err := hex.DecodeString(strings.TrimPrefix(beaconBlockJSON.ParentRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for parent root")
 	}
+
 	if len(parentRoot) != RootLength {
 		return errors.New("incorrect length for parent root")
 	}
+
 	copy(b.ParentRoot[:], parentRoot)
+
 	if beaconBlockJSON.StateRoot == "" {
 		return errors.New("state root missing")
 	}
+
 	stateRoot, err := hex.DecodeString(strings.TrimPrefix(beaconBlockJSON.StateRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for state root")
 	}
+
 	if len(stateRoot) != RootLength {
 		return errors.New("incorrect length for state root")
 	}
+
 	copy(b.StateRoot[:], stateRoot)
+
 	if beaconBlockJSON.Body == nil {
 		return errors.New("body missing")
 	}
+
 	b.Body = beaconBlockJSON.Body
 
 	return nil

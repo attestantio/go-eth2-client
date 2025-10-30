@@ -64,24 +64,31 @@ func (s *SigningData) unpack(signingDataJSON *signingDataJSON) error {
 	if signingDataJSON.ObjectRoot == "" {
 		return errors.New("object root missing")
 	}
+
 	objectRoot, err := hex.DecodeString(strings.TrimPrefix(signingDataJSON.ObjectRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for object root")
 	}
+
 	if len(objectRoot) != RootLength {
 		return errors.New("incorrect length for object root")
 	}
+
 	copy(s.ObjectRoot[:], objectRoot)
+
 	if signingDataJSON.Domain == "" {
 		return errors.New("domain missing")
 	}
+
 	domain, err := hex.DecodeString(strings.TrimPrefix(signingDataJSON.Domain, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for domain")
 	}
+
 	if len(domain) != DomainLength {
 		return errors.New("incorrect length for domain")
 	}
+
 	copy(s.Domain[:], domain)
 
 	return nil

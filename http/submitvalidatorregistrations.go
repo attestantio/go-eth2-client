@@ -31,13 +31,16 @@ func (s *Service) SubmitValidatorRegistrations(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return err
 	}
+
 	if len(registrations) == 0 {
 		return errors.Join(errors.New("no registrations supplied"), client.ErrInvalidOptions)
 	}
 
 	// Unwrap versioned registrations.
-	var version *spec.BuilderVersion
-	var unversionedRegistrations []any
+	var (
+		version                  *spec.BuilderVersion
+		unversionedRegistrations []any
+	)
 
 	for i := range registrations {
 		if registrations[i] == nil {

@@ -73,60 +73,6 @@ func (b *BeaconBlockHeader) UnmarshalJSON(input []byte) error {
 	return b.unpack(&beaconBlockHeaderJSON)
 }
 
-func (b *BeaconBlockHeader) unpack(beaconBlockHeaderJSON *beaconBlockHeaderJSON) error {
-	if beaconBlockHeaderJSON.Slot == "" {
-		return errors.New("slot missing")
-	}
-	slot, err := strconv.ParseUint(beaconBlockHeaderJSON.Slot, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for slot")
-	}
-	b.Slot = Slot(slot)
-	if beaconBlockHeaderJSON.ProposerIndex == "" {
-		return errors.New("proposer index missing")
-	}
-	proposerIndex, err := strconv.ParseUint(beaconBlockHeaderJSON.ProposerIndex, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for proposer index")
-	}
-	b.ProposerIndex = ValidatorIndex(proposerIndex)
-	if beaconBlockHeaderJSON.ParentRoot == "" {
-		return errors.New("parent root missing")
-	}
-	parentRoot, err := hex.DecodeString(strings.TrimPrefix(beaconBlockHeaderJSON.ParentRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for parent root")
-	}
-	if len(parentRoot) != RootLength {
-		return errors.New("incorrect length for parent root")
-	}
-	copy(b.ParentRoot[:], parentRoot)
-	if beaconBlockHeaderJSON.StateRoot == "" {
-		return errors.New("state root missing")
-	}
-	stateRoot, err := hex.DecodeString(strings.TrimPrefix(beaconBlockHeaderJSON.StateRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for state root")
-	}
-	if len(stateRoot) != RootLength {
-		return errors.New("incorrect length for state root")
-	}
-	copy(b.StateRoot[:], stateRoot)
-	if beaconBlockHeaderJSON.BodyRoot == "" {
-		return errors.New("body root missing")
-	}
-	bodyRoot, err := hex.DecodeString(strings.TrimPrefix(beaconBlockHeaderJSON.BodyRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for body root")
-	}
-	if len(bodyRoot) != RootLength {
-		return errors.New("incorrect length for body root")
-	}
-	copy(b.BodyRoot[:], bodyRoot)
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (b *BeaconBlockHeader) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&beaconBlockHeaderYAML{
@@ -162,4 +108,75 @@ func (b *BeaconBlockHeader) String() string {
 	}
 
 	return string(data)
+}
+
+func (b *BeaconBlockHeader) unpack(beaconBlockHeaderJSON *beaconBlockHeaderJSON) error {
+	if beaconBlockHeaderJSON.Slot == "" {
+		return errors.New("slot missing")
+	}
+
+	slot, err := strconv.ParseUint(beaconBlockHeaderJSON.Slot, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for slot")
+	}
+
+	b.Slot = Slot(slot)
+
+	if beaconBlockHeaderJSON.ProposerIndex == "" {
+		return errors.New("proposer index missing")
+	}
+
+	proposerIndex, err := strconv.ParseUint(beaconBlockHeaderJSON.ProposerIndex, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for proposer index")
+	}
+
+	b.ProposerIndex = ValidatorIndex(proposerIndex)
+
+	if beaconBlockHeaderJSON.ParentRoot == "" {
+		return errors.New("parent root missing")
+	}
+
+	parentRoot, err := hex.DecodeString(strings.TrimPrefix(beaconBlockHeaderJSON.ParentRoot, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for parent root")
+	}
+
+	if len(parentRoot) != RootLength {
+		return errors.New("incorrect length for parent root")
+	}
+
+	copy(b.ParentRoot[:], parentRoot)
+
+	if beaconBlockHeaderJSON.StateRoot == "" {
+		return errors.New("state root missing")
+	}
+
+	stateRoot, err := hex.DecodeString(strings.TrimPrefix(beaconBlockHeaderJSON.StateRoot, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for state root")
+	}
+
+	if len(stateRoot) != RootLength {
+		return errors.New("incorrect length for state root")
+	}
+
+	copy(b.StateRoot[:], stateRoot)
+
+	if beaconBlockHeaderJSON.BodyRoot == "" {
+		return errors.New("body root missing")
+	}
+
+	bodyRoot, err := hex.DecodeString(strings.TrimPrefix(beaconBlockHeaderJSON.BodyRoot, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for body root")
+	}
+
+	if len(bodyRoot) != RootLength {
+		return errors.New("incorrect length for body root")
+	}
+
+	copy(b.BodyRoot[:], bodyRoot)
+
+	return nil
 }

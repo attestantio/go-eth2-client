@@ -46,12 +46,15 @@ func (s *Service) Validators(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	if opts.State == "" {
 		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
+
 	span.SetAttributes(attribute.Int("validators", len(opts.Indices)+len(opts.PubKeys)))
 
 	if len(opts.Indices) == 0 && len(opts.PubKeys) == 0 {
@@ -69,9 +72,11 @@ func (s *Service) Validators(ctx context.Context,
 	for i := range opts.Indices {
 		body.IDs = append(body.IDs, fmt.Sprintf("%d", opts.Indices[i]))
 	}
+
 	for i := range opts.PubKeys {
 		body.IDs = append(body.IDs, opts.PubKeys[i].String())
 	}
+
 	for i := range opts.ValidatorStates {
 		body.Statuses = append(body.Statuses, opts.ValidatorStates[i].String())
 	}
@@ -119,6 +124,7 @@ func (s *Service) validatorsFromState(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
+
 	if stateResponse == nil {
 		return nil, errors.New("no beacon state")
 	}
@@ -137,10 +143,12 @@ func (s *Service) validatorsFromState(ctx context.Context,
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to obtain slot from state"), err)
 	}
+
 	slotsPerEpoch, err := s.SlotsPerEpoch(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	epoch := phase0.Epoch(uint64(slot) / slotsPerEpoch)
 
 	farFutureEpoch, err := s.FarFutureEpoch(ctx)

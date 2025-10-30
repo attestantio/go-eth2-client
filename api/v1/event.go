@@ -65,6 +65,7 @@ func (e *Event) MarshalJSON() ([]byte, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal data")
 	}
+
 	var unmarshalled map[string]any
 	if err := json.Unmarshal(data, &unmarshalled); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal data")
@@ -84,14 +85,17 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &eventJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if eventJSON.Topic == "" {
 		return errors.New("topic missing")
 	}
+
 	e.Topic = eventJSON.Topic
 
 	if eventJSON.Data == nil {
 		return errors.New("data missing")
 	}
+
 	switch eventJSON.Topic {
 	case "attestation":
 		e.Data = &spec.VersionedAttestation{}
@@ -126,13 +130,16 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 	default:
 		return fmt.Errorf("unsupported event topic %s", eventJSON.Topic)
 	}
+
 	data, err := json.Marshal(eventJSON.Data)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
+
 	if err := json.Unmarshal(data, &e.Data); err != nil {
 		return errors.New("data missing")
 	}
+
 	e.Data = eventJSON.Data
 
 	return nil

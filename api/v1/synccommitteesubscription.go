@@ -61,33 +61,41 @@ func (s *SyncCommitteeSubscription) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &syncCommitteeSubscriptionJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if syncCommitteeSubscriptionJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
+
 	validatorIndex, err := strconv.ParseUint(syncCommitteeSubscriptionJSON.ValidatorIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+
 	s.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
 
 	if len(syncCommitteeSubscriptionJSON.SyncCommitteeIndices) == 0 {
 		return errors.New("sync committee indices missing")
 	}
+
 	s.SyncCommitteeIndices = make([]phase0.CommitteeIndex, len(syncCommitteeSubscriptionJSON.SyncCommitteeIndices))
 	for i, committeeIndex := range syncCommitteeSubscriptionJSON.SyncCommitteeIndices {
 		syncCommitteeIndex, err := strconv.ParseUint(committeeIndex, 10, 64)
 		if err != nil {
 			return errors.Wrap(err, "invalid value for sync committee index")
 		}
+
 		s.SyncCommitteeIndices[i] = phase0.CommitteeIndex(syncCommitteeIndex)
 	}
+
 	if syncCommitteeSubscriptionJSON.UntilEpoch == "" {
 		return errors.New("until epoch missing")
 	}
+
 	untilEpoch, err := strconv.ParseUint(syncCommitteeSubscriptionJSON.UntilEpoch, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for until epoch")
 	}
+
 	s.UntilEpoch = phase0.Epoch(untilEpoch)
 
 	return nil

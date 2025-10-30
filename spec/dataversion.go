@@ -69,10 +69,12 @@ func (d *DataVersion) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (d *DataVersion) UnmarshalJSON(input []byte) error {
 	lower := strings.ToLower(string(input))
+
 	version, ok := dataVersionMap[lower]
 	if !ok {
 		return fmt.Errorf("unrecognised data version %s", string(input))
 	}
+
 	*d = version
 
 	return nil

@@ -74,6 +74,7 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 		timeout:     2 * time.Second,
 		genesisTime: time.Now(),
 	}
+
 	for _, p := range params {
 		if params != nil {
 			p.apply(&parameters)

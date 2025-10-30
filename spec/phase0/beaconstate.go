@@ -107,22 +107,27 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 	for i := range s.BlockRoots {
 		blockRoots[i] = fmt.Sprintf("%#x", s.BlockRoots[i])
 	}
+
 	stateRoots := make([]string, len(s.StateRoots))
 	for i := range s.StateRoots {
 		stateRoots[i] = fmt.Sprintf("%#x", s.StateRoots[i])
 	}
+
 	historicalRoots := make([]string, len(s.HistoricalRoots))
 	for i := range s.HistoricalRoots {
 		historicalRoots[i] = fmt.Sprintf("%#x", s.HistoricalRoots[i])
 	}
+
 	balances := make([]string, len(s.Balances))
 	for i := range s.Balances {
 		balances[i] = fmt.Sprintf("%d", s.Balances[i])
 	}
+
 	randaoMixes := make([]string, len(s.RANDAOMixes))
 	for i := range s.RANDAOMixes {
 		randaoMixes[i] = fmt.Sprintf("%#x", s.RANDAOMixes[i])
 	}
+
 	slashings := make([]string, len(s.Slashings))
 	for i := range s.Slashings {
 		slashings[i] = fmt.Sprintf("%d", s.Slashings[i])
@@ -163,186 +168,6 @@ func (s *BeaconState) UnmarshalJSON(input []byte) error {
 	}
 
 	return s.unpack(&data)
-}
-
-//nolint:gocyclo
-func (s *BeaconState) unpack(data *beaconStateJSON) error {
-	var err error
-
-	if data.GenesisTime == "" {
-		return errors.New("genesis time missing")
-	}
-	if s.GenesisTime, err = strconv.ParseUint(data.GenesisTime, 10, 64); err != nil {
-		return errors.Wrap(err, "invalid value for genesis time")
-	}
-	if data.GenesisValidatorsRoot == "" {
-		return errors.New("genesis validators root missing")
-	}
-	genesisValidatorsRoot, err := hex.DecodeString(strings.TrimPrefix(data.GenesisValidatorsRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for genesis validators root")
-	}
-	if len(genesisValidatorsRoot) != RootLength {
-		return fmt.Errorf("incorrect length %d for genesis validators root", len(genesisValidatorsRoot))
-	}
-	copy(s.GenesisValidatorsRoot[:], genesisValidatorsRoot)
-	if data.Slot == "" {
-		return errors.New("slot missing")
-	}
-	slot, err := strconv.ParseUint(data.Slot, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for slot")
-	}
-	s.Slot = Slot(slot)
-	if data.Fork == nil {
-		return errors.New("fork missing")
-	}
-	s.Fork = data.Fork
-	if data.LatestBlockHeader == nil {
-		return errors.New("latest block header missing")
-	}
-	s.LatestBlockHeader = data.LatestBlockHeader
-	if len(data.BlockRoots) == 0 {
-		return errors.New("block roots missing")
-	}
-	s.BlockRoots = make([]Root, len(data.BlockRoots))
-	for i := range data.BlockRoots {
-		if data.BlockRoots[i] == "" {
-			return fmt.Errorf("block root %d missing", i)
-		}
-		blockRoot, err := hex.DecodeString(strings.TrimPrefix(data.BlockRoots[i], "0x"))
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("invalid value for block root %d", i))
-		}
-		if len(blockRoot) != RootLength {
-			return fmt.Errorf("incorrect length %d for block root %d", len(blockRoot), i)
-		}
-		copy(s.BlockRoots[i][:], blockRoot)
-	}
-	s.StateRoots = make([]Root, len(data.StateRoots))
-	for i := range data.StateRoots {
-		if data.StateRoots[i] == "" {
-			return fmt.Errorf("state root %d missing", i)
-		}
-		stateRoot, err := hex.DecodeString(strings.TrimPrefix(data.StateRoots[i], "0x"))
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("invalid value for state root %d", i))
-		}
-		if len(stateRoot) != RootLength {
-			return fmt.Errorf("incorrect length %d for state root %d", len(stateRoot), i)
-		}
-		copy(s.StateRoots[i][:], stateRoot)
-	}
-	s.HistoricalRoots = make([]Root, len(data.HistoricalRoots))
-	for i := range data.HistoricalRoots {
-		if data.HistoricalRoots[i] == "" {
-			return fmt.Errorf("historical root %d missing", i)
-		}
-		historicalRoot, err := hex.DecodeString(strings.TrimPrefix(data.HistoricalRoots[i], "0x"))
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("invalid value for historical root %d", i))
-		}
-		if len(historicalRoot) != RootLength {
-			return fmt.Errorf("incorrect length %d for historical root %d", len(historicalRoot), i)
-		}
-		copy(s.HistoricalRoots[i][:], historicalRoot)
-	}
-	if data.ETH1Data == nil {
-		return errors.New("eth1 data missing")
-	}
-	s.ETH1Data = data.ETH1Data
-	// ETH1DataVotes can be empty, but if present the individual votes must not be null.
-	if data.ETH1DataVotes != nil {
-		for i := range data.Validators {
-			if data.Validators[i] == nil {
-				return fmt.Errorf("validators entry %d missing", i)
-			}
-		}
-	}
-	s.ETH1DataVotes = data.ETH1DataVotes
-	if data.Validators == nil {
-		return errors.New("validators missing")
-	}
-	for i := range data.Validators {
-		if data.Validators[i] == nil {
-			return fmt.Errorf("validators entry %d missing", i)
-		}
-	}
-	s.Validators = data.Validators
-	if data.ETH1DepositIndex == "" {
-		return errors.New("eth1 deposit index missing")
-	}
-	if s.ETH1DepositIndex, err = strconv.ParseUint(data.ETH1DepositIndex, 10, 64); err != nil {
-		return errors.Wrap(err, "invalid value for eth1 deposit index")
-	}
-	s.Balances = make([]Gwei, len(data.Balances))
-	for i := range data.Balances {
-		if data.Balances[i] == "" {
-			return fmt.Errorf("balance %d missing", i)
-		}
-		balance, err := strconv.ParseUint(data.Balances[i], 10, 64)
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("invalid value for balance %d", i))
-		}
-		s.Balances[i] = Gwei(balance)
-	}
-	s.RANDAOMixes = make([]Root, len(data.RANDAOMixes))
-	for i := range data.RANDAOMixes {
-		if data.RANDAOMixes[i] == "" {
-			return fmt.Errorf("RANDAO mix %d missing", i)
-		}
-		randaoMix, err := hex.DecodeString(strings.TrimPrefix(data.RANDAOMixes[i], "0x"))
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("invalid value for RANDAO mix %d", i))
-		}
-		if len(randaoMix) != RootLength {
-			return fmt.Errorf("incorrect length %d for RANDAO mix %d", len(randaoMix), i)
-		}
-		copy(s.RANDAOMixes[i][:], randaoMix)
-	}
-	s.Slashings = make([]Gwei, len(data.Slashings))
-	for i := range data.Slashings {
-		if data.Slashings[i] == "" {
-			return fmt.Errorf("slashing %d missing", i)
-		}
-		slashings, err := strconv.ParseUint(data.Slashings[i], 10, 64)
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("invalid value for slashing %d", i))
-		}
-		s.Slashings[i] = Gwei(slashings)
-	}
-	for i := range data.PreviousEpochAttestations {
-		if data.PreviousEpochAttestations[i] == nil {
-			return fmt.Errorf("previous epoch attestations entry %d missing", i)
-		}
-	}
-	s.PreviousEpochAttestations = data.PreviousEpochAttestations
-	for i := range data.CurrentEpochAttestations {
-		if data.CurrentEpochAttestations[i] == nil {
-			return fmt.Errorf("current epoch attestations entry %d missing", i)
-		}
-	}
-	s.CurrentEpochAttestations = data.CurrentEpochAttestations
-	if data.JustificationBits == "" {
-		return errors.New("justification bits missing")
-	}
-	if s.JustificationBits, err = hex.DecodeString(strings.TrimPrefix(data.JustificationBits, "0x")); err != nil {
-		return errors.Wrap(err, "invalid value for justification bits")
-	}
-	if data.PreviousJustifiedCheckpoint == nil {
-		return errors.New("previous justified checkpoint missing")
-	}
-	s.PreviousJustifiedCheckpoint = data.PreviousJustifiedCheckpoint
-	if data.CurrentJustifiedCheckpoint == nil {
-		return errors.New("current justified checkpoint missing")
-	}
-	s.CurrentJustifiedCheckpoint = data.CurrentJustifiedCheckpoint
-	if data.FinalizedCheckpoint == nil {
-		return errors.New("finalized checkpoint missing")
-	}
-	s.FinalizedCheckpoint = data.FinalizedCheckpoint
-
-	return nil
 }
 
 // MarshalYAML implements yaml.Marshaler.
@@ -396,4 +221,231 @@ func (s *BeaconState) String() string {
 	}
 
 	return string(data)
+}
+
+//nolint:gocyclo
+func (s *BeaconState) unpack(data *beaconStateJSON) error {
+	var err error
+
+	if data.GenesisTime == "" {
+		return errors.New("genesis time missing")
+	}
+
+	if s.GenesisTime, err = strconv.ParseUint(data.GenesisTime, 10, 64); err != nil {
+		return errors.Wrap(err, "invalid value for genesis time")
+	}
+
+	if data.GenesisValidatorsRoot == "" {
+		return errors.New("genesis validators root missing")
+	}
+
+	genesisValidatorsRoot, err := hex.DecodeString(strings.TrimPrefix(data.GenesisValidatorsRoot, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for genesis validators root")
+	}
+
+	if len(genesisValidatorsRoot) != RootLength {
+		return fmt.Errorf("incorrect length %d for genesis validators root", len(genesisValidatorsRoot))
+	}
+
+	copy(s.GenesisValidatorsRoot[:], genesisValidatorsRoot)
+
+	if data.Slot == "" {
+		return errors.New("slot missing")
+	}
+
+	slot, err := strconv.ParseUint(data.Slot, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for slot")
+	}
+
+	s.Slot = Slot(slot)
+
+	if data.Fork == nil {
+		return errors.New("fork missing")
+	}
+
+	s.Fork = data.Fork
+	if data.LatestBlockHeader == nil {
+		return errors.New("latest block header missing")
+	}
+
+	s.LatestBlockHeader = data.LatestBlockHeader
+	if len(data.BlockRoots) == 0 {
+		return errors.New("block roots missing")
+	}
+
+	s.BlockRoots = make([]Root, len(data.BlockRoots))
+	for i := range data.BlockRoots {
+		if data.BlockRoots[i] == "" {
+			return fmt.Errorf("block root %d missing", i)
+		}
+
+		blockRoot, err := hex.DecodeString(strings.TrimPrefix(data.BlockRoots[i], "0x"))
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("invalid value for block root %d", i))
+		}
+
+		if len(blockRoot) != RootLength {
+			return fmt.Errorf("incorrect length %d for block root %d", len(blockRoot), i)
+		}
+
+		copy(s.BlockRoots[i][:], blockRoot)
+	}
+
+	s.StateRoots = make([]Root, len(data.StateRoots))
+	for i := range data.StateRoots {
+		if data.StateRoots[i] == "" {
+			return fmt.Errorf("state root %d missing", i)
+		}
+
+		stateRoot, err := hex.DecodeString(strings.TrimPrefix(data.StateRoots[i], "0x"))
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("invalid value for state root %d", i))
+		}
+
+		if len(stateRoot) != RootLength {
+			return fmt.Errorf("incorrect length %d for state root %d", len(stateRoot), i)
+		}
+
+		copy(s.StateRoots[i][:], stateRoot)
+	}
+
+	s.HistoricalRoots = make([]Root, len(data.HistoricalRoots))
+	for i := range data.HistoricalRoots {
+		if data.HistoricalRoots[i] == "" {
+			return fmt.Errorf("historical root %d missing", i)
+		}
+
+		historicalRoot, err := hex.DecodeString(strings.TrimPrefix(data.HistoricalRoots[i], "0x"))
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("invalid value for historical root %d", i))
+		}
+
+		if len(historicalRoot) != RootLength {
+			return fmt.Errorf("incorrect length %d for historical root %d", len(historicalRoot), i)
+		}
+
+		copy(s.HistoricalRoots[i][:], historicalRoot)
+	}
+
+	if data.ETH1Data == nil {
+		return errors.New("eth1 data missing")
+	}
+
+	s.ETH1Data = data.ETH1Data
+	// ETH1DataVotes can be empty, but if present the individual votes must not be null.
+	if data.ETH1DataVotes != nil {
+		for i := range data.Validators {
+			if data.Validators[i] == nil {
+				return fmt.Errorf("validators entry %d missing", i)
+			}
+		}
+	}
+
+	s.ETH1DataVotes = data.ETH1DataVotes
+	if data.Validators == nil {
+		return errors.New("validators missing")
+	}
+
+	for i := range data.Validators {
+		if data.Validators[i] == nil {
+			return fmt.Errorf("validators entry %d missing", i)
+		}
+	}
+
+	s.Validators = data.Validators
+	if data.ETH1DepositIndex == "" {
+		return errors.New("eth1 deposit index missing")
+	}
+
+	if s.ETH1DepositIndex, err = strconv.ParseUint(data.ETH1DepositIndex, 10, 64); err != nil {
+		return errors.Wrap(err, "invalid value for eth1 deposit index")
+	}
+
+	s.Balances = make([]Gwei, len(data.Balances))
+	for i := range data.Balances {
+		if data.Balances[i] == "" {
+			return fmt.Errorf("balance %d missing", i)
+		}
+
+		balance, err := strconv.ParseUint(data.Balances[i], 10, 64)
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("invalid value for balance %d", i))
+		}
+
+		s.Balances[i] = Gwei(balance)
+	}
+
+	s.RANDAOMixes = make([]Root, len(data.RANDAOMixes))
+	for i := range data.RANDAOMixes {
+		if data.RANDAOMixes[i] == "" {
+			return fmt.Errorf("RANDAO mix %d missing", i)
+		}
+
+		randaoMix, err := hex.DecodeString(strings.TrimPrefix(data.RANDAOMixes[i], "0x"))
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("invalid value for RANDAO mix %d", i))
+		}
+
+		if len(randaoMix) != RootLength {
+			return fmt.Errorf("incorrect length %d for RANDAO mix %d", len(randaoMix), i)
+		}
+
+		copy(s.RANDAOMixes[i][:], randaoMix)
+	}
+
+	s.Slashings = make([]Gwei, len(data.Slashings))
+	for i := range data.Slashings {
+		if data.Slashings[i] == "" {
+			return fmt.Errorf("slashing %d missing", i)
+		}
+
+		slashings, err := strconv.ParseUint(data.Slashings[i], 10, 64)
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("invalid value for slashing %d", i))
+		}
+
+		s.Slashings[i] = Gwei(slashings)
+	}
+
+	for i := range data.PreviousEpochAttestations {
+		if data.PreviousEpochAttestations[i] == nil {
+			return fmt.Errorf("previous epoch attestations entry %d missing", i)
+		}
+	}
+
+	s.PreviousEpochAttestations = data.PreviousEpochAttestations
+	for i := range data.CurrentEpochAttestations {
+		if data.CurrentEpochAttestations[i] == nil {
+			return fmt.Errorf("current epoch attestations entry %d missing", i)
+		}
+	}
+
+	s.CurrentEpochAttestations = data.CurrentEpochAttestations
+	if data.JustificationBits == "" {
+		return errors.New("justification bits missing")
+	}
+
+	if s.JustificationBits, err = hex.DecodeString(strings.TrimPrefix(data.JustificationBits, "0x")); err != nil {
+		return errors.Wrap(err, "invalid value for justification bits")
+	}
+
+	if data.PreviousJustifiedCheckpoint == nil {
+		return errors.New("previous justified checkpoint missing")
+	}
+
+	s.PreviousJustifiedCheckpoint = data.PreviousJustifiedCheckpoint
+	if data.CurrentJustifiedCheckpoint == nil {
+		return errors.New("current justified checkpoint missing")
+	}
+
+	s.CurrentJustifiedCheckpoint = data.CurrentJustifiedCheckpoint
+	if data.FinalizedCheckpoint == nil {
+		return errors.New("finalized checkpoint missing")
+	}
+
+	s.FinalizedCheckpoint = data.FinalizedCheckpoint
+
+	return nil
 }

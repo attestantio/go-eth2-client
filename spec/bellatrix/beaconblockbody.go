@@ -98,82 +98,104 @@ func (b *BeaconBlockBody) unpack(data *beaconBlockBodyJSON) error {
 	if data.RANDAOReveal == "" {
 		return errors.New("RANDAO reveal missing")
 	}
+
 	randaoReveal, err := hex.DecodeString(strings.TrimPrefix(data.RANDAOReveal, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for RANDAO reveal")
 	}
+
 	if len(randaoReveal) != phase0.SignatureLength {
 		return errors.New("incorrect length for RANDAO reveal")
 	}
+
 	copy(b.RANDAOReveal[:], randaoReveal)
+
 	if data.ETH1Data == nil {
 		return errors.New("ETH1 data missing")
 	}
+
 	b.ETH1Data = data.ETH1Data
 	if data.Graffiti == "" {
 		return errors.New("graffiti missing")
 	}
+
 	graffiti, err := hex.DecodeString(strings.TrimPrefix(data.Graffiti, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for graffiti")
 	}
+
 	if len(graffiti) != phase0.GraffitiLength {
 		return errors.New("incorrect length for graffiti")
 	}
+
 	copy(b.Graffiti[:], graffiti)
+
 	if data.ProposerSlashings == nil {
 		return errors.New("proposer slashings missing")
 	}
+
 	for i := range data.ProposerSlashings {
 		if data.ProposerSlashings[i] == nil {
 			return fmt.Errorf("proposer slashings entry %d missing", i)
 		}
 	}
+
 	b.ProposerSlashings = data.ProposerSlashings
 	if data.AttesterSlashings == nil {
 		return errors.New("attester slashings missing")
 	}
+
 	for i := range data.AttesterSlashings {
 		if data.AttesterSlashings[i] == nil {
 			return fmt.Errorf("attester slashings entry %d missing", i)
 		}
 	}
+
 	b.AttesterSlashings = data.AttesterSlashings
 	if data.Attestations == nil {
 		return errors.New("attestations missing")
 	}
+
 	for i := range data.Attestations {
 		if data.Attestations[i] == nil {
 			return fmt.Errorf("attestations entry %d missing", i)
 		}
 	}
+
 	b.Attestations = data.Attestations
 	if data.Deposits == nil {
 		return errors.New("deposits missing")
 	}
+
 	for i := range data.Deposits {
 		if data.Deposits[i] == nil {
 			return fmt.Errorf("deposits entry %d missing", i)
 		}
 	}
+
 	b.Deposits = data.Deposits
 	if data.VoluntaryExits == nil {
 		return errors.New("voluntary exits missing")
 	}
+
 	for i := range data.VoluntaryExits {
 		if data.VoluntaryExits[i] == nil {
 			return fmt.Errorf("voluntary exits entry %d missing", i)
 		}
 	}
+
 	b.Deposits = data.Deposits
+
 	b.VoluntaryExits = data.VoluntaryExits
 	if data.SyncAggregate == nil {
 		return errors.New("sync aggregate missing")
 	}
+
 	b.SyncAggregate = data.SyncAggregate
 	if data.ExecutionPayload == nil {
 		return errors.New("execution payload missing")
 	}
+
 	b.ExecutionPayload = data.ExecutionPayload
 
 	return nil

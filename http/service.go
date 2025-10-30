@@ -162,12 +162,144 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 	return s, nil
 }
 
+// Name provides the name of the service.
+func (*Service) Name() string {
+	return "Standard (HTTP)"
+}
+
+// Address provides the address for the connection.
+func (s *Service) Address() string {
+	return s.address
+}
+
+// close closes the service, freeing up resources.
+
+// CheckConnectionState checks the connection state for the client, potentially updating
+// its activation and sync states.
+// This will call hooks supplied when creating the client if the state changes.
+func (s *Service) CheckConnectionState(ctx context.Context) {
+	log := zerolog.Ctx(ctx)
+
+	s.connectionMu.Lock()
+	wasActive := s.connectionActive
+	wasSynced := s.connectionSynced
+	s.connectionMu.Unlock()
+
+	var (
+		active bool
+		synced bool
+	)
+
+	acquired := s.pingSem.TryAcquire(1)
+	if !acquired {
+		// Means there is another ping running, just use current info.
+		active = wasActive
+		synced = wasSynced
+	} else {
+		response, err := s.NodeSyncing(ctx, &api.NodeSyncingOpts{})
+		if err != nil {
+			log.Debug().Err(err).Msg("Failed to obtain sync state from node")
+
+			active = false
+			synced = false
+		} else {
+			active = true
+			synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
+		}
+
+		s.pingSem.Release(1)
+	}
+
+	if !wasActive && active {
+		// Switched from not active to active.
+
+		// Check connection to DVT middleware.
+		if err := s.checkDVT(ctx); err != nil {
+			log.Error().Err(err).Msg("Failed to check DVT connection on client activation; returning to inactive")
+
+			active = false
+		}
+	}
+
+	if wasActive && !active {
+		// Switched from active to not active.
+
+		// Clear static values.
+		s.clearStaticValues()
+	}
+
+	// if !wasSynced && synced {
+	// 	// Switched from not synced to synced.
+	// }
+
+	// if wasSynced && !synced {
+	// 	// Switched from synced to not synced.
+	// }
+
+	log.Trace().
+		Bool("was_active", wasActive).
+		Bool("active", active).
+		Bool("was_synced", wasSynced).
+		Bool("synced", synced).
+		Msg("Updated connection state")
+
+	s.connectionMu.Lock()
+	s.connectionActive = active
+	s.connectionSynced = synced
+	s.connectionMu.Unlock()
+
+	switch {
+	case synced:
+		s.monitorState("synced")
+	case active:
+		s.monitorState("active")
+	default:
+		s.monitorState("inactive")
+	}
+
+	// Call hooks if present.
+	if (!wasActive && active) && s.hooks.OnActive != nil {
+		go s.hooks.OnActive(ctx, s)
+	}
+
+	if (wasActive && !active) && s.hooks.OnInactive != nil {
+		go s.hooks.OnInactive(ctx, s)
+	}
+
+	if (!wasSynced && synced) && s.hooks.OnSynced != nil {
+		go s.hooks.OnSynced(ctx, s)
+	}
+
+	if (wasSynced && !synced) && s.hooks.OnDesynced != nil {
+		go s.hooks.OnDesynced(ctx, s)
+	}
+}
+
+// IsActive returns true if the client is active.
+func (s *Service) IsActive() bool {
+	s.connectionMu.RLock()
+	active := s.connectionActive
+	s.connectionMu.RUnlock()
+
+	return active
+}
+
+// IsSynced returns true if the client is synced.
+func (s *Service) IsSynced() bool {
+	s.connectionMu.RLock()
+	synced := s.connectionSynced
+	s.connectionMu.RUnlock()
+
+	return synced
+}
+
 // periodicUpdateConnectionState periodically pings the client to update its active and synced status.
 func (s *Service) periodicUpdateConnectionState(ctx context.Context) {
 	go func(s *Service, ctx context.Context) {
 		// Refresh every 30 seconds.
 		refreshTicker := time.NewTicker(30 * time.Second)
 		defer refreshTicker.Stop()
+
 		for {
 			select {
 			case <-refreshTicker.C:
@@ -186,6 +318,7 @@ func (s *Service) periodicClearStaticValues(ctx context.Context) {
 		// Refresh every 5 minutes.
 		refreshTicker := time.NewTicker(5 * time.Minute)
 		defer refreshTicker.Stop()
+
 		for {
 			select {
 			case <-refreshTicker.C:
@@ -234,129 +367,7 @@ func (s *Service) checkDVT(ctx context.Context) error {
 	return nil
 }
 
-// Name provides the name of the service.
-func (*Service) Name() string {
-	return "Standard (HTTP)"
-}
-
-// Address provides the address for the connection.
-func (s *Service) Address() string {
-	return s.address
-}
-
-// close closes the service, freeing up resources.
 func (*Service) close() {
-}
-
-// CheckConnectionState checks the connection state for the client, potentially updating
-// its activation and sync states.
-// This will call hooks supplied when creating the client if the state changes.
-func (s *Service) CheckConnectionState(ctx context.Context) {
-	log := zerolog.Ctx(ctx)
-
-	s.connectionMu.Lock()
-	wasActive := s.connectionActive
-	wasSynced := s.connectionSynced
-	s.connectionMu.Unlock()
-
-	var active bool
-	var synced bool
-
-	acquired := s.pingSem.TryAcquire(1)
-	if !acquired {
-		// Means there is another ping running, just use current info.
-		active = wasActive
-		synced = wasSynced
-	} else {
-		response, err := s.NodeSyncing(ctx, &api.NodeSyncingOpts{})
-		if err != nil {
-			log.Debug().Err(err).Msg("Failed to obtain sync state from node")
-			active = false
-			synced = false
-		} else {
-			active = true
-			synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
-		}
-		s.pingSem.Release(1)
-	}
-
-	if !wasActive && active {
-		// Switched from not active to active.
-
-		// Check connection to DVT middleware.
-		if err := s.checkDVT(ctx); err != nil {
-			log.Error().Err(err).Msg("Failed to check DVT connection on client activation; returning to inactive")
-			active = false
-		}
-	}
-
-	if wasActive && !active {
-		// Switched from active to not active.
-
-		// Clear static values.
-		s.clearStaticValues()
-	}
-
-	// if !wasSynced && synced {
-	// 	// Switched from not synced to synced.
-	// }
-
-	// if wasSynced && !synced {
-	// 	// Switched from synced to not synced.
-	// }
-
-	log.Trace().
-		Bool("was_active", wasActive).
-		Bool("active", active).
-		Bool("was_synced", wasSynced).
-		Bool("synced", synced).
-		Msg("Updated connection state")
-
-	s.connectionMu.Lock()
-	s.connectionActive = active
-	s.connectionSynced = synced
-	s.connectionMu.Unlock()
-
-	switch {
-	case synced:
-		s.monitorState("synced")
-	case active:
-		s.monitorState("active")
-	default:
-		s.monitorState("inactive")
-	}
-
-	// Call hooks if present.
-	if (!wasActive && active) && s.hooks.OnActive != nil {
-		go s.hooks.OnActive(ctx, s)
-	}
-	if (wasActive && !active) && s.hooks.OnInactive != nil {
-		go s.hooks.OnInactive(ctx, s)
-	}
-	if (!wasSynced && synced) && s.hooks.OnSynced != nil {
-		go s.hooks.OnSynced(ctx, s)
-	}
-	if (wasSynced && !synced) && s.hooks.OnDesynced != nil {
-		go s.hooks.OnDesynced(ctx, s)
-	}
-}
-
-// IsActive returns true if the client is active.
-func (s *Service) IsActive() bool {
-	s.connectionMu.RLock()
-	active := s.connectionActive
-	s.connectionMu.RUnlock()
-
-	return active
-}
-
-// IsSynced returns true if the client is synced.
-func (s *Service) IsSynced() bool {
-	s.connectionMu.RLock()
-	synced := s.connectionSynced
-	s.connectionMu.RUnlock()
-
-	return synced
 }
 
 func (s *Service) assertIsActive(ctx context.Context) error {
@@ -366,6 +377,7 @@ func (s *Service) assertIsActive(ctx context.Context) error {
 	}
 
 	s.CheckConnectionState(ctx)
+
 	active = s.IsActive()
 	if !active {
 		return client.ErrNotActive
@@ -381,6 +393,7 @@ func (s *Service) assertIsSynced(ctx context.Context) error {
 	}
 
 	s.CheckConnectionState(ctx)
+
 	active := s.IsActive()
 	if !active {
 		return client.ErrNotActive
@@ -399,6 +412,7 @@ func parseAddress(address string) (*url.URL, *url.URL, error) {
 	if !strings.HasPrefix(address, "http") {
 		address = fmt.Sprintf("http://%s", address)
 	}
+
 	base, err := url.Parse(address)
 	if err != nil {
 		return nil, nil, errors.Join(errors.New("invalid URL"), err)
@@ -413,10 +427,12 @@ func parseAddress(address string) (*url.URL, *url.URL, error) {
 		user := baseAddress.User.Username()
 		baseAddress.User = url.UserPassword(user, "xxxxx")
 	}
+
 	if baseAddress.Path != "" {
 		// Mask the path.
 		baseAddress.Path = "xxxxx"
 	}
+
 	if baseAddress.RawQuery != "" {
 		// Mask all query values.
 		sensitiveRegex := regexp.MustCompile("=([^&]*)(&)?")

@@ -36,9 +36,11 @@ func (s *Service) ValidatorLiveness(
 	if err := s.assertIsSynced(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	if len(opts.Indices) == 0 {
 		return nil, errors.Join(errors.New("no validator indices specified"), client.ErrInvalidOptions)
 	}

@@ -54,36 +54,13 @@ func (c *Checkpoint) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler.
 func (c *Checkpoint) UnmarshalJSON(input []byte) error {
 	var checkpointJSON checkpointJSON
+
 	err := json.Unmarshal(input, &checkpointJSON)
 	if err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
 
 	return c.unpack(&checkpointJSON)
-}
-
-func (c *Checkpoint) unpack(checkpointJSON *checkpointJSON) error {
-	if checkpointJSON.Epoch == "" {
-		return errors.New("epoch missing")
-	}
-	epoch, err := strconv.ParseUint(checkpointJSON.Epoch, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for epoch")
-	}
-	c.Epoch = Epoch(epoch)
-	if checkpointJSON.Root == "" {
-		return errors.New("root missing")
-	}
-	root, err := hex.DecodeString(strings.TrimPrefix(checkpointJSON.Root, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for root")
-	}
-	if len(root) != RootLength {
-		return errors.New("incorrect length for root")
-	}
-	copy(c.Root[:], root)
-
-	return nil
 }
 
 // MarshalYAML implements yaml.Marshaler.
@@ -118,4 +95,34 @@ func (c *Checkpoint) String() string {
 	}
 
 	return string(data)
+}
+
+func (c *Checkpoint) unpack(checkpointJSON *checkpointJSON) error {
+	if checkpointJSON.Epoch == "" {
+		return errors.New("epoch missing")
+	}
+
+	epoch, err := strconv.ParseUint(checkpointJSON.Epoch, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for epoch")
+	}
+
+	c.Epoch = Epoch(epoch)
+
+	if checkpointJSON.Root == "" {
+		return errors.New("root missing")
+	}
+
+	root, err := hex.DecodeString(strings.TrimPrefix(checkpointJSON.Root, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for root")
+	}
+
+	if len(root) != RootLength {
+		return errors.New("incorrect length for root")
+	}
+
+	copy(c.Root[:], root)
+
+	return nil
 }
