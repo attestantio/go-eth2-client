@@ -54,5 +54,5 @@ func (s *Slot) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (s Slot) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%d"`, s)), nil
+	return fmt.Appendf(nil, `"%d"`, s), nil
 }

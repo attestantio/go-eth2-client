@@ -67,7 +67,7 @@ func (v *ValidatorState) MarshalJSON() ([]byte, error) {
 		vs = validatorStateStrings[*v]
 	}
 
-	return []byte(fmt.Sprintf("%q", vs)), nil
+	return fmt.Appendf(nil, "%q", vs), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

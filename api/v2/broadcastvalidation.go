@@ -38,7 +38,7 @@ var broadcastValidationStrings = [...]string{
 
 // MarshalJSON implements json.Marshaler.
 func (b *BroadcastValidation) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", broadcastValidationStrings[*b])), nil
+	return fmt.Appendf(nil, "%q", broadcastValidationStrings[*b]), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

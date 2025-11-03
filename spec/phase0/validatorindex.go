@@ -54,5 +54,5 @@ func (v *ValidatorIndex) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (v ValidatorIndex) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%d"`, v)), nil
+	return fmt.Appendf(nil, `"%d"`, v), nil
 }

@@ -32,7 +32,7 @@ var responseBuilderVersionStrings = [...]string{
 
 // MarshalJSON implements json.Marshaler.
 func (d *BuilderVersion) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", responseBuilderVersionStrings[*d])), nil
+	return fmt.Appendf(nil, "%q", responseBuilderVersionStrings[*d]), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

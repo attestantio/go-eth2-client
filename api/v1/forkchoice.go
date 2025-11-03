@@ -134,7 +134,7 @@ func ForkChoiceNodeValidityFromString(input string) (ForkChoiceNodeValidity, err
 
 // MarshalJSON implements json.Marshaler.
 func (d *ForkChoiceNodeValidity) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", ForkChoiceNodeValidityStrings[*d])), nil
+	return fmt.Appendf(nil, "%q", ForkChoiceNodeValidityStrings[*d]), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

@@ -54,7 +54,7 @@ func (g *Gwei) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (g Gwei) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%d"`, g)), nil
+	return fmt.Appendf(nil, `"%d"`, g), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
@@ -75,5 +75,5 @@ func (g *Gwei) UnmarshalYAML(input []byte) error {
 
 // MarshalYAML implements yaml.Marshaler.
 func (g Gwei) MarshalYAML() ([]byte, error) {
-	return []byte(fmt.Sprintf(`%d`, g)), nil
+	return fmt.Appendf(nil, `%d`, g), nil
 }

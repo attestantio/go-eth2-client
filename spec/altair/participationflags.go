@@ -54,5 +54,5 @@ func (p *ParticipationFlags) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (p ParticipationFlags) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%d"`, p)), nil
+	return fmt.Appendf(nil, `"%d"`, p), nil
 }

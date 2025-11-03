@@ -40,7 +40,7 @@ func (a ExecutionAddress) String() string {
 	keccak.Write(data)
 	hash := keccak.Sum(nil)
 
-	for i := 0; i < len(data); i++ {
+	for i := range len(data) {
 		hashByte := hash[i/2]
 		if i%2 == 0 {
 			hashByte >>= 4
@@ -105,7 +105,7 @@ func (a *ExecutionAddress) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (a ExecutionAddress) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%s"`, a.String())), nil
+	return fmt.Appendf(nil, `"%s"`, a.String()), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
@@ -140,5 +140,5 @@ func (a *ExecutionAddress) UnmarshalYAML(input []byte) error {
 
 // MarshalYAML implements yaml.Marshaler.
 func (a ExecutionAddress) MarshalYAML() ([]byte, error) {
-	return []byte(fmt.Sprintf(`'%s'`, a.String())), nil
+	return fmt.Appendf(nil, `'%s'`, a.String()), nil
 }

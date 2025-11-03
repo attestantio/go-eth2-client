@@ -32,7 +32,7 @@ func (b *BlobSidecars) UnmarshalSSZ(buf []byte) error {
 	}
 
 	b.Sidecars = make([]*deneb.BlobSidecar, num)
-	for ii := 0; ii < num; ii++ {
+	for ii := range num {
 		if b.Sidecars[ii] == nil {
 			b.Sidecars[ii] = new(deneb.BlobSidecar)
 		}

@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"math/rand"
 	"net"
 	"net/http"
@@ -64,9 +65,7 @@ func (s *Service) Events(ctx context.Context, opts *api.EventsOpts) error {
 	log.Trace().Str("url", callURL.String()).Msg("GET request to events stream")
 
 	sseClient := sse.NewClient(callURL.String())
-	for k, v := range s.extraHeaders {
-		sseClient.Headers[k] = v
-	}
+	maps.Copy(sseClient.Headers, s.extraHeaders)
 
 	if _, exists := sseClient.Headers["User-Agent"]; !exists {
 		sseClient.Headers["User-Agent"] = defaultUserAgent

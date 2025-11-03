@@ -85,7 +85,7 @@ func (h *VersionedHash) MarshalJSON() ([]byte, error) {
 		return nil, errors.New("value nil")
 	}
 
-	return []byte(fmt.Sprintf(`"%#x"`, h)), nil
+	return fmt.Appendf(nil, `"%#x"`, h), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
@@ -124,5 +124,5 @@ func (h *VersionedHash) MarshalYAML() ([]byte, error) {
 		return nil, errors.New("value nil")
 	}
 
-	return []byte(fmt.Sprintf(`'%#x'`, h)), nil
+	return fmt.Appendf(nil, `'%#x'`, h), nil
 }

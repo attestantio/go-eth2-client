@@ -180,13 +180,14 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	e.Timestamp = tmpUint
 
 	var tmpBytes []byte
+
 	switch {
 	case bytes.Equal(raw["extra_data"], []byte{'0', 'x'}), bytes.Equal(raw["extra_data"], []byte{'0'}):
 		// Empty.
 	default:
 		tmpBytes = bytes.TrimPrefix(bytes.Trim(raw["extra_data"], `"`), []byte{'0', 'x'})
 		if len(tmpBytes)%2 == 1 {
-			tmpBytes = []byte(fmt.Sprintf("0%s", string(tmpBytes)))
+			tmpBytes = fmt.Appendf(nil, "0%s", string(tmpBytes))
 		}
 
 		tmp, err := hex.DecodeString(string(tmpBytes))

@@ -162,8 +162,8 @@ func parseSpecString(k, v string) any {
 	}
 
 	// Handle hex strings.
-	if strings.HasPrefix(v, "0x") {
-		byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
+	if hexVal, found := strings.CutPrefix(v, "0x"); found {
+		byteVal, err := hex.DecodeString(hexVal)
 		if err == nil {
 			return byteVal
 		}

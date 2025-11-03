@@ -54,7 +54,7 @@ func (e *Epoch) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (e Epoch) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%d"`, e)), nil
+	return fmt.Appendf(nil, `"%d"`, e), nil
 }
 
 // CommitteeIndex is a committee index at a slot.

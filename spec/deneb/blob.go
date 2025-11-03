@@ -81,7 +81,7 @@ func (b *Blob) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (b Blob) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%#x"`, b)), nil
+	return fmt.Appendf(nil, `"%#x"`, b), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
@@ -116,5 +116,5 @@ func (b *Blob) UnmarshalYAML(input []byte) error {
 
 // MarshalYAML implements yaml.Marshaler.
 func (b Blob) MarshalYAML() ([]byte, error) {
-	return []byte(fmt.Sprintf(`'%#x'`, b)), nil
+	return fmt.Appendf(nil, `'%#x'`, b), nil
 }

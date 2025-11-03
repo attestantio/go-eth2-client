@@ -403,7 +403,7 @@ func populateConsensusVersion(res *httpResponse, resp *http.Response) error {
 		return fmt.Errorf("malformed consensus version (%d entries)", len(respConsensusVersions))
 	}
 
-	if err := res.consensusVersion.UnmarshalJSON([]byte(fmt.Sprintf("%q", respConsensusVersions[0]))); err != nil {
+	if err := res.consensusVersion.UnmarshalJSON(fmt.Appendf(nil, "%q", respConsensusVersions[0])); err != nil {
 		return errors.Join(errors.New("failed to parse consensus version"), err)
 	}
 

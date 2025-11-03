@@ -102,8 +102,8 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 	// base fee per gas is stored little-endian but we need it
 	// big-endian for big.Int.
 	var baseFeePerGasBEBytes [32]byte
-	for i := 0; i < 32; i++ {
-		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i]
+	for i := range 32 {
+		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i] //nolint:gosec
 	}
 
 	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
@@ -152,8 +152,8 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 	// base fee per gas is stored little-endian but we need it
 	// big-endian for big.Int.
 	var baseFeePerGasBEBytes [32]byte
-	for i := 0; i < 32; i++ {
-		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i]
+	for i := range 32 {
+		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i] //nolint:gosec
 	}
 
 	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
@@ -400,8 +400,8 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	var baseFeePerGasLEBytes [32]byte
 
 	baseFeeLen := len(baseFeePerGasBEBytes)
-	for i := 0; i < baseFeeLen; i++ {
-		baseFeePerGasLEBytes[i] = baseFeePerGasBEBytes[baseFeeLen-1-i]
+	for i := range baseFeeLen {
+		baseFeePerGasLEBytes[i] = baseFeePerGasBEBytes[baseFeeLen-1-i] //nolint:gosec
 	}
 
 	copy(e.BaseFeePerGas[:], baseFeePerGasLEBytes[:])

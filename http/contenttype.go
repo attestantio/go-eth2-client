@@ -39,7 +39,7 @@ var contentTypeStrings = [...]string{
 
 // MarshalJSON implements json.Marshaler.
 func (c *ContentType) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", contentTypeStrings[*c])), nil
+	return fmt.Appendf(nil, "%q", contentTypeStrings[*c]), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.

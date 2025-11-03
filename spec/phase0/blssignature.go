@@ -103,7 +103,7 @@ func (s *BLSSignature) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (s BLSSignature) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%#x"`, s)), nil
+	return fmt.Appendf(nil, `"%#x"`, s), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
@@ -138,5 +138,5 @@ func (s *BLSSignature) UnmarshalYAML(input []byte) error {
 
 // MarshalYAML implements yaml.Marshaler.
 func (s BLSSignature) MarshalYAML() ([]byte, error) {
-	return []byte(fmt.Sprintf(`'%#x'`, s)), nil
+	return fmt.Appendf(nil, `'%#x'`, s), nil
 }

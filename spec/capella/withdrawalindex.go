@@ -54,5 +54,5 @@ func (w *WithdrawalIndex) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (w WithdrawalIndex) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%d"`, w)), nil
+	return fmt.Appendf(nil, `"%d"`, w), nil
 }

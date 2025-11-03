@@ -81,7 +81,7 @@ func (k *KZGCommitment) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (k KZGCommitment) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%#x"`, k)), nil
+	return fmt.Appendf(nil, `"%#x"`, k), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
@@ -116,5 +116,5 @@ func (k *KZGCommitment) UnmarshalYAML(input []byte) error {
 
 // MarshalYAML implements yaml.Marshaler.
 func (k KZGCommitment) MarshalYAML() ([]byte, error) {
-	return []byte(fmt.Sprintf(`'%#x'`, k)), nil
+	return fmt.Appendf(nil, `'%#x'`, k), nil
 }

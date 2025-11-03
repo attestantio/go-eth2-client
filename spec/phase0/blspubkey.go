@@ -97,7 +97,7 @@ func (p *BLSPubKey) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (p BLSPubKey) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%#x"`, p)), nil
+	return fmt.Appendf(nil, `"%#x"`, p), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
@@ -132,5 +132,5 @@ func (p *BLSPubKey) UnmarshalYAML(input []byte) error {
 
 // MarshalYAML implements yaml.Marshaler.
 func (p BLSPubKey) MarshalYAML() ([]byte, error) {
-	return []byte(fmt.Sprintf(`'%#x'`, p)), nil
+	return fmt.Appendf(nil, `'%#x'`, p), nil
 }

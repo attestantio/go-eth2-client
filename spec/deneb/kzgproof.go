@@ -81,7 +81,7 @@ func (k *KZGProof) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (k KZGProof) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%#x"`, k)), nil
+	return fmt.Appendf(nil, `"%#x"`, k), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
@@ -116,5 +116,5 @@ func (k *KZGProof) UnmarshalYAML(input []byte) error {
 
 // MarshalYAML implements yaml.Marshaler.
 func (k KZGProof) MarshalYAML() ([]byte, error) {
-	return []byte(fmt.Sprintf(`'%#x'`, k)), nil
+	return fmt.Appendf(nil, `'%#x'`, k), nil
 }
