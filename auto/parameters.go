@@ -66,7 +66,7 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	}
 
 	for _, p := range params {
-		if params != nil {
+		if p != nil {
 			p.apply(&parameters)
 		}
 	}

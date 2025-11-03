@@ -8,6 +8,7 @@ require (
 	github.com/ferranbt/fastssz v0.1.4
 	github.com/goccy/go-yaml v1.9.2
 	github.com/golang/snappy v0.0.4
+	github.com/google/go-cmp v0.5.9
 	github.com/holiman/uint256 v1.3.2
 	github.com/huandu/go-clone v1.6.0
 	github.com/huandu/go-clone/generic v1.6.0
