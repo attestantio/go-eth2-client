@@ -2161,7 +2161,7 @@ func TestValidators(t *testing.T) {
 			opts: &api.ValidatorsOpts{
 				State: "head",
 				Indices: []phase0.ValidatorIndex{
-					0, 1,
+					55, 66,
 				},
 				PubKeys: []phase0.BLSPubKey{
 					*mustParsePubKey("0xa85e33ca0737c84dc947006226462a6eba8a96c41962248031980326ee1d119b5e64bb868c9c279ca9424799dda52698"),
