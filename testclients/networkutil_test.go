@@ -42,7 +42,7 @@ func TestNetworkName(t *testing.T) {
 	network := testclients.NetworkName(ctx, service)
 
 	// The network name should be one of the known networks
-	require.Contains(t, []string{"Mainnet", "Sepolia", "Holesky", "Hoodi", "Unknown"}, network)
+	require.Contains(t, []string{"mainnet", "sepolia", "hoodi", "unknown"}, network)
 
 	t.Logf("Connected to network: %s", network)
 }

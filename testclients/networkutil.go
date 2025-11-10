@@ -28,9 +28,9 @@ import (
 func NetworkName(ctx context.Context, service interface{}) string {
 	// Known genesis validators roots for different networks
 	knownNetworks := map[string]string{
-		"0x4b363db94e286120d76eb905340fdd4e54bfe9f06bf33ff6cf5ad27f511bfe95": "Mainnet",
-		"0xd8ea171f3c94aea21ebc42a1ed61052acf3f9209c00e4efbaaddac09ed9b8078": "Sepolia",
-		"0x212f13fc4df078b6cb7db228f1c8307566dcecf900867401a92023d7ba99cb5f": "Hoodi",
+		"0x4b363db94e286120d76eb905340fdd4e54bfe9f06bf33ff6cf5ad27f511bfe95": "mainnet",
+		"0xd8ea171f3c94aea21ebc42a1ed61052acf3f9209c00e4efbaaddac09ed9b8078": "sepolia",
+		"0x212f13fc4df078b6cb7db228f1c8307566dcecf900867401a92023d7ba99cb5f": "hoodi",
 	}
 
 	// Type assert to GenesisProvider interface
