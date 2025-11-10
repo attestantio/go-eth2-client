@@ -16,14 +16,13 @@ package http_test
 import (
 	"context"
 	"errors"
-	"os"
 	"testing"
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,6 +36,7 @@ func TestBeaconBlockRoot(t *testing.T) {
 		expected *phase0.Root
 		err      string
 		errCode  int
+		network  string
 	}{
 		{
 			name: "NoOpts",
@@ -60,17 +60,26 @@ func TestBeaconBlockRoot(t *testing.T) {
 				Block: "0",
 			},
 			expected: mustParseRoot("0x4d611d5b93fdab69013a7f0a2f961caca0c853f87cfe9595fe50038163079360"),
+			network:  "mainnet",
+		},
+		{
+			name: "GenesisHoodi",
+			opts: &api.BeaconBlockRootOpts{
+				Block: "0",
+			},
+			expected: mustParseRoot("0x376450cd7fb9f05ade82a7f88565ac57af449ac696b1a6ac5cc7dac7d467b7d6"),
+			network:  "hoodi",
 		},
 	}
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
+	network := testclients.NetworkName(ctx, service)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			if test.network != "" && test.network != network {
+				t.Skipf("Skipping test %s on network %s", test.name, network)
+			}
 			response, err := service.(client.BeaconBlockRootProvider).BeaconBlockRoot(ctx, test.opts)
 			switch {
 			case test.err != "":
@@ -93,13 +102,9 @@ func TestBeaconBlockRootTimeout(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
 
-	_, err = service.(client.BeaconBlockRootProvider).BeaconBlockRoot(ctx, &api.BeaconBlockRootOpts{
+	_, err := service.(client.BeaconBlockRootProvider).BeaconBlockRoot(ctx, &api.BeaconBlockRootOpts{
 		Common: api.CommonOpts{
 			Timeout: time.Millisecond,
 		},
