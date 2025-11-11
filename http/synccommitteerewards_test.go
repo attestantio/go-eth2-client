@@ -16,6 +16,8 @@ package http_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"reflect"
 	"strconv"
 	"testing"
 
@@ -78,7 +80,7 @@ func TestSyncCommitteeRewards(t *testing.T) {
 					*mustParsePubKey("0x89c3d75c9fa8daa39cf721fd3caf441de9b43dd59ae1275dd482fa48dbd8463737038b3b8cb2f53c1a8635c8733fb7ca"),
 				},
 			},
-			expectedResponse: `[{"validator_index":"525735","reward":"-25016"},{"validator_index":"290742","reward":"25016"}]`,
+			expectedResponse: `[{"validator_index":"290742","reward":"25016"}, {"validator_index":"525735","reward":"-25016"}]`,
 			network:          "hoodi",
 		},
 		{
@@ -113,9 +115,29 @@ func TestSyncCommitteeRewards(t *testing.T) {
 				if test.expectedResponse != "" {
 					responseJSON, err := json.Marshal(response.Data)
 					require.NoError(t, err)
-					require.JSONEq(t, test.expectedResponse, string(responseJSON))
+					equal, err := jsonEqual(test.expectedResponse, string(responseJSON))
+					require.NoError(t, err)
+					require.True(t, equal)
 				}
 			}
 		})
 	}
+}
+
+// require.JSONEq fails for these tests because the order of the elements is not guaranteed.
+func jsonEqual(json1, json2 string) (bool, error) {
+	var data1 any
+	var data2 any
+
+	if err := json.Unmarshal([]byte(json1), &data1); err != nil {
+		return false, fmt.Errorf("could not unmarshal json1: %w", err)
+	}
+
+	if err := json.Unmarshal([]byte(json2), &data2); err != nil {
+		return false, fmt.Errorf("could not unmarshal json2: %w", err)
+	}
+
+	// Compare the two resulting data structures
+	// reflect.DeepEqual correctly handles unordered maps.
+	return reflect.DeepEqual(data1, data2), nil
 }

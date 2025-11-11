@@ -19,12 +19,11 @@ package http_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"reflect"
 	"testing"
 	"time"
 
-	"github.com/attestantio/go-eth2-client/http"
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -98,11 +97,7 @@ func TestSpecConformance(t *testing.T) {
 		"WHISTLEBLOWER_REWARD_QUOTIENT":         uint64(0),
 	}
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
 
 	spec, err := service.Spec(ctx)
 	require.NoError(t, err)

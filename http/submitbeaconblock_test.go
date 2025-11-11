@@ -15,13 +15,11 @@ package http_test
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
@@ -34,11 +32,7 @@ func TestSubmitBeaconBlock(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
 
 	// Need to fetch current slot for proposal.
 	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})

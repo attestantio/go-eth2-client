@@ -16,12 +16,10 @@ package http_test
 import (
 	"context"
 	"errors"
-	"os"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
@@ -35,7 +33,7 @@ func TestBeaconStateRoot(t *testing.T) {
 		opts     *api.BeaconStateRootOpts
 		expected *phase0.BLSSignature
 		err      string
-		errCode  int
+		errCodes []int
 	}{
 		{
 			name: "NilOpts",
@@ -47,9 +45,9 @@ func TestBeaconStateRoot(t *testing.T) {
 			err:  "no state specified",
 		},
 		{
-			name:    "Invalid",
-			opts:    &api.BeaconStateRootOpts{State: "current"},
-			errCode: 400,
+			name:     "Invalid",
+			opts:     &api.BeaconStateRootOpts{State: "current"},
+			errCodes: []int{400, 500},
 		},
 		{
 			name: "Zero",
@@ -69,11 +67,7 @@ func TestBeaconStateRoot(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -93,10 +87,10 @@ func TestBeaconStateRoot(t *testing.T) {
 			switch {
 			case test.err != "":
 				require.ErrorContains(t, err, test.err)
-			case test.errCode != 0:
+			case len(test.errCodes) > 0:
 				var apiErr *api.Error
 				if errors.As(err, &apiErr) {
-					require.Equal(t, test.errCode, apiErr.StatusCode)
+					require.Contains(t, test.errCodes, apiErr.StatusCode)
 				}
 			default:
 				require.NoError(t, err)

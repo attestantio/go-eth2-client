@@ -145,7 +145,8 @@ func verifyElectraAttestation(opts *api.AttestationPoolOpts, data *electra.Attes
 				return nil
 			}
 		}
+		return errors.New("attestation data not for requested committee index")
 	}
-
-	return errors.New("attestation data not for requested committee index")
+	// No check for committee index, so we match all committee indices.
+	return nil
 }
