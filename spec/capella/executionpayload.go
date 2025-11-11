@@ -102,9 +102,10 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 	// base fee per gas is stored little-endian but we need it
 	// big-endian for big.Int.
 	var baseFeePerGasBEBytes [32]byte
-	for i := 0; i < 32; i++ {
-		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i]
+	for i := range 32 {
+		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i] //nolint:gosec
 	}
+
 	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
 
 	return json.Marshal(&executionPayloadJSON{
@@ -136,216 +137,6 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	return e.unpack(&data)
 }
 
-//nolint:gocyclo
-func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
-	if data.ParentHash == "" {
-		return errors.New("parent hash missing")
-	}
-	parentHash, err := hex.DecodeString(strings.TrimPrefix(data.ParentHash, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for parent hash")
-	}
-	if len(parentHash) != phase0.Hash32Length {
-		return errors.New("incorrect length for parent hash")
-	}
-	copy(e.ParentHash[:], parentHash)
-
-	if data.FeeRecipient == "" {
-		return errors.New("fee recipient missing")
-	}
-	feeRecipient, err := hex.DecodeString(strings.TrimPrefix(data.FeeRecipient, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for fee recipient")
-	}
-	if len(feeRecipient) != bellatrix.FeeRecipientLength {
-		return errors.New("incorrect length for fee recipient")
-	}
-	copy(e.FeeRecipient[:], feeRecipient)
-
-	if data.StateRoot == "" {
-		return errors.New("state root missing")
-	}
-	stateRoot, err := hex.DecodeString(strings.TrimPrefix(data.StateRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for state root")
-	}
-	if len(stateRoot) != 32 {
-		return errors.New("incorrect length for state root")
-	}
-	copy(e.StateRoot[:], stateRoot)
-
-	if data.ReceiptsRoot == "" {
-		return errors.New("receipts root missing")
-	}
-	receiptsRoot, err := hex.DecodeString(strings.TrimPrefix(data.ReceiptsRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for receipts root")
-	}
-	if len(receiptsRoot) != 32 {
-		return errors.New("incorrect length for receipts root")
-	}
-	copy(e.ReceiptsRoot[:], receiptsRoot)
-
-	if data.LogsBloom == "" {
-		return errors.New("logs bloom missing")
-	}
-	logsBloom, err := hex.DecodeString(strings.TrimPrefix(data.LogsBloom, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for logs bloom")
-	}
-	if len(logsBloom) != 256 {
-		return errors.New("incorrect length for logs bloom")
-	}
-	copy(e.LogsBloom[:], logsBloom)
-
-	if data.PrevRandao == "" {
-		return errors.New("prev randao missing")
-	}
-	prevRandao, err := hex.DecodeString(strings.TrimPrefix(data.PrevRandao, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for prev randao")
-	}
-	if len(prevRandao) != 32 {
-		return errors.New("incorrect length for prev randao")
-	}
-	copy(e.PrevRandao[:], prevRandao)
-
-	if data.BlockNumber == "" {
-		return errors.New("block number missing")
-	}
-	blockNumber, err := strconv.ParseUint(data.BlockNumber, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for block number")
-	}
-	e.BlockNumber = blockNumber
-
-	if data.GasLimit == "" {
-		return errors.New("gas limit missing")
-	}
-	gasLimit, err := strconv.ParseUint(data.GasLimit, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for gas limit")
-	}
-	e.GasLimit = gasLimit
-
-	if data.GasUsed == "" {
-		return errors.New("gas used missing")
-	}
-	gasUsed, err := strconv.ParseUint(data.GasUsed, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for gas used")
-	}
-	e.GasUsed = gasUsed
-
-	if data.Timestamp == "" {
-		return errors.New("timestamp missing")
-	}
-	e.Timestamp, err = strconv.ParseUint(data.Timestamp, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for timestamp")
-	}
-
-	if data.ExtraData == "" {
-		return errors.New("extra data missing")
-	}
-	switch {
-	case data.ExtraData == "0x", data.ExtraData == "0":
-		e.ExtraData = make([]byte, 0)
-	default:
-		data.ExtraData = strings.TrimPrefix(data.ExtraData, "0x")
-		if len(data.ExtraData)%2 == 1 {
-			data.ExtraData = fmt.Sprintf("0%s", data.ExtraData)
-		}
-		extraData, err := hex.DecodeString(data.ExtraData)
-		if err != nil {
-			return errors.Wrap(err, "invalid value for extra data")
-		}
-		if len(extraData) > 32 {
-			return errors.New("incorrect length for extra data")
-		}
-		e.ExtraData = extraData
-	}
-
-	if data.BaseFeePerGas == "" {
-		return errors.New("base fee per gas missing")
-	}
-	baseFeePerGas := new(big.Int)
-	var ok bool
-	input := data.BaseFeePerGas
-	if strings.HasPrefix(data.BaseFeePerGas, "0x") {
-		input = strings.TrimPrefix(input, "0x")
-		if len(data.BaseFeePerGas)%2 == 1 {
-			input = fmt.Sprintf("0%s", input)
-		}
-		baseFeePerGas, ok = baseFeePerGas.SetString(input, 16)
-	} else {
-		baseFeePerGas, ok = baseFeePerGas.SetString(input, 10)
-	}
-	if !ok {
-		return errors.New("invalid value for base fee per gas")
-	}
-	if baseFeePerGas.Sign() == -1 {
-		return errors.New("base fee per gas cannot be negative")
-	}
-	if baseFeePerGas.Cmp(maxBaseFeePerGas) > 0 {
-		return errors.New("overflow for base fee per gas")
-	}
-	// We need to store internally as little-endian, but big.Int uses
-	// big-endian so do it manually.
-	baseFeePerGasBEBytes := baseFeePerGas.Bytes()
-	var baseFeePerGasLEBytes [32]byte
-	baseFeeLen := len(baseFeePerGasBEBytes)
-	for i := 0; i < baseFeeLen; i++ {
-		baseFeePerGasLEBytes[i] = baseFeePerGasBEBytes[baseFeeLen-1-i]
-	}
-	copy(e.BaseFeePerGas[:], baseFeePerGasLEBytes[:])
-
-	if data.BlockHash == "" {
-		return errors.New("block hash missing")
-	}
-	blockHash, err := hex.DecodeString(strings.TrimPrefix(data.BlockHash, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for block hash")
-	}
-	if len(blockHash) != phase0.Hash32Length {
-		return errors.New("incorrect length for block hash")
-	}
-	copy(e.BlockHash[:], blockHash)
-
-	if data.Transactions == nil {
-		return errors.New("transactions missing")
-	}
-	if len(data.Transactions) > bellatrix.MaxTransactionsPerPayload {
-		return errors.Wrap(err, "incorrect length for transactions")
-	}
-	transactions := make([]bellatrix.Transaction, len(data.Transactions))
-	for i := range data.Transactions {
-		if data.Transactions[i] == "" {
-			return errors.New("transaction missing")
-		}
-		transactions[i], err = hex.DecodeString(strings.TrimPrefix(data.Transactions[i], "0x"))
-		if err != nil {
-			return errors.Wrap(err, "invalid value for transaction")
-		}
-		if len(transactions[i]) > bellatrix.MaxBytesPerTransaction {
-			return errors.Wrap(err, "incorrect length for transaction")
-		}
-	}
-	e.Transactions = transactions
-
-	if data.Withdrawals == nil {
-		return errors.New("withdrawals missing")
-	}
-	for i := range data.Withdrawals {
-		if data.Withdrawals[i] == nil {
-			return fmt.Errorf("withdrawals entry %d missing", i)
-		}
-	}
-	e.Withdrawals = data.Withdrawals
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 	transactions := make([]string, len(e.Transactions))
@@ -361,9 +152,10 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 	// base fee per gas is stored little-endian but we need it
 	// big-endian for big.Int.
 	var baseFeePerGasBEBytes [32]byte
-	for i := 0; i < 32; i++ {
-		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i]
+	for i := range 32 {
+		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i] //nolint:gosec
 	}
+
 	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
 
 	yamlBytes, err := yaml.MarshalWithOptions(&executionPayloadYAML{
@@ -409,4 +201,263 @@ func (e *ExecutionPayload) String() string {
 	}
 
 	return string(data)
+}
+
+//nolint:gocyclo
+func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
+	if data.ParentHash == "" {
+		return errors.New("parent hash missing")
+	}
+
+	parentHash, err := hex.DecodeString(strings.TrimPrefix(data.ParentHash, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for parent hash")
+	}
+
+	if len(parentHash) != phase0.Hash32Length {
+		return errors.New("incorrect length for parent hash")
+	}
+
+	copy(e.ParentHash[:], parentHash)
+
+	if data.FeeRecipient == "" {
+		return errors.New("fee recipient missing")
+	}
+
+	feeRecipient, err := hex.DecodeString(strings.TrimPrefix(data.FeeRecipient, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for fee recipient")
+	}
+
+	if len(feeRecipient) != bellatrix.FeeRecipientLength {
+		return errors.New("incorrect length for fee recipient")
+	}
+
+	copy(e.FeeRecipient[:], feeRecipient)
+
+	if data.StateRoot == "" {
+		return errors.New("state root missing")
+	}
+
+	stateRoot, err := hex.DecodeString(strings.TrimPrefix(data.StateRoot, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for state root")
+	}
+
+	if len(stateRoot) != 32 {
+		return errors.New("incorrect length for state root")
+	}
+
+	copy(e.StateRoot[:], stateRoot)
+
+	if data.ReceiptsRoot == "" {
+		return errors.New("receipts root missing")
+	}
+
+	receiptsRoot, err := hex.DecodeString(strings.TrimPrefix(data.ReceiptsRoot, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for receipts root")
+	}
+
+	if len(receiptsRoot) != 32 {
+		return errors.New("incorrect length for receipts root")
+	}
+
+	copy(e.ReceiptsRoot[:], receiptsRoot)
+
+	if data.LogsBloom == "" {
+		return errors.New("logs bloom missing")
+	}
+
+	logsBloom, err := hex.DecodeString(strings.TrimPrefix(data.LogsBloom, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for logs bloom")
+	}
+
+	if len(logsBloom) != 256 {
+		return errors.New("incorrect length for logs bloom")
+	}
+
+	copy(e.LogsBloom[:], logsBloom)
+
+	if data.PrevRandao == "" {
+		return errors.New("prev randao missing")
+	}
+
+	prevRandao, err := hex.DecodeString(strings.TrimPrefix(data.PrevRandao, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for prev randao")
+	}
+
+	if len(prevRandao) != 32 {
+		return errors.New("incorrect length for prev randao")
+	}
+
+	copy(e.PrevRandao[:], prevRandao)
+
+	if data.BlockNumber == "" {
+		return errors.New("block number missing")
+	}
+
+	blockNumber, err := strconv.ParseUint(data.BlockNumber, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for block number")
+	}
+
+	e.BlockNumber = blockNumber
+
+	if data.GasLimit == "" {
+		return errors.New("gas limit missing")
+	}
+
+	gasLimit, err := strconv.ParseUint(data.GasLimit, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for gas limit")
+	}
+
+	e.GasLimit = gasLimit
+
+	if data.GasUsed == "" {
+		return errors.New("gas used missing")
+	}
+
+	gasUsed, err := strconv.ParseUint(data.GasUsed, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for gas used")
+	}
+
+	e.GasUsed = gasUsed
+
+	if data.Timestamp == "" {
+		return errors.New("timestamp missing")
+	}
+
+	e.Timestamp, err = strconv.ParseUint(data.Timestamp, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for timestamp")
+	}
+
+	if data.ExtraData == "" {
+		return errors.New("extra data missing")
+	}
+
+	switch data.ExtraData {
+	case "0x", "0":
+		e.ExtraData = make([]byte, 0)
+	default:
+		data.ExtraData = strings.TrimPrefix(data.ExtraData, "0x")
+		if len(data.ExtraData)%2 == 1 {
+			data.ExtraData = fmt.Sprintf("0%s", data.ExtraData)
+		}
+
+		extraData, err := hex.DecodeString(data.ExtraData)
+		if err != nil {
+			return errors.Wrap(err, "invalid value for extra data")
+		}
+
+		if len(extraData) > 32 {
+			return errors.New("incorrect length for extra data")
+		}
+
+		e.ExtraData = extraData
+	}
+
+	if data.BaseFeePerGas == "" {
+		return errors.New("base fee per gas missing")
+	}
+
+	baseFeePerGas := new(big.Int)
+
+	var ok bool
+
+	input := data.BaseFeePerGas
+	if strings.HasPrefix(data.BaseFeePerGas, "0x") {
+		input = strings.TrimPrefix(input, "0x")
+		if len(data.BaseFeePerGas)%2 == 1 {
+			input = fmt.Sprintf("0%s", input)
+		}
+
+		baseFeePerGas, ok = baseFeePerGas.SetString(input, 16)
+	} else {
+		baseFeePerGas, ok = baseFeePerGas.SetString(input, 10)
+	}
+
+	if !ok {
+		return errors.New("invalid value for base fee per gas")
+	}
+
+	if baseFeePerGas.Sign() == -1 {
+		return errors.New("base fee per gas cannot be negative")
+	}
+
+	if baseFeePerGas.Cmp(maxBaseFeePerGas) > 0 {
+		return errors.New("overflow for base fee per gas")
+	}
+	// We need to store internally as little-endian, but big.Int uses
+	// big-endian so do it manually.
+	baseFeePerGasBEBytes := baseFeePerGas.Bytes()
+
+	var baseFeePerGasLEBytes [32]byte
+
+	baseFeeLen := len(baseFeePerGasBEBytes)
+	for i := range baseFeeLen {
+		baseFeePerGasLEBytes[i] = baseFeePerGasBEBytes[baseFeeLen-1-i] //nolint:gosec
+	}
+
+	copy(e.BaseFeePerGas[:], baseFeePerGasLEBytes[:])
+
+	if data.BlockHash == "" {
+		return errors.New("block hash missing")
+	}
+
+	blockHash, err := hex.DecodeString(strings.TrimPrefix(data.BlockHash, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for block hash")
+	}
+
+	if len(blockHash) != phase0.Hash32Length {
+		return errors.New("incorrect length for block hash")
+	}
+
+	copy(e.BlockHash[:], blockHash)
+
+	if data.Transactions == nil {
+		return errors.New("transactions missing")
+	}
+
+	if len(data.Transactions) > bellatrix.MaxTransactionsPerPayload {
+		return errors.Wrap(err, "incorrect length for transactions")
+	}
+
+	transactions := make([]bellatrix.Transaction, len(data.Transactions))
+	for i := range data.Transactions {
+		if data.Transactions[i] == "" {
+			return errors.New("transaction missing")
+		}
+
+		transactions[i], err = hex.DecodeString(strings.TrimPrefix(data.Transactions[i], "0x"))
+		if err != nil {
+			return errors.Wrap(err, "invalid value for transaction")
+		}
+
+		if len(transactions[i]) > bellatrix.MaxBytesPerTransaction {
+			return errors.Wrap(err, "incorrect length for transaction")
+		}
+	}
+
+	e.Transactions = transactions
+
+	if data.Withdrawals == nil {
+		return errors.New("withdrawals missing")
+	}
+
+	for i := range data.Withdrawals {
+		if data.Withdrawals[i] == nil {
+			return fmt.Errorf("withdrawals entry %d missing", i)
+		}
+	}
+
+	e.Withdrawals = data.Withdrawals
+
+	return nil
 }

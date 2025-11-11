@@ -38,6 +38,7 @@ func (s *Service) NodeVersion(ctx context.Context,
 	}
 
 	s.nodeVersionMutex.RLock()
+
 	if s.nodeVersion != "" {
 		defer s.nodeVersionMutex.RUnlock()
 
@@ -46,10 +47,12 @@ func (s *Service) NodeVersion(ctx context.Context,
 			Metadata: make(map[string]any),
 		}, nil
 	}
+
 	s.nodeVersionMutex.RUnlock()
 
 	s.nodeVersionMutex.Lock()
 	defer s.nodeVersionMutex.Unlock()
+
 	if s.nodeVersion != "" {
 		// Someone else fetched this whilst we were waiting for the lock.
 		return &api.Response[string]{
@@ -60,6 +63,7 @@ func (s *Service) NodeVersion(ctx context.Context,
 
 	// Up to us to fetch the information.
 	endpoint := "/eth/v1/node/version"
+
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, err

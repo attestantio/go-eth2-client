@@ -57,22 +57,27 @@ func (b *BeaconBlockHeader) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &beaconBlockHeaderJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if beaconBlockHeaderJSON.Root == "" {
 		return errors.New("root missing")
 	}
+
 	root, err := hex.DecodeString(strings.TrimPrefix(beaconBlockHeaderJSON.Root, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for root")
 	}
+
 	if len(root) != rootLength {
 		return fmt.Errorf("incorrect length %d for root", len(root))
 	}
+
 	copy(b.Root[:], root)
 
 	b.Canonical = beaconBlockHeaderJSON.Canonical
 	if beaconBlockHeaderJSON.Header == nil {
 		return errors.New("header missing")
 	}
+
 	b.Header = beaconBlockHeaderJSON.Header
 
 	return nil

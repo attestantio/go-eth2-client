@@ -28,7 +28,7 @@ func (*Service) BeaconCommittees(_ context.Context,
 	error,
 ) {
 	data := make([]*apiv1.BeaconCommittee, 5)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		data[i] = &apiv1.BeaconCommittee{}
 	}
 

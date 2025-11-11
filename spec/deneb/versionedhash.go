@@ -42,6 +42,7 @@ func (h VersionedHash) Format(state fmt.State, v rune) {
 		if state.Flag('#') {
 			format = "#" + format
 		}
+
 		fmt.Fprintf(state, "%"+format, h[:])
 	default:
 		fmt.Fprintf(state, "%"+format, h[:])
@@ -57,9 +58,11 @@ func (h *VersionedHash) UnmarshalJSON(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'"', '0', 'x'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'"'}) {
 		return errors.New("invalid suffix")
 	}
+
 	if len(input) != 1+2+VersionedHashLength*2+1 {
 		return errors.New("incorrect length")
 	}
@@ -82,7 +85,7 @@ func (h *VersionedHash) MarshalJSON() ([]byte, error) {
 		return nil, errors.New("value nil")
 	}
 
-	return []byte(fmt.Sprintf(`"%#x"`, h)), nil
+	return fmt.Appendf(nil, `"%#x"`, h), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
@@ -94,9 +97,11 @@ func (h *VersionedHash) UnmarshalYAML(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'\'', '0', 'x'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'\''}) {
 		return errors.New("invalid suffix")
 	}
+
 	if len(input) != 1+2+VersionedHashLength*2+1 {
 		return errors.New("incorrect length")
 	}
@@ -119,5 +124,5 @@ func (h *VersionedHash) MarshalYAML() ([]byte, error) {
 		return nil, errors.New("value nil")
 	}
 
-	return []byte(fmt.Sprintf(`'%#x'`, h)), nil
+	return fmt.Appendf(nil, `'%#x'`, h), nil
 }

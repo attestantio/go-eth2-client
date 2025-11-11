@@ -29,6 +29,7 @@ func (e *Epoch) UnmarshalJSON(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
+
 	if len(input) < 3 {
 		return errors.New("input malformed")
 	}
@@ -36,6 +37,7 @@ func (e *Epoch) UnmarshalJSON(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'"'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'"'}) {
 		return errors.New("invalid suffix")
 	}
@@ -44,6 +46,7 @@ func (e *Epoch) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrapf(err, "invalid value %s", string(input[1:len(input)-1]))
 	}
+
 	*e = Epoch(val)
 
 	return nil
@@ -51,7 +54,7 @@ func (e *Epoch) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (e Epoch) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%d"`, e)), nil
+	return fmt.Appendf(nil, `"%d"`, e), nil
 }
 
 // CommitteeIndex is a committee index at a slot.

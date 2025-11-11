@@ -88,48 +88,62 @@ func (b *BeaconBlockBody) unpack(beaconBlockBodyJSON *beaconBlockBodyJSON) error
 	if beaconBlockBodyJSON.RANDAOReveal == "" {
 		return errors.New("RANDAO reveal missing")
 	}
+
 	randaoReveal, err := hex.DecodeString(strings.TrimPrefix(beaconBlockBodyJSON.RANDAOReveal, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for RANDAO reveal")
 	}
+
 	if len(randaoReveal) != SignatureLength {
 		return errors.New("incorrect length for RANDAO reveal")
 	}
+
 	copy(b.RANDAOReveal[:], randaoReveal)
+
 	if beaconBlockBodyJSON.ETH1Data == nil {
 		return errors.New("ETH1 data missing")
 	}
+
 	b.ETH1Data = beaconBlockBodyJSON.ETH1Data
 	if beaconBlockBodyJSON.Graffiti == "" {
 		return errors.New("graffiti missing")
 	}
+
 	graffiti, err := hex.DecodeString(strings.TrimPrefix(beaconBlockBodyJSON.Graffiti, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for graffiti")
 	}
+
 	if len(graffiti) != GraffitiLength {
 		return errors.New("incorrect length for graffiti")
 	}
+
 	copy(b.Graffiti[:], graffiti)
+
 	if beaconBlockBodyJSON.ProposerSlashings == nil {
 		return errors.New("proposer slashings missing")
 	}
+
 	b.ProposerSlashings = beaconBlockBodyJSON.ProposerSlashings
 	if beaconBlockBodyJSON.AttesterSlashings == nil {
 		return errors.New("attester slashings missing")
 	}
+
 	b.AttesterSlashings = beaconBlockBodyJSON.AttesterSlashings
 	if beaconBlockBodyJSON.Attestations == nil {
 		return errors.New("attestations missing")
 	}
+
 	b.Attestations = beaconBlockBodyJSON.Attestations
 	if beaconBlockBodyJSON.Deposits == nil {
 		return errors.New("deposits missing")
 	}
+
 	b.Deposits = beaconBlockBodyJSON.Deposits
 	if beaconBlockBodyJSON.VoluntaryExits == nil {
 		return errors.New("voluntary exits missing")
 	}
+
 	b.VoluntaryExits = beaconBlockBodyJSON.VoluntaryExits
 
 	return nil

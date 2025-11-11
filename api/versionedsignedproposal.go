@@ -65,6 +65,7 @@ func (v *VersionedSignedProposal) AssertPresent() error {
 		if v.Bellatrix == nil && !v.Blinded {
 			return errors.New("bellatrix proposal not present")
 		}
+
 		if v.BellatrixBlinded == nil && v.Blinded {
 			return errors.New("blinded bellatrix proposal not present")
 		}
@@ -72,6 +73,7 @@ func (v *VersionedSignedProposal) AssertPresent() error {
 		if v.Capella == nil && !v.Blinded {
 			return errors.New("capella proposal not present")
 		}
+
 		if v.CapellaBlinded == nil && v.Blinded {
 			return errors.New("blinded capella proposal not present")
 		}
@@ -79,6 +81,7 @@ func (v *VersionedSignedProposal) AssertPresent() error {
 		if v.Deneb == nil && !v.Blinded {
 			return errors.New("deneb proposal not present")
 		}
+
 		if v.DenebBlinded == nil && v.Blinded {
 			return errors.New("blinded deneb proposal not present")
 		}
@@ -86,6 +89,7 @@ func (v *VersionedSignedProposal) AssertPresent() error {
 		if v.Electra == nil && !v.Blinded {
 			return errors.New("electra proposal not present")
 		}
+
 		if v.ElectraBlinded == nil && v.Blinded {
 			return errors.New("blinded electra proposal not present")
 		}
@@ -93,6 +97,7 @@ func (v *VersionedSignedProposal) AssertPresent() error {
 		if v.Fulu == nil && !v.Blinded {
 			return errors.New("fulu proposal not present")
 		}
+
 		if v.FuluBlinded == nil && v.Blinded {
 			return errors.New("blinded fulu proposal not present")
 		}
@@ -105,7 +110,8 @@ func (v *VersionedSignedProposal) AssertPresent() error {
 
 // Slot returns the slot of the signed proposal.
 func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
-	if err := v.assertMessagePresent(); err != nil {
+	err := v.assertMessagePresent()
+	if err != nil {
 		return 0, err
 	}
 

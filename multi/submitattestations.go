@@ -53,7 +53,6 @@ func (s *Service) SubmitAttestations(ctx context.Context,
 			return true /* failover */, err
 		default:
 			// Any other error should result in a failover.
-
 			return true /* failover */, err
 		}
 	})

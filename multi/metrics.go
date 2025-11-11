@@ -31,10 +31,12 @@ func registerMetrics(ctx context.Context, monitor metrics.Service) error {
 		// Already registered.
 		return nil
 	}
+
 	if monitor == nil {
 		// No monitor.
 		return nil
 	}
+
 	if monitor.Presenter() == "prometheus" {
 		return registerPrometheusMetrics(ctx)
 	}
@@ -52,6 +54,7 @@ func registerPrometheusMetrics(_ context.Context) error {
 	if err := prometheus.Register(connectionsMetric); err != nil {
 		return errors.Wrap(err, "failed to register connections")
 	}
+
 	stateMetric = prometheus.NewGaugeVec(prometheus.GaugeOpts{
 		Namespace: "consensusclient",
 		Subsystem: "multi",
@@ -77,6 +80,8 @@ func (s *Service) setProviderStateMetric(_ context.Context, server string, state
 	case "inactive":
 		stateMetric.WithLabelValues(s.name, server, "active").Set(0)
 		stateMetric.WithLabelValues(s.name, server, "inactive").Set(1)
+	default:
+		// Unknown state, do nothing
 	}
 }
 

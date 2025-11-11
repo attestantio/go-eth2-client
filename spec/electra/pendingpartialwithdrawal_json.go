@@ -47,9 +47,11 @@ func (p *PendingPartialWithdrawal) UnmarshalJSON(input []byte) error {
 	if err := p.ValidatorIndex.UnmarshalJSON(raw["validator_index"]); err != nil {
 		return errors.Wrap(err, "validator_index")
 	}
+
 	if err := p.Amount.UnmarshalJSON(raw["amount"]); err != nil {
 		return errors.Wrap(err, "amount")
 	}
+
 	if err := p.WithdrawableEpoch.UnmarshalJSON(raw["withdrawable_epoch"]); err != nil {
 		return errors.Wrap(err, "withdrawable_epoch")
 	}

@@ -686,6 +686,7 @@ func (v *VersionedBeaconState) FieldRoot(name string) (phase0.Hash32, error) {
 	if err != nil {
 		return phase0.Hash32{}, err
 	}
+
 	var root phase0.Hash32
 	copy(root[:], fieldTree.Hash())
 

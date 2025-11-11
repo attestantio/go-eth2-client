@@ -55,15 +55,18 @@ func (s *SyncCommitteeReward) UnmarshalJSON(input []byte) error {
 	if data.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
+
 	validatorIndex, err := strconv.ParseUint(data.ValidatorIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+
 	s.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
 
 	if data.Reward == "" {
 		return errors.New("reward missing")
 	}
+
 	s.Reward, err = strconv.ParseInt(data.Reward, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for reward")

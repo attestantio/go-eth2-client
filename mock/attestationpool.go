@@ -29,7 +29,7 @@ func (*Service) AttestationPool(_ context.Context,
 	error,
 ) {
 	data := make([]*spec.VersionedAttestation, 5)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		data[i] = &spec.VersionedAttestation{
 			Version: spec.DataVersionPhase0,
 			Phase0: &phase0.Attestation{

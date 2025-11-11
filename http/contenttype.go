@@ -39,12 +39,13 @@ var contentTypeStrings = [...]string{
 
 // MarshalJSON implements json.Marshaler.
 func (c *ContentType) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", contentTypeStrings[*c])), nil
+	return fmt.Appendf(nil, "%q", contentTypeStrings[*c]), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (c *ContentType) UnmarshalJSON(input []byte) error {
 	var err error
+
 	switch strings.ToUpper(string(input)) {
 	case `"SSZ"`:
 		*c = ContentTypeSSZ

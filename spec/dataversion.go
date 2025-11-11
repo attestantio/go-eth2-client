@@ -63,16 +63,18 @@ var dataVersionMap = map[string]DataVersion{
 
 // MarshalJSON implements json.Marshaler.
 func (d *DataVersion) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", dataVersionStrings[*d])), nil
+	return fmt.Appendf(nil, "%q", dataVersionStrings[*d]), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (d *DataVersion) UnmarshalJSON(input []byte) error {
 	lower := strings.ToLower(string(input))
+
 	version, ok := dataVersionMap[lower]
 	if !ok {
 		return fmt.Errorf("unrecognised data version %s", string(input))
 	}
+
 	*d = version
 
 	return nil
@@ -92,5 +94,5 @@ func (d DataVersion) String() string {
 func DataVersionFromString(fork string) (DataVersion, error) {
 	var version DataVersion
 
-	return version, version.UnmarshalJSON([]byte(fmt.Sprintf("\"%v\"", fork)))
+	return version, version.UnmarshalJSON(fmt.Appendf(nil, "\"%v\"", fork))
 }

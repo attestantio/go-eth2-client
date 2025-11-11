@@ -30,13 +30,17 @@ func (s *Service) SubmitAttestations(ctx context.Context, opts *api.SubmitAttest
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
 	}
+
 	if opts == nil {
 		return client.ErrNoOptions
 	}
+
 	if len(opts.Attestations) == 0 {
 		return errors.Join(errors.New("no attestations supplied"), client.ErrInvalidOptions)
 	}
+
 	attestations := opts.Attestations
+
 	unversionedAttestations, err := s.createUnversionedAttestations(attestations)
 	if err != nil {
 		return err
@@ -51,6 +55,7 @@ func (s *Service) SubmitAttestations(ctx context.Context, opts *api.SubmitAttest
 	query := ""
 
 	headers := make(map[string]string)
+
 	headers["Eth-Consensus-Version"] = strings.ToLower(attestations[0].Version.String())
 	if _, err = s.post(ctx,
 		endpoint,
@@ -67,8 +72,10 @@ func (s *Service) SubmitAttestations(ctx context.Context, opts *api.SubmitAttest
 }
 
 func (s *Service) createUnversionedAttestations(attestations []*spec.VersionedAttestation) ([]any, error) {
-	var version spec.DataVersion
-	var unversionedAttestations []any
+	var (
+		version                 spec.DataVersion
+		unversionedAttestations []any
+	)
 
 	for i := range attestations {
 		if attestations[i] == nil {
@@ -101,6 +108,7 @@ func (s *Service) createUnversionedAttestations(attestations []*spec.VersionedAt
 
 				continue
 			}
+
 			unversionedAttestations = append(unversionedAttestations, singleAttestation)
 		case spec.DataVersionFulu:
 			singleAttestation, err := attestations[i].Fulu.ToSingleAttestation(attestations[i].ValidatorIndex)
@@ -109,6 +117,7 @@ func (s *Service) createUnversionedAttestations(attestations []*spec.VersionedAt
 
 				continue
 			}
+
 			unversionedAttestations = append(unversionedAttestations, singleAttestation)
 		default:
 			return nil, errors.Join(errors.New("unknown attestation version"), client.ErrInvalidOptions)

@@ -32,11 +32,13 @@ func (s *Service) ForkSchedule(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
 
 	s.forkScheduleMutex.RLock()
+
 	if s.forkSchedule != nil {
 		defer s.forkScheduleMutex.RUnlock()
 
@@ -45,10 +47,12 @@ func (s *Service) ForkSchedule(ctx context.Context,
 			Metadata: make(map[string]any),
 		}, nil
 	}
+
 	s.forkScheduleMutex.RUnlock()
 
 	s.forkScheduleMutex.Lock()
 	defer s.forkScheduleMutex.Unlock()
+
 	if s.forkSchedule != nil {
 		// Someone else fetched this whilst we were waiting for the lock.
 		return &api.Response[[]*phase0.Fork]{
@@ -59,6 +63,7 @@ func (s *Service) ForkSchedule(ctx context.Context,
 
 	// Up to us to fetch the information.
 	endpoint := "/eth/v1/config/fork_schedule"
+
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, err
@@ -68,6 +73,7 @@ func (s *Service) ForkSchedule(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
+
 	s.forkSchedule = data
 
 	return &api.Response[[]*phase0.Fork]{

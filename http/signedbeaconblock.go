@@ -19,8 +19,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/attestantio/go-eth2-client/spec/electra"
-
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -28,6 +26,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	dynssz "github.com/pk910/dynamic-ssz"
 )
@@ -42,20 +41,24 @@ func (s *Service) SignedBeaconBlock(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	if opts.Block == "" {
 		return nil, errors.Join(errors.New("no block specified"), client.ErrInvalidOptions)
 	}
 
 	endpoint := fmt.Sprintf("/eth/v2/beacon/blocks/%s", opts.Block)
+
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var response *api.Response[*spec.VersionedSignedBeaconBlock]
+
 	switch httpResponse.contentType {
 	case ContentTypeSSZ:
 		response, err = s.signedBeaconBlockFromSSZ(ctx, httpResponse)
@@ -64,6 +67,7 @@ func (s *Service) SignedBeaconBlock(ctx context.Context,
 	default:
 		return nil, fmt.Errorf("unhandled content type %v", httpResponse.contentType)
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -85,6 +89,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 	}
 
 	var dynSSZ *dynssz.DynSsz
+
 	if s.customSpecSupport {
 		specs, err := s.Spec(ctx, &api.SpecOpts{})
 		if err != nil {
@@ -95,6 +100,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 	}
 
 	var err error
+
 	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
 		response.Data.Phase0 = &phase0.SignedBeaconBlock{}
@@ -103,6 +109,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 		} else {
 			err = response.Data.Phase0.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode phase0 signed beacon block"), err)
 		}
@@ -113,6 +120,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 		} else {
 			err = response.Data.Altair.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode altair signed beacon block"), err)
 		}
@@ -123,6 +131,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 		} else {
 			err = response.Data.Bellatrix.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode bellatrix signed beacon block"), err)
 		}
@@ -133,6 +142,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 		} else {
 			err = response.Data.Capella.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode capella signed beacon block"), err)
 		}
@@ -143,6 +153,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 		} else {
 			err = response.Data.Deneb.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode deneb signed block contents"), err)
 		}
@@ -153,6 +164,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 		} else {
 			err = response.Data.Electra.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode electra signed block contents"), err)
 		}
@@ -163,6 +175,7 @@ func (s *Service) signedBeaconBlockFromSSZ(ctx context.Context,
 		} else {
 			err = response.Data.Fulu.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode fulu signed block contents"), err)
 		}
@@ -181,6 +194,7 @@ func (*Service) signedBeaconBlockFromJSON(res *httpResponse) (*api.Response[*spe
 	}
 
 	var err error
+
 	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
 		response.Data.Phase0, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body),
@@ -213,6 +227,7 @@ func (*Service) signedBeaconBlockFromJSON(res *httpResponse) (*api.Response[*spe
 	default:
 		return nil, fmt.Errorf("unhandled version %s", res.consensusVersion)
 	}
+
 	if err != nil {
 		return nil, err
 	}

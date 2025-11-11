@@ -62,33 +62,6 @@ func (f *ForkData) UnmarshalJSON(input []byte) error {
 	return f.unpack(&forkDataJSON)
 }
 
-func (f *ForkData) unpack(forkDataJSON *forkDataJSON) error {
-	if forkDataJSON.CurrentVersion == "" {
-		return errors.New("current version missing")
-	}
-	currentVersion, err := hex.DecodeString(strings.TrimPrefix(forkDataJSON.CurrentVersion, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for current version")
-	}
-	if len(currentVersion) != ForkVersionLength {
-		return errors.New("incorrect length for current version")
-	}
-	copy(f.CurrentVersion[:], currentVersion)
-	if forkDataJSON.GenesisValidatorsRoot == "" {
-		return errors.New("genesis validators root missing")
-	}
-	genesisValidatorsRoot, err := hex.DecodeString(strings.TrimPrefix(forkDataJSON.GenesisValidatorsRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for genesis validators root")
-	}
-	if len(genesisValidatorsRoot) != RootLength {
-		return errors.New("incorrect length for genesis validators root")
-	}
-	copy(f.GenesisValidatorsRoot[:], genesisValidatorsRoot)
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (f *ForkData) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&forkDataYAML{
@@ -121,4 +94,38 @@ func (f *ForkData) String() string {
 	}
 
 	return string(data)
+}
+
+func (f *ForkData) unpack(forkDataJSON *forkDataJSON) error {
+	if forkDataJSON.CurrentVersion == "" {
+		return errors.New("current version missing")
+	}
+
+	currentVersion, err := hex.DecodeString(strings.TrimPrefix(forkDataJSON.CurrentVersion, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for current version")
+	}
+
+	if len(currentVersion) != ForkVersionLength {
+		return errors.New("incorrect length for current version")
+	}
+
+	copy(f.CurrentVersion[:], currentVersion)
+
+	if forkDataJSON.GenesisValidatorsRoot == "" {
+		return errors.New("genesis validators root missing")
+	}
+
+	genesisValidatorsRoot, err := hex.DecodeString(strings.TrimPrefix(forkDataJSON.GenesisValidatorsRoot, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for genesis validators root")
+	}
+
+	if len(genesisValidatorsRoot) != RootLength {
+		return errors.New("incorrect length for genesis validators root")
+	}
+
+	copy(f.GenesisValidatorsRoot[:], genesisValidatorsRoot)
+
+	return nil
 }

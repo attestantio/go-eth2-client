@@ -45,6 +45,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 	if err == nil {
 		return httpClient, nil
 	}
+
 	log.Trace().Err(err).Msg("Attempt to connect via HTTP API failed")
 
 	// No luck
@@ -56,6 +57,7 @@ func tryHTTP(ctx context.Context, parameters *parameters) (consensusclient.Servi
 	httpParameters = append(httpParameters, http.WithLogLevel(parameters.logLevel))
 	httpParameters = append(httpParameters, http.WithAddress(parameters.address))
 	httpParameters = append(httpParameters, http.WithTimeout(parameters.timeout))
+
 	client, err := http.New(ctx, httpParameters...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed when trying to open connection with standard API")

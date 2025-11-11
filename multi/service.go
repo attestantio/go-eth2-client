@@ -50,6 +50,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 	if parameters.logLevel != log.GetLevel() {
 		log = log.Level(parameters.logLevel)
 	}
+
 	ctx = log.WithContext(ctx)
 
 	if parameters.monitor != nil {
@@ -60,6 +61,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 
 	// Check the state of each client and put it in the active or inactive list, accordingly.
 	activeClients := make([]consensusclient.Service, 0, len(parameters.clients))
+
 	inactiveClients := make([]consensusclient.Service, 0, len(parameters.clients))
 	for _, client := range parameters.clients {
 		switch {
@@ -69,6 +71,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 			inactiveClients = append(inactiveClients, client)
 		}
 	}
+
 	for _, address := range parameters.addresses {
 		client, err := http.New(ctx,
 			http.WithLogLevel(parameters.logLevel),
@@ -83,6 +86,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 
 			continue
 		}
+
 		switch {
 		case client.IsSynced():
 			activeClients = append(activeClients, client)
@@ -90,9 +94,11 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 			inactiveClients = append(inactiveClients, client)
 		}
 	}
+
 	if len(activeClients) == 0 && !parameters.allowDelayedStart {
 		return nil, consensusclient.ErrNotActive
 	}
+
 	log.Trace().Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Initial providers")
 
 	s := &Service{
@@ -106,9 +112,11 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 	for _, client := range s.activeClients {
 		s.setProviderStateMetric(ctx, client.Address(), "active")
 	}
+
 	for _, client := range s.inactiveClients {
 		s.setProviderStateMetric(ctx, client.Address(), "inactive")
 	}
+
 	s.setConnectionsMetric(ctx, len(activeClients), len(inactiveClients))
 
 	// Kick off monitor.
@@ -126,6 +134,7 @@ func (*Service) Name() string {
 func (s *Service) Address() string {
 	s.clientsMu.RLock()
 	defer s.clientsMu.RUnlock()
+
 	if len(s.activeClients) > 0 {
 		return s.activeClients[0].Address()
 	}

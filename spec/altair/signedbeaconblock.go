@@ -65,17 +65,21 @@ func (s *SignedBeaconBlock) unpack(signedBeaconBlockJSON *signedBeaconBlockJSON)
 	if signedBeaconBlockJSON.Message == nil {
 		return errors.New("message missing")
 	}
+
 	s.Message = signedBeaconBlockJSON.Message
 	if signedBeaconBlockJSON.Signature == "" {
 		return errors.New("signature missing")
 	}
+
 	signature, err := hex.DecodeString(strings.TrimPrefix(signedBeaconBlockJSON.Signature, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
+
 	if len(signature) != phase0.SignatureLength {
 		return fmt.Errorf("incorrect length %d for signature", len(signature))
 	}
+
 	copy(s.Signature[:], signature)
 
 	return nil

@@ -34,6 +34,7 @@ func (s *Service) NodeClient(ctx context.Context) (*api.Response[string], error)
 	nodeVersion := strings.ToLower(response.Data)
 
 	var client string
+
 	switch {
 	case strings.HasPrefix(nodeVersion, "lighthouse"):
 		client = "lighthouse"

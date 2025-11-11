@@ -34,14 +34,17 @@ func (s *Service) SyncCommittee(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	if opts.State == "" {
 		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 
 	endpoint := fmt.Sprintf("/eth/v1/beacon/states/%s/sync_committees", opts.State)
+
 	query := ""
 	if opts.Epoch != nil {
 		query = fmt.Sprintf("epoch=%d", *opts.Epoch)

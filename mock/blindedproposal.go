@@ -34,7 +34,8 @@ func (*Service) BlindedProposal(_ context.Context,
 
 	// Create a few attestations.
 	attestations := make([]*phase0.Attestation, 4)
-	for i := uint64(0); i < 4; i++ {
+
+	for i := range uint64(4) {
 		aggregationBits := bitfield.NewBitlist(128)
 		aggregationBits.SetBitAt(i, true)
 		attestations[i] = &phase0.Attestation{

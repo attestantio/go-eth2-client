@@ -29,12 +29,15 @@ func (w *WithdrawalIndex) UnmarshalJSON(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
+
 	if len(input) < 3 {
 		return errors.New("input malformed")
 	}
+
 	if !bytes.HasPrefix(input, []byte{'"'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'"'}) {
 		return errors.New("invalid suffix")
 	}
@@ -43,6 +46,7 @@ func (w *WithdrawalIndex) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrapf(err, "invalid value %s", string(input[1:len(input)-1]))
 	}
+
 	*w = WithdrawalIndex(val)
 
 	return nil
@@ -50,5 +54,5 @@ func (w *WithdrawalIndex) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (w WithdrawalIndex) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%d"`, w)), nil
+	return fmt.Appendf(nil, `"%d"`, w), nil
 }

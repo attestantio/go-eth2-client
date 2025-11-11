@@ -65,40 +65,13 @@ func (d *Deposit) UnmarshalJSON(input []byte) error {
 	return d.unpack(&depositJSON)
 }
 
-func (d *Deposit) unpack(depositJSON *depositJSON) error {
-	var err error
-	if depositJSON.Proof == nil {
-		return errors.New("proof missing")
-	}
-	if len(depositJSON.Proof) != 33 {
-		return errors.New("incorrect length for proof")
-	}
-	d.Proof = make([][]byte, len(depositJSON.Proof))
-	for i := range depositJSON.Proof {
-		if depositJSON.Proof[i] == "" {
-			return errors.New("proof component missing")
-		}
-		if d.Proof[i], err = hex.DecodeString(strings.TrimPrefix(depositJSON.Proof[i], "0x")); err != nil {
-			return errors.Wrap(err, "invalid value for proof")
-		}
-		if len(d.Proof[i]) != 32 {
-			return fmt.Errorf("incorrect size %d for deposit proof", len(d.Proof[i]))
-		}
-	}
-	if depositJSON.Data == nil {
-		return errors.New("data missing")
-	}
-	d.Data = depositJSON.Data
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (d *Deposit) MarshalYAML() ([]byte, error) {
 	proof := make([]string, len(d.Proof))
 	for i := range d.Proof {
 		proof[i] = fmt.Sprintf("%#x", d.Proof[i])
 	}
+
 	yamlBytes, err := yaml.MarshalWithOptions(&depositYAML{
 		Proof: proof,
 		Data:  d.Data,
@@ -129,4 +102,39 @@ func (d *Deposit) String() string {
 	}
 
 	return string(data)
+}
+
+func (d *Deposit) unpack(depositJSON *depositJSON) error {
+	var err error
+
+	if depositJSON.Proof == nil {
+		return errors.New("proof missing")
+	}
+
+	if len(depositJSON.Proof) != 33 {
+		return errors.New("incorrect length for proof")
+	}
+
+	d.Proof = make([][]byte, len(depositJSON.Proof))
+	for i := range depositJSON.Proof {
+		if depositJSON.Proof[i] == "" {
+			return errors.New("proof component missing")
+		}
+
+		if d.Proof[i], err = hex.DecodeString(strings.TrimPrefix(depositJSON.Proof[i], "0x")); err != nil {
+			return errors.Wrap(err, "invalid value for proof")
+		}
+
+		if len(d.Proof[i]) != 32 {
+			return fmt.Errorf("incorrect size %d for deposit proof", len(d.Proof[i]))
+		}
+	}
+
+	if depositJSON.Data == nil {
+		return errors.New("data missing")
+	}
+
+	d.Data = depositJSON.Data
+
+	return nil
 }

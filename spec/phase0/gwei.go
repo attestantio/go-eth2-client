@@ -29,12 +29,15 @@ func (g *Gwei) UnmarshalJSON(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
+
 	if len(input) < 3 {
 		return errors.New("input malformed")
 	}
+
 	if !bytes.HasPrefix(input, []byte{'"'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'"'}) {
 		return errors.New("invalid suffix")
 	}
@@ -43,6 +46,7 @@ func (g *Gwei) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrapf(err, "invalid value %s", string(input[1:len(input)-1]))
 	}
+
 	*g = Gwei(val)
 
 	return nil
@@ -50,7 +54,7 @@ func (g *Gwei) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (g Gwei) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%d"`, g)), nil
+	return fmt.Appendf(nil, `"%d"`, g), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
@@ -63,6 +67,7 @@ func (g *Gwei) UnmarshalYAML(input []byte) error {
 	if err != nil {
 		return errors.Wrapf(err, "invalid value %s", string(input))
 	}
+
 	*g = Gwei(val)
 
 	return nil
@@ -70,5 +75,5 @@ func (g *Gwei) UnmarshalYAML(input []byte) error {
 
 // MarshalYAML implements yaml.Marshaler.
 func (g Gwei) MarshalYAML() ([]byte, error) {
-	return []byte(fmt.Sprintf(`%d`, g)), nil
+	return fmt.Appendf(nil, `%d`, g), nil
 }

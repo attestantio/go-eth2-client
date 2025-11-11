@@ -73,46 +73,6 @@ func (a *AttestationData) UnmarshalJSON(input []byte) error {
 	return a.unpack(&attestationDataJSON)
 }
 
-func (a *AttestationData) unpack(attestationDataJSON *attestationDataJSON) error {
-	if attestationDataJSON.Slot == "" {
-		return errors.New("slot missing")
-	}
-	slot, err := strconv.ParseUint(attestationDataJSON.Slot, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for slot")
-	}
-	a.Slot = Slot(slot)
-	if attestationDataJSON.Index == "" {
-		return errors.New("index missing")
-	}
-	index, err := strconv.ParseUint(attestationDataJSON.Index, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for index")
-	}
-	a.Index = CommitteeIndex(index)
-	if attestationDataJSON.BeaconBlockRoot == "" {
-		return errors.New("beacon block root missing")
-	}
-	beaconBlockRoot, err := hex.DecodeString(strings.TrimPrefix(attestationDataJSON.BeaconBlockRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for beacon block root")
-	}
-	if len(beaconBlockRoot) != RootLength {
-		return errors.New("incorrect length for beacon block root")
-	}
-	copy(a.BeaconBlockRoot[:], beaconBlockRoot)
-	if attestationDataJSON.Source == nil {
-		return errors.New("source missing")
-	}
-	a.Source = attestationDataJSON.Source
-	if attestationDataJSON.Target == nil {
-		return errors.New("target missing")
-	}
-	a.Target = attestationDataJSON.Target
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (a *AttestationData) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&attestationDataYAML{
@@ -148,4 +108,56 @@ func (a *AttestationData) String() string {
 	}
 
 	return string(data)
+}
+
+func (a *AttestationData) unpack(attestationDataJSON *attestationDataJSON) error {
+	if attestationDataJSON.Slot == "" {
+		return errors.New("slot missing")
+	}
+
+	slot, err := strconv.ParseUint(attestationDataJSON.Slot, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for slot")
+	}
+
+	a.Slot = Slot(slot)
+
+	if attestationDataJSON.Index == "" {
+		return errors.New("index missing")
+	}
+
+	index, err := strconv.ParseUint(attestationDataJSON.Index, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for index")
+	}
+
+	a.Index = CommitteeIndex(index)
+
+	if attestationDataJSON.BeaconBlockRoot == "" {
+		return errors.New("beacon block root missing")
+	}
+
+	beaconBlockRoot, err := hex.DecodeString(strings.TrimPrefix(attestationDataJSON.BeaconBlockRoot, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for beacon block root")
+	}
+
+	if len(beaconBlockRoot) != RootLength {
+		return errors.New("incorrect length for beacon block root")
+	}
+
+	copy(a.BeaconBlockRoot[:], beaconBlockRoot)
+
+	if attestationDataJSON.Source == nil {
+		return errors.New("source missing")
+	}
+
+	a.Source = attestationDataJSON.Source
+	if attestationDataJSON.Target == nil {
+		return errors.New("target missing")
+	}
+
+	a.Target = attestationDataJSON.Target
+
+	return nil
 }

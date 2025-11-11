@@ -59,11 +59,6 @@ var validatorStateStrings = [...]string{
 	"withdrawal_done",
 }
 
-// valid returns true if v integer value can be represented as one of the validator state strings.
-func (v ValidatorState) valid() bool {
-	return v >= 0 && int(v) < len(validatorStateStrings)
-}
-
 // MarshalJSON implements json.Marshaler.
 func (v *ValidatorState) MarshalJSON() ([]byte, error) {
 	vs := validatorStateStrings[0]
@@ -72,12 +67,13 @@ func (v *ValidatorState) MarshalJSON() ([]byte, error) {
 		vs = validatorStateStrings[*v]
 	}
 
-	return []byte(fmt.Sprintf("%q", vs)), nil
+	return fmt.Appendf(nil, "%q", vs), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (v *ValidatorState) UnmarshalJSON(input []byte) error {
 	var err error
+
 	switch strings.ToLower(string(input)) {
 	case `"unknown"`:
 		*v = ValidatorStateUnknown
@@ -160,6 +156,11 @@ func (v ValidatorState) HasExited() bool {
 // HasBalance returns true if the validator has a balance.
 func (v ValidatorState) HasBalance() bool {
 	return v != ValidatorStateUnknown
+}
+
+// valid returns true if v integer value can be represented as one of the validator state strings.
+func (v ValidatorState) valid() bool {
+	return v >= 0 && int(v) < len(validatorStateStrings)
 }
 
 // ValidatorToState is a helper that calculates the validator status given a validator struct.

@@ -84,16 +84,20 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	if !bytes.HasPrefix(graffiti, []byte{'"', '0', 'x'}) {
 		return errors.New("graffiti: invalid prefix")
 	}
+
 	if !bytes.HasSuffix(graffiti, []byte{'"'}) {
 		return errors.New("graffiti: invalid suffix")
 	}
+
 	if len(graffiti) != 1+2+32*2+1 {
 		return errors.New("graffiti: incorrect length")
 	}
+
 	length, err := hex.Decode(b.Graffiti[:], graffiti[3:3+32*2])
 	if err != nil {
 		return errors.Wrap(err, "graffiti")
 	}
+
 	if length != 32 {
 		return errors.New("graffiti: incorrect length")
 	}
@@ -101,6 +105,7 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["proposer_slashings"], &b.ProposerSlashings); err != nil {
 		return errors.Wrap(err, "proposer_slashings")
 	}
+
 	for i := range b.ProposerSlashings {
 		if b.ProposerSlashings[i] == nil {
 			return fmt.Errorf("proposer slashings entry %d missing", i)
@@ -110,6 +115,7 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["attester_slashings"], &b.AttesterSlashings); err != nil {
 		return errors.Wrap(err, "attester_slashings")
 	}
+
 	for i := range b.AttesterSlashings {
 		if b.AttesterSlashings[i] == nil {
 			return fmt.Errorf("attester slashings entry %d missing", i)
@@ -119,6 +125,7 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["attestations"], &b.Attestations); err != nil {
 		return errors.Wrap(err, "attestations")
 	}
+
 	for i := range b.Attestations {
 		if b.Attestations[i] == nil {
 			return fmt.Errorf("attestations entry %d missing", i)
@@ -128,6 +135,7 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["deposits"], &b.Deposits); err != nil {
 		return errors.Wrap(err, "deposits")
 	}
+
 	for i := range b.Deposits {
 		if b.Deposits[i] == nil {
 			return fmt.Errorf("deposits entry %d missing", i)
@@ -137,6 +145,7 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["voluntary_exits"], &b.VoluntaryExits); err != nil {
 		return errors.Wrap(err, "voluntary_exits")
 	}
+
 	for i := range b.VoluntaryExits {
 		if b.VoluntaryExits[i] == nil {
 			return fmt.Errorf("voluntary exits entry %d missing", i)
@@ -154,6 +163,7 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["bls_to_execution_changes"], &b.BLSToExecutionChanges); err != nil {
 		return errors.Wrap(err, "bls_to_execution_changes")
 	}
+
 	for i := range b.BLSToExecutionChanges {
 		if b.BLSToExecutionChanges[i] == nil {
 			return fmt.Errorf("bls to execution changes entry %d missing", i)

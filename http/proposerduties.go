@@ -35,11 +35,13 @@ func (s *Service) ProposerDuties(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
 
 	endpoint := fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", opts.Epoch)
+
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, err
@@ -55,7 +57,9 @@ func (s *Service) ProposerDuties(ctx context.Context,
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to obtain slots per epoch"), err)
 	}
+
 	startSlot := phase0.Slot(uint64(opts.Epoch) * slotsPerEpoch)
+
 	endSlot := phase0.Slot(uint64(opts.Epoch)*slotsPerEpoch + slotsPerEpoch - 1)
 	for _, duty := range data {
 		if duty.Slot < startSlot || duty.Slot > endSlot {
@@ -76,6 +80,7 @@ func (s *Service) ProposerDuties(ctx context.Context,
 				filteredData = append(filteredData, duty)
 			}
 		}
+
 		data = filteredData
 	}
 

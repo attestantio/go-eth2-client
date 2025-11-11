@@ -65,7 +65,8 @@ func (e *DataColumnSidecarEvent) UnmarshalJSON(input []byte) error {
 	if dataColumnSidecarEventJSON.BlockRoot == "" {
 		return errors.New("block_root missing")
 	}
-	err = e.BlockRoot.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, dataColumnSidecarEventJSON.BlockRoot)))
+
+	err = e.BlockRoot.UnmarshalJSON(fmt.Appendf(nil, `"%s"`, dataColumnSidecarEventJSON.BlockRoot))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for block_root")
 	}
@@ -73,7 +74,8 @@ func (e *DataColumnSidecarEvent) UnmarshalJSON(input []byte) error {
 	if dataColumnSidecarEventJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
-	err = e.Slot.UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, dataColumnSidecarEventJSON.Slot)))
+
+	err = e.Slot.UnmarshalJSON(fmt.Appendf(nil, `"%s"`, dataColumnSidecarEventJSON.Slot))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
@@ -81,6 +83,7 @@ func (e *DataColumnSidecarEvent) UnmarshalJSON(input []byte) error {
 	if dataColumnSidecarEventJSON.Index == "" {
 		return errors.New("index missing")
 	}
+
 	e.Index = 0
 	if _, err = fmt.Sscanf(dataColumnSidecarEventJSON.Index, "%d", &e.Index); err != nil {
 		return errors.Wrap(err, "invalid value for index")
@@ -89,12 +92,14 @@ func (e *DataColumnSidecarEvent) UnmarshalJSON(input []byte) error {
 	if len(dataColumnSidecarEventJSON.KZGCommitments) == 0 {
 		return errors.New("kzg_commitments missing")
 	}
+
 	e.KZGCommitments = make([]deneb.KZGCommitment, len(dataColumnSidecarEventJSON.KZGCommitments))
 	for i, commitment := range dataColumnSidecarEventJSON.KZGCommitments {
 		if commitment == "" {
 			return fmt.Errorf("kzg_commitments[%d] missing", i)
 		}
-		err = e.KZGCommitments[i].UnmarshalJSON([]byte(fmt.Sprintf(`"%s"`, commitment)))
+
+		err = e.KZGCommitments[i].UnmarshalJSON(fmt.Appendf(nil, `"%s"`, commitment))
 		if err != nil {
 			return errors.Wrap(err, fmt.Sprintf("invalid value for kzg_commitments[%d]", i))
 		}

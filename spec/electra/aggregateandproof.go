@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
@@ -67,34 +66,6 @@ func (a *AggregateAndProof) UnmarshalJSON(input []byte) error {
 	return a.unpack(&aggregateAndProofJSON)
 }
 
-func (a *AggregateAndProof) unpack(aggregateAndProofJSON *aggregateAndProofJSON) error {
-	if aggregateAndProofJSON.AggregatorIndex == "" {
-		return errors.New("aggregator index missing")
-	}
-	aggregatorIndex, err := strconv.ParseUint(aggregateAndProofJSON.AggregatorIndex, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for aggregator index")
-	}
-	a.AggregatorIndex = phase0.ValidatorIndex(aggregatorIndex)
-	if aggregateAndProofJSON.Aggregate == nil {
-		return errors.New("aggregate missing")
-	}
-	a.Aggregate = aggregateAndProofJSON.Aggregate
-	if aggregateAndProofJSON.SelectionProof == "" {
-		return errors.New("selection proof missing")
-	}
-	selectionProof, err := hex.DecodeString(strings.TrimPrefix(aggregateAndProofJSON.SelectionProof, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for selection proof")
-	}
-	if len(selectionProof) != phase0.SignatureLength {
-		return errors.New("incorrect length for selection proof")
-	}
-	copy(a.SelectionProof[:], selectionProof)
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (a *AggregateAndProof) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&aggregateAndProofYAML{
@@ -128,4 +99,39 @@ func (a *AggregateAndProof) String() string {
 	}
 
 	return string(data)
+}
+
+func (a *AggregateAndProof) unpack(aggregateAndProofJSON *aggregateAndProofJSON) error {
+	if aggregateAndProofJSON.AggregatorIndex == "" {
+		return errors.New("aggregator index missing")
+	}
+
+	aggregatorIndex, err := strconv.ParseUint(aggregateAndProofJSON.AggregatorIndex, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for aggregator index")
+	}
+
+	a.AggregatorIndex = phase0.ValidatorIndex(aggregatorIndex)
+
+	if aggregateAndProofJSON.Aggregate == nil {
+		return errors.New("aggregate missing")
+	}
+
+	a.Aggregate = aggregateAndProofJSON.Aggregate
+	if aggregateAndProofJSON.SelectionProof == "" {
+		return errors.New("selection proof missing")
+	}
+
+	selectionProof, err := hex.DecodeString(strings.TrimPrefix(aggregateAndProofJSON.SelectionProof, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for selection proof")
+	}
+
+	if len(selectionProof) != phase0.SignatureLength {
+		return errors.New("incorrect length for selection proof")
+	}
+
+	copy(a.SelectionProof[:], selectionProof)
+
+	return nil
 }

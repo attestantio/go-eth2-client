@@ -34,20 +34,24 @@ func (s *Service) BlobSidecars(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	if opts.Block == "" {
 		return nil, errors.Join(errors.New("no block specified"), client.ErrInvalidOptions)
 	}
 
 	endpoint := fmt.Sprintf("/eth/v1/beacon/blob_sidecars/%s", opts.Block)
+
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, true)
 	if err != nil {
 		return nil, err
 	}
 
 	var response *api.Response[[]*deneb.BlobSidecar]
+
 	switch httpResponse.contentType {
 	case ContentTypeSSZ:
 		response, err = s.blobSidecarsFromSSZ(httpResponse)
@@ -56,6 +60,7 @@ func (s *Service) BlobSidecars(ctx context.Context,
 	default:
 		return nil, fmt.Errorf("unhandled content type %v", httpResponse.contentType)
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -88,6 +93,7 @@ func (*Service) blobSidecarsFromJSON(res *httpResponse) (*api.Response[[]*deneb.
 	response := &api.Response[[]*deneb.BlobSidecar]{}
 
 	var err error
+
 	response.Data, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), []*deneb.BlobSidecar{})
 	if err != nil {
 		return nil, err

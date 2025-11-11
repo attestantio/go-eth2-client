@@ -1,13 +1,14 @@
 module github.com/attestantio/go-eth2-client
 
-go 1.21.0
+go 1.25
 
-toolchain go1.23.2
+toolchain go1.25.2
 
 require (
 	github.com/ferranbt/fastssz v0.1.4
 	github.com/goccy/go-yaml v1.9.2
 	github.com/golang/snappy v0.0.4
+	github.com/google/go-cmp v0.5.9
 	github.com/holiman/uint256 v1.3.2
 	github.com/huandu/go-clone v1.6.0
 	github.com/huandu/go-clone/generic v1.6.0

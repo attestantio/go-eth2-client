@@ -80,6 +80,7 @@ func (b *BeaconBlockBody) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
+
 	marshaled, err := json.Marshal(unmarshaled)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal JSON")
