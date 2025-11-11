@@ -25,7 +25,7 @@ import (
 // NetworkName returns the network name (Mainnet, Sepolia, Holesky, or Hoodi) for the given service.
 // It identifies the network by querying the genesis validators root and comparing it against known values.
 // Returns "Unknown" if the network cannot be identified or if genesis information is unavailable.
-func NetworkName(ctx context.Context, service interface{}) string {
+func NetworkName(ctx context.Context, service any) string {
 	// Known genesis validators roots for different networks
 	knownNetworks := map[string]string{
 		"0x4b363db94e286120d76eb905340fdd4e54bfe9f06bf33ff6cf5ad27f511bfe95": "mainnet",
