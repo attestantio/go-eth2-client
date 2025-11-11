@@ -55,21 +55,25 @@ func (f *ForkChoice) UnmarshalJSON(input []byte) error {
 	if forkChoiceJSON.JustifiedCheckpoint == nil {
 		return errors.New("justified checkpoint missing")
 	}
+
 	f.JustifiedCheckpoint = *forkChoiceJSON.JustifiedCheckpoint
 
 	if forkChoiceJSON.FinalizedCheckpoint == nil {
 		return errors.New("finalized checkpoint missing")
 	}
+
 	f.FinalizedCheckpoint = *forkChoiceJSON.FinalizedCheckpoint
 
 	if forkChoiceJSON.ForkChoiceNodes == nil {
 		return errors.New("fork choice nodes missing")
 	}
+
 	for i := range forkChoiceJSON.ForkChoiceNodes {
 		if forkChoiceJSON.ForkChoiceNodes[i] == nil {
 			return fmt.Errorf("fork choice node entry %d missing", i)
 		}
 	}
+
 	f.ForkChoiceNodes = forkChoiceJSON.ForkChoiceNodes
 
 	return nil
@@ -130,7 +134,7 @@ func ForkChoiceNodeValidityFromString(input string) (ForkChoiceNodeValidity, err
 
 // MarshalJSON implements json.Marshaler.
 func (d *ForkChoiceNodeValidity) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", ForkChoiceNodeValidityStrings[*d])), nil
+	return fmt.Appendf(nil, "%q", ForkChoiceNodeValidityStrings[*d]), nil
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -217,54 +221,64 @@ func (f *ForkChoiceNode) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("invalid value for slot: %s", forkChoiceNodeJSON.Slot))
 	}
+
 	f.Slot = phase0.Slot(slot)
 
 	blockRoot, err := hex.DecodeString(strings.TrimPrefix(forkChoiceNodeJSON.BlockRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("invalid value for block root: %s", forkChoiceNodeJSON.BlockRoot))
 	}
+
 	if len(blockRoot) != rootLength {
 		return fmt.Errorf("incorrect length %d for block root", len(blockRoot))
 	}
+
 	copy(f.BlockRoot[:], blockRoot)
 
 	parentRoot, err := hex.DecodeString(strings.TrimPrefix(forkChoiceNodeJSON.ParentRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("invalid value for parent root: %s", forkChoiceNodeJSON.ParentRoot))
 	}
+
 	copy(f.ParentRoot[:], parentRoot)
 
 	justifiedEpoch, err := strconv.ParseUint(forkChoiceNodeJSON.JustifiedEpoch, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("invalid value for justified epoch: %s", forkChoiceNodeJSON.JustifiedEpoch))
 	}
+
 	f.JustifiedEpoch = phase0.Epoch(justifiedEpoch)
 
 	finalizedEpoch, err := strconv.ParseUint(forkChoiceNodeJSON.FinalizedEpoch, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("invalid value for finalized epoch: %s", forkChoiceNodeJSON.FinalizedEpoch))
 	}
+
 	f.FinalizedEpoch = phase0.Epoch(finalizedEpoch)
 
 	weight, err := strconv.ParseUint(forkChoiceNodeJSON.Weight, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("invalid value for weight: %s", forkChoiceNodeJSON.Weight))
 	}
+
 	f.Weight = weight
 
 	validity, err := ForkChoiceNodeValidityFromString(forkChoiceNodeJSON.Validity)
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("invalid value for validity: %s", forkChoiceNodeJSON.Validity))
 	}
+
 	f.Validity = validity
 
 	executionBlockHash, err := hex.DecodeString(strings.TrimPrefix(forkChoiceNodeJSON.ExecutionBlockHash, "0x"))
 	if err != nil {
 		return errors.Wrap(err, fmt.Sprintf("invalid value for execution block hash: %s", forkChoiceNodeJSON.ExecutionBlockHash))
 	}
+
 	if len(executionBlockHash) != rootLength {
 		return fmt.Errorf("incorrect length %d for execution block hash", len(executionBlockHash))
 	}
+
 	copy(f.ExecutionBlockHash[:], executionBlockHash)
 
 	f.ExtraData = forkChoiceNodeJSON.ExtraData

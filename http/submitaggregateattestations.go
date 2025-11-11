@@ -30,13 +30,17 @@ func (s *Service) SubmitAggregateAttestations(ctx context.Context, opts *api.Sub
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
 	}
+
 	if opts == nil {
 		return client.ErrNoOptions
 	}
+
 	if len(opts.SignedAggregateAndProofs) == 0 {
 		return errors.Join(errors.New("no aggregate and proofs supplied"), client.ErrInvalidOptions)
 	}
+
 	aggregateAndProofs := opts.SignedAggregateAndProofs
+
 	unversionedAggregates, err := createUnversionedAggregates(aggregateAndProofs)
 	if err != nil {
 		return err
@@ -51,6 +55,7 @@ func (s *Service) SubmitAggregateAttestations(ctx context.Context, opts *api.Sub
 	query := ""
 
 	headers := make(map[string]string)
+
 	headers["Eth-Consensus-Version"] = strings.ToLower(aggregateAndProofs[0].Version.String())
 	if _, err = s.post(ctx,
 		endpoint,
@@ -67,8 +72,10 @@ func (s *Service) SubmitAggregateAttestations(ctx context.Context, opts *api.Sub
 }
 
 func createUnversionedAggregates(aggregateAndProofs []*spec.VersionedSignedAggregateAndProof) ([]any, error) {
-	var version spec.DataVersion
-	var unversionedAggregates []any
+	var (
+		version               spec.DataVersion
+		unversionedAggregates []any
+	)
 
 	for i := range aggregateAndProofs {
 		if aggregateAndProofs[i] == nil {

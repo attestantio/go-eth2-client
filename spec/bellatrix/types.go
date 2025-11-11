@@ -33,6 +33,7 @@ func (t Transaction) UnmarshalJSON(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'"', '0', 'x'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'"'}) {
 		return errors.New("invalid suffix")
 	}
@@ -47,7 +48,7 @@ func (t Transaction) UnmarshalJSON(input []byte) error {
 
 // MarshalJSON implements json.Marshaler.
 func (t Transaction) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf(`"%#x"`, t)), nil
+	return fmt.Appendf(nil, `"%#x"`, t), nil
 }
 
 // UnmarshalYAML implements yaml.Unmarshaler.
@@ -59,6 +60,7 @@ func (t *Transaction) UnmarshalYAML(input []byte) error {
 	if !bytes.HasPrefix(input, []byte{'\'', '0', 'x'}) {
 		return errors.New("invalid prefix")
 	}
+
 	if !bytes.HasSuffix(input, []byte{'\''}) {
 		return errors.New("invalid suffix")
 	}
@@ -73,5 +75,5 @@ func (t *Transaction) UnmarshalYAML(input []byte) error {
 
 // MarshalYAML implements yaml.Marshaler.
 func (t Transaction) MarshalYAML() ([]byte, error) {
-	return []byte(fmt.Sprintf(`'%#x'`, t)), nil
+	return fmt.Appendf(nil, `'%#x'`, t), nil
 }

@@ -45,6 +45,7 @@ func (p *PendingConsolidation) UnmarshalJSON(input []byte) error {
 	if err := p.SourceIndex.UnmarshalJSON(raw["source_index"]); err != nil {
 		return errors.Wrap(err, "source_index")
 	}
+
 	if err := p.TargetIndex.UnmarshalJSON(raw["target_index"]); err != nil {
 		return errors.Wrap(err, "target_index")
 	}

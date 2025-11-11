@@ -80,48 +80,63 @@ func (s *SyncCommitteeContribution) unpack(syncCommitteeContributionJSON *syncCo
 	if syncCommitteeContributionJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
+
 	slot, err := strconv.ParseUint(syncCommitteeContributionJSON.Slot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+
 	s.Slot = phase0.Slot(slot)
+
 	if syncCommitteeContributionJSON.BeaconBlockRoot == "" {
 		return errors.New("beacon block root missing")
 	}
+
 	beaconBlockRoot, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeContributionJSON.BeaconBlockRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for beacon block root")
 	}
+
 	if len(beaconBlockRoot) != phase0.RootLength {
 		return errors.New("incorrect length for beacon block root")
 	}
+
 	copy(s.BeaconBlockRoot[:], beaconBlockRoot)
+
 	if syncCommitteeContributionJSON.SubcommitteeIndex == "" {
 		return errors.New("subcommittee index missing")
 	}
+
 	subCommitteeIndex, err := strconv.ParseUint(syncCommitteeContributionJSON.SubcommitteeIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for subcommittee index")
 	}
+
 	s.SubcommitteeIndex = subCommitteeIndex
+
 	if syncCommitteeContributionJSON.AggregationBits == "" {
 		return errors.New("aggregation bits missing")
 	}
+
 	if s.AggregationBits, err = hex.DecodeString(
 		strings.TrimPrefix(syncCommitteeContributionJSON.AggregationBits, "0x"),
 	); err != nil {
 		return errors.Wrap(err, "invalid value for aggregation bits")
 	}
+
 	if syncCommitteeContributionJSON.Signature == "" {
 		return errors.New("signature missing")
 	}
+
 	signature, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeContributionJSON.Signature, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
+
 	if len(signature) != phase0.SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
+
 	copy(s.Signature[:], signature)
 
 	return nil

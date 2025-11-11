@@ -19,9 +19,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/attestantio/go-eth2-client/spec/electra"
-	"github.com/attestantio/go-eth2-client/spec/fulu"
-
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -29,6 +26,8 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/fulu"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	dynssz "github.com/pk910/dynamic-ssz"
 )
@@ -43,14 +42,17 @@ func (s *Service) BeaconState(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	if opts.State == "" {
 		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
 
 	endpoint := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", opts.State)
+
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, true)
 	if err != nil {
 		return nil, err
@@ -75,6 +77,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 	}
 
 	var dynSSZ *dynssz.DynSsz
+
 	if s.customSpecSupport {
 		specs, err := s.Spec(ctx, &api.SpecOpts{})
 		if err != nil {
@@ -85,6 +88,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 	}
 
 	var err error
+
 	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
 		response.Data.Phase0 = &phase0.BeaconState{}
@@ -93,6 +97,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		} else {
 			err = response.Data.Phase0.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode phase0 beacon state"), err)
 		}
@@ -103,6 +108,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		} else {
 			err = response.Data.Altair.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode altair beacon state"), err)
 		}
@@ -113,6 +119,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		} else {
 			err = response.Data.Bellatrix.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode bellatrix beacon state"), err)
 		}
@@ -123,6 +130,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		} else {
 			err = response.Data.Capella.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode capella beacon state"), err)
 		}
@@ -133,6 +141,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		} else {
 			err = response.Data.Deneb.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode deneb beacon state"), err)
 		}
@@ -143,6 +152,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		} else {
 			err = response.Data.Electra.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode electra beacon state"), err)
 		}
@@ -153,6 +163,7 @@ func (s *Service) beaconStateFromSSZ(ctx context.Context, res *httpResponse) (*a
 		} else {
 			err = response.Data.Fulu.UnmarshalSSZ(res.body)
 		}
+
 		if err != nil {
 			return nil, errors.Join(errors.New("failed to decode fulu beacon state"), err)
 		}
@@ -171,6 +182,7 @@ func (*Service) beaconStateFromJSON(res *httpResponse) (*api.Response[*spec.Vers
 	}
 
 	var err error
+
 	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
 		response.Data.Phase0, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &phase0.BeaconState{})
@@ -189,6 +201,7 @@ func (*Service) beaconStateFromJSON(res *httpResponse) (*api.Response[*spec.Vers
 	default:
 		err = fmt.Errorf("unsupported version %s", res.consensusVersion)
 	}
+
 	if err != nil {
 		return nil, err
 	}

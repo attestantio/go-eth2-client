@@ -58,19 +58,6 @@ func (a *AttesterSlashing) UnmarshalJSON(input []byte) error {
 	return a.unpack(&attesterSlashingJSON)
 }
 
-func (a *AttesterSlashing) unpack(attesterSlashingJSON *attesterSlashingJSON) error {
-	if attesterSlashingJSON.Attestation1 == nil {
-		return errors.New("attestation 1 missing")
-	}
-	a.Attestation1 = attesterSlashingJSON.Attestation1
-	if attesterSlashingJSON.Attestation2 == nil {
-		return errors.New("attestation 2 missing")
-	}
-	a.Attestation2 = attesterSlashingJSON.Attestation2
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (a *AttesterSlashing) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&attesterSlashingYAML{
@@ -102,4 +89,19 @@ func (a *AttesterSlashing) String() string {
 	}
 
 	return string(data)
+}
+
+func (a *AttesterSlashing) unpack(attesterSlashingJSON *attesterSlashingJSON) error {
+	if attesterSlashingJSON.Attestation1 == nil {
+		return errors.New("attestation 1 missing")
+	}
+
+	a.Attestation1 = attesterSlashingJSON.Attestation1
+	if attesterSlashingJSON.Attestation2 == nil {
+		return errors.New("attestation 2 missing")
+	}
+
+	a.Attestation2 = attesterSlashingJSON.Attestation2
+
+	return nil
 }

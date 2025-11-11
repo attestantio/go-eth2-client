@@ -55,24 +55,31 @@ func (e *BlockEvent) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &blockEventJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if blockEventJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
+
 	slot, err := strconv.ParseUint(blockEventJSON.Slot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+
 	e.Slot = phase0.Slot(slot)
+
 	if blockEventJSON.Block == "" {
 		return errors.New("block missing")
 	}
+
 	block, err := hex.DecodeString(strings.TrimPrefix(blockEventJSON.Block, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for block")
 	}
+
 	if len(block) != rootLength {
 		return fmt.Errorf("incorrect length %d for block", len(block))
 	}
+
 	copy(e.Block[:], block)
 	e.ExecutionOptimistic = blockEventJSON.ExecutionOptimistic
 

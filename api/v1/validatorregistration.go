@@ -72,49 +72,6 @@ func (v *ValidatorRegistration) UnmarshalJSON(input []byte) error {
 	return v.unpack(&data)
 }
 
-func (v *ValidatorRegistration) unpack(data *validatorRegistrationJSON) error {
-	if data.FeeRecipient == "" {
-		return errors.New("fee recipient missing")
-	}
-	feeRecipient, err := hex.DecodeString(strings.TrimPrefix(data.FeeRecipient, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for fee recipient")
-	}
-	copy(v.FeeRecipient[:], feeRecipient)
-
-	if data.GasLimit == "" {
-		return errors.New("gas limit missing")
-	}
-	gasLimit, err := strconv.ParseUint(data.GasLimit, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for gas limit")
-	}
-	v.GasLimit = gasLimit
-
-	if data.Timestamp == "" {
-		return errors.New("timestamp missing")
-	}
-	timestamp, err := strconv.ParseInt(data.Timestamp, 10, 64)
-	if err != nil {
-		return errors.Wrap(err, "invalid value for timestamp")
-	}
-	v.Timestamp = time.Unix(timestamp, 0)
-
-	if data.Pubkey == "" {
-		return errors.New("public key missing")
-	}
-	pubKey, err := hex.DecodeString(strings.TrimPrefix(data.Pubkey, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for public key")
-	}
-	if len(pubKey) != publicKeyLength {
-		return errors.New("incorrect length for public key")
-	}
-	copy(v.Pubkey[:], pubKey)
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (v *ValidatorRegistration) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&validatorRegistrationYAML{
@@ -149,4 +106,56 @@ func (v *ValidatorRegistration) String() string {
 	}
 
 	return string(data)
+}
+
+func (v *ValidatorRegistration) unpack(data *validatorRegistrationJSON) error {
+	if data.FeeRecipient == "" {
+		return errors.New("fee recipient missing")
+	}
+
+	feeRecipient, err := hex.DecodeString(strings.TrimPrefix(data.FeeRecipient, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for fee recipient")
+	}
+
+	copy(v.FeeRecipient[:], feeRecipient)
+
+	if data.GasLimit == "" {
+		return errors.New("gas limit missing")
+	}
+
+	gasLimit, err := strconv.ParseUint(data.GasLimit, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for gas limit")
+	}
+
+	v.GasLimit = gasLimit
+
+	if data.Timestamp == "" {
+		return errors.New("timestamp missing")
+	}
+
+	timestamp, err := strconv.ParseInt(data.Timestamp, 10, 64)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for timestamp")
+	}
+
+	v.Timestamp = time.Unix(timestamp, 0)
+
+	if data.Pubkey == "" {
+		return errors.New("public key missing")
+	}
+
+	pubKey, err := hex.DecodeString(strings.TrimPrefix(data.Pubkey, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for public key")
+	}
+
+	if len(pubKey) != publicKeyLength {
+		return errors.New("incorrect length for public key")
+	}
+
+	copy(v.Pubkey[:], pubKey)
+
+	return nil
 }

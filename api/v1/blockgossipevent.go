@@ -52,24 +52,31 @@ func (e *BlockGossipEvent) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if data.Slot == "" {
 		return errors.New("slot missing")
 	}
+
 	slot, err := strconv.ParseUint(data.Slot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+
 	e.Slot = phase0.Slot(slot)
+
 	if data.Block == "" {
 		return errors.New("block missing")
 	}
+
 	block, err := hex.DecodeString(strings.TrimPrefix(data.Block, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for block")
 	}
+
 	if len(block) != rootLength {
 		return fmt.Errorf("incorrect length %d for block", len(block))
 	}
+
 	copy(e.Block[:], block)
 
 	return nil

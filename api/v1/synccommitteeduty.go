@@ -63,35 +63,44 @@ func (s *SyncCommitteeDuty) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &syncCommitteeDutyJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if syncCommitteeDutyJSON.PubKey == "" {
 		return errors.New("public key missing")
 	}
+
 	pubKey, err := hex.DecodeString(strings.TrimPrefix(syncCommitteeDutyJSON.PubKey, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for public key")
 	}
+
 	if len(pubKey) != publicKeyLength {
 		return errors.New("incorrect length for public key")
 	}
+
 	copy(s.PubKey[:], pubKey)
+
 	if syncCommitteeDutyJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
+
 	validatorIndex, err := strconv.ParseUint(syncCommitteeDutyJSON.ValidatorIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+
 	s.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
 
 	if len(syncCommitteeDutyJSON.ValidatorSyncCommitteeIndices) == 0 {
 		return errors.New("validator sync committee indices missing")
 	}
+
 	s.ValidatorSyncCommitteeIndices = make([]phase0.CommitteeIndex, len(syncCommitteeDutyJSON.ValidatorSyncCommitteeIndices))
 	for i := range syncCommitteeDutyJSON.ValidatorSyncCommitteeIndices {
 		committeeIndex, err := strconv.ParseUint(syncCommitteeDutyJSON.ValidatorSyncCommitteeIndices[i], 10, 64)
 		if err != nil {
 			return errors.Wrap(err, "invalid value for sync committee index")
 		}
+
 		s.ValidatorSyncCommitteeIndices[i] = phase0.CommitteeIndex(committeeIndex)
 	}
 

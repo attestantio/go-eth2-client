@@ -36,9 +36,11 @@ func (s *Service) ValidatorBalances(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
+
 	if opts.State == "" {
 		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
 	}
@@ -50,6 +52,7 @@ func (s *Service) ValidatorBalances(ctx context.Context,
 	for i := range opts.Indices {
 		body = append(body, fmt.Sprintf("%d", opts.Indices[i]))
 	}
+
 	for i := range opts.PubKeys {
 		body = append(body, opts.PubKeys[i].String())
 	}

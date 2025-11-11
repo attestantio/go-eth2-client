@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -33,25 +34,21 @@ func RawJSON(b any, input []byte) (map[string]json.RawMessage, error) {
 
 	// Ensure all values are present.
 	elem := reflect.TypeOf(b).Elem()
+
 	fields := elem.NumField()
-	for i := 0; i < fields; i++ {
+	for i := range fields {
 		jsonTags, present := elem.Field(i).Tag.Lookup("json")
 		if !present {
 			return nil, fmt.Errorf("no json tags for field %d", i)
 		}
-		tags := strings.Split(jsonTags, ",")
-		var emptyAllowed bool
-		for i := range tags {
-			if tags[i] == "allowempty" {
-				// This can be omitted.
-				emptyAllowed = true
 
-				break
-			}
-		}
-		if emptyAllowed {
+		tags := strings.Split(jsonTags, ",")
+
+		// This can be omitted if "allowempty" is present.
+		if slices.Contains(tags, "allowempty") {
 			continue
 		}
+
 		if _, exists := base[tags[0]]; !exists {
 			// This should be present but is not.
 			return nil, fmt.Errorf("%s: missing", tags[0])

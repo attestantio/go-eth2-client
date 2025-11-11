@@ -66,37 +66,6 @@ func (e *ETH1Data) UnmarshalJSON(input []byte) error {
 	return e.unpack(&eth1DataJSON)
 }
 
-func (e *ETH1Data) unpack(eth1DataJSON *eth1DataJSON) error {
-	if eth1DataJSON.DepositRoot == "" {
-		return errors.New("deposit root missing")
-	}
-	depositRoot, err := hex.DecodeString(strings.TrimPrefix(eth1DataJSON.DepositRoot, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for deposit root")
-	}
-	if len(depositRoot) != RootLength {
-		return errors.New("incorrect length for deposit root")
-	}
-	copy(e.DepositRoot[:], depositRoot)
-	if eth1DataJSON.DepositCount == "" {
-		return errors.New("deposit count missing")
-	}
-	if e.DepositCount, err = strconv.ParseUint(eth1DataJSON.DepositCount, 10, 64); err != nil {
-		return errors.Wrap(err, "invalid value for deposit count")
-	}
-	if eth1DataJSON.BlockHash == "" {
-		return errors.New("block hash missing")
-	}
-	if e.BlockHash, err = hex.DecodeString(strings.TrimPrefix(eth1DataJSON.BlockHash, "0x")); err != nil {
-		return errors.Wrap(err, "invalid value for block hash")
-	}
-	if len(e.BlockHash) != HashLength {
-		return errors.New("incorrect length for block hash")
-	}
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (e *ETH1Data) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&eth1DataYAML{
@@ -130,4 +99,43 @@ func (e *ETH1Data) String() string {
 	}
 
 	return string(data)
+}
+
+func (e *ETH1Data) unpack(eth1DataJSON *eth1DataJSON) error {
+	if eth1DataJSON.DepositRoot == "" {
+		return errors.New("deposit root missing")
+	}
+
+	depositRoot, err := hex.DecodeString(strings.TrimPrefix(eth1DataJSON.DepositRoot, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for deposit root")
+	}
+
+	if len(depositRoot) != RootLength {
+		return errors.New("incorrect length for deposit root")
+	}
+
+	copy(e.DepositRoot[:], depositRoot)
+
+	if eth1DataJSON.DepositCount == "" {
+		return errors.New("deposit count missing")
+	}
+
+	if e.DepositCount, err = strconv.ParseUint(eth1DataJSON.DepositCount, 10, 64); err != nil {
+		return errors.Wrap(err, "invalid value for deposit count")
+	}
+
+	if eth1DataJSON.BlockHash == "" {
+		return errors.New("block hash missing")
+	}
+
+	if e.BlockHash, err = hex.DecodeString(strings.TrimPrefix(eth1DataJSON.BlockHash, "0x")); err != nil {
+		return errors.Wrap(err, "invalid value for block hash")
+	}
+
+	if len(e.BlockHash) != HashLength {
+		return errors.New("incorrect length for block hash")
+	}
+
+	return nil
 }

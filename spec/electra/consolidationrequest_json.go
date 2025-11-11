@@ -48,9 +48,11 @@ func (e *ConsolidationRequest) UnmarshalJSON(input []byte) error {
 	if err := e.SourceAddress.UnmarshalJSON(raw["source_address"]); err != nil {
 		return errors.Wrap(err, "source_address")
 	}
+
 	if err := e.SourcePubkey.UnmarshalJSON(raw["source_pubkey"]); err != nil {
 		return errors.Wrap(err, "source_pubkey")
 	}
+
 	if err := e.TargetPubkey.UnmarshalJSON(raw["target_pubkey"]); err != nil {
 		return errors.Wrap(err, "target_pubkey")
 	}

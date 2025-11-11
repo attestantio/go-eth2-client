@@ -65,13 +65,16 @@ func (s *SignedVoluntaryExit) unpack(signedVoluntaryExitJSON *signedVoluntaryExi
 	if s.Message == nil {
 		return errors.New("message missing")
 	}
+
 	signature, err := hex.DecodeString(strings.TrimPrefix(signedVoluntaryExitJSON.Signature, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for signature")
 	}
+
 	if len(signature) != SignatureLength {
 		return errors.New("incorrect length for signature")
 	}
+
 	copy(s.Signature[:], signature)
 
 	return nil

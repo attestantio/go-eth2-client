@@ -66,25 +66,31 @@ func (s *SyncAggregate) unpack(syncAggregateJSON *syncAggregateJSON) error {
 	if syncAggregateJSON.SyncCommitteeBits == "" {
 		return errors.New("sync committee bits missing")
 	}
+
 	syncCommitteeBits, err := hex.DecodeString(strings.TrimPrefix(syncAggregateJSON.SyncCommitteeBits, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for sync committee bits")
 	}
+
 	s.SyncCommitteeBits = syncCommitteeBits
 
 	if syncAggregateJSON.SyncCommitteeSignature == "" {
 		return errors.New("sync committee signature missing")
 	}
+
 	syncCommitteeSignature, err := hex.DecodeString(strings.TrimPrefix(syncAggregateJSON.SyncCommitteeSignature, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for sync committee signature")
 	}
+
 	if len(syncCommitteeSignature) < 96 {
 		return errors.New("sync committee signature short")
 	}
+
 	if len(syncCommitteeSignature) > 96 {
 		return errors.New("sync committee signature long")
 	}
+
 	copy(s.SyncCommitteeSignature[:], syncCommitteeSignature)
 
 	return nil

@@ -38,11 +38,13 @@ func (s *Service) Genesis(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
 
 	s.genesisMutex.RLock()
+
 	if s.genesis != nil {
 		defer s.genesisMutex.RUnlock()
 
@@ -51,10 +53,12 @@ func (s *Service) Genesis(ctx context.Context,
 			Metadata: make(map[string]any),
 		}, nil
 	}
+
 	s.genesisMutex.RUnlock()
 
 	s.genesisMutex.Lock()
 	defer s.genesisMutex.Unlock()
+
 	if s.genesis != nil {
 		// Someone else fetched this whilst we were waiting for the lock.
 		return &api.Response[*apiv1.Genesis]{
@@ -65,6 +69,7 @@ func (s *Service) Genesis(ctx context.Context,
 
 	// Up to us to fetch the information.
 	endpoint := "/eth/v1/beacon/genesis"
+
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request genesis"), err)
@@ -74,6 +79,7 @@ func (s *Service) Genesis(ctx context.Context,
 	if err := json.NewDecoder(bytes.NewReader(httpResponse.body)).Decode(&resp); err != nil {
 		return nil, errors.Join(errors.New("failed to parse genesis"), err)
 	}
+
 	s.genesis = resp.Data
 
 	return &api.Response[*apiv1.Genesis]{

@@ -93,77 +93,97 @@ func (b *BeaconBlockBody) unpack(beaconBlockBodyJSON *beaconBlockBodyJSON) error
 	if beaconBlockBodyJSON.RANDAOReveal == "" {
 		return errors.New("RANDAO reveal missing")
 	}
+
 	randaoReveal, err := hex.DecodeString(strings.TrimPrefix(beaconBlockBodyJSON.RANDAOReveal, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for RANDAO reveal")
 	}
+
 	if len(randaoReveal) != phase0.SignatureLength {
 		return errors.New("incorrect length for RANDAO reveal")
 	}
+
 	copy(b.RANDAOReveal[:], randaoReveal)
+
 	if beaconBlockBodyJSON.ETH1Data == nil {
 		return errors.New("ETH1 data missing")
 	}
+
 	b.ETH1Data = beaconBlockBodyJSON.ETH1Data
 	if beaconBlockBodyJSON.Graffiti == "" {
 		return errors.New("graffiti missing")
 	}
+
 	graffiti, err := hex.DecodeString(strings.TrimPrefix(beaconBlockBodyJSON.Graffiti, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid value for graffiti")
 	}
+
 	if len(graffiti) != phase0.GraffitiLength {
 		return errors.New("incorrect length for graffiti")
 	}
+
 	copy(b.Graffiti[:], graffiti)
+
 	if beaconBlockBodyJSON.ProposerSlashings == nil {
 		return errors.New("proposer slashings missing")
 	}
+
 	for i := range beaconBlockBodyJSON.ProposerSlashings {
 		if beaconBlockBodyJSON.ProposerSlashings[i] == nil {
 			return fmt.Errorf("proposer slashings entry %d missing", i)
 		}
 	}
+
 	b.ProposerSlashings = beaconBlockBodyJSON.ProposerSlashings
 	if beaconBlockBodyJSON.AttesterSlashings == nil {
 		return errors.New("attester slashings missing")
 	}
+
 	for i := range beaconBlockBodyJSON.AttesterSlashings {
 		if beaconBlockBodyJSON.AttesterSlashings[i] == nil {
 			return fmt.Errorf("attester slashings entry %d missing", i)
 		}
 	}
+
 	b.AttesterSlashings = beaconBlockBodyJSON.AttesterSlashings
 	if beaconBlockBodyJSON.Attestations == nil {
 		return errors.New("attestations missing")
 	}
+
 	for i := range beaconBlockBodyJSON.Attestations {
 		if beaconBlockBodyJSON.Attestations[i] == nil {
 			return fmt.Errorf("attestations entry %d missing", i)
 		}
 	}
+
 	b.Attestations = beaconBlockBodyJSON.Attestations
 	if beaconBlockBodyJSON.Deposits == nil {
 		return errors.New("deposits missing")
 	}
+
 	for i := range beaconBlockBodyJSON.Deposits {
 		if beaconBlockBodyJSON.Deposits[i] == nil {
 			return fmt.Errorf("deposits entry %d missing", i)
 		}
 	}
+
 	b.Deposits = beaconBlockBodyJSON.Deposits
 	if beaconBlockBodyJSON.VoluntaryExits == nil {
 		return errors.New("voluntary exits missing")
 	}
+
 	for i := range beaconBlockBodyJSON.VoluntaryExits {
 		if beaconBlockBodyJSON.VoluntaryExits[i] == nil {
 			return fmt.Errorf("voluntary exits entry %d missing", i)
 		}
 	}
+
 	b.VoluntaryExits = beaconBlockBodyJSON.VoluntaryExits
 	if beaconBlockBodyJSON.SyncAggregate == nil {
 		return errors.New("sync aggregate missing")
 	}
+
 	b.SyncAggregate = beaconBlockBodyJSON.SyncAggregate
 
 	return nil

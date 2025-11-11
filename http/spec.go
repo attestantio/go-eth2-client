@@ -36,11 +36,13 @@ func (s *Service) Spec(ctx context.Context,
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
+
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
 
 	s.specMutex.RLock()
+
 	if s.spec != nil {
 		defer s.specMutex.RUnlock()
 
@@ -49,10 +51,12 @@ func (s *Service) Spec(ctx context.Context,
 			Metadata: make(map[string]any),
 		}, nil
 	}
+
 	s.specMutex.RUnlock()
 
 	s.specMutex.Lock()
 	defer s.specMutex.Unlock()
+
 	if s.spec != nil {
 		// Someone else fetched this whilst we were waiting for the lock.
 		return &api.Response[map[string]any]{
@@ -63,6 +67,7 @@ func (s *Service) Spec(ctx context.Context,
 
 	// Up to us to fetch the information.
 	endpoint := "/eth/v1/config/spec"
+
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
 		return nil, err
@@ -98,6 +103,7 @@ func (s *Service) Spec(ctx context.Context,
 
 func parseSpecMap(data map[string]any) map[string]any {
 	config := make(map[string]any)
+
 	for k, v := range data {
 		switch value := v.(type) {
 		case string:
@@ -156,8 +162,8 @@ func parseSpecString(k, v string) any {
 	}
 
 	// Handle hex strings.
-	if strings.HasPrefix(v, "0x") {
-		byteVal, err := hex.DecodeString(strings.TrimPrefix(v, "0x"))
+	if hexVal, found := strings.CutPrefix(v, "0x"); found {
+		byteVal, err := hex.DecodeString(hexVal)
 		if err == nil {
 			return byteVal
 		}
@@ -183,6 +189,7 @@ func parseSpecString(k, v string) any {
 	if v == "0" {
 		return uint64(0)
 	}
+
 	intVal, err := strconv.ParseUint(v, 10, 64)
 	if err == nil && intVal != 0 {
 		return intVal

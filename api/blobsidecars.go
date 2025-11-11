@@ -30,12 +30,15 @@ func (b *BlobSidecars) UnmarshalSSZ(buf []byte) error {
 	if err != nil {
 		return err
 	}
+
 	b.Sidecars = make([]*deneb.BlobSidecar, num)
-	for ii := 0; ii < num; ii++ {
+	for ii := range num {
 		if b.Sidecars[ii] == nil {
 			b.Sidecars[ii] = new(deneb.BlobSidecar)
 		}
-		if err = b.Sidecars[ii].UnmarshalSSZ(buf[ii*131928 : (ii+1)*131928]); err != nil {
+
+		err = b.Sidecars[ii].UnmarshalSSZ(buf[ii*131928 : (ii+1)*131928])
+		if err != nil {
 			return err
 		}
 	}

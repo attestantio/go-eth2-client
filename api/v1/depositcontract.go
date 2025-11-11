@@ -51,18 +51,23 @@ func (d *DepositContract) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &depositContractJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if depositContractJSON.ChainID == "" {
 		return errors.New("chain ID missing")
 	}
+
 	if d.ChainID, err = strconv.ParseUint(depositContractJSON.ChainID, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for chain ID")
 	}
+
 	if depositContractJSON.Address == "" {
 		return errors.New("address missing")
 	}
+
 	if d.Address, err = hex.DecodeString(strings.TrimPrefix(depositContractJSON.Address, "0x")); err != nil {
 		return errors.Wrap(err, "invalid value for address")
 	}
+
 	if len(d.Address) != eth1AddressLength {
 		return fmt.Errorf("incorrect length %d for address", len(d.Address))
 	}

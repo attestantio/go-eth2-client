@@ -32,7 +32,7 @@ func (s *Service) VoluntaryExitPool(ctx context.Context,
 	}
 
 	res := make([]*phase0.SignedVoluntaryExit, 5)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		res[i] = &phase0.SignedVoluntaryExit{
 			Message: &phase0.VoluntaryExit{
 				Epoch:          1,

@@ -111,16 +111,20 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	if !bytes.HasPrefix(logsBloom, []byte{'"', '0', 'x'}) {
 		return errors.New("logs_bloom: invalid prefix")
 	}
+
 	if !bytes.HasSuffix(logsBloom, []byte{'"'}) {
 		return errors.New("logs_bloom: invalid suffix")
 	}
+
 	if len(logsBloom) != 1+2+256*2+1 {
 		return errors.New("logs_bloom: incorrect length")
 	}
+
 	length, err := hex.Decode(e.LogsBloom[:], logsBloom[3:3+256*2])
 	if err != nil {
 		return errors.Wrap(err, "logs_bloom")
 	}
+
 	if length != 256 {
 		return errors.New("logs_bloom: incorrect length")
 	}
@@ -129,16 +133,20 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	if !bytes.HasPrefix(prevRandao, []byte{'"', '0', 'x'}) {
 		return errors.New("prev_randao: invalid prefix")
 	}
+
 	if !bytes.HasSuffix(prevRandao, []byte{'"'}) {
 		return errors.New("prev_randao: invalid suffix")
 	}
+
 	if len(prevRandao) != 1+2+32*2+1 {
 		return errors.New("prev_randao: incorrect length")
 	}
+
 	length, err = hex.Decode(e.PrevRandao[:], prevRandao[3:3+32*2])
 	if err != nil {
 		return errors.Wrap(err, "prev_randao")
 	}
+
 	if length != 32 {
 		return errors.New("prev_randao: incorrect length")
 	}
@@ -147,52 +155,62 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "block_number")
 	}
+
 	e.BlockNumber = tmpUint
 
 	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["gas_limit"], `"`)), 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "gas_limit")
 	}
+
 	e.GasLimit = tmpUint
 
 	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["gas_used"], `"`)), 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "gas_used")
 	}
+
 	e.GasUsed = tmpUint
 
 	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["timestamp"], `"`)), 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "timestamp")
 	}
+
 	e.Timestamp = tmpUint
 
 	var tmpBytes []byte
+
 	switch {
 	case bytes.Equal(raw["extra_data"], []byte{'0', 'x'}), bytes.Equal(raw["extra_data"], []byte{'0'}):
 		// Empty.
 	default:
 		tmpBytes = bytes.TrimPrefix(bytes.Trim(raw["extra_data"], `"`), []byte{'0', 'x'})
 		if len(tmpBytes)%2 == 1 {
-			tmpBytes = []byte(fmt.Sprintf("0%s", string(tmpBytes)))
+			tmpBytes = fmt.Appendf(nil, "0%s", string(tmpBytes))
 		}
+
 		tmp, err := hex.DecodeString(string(tmpBytes))
 		if err != nil {
 			return errors.Wrap(err, "extra_data")
 		}
+
 		if len(tmp) > 32 {
 			return errors.New("extra_data: incorrect length")
 		}
+
 		e.ExtraData = tmp
 	}
 
 	tmpBytes = bytes.Trim(raw["base_fee_per_gas"], `"`)
+
 	tmpBytes = bytes.TrimPrefix(tmpBytes, []byte{'0', 'x'})
 	if bytes.HasPrefix(tmpBytes, []byte{'0', 'x'}) {
 		e.BaseFeePerGas, err = uint256.FromHex(string(tmpBytes))
 	} else {
 		e.BaseFeePerGas, err = uint256.FromDecimal(string(tmpBytes))
 	}
+
 	if err != nil {
 		return errors.Wrap(err, "base_fee_per_gas")
 	}
@@ -205,9 +223,11 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["transactions"], &transactions); err != nil {
 		return errors.Wrap(err, "transactions")
 	}
+
 	if len(transactions) > bellatrix.MaxTransactionsPerPayload {
 		return errors.Wrap(err, "incorrect length for transactions")
 	}
+
 	e.Transactions = make([]bellatrix.Transaction, len(transactions))
 	for i := range transactions {
 		if len(transactions[i]) == 0 ||
@@ -215,10 +235,12 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 			bytes.Equal(transactions[i], []byte{'"', '0', 'x', '"'}) {
 			return fmt.Errorf("transaction %d: missing", i)
 		}
+
 		e.Transactions[i] = make([]byte, (len(transactions[i])-4)/2)
 		if err := json.Unmarshal(transactions[i], &e.Transactions[i]); err != nil {
 			return errors.Wrapf(err, "transaction %d", i)
 		}
+
 		if len(e.Transactions[i]) > bellatrix.MaxBytesPerTransaction {
 			return errors.Wrapf(err, "incorrect length for transaction %d", i)
 		}
@@ -227,6 +249,7 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(raw["withdrawals"], &e.Withdrawals); err != nil {
 		return errors.Wrap(err, "withdrawals")
 	}
+
 	for i := range e.Withdrawals {
 		if e.Withdrawals[i] == nil {
 			return fmt.Errorf("withdrawals entry %d missing", i)
@@ -237,12 +260,14 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "blob_gas_used")
 	}
+
 	e.BlobGasUsed = tmpUint
 
 	tmpUint, err = strconv.ParseUint(string(bytes.Trim(raw["excess_blob_gas"], `"`)), 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "excess_blob_gas")
 	}
+
 	e.ExcessBlobGas = tmpUint
 
 	return nil

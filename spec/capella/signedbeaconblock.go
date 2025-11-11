@@ -61,26 +61,6 @@ func (s *SignedBeaconBlock) UnmarshalJSON(input []byte) error {
 	return s.unpack(&data)
 }
 
-func (s *SignedBeaconBlock) unpack(data *signedBeaconBlockJSON) error {
-	if data.Message == nil {
-		return errors.New("message missing")
-	}
-	s.Message = data.Message
-	if data.Signature == "" {
-		return errors.New("signature missing")
-	}
-	signature, err := hex.DecodeString(strings.TrimPrefix(data.Signature, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for signature")
-	}
-	if len(signature) != phase0.SignatureLength {
-		return fmt.Errorf("incorrect length %d for signature", len(signature))
-	}
-	copy(s.Signature[:], signature)
-
-	return nil
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (s *SignedBeaconBlock) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&signedBeaconBlockYAML{
@@ -113,4 +93,28 @@ func (s *SignedBeaconBlock) String() string {
 	}
 
 	return string(data)
+}
+
+func (s *SignedBeaconBlock) unpack(data *signedBeaconBlockJSON) error {
+	if data.Message == nil {
+		return errors.New("message missing")
+	}
+
+	s.Message = data.Message
+	if data.Signature == "" {
+		return errors.New("signature missing")
+	}
+
+	signature, err := hex.DecodeString(strings.TrimPrefix(data.Signature, "0x"))
+	if err != nil {
+		return errors.Wrap(err, "invalid value for signature")
+	}
+
+	if len(signature) != phase0.SignatureLength {
+		return fmt.Errorf("incorrect length %d for signature", len(signature))
+	}
+
+	copy(s.Signature[:], signature)
+
+	return nil
 }

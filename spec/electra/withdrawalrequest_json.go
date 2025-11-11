@@ -48,9 +48,11 @@ func (e *WithdrawalRequest) UnmarshalJSON(input []byte) error {
 	if err := e.SourceAddress.UnmarshalJSON(raw["source_address"]); err != nil {
 		return errors.Wrap(err, "source_address")
 	}
+
 	if err := e.ValidatorPubkey.UnmarshalJSON(raw["validator_pubkey"]); err != nil {
 		return errors.Wrap(err, "validator_pubkey")
 	}
+
 	if err := e.Amount.UnmarshalJSON(raw["amount"]); err != nil {
 		return errors.Wrap(err, "amount")
 	}

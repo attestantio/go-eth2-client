@@ -32,6 +32,7 @@ func (s *Service) monitor(ctx context.Context) {
 	ctx = log.WithContext(ctx)
 
 	log.Trace().Msg("Monitor starting")
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -63,6 +64,7 @@ func (s *Service) recheck(ctx context.Context) {
 				httpClient.CheckConnectionState(ctx)
 			}
 		}
+
 		switch {
 		case client.IsSynced():
 			s.activateClient(ctx, client)
@@ -80,15 +82,18 @@ func (s *Service) deactivateClient(ctx context.Context, client consensusclient.S
 	defer s.clientsMu.Unlock()
 
 	activeClients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
+
 	inactiveClients := s.inactiveClients
 	for _, activeClient := range s.activeClients {
 		if activeClient == client {
 			inactiveClients = append(inactiveClients, activeClient)
+
 			s.setProviderStateMetric(ctx, client.Address(), "inactive")
 		} else {
 			activeClients = append(activeClients, activeClient)
 		}
 	}
+
 	if len(inactiveClients) != len(s.inactiveClients) {
 		log.Trace().Str("client", client.Address()).
 			Int("active", len(activeClients)).
@@ -109,15 +114,18 @@ func (s *Service) activateClient(ctx context.Context, client consensusclient.Ser
 	defer s.clientsMu.Unlock()
 
 	activeClients := s.activeClients
+
 	inactiveClients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
 	for _, inactiveClient := range s.inactiveClients {
 		if inactiveClient == client {
 			activeClients = append(activeClients, inactiveClient)
+
 			s.setProviderStateMetric(ctx, client.Address(), "active")
 		} else {
 			inactiveClients = append(inactiveClients, inactiveClient)
 		}
 	}
+
 	if len(inactiveClients) != len(s.inactiveClients) {
 		log.Trace().Str("client", client.Address()).
 			Int("active", len(activeClients)).
@@ -161,13 +169,18 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		return nil, errors.New("no clients to which to make call")
 	}
 
-	var err error
-	var res any
+	var (
+		err error
+		res any
+	)
+
 	for _, client := range activeClients {
 		log := log.With().Str("client", client.Name()).Str("address", client.Address()).Logger()
+
 		res, err = call(ctx, client)
 		if err != nil {
 			log.Trace().Err(err).Msg("Potentially deactivating client due to error")
+
 			var apiErr *api.Error
 			switch {
 			case errors.As(err, &apiErr) && statusCodeFamily(apiErr.StatusCode) == 4:
@@ -188,6 +201,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 			if errHandler != nil {
 				failover, err = errHandler(ctx, client, err)
 			}
+
 			if failover {
 				log.Debug().Err(err).Msg("Deactivating client on error")
 				s.deactivateClient(ctx, client)
@@ -198,6 +212,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 			// No failover required, return.
 			return res, err
 		}
+
 		if res == nil {
 			// No response from this client; try the next.
 			err = errors.New("empty response")
@@ -215,6 +230,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 // Currently this just returns the name of the service (lighthouse/teku/etc.).
 func (*Service) providerInfo(ctx context.Context, provider consensusclient.Service) string {
 	providerName := "<unknown>"
+
 	nodeVersionProvider, isNodeVersionProvider := provider.(consensusclient.NodeVersionProvider)
 	if isNodeVersionProvider {
 		response, err := nodeVersionProvider.NodeVersion(ctx, &api.NodeVersionOpts{})
@@ -230,6 +246,8 @@ func (*Service) providerInfo(ctx context.Context, provider consensusclient.Servi
 				providerName = "teku"
 			case strings.Contains(strings.ToLower(response.Data), "nimbus"):
 				providerName = "nimbus"
+			default:
+				// Unknown provider, keep as "<unknown>"
 			}
 		}
 	}

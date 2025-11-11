@@ -64,39 +64,52 @@ func (b *BeaconCommitteeSubscription) UnmarshalJSON(input []byte) error {
 	if err = json.Unmarshal(input, &beaconCommitteeSubscriptionJSON); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	if beaconCommitteeSubscriptionJSON.ValidatorIndex == "" {
 		return errors.New("validator index missing")
 	}
+
 	validatorIndex, err := strconv.ParseUint(beaconCommitteeSubscriptionJSON.ValidatorIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for validator index")
 	}
+
 	b.ValidatorIndex = phase0.ValidatorIndex(validatorIndex)
+
 	if beaconCommitteeSubscriptionJSON.Slot == "" {
 		return errors.New("slot missing")
 	}
+
 	slot, err := strconv.ParseUint(beaconCommitteeSubscriptionJSON.Slot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
+
 	b.Slot = phase0.Slot(slot)
+
 	if beaconCommitteeSubscriptionJSON.CommitteeIndex == "" {
 		return errors.New("committee index missing")
 	}
+
 	committeeIndex, err := strconv.ParseUint(beaconCommitteeSubscriptionJSON.CommitteeIndex, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for committee index")
 	}
+
 	b.CommitteeIndex = phase0.CommitteeIndex(committeeIndex)
+
 	if beaconCommitteeSubscriptionJSON.CommitteesAtSlot == "" {
 		return errors.New("committees at slot missing")
 	}
+
 	if b.CommitteesAtSlot, err = strconv.ParseUint(beaconCommitteeSubscriptionJSON.CommitteesAtSlot, 10, 64); err != nil {
 		return errors.Wrap(err, "invalid value for committees at slot")
 	}
+
 	if b.CommitteesAtSlot == 0 {
 		return errors.New("committees at slot cannot be 0")
 	}
+
 	b.IsAggregator = beaconCommitteeSubscriptionJSON.IsAggregator
 
 	return nil
