@@ -4,6 +4,7 @@
 *.so
 *.dylib
 *.ssz
+!api/v1/testdata/blobs/blob.ssz
 # Test binary, build with `go test -c`
 *.test
 
