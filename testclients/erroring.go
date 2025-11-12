@@ -918,6 +918,7 @@ func (s *Erroring) Blobs(ctx context.Context,
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
+
 	next, isNext := s.next.(consensusclient.BlobsProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
