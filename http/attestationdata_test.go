@@ -45,6 +45,12 @@ func TestAttestationData(t *testing.T) {
 		errCode int
 	}{
 		{
+			name: "Good",
+			opts: &api.AttestationDataOpts{
+				Slot: phase0.Slot(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / uint64(slotDuration.Seconds())),
+			},
+		},
+		{
 			name: "NilOpts",
 			err:  []string{"no options specified"},
 		},
@@ -55,12 +61,6 @@ func TestAttestationData(t *testing.T) {
 			},
 			errCode: 400,
 			err:     []string{"request slot 999999999 is more than one slot past the current slot", "slot 999999999 is not the current slot"},
-		},
-		{
-			name: "Good",
-			opts: &api.AttestationDataOpts{
-				Slot: phase0.Slot(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / uint64(slotDuration.Seconds())),
-			},
 		},
 	}
 
