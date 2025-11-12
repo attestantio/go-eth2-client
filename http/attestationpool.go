@@ -144,16 +144,18 @@ func verifyElectraAttestation(opts *api.AttestationPoolOpts, data *electra.Attes
 		return errors.New("attestation data not for requested slot")
 	}
 
-	if opts.CommitteeIndex != nil {
-		for _, committeeIndex := range data.CommitteeBits.BitIndices() {
-			if phase0.CommitteeIndex(committeeIndex) == *opts.CommitteeIndex {
-				// We have a match.
-				return nil
-			}
-		}
-
-		return errors.New("attestation data not for requested committee index")
+	if opts.CommitteeIndex == nil {
+		// No committee index specified in opts so skipping check.
+		// This means we won't filter by committee indices and will attempt to match all committee indices.
+		return nil
 	}
-	// No check for committee index, so we match all committee indices.
-	return nil
+
+	for _, committeeIndex := range data.CommitteeBits.BitIndices() {
+		if phase0.CommitteeIndex(committeeIndex) == *opts.CommitteeIndex {
+			// We have a match.
+			return nil
+		}
+	}
+
+	return errors.New("attestation data not for requested committee index")
 }
