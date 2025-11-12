@@ -16,16 +16,24 @@ package testclients_test
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/testclients"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNetworkName(t *testing.T) {
 	if os.Getenv("HTTP_ADDRESS") == "" {
 		t.Skip("HTTP_ADDRESS not set")
+	}
+
+	if logLevel := os.Getenv("HTTP_DEBUG_LOG_ENABLED"); strings.ToLower(logLevel) == "true" {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	} else {
+		zerolog.SetGlobalLevel(zerolog.Disabled)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
