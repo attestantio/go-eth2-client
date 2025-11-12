@@ -16,10 +16,10 @@ package capella
 import (
 	"fmt"
 
+	bitfield "github.com/OffchainLabs/go-bitfield"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
-	bitfield "github.com/prysmaticlabs/go-bitfield"
 )
 
 // BeaconState represents a beacon state.
