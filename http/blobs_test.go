@@ -21,11 +21,12 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/spec/deneb"
+	v1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/stretchr/testify/require"
 )
 
-func TestBlobsSidecars(t *testing.T) {
+func TestBlobs(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -37,54 +38,57 @@ func TestBlobsSidecars(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, headBlock)
 
+	if headBlock.Data.Version < spec.DataVersionFulu {
+		t.Logf("Client does not support Fulu, skipping tests")
+		return
+	}
+
 	headBlockSlot, err := headBlock.Data.Slot()
 	require.NoError(t, err)
 	headBlockRoot, err := headBlock.Data.Root()
 	require.NoError(t, err)
 
-	assertBlobs := func(t *testing.T, response *api.Response[[]*deneb.BlobSidecar], err error) {
+	assertBlobs := func(t *testing.T, response *api.Response[v1.Blobs], err error) {
 		require.NoError(t, err)
 		require.NotNil(t, response)
 		require.NotNil(t, response.Data)
-
-		if len(response.Data) == 0 {
-			t.Skip("No blobs found or endpoint is already deprecated")
-		}
+		require.Greater(t, len(response.Data), 0)
 
 		// Check a Blob for correctness
-		_, err = response.Data[0].GetTree()
+		// GetTree panics with the error: size of tree should be a power of 2
+		_, err = response.Data.GetTree()
 		require.NoError(t, err)
-		_, err = response.Data[0].HashTreeRoot()
+		_, err = response.Data.HashTreeRoot()
 		require.NoError(t, err)
-		size := response.Data[0].SizeSSZ()
-		require.Greater(t, size, 0)
+		size := response.Data.SizeSSZ()
+		require.Equal(t, 131072*len(response.Data), size)
 	}
 
 	tests := []struct {
 		name   string
-		opts   *api.BlobSidecarsOpts
-		assert func(t *testing.T, response *api.Response[[]*deneb.BlobSidecar], err error)
+		opts   *api.BlobsOpts
+		assert func(t *testing.T, response *api.Response[v1.Blobs], err error)
 	}{
 		{
 			name: "Head Block Root",
-			opts: &api.BlobSidecarsOpts{
+			opts: &api.BlobsOpts{
 				Block: headBlockRoot.String(),
 			},
 			assert: assertBlobs,
 		},
 		{
 			name: "Head Block Slot",
-			opts: &api.BlobSidecarsOpts{
+			opts: &api.BlobsOpts{
 				Block: fmt.Sprintf("%d", headBlockSlot),
 			},
 			assert: assertBlobs,
 		},
 		{
 			name: "Invalid Block",
-			opts: &api.BlobSidecarsOpts{
+			opts: &api.BlobsOpts{
 				Block: "invalid",
 			},
-			assert: func(t *testing.T, response *api.Response[[]*deneb.BlobSidecar], err error) {
+			assert: func(t *testing.T, response *api.Response[v1.Blobs], err error) {
 				var apiError *api.Error
 				if errors.As(err, &apiError) {
 					require.Equal(t, 400, apiError.StatusCode)
@@ -93,10 +97,10 @@ func TestBlobsSidecars(t *testing.T) {
 		},
 		{
 			name: "Slot to far in the future",
-			opts: &api.BlobSidecarsOpts{
+			opts: &api.BlobsOpts{
 				Block: fmt.Sprintf("%d", math.MaxInt64),
 			},
-			assert: func(t *testing.T, response *api.Response[[]*deneb.BlobSidecar], err error) {
+			assert: func(t *testing.T, response *api.Response[v1.Blobs], err error) {
 				var apiError *api.Error
 				if errors.As(err, &apiError) {
 					require.Equal(t, 404, apiError.StatusCode)
@@ -107,7 +111,7 @@ func TestBlobsSidecars(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			response, err := service.(client.BlobSidecarsProvider).BlobSidecars(ctx, test.opts)
+			response, err := service.(client.BlobsProvider).Blobs(ctx, test.opts)
 			test.assert(t, response, err)
 		})
 	}
