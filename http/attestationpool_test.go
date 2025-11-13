@@ -44,7 +44,6 @@ func TestAttestationPool(t *testing.T) {
 	require.NoError(t, err)
 	currentSlot := uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / uint64(slotDuration.Seconds())
 	t.Logf("currentSlot: %d", currentSlot)
-	committeeIndex := phase0.CommitteeIndex(0)
 
 	tests := []struct {
 		name    string
@@ -68,6 +67,26 @@ func TestAttestationPool(t *testing.T) {
 			},
 		},
 		{
+			name: "Default options (current slot and all committee indices)",
+			opts: &api.AttestationPoolOpts{},
+			assert: func(t *testing.T, response *api.Response[[]*spec.VersionedAttestation]) {
+				require.NotNil(t, response)
+				require.Greater(t, len(response.Data), 0, "Beacon node probably returned no attestations. Try again.")
+
+				committeeIndices := make(map[int]bool)
+				for _, attestation := range response.Data {
+					committeeBits, err := attestation.CommitteeBits()
+					require.NoError(t, err)
+					for _, committeeIndex := range committeeBits.BitIndices() {
+						committeeIndices[committeeIndex] = true
+					}
+					_, err = attestation.Data()
+					require.NoError(t, err)
+				}
+				require.Greater(t, len(committeeIndices), 0, "Beacon node returned attestations, we should have at least one committee index.")
+			},
+		},
+		{
 			name: "Previous Slot",
 			opts: &api.AttestationPoolOpts{
 				Slot: slotptr(currentSlot - 1), // Get the previous slot to decrease the chance of getting an empty pool
@@ -78,20 +97,6 @@ func TestAttestationPool(t *testing.T) {
 				data, err := response.Data[0].Data()
 				require.NoError(t, err)
 				require.Equal(t, uint64(data.Slot), currentSlot-1)
-			},
-		},
-		{
-			name: "Previous Slot, Committee Index 0",
-			opts: &api.AttestationPoolOpts{
-				Slot:           slotptr(currentSlot - 1), // Get the previous slot to decrease the chance of getting an empty pool
-				CommitteeIndex: &committeeIndex,
-			},
-			assert: func(t *testing.T, response *api.Response[[]*spec.VersionedAttestation]) {
-				require.NotNil(t, response)
-				require.Greater(t, len(response.Data), 0, "Beacon node probably returned no attestations. Try again.")
-				data, err := response.Data[0].Data()
-				require.NoError(t, err)
-				require.Equal(t, data.Index, committeeIndex)
 			},
 		},
 	}
@@ -116,4 +121,78 @@ func TestAttestationPool(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestAttestationPoolCommitteeIndexSet(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	service := testService(ctx, t).(client.Service)
+
+	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
+	require.NoError(t, err)
+	slotDuration, err := service.(client.SlotDurationProvider).SlotDuration(ctx)
+	require.NoError(t, err)
+	currentSlot := uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / uint64(slotDuration.Seconds())
+
+	// Collect all committee indices that have attestations to avoid testing invalid indices
+	committeeIndices := collectCommitteeIndicesWithAttestations(ctx, t, service)
+	require.Greater(t, len(committeeIndices), 0, "Beacon node should have returned attestations for at least one committee")
+
+	// Helper function to find attestations for any committee index
+	findAttestationsForCommittee := func(opts *api.AttestationPoolOpts) (*api.Response[[]*spec.VersionedAttestation], error) {
+		for committeeIndex := range committeeIndices {
+			optsCopy := *opts // Create a copy to avoid modifying the original
+			optsCopy.CommitteeIndex = &committeeIndex
+			response, err := service.(client.AttestationPoolProvider).AttestationPool(ctx, &optsCopy)
+			if err == nil && response != nil && len(response.Data) > 0 {
+				return response, nil
+			}
+		}
+		return nil, errors.New("no attestations found for any committee index")
+	}
+
+	tests := []struct {
+		name string
+		opts *api.AttestationPoolOpts
+	}{
+		{
+			name: "Committee Index Set, Slot specified",
+			opts: &api.AttestationPoolOpts{
+				Slot: slotptr(currentSlot - 1), // Previous slot to increase chance of finding attestations
+			},
+		},
+		{
+			name: "Committee Index Set, Slot not specified",
+			opts: &api.AttestationPoolOpts{},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			response, err := findAttestationsForCommittee(test.opts)
+			require.NoError(t, err)
+			require.NotNil(t, response)
+			require.Greater(t, len(response.Data), 0, "Beacon node should have returned attestations")
+		})
+	}
+}
+
+// collectCommitteeIndicesWithAttestations fetches all attestations and returns the set of committee indices that have attestations
+func collectCommitteeIndicesWithAttestations(ctx context.Context, t *testing.T, service client.Service) map[phase0.CommitteeIndex]bool {
+	t.Helper()
+	response, err := service.(client.AttestationPoolProvider).AttestationPool(ctx, &api.AttestationPoolOpts{})
+	require.NoError(t, err)
+	require.NotNil(t, response)
+	require.Greater(t, len(response.Data), 0, "Beacon node should have returned some attestations")
+
+	indices := make(map[phase0.CommitteeIndex]bool)
+	for _, attestation := range response.Data {
+		committeeBits, err := attestation.CommitteeBits()
+		require.NoError(t, err)
+		for _, committeeIndex := range committeeBits.BitIndices() {
+			indices[phase0.CommitteeIndex(committeeIndex)] = true
+		}
+	}
+	return indices
 }
