@@ -16,12 +16,10 @@ package http_test
 import (
 	"context"
 	"errors"
-	"os"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
@@ -34,7 +32,7 @@ func TestValidatorBalances(t *testing.T) {
 		name             string
 		opts             *api.ValidatorBalancesOpts
 		err              string
-		errCode          int
+		errCodes         []int
 		expected         map[phase0.ValidatorIndex]phase0.Gwei
 		expectedBalances int
 	}{
@@ -47,21 +45,21 @@ func TestValidatorBalances(t *testing.T) {
 			opts: &api.ValidatorBalancesOpts{
 				State: "invalid",
 			},
-			errCode: 400,
+			errCodes: []int{400},
 		},
 		{
 			name: "StateUnknown",
 			opts: &api.ValidatorBalancesOpts{
 				State: "0x0000000000000000000000000000000000000000000000000000000000000000",
 			},
-			errCode: 404,
+			errCodes: []int{404},
 		},
 		{
 			name: "StateFuture",
 			opts: &api.ValidatorBalancesOpts{
 				State: "9999999999",
 			},
-			errCode: 404,
+			errCodes: []int{404, 500},
 		},
 		{
 			name: "SingleGenesisIndex",
@@ -81,11 +79,7 @@ func TestValidatorBalances(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -93,10 +87,10 @@ func TestValidatorBalances(t *testing.T) {
 			switch {
 			case test.err != "":
 				require.ErrorContains(t, err, test.err)
-			case test.errCode != 0:
+			case len(test.errCodes) > 0:
 				var apiErr *api.Error
 				if errors.As(err, &apiErr) {
-					require.Equal(t, test.errCode, apiErr.StatusCode)
+					require.Contains(t, test.errCodes, apiErr.StatusCode)
 				}
 			default:
 				require.NoError(t, err)

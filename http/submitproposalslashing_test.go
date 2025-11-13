@@ -15,12 +15,13 @@ package http_test
 
 import (
 	"context"
+	"os"
+	"testing"
+
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func TestSubmitProposalSlashing(t *testing.T) {

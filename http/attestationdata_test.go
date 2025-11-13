@@ -16,13 +16,12 @@ package http_test
 import (
 	"context"
 	"errors"
-	"os"
+	"strings"
 	"testing"
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
@@ -31,11 +30,7 @@ func TestAttestationData(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
 
 	// Need to fetch current slot for attestation data.
 	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
@@ -46,12 +41,18 @@ func TestAttestationData(t *testing.T) {
 	tests := []struct {
 		name    string
 		opts    *api.AttestationDataOpts
-		err     string
+		err     []string
 		errCode int
 	}{
 		{
+			name: "Good",
+			opts: &api.AttestationDataOpts{
+				Slot: phase0.Slot(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / uint64(slotDuration.Seconds())),
+			},
+		},
+		{
 			name: "NilOpts",
-			err:  "no options specified",
+			err:  []string{"no options specified"},
 		},
 		{
 			name: "BadSlot",
@@ -59,13 +60,7 @@ func TestAttestationData(t *testing.T) {
 				Slot: 999999999,
 			},
 			errCode: 400,
-			err:     "more than one slot past the current slot",
-		},
-		{
-			name: "Good",
-			opts: &api.AttestationDataOpts{
-				Slot: phase0.Slot(uint64(time.Since(genesisResponse.Data.GenesisTime).Seconds()) / uint64(slotDuration.Seconds())),
-			},
+			err:     []string{"request slot 999999999 is more than one slot past the current slot", "slot 999999999 is not the current slot"},
 		},
 	}
 
@@ -73,8 +68,16 @@ func TestAttestationData(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			response, err := service.(client.AttestationDataProvider).AttestationData(ctx, test.opts)
 			switch {
-			case test.err != "":
-				require.ErrorContains(t, err, test.err)
+			case len(test.err) > 0:
+				found := false
+				for _, errMsg := range test.err {
+					if strings.Contains(err.Error(), errMsg) {
+						require.ErrorContains(t, err, errMsg)
+						found = true
+						break
+					}
+				}
+				require.True(t, found, "error message not found in error: %s", err.Error())
 			case test.errCode != 0:
 				var apiErr *api.Error
 				if errors.As(err, &apiErr) {

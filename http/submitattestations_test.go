@@ -15,15 +15,15 @@ package http_test
 
 import (
 	"context"
-	"github.com/attestantio/go-eth2-client/spec"
-	"os"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/attestantio/go-eth2-client/spec"
+
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/http"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/prysmaticlabs/go-bitfield"
 	"github.com/stretchr/testify/require"
@@ -33,11 +33,7 @@ func TestSubmitAttestations(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
 
 	// Need to fetch current slot for attestation.
 	genesisResponse, err := service.(client.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
@@ -65,9 +61,15 @@ func TestSubmitAttestations(t *testing.T) {
 			attestationDataResponse, err := service.(client.AttestationDataProvider).AttestationData(ctx, test.opts)
 			require.NoError(t, err)
 
+			// Create an Electra attestation with intentionally wrong aggregation bits size to trigger validation error
 			aggregationBits := bitfield.NewBitlist(160)
 			aggregationBits.SetBitAt(1, true)
-			attestation := &phase0.Attestation{
+
+			// CommitteeBits for Electra - set bit for the committee index from attestation data
+			committeeBits := bitfield.NewBitvector64()
+			committeeBits.SetBitAt(uint64(attestationDataResponse.Data.Index), true)
+
+			attestation := &electra.Attestation{
 				AggregationBits: aggregationBits,
 				Data:            attestationDataResponse.Data,
 				Signature: phase0.BLSSignature([96]byte{
@@ -78,10 +80,13 @@ func TestSubmitAttestations(t *testing.T) {
 					0x33, 0x90, 0xec, 0x76, 0x08, 0x4f, 0x7e, 0x20, 0x83, 0xcf, 0x3a, 0x46, 0xe1, 0xd6, 0xca, 0x1c,
 					0x72, 0xb5, 0x71, 0xab, 0x58, 0x2d, 0x3d, 0x64, 0xe2, 0x69, 0x10, 0x20, 0x80, 0x85, 0x0d, 0x82,
 				}),
+				CommitteeBits: committeeBits,
 			}
 
+			// For Electra, validator index is required for single attestation conversion
+			validatorIndex := phase0.ValidatorIndex(1)
 			versionedAttestations := []*spec.VersionedAttestation{
-				{Version: spec.DataVersionPhase0, Phase0: attestation},
+				{Version: spec.DataVersionElectra, Electra: attestation, ValidatorIndex: &validatorIndex},
 			}
 			opts := &api.SubmitAttestationsOpts{
 				Attestations: versionedAttestations,
@@ -91,10 +96,15 @@ func TestSubmitAttestations(t *testing.T) {
 			case test.err != "":
 				require.ErrorContains(t, err, test.err)
 			case err != nil:
-				// We will get an error as the bitlist is the incorrect size (on purpose, to stop our test being broadcast).
+				// We will get an error as the signature is invalid (on purpose, to stop our test being broadcast).
+				// Different beacon node implementations may return different error messages.
+				// Some nodes validate signature first, others validate aggregation bits size first.
+				t.Logf("Received error: %v", err)
 				require.True(t, strings.Contains(err.Error(), "Aggregation bitlist size (160) does not match committee size") ||
 					strings.Contains(err.Error(), "Aggregation bit size 160 is greater than committee size") ||
-					strings.Contains(err.Error(), "Invalid(BeaconStateError(InvalidBitfield))"))
+					strings.Contains(err.Error(), "Invalid(BeaconStateError(InvalidBitfield))") ||
+					strings.Contains(err.Error(), "Validation(InvalidSignature)"),
+					"Unexpected error message: %v", err)
 			}
 		})
 	}

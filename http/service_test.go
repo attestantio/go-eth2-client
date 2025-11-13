@@ -115,8 +115,8 @@ func TestInterfaces(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	s, err := v1.New(ctx, v1.WithAddress(os.Getenv("HTTP_ADDRESS")), v1.WithTimeout(5*time.Second))
-	require.NoError(t, err)
+	// Use testService helper (returns interface{}, needs type assertion)
+	s := testService(ctx, t)
 
 	// Standard interfaces.
 	assert.Implements(t, (*client.AggregateAttestationProvider)(nil), s)

@@ -163,6 +163,8 @@ func TestEventHandler(t *testing.T) {
 		},
 	}
 
+	// Note: Rate limiting for internal tests would need to be implemented separately
+	// if needed. For now, this test runs without rate limiting.
 	s, err := New(ctx,
 		WithTimeout(timeout),
 		WithAddress(os.Getenv("HTTP_ADDRESS")),

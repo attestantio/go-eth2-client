@@ -16,14 +16,13 @@ package http_test
 import (
 	"context"
 	"errors"
-	"os"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,6 +36,7 @@ func TestBeaconBlockHeader(t *testing.T) {
 		expected *apiv1.BeaconBlockHeader
 		err      string
 		errCode  int
+		network  string
 	}{
 		{
 			name: "NilOpts",
@@ -59,6 +59,26 @@ func TestBeaconBlockHeader(t *testing.T) {
 					Signature: *mustParseSignature("0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
 				},
 			},
+			network: "mainnet",
+		},
+		{
+			name: "GenesisHoodi",
+			opts: &api.BeaconBlockHeaderOpts{Block: "0"},
+			expected: &apiv1.BeaconBlockHeader{
+				Root:      *mustParseRoot("0x376450cd7fb9f05ade82a7f88565ac57af449ac696b1a6ac5cc7dac7d467b7d6"),
+				Canonical: true,
+				Header: &phase0.SignedBeaconBlockHeader{
+					Message: &phase0.BeaconBlockHeader{
+						Slot:          0,
+						ProposerIndex: 0,
+						ParentRoot:    *mustParseRoot("0x0000000000000000000000000000000000000000000000000000000000000000"),
+						StateRoot:     *mustParseRoot("0x2683ebc120f91f740c7bed4c866672d01e1ba51b4cc360297138465ee5df40f0"),
+						BodyRoot:      *mustParseRoot("0xbce73ee2c617851846af2b3ea2287e3b686098e18ae508c7271aaa06ab1d06cd"),
+					},
+					Signature: *mustParseSignature("0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+				},
+			},
+			network: "hoodi",
 		},
 		{
 			name: "Head",
@@ -66,14 +86,14 @@ func TestBeaconBlockHeader(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
+	network := testclients.NetworkName(ctx, service)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			if test.network != "" && test.network != network {
+				t.Skipf("Skipping test %s on network %s", test.name, network)
+			}
 			response, err := service.(client.BeaconBlockHeadersProvider).BeaconBlockHeader(ctx, test.opts)
 			switch {
 			case test.err != "":

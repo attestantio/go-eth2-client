@@ -16,14 +16,15 @@ package http_test
 import (
 	"context"
 	"encoding/json"
-	"os"
+	"fmt"
+	"reflect"
 	"strconv"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,6 +37,7 @@ func TestSyncCommitteeRewards(t *testing.T) {
 		opts              *api.SyncCommitteeRewardsOpts
 		expectedErrorCode int
 		expectedResponse  string
+		network           string
 	}{
 		{
 			name:              "BlockInvalid",
@@ -54,6 +56,7 @@ func TestSyncCommitteeRewards(t *testing.T) {
 				},
 			},
 			expectedResponse: `[{"validator_index":"286437","reward":"22456"},{"validator_index":"1674334","reward":"22456"}]`,
+			network:          "mainnet",
 		},
 		{
 			name: "NegativeRewards",
@@ -64,17 +67,43 @@ func TestSyncCommitteeRewards(t *testing.T) {
 				},
 			},
 			expectedResponse: `[{"validator_index":"1055307","reward":"-22456"}]`,
+			network:          "mainnet",
+		},
+		{
+			name: "MixedIndicesAndPubKeysHoodi",
+			opts: &api.SyncCommitteeRewardsOpts{
+				Block: "1714544",
+				Indices: []phase0.ValidatorIndex{
+					290742,
+				},
+				PubKeys: []phase0.BLSPubKey{
+					*mustParsePubKey("0x89c3d75c9fa8daa39cf721fd3caf441de9b43dd59ae1275dd482fa48dbd8463737038b3b8cb2f53c1a8635c8733fb7ca"),
+				},
+			},
+			expectedResponse: `[{"validator_index":"290742","reward":"25016"}, {"validator_index":"525735","reward":"-25016"}]`,
+			network:          "hoodi",
+		},
+		{
+			name: "NegativeRewardsHoodi",
+			opts: &api.SyncCommitteeRewardsOpts{
+				Block: "1714544",
+				Indices: []phase0.ValidatorIndex{
+					525735,
+				},
+			},
+			expectedResponse: `[{"validator_index":"525735","reward":"-25016"}]`,
+			network:          "hoodi",
 		},
 	}
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
+	network := testclients.NetworkName(ctx, service)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			if test.network != "" && test.network != network {
+				t.Skipf("Skipping test %s on network %s", test.name, network)
+			}
 			response, err := service.(client.SyncCommitteeRewardsProvider).SyncCommitteeRewards(ctx, test.opts)
 			if test.expectedErrorCode != 0 {
 				require.Contains(t, err.Error(), strconv.Itoa(test.expectedErrorCode))
@@ -86,9 +115,29 @@ func TestSyncCommitteeRewards(t *testing.T) {
 				if test.expectedResponse != "" {
 					responseJSON, err := json.Marshal(response.Data)
 					require.NoError(t, err)
-					require.JSONEq(t, test.expectedResponse, string(responseJSON))
+					equal, err := jsonEqual(test.expectedResponse, string(responseJSON))
+					require.NoError(t, err)
+					require.True(t, equal)
 				}
 			}
 		})
 	}
+}
+
+// require.JSONEq fails for these tests because the order of the elements is not guaranteed.
+func jsonEqual(json1, json2 string) (bool, error) {
+	var data1 any
+	var data2 any
+
+	if err := json.Unmarshal([]byte(json1), &data1); err != nil {
+		return false, fmt.Errorf("could not unmarshal json1: %w", err)
+	}
+
+	if err := json.Unmarshal([]byte(json2), &data2); err != nil {
+		return false, fmt.Errorf("could not unmarshal json2: %w", err)
+	}
+
+	// Compare the two resulting data structures
+	// reflect.DeepEqual correctly handles unordered maps.
+	return reflect.DeepEqual(data1, data2), nil
 }

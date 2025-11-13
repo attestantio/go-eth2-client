@@ -76,14 +76,18 @@ func (b *Blobs) HashTreeRootWith(hh ssz.HashWalker) (err error) {
 		}
 		subIndx := hh.Index()
 		for _, i := range *b {
-			if len(i) != 131072 {
+			if i == nil {
 				err = ssz.ErrBytesLength
 				return
 			}
-			hh.PutBytes(i[:])
+			if len(*i) != 131072 {
+				err = ssz.ErrBytesLength
+				return
+			}
+			hh.PutBytes((*i)[:])
 		}
 		numItems := uint64(len(*b))
-		hh.MerkleizeWithMixin(subIndx, numItems, 72)
+		hh.MerkleizeWithMixin(subIndx, numItems, 128)
 	}
 
 	return
