@@ -16,12 +16,14 @@ package http_test
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/rs/zerolog"
@@ -71,11 +73,25 @@ func initGlobalHTTPService() {
 	}
 
 	ctx := context.Background()
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-		http.WithAllowDelayedStart(true),
-	)
+	var service client.Service
+	var err error
+	if os.Getenv("HTTP_BEARER_TOKEN") != "" {
+		service, err = http.New(ctx,
+			http.WithTimeout(timeout),
+			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+			http.WithAllowDelayedStart(true),
+			http.WithExtraHeaders(map[string]string{
+				"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN")),
+			}),
+		)
+	} else {
+		service, err = http.New(ctx,
+			http.WithTimeout(timeout),
+			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+			http.WithAllowDelayedStart(true),
+		)
+	}
+
 	if err != nil {
 		// If we can't create the service, tests will fail anyway
 		// Just log and continue - individual tests will handle the error
@@ -108,10 +124,21 @@ func testService(ctx context.Context, t *testing.T) any {
 	}
 
 	// Fallback: create a new service if global service is not available
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
+	var service client.Service
+	var err error
+	if os.Getenv("HTTP_BEARER_TOKEN") != "" {
+		service, err = http.New(ctx,
+			http.WithTimeout(timeout),
+			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+			http.WithExtraHeaders(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN"))}),
+		)
+	} else {
+		service, err = http.New(ctx,
+			http.WithTimeout(timeout),
+			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+		)
+	}
+
 	if err != nil {
 		t.Fatalf("Failed to create HTTP service: %v", err)
 	}
