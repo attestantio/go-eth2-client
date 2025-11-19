@@ -1,0 +1,35 @@
+name: http-tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.2'
+
+      - name: Validate required variables
+        run: |
+          if [ -z "${{ vars.HTTP_ADDRESS }}" ]; then
+            echo "Error: HTTP_ADDRESS variable is not set in repository variables"
+            exit 1
+          fi
+          if [ -z "${{ vars.HTTP_TEST_CONCURRENCY }}" ]; then
+            echo "Error: HTTP_TEST_CONCURRENCY variable is not set in repository variables"
+            exit 1
+          fi
+
+      - name: Run HTTP tests
+        env:
+          HTTP_ADDRESS: ${{ vars.HTTP_ADDRESS }}
+          HTTP_TEST_CONCURRENCY: ${{ vars.HTTP_TEST_CONCURRENCY }}
+          HTTP_BEARER_TOKEN: ${{ secrets.HTTP_BEARER_TOKEN }}
+        run: go test -v -timeout=10m ./http/...
