@@ -17,7 +17,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"strconv"
 	"testing"
 
@@ -25,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/attestantio/go-eth2-client/testclients"
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -102,7 +102,7 @@ func TestSyncCommitteeRewards(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			if test.network != "" && test.network != network {
-				t.Skipf("Skipping test %s on network %s", test.name, network)
+				t.Skipf("Skipping test %s on network %s. Client network: %s", test.name, test.network, network)
 			}
 			response, err := service.(client.SyncCommitteeRewardsProvider).SyncCommitteeRewards(ctx, test.opts)
 			if test.expectedErrorCode != 0 {
@@ -115,29 +115,50 @@ func TestSyncCommitteeRewards(t *testing.T) {
 				if test.expectedResponse != "" {
 					responseJSON, err := json.Marshal(response.Data)
 					require.NoError(t, err)
-					equal, err := jsonEqual(test.expectedResponse, string(responseJSON))
+					err = jsonEqualCommitteeRewards(test.expectedResponse, string(responseJSON))
 					require.NoError(t, err)
-					require.True(t, equal)
 				}
 			}
 		})
 	}
 }
 
+type committeeReward struct {
+	ValidatorIndex string `json:"validator_index"`
+	Reward         string `json:"reward"`
+}
+
 // require.JSONEq fails for these tests because the order of the elements is not guaranteed.
-func jsonEqual(json1, json2 string) (bool, error) {
-	var data1 any
-	var data2 any
+func jsonEqualCommitteeRewards(expectedJson, actualJson string) error {
+	var expectedData []committeeReward
+	var actualData []committeeReward
 
-	if err := json.Unmarshal([]byte(json1), &data1); err != nil {
-		return false, fmt.Errorf("could not unmarshal json1: %w", err)
+	if err := json.Unmarshal([]byte(expectedJson), &expectedData); err != nil {
+		return errors.Wrap(err, "could not unmarshal json1")
 	}
 
-	if err := json.Unmarshal([]byte(json2), &data2); err != nil {
-		return false, fmt.Errorf("could not unmarshal json2: %w", err)
+	if err := json.Unmarshal([]byte(actualJson), &actualData); err != nil {
+		return errors.Wrap(err, "could not unmarshal json2")
 	}
 
-	// Compare the two resulting data structures
-	// reflect.DeepEqual correctly handles unordered maps.
-	return reflect.DeepEqual(data1, data2), nil
+	if len(expectedData) != len(actualData) {
+		return errors.New("number of rewards is different")
+	}
+
+	for i := range expectedData {
+		found := false
+		for j := range actualData {
+			if expectedData[i].ValidatorIndex == actualData[j].ValidatorIndex {
+				if expectedData[i].Reward != actualData[j].Reward {
+					return errors.New(fmt.Sprintf("response does not contain the expected reward for validator index %s: expected %s, got %s", expectedData[i].ValidatorIndex, expectedData[i].Reward, actualData[j].Reward))
+				}
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errors.New(fmt.Sprintf("response does not contain the expected validator index: expected %s, got %s", expectedData[i].ValidatorIndex, actualData[i].ValidatorIndex))
+		}
+	}
+	return nil
 }
