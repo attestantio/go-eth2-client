@@ -76,12 +76,24 @@ func TestBeaconState(t *testing.T) {
 
 	service := testService(ctx, t).(client.Service)
 
-	jsonService, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-		http.WithEnforceJSON(true),
-	)
-	require.NoError(t, err)
+	var jsonService client.Service
+	var err error
+
+	if os.Getenv("HTTP_BEARER_TOKEN") != "" {
+		jsonService, err = http.New(ctx,
+			http.WithTimeout(timeout),
+			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+			http.WithExtraHeaders(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN"))}),
+			http.WithEnforceJSON(true),
+		)
+	} else {
+		jsonService, err = http.New(ctx,
+			http.WithTimeout(timeout),
+			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+			http.WithEnforceJSON(true),
+		)
+	}
+	require.NoError(t, err, "failed to create JSON service")
 
 	network := testclients.NetworkName(ctx, service)
 
