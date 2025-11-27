@@ -54,6 +54,7 @@ linters:
     - varnamelen       # Disable variable name length check
     - wrapcheck        # Disable wrap check
     - wsl              # Disable whitespace check for line length
+    - wsl_v5           # Disable whitespace check for line length
     - noinlineerr      # Disable inline error check
     - funcorder        # Disable function order check
   # Linter-specific settings and configurations
