@@ -16,13 +16,12 @@ package http_test
 import (
 	"context"
 	"encoding/json"
-	"os"
 	"strconv"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/http"
+	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,6 +34,7 @@ func TestBlockRewards(t *testing.T) {
 		opts              *api.BlockRewardsOpts
 		expectedErrorCode int
 		expectedResponse  string
+		network           string
 	}{
 		{
 			name:              "BlockInvalid",
@@ -47,17 +47,26 @@ func TestBlockRewards(t *testing.T) {
 				Block: "10760040",
 			},
 			expectedResponse: `{"proposer_index":"1515282","total":"42294581","attestations":"40696997","sync_aggregate":"1597584","proposer_slashings":"0","attester_slashings":"0"}`,
+			network:          "mainnet",
+		},
+		{
+			name: "GoodHoodi",
+			opts: &api.BlockRewardsOpts{
+				Block: "1714850",
+			},
+			expectedResponse: `{"proposer_index":"196644","total":"48373688","attestations":"46647929","sync_aggregate":"1725759","proposer_slashings":"0","attester_slashings":"0"}`,
+			network:          "hoodi",
 		},
 	}
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
+	network := testclients.NetworkName(ctx, service)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			if test.network != "" && test.network != network {
+				t.Skipf("Skipping test %s on network %s", test.name, network)
+			}
 			response, err := service.(client.BlockRewardsProvider).BlockRewards(ctx, test.opts)
 			if test.expectedErrorCode != 0 {
 				require.Contains(t, err.Error(), strconv.Itoa(test.expectedErrorCode))

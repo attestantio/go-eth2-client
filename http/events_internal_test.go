@@ -16,10 +16,12 @@ package http
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"testing"
 	"time"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/r3labs/sse/v2"
@@ -163,10 +165,22 @@ func TestEventHandler(t *testing.T) {
 		},
 	}
 
-	s, err := New(ctx,
-		WithTimeout(timeout),
-		WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
+	// Note: Rate limiting for internal tests would need to be implemented separately
+	// if needed. For now, this test runs without rate limiting.
+	var s client.Service
+	var err error
+	if os.Getenv("HTTP_BEARER_TOKEN") != "" {
+		s, err = New(ctx,
+			WithTimeout(timeout),
+			WithAddress(os.Getenv("HTTP_ADDRESS")),
+			WithExtraHeaders(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN"))}),
+		)
+	} else {
+		s, err = New(ctx,
+			WithTimeout(timeout),
+			WithAddress(os.Getenv("HTTP_ADDRESS")),
+		)
+	}
 	require.NoError(t, err)
 
 	h, isHTTPService := s.(*Service)

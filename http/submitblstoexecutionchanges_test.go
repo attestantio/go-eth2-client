@@ -15,11 +15,9 @@ package http_test
 
 import (
 	"context"
-	"os"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -46,11 +44,7 @@ func TestSubmitBLSToExecutionChanges(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(context.Background(),
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(context.Background(), t)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

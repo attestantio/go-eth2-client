@@ -24,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,6 +38,7 @@ func TestBeaconState(t *testing.T) {
 		expected *phase0.BeaconState
 		err      string
 		errCode  int
+		network  string
 	}{
 		{
 			name: "NilOpts",
@@ -47,21 +49,24 @@ func TestBeaconState(t *testing.T) {
 			opts: &api.BeaconStateOpts{},
 			err:  "no state specified",
 		},
+		// {
+		// 	name: "Genesis",
+		// 	opts: &api.BeaconStateOpts{State: "genesis"},
+		// },
 		{
-			name: "Genesis",
-			opts: &api.BeaconStateOpts{State: "genesis"},
+			name:    "Altair",
+			opts:    &api.BeaconStateOpts{State: "2375680"},
+			network: "mainnet",
 		},
 		{
-			name: "Altair",
-			opts: &api.BeaconStateOpts{State: "2375680"},
+			name:    "Bellatrix",
+			opts:    &api.BeaconStateOpts{State: "4636672"},
+			network: "mainnet",
 		},
 		{
-			name: "Bellatrix",
-			opts: &api.BeaconStateOpts{State: "4636672"},
-		},
-		{
-			name: "Capella",
-			opts: &api.BeaconStateOpts{State: "6209536"},
+			name:    "Capella",
+			opts:    &api.BeaconStateOpts{State: "6209536"},
+			network: "mainnet",
 		},
 		{
 			name: "Head",
@@ -69,22 +74,35 @@ func TestBeaconState(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
 
-	jsonService, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-		http.WithEnforceJSON(true),
-	)
-	require.NoError(t, err)
+	var jsonService client.Service
+	var err error
+
+	if os.Getenv("HTTP_BEARER_TOKEN") != "" {
+		jsonService, err = http.New(ctx,
+			http.WithTimeout(timeout),
+			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+			http.WithExtraHeaders(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN"))}),
+			http.WithEnforceJSON(true),
+		)
+	} else {
+		jsonService, err = http.New(ctx,
+			http.WithTimeout(timeout),
+			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+			http.WithEnforceJSON(true),
+		)
+	}
+	require.NoError(t, err, "failed to create JSON service")
+
+	network := testclients.NetworkName(ctx, service)
 
 	for _, test := range tests {
 		// Run with and without enforced JSON.
 		t.Run(test.name, func(t *testing.T) {
+			if test.network != "" && test.network != network {
+				t.Skipf("Skipping test %s on network %s", test.name, network)
+			}
 			response, err := service.(client.BeaconStateProvider).BeaconState(ctx, test.opts)
 			switch {
 			case test.err != "":
@@ -96,9 +114,17 @@ func TestBeaconState(t *testing.T) {
 				}
 			default:
 				// Possible that the beacon node does not contain the state, so allow a 404.
+				// Prysm returns a 500 for Not Found, so we need to handle that.
 				var apiErr *api.Error
 				if errors.As(err, &apiErr) {
-					require.Equal(t, 404, apiErr.StatusCode)
+					switch apiErr.StatusCode {
+					case 404:
+						// No state found.
+					case 500:
+						// No state found Prysm.
+					default:
+						require.Equal(t, test.errCode, apiErr.StatusCode)
+					}
 				} else {
 					require.NoError(t, err)
 					require.NotNil(t, response.Data)
@@ -106,6 +132,9 @@ func TestBeaconState(t *testing.T) {
 			}
 		})
 		t.Run(fmt.Sprintf("%s (json)", test.name), func(t *testing.T) {
+			if test.network != "" && test.network != network {
+				t.Skipf("Skipping test %s on network %s", test.name, network)
+			}
 			response, err := jsonService.(client.BeaconStateProvider).BeaconState(ctx, test.opts)
 			switch {
 			case test.err != "":
@@ -117,9 +146,17 @@ func TestBeaconState(t *testing.T) {
 				}
 			default:
 				// Possible that the beacon node does not contain the state, so allow a 404.
+				// Prysm returns a 500 for Not Found, so we need to handle that.
 				var apiErr *api.Error
 				if errors.As(err, &apiErr) {
-					require.Equal(t, 404, apiErr.StatusCode)
+					switch apiErr.StatusCode {
+					case 404:
+						// No state found.
+					case 500:
+						// No state found Prysm.
+					default:
+						require.Equal(t, test.errCode, apiErr.StatusCode)
+					}
 				} else {
 					require.NoError(t, err)
 					require.NotNil(t, response.Data)

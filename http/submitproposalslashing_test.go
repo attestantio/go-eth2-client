@@ -15,21 +15,16 @@ package http_test
 
 import (
 	"context"
+	"testing"
+
 	client "github.com/attestantio/go-eth2-client"
-	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
-	"os"
-	"testing"
 )
 
 func TestSubmitProposalSlashing(t *testing.T) {
 
-	service, err := http.New(context.Background(),
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(context.Background(), t)
 
 	tests := []struct {
 		name     string

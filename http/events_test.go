@@ -15,7 +15,6 @@ package http_test
 
 import (
 	"context"
-	"os"
 	"sync"
 	"testing"
 	"time"
@@ -23,7 +22,6 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/http"
 	"github.com/stretchr/testify/require"
 )
 
@@ -41,11 +39,7 @@ func TestEvents(t *testing.T) {
 		},
 	}
 
-	service, err := http.New(ctx,
-		http.WithTimeout(timeout),
-		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-	)
-	require.NoError(t, err)
+	service := testService(ctx, t).(client.Service)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
