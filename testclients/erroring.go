@@ -464,6 +464,24 @@ func (s *Erroring) SubmitBeaconCommitteeSubscriptions(ctx context.Context,
 	return next.SubmitBeaconCommitteeSubscriptions(ctx, subscriptions)
 }
 
+// BeaconCommitteeSelections submits beacon committee selections.
+func (s *Erroring) BeaconCommitteeSelections(ctx context.Context,
+	opts *api.BeaconCommitteeSelectionsOpts,
+) (
+	*api.Response[[]*apiv1.BeaconCommitteeSelection],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.BeaconCommitteeSelectionsProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.BeaconCommitteeSelections(ctx, opts)
+}
+
 // SubmitBlindedBeaconBlock submits a blinded beacon block.
 //
 // Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitBlindedProposal() instead.
