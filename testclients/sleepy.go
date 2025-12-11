@@ -674,6 +674,7 @@ func (s *Sleepy) Blobs(ctx context.Context,
 	error,
 ) {
 	s.sleep(ctx)
+
 	next, isNext := s.next.(consensusclient.BlobsProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
