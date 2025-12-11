@@ -112,6 +112,8 @@ linters:
           disabled: true
         - name: package-directory-mismatch
           disabled: true
+        - name: var-naming
+          disabled: true
         # Configure specific rules
         - name: confusing-results
         - name: line-length-limit
