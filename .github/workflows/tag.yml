@@ -22,10 +22,25 @@ jobs:
         with:
           ref: master
 
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | base64 -d | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+
+      - name: Configure Git user
+        run: |
+          git config --global user.name "obol-platform"
+          git config --global user.email "platform@obol.tech"
+          git config --global user.signingkey "$(gpg --list-secret-keys --keyid-format LONG platform@obol.tech | grep sec | awk '{print $2}' | cut -d'/' -f2)"
+          git config --global commit.gpgsign true
+          git config --global tag.gpgsign true
+
       - name: Fetch tags from upstream
         id: fetch
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.OBOL_PLATFORM_PAT }}
         run: |
           echo "Adding upstream repository"
           git remote add upstream https://github.com/attestantio/go-eth2-client
@@ -75,6 +90,8 @@ jobs:
 
       - name: Sync upstream tags
         if: steps.get_latest_tag.outputs.HAS_NEW_TAG == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.OBOL_PLATFORM_PAT }}
         run: |
           echo "Pushing tags to origin"
           git push --tags
@@ -92,8 +109,25 @@ jobs:
           fetch-depth: 0
           ref: obol
 
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | base64 -d | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+
+      - name: Configure Git user
+        run: |
+          git config --global user.name "obol-platform"
+          git config --global user.email "platform@obol.tech"
+          git config --global user.signingkey "$(gpg --list-secret-keys --keyid-format LONG platform@obol.tech | grep sec | awk '{print $2}' | cut -d'/' -f2)"
+          git config --global commit.gpgsign true
+          git config --global tag.gpgsign true
+
       - name: Rebase branch obol
         id: rebase
+        env:
+          GITHUB_TOKEN: ${{ secrets.OBOL_PLATFORM_PAT }}
         run: |
           echo "Rebasing branch obol on tag ${{ needs.fetch_latest_tag.outputs.latest_tag }}"
           git fetch
@@ -106,6 +140,8 @@ jobs:
 
       - name: Tag obolnetwork/go-eth2-client
         if: contains(steps.rebase.outputs.RESULT, 'Successfully rebased and updated') || contains(steps.rebase.outputs.RESULT, 'is up to date.')
+        env:
+          GITHUB_TOKEN: ${{ secrets.OBOL_PLATFORM_PAT }}
         run: |
           tag="${{ needs.fetch_latest_tag.outputs.latest_tag }}-obol"
           echo "Tagging new obolnetwork/go-eth2-client $tag"

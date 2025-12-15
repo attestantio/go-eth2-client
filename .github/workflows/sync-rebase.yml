@@ -17,12 +17,17 @@ jobs:
         with:
           ref: master
 
+      - name: Configure Git user
+        run: |
+          git config --global user.name "obol-platform"
+          git config --global user.email "platform@obol.tech"
+
       - name: Sync upstream changes
         id: sync
         uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
         with:
           target_sync_branch: master
-          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+          target_repo_token: ${{ secrets.OBOL_PLATFORM_PAT }}
           upstream_sync_branch: master
           upstream_sync_repo: attestantio/go-eth2-client
 
@@ -38,12 +43,27 @@ jobs:
           fetch-depth: 0
           ref: obol
 
+      - name: Import GPG key
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | base64 -d | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
+
+      - name: Configure Git user
+        run: |
+          git config --global user.name "obol-platform"
+          git config --global user.email "platform@obol.tech"
+          git config --global user.signingkey "$(gpg --list-secret-keys --keyid-format LONG platform@obol.tech | grep sec | awk '{print $2}' | cut -d'/' -f2)"
+          git config --global commit.gpgsign true
+          git config --global tag.gpgsign true
+
       - name: Rebase branch obol
         id: rebase
+        env:
+          GITHUB_TOKEN: ${{ secrets.OBOL_PLATFORM_PAT }}
         run: |
           echo "Rebasing branch obol on branch master"
-          git config user.name 'github-actions'
-          git config user.email 'github-actions@users.noreply.github.com'
           git fetch
           {
             echo "RESULT<<EOF"
@@ -54,6 +74,8 @@ jobs:
 
       - name: Push changes
         if: contains(steps.rebase.outputs.RESULT, 'Successfully rebased and updated')
+        env:
+          GITHUB_TOKEN: ${{ secrets.OBOL_PLATFORM_PAT }}
         run: |
           echo "Force pushing rebased branch"
           git push --force-with-lease origin obol
