@@ -16,11 +16,11 @@ package mock
 import (
 	"context"
 
+	"github.com/OffchainLabs/go-bitfield"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/prysmaticlabs/go-bitfield"
 )
 
 // BeaconBlockAttestations fetches a block's attestations given a block ID.
@@ -35,7 +35,7 @@ func (s *Service) BeaconBlockAttestations(ctx context.Context,
 	}
 
 	attestations := make([]*spec.VersionedAttestation, 4)
-	for i := uint64(0); i < 4; i++ {
+	for i := range uint64(4) {
 		aggregationBits := bitfield.NewBitlist(128)
 		aggregationBits.SetBitAt(i, true)
 		attestations[i] = &spec.VersionedAttestation{

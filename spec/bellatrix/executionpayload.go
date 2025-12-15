@@ -289,7 +289,8 @@ func (e *ExecutionPayload) unpack(data *executionPayloadJSON) error {
 	baseFeePerGasBEBytes := baseFeePerGas.Bytes()
 	var baseFeePerGasLEBytes [32]byte
 	baseFeeLen := len(baseFeePerGasBEBytes)
-	for i := 0; i < baseFeeLen; i++ {
+	for i := range baseFeeLen {
+		//nolint:gosec
 		baseFeePerGasLEBytes[i] = baseFeePerGasBEBytes[baseFeeLen-1-i]
 	}
 	copy(e.BaseFeePerGas[:], baseFeePerGasLEBytes[:])

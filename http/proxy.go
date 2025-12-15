@@ -27,6 +27,8 @@ func (s *Service) Proxy(ctx context.Context, req *http.Request) (*http.Response,
 }
 
 // proxy performs an HTTP proxy request using a reverse proxy and returns the response.
+//
+//nolint:revive
 func (s *Service) proxy(ctx context.Context, req *http.Request) (*http.Response, error) {
 	endpoint := req.URL.Path
 	query := req.URL.Query().Encode()
