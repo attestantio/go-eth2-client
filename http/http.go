@@ -388,8 +388,8 @@ func populateConsensusVersion(res *httpResponse, resp *http.Response) error {
 	respConsensusVersions, exists := resp.Header["Eth-Consensus-Version"]
 	if !exists {
 		// No consensus version supplied in response; obtain it from the body if possible.
-		if res.contentType != ContentTypeJSON {
-			// Not present here either.  Many responses do not provide this information, so assume
+		if res.contentType != ContentTypeJSON || res.body == nil || len(res.body) == 0 {
+			// Not present here either. Many responses do not provide this information, so assume
 			// this is one of them.
 			return nil
 		}
