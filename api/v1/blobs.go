@@ -24,8 +24,8 @@ import (
 type Blobs []*deneb.Blob
 
 // String returns a string version of the structure.
-func (g *Blobs) String() string {
-	data, err := json.Marshal(g)
+func (b *Blobs) String() string {
+	data, err := json.Marshal(b)
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
