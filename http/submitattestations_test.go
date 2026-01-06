@@ -21,6 +21,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec"
 
+	bitfield "github.com/OffchainLabs/go-bitfield"
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/electra"
