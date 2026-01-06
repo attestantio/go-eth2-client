@@ -1,3 +1,12 @@
+0.28.0:
+  - update dependency for go-bitfield to get from offchain instead of prysmatic org
+
+0.27.2:
+  - add /eth/v1/beacon/blobs/ endpoint support
+  - update go version to 1.25
+  - updated spec conformance tests for latest forks
+  - updated linters and corresponding fixes
+
 0.27.1:
   - set max possible blob count to 72
 

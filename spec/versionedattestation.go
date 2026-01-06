@@ -17,9 +17,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/OffchainLabs/go-bitfield"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/prysmaticlabs/go-bitfield"
 )
 
 // VersionedAttestation contains a versioned attestation.
