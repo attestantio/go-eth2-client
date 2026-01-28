@@ -68,6 +68,7 @@ type Service struct {
 	ForkFunc                      func(context.Context, *api.ForkOpts) (*api.Response[*phase0.Fork], error)
 	ForkScheduleFunc              func(context.Context, *api.ForkScheduleOpts) (*api.Response[[]*phase0.Fork], error)
 	GenesisFunc                   func(context.Context, *api.GenesisOpts) (*api.Response[*apiv1.Genesis], error)
+	NodeIdentityFunc              func(context.Context, *api.NodeIdentityOpts) (*api.Response[*apiv1.NodeIdentity], error)
 	NodePeersFunc                 func(context.Context, *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error)
 	NodePeerCountFunc             func(context.Context, *api.NodePeerCountOpts) (*api.Response[*apiv1.PeerCount], error)
 	NodeSyncingFunc               func(context.Context, *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error)

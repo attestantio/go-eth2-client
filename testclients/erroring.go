@@ -126,6 +126,24 @@ func (s *Erroring) SlotFromStateID(ctx context.Context, stateID string) (phase0.
 	return next.SlotFromStateID(ctx, stateID)
 }
 
+// NodeIdentity provides the identity information of the node.
+func (s *Erroring) NodeIdentity(ctx context.Context,
+	opts *api.NodeIdentityOpts,
+) (
+	*api.Response[*apiv1.NodeIdentity],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.NodeIdentityProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.NodeIdentity(ctx, opts)
+}
+
 // NodeVersion returns a free-text string with the node version.
 func (s *Erroring) NodeVersion(ctx context.Context,
 	opts *api.NodeVersionOpts,

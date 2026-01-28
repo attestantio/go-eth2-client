@@ -527,6 +527,17 @@ type GenesisProvider interface {
 	)
 }
 
+// NodeIdentityProvider is the interface for providing node identity information.
+type NodeIdentityProvider interface {
+	// NodeIdentity provides the identity information of the node.
+	NodeIdentity(ctx context.Context,
+		opts *api.NodeIdentityOpts,
+	) (
+		*api.Response[*apiv1.NodeIdentity],
+		error,
+	)
+}
+
 // NodePeersProvider is the interface for providing peer information.
 type NodePeersProvider interface {
 	// NodePeers provides the peers of the node.

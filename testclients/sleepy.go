@@ -119,6 +119,22 @@ func (s *Sleepy) SlotFromStateID(ctx context.Context, stateID string) (phase0.Sl
 	return next.SlotFromStateID(ctx, stateID)
 }
 
+// NodeIdentity provides the identity information of the node.
+func (s *Sleepy) NodeIdentity(ctx context.Context,
+	opts *api.NodeIdentityOpts,
+) (
+	*api.Response[*apiv1.NodeIdentity],
+	error,
+) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.NodeIdentityProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.NodeIdentity(ctx, opts)
+}
+
 // NodeVersion returns a free-text string with the node version.
 func (s *Sleepy) NodeVersion(ctx context.Context,
 	opts *api.NodeVersionOpts,
