@@ -53,7 +53,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 }
 
 func tryHTTP(ctx context.Context, parameters *parameters) (consensusclient.Service, error) {
-	httpParameters := make([]http.Parameter, 0)
+	httpParameters := make([]http.Parameter, 0, 3)
 	httpParameters = append(httpParameters, http.WithLogLevel(parameters.logLevel))
 	httpParameters = append(httpParameters, http.WithAddress(parameters.address))
 	httpParameters = append(httpParameters, http.WithTimeout(parameters.timeout))

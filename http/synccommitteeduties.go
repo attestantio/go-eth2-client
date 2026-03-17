@@ -49,7 +49,7 @@ func (s *Service) SyncCommitteeDuties(ctx context.Context,
 	}
 
 	for i := range opts.Indices {
-		if _, err := reqBodyReader.WriteString(fmt.Sprintf(`"%d"`, opts.Indices[i])); err != nil {
+		if _, err := fmt.Fprintf(&reqBodyReader, `"%d"`, opts.Indices[i]); err != nil {
 			return nil, errors.Join(errors.New("failed to write index"), err)
 		}
 
