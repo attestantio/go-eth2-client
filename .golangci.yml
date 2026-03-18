@@ -116,8 +116,6 @@ linters:
           disabled: true
         - name: package-directory-mismatch
           disabled: true
-        - name: package-naming
-          disabled: true
         - name: var-naming
           disabled: true
         # Configure specific rules
