@@ -1,0 +1,263 @@
+name: Update Go Version
+
+on:
+  schedule:
+    # Run every Wednesday at 10:00 UTC
+    - cron: "0 10 * * 3"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-go-version:
+    name: Check and Update Go Version
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Generate GitHub App Token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.GO_AUTOUPDATE_APP_ID }}
+          private-key: ${{ secrets.GO_AUTOUPDATE_APP_PRIVATE_KEY }}
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Fetch latest stable Go version
+        id: fetch-version
+        run: |
+          echo "Fetching latest Go version from go.dev..."
+
+          VERSIONS_JSON=$(curl -fsSL "https://go.dev/dl/?mode=json")
+
+          if [ -z "$VERSIONS_JSON" ]; then
+            echo "Error: Failed to fetch Go versions from go.dev"
+            exit 1
+          fi
+
+          LATEST_VERSION=$(echo "$VERSIONS_JSON" | jq -r '.[0] | select(.stable == true) | .version')
+
+          if [ -z "$LATEST_VERSION" ]; then
+            echo "Error: Could not parse latest stable Go version"
+            exit 1
+          fi
+
+          echo "Latest stable Go version: $LATEST_VERSION"
+
+          TOOLCHAIN_VERSION="$LATEST_VERSION"
+          VERSION_NUMBER="${LATEST_VERSION#go}"
+          SHORT_VERSION=$(echo "$VERSION_NUMBER" | cut -d. -f1,2)
+
+          echo "toolchain_version=$TOOLCHAIN_VERSION" >> $GITHUB_OUTPUT
+          echo "short_version=$SHORT_VERSION" >> $GITHUB_OUTPUT
+          echo "version_number=$VERSION_NUMBER" >> $GITHUB_OUTPUT
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          cache: false
+          go-version: "${{ steps.fetch-version.outputs.version_number }}"
+
+      - name: Check current versions
+        id: check-versions
+        run: |
+          echo "Checking current versions in repository..."
+
+          CURRENT_GO_VERSION=$(grep -E "^go [0-9]" go.mod | awk '{print $2}')
+          CURRENT_TOOLCHAIN=$(grep -E "^toolchain" go.mod | awk '{print $2}')
+
+          CURRENT_WORKFLOW_VERSION_LINT=$(grep "go-version:" .github/workflows/golangci-lint.yml | awk '{print $2}' | tr -d "'^\"")
+          CURRENT_WORKFLOW_VERSION_TEST=$(grep "go-version:" .github/workflows/test.yml | awk '{print $2}' | tr -d "'^\"")
+
+          echo "Current go.mod go version: $CURRENT_GO_VERSION"
+          echo "Current go.mod toolchain: $CURRENT_TOOLCHAIN"
+          echo "Current golangci-lint workflow version: $CURRENT_WORKFLOW_VERSION_LINT"
+          echo "Current test workflow version: $CURRENT_WORKFLOW_VERSION_TEST"
+
+          NEEDS_UPDATE=false
+
+          if [ "$CURRENT_GO_VERSION" != "${{ steps.fetch-version.outputs.short_version }}" ]; then
+            echo "go.mod go version needs update"
+            NEEDS_UPDATE=true
+          fi
+
+          if [ "$CURRENT_TOOLCHAIN" != "${{ steps.fetch-version.outputs.toolchain_version }}" ]; then
+            echo "go.mod toolchain needs update"
+            NEEDS_UPDATE=true
+          fi
+
+          if [ "$CURRENT_WORKFLOW_VERSION_LINT" != "${{ steps.fetch-version.outputs.short_version }}" ]; then
+            echo "golangci-lint workflow needs update"
+            NEEDS_UPDATE=true
+          fi
+
+          if [ "$CURRENT_WORKFLOW_VERSION_TEST" != "${{ steps.fetch-version.outputs.short_version }}" ]; then
+            echo "test workflow needs update"
+            NEEDS_UPDATE=true
+          fi
+
+          echo "needs_update=$NEEDS_UPDATE" >> $GITHUB_OUTPUT
+          echo "current_go_version=$CURRENT_GO_VERSION" >> $GITHUB_OUTPUT
+          echo "current_toolchain=$CURRENT_TOOLCHAIN" >> $GITHUB_OUTPUT
+          echo "current_workflow_version_lint=$CURRENT_WORKFLOW_VERSION_LINT" >> $GITHUB_OUTPUT
+          echo "current_workflow_version_test=$CURRENT_WORKFLOW_VERSION_TEST" >> $GITHUB_OUTPUT
+
+      - name: Exit if no updates needed
+        if: steps.check-versions.outputs.needs_update != 'true'
+        run: |
+          echo "All Go versions are up to date. No action needed."
+          exit 0
+
+      - name: Configure Git
+        if: steps.check-versions.outputs.needs_update == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Create/checkout update branch
+        if: steps.check-versions.outputs.needs_update == 'true'
+        run: |
+          BRANCH_NAME="update-go-version-${{ steps.fetch-version.outputs.version_number }}"
+          echo "Branch name: $BRANCH_NAME"
+
+          if git ls-remote --exit-code --heads origin "$BRANCH_NAME" > /dev/null 2>&1; then
+            echo "Branch $BRANCH_NAME exists remotely, checking out..."
+            git fetch origin "$BRANCH_NAME"
+            git checkout "$BRANCH_NAME"
+            git reset --hard "origin/$BRANCH_NAME"
+          else
+            echo "Creating new branch $BRANCH_NAME..."
+            git checkout -b "$BRANCH_NAME"
+          fi
+
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_ENV
+
+      - name: Update go.mod
+        if: steps.check-versions.outputs.needs_update == 'true'
+        run: |
+          echo "Updating go.mod..."
+
+          sed -i "s/^go [0-9].*/go ${{ steps.fetch-version.outputs.short_version }}/" go.mod
+          sed -i "s/^toolchain go.*/toolchain ${{ steps.fetch-version.outputs.toolchain_version }}/" go.mod
+
+          echo "go.mod updated successfully"
+          cat go.mod | head -10
+
+      - name: Update workflow files
+        if: steps.check-versions.outputs.needs_update == 'true'
+        run: |
+          echo "Updating workflow files..."
+
+          # Update all workflow files with go-version (handles both single and double quotes)
+          for WF in golangci-lint.yml test.yml http-tests.yml revive.yml; do
+            FILE=".github/workflows/$WF"
+            if [ -f "$FILE" ]; then
+              # Handle double-quoted: go-version: "X.Y"
+              sed "s/go-version: \"[^\"]*\"/go-version: \"${{ steps.fetch-version.outputs.short_version }}\"/" "$FILE" > tmp && mv tmp "$FILE"
+              # Handle single-quoted: go-version: 'X.Y.Z'
+              sed "s/go-version: '[^']*'/go-version: '${{ steps.fetch-version.outputs.short_version }}'/" "$FILE" > tmp && mv tmp "$FILE"
+              echo "Updated $FILE"
+            fi
+          done
+
+          echo "Workflow files updated successfully"
+
+      - name: Run go mod tidy
+        if: steps.check-versions.outputs.needs_update == 'true'
+        run: |
+          echo "Running go mod tidy..."
+          go mod tidy
+          echo "go mod tidy completed successfully"
+
+      - name: Check for changes
+        if: steps.check-versions.outputs.needs_update == 'true'
+        id: check-changes
+        run: |
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "No changes detected after updates"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            git status
+          fi
+
+      - name: Commit changes
+        if: steps.check-versions.outputs.needs_update == 'true' && steps.check-changes.outputs.has_changes == 'true'
+        run: |
+          git add -A
+          git commit -m "chore: update Go to version ${{ steps.fetch-version.outputs.version_number }}" \
+                     -m "- Update go.mod go version to ${{ steps.fetch-version.outputs.short_version }}" \
+                     -m "- Update go.mod toolchain to ${{ steps.fetch-version.outputs.toolchain_version }}" \
+                     -m "- Update workflow files to use Go ${{ steps.fetch-version.outputs.short_version }}" \
+                     -m "- Run go mod tidy to update dependencies"
+
+      - name: Push changes
+        if: steps.check-versions.outputs.needs_update == 'true' && steps.check-changes.outputs.has_changes == 'true'
+        run: git push -f origin "${{ env.branch_name }}"
+
+      - name: Create or update Pull Request
+        if: steps.check-versions.outputs.needs_update == 'true' && steps.check-changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          PR_TITLE="Update Go to version ${{ steps.fetch-version.outputs.version_number }}"
+
+          PR_BODY=$(
+            echo "## Update Go Version"
+            echo ""
+            echo "This PR updates the Go version across the repository to the latest stable release."
+            echo ""
+            echo "### Changes"
+
+            if [ "${{ steps.check-versions.outputs.current_go_version }}" != "${{ steps.fetch-version.outputs.short_version }}" ]; then
+              echo "- **go.mod**: Updated \`go\` directive from \`${{ steps.check-versions.outputs.current_go_version }}\` to \`${{ steps.fetch-version.outputs.short_version }}\`"
+            fi
+
+            if [ "${{ steps.check-versions.outputs.current_toolchain }}" != "${{ steps.fetch-version.outputs.toolchain_version }}" ]; then
+              echo "- **go.mod**: Updated \`toolchain\` directive from \`${{ steps.check-versions.outputs.current_toolchain }}\` to \`${{ steps.fetch-version.outputs.toolchain_version }}\`"
+            fi
+
+            if [ "${{ steps.check-versions.outputs.current_workflow_version_lint }}" != "${{ steps.fetch-version.outputs.short_version }}" ] || [ "${{ steps.check-versions.outputs.current_workflow_version_test }}" != "${{ steps.fetch-version.outputs.short_version }}" ]; then
+              echo "- **Workflow files**: Updated Go version to \`${{ steps.fetch-version.outputs.short_version }}\`"
+            fi
+
+            echo "- **Dependencies**: Ran \`go mod tidy\` to update dependency checksums"
+            echo ""
+            echo "---"
+            echo "*This PR was automatically generated by the [update-go-version workflow](https://github.com/${{ github.repository }}/actions/workflows/update-go-version.yml)*"
+          )
+
+          EXISTING_PR=$(gh pr list --head "${{ env.branch_name }}" --json number --jq '.[0].number')
+
+          if [ -n "$EXISTING_PR" ]; then
+            gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body "$PR_BODY"
+          else
+            gh pr create --title "$PR_TITLE" --body "$PR_BODY" --base master --head "${{ env.branch_name }}"
+          fi
+
+      - name: Workflow Summary
+        if: always()
+        run: |
+          echo "## Go Version Update Workflow Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.check-versions.outputs.needs_update }}" != "true" ]; then
+            echo "✅ All Go versions are up to date. No updates were needed." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.check-changes.outputs.has_changes }}" != "true" ]; then
+            echo "⚠️ Updates were needed but no file changes were detected." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ Successfully updated Go version to **${{ steps.fetch-version.outputs.version_number }}**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Changes Made" >> $GITHUB_STEP_SUMMARY
+            echo "- go.mod go version: \`${{ steps.check-versions.outputs.current_go_version }}\` → \`${{ steps.fetch-version.outputs.short_version }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- go.mod toolchain: \`${{ steps.check-versions.outputs.current_toolchain }}\` → \`${{ steps.fetch-version.outputs.toolchain_version }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- Workflow Go version: → \`${{ steps.fetch-version.outputs.short_version }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "A Pull Request has been created or updated on branch \`${{ env.branch_name }}\`" >> $GITHUB_STEP_SUMMARY
+          fi
