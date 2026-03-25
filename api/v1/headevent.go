@@ -33,6 +33,8 @@ type HeadEvent struct {
 	EpochTransition           bool
 	CurrentDutyDependentRoot  phase0.Root
 	PreviousDutyDependentRoot phase0.Root
+	// Provider is the address of the provider that returned this event.
+	Provider string
 }
 
 // headEventJSON is the spec representation of the struct.

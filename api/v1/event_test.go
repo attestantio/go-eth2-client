@@ -111,3 +111,20 @@ func TestEvent(t *testing.T) {
 		})
 	}
 }
+
+func TestEventProviderNotInJSON(t *testing.T) {
+	input := []byte(`{"topic":"head","data":{"block":"0xbe36e714a6114cf718e35dafc4ac530ce8f01e4a9a360e78098eb129772dcc39","current_duty_dependent_root":"0x92c6b763f610d5941d2041906007bf9449d37772aacf0483a76275ac27c096b4","epoch_transition":false,"previous_duty_dependent_root":"0xa692c095bbca3eeaf99eeabada78874c028c02b176ccf691f3e8fa075d67f5c6","slot":"231192","state":"0x61099b2c1dee0104c93ce0e14e5f5fc4b6faceff4cb863278d055bdfb73b7dc7"}}`)
+
+	var event api.Event
+	require.NoError(t, json.Unmarshal(input, &event))
+	event.Provider = "test-provider"
+
+	rt, err := json.Marshal(&event)
+	require.NoError(t, err)
+	assert.NotContains(t, string(rt), "\"provider\"")
+	assert.NotContains(t, string(rt), "test-provider")
+
+	var roundTripped api.Event
+	require.NoError(t, json.Unmarshal(rt, &roundTripped))
+	assert.Empty(t, roundTripped.Provider)
+}

@@ -156,6 +156,7 @@ func (h *activeHandler) attestationHandler(ctx context.Context, data *spec.Versi
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	ctx = apiv1.WithProvider(ctx, h.address)
 	h.opts.AttestationHandler(ctx, data)
 }
 
@@ -172,6 +173,7 @@ func (h *activeHandler) attesterSlashingHandler(ctx context.Context, data *elect
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	ctx = apiv1.WithProvider(ctx, h.address)
 	h.opts.AttesterSlashingHandler(ctx, data)
 }
 
@@ -188,6 +190,8 @@ func (h *activeHandler) blobSidecarHandler(ctx context.Context, data *apiv1.Blob
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	data.Provider = h.address
+	ctx = apiv1.WithProvider(ctx, h.address)
 	h.opts.BlobSidecarHandler(ctx, data)
 }
 
@@ -204,6 +208,7 @@ func (h *activeHandler) blsToExecutionChangeHandler(ctx context.Context, data *c
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	ctx = apiv1.WithProvider(ctx, h.address)
 	h.opts.BLSToExecutionChangeHandler(ctx, data)
 }
 
@@ -220,6 +225,8 @@ func (h *activeHandler) chainReorgHandler(ctx context.Context, data *apiv1.Chain
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	data.Provider = h.address
+	ctx = apiv1.WithProvider(ctx, h.address)
 	h.opts.ChainReorgHandler(ctx, data)
 }
 
@@ -236,6 +243,7 @@ func (h *activeHandler) contributionAndProofHandler(ctx context.Context, data *a
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	ctx = apiv1.WithProvider(ctx, h.address)
 	h.opts.ContributionAndProofHandler(ctx, data)
 }
 
@@ -252,6 +260,8 @@ func (h *activeHandler) finalizedCheckpointHandler(ctx context.Context, data *ap
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	data.Provider = h.address
+	ctx = apiv1.WithProvider(ctx, h.address)
 	h.opts.FinalizedCheckpointHandler(ctx, data)
 }
 
@@ -268,6 +278,8 @@ func (h *activeHandler) headHandler(ctx context.Context, data *apiv1.HeadEvent) 
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	data.Provider = h.address
+	ctx = apiv1.WithProvider(ctx, h.address)
 	h.opts.HeadHandler(ctx, data)
 }
 
@@ -284,6 +296,8 @@ func (h *activeHandler) payloadAttributesHandler(ctx context.Context, data *apiv
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	data.Provider = h.address
+	ctx = apiv1.WithProvider(ctx, h.address)
 	h.opts.PayloadAttributesHandler(ctx, data)
 }
 
@@ -300,6 +314,7 @@ func (h *activeHandler) proposerSlashingHandler(ctx context.Context, data *phase
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	ctx = apiv1.WithProvider(ctx, h.address)
 	h.opts.ProposerSlashingHandler(ctx, data)
 }
 
@@ -316,6 +331,7 @@ func (h *activeHandler) singleAttestationHandler(ctx context.Context, data *elec
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	ctx = apiv1.WithProvider(ctx, h.address)
 	h.opts.SingleAttestationHandler(ctx, data)
 }
 
@@ -332,6 +348,7 @@ func (h *activeHandler) voluntaryExitHandler(ctx context.Context, data *phase0.S
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	ctx = apiv1.WithProvider(ctx, h.address)
 	h.opts.VoluntaryExitHandler(ctx, data)
 }
 
@@ -348,6 +365,7 @@ func (h *activeHandler) genericHandler(event *apiv1.Event) {
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	event.Provider = h.address
 	if h.opts.Handler != nil {
 		h.opts.Handler(event)
 	}

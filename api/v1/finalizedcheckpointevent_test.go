@@ -124,3 +124,20 @@ func TestFinalizedCheckpointEventJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestFinalizedCheckpointEventProviderNotInJSON(t *testing.T) {
+	input := []byte(`{"block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","state":"0x749a95b1355828b758864ea601c007e69aabed7b34a0f2084c43c26242f77e28","epoch":"2"}`)
+
+	var event api.FinalizedCheckpointEvent
+	require.NoError(t, json.Unmarshal(input, &event))
+	event.Provider = "test-provider"
+
+	rt, err := json.Marshal(&event)
+	require.NoError(t, err)
+	assert.NotContains(t, string(rt), "provider")
+	assert.NotContains(t, string(rt), "test-provider")
+
+	var roundTripped api.FinalizedCheckpointEvent
+	require.NoError(t, json.Unmarshal(rt, &roundTripped))
+	assert.Empty(t, roundTripped.Provider)
+}

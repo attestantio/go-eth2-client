@@ -29,6 +29,8 @@ type BlockEvent struct {
 	Slot                phase0.Slot
 	Block               phase0.Root
 	ExecutionOptimistic bool
+	// Provider is the address of the provider that returned this event.
+	Provider string
 }
 
 // blockEventJSON is the spec representation of the struct.

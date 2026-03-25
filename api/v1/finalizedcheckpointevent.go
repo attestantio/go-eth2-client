@@ -29,6 +29,8 @@ type FinalizedCheckpointEvent struct {
 	Block phase0.Root
 	State phase0.Root
 	Epoch phase0.Epoch
+	// Provider is the address of the provider that returned this event.
+	Provider string
 }
 
 // finalizedCheckpointEventJSON is the spec representation of the struct.

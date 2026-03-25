@@ -31,6 +31,8 @@ type Event struct {
 	Topic string
 	// Data is the data of the event.
 	Data any
+	// Provider is the address of the provider that returned this event.
+	Provider string
 }
 
 // SupportedEventTopics is a map of supported event topics.

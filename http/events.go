@@ -219,7 +219,7 @@ func (s *Service) handleEvent(ctx context.Context,
 	}
 }
 
-func (*Service) handleAttestationEvent(ctx context.Context,
+func (s *Service) handleAttestationEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -233,20 +233,23 @@ func (*Service) handleAttestationEvent(ctx context.Context,
 		return
 	}
 
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.AttestationHandler != nil:
 		opts.AttestationHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleAttesterSlashingEvent(ctx context.Context,
+func (s *Service) handleAttesterSlashingEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -260,20 +263,23 @@ func (*Service) handleAttesterSlashingEvent(ctx context.Context,
 		return
 	}
 
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.AttesterSlashingHandler != nil:
 		opts.AttesterSlashingHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleBlobSidecarEvent(ctx context.Context,
+func (s *Service) handleBlobSidecarEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -287,20 +293,24 @@ func (*Service) handleBlobSidecarEvent(ctx context.Context,
 		return
 	}
 
+	data.Provider = s.address
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.BlobSidecarHandler != nil:
 		opts.BlobSidecarHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleBlockEvent(ctx context.Context,
+func (s *Service) handleBlockEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -314,20 +324,24 @@ func (*Service) handleBlockEvent(ctx context.Context,
 		return
 	}
 
+	data.Provider = s.address
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.BlockHandler != nil:
 		opts.BlockHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleBlockGossipEvent(ctx context.Context,
+func (s *Service) handleBlockGossipEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -341,20 +355,24 @@ func (*Service) handleBlockGossipEvent(ctx context.Context,
 		return
 	}
 
+	data.Provider = s.address
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.BlockGossipHandler != nil:
 		opts.BlockGossipHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleBLSToExecutionChangeEvent(ctx context.Context,
+func (s *Service) handleBLSToExecutionChangeEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -368,20 +386,23 @@ func (*Service) handleBLSToExecutionChangeEvent(ctx context.Context,
 		return
 	}
 
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.BLSToExecutionChangeHandler != nil:
 		opts.BLSToExecutionChangeHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleChainReorgEvent(ctx context.Context,
+func (s *Service) handleChainReorgEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -395,20 +416,24 @@ func (*Service) handleChainReorgEvent(ctx context.Context,
 		return
 	}
 
+	data.Provider = s.address
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.ChainReorgHandler != nil:
 		opts.ChainReorgHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleContributionAndProofEvent(ctx context.Context,
+func (s *Service) handleContributionAndProofEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -422,20 +447,23 @@ func (*Service) handleContributionAndProofEvent(ctx context.Context,
 		return
 	}
 
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.ContributionAndProofHandler != nil:
 		opts.ContributionAndProofHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleFinalizedCheckpointEvent(ctx context.Context,
+func (s *Service) handleFinalizedCheckpointEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -449,20 +477,24 @@ func (*Service) handleFinalizedCheckpointEvent(ctx context.Context,
 		return
 	}
 
+	data.Provider = s.address
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.FinalizedCheckpointHandler != nil:
 		opts.FinalizedCheckpointHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleHeadEvent(ctx context.Context,
+func (s *Service) handleHeadEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -476,20 +508,24 @@ func (*Service) handleHeadEvent(ctx context.Context,
 		return
 	}
 
+	data.Provider = s.address
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.HeadHandler != nil:
 		opts.HeadHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handlePayloadAttributesEvent(ctx context.Context,
+func (s *Service) handlePayloadAttributesEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -503,20 +539,24 @@ func (*Service) handlePayloadAttributesEvent(ctx context.Context,
 		return
 	}
 
+	data.Provider = s.address
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.PayloadAttributesHandler != nil:
 		opts.PayloadAttributesHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleProposerSlashingEvent(ctx context.Context,
+func (s *Service) handleProposerSlashingEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -530,20 +570,23 @@ func (*Service) handleProposerSlashingEvent(ctx context.Context,
 		return
 	}
 
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.ProposerSlashingHandler != nil:
 		opts.ProposerSlashingHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleSingleAttestationEvent(ctx context.Context,
+func (s *Service) handleSingleAttestationEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -557,20 +600,23 @@ func (*Service) handleSingleAttestationEvent(ctx context.Context,
 		return
 	}
 
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.SingleAttestationHandler != nil:
 		opts.SingleAttestationHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleVoluntaryExitEvent(ctx context.Context,
+func (s *Service) handleVoluntaryExitEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -584,20 +630,23 @@ func (*Service) handleVoluntaryExitEvent(ctx context.Context,
 		return
 	}
 
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.VoluntaryExitHandler != nil:
 		opts.VoluntaryExitHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
 }
 
-func (*Service) handleDataColumnSidecarEvent(ctx context.Context,
+func (s *Service) handleDataColumnSidecarEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -611,13 +660,17 @@ func (*Service) handleDataColumnSidecarEvent(ctx context.Context,
 		return
 	}
 
+	data.Provider = s.address
+	ctx = apiv1.WithProvider(ctx, s.address)
+
 	switch {
 	case opts.DataColumnSidecarHandler != nil:
 		opts.DataColumnSidecarHandler(ctx, data)
 	case opts.Handler != nil:
 		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
+			Topic:    string(msg.Event),
+			Data:     data,
+			Provider: s.address,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")

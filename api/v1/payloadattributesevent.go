@@ -34,6 +34,8 @@ type PayloadAttributesEvent struct {
 	Version spec.DataVersion
 	// Data is the data of the event.
 	Data *PayloadAttributesData
+	// Provider is the address of the provider that returned this event.
+	Provider string
 }
 
 // PayloadAttributesData represents the data of a payload_attributes event.

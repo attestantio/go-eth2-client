@@ -204,3 +204,20 @@ func TestChainReorgEventJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestChainReorgEventProviderNotInJSON(t *testing.T) {
+	input := []byte(`{"slot":"524986","depth":"2","old_head_block":"0x2ffc0a5b75de20f2a12853dff3e09b263e7c3cb19515134cba756b28e5ba25ee","new_head_block":"0xa3fe14d8d749318359aa3790d3588a23e12ea3b02bd879fbfbf04c3a66770df7","old_head_state":"0x97cc0a37b77fbac6fa140f330c92521ddcd5b1dfefeef99d86996a51f1993d60","new_head_state":"0x4ab800aaa51c14c786fe7e924abd1355aa2ac2e0434d7cb5ae568720ed1bf522","epoch":"16405"}`)
+
+	var event api.ChainReorgEvent
+	require.NoError(t, json.Unmarshal(input, &event))
+	event.Provider = "test-provider"
+
+	rt, err := json.Marshal(&event)
+	require.NoError(t, err)
+	assert.NotContains(t, string(rt), "provider")
+	assert.NotContains(t, string(rt), "test-provider")
+
+	var roundTripped api.ChainReorgEvent
+	require.NoError(t, json.Unmarshal(rt, &roundTripped))
+	assert.Empty(t, roundTripped.Provider)
+}
