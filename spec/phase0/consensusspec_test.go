@@ -21,10 +21,10 @@ import (
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	ssz "github.com/ferranbt/fastssz"
 	"github.com/goccy/go-yaml"
 	"github.com/golang/snappy"
 	clone "github.com/huandu/go-clone/generic"
+	"github.com/pk910/dynamic-ssz/sszutils"
 	require "github.com/stretchr/testify/require"
 )
 
@@ -164,9 +164,9 @@ func TestConsensusSpec(t *testing.T) {
 					var specSSZ []byte
 					specSSZ, err = snappy.Decode(specSSZ, compressedSpecSSZ)
 					require.NoError(t, err)
-					require.NoError(t, s2.(ssz.Unmarshaler).UnmarshalSSZ(specSSZ))
+					require.NoError(t, s2.(sszutils.FastsszUnmarshaler).UnmarshalSSZ(specSSZ))
 					// Confirm we can return to the SSZ.
-					remarshalledSpecSSZ, err := s2.(ssz.Marshaler).MarshalSSZ()
+					remarshalledSpecSSZ, err := s2.(sszutils.FastsszMarshaler).MarshalSSZ()
 					require.NoError(t, err)
 					require.Equal(t, specSSZ, remarshalledSpecSSZ)
 
@@ -174,7 +174,7 @@ func TestConsensusSpec(t *testing.T) {
 					specYAMLRoot, err := os.ReadFile(filepath.Join(path, "roots.yaml"))
 					require.NoError(t, err)
 					// Confirm we calculate the same root.
-					generatedRootBytes, err := s2.(ssz.HashRoot).HashTreeRoot()
+					generatedRootBytes, err := s2.(sszutils.FastsszHashRoot).HashTreeRoot()
 					require.NoError(t, err)
 					generatedRoot := fmt.Sprintf("{root: '%#x'}\n", string(generatedRootBytes[:]))
 					require.YAMLEq(t, string(specYAMLRoot), generatedRoot)

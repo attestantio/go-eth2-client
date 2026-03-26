@@ -14,7 +14,6 @@
 package v1
 
 //nolint:revive
-// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f signedvalidatorregistration_ssz.go validatorregistration_ssz.go
-//go:generate sszgen -suffix ssz -include ../../spec/phase0,../../spec/altair,../../spec/bellatrix -path . -objs SignedValidatorRegistration,ValidatorRegistration
-//go:generate goimports -w signedvalidatorregistration_ssz.go validatorregistration_ssz.go
+// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
+//go:generate rm -f blobs_ssz.go signedvalidatorregistration_ssz.go validatorregistration_ssz.go
+//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types Blobs:blobs_ssz.go,SignedValidatorRegistration:signedvalidatorregistration_ssz.go,ValidatorRegistration:validatorregistration_ssz.go
