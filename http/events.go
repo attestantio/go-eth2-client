@@ -233,8 +233,6 @@ func (s *Service) handleAttestationEvent(ctx context.Context,
 		return
 	}
 
-	ctx = apiv1.WithProvider(ctx, s.address)
-
 	switch {
 	case opts.AttestationHandler != nil:
 		opts.AttestationHandler(ctx, data)
@@ -262,8 +260,6 @@ func (s *Service) handleAttesterSlashingEvent(ctx context.Context,
 
 		return
 	}
-
-	ctx = apiv1.WithProvider(ctx, s.address)
 
 	switch {
 	case opts.AttesterSlashingHandler != nil:
@@ -294,7 +290,6 @@ func (s *Service) handleBlobSidecarEvent(ctx context.Context,
 	}
 
 	data.Provider = s.address
-	ctx = apiv1.WithProvider(ctx, s.address)
 
 	switch {
 	case opts.BlobSidecarHandler != nil:
@@ -325,7 +320,6 @@ func (s *Service) handleBlockEvent(ctx context.Context,
 	}
 
 	data.Provider = s.address
-	ctx = apiv1.WithProvider(ctx, s.address)
 
 	switch {
 	case opts.BlockHandler != nil:
@@ -356,7 +350,6 @@ func (s *Service) handleBlockGossipEvent(ctx context.Context,
 	}
 
 	data.Provider = s.address
-	ctx = apiv1.WithProvider(ctx, s.address)
 
 	switch {
 	case opts.BlockGossipHandler != nil:
@@ -385,8 +378,6 @@ func (s *Service) handleBLSToExecutionChangeEvent(ctx context.Context,
 
 		return
 	}
-
-	ctx = apiv1.WithProvider(ctx, s.address)
 
 	switch {
 	case opts.BLSToExecutionChangeHandler != nil:
@@ -417,7 +408,6 @@ func (s *Service) handleChainReorgEvent(ctx context.Context,
 	}
 
 	data.Provider = s.address
-	ctx = apiv1.WithProvider(ctx, s.address)
 
 	switch {
 	case opts.ChainReorgHandler != nil:
@@ -446,8 +436,6 @@ func (s *Service) handleContributionAndProofEvent(ctx context.Context,
 
 		return
 	}
-
-	ctx = apiv1.WithProvider(ctx, s.address)
 
 	switch {
 	case opts.ContributionAndProofHandler != nil:
@@ -478,7 +466,6 @@ func (s *Service) handleFinalizedCheckpointEvent(ctx context.Context,
 	}
 
 	data.Provider = s.address
-	ctx = apiv1.WithProvider(ctx, s.address)
 
 	switch {
 	case opts.FinalizedCheckpointHandler != nil:
@@ -509,7 +496,6 @@ func (s *Service) handleHeadEvent(ctx context.Context,
 	}
 
 	data.Provider = s.address
-	ctx = apiv1.WithProvider(ctx, s.address)
 
 	switch {
 	case opts.HeadHandler != nil:
@@ -540,7 +526,6 @@ func (s *Service) handlePayloadAttributesEvent(ctx context.Context,
 	}
 
 	data.Provider = s.address
-	ctx = apiv1.WithProvider(ctx, s.address)
 
 	switch {
 	case opts.PayloadAttributesHandler != nil:
@@ -570,8 +555,6 @@ func (s *Service) handleProposerSlashingEvent(ctx context.Context,
 		return
 	}
 
-	ctx = apiv1.WithProvider(ctx, s.address)
-
 	switch {
 	case opts.ProposerSlashingHandler != nil:
 		opts.ProposerSlashingHandler(ctx, data)
@@ -600,8 +583,6 @@ func (s *Service) handleSingleAttestationEvent(ctx context.Context,
 		return
 	}
 
-	ctx = apiv1.WithProvider(ctx, s.address)
-
 	switch {
 	case opts.SingleAttestationHandler != nil:
 		opts.SingleAttestationHandler(ctx, data)
@@ -629,8 +610,6 @@ func (s *Service) handleVoluntaryExitEvent(ctx context.Context,
 
 		return
 	}
-
-	ctx = apiv1.WithProvider(ctx, s.address)
 
 	switch {
 	case opts.VoluntaryExitHandler != nil:
@@ -661,7 +640,6 @@ func (s *Service) handleDataColumnSidecarEvent(ctx context.Context,
 	}
 
 	data.Provider = s.address
-	ctx = apiv1.WithProvider(ctx, s.address)
 
 	switch {
 	case opts.DataColumnSidecarHandler != nil:
