@@ -23,6 +23,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	v1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
+	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,7 +57,7 @@ func TestBlobs(t *testing.T) {
 
 		// Check a Blob for correctness
 		// GetTree panics with the error: size of tree should be a power of 2
-		_, err = response.Data.GetTree()
+		_, err = dynssz.GetGlobalDynSsz().GetTree(response.Data)
 		require.NoError(t, err)
 		_, err = response.Data.HashTreeRoot()
 		require.NoError(t, err)

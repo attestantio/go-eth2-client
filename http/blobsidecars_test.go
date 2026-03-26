@@ -22,6 +22,7 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/stretchr/testify/require"
 )
 
@@ -52,7 +53,7 @@ func TestBlobsSidecars(t *testing.T) {
 		}
 
 		// Check a Blob for correctness
-		_, err = response.Data[0].GetTree()
+		_, err = dynssz.GetGlobalDynSsz().GetTree(response.Data[0])
 		require.NoError(t, err)
 		_, err = response.Data[0].HashTreeRoot()
 		require.NoError(t, err)
