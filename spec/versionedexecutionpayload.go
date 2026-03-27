@@ -19,6 +19,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/holiman/uint256"
 )
@@ -31,12 +32,13 @@ type VersionedExecutionPayload struct {
 	Deneb     *deneb.ExecutionPayload
 	Electra   *deneb.ExecutionPayload
 	Fulu      *deneb.ExecutionPayload
+	Gloas     *gloas.ExecutionPayload
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedExecutionPayload) IsEmpty() bool {
 	return v.Version < DataVersionBellatrix || (v.Bellatrix == nil &&
-		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil)
+		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.Gloas == nil)
 }
 
 // ParentHash returns the parent hash of the execution payload.
@@ -76,6 +78,12 @@ func (v *VersionedExecutionPayload) ParentHash() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.ParentHash, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.Hash32{}, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.ParentHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -118,6 +126,12 @@ func (v *VersionedExecutionPayload) FeeRecipient() (bellatrix.ExecutionAddress, 
 		}
 
 		return v.Fulu.FeeRecipient, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return bellatrix.ExecutionAddress{}, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.FeeRecipient, nil
 	default:
 		return bellatrix.ExecutionAddress{}, errors.New("unknown version")
 	}
@@ -160,6 +174,12 @@ func (v *VersionedExecutionPayload) StateRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.StateRoot, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.Root{}, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.StateRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -202,6 +222,12 @@ func (v *VersionedExecutionPayload) ReceiptsRoot() (phase0.Root, error) {
 		}
 
 		return v.Fulu.ReceiptsRoot, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.Root{}, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.ReceiptsRoot, nil
 	default:
 		return phase0.Root{}, errors.New("unknown version")
 	}
@@ -244,6 +270,12 @@ func (v *VersionedExecutionPayload) LogsBloom() ([256]byte, error) {
 		}
 
 		return v.Fulu.LogsBloom, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return [256]byte{}, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.LogsBloom, nil
 	default:
 		return [256]byte{}, errors.New("unknown version")
 	}
@@ -286,6 +318,12 @@ func (v *VersionedExecutionPayload) PrevRandao() ([32]byte, error) {
 		}
 
 		return v.Fulu.PrevRandao, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return [32]byte{}, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.PrevRandao, nil
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -328,6 +366,12 @@ func (v *VersionedExecutionPayload) BlockNumber() (uint64, error) {
 		}
 
 		return v.Fulu.BlockNumber, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.BlockNumber, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -370,6 +414,12 @@ func (v *VersionedExecutionPayload) GasLimit() (uint64, error) {
 		}
 
 		return v.Fulu.GasLimit, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.GasLimit, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -412,6 +462,12 @@ func (v *VersionedExecutionPayload) GasUsed() (uint64, error) {
 		}
 
 		return v.Fulu.GasUsed, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.GasUsed, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -454,6 +510,12 @@ func (v *VersionedExecutionPayload) Timestamp() (uint64, error) {
 		}
 
 		return v.Fulu.Timestamp, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.Timestamp, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -496,6 +558,12 @@ func (v *VersionedExecutionPayload) ExtraData() ([]byte, error) {
 		}
 
 		return v.Fulu.ExtraData, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.ExtraData, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -538,6 +606,12 @@ func (v *VersionedExecutionPayload) BaseFeePerGas() (*uint256.Int, error) {
 		}
 
 		return v.Fulu.BaseFeePerGas, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.BaseFeePerGas, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -580,6 +654,12 @@ func (v *VersionedExecutionPayload) BlockHash() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.BlockHash, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.Hash32{}, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.BlockHash, nil
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -622,6 +702,12 @@ func (v *VersionedExecutionPayload) Transactions() ([]bellatrix.Transaction, err
 		}
 
 		return v.Fulu.Transactions, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.Transactions, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -660,6 +746,12 @@ func (v *VersionedExecutionPayload) Withdrawals() ([]*capella.Withdrawal, error)
 		}
 
 		return v.Fulu.Withdrawals, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.Withdrawals, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -694,6 +786,12 @@ func (v *VersionedExecutionPayload) BlobGasUsed() (uint64, error) {
 		}
 
 		return v.Fulu.BlobGasUsed, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.BlobGasUsed, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -728,6 +826,68 @@ func (v *VersionedExecutionPayload) ExcessBlobGas() (uint64, error) {
 		}
 
 		return v.Fulu.ExcessBlobGas, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.ExcessBlobGas, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
+// BlockAccessList returns the block access list of the execution payload.
+func (v *VersionedExecutionPayload) BlockAccessList() (gloas.BlockAccessList, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return gloas.BlockAccessList{}, errors.New("no execution payload in phase0")
+	case DataVersionAltair:
+		return gloas.BlockAccessList{}, errors.New("no execution payload in altair")
+	case DataVersionBellatrix:
+		return gloas.BlockAccessList{}, errors.New("no block access list in bellatrix")
+	case DataVersionCapella:
+		return gloas.BlockAccessList{}, errors.New("no block access list in capella")
+	case DataVersionDeneb:
+		return gloas.BlockAccessList{}, errors.New("no block access list in deneb")
+	case DataVersionElectra:
+		return gloas.BlockAccessList{}, errors.New("no block access list in electra")
+	case DataVersionFulu:
+		return gloas.BlockAccessList{}, errors.New("no block access list in fulu")
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return gloas.BlockAccessList{}, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.BlockAccessList, nil
+	default:
+		return gloas.BlockAccessList{}, errors.New("unknown version")
+	}
+}
+
+// SlotNumber returns the slot number of the execution payload.
+func (v *VersionedExecutionPayload) SlotNumber() (uint64, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return 0, errors.New("no execution payload in phase0")
+	case DataVersionAltair:
+		return 0, errors.New("no execution payload in altair")
+	case DataVersionBellatrix:
+		return 0, errors.New("no slot number in bellatrix")
+	case DataVersionCapella:
+		return 0, errors.New("no slot number in capella")
+	case DataVersionDeneb:
+		return 0, errors.New("no slot number in deneb")
+	case DataVersionElectra:
+		return 0, errors.New("no slot number in electra")
+	case DataVersionFulu:
+		return 0, errors.New("no slot number in fulu")
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no gloas execution payload")
+		}
+
+		return v.Gloas.SlotNumber, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -770,6 +930,12 @@ func (v *VersionedExecutionPayload) String() string {
 		}
 
 		return v.Fulu.String()
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return ""
+		}
+
+		return v.Gloas.String()
 	default:
 		return "unknown version"
 	}

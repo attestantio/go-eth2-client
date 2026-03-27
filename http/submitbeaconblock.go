@@ -56,6 +56,8 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSi
 		specJSON, err = json.Marshal(block.Electra)
 	case spec.DataVersionFulu:
 		specJSON, err = json.Marshal(block.Fulu)
+	case spec.DataVersionGloas:
+		specJSON, err = json.Marshal(block.Gloas)
 	default:
 		err = errors.New("unknown block version")
 	}

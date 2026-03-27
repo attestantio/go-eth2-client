@@ -33,12 +33,13 @@ type VersionedAttestation struct {
 	Deneb          *phase0.Attestation
 	Electra        *electra.Attestation
 	Fulu           *electra.Attestation
+	Gloas          *electra.Attestation
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedAttestation) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil &&
-		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil
+		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.Gloas == nil
 }
 
 // AggregationBits returns the aggregation bits of the attestation.
@@ -86,6 +87,12 @@ func (v *VersionedAttestation) AggregationBits() (bitfield.Bitlist, error) {
 		}
 
 		return v.Fulu.AggregationBits, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas attestation")
+		}
+
+		return v.Gloas.AggregationBits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -136,6 +143,12 @@ func (v *VersionedAttestation) Data() (*phase0.AttestationData, error) {
 		}
 
 		return v.Fulu.Data, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas attestation")
+		}
+
+		return v.Gloas.Data, nil
 	default:
 		return nil, fmt.Errorf("unknown version: %d", v.Version)
 	}
@@ -158,6 +171,12 @@ func (v *VersionedAttestation) CommitteeBits() (bitfield.Bitvector64, error) {
 		}
 
 		return v.Fulu.CommitteeBits, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas attestation")
+		}
+
+		return v.Gloas.CommitteeBits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -208,6 +227,12 @@ func (v *VersionedAttestation) CommitteeIndex() (phase0.CommitteeIndex, error) {
 		}
 
 		return v.Fulu.CommitteeIndex()
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas attestation")
+		}
+
+		return v.Gloas.CommitteeIndex()
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -257,6 +282,12 @@ func (v *VersionedAttestation) HashTreeRoot() ([32]byte, error) {
 		}
 
 		return v.Fulu.HashTreeRoot()
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return [32]byte{}, errors.New("no Gloas attestation")
+		}
+
+		return v.Gloas.HashTreeRoot()
 	default:
 		return [32]byte{}, errors.New("unknown version")
 	}
@@ -307,6 +338,12 @@ func (v *VersionedAttestation) Signature() (phase0.BLSSignature, error) {
 		}
 
 		return v.Fulu.Signature, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.BLSSignature{}, errors.New("no Gloas attestation")
+		}
+
+		return v.Gloas.Signature, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -357,6 +394,12 @@ func (v *VersionedAttestation) String() string {
 		}
 
 		return v.Fulu.String()
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return ""
+		}
+
+		return v.Gloas.String()
 	default:
 		return "unknown version"
 	}

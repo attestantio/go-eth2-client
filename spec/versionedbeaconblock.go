@@ -21,6 +21,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -34,12 +35,13 @@ type VersionedBeaconBlock struct {
 	Deneb     *deneb.BeaconBlock
 	Electra   *electra.BeaconBlock
 	Fulu      *electra.BeaconBlock
+	Gloas     *gloas.BeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBeaconBlock) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil &&
-		v.Deneb == nil && v.Electra == nil && v.Fulu == nil
+		v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.Gloas == nil
 }
 
 // Slot returns the slot of the beacon block.
@@ -87,6 +89,12 @@ func (v *VersionedBeaconBlock) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.Slot, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no gloas block")
+		}
+
+		return v.Gloas.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}

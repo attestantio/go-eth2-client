@@ -30,6 +30,7 @@ type VersionedSignedAggregateAndProof struct {
 	Deneb     *phase0.SignedAggregateAndProof
 	Electra   *electra.SignedAggregateAndProof
 	Fulu      *electra.SignedAggregateAndProof
+	Gloas     *electra.SignedAggregateAndProof
 }
 
 // AggregatorIndex returns the aggregator index of the aggregate.
@@ -77,6 +78,12 @@ func (v *VersionedSignedAggregateAndProof) AggregatorIndex() (phase0.ValidatorIn
 		}
 
 		return v.Fulu.Message.AggregatorIndex, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no gloas signed aggregate and proof")
+		}
+
+		return v.Gloas.Message.AggregatorIndex, nil
 	default:
 		return 0, errors.New("unknown version for signed aggregate and proof")
 	}
@@ -85,7 +92,7 @@ func (v *VersionedSignedAggregateAndProof) AggregatorIndex() (phase0.ValidatorIn
 // IsEmpty returns true if there is no aggregate and proof.
 func (v *VersionedSignedAggregateAndProof) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
-		v.Electra == nil && v.Fulu == nil
+		v.Electra == nil && v.Fulu == nil && v.Gloas == nil
 }
 
 // SelectionProof returns the selection proof of the signed aggregate.
@@ -133,6 +140,12 @@ func (v *VersionedSignedAggregateAndProof) SelectionProof() (phase0.BLSSignature
 		}
 
 		return v.Fulu.Message.SelectionProof, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.BLSSignature{}, errors.New("no gloas signed aggregate and proof")
+		}
+
+		return v.Gloas.Message.SelectionProof, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -183,6 +196,12 @@ func (v *VersionedSignedAggregateAndProof) Signature() (phase0.BLSSignature, err
 		}
 
 		return v.Fulu.Signature, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.BLSSignature{}, errors.New("no gloas signed aggregate and proof")
+		}
+
+		return v.Gloas.Signature, nil
 	default:
 		return phase0.BLSSignature{}, errors.New("unknown version")
 	}
@@ -233,6 +252,12 @@ func (v *VersionedSignedAggregateAndProof) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.Message.Aggregate.Data.Slot, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no gloas signed aggregate and proof")
+		}
+
+		return v.Gloas.Message.Aggregate.Data.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -283,6 +308,12 @@ func (v *VersionedSignedAggregateAndProof) String() string {
 		}
 
 		return v.Fulu.String()
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return ""
+		}
+
+		return v.Gloas.String()
 	default:
 		return "unknown version"
 	}

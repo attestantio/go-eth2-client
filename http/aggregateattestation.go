@@ -173,6 +173,15 @@ func decodeAggregateAttestation(httpResponse *httpResponse) (*spec.VersionedAtte
 		}
 
 		return data, metadata, nil
+	case spec.DataVersionGloas:
+		gloasData, gloasMetadata, decodeErr := decodeJSONResponse(bytes.NewReader(httpResponse.body), &electra.Attestation{})
+		metadata = gloasMetadata
+		data.Gloas = gloasData
+		if decodeErr != nil {
+			return &spec.VersionedAttestation{}, nil, decodeErr
+		}
+
+		return data, metadata, nil
 	default:
 		return &spec.VersionedAttestation{}, nil, errors.New("unknown consensus version")
 	}

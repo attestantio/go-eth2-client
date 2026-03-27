@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/fulu"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	proofutil "github.com/attestantio/go-eth2-client/util/proof"
 	ssz "github.com/ferranbt/fastssz"
@@ -37,12 +38,13 @@ type VersionedBeaconState struct {
 	Deneb     *deneb.BeaconState
 	Electra   *electra.BeaconState
 	Fulu      *fulu.BeaconState
+	Gloas     *gloas.BeaconState
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBeaconState) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil &&
-		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil
+		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.Gloas == nil
 }
 
 // Slot returns the slot of the state.
@@ -90,6 +92,12 @@ func (v *VersionedBeaconState) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.Slot, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -124,6 +132,12 @@ func (v *VersionedBeaconState) NextWithdrawalValidatorIndex() (phase0.ValidatorI
 		}
 
 		return v.Fulu.NextWithdrawalValidatorIndex, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.NextWithdrawalValidatorIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -174,6 +188,12 @@ func (v *VersionedBeaconState) Validators() ([]*phase0.Validator, error) {
 		}
 
 		return v.Fulu.Validators, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.Validators, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -224,6 +244,12 @@ func (v *VersionedBeaconState) ValidatorBalances() ([]phase0.Gwei, error) {
 		}
 
 		return v.Fulu.Balances, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.Balances, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -246,6 +272,12 @@ func (v *VersionedBeaconState) DepositRequestsStartIndex() (uint64, error) {
 		}
 
 		return v.Fulu.DepositRequestsStartIndex, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.DepositRequestsStartIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -268,6 +300,12 @@ func (v *VersionedBeaconState) DepositBalanceToConsume() (phase0.Gwei, error) {
 		}
 
 		return v.Fulu.DepositBalanceToConsume, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.DepositBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -290,6 +328,12 @@ func (v *VersionedBeaconState) ExitBalanceToConsume() (phase0.Gwei, error) {
 		}
 
 		return v.Fulu.ExitBalanceToConsume, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.ExitBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -312,6 +356,12 @@ func (v *VersionedBeaconState) EarliestExitEpoch() (phase0.Epoch, error) {
 		}
 
 		return v.Fulu.EarliestExitEpoch, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.EarliestExitEpoch, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -334,6 +384,12 @@ func (v *VersionedBeaconState) ConsolidationBalanceToConsume() (phase0.Gwei, err
 		}
 
 		return v.Fulu.ConsolidationBalanceToConsume, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.ConsolidationBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -356,6 +412,12 @@ func (v *VersionedBeaconState) EarliestConsolidationEpoch() (phase0.Epoch, error
 		}
 
 		return v.Fulu.EarliestConsolidationEpoch, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.EarliestConsolidationEpoch, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -378,6 +440,12 @@ func (v *VersionedBeaconState) PendingDeposits() ([]*electra.PendingDeposit, err
 		}
 
 		return v.Fulu.PendingDeposits, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.PendingDeposits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -400,6 +468,12 @@ func (v *VersionedBeaconState) PendingPartialWithdrawals() ([]*electra.PendingPa
 		}
 
 		return v.Fulu.PendingPartialWithdrawals, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.PendingPartialWithdrawals, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -422,6 +496,12 @@ func (v *VersionedBeaconState) PendingConsolidations() ([]*electra.PendingConsol
 		}
 
 		return v.Fulu.PendingConsolidations, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.PendingConsolidations, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -514,6 +594,12 @@ func (v *VersionedBeaconState) GetTree() (*ssz.Node, error) {
 		}
 
 		return v.Fulu.GetTree()
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.GetTree()
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -564,6 +650,12 @@ func (v *VersionedBeaconState) HashTreeRoot() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.HashTreeRoot()
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.Hash32{}, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.HashTreeRoot()
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -616,6 +708,12 @@ func (v *VersionedBeaconState) FieldIndex(name string) (int, error) {
 		}
 
 		return proofutil.FieldIndex(v.Fulu, name)
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return proofutil.FieldIndex(v.Gloas, name)
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -669,6 +767,12 @@ func (v *VersionedBeaconState) FieldGeneralizedIndex(name string) (int, error) {
 		}
 
 		return proofutil.FieldGeneralizedIndex(v.Fulu, name)
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return proofutil.FieldGeneralizedIndex(v.Gloas, name)
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -828,6 +932,12 @@ func (v *VersionedBeaconState) String() string {
 		}
 
 		return v.Fulu.String()
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return ""
+		}
+
+		return v.Gloas.String()
 	default:
 		return "unknown version"
 	}

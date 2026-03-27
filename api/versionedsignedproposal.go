@@ -26,6 +26,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -47,6 +48,8 @@ type VersionedSignedProposal struct {
 	ElectraBlinded   *apiv1electra.SignedBlindedBeaconBlock
 	Fulu             *apiv1fulu.SignedBlockContents
 	FuluBlinded      *apiv1electra.SignedBlindedBeaconBlock
+	Gloas            *gloas.SignedBeaconBlock
+	GloasBlinded     *apiv1electra.SignedBlindedBeaconBlock
 }
 
 // AssertPresent throws an error if the expected proposal
@@ -101,6 +104,13 @@ func (v *VersionedSignedProposal) AssertPresent() error {
 		if v.FuluBlinded == nil && v.Blinded {
 			return errors.New("blinded fulu proposal not present")
 		}
+	case spec.DataVersionGloas:
+		if v.Gloas == nil && !v.Blinded {
+			return errors.New("gloas proposal not present")
+		}
+		if v.GloasBlinded == nil && v.Blinded {
+			return errors.New("blinded gloas proposal not present")
+		}
 	default:
 		return errors.New("unsupported version")
 	}
@@ -150,6 +160,12 @@ func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.SignedBlock.Message.Slot, nil
+	case spec.DataVersionGloas:
+		if v.Blinded {
+			return v.GloasBlinded.Message.Slot, nil
+		}
+
+		return v.Gloas.Message.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -196,6 +212,12 @@ func (v *VersionedSignedProposal) ProposerIndex() (phase0.ValidatorIndex, error)
 		}
 
 		return v.Fulu.SignedBlock.Message.ProposerIndex, nil
+	case spec.DataVersionGloas:
+		if v.Blinded {
+			return v.GloasBlinded.Message.ProposerIndex, nil
+		}
+
+		return v.Gloas.Message.ProposerIndex, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -238,6 +260,12 @@ func (v *VersionedSignedProposal) ExecutionBlockHash() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.SignedBlock.Message.Body.ExecutionPayload.BlockHash, nil
+	case spec.DataVersionGloas:
+		if v.Blinded {
+			return v.GloasBlinded.Message.Body.ExecutionPayloadHeader.BlockHash, nil
+		}
+
+		return v.Gloas.Message.Body.ExecutionPayload.BlockHash, nil
 	default:
 		return phase0.Hash32{}, ErrUnsupportedVersion
 	}
@@ -328,6 +356,20 @@ func (v *VersionedSignedProposal) String() string {
 		}
 
 		return v.Fulu.String()
+	case spec.DataVersionGloas:
+		if v.Blinded {
+			if v.GloasBlinded == nil {
+				return ""
+			}
+
+			return v.GloasBlinded.String()
+		}
+
+		if v.Gloas == nil {
+			return ""
+		}
+
+		return v.Gloas.String()
 	default:
 		return "unsupported version"
 	}
@@ -339,6 +381,16 @@ func (v *VersionedSignedProposal) String() string {
 //nolint:gocyclo // ignore
 func (v *VersionedSignedProposal) assertMessagePresent() error {
 	switch v.Version {
+	case spec.DataVersionPhase0:
+		if v.Phase0 == nil ||
+			v.Phase0.Message == nil {
+			return ErrDataMissing
+		}
+	case spec.DataVersionAltair:
+		if v.Altair == nil ||
+			v.Altair.Message == nil {
+			return ErrDataMissing
+		}
 	case spec.DataVersionBellatrix:
 		if v.Blinded {
 			if v.BellatrixBlinded == nil ||
@@ -399,6 +451,18 @@ func (v *VersionedSignedProposal) assertMessagePresent() error {
 			if v.Fulu == nil ||
 				v.Fulu.SignedBlock == nil ||
 				v.Fulu.SignedBlock.Message == nil {
+				return ErrDataMissing
+			}
+		}
+	case spec.DataVersionGloas:
+		if v.Blinded {
+			if v.GloasBlinded == nil ||
+				v.GloasBlinded.Message == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.Gloas == nil ||
+				v.Gloas.Message == nil {
 				return ErrDataMissing
 			}
 		}
@@ -484,7 +548,9 @@ func (v *VersionedSignedProposal) assertExecutionPayloadPresent() error {
 	case spec.DataVersionFulu:
 		if v.Blinded {
 			if v.FuluBlinded == nil ||
-				v.FuluBlinded.Message == nil {
+				v.FuluBlinded.Message == nil ||
+				v.FuluBlinded.Message.Body == nil ||
+				v.FuluBlinded.Message.Body.ExecutionPayloadHeader == nil {
 				return ErrDataMissing
 			}
 		} else {
@@ -493,6 +559,22 @@ func (v *VersionedSignedProposal) assertExecutionPayloadPresent() error {
 				v.Fulu.SignedBlock.Message == nil ||
 				v.Fulu.SignedBlock.Message.Body == nil ||
 				v.Fulu.SignedBlock.Message.Body.ExecutionPayload == nil {
+				return ErrDataMissing
+			}
+		}
+	case spec.DataVersionGloas:
+		if v.Blinded {
+			if v.GloasBlinded == nil ||
+				v.GloasBlinded.Message == nil ||
+				v.GloasBlinded.Message.Body == nil ||
+				v.GloasBlinded.Message.Body.ExecutionPayloadHeader == nil {
+				return ErrDataMissing
+			}
+		} else {
+			if v.Gloas == nil ||
+				v.Gloas.Message == nil ||
+				v.Gloas.Message.Body == nil ||
+				v.Gloas.Message.Body.ExecutionPayload == nil {
 				return ErrDataMissing
 			}
 		}
