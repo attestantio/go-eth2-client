@@ -23,7 +23,7 @@ import (
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
 
-// BeaconCommitteeSelections submits beacon committee selections.
+// BeaconCommitteeSelections obtains beacon committee selections.
 func (s *Service) BeaconCommitteeSelections(ctx context.Context,
 	opts *api.BeaconCommitteeSelectionsOpts,
 ) (
