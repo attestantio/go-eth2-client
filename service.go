@@ -379,7 +379,7 @@ type BeaconCommitteeSubscriptionsSubmitter interface {
 // BeaconCommitteeSelectionsProvider is the interface for obtaining beacon committee subnet selections.
 // Used by DV middleware clients.
 type BeaconCommitteeSelectionsProvider interface {
-	// BeaconCommitteeSelections submits beacon committee selections.
+	// BeaconCommitteeSelections obtains beacon committee selections.
 	BeaconCommitteeSelections(ctx context.Context,
 		opts *api.BeaconCommitteeSelectionsOpts,
 	) (
