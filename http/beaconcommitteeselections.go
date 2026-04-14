@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
@@ -34,6 +35,10 @@ func (s *Service) BeaconCommitteeSelections(ctx context.Context,
 		return nil, err
 	}
 
+	if opts == nil {
+		return nil, client.ErrNoOptions
+	}
+
 	specJSON, err := json.Marshal(opts.Selections)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to encode beacon committee selections"), err)
@@ -45,7 +50,7 @@ func (s *Service) BeaconCommitteeSelections(ctx context.Context,
 	httpResponse, err := s.post(ctx,
 		endpoint,
 		query,
-		&api.CommonOpts{},
+		&opts.Common,
 		bytes.NewReader(specJSON),
 		ContentTypeJSON,
 		map[string]string{},
