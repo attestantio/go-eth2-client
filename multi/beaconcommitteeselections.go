@@ -28,13 +28,13 @@ func (s *Service) BeaconCommitteeSelections(ctx context.Context,
 	*api.Response[[]*apiv1.BeaconCommitteeSelection], error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		aggregatedSelections, err := client.(consensusclient.BeaconCommitteeSelectionsProvider).
+		beaconCommitteeSelections, err := client.(consensusclient.BeaconCommitteeSelectionsProvider).
 			BeaconCommitteeSelections(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
 
-		return aggregatedSelections, nil
+		return beaconCommitteeSelections, nil
 	}, nil)
 	if err != nil {
 		return nil, err
