@@ -376,6 +376,18 @@ type BeaconCommitteeSubscriptionsSubmitter interface {
 	SubmitBeaconCommitteeSubscriptions(ctx context.Context, subscriptions []*apiv1.BeaconCommitteeSubscription) error
 }
 
+// BeaconCommitteeSelectionsProvider is the interface for obtaining beacon committee subnet selections.
+// Used by DV middleware clients.
+type BeaconCommitteeSelectionsProvider interface {
+	// BeaconCommitteeSelections obtains beacon committee selections.
+	BeaconCommitteeSelections(ctx context.Context,
+		opts *api.BeaconCommitteeSelectionsOpts,
+	) (
+		*api.Response[[]*apiv1.BeaconCommitteeSelection],
+		error,
+	)
+}
+
 // BeaconStateProvider is the interface for providing beacon state.
 type BeaconStateProvider interface {
 	// BeaconState fetches a beacon state given a state ID.
