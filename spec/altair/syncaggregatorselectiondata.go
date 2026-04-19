@@ -96,6 +96,7 @@ func (s *SyncAggregatorSelectionData) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -105,6 +106,7 @@ func (s *SyncAggregatorSelectionData) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &syncAggregatorSelectionDataJSON); err != nil {
 		return err
 	}
+
 	return s.unpack(&syncAggregatorSelectionDataJSON)
 }
 
@@ -114,5 +116,6 @@ func (s *SyncAggregatorSelectionData) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }
