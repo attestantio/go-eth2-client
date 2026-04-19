@@ -100,6 +100,45 @@ func TestSyncAggregatorSelectionDataYAML(t *testing.T) {
 			name:  "Good",
 			input: []byte(`{slot: 1, subcommittee_index: 3}`),
 		},
+		{
+			name:  "YAMLBad",
+			input: []byte("[]"),
+			err:   "[1:1] sequence was used where mapping is expected\n>  1 | []\n       ^\n",
+		},
+		{
+			name:  "SlotMissing",
+			input: []byte(`{"subcommittee_index":"3"}`),
+			err:   "slot missing",
+		},
+		{
+			name:  "SlotWrongType",
+			input: []byte(`{"slot":true,"subcommittee_index":"3"}`),
+			err:   "invalid value for slot: strconv.ParseUint: parsing \"true\": invalid syntax",
+		},
+		{
+			name:  "SlotInvalid",
+			input: []byte(`{"slot":"-1","subcommittee_index":"3"}`),
+			err:   "invalid value for slot: strconv.ParseUint: parsing \"-1\": invalid syntax",
+		},
+		{
+			name:  "SubcommitteeIndexMissing",
+			input: []byte(`{"slot":"1"}`),
+			err:   "subcommittee index missing",
+		},
+		{
+			name:  "SubcommitteeIndexWrongType",
+			input: []byte(`{"slot":"1","subcommittee_index":true}`),
+			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field syncAggregatorSelectionDataJSON.subcommittee_index of type string",
+		},
+		{
+			name:  "SubcommitteeIndexInvalid",
+			input: []byte(`{"slot":"1","subcommittee_index":"-1"}`),
+			err:   "invalid value for subcommittee index: strconv.ParseUint: parsing \"-1\": invalid syntax",
+		},
+		{
+			name:  "Valid",
+			input: []byte(`{"slot":"1","subcommittee_index":"3"}`),
+		},
 	}
 
 	for _, test := range tests {
