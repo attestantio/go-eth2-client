@@ -1,3 +1,7 @@
+0.28.1:
+  - update to HTTP tests
+  - add beacon committee selections endpoint for distributed validators
+
 0.28.0:
   - update dependency for go-bitfield to get from offchain instead of prysmatic org
 
