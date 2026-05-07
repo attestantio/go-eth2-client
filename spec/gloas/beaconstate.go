@@ -35,7 +35,7 @@ type BeaconState struct {
 	StateRoots                    []phase0.Root `dynssz-size:"SLOTS_PER_HISTORICAL_ROOT,32" ssz-size:"8192,32"`
 	HistoricalRoots               []phase0.Root `ssz-max:"16777216"                         ssz-size:"?,32"`
 	ETH1Data                      *phase0.ETH1Data
-	ETH1DataVotes                 []*phase0.ETH1Data `ssz-max:"2048"`
+	ETH1DataVotes                 []*phase0.ETH1Data `dynssz-max:"EPOCHS_PER_ETH1_VOTING_PERIOD*SLOTS_PER_EPOCH" ssz-max:"2048"`
 	ETH1DepositIndex              uint64
 	Validators                    []*phase0.Validator         `ssz-max:"1099511627776"`
 	Balances                      []phase0.Gwei               `ssz-max:"1099511627776"`
@@ -60,9 +60,9 @@ type BeaconState struct {
 	EarliestExitEpoch             phase0.Epoch
 	ConsolidationBalanceToConsume phase0.Gwei
 	EarliestConsolidationEpoch    phase0.Epoch
-	PendingDeposits               []*electra.PendingDeposit           `ssz-max:"134217728"`
-	PendingPartialWithdrawals     []*electra.PendingPartialWithdrawal `ssz-max:"134217728"`
-	PendingConsolidations         []*electra.PendingConsolidation     `ssz-max:"262144"`
+	PendingDeposits               []*electra.PendingDeposit           `dynssz-max:"PENDING_DEPOSITS_LIMIT"                  ssz-max:"134217728"`
+	PendingPartialWithdrawals     []*electra.PendingPartialWithdrawal `dynssz-max:"PENDING_PARTIAL_WITHDRAWALS_LIMIT"       ssz-max:"134217728"`
+	PendingConsolidations         []*electra.PendingConsolidation     `dynssz-max:"PENDING_CONSOLIDATIONS_LIMIT"            ssz-max:"262144"`
 	ProposerLookahead             []phase0.ValidatorIndex             `dynssz-size:"(MIN_SEED_LOOKAHEAD+1)*SLOTS_PER_EPOCH" ssz-size:"64"`
 	Builders                      []*Builder                          `dynssz-max:"BUILDER_REGISTRY_LIMIT"                  ssz-max:"1099511627776"`
 	NextWithdrawalBuilderIndex    BuilderIndex
