@@ -54,6 +54,20 @@ func TestGweiUnmarshalJSON(t *testing.T) {
 			expected: 0,
 			wantErr:  true,
 		},
+		// Caplin (Erigon's CL) emits Gwei amounts in execution_requests as
+		// bare JSON numbers rather than quoted decimal strings; accept both.
+		{
+			name:     "Caplin bare number 32000000000",
+			input:    []byte("32000000000"),
+			expected: phase0.Gwei(32000000000),
+			wantErr:  false,
+		},
+		{
+			name:     "Caplin bare number 0",
+			input:    []byte("0"),
+			expected: phase0.Gwei(0),
+			wantErr:  false,
+		},
 	}
 
 	// Run tests

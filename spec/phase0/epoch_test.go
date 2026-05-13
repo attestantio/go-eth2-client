@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,68 +13,56 @@
 
 package phase0_test
 
-// Create a test to verify gwei.unmarshalJSON
 import (
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-func TestSlotUnmarshalJSON(t *testing.T) {
-	// Test cases
+func TestEpochUnmarshalJSON(t *testing.T) {
 	tests := []struct {
-		name     string
+		label    string
 		input    []byte
-		expected phase0.Slot
+		expected phase0.Epoch
 		wantErr  bool
 	}{
 		{
-			name:     "Valid input 100000",
-			input:    []byte("\"100000\""),
-			expected: phase0.Slot(100000),
-			wantErr:  false,
+			label:    "Valid quoted",
+			input:    []byte("\"42\""),
+			expected: phase0.Epoch(42),
 		},
-
 		{
-			name:     "Valid input",
-			input:    []byte("\"1\""),
-			expected: phase0.Slot(1),
-			wantErr:  false,
-		},
-
-		{
-			name:     "Invalid input text",
+			label:    "Invalid text",
 			input:    []byte("not-a-number"),
 			expected: 0,
 			wantErr:  true,
 		},
 		{
-			name:     "Invalid input single quote",
+			label:    "Invalid single quote",
 			input:    []byte("\""),
 			expected: 0,
 			wantErr:  true,
 		},
-		// Caplin emits bare uint64 fields (e.g. PendingDeposit.slot) without
-		// the spec's surrounding quotes; accept both.
+		// Caplin emits bare uint64 epoch fields (e.g.
+		// PendingPartialWithdrawal.withdrawable_epoch); accept both.
 		{
-			name:     "Caplin bare number",
-			input:    []byte("100000"),
-			expected: phase0.Slot(100000),
-			wantErr:  false,
+			label:    "Caplin bare number",
+			input:    []byte("42"),
+			expected: phase0.Epoch(42),
 		},
 	}
 
-	// Run tests
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var s phase0.Slot
-			err := s.UnmarshalJSON(tt.input)
+		t.Run(tt.label, func(t *testing.T) {
+			var e phase0.Epoch
+			err := e.UnmarshalJSON(tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("UnmarshalJSON() error = %v, wantErr %v", err, tt.wantErr)
+
 				return
 			}
-			if s != tt.expected {
-				t.Errorf("UnmarshalJSON() got = %v, expected %v", s, tt.expected)
+			if e != tt.expected {
+				t.Errorf("UnmarshalJSON() got = %v, expected %v", e, tt.expected)
 			}
 		})
 	}

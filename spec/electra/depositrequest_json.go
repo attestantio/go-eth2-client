@@ -25,12 +25,15 @@ import (
 )
 
 // depositRequestJSON is the spec representation of the struct.
+// Amount and Index are typed as json.RawMessage so we accept both the
+// spec form ("42") and the bare-number form (42) that Erigon's Caplin
+// emits in execution_requests.
 type depositRequestJSON struct {
-	Pubkey                string `json:"pubkey"`
-	WithdrawalCredentials string `json:"withdrawal_credentials"`
-	Amount                string `json:"amount"`
-	Signature             string `json:"signature"`
-	Index                 string `json:"index"`
+	Pubkey                string          `json:"pubkey"`
+	WithdrawalCredentials string          `json:"withdrawal_credentials"`
+	Amount                json.RawMessage `json:"amount"`
+	Signature             string          `json:"signature"`
+	Index                 json.RawMessage `json:"index"`
 }
 
 // MarshalJSON implements json.Marshaler.
@@ -38,9 +41,9 @@ func (d *DepositRequest) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&depositRequestJSON{
 		Pubkey:                fmt.Sprintf("%#x", d.Pubkey),
 		WithdrawalCredentials: fmt.Sprintf("%#x", d.WithdrawalCredentials),
-		Amount:                fmt.Sprintf("%d", d.Amount),
+		Amount:                json.RawMessage(fmt.Sprintf(`"%d"`, d.Amount)),
 		Signature:             fmt.Sprintf("%#x", d.Signature),
-		Index:                 fmt.Sprintf("%d", d.Index),
+		Index:                 json.RawMessage(fmt.Sprintf(`"%d"`, d.Index)),
 	})
 }
 
@@ -82,13 +85,9 @@ func (d *DepositRequest) unpack(depositReceipt *depositRequestJSON) error {
 		return errors.New("incorrect length for withdrawal credentials")
 	}
 
-	if depositReceipt.Amount == "" {
-		return errors.New("amount missing")
-	}
-
-	amount, err := strconv.ParseUint(depositReceipt.Amount, 10, 64)
+	amount, err := parseLenientUint64(depositReceipt.Amount, "amount")
 	if err != nil {
-		return errors.Wrap(err, "invalid value for amount")
+		return err
 	}
 
 	d.Amount = phase0.Gwei(amount)
@@ -108,16 +107,37 @@ func (d *DepositRequest) unpack(depositReceipt *depositRequestJSON) error {
 
 	copy(d.Signature[:], signature)
 
-	if depositReceipt.Index == "" {
-		return errors.New("index missing")
-	}
-
-	index, err := strconv.ParseUint(depositReceipt.Index, 10, 64)
+	index, err := parseLenientUint64(depositReceipt.Index, "index")
 	if err != nil {
-		return errors.Wrap(err, "invalid value for index")
+		return err
 	}
 
 	d.Index = index
 
 	return nil
+}
+
+// parseLenientUint64 parses a JSON-encoded uint64 from raw bytes,
+// accepting either a quoted decimal string ("42") or a bare number (42).
+// Returns "<field> missing" if the raw bytes are empty or an empty string.
+func parseLenientUint64(raw json.RawMessage, field string) (uint64, error) {
+	if len(raw) == 0 {
+		return 0, errors.Errorf("%s missing", field)
+	}
+
+	s := string(raw)
+	if len(s) >= 2 && s[0] == '"' && s[len(s)-1] == '"' {
+		s = s[1 : len(s)-1]
+	}
+
+	if s == "" {
+		return 0, errors.Errorf("%s missing", field)
+	}
+
+	v, err := strconv.ParseUint(s, 10, 64)
+	if err != nil {
+		return 0, errors.Wrapf(err, "invalid value for %s", field)
+	}
+
+	return v, nil
 }

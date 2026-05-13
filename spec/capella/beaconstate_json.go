@@ -42,8 +42,8 @@ type beaconStateJSON struct {
 	Balances                     []string                  `json:"balances"`
 	RANDAOMixes                  []string                  `json:"randao_mixes"`
 	Slashings                    []string                  `json:"slashings"`
-	PreviousEpochParticipation   []string                  `json:"previous_epoch_participation"`
-	CurrentEpochParticipation    []string                  `json:"current_epoch_participation"`
+	PreviousEpochParticipation   json.RawMessage           `json:"previous_epoch_participation"`
+	CurrentEpochParticipation    json.RawMessage           `json:"current_epoch_participation"`
 	JustificationBits            string                    `json:"justification_bits"`
 	PreviousJustifiedCheckpoint  *phase0.Checkpoint        `json:"previous_justified_checkpoint"`
 	CurrentJustifiedCheckpoint   *phase0.Checkpoint        `json:"current_justified_checkpoint"`
@@ -89,14 +89,14 @@ func (s *BeaconState) MarshalJSON() ([]byte, error) {
 		slashings[i] = fmt.Sprintf("%d", s.Slashings[i])
 	}
 
-	previousEpochParticipation := make([]string, len(s.PreviousEpochParticipation))
-	for i := range s.PreviousEpochParticipation {
-		previousEpochParticipation[i] = fmt.Sprintf("%d", s.PreviousEpochParticipation[i])
+	previousEpochParticipation, err := altair.MarshalParticipationFlags(s.PreviousEpochParticipation)
+	if err != nil {
+		return nil, errors.Wrap(err, "previous_epoch_participation")
 	}
 
-	currentEpochParticipation := make([]string, len(s.CurrentEpochParticipation))
-	for i := range s.CurrentEpochParticipation {
-		currentEpochParticipation[i] = fmt.Sprintf("%d", s.CurrentEpochParticipation[i])
+	currentEpochParticipation, err := altair.MarshalParticipationFlags(s.CurrentEpochParticipation)
+	if err != nil {
+		return nil, errors.Wrap(err, "current_epoch_participation")
 	}
 
 	inactivityScores := make([]string, len(s.InactivityScores))
@@ -334,32 +334,12 @@ func (s *BeaconState) unpack(data *beaconStateJSON) error {
 		s.Slashings[i] = phase0.Gwei(slashings)
 	}
 
-	s.PreviousEpochParticipation = make([]altair.ParticipationFlags, len(data.PreviousEpochParticipation))
-	for i := range data.PreviousEpochParticipation {
-		if data.PreviousEpochParticipation[i] == "" {
-			return fmt.Errorf("previous epoch attestation %d missing", i)
-		}
-
-		previousEpochAttestation, err := strconv.ParseUint(data.PreviousEpochParticipation[i], 10, 8)
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("invalid value for previous epoch attestation %d", i))
-		}
-
-		s.PreviousEpochParticipation[i] = altair.ParticipationFlags(previousEpochAttestation)
+	if s.PreviousEpochParticipation, err = altair.ParseParticipationFlags(data.PreviousEpochParticipation, "previous_epoch_participation"); err != nil {
+		return err
 	}
 
-	s.CurrentEpochParticipation = make([]altair.ParticipationFlags, len(data.CurrentEpochParticipation))
-	for i := range data.CurrentEpochParticipation {
-		if data.CurrentEpochParticipation[i] == "" {
-			return fmt.Errorf("current epoch attestation %d missing", i)
-		}
-
-		currentEpochAttestation, err := strconv.ParseUint(data.CurrentEpochParticipation[i], 10, 8)
-		if err != nil {
-			return errors.Wrap(err, fmt.Sprintf("invalid value for current epoch attestation %d", i))
-		}
-
-		s.CurrentEpochParticipation[i] = altair.ParticipationFlags(currentEpochAttestation)
+	if s.CurrentEpochParticipation, err = altair.ParseParticipationFlags(data.CurrentEpochParticipation, "current_epoch_participation"); err != nil {
+		return err
 	}
 
 	if data.JustificationBits == "" {

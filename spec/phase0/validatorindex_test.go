@@ -54,6 +54,14 @@ func TestValidatorIndexUnmarshalJSON(t *testing.T) {
 			expected: 0,
 			wantErr:  true,
 		},
+		// Caplin emits bare uint64 validator_index (e.g.
+		// PendingPartialWithdrawal.validator_index); accept both.
+		{
+			name:     "Caplin bare number",
+			input:    []byte("42"),
+			expected: phase0.ValidatorIndex(42),
+			wantErr:  false,
+		},
 	}
 
 	// Run tests

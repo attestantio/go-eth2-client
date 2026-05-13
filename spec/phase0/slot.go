@@ -14,7 +14,6 @@
 package phase0
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 
@@ -24,27 +23,22 @@ import (
 // Slot is a slot number.
 type Slot uint64
 
-// UnmarshalJSON implements json.Unmarshaler.
+// UnmarshalJSON implements json.Unmarshaler. The spec encodes Slot as a
+// quoted decimal string, but some clients (notably Erigon's Caplin) emit
+// uint64 fields in state-tree types as bare JSON numbers. Accept both.
 func (s *Slot) UnmarshalJSON(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
 
-	if len(input) < 3 {
-		return errors.New("input malformed")
+	str := string(input)
+	if len(str) >= 2 && str[0] == '"' && str[len(str)-1] == '"' {
+		str = str[1 : len(str)-1]
 	}
 
-	if !bytes.HasPrefix(input, []byte{'"'}) {
-		return errors.New("invalid prefix")
-	}
-
-	if !bytes.HasSuffix(input, []byte{'"'}) {
-		return errors.New("invalid suffix")
-	}
-
-	val, err := strconv.ParseUint(string(input[1:len(input)-1]), 10, 64)
+	val, err := strconv.ParseUint(str, 10, 64)
 	if err != nil {
-		return errors.Wrapf(err, "invalid value %s", string(input[1:len(input)-1]))
+		return errors.Wrapf(err, "invalid value %s", str)
 	}
 
 	*s = Slot(val)

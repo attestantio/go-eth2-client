@@ -15,7 +15,9 @@ package electra
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"github.com/goccy/go-yaml"
 )
@@ -47,11 +49,19 @@ func (d *DepositRequest) MarshalYAML() ([]byte, error) {
 
 // UnmarshalYAML implements yaml.Unmarshaler.
 func (d *DepositRequest) UnmarshalYAML(input []byte) error {
-	// We unmarshal to the JSON struct to save on duplicate code.
-	var depositReceipt depositRequestJSON
+	// YAML emits Amount/Index as bare numbers; decode through the YAML
+	// intermediate (typed uint64) and then re-shape into the JSON form
+	// expected by unpack().
+	var depositReceipt depositRequestYAML
 	if err := yaml.Unmarshal(input, &depositReceipt); err != nil {
 		return err
 	}
 
-	return d.unpack(&depositReceipt)
+	return d.unpack(&depositRequestJSON{
+		Pubkey:                depositReceipt.Pubkey,
+		WithdrawalCredentials: depositReceipt.WithdrawalCredentials,
+		Amount:                json.RawMessage(strconv.FormatUint(depositReceipt.Amount, 10)),
+		Signature:             depositReceipt.Signature,
+		Index:                 json.RawMessage(strconv.FormatUint(depositReceipt.Index, 10)),
+	})
 }

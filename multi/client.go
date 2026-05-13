@@ -246,6 +246,8 @@ func (*Service) providerInfo(ctx context.Context, provider consensusclient.Servi
 				providerName = "teku"
 			case strings.Contains(strings.ToLower(response.Data), "nimbus"):
 				providerName = "nimbus"
+			case strings.Contains(strings.ToLower(response.Data), "caplin"):
+				providerName = "caplin"
 			default:
 				// Unknown provider, keep as "<unknown>"
 			}

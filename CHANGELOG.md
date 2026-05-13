@@ -1,3 +1,10 @@
+dev:
+  - support Erigon Caplin consensus client
+    - accept bare-number `amount`/`index` in Electra `execution_requests` (`phase0.Gwei` and `electra.DepositRequest` unmarshalers accept both quoted decimal strings and bare JSON numbers)
+    - accept bare-number `slot`/`validator_index`/`withdrawable_epoch` in `pending_deposits`/`pending_partial_withdrawals` state fields (`phase0.Slot`, `phase0.ValidatorIndex`, `phase0.Epoch` unmarshalers accept both forms)
+    - accept Caplin's `0x`-prefixed hex form for `previous_epoch_participation` / `current_epoch_participation` (BeaconState debug endpoint); spec JSON-array form still works
+    - recognize Caplin in `multi.Service` provider detection
+
 0.28.1:
   - update to HTTP tests
   - add beacon committee selections endpoint for distributed validators
