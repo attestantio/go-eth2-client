@@ -16,6 +16,7 @@ package deneb
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 
 	"github.com/pkg/errors"
 )
@@ -25,6 +26,24 @@ const kzgCommitmentProofElements = 17
 
 // KZGCommitmentInclusionProof is the proof of inclusion for a KZG commitment.
 type KZGCommitmentInclusionProof []KZGCommitmentInclusionProofElement
+
+// MarshalJSON implements json.Marshaler.
+//
+// The proof was historically a fixed-size [17]element array, which always serialized as
+// exactly 17 hex strings.  As a slice, a nil/short proof would otherwise serialize as
+// "null" (or a truncated list), which fails to round-trip through UnmarshalJSON.  We
+// therefore always emit exactly kzgCommitmentProofElements entries, zero-filling a short
+// proof and rejecting an over-long one, preserving the original wire format.
+func (k KZGCommitmentInclusionProof) MarshalJSON() ([]byte, error) {
+	if len(k) > kzgCommitmentProofElements {
+		return nil, errors.New("incorrect number of elements")
+	}
+
+	proof := make([]KZGCommitmentInclusionProofElement, kzgCommitmentProofElements)
+	copy(proof, k)
+
+	return json.Marshal(proof)
+}
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (k *KZGCommitmentInclusionProof) UnmarshalJSON(input []byte) error {
