@@ -28,6 +28,8 @@ type DataColumnSidecarEvent struct {
 	Slot           phase0.Slot
 	Index          uint64
 	KZGCommitments []deneb.KZGCommitment
+	// Provider is the address of the provider that returned this event.
+	Provider string
 }
 
 // dataColumnSidecarEventJSON is the spec representation of the struct.

@@ -103,3 +103,20 @@ func TestDataColumnSidecarEventJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestDataColumnSidecarEventProviderNotInJSON(t *testing.T) {
+	input := []byte(`{"block_root":"0xcf8e0d4e9587369b2301d0790347320302cc0943d5a1884560367e8208d920f2","slot":"1","index":"1","kzg_commitments":["0xa590e760fdce951756d59c46b037bab8de815fe8ffc25e6e3a7b45e43289e1fdc942854cdfea1615385a0db63442f363"]}`)
+
+	var event api.DataColumnSidecarEvent
+	require.NoError(t, json.Unmarshal(input, &event))
+	event.Provider = "test-provider"
+
+	rt, err := json.Marshal(&event)
+	require.NoError(t, err)
+	assert.NotContains(t, string(rt), "provider")
+	assert.NotContains(t, string(rt), "test-provider")
+
+	var roundTripped api.DataColumnSidecarEvent
+	require.NoError(t, json.Unmarshal(rt, &roundTripped))
+	assert.Empty(t, roundTripped.Provider)
+}

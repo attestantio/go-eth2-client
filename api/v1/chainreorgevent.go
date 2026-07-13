@@ -33,6 +33,8 @@ type ChainReorgEvent struct {
 	OldHeadState phase0.Root
 	NewHeadState phase0.Root
 	Epoch        phase0.Epoch
+	// Provider is the address of the provider that returned this event.
+	Provider string
 }
 
 // chainReorgEventJSON is the spec representation of the struct.

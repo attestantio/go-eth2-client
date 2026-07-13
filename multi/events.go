@@ -188,6 +188,7 @@ func (h *activeHandler) blobSidecarHandler(ctx context.Context, data *apiv1.Blob
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	data.Provider = h.address
 	h.opts.BlobSidecarHandler(ctx, data)
 }
 
@@ -220,6 +221,7 @@ func (h *activeHandler) chainReorgHandler(ctx context.Context, data *apiv1.Chain
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	data.Provider = h.address
 	h.opts.ChainReorgHandler(ctx, data)
 }
 
@@ -252,6 +254,7 @@ func (h *activeHandler) finalizedCheckpointHandler(ctx context.Context, data *ap
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	data.Provider = h.address
 	h.opts.FinalizedCheckpointHandler(ctx, data)
 }
 
@@ -268,6 +271,7 @@ func (h *activeHandler) headHandler(ctx context.Context, data *apiv1.HeadEvent) 
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	data.Provider = h.address
 	h.opts.HeadHandler(ctx, data)
 }
 
@@ -284,6 +288,7 @@ func (h *activeHandler) payloadAttributesHandler(ctx context.Context, data *apiv
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	data.Provider = h.address
 	h.opts.PayloadAttributesHandler(ctx, data)
 }
 
@@ -348,6 +353,7 @@ func (h *activeHandler) genericHandler(event *apiv1.Event) {
 
 	log.Trace().Msg("Forwarding due to primary active address")
 
+	event.Provider = h.address
 	if h.opts.Handler != nil {
 		h.opts.Handler(event)
 	}

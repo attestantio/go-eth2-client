@@ -99,3 +99,20 @@ func TestBlockGossipEventJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestBlockGossipEventProviderNotInJSON(t *testing.T) {
+	input := []byte(`{"slot":"525277","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028"}`)
+
+	var event api.BlockGossipEvent
+	require.NoError(t, json.Unmarshal(input, &event))
+	event.Provider = "test-provider"
+
+	rt, err := json.Marshal(&event)
+	require.NoError(t, err)
+	assert.NotContains(t, string(rt), "provider")
+	assert.NotContains(t, string(rt), "test-provider")
+
+	var roundTripped api.BlockGossipEvent
+	require.NoError(t, json.Unmarshal(rt, &roundTripped))
+	assert.Empty(t, roundTripped.Provider)
+}

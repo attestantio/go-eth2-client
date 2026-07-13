@@ -29,6 +29,8 @@ type BlobSidecarEvent struct {
 	Index         deneb.BlobIndex
 	KZGCommitment deneb.KZGCommitment
 	VersionedHash deneb.VersionedHash
+	// Provider is the address of the provider that returned this event.
+	Provider string
 }
 
 // blobSidecarEventJSON is the spec representation of the struct.

@@ -28,6 +28,8 @@ import (
 type BlockGossipEvent struct {
 	Slot  phase0.Slot
 	Block phase0.Root
+	// Provider is the address of the provider that returned this event.
+	Provider string
 }
 
 // blockGossipEventJSON is the spec representation of the struct.
