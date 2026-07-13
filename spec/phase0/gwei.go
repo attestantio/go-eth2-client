@@ -14,7 +14,6 @@
 package phase0
 
 import (
-	"bytes"
 	"fmt"
 	"strconv"
 
@@ -24,27 +23,22 @@ import (
 // Gwei is an amount in Gwei.
 type Gwei uint64
 
-// UnmarshalJSON implements json.Unmarshaler.
+// UnmarshalJSON implements json.Unmarshaler. The spec encodes Gwei as a
+// quoted decimal string, but some clients (notably Erigon's Caplin) emit
+// it as a bare JSON number in execution_requests payloads. Accept both.
 func (g *Gwei) UnmarshalJSON(input []byte) error {
 	if len(input) == 0 {
 		return errors.New("input missing")
 	}
 
-	if len(input) < 3 {
-		return errors.New("input malformed")
+	s := string(input)
+	if len(s) >= 2 && s[0] == '"' && s[len(s)-1] == '"' {
+		s = s[1 : len(s)-1]
 	}
 
-	if !bytes.HasPrefix(input, []byte{'"'}) {
-		return errors.New("invalid prefix")
-	}
-
-	if !bytes.HasSuffix(input, []byte{'"'}) {
-		return errors.New("invalid suffix")
-	}
-
-	val, err := strconv.ParseUint(string(input[1:len(input)-1]), 10, 64)
+	val, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
-		return errors.Wrapf(err, "invalid value %s", string(input[1:len(input)-1]))
+		return errors.Wrapf(err, "invalid value %s", s)
 	}
 
 	*g = Gwei(val)

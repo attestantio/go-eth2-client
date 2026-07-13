@@ -229,12 +229,12 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "slashings")
 	}
 
-	if err := json.Unmarshal(raw["previous_epoch_participation"], &b.PreviousEpochParticipation); err != nil {
-		return errors.Wrap(err, "previous_epoch_participation")
+	if b.PreviousEpochParticipation, err = altair.ParseParticipationFlags(raw["previous_epoch_participation"], "previous_epoch_participation"); err != nil {
+		return err
 	}
 
-	if err := json.Unmarshal(raw["current_epoch_participation"], &b.CurrentEpochParticipation); err != nil {
-		return errors.Wrap(err, "current_epoch_participation")
+	if b.CurrentEpochParticipation, err = altair.ParseParticipationFlags(raw["current_epoch_participation"], "current_epoch_participation"); err != nil {
+		return err
 	}
 
 	justificationBits := string(bytes.TrimPrefix(bytes.Trim(raw["justification_bits"], `"`), []byte{'0', 'x'}))
