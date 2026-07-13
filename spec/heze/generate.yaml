@@ -1,0 +1,17 @@
+package: .
+legacy: true
+without-dynamic-expressions: true
+
+types:
+  - name: BeaconBlock
+    output: beaconblock_ssz.go
+  - name: BeaconBlockBody
+    output: beaconblockbody_ssz.go
+  - name: BeaconState
+    output: beaconstate_ssz.go
+  - name: ExecutionPayloadBid
+    output: executionpayloadbid_ssz.go
+  - name: SignedBeaconBlock
+    output: signedbeaconblock_ssz.go
+  - name: SignedExecutionPayloadBid
+    output: signedexecutionpayloadbid_ssz.go

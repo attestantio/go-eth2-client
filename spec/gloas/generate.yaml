@@ -1,0 +1,41 @@
+package: .
+legacy: true
+without-dynamic-expressions: true
+
+types:
+  - name: BeaconBlockBody
+    output: beaconblockbody_ssz.go
+  - name: BeaconBlock
+    output: beaconblock_ssz.go
+  - name: BeaconState
+    output: beaconstate_ssz.go
+  - name: Builder
+    output: builder_ssz.go
+  - name: BuilderPendingPayment
+    output: builderpendingpayment_ssz.go
+  - name: BuilderPendingWithdrawal
+    output: builderpendingwithdrawal_ssz.go
+  - name: ExecutionPayload
+    output: executionpayload_ssz.go
+  - name: ExecutionPayloadBid
+    output: executionpayloadbid_ssz.go
+  - name: ExecutionPayloadEnvelope
+    output: executionpayloadenvelope_ssz.go
+  - name: IndexedPayloadAttestation
+    output: indexedpayloadattestation_ssz.go
+  - name: PayloadAttestation
+    output: payloadattestation_ssz.go
+  - name: PayloadAttestationData
+    output: payloadattestationdata_ssz.go
+  - name: PayloadAttestationMessage
+    output: payloadattestationmessage_ssz.go
+  - name: ProposerPreferences
+    output: proposerpreferences_ssz.go
+  - name: SignedBeaconBlock
+    output: signedbeaconblock_ssz.go
+  - name: SignedExecutionPayloadBid
+    output: signedexecutionpayloadbid_ssz.go
+  - name: SignedExecutionPayloadEnvelope
+    output: signedexecutionpayloadenvelope_ssz.go
+  - name: SignedProposerPreferences
+    output: signedproposerpreferences_ssz.go

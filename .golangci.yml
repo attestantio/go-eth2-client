@@ -47,6 +47,7 @@ linters:
     - gochecknoinits   # Disable global variable check
     - gocognit         # Disable cognitive complexity check
     - goconst          # Disable constant check
+    - gocyclo          # Disable gocyclo (redundant with cyclop; version-dispatch switches legitimately exceed default thresholds)
     - intrange         # Disable integer range check
     - ireturn          # Disable return check
     - lll              # Disable line length check
@@ -122,7 +123,7 @@ linters:
         - name: confusing-results
         - name: line-length-limit
           arguments:
-            - 132
+            - 160
         - name: struct-tag
           arguments:
             - json,allowempty

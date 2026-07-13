@@ -29,8 +29,6 @@ import (
 )
 
 // ExecutionPayload represents an execution layer payload.
-//
-//nolint:revive
 type ExecutionPayload struct {
 	ParentHash    phase0.Hash32              `ssz-size:"32"`
 	FeeRecipient  bellatrix.ExecutionAddress `ssz-size:"20"`

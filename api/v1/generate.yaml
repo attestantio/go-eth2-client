@@ -1,0 +1,11 @@
+package: .
+legacy: true
+without-dynamic-expressions: true
+
+types:
+  - name: Blobs
+    output: blobs_ssz.go
+  - name: SignedValidatorRegistration
+    output: signedvalidatorregistration_ssz.go
+  - name: ValidatorRegistration
+    output: validatorregistration_ssz.go

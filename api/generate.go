@@ -13,8 +13,5 @@
 
 package api
 
-//nolint:revive
-// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f versionedblindedbeaconblock_ssz.go versionedsignedblindedbeaconblock_ssz.go versionedsignedvalidatorregistration_ssz.go
-//go:generate sszgen -suffix=ssz -path . -include ../spec,../spec/phase0,../spec/altair,../spec/bellatrix,../spec/capella,../spec/deneb,v1,v1/bellatrix,v1/capella,v1/deneb -exclude-objs DataVersion -objs VersionedBlindedBeaconBlock,VersionedSignedBlindedBeaconBlock,VersionedSignedValidatorRegistration
-//go:generate goimports -w versionedblindedbeaconblock_ssz.go versionedsignedblindedbeaconblock_ssz.go versionedsignedvalidatorregistration_ssz.go
+//go:generate rm -f *_ssz.go
+//go:generate go tool dynssz-gen -config generate.yaml

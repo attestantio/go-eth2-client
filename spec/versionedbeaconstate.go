@@ -22,9 +22,12 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/fulu"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
+	"github.com/attestantio/go-eth2-client/spec/heze"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	proofutil "github.com/attestantio/go-eth2-client/util/proof"
-	ssz "github.com/ferranbt/fastssz"
+	dynssz "github.com/pk910/dynamic-ssz"
+	"github.com/pk910/dynamic-ssz/treeproof"
 )
 
 // VersionedBeaconState contains a versioned beacon state.
@@ -37,12 +40,14 @@ type VersionedBeaconState struct {
 	Deneb     *deneb.BeaconState
 	Electra   *electra.BeaconState
 	Fulu      *fulu.BeaconState
+	Gloas     *gloas.BeaconState
+	Heze      *heze.BeaconState
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBeaconState) IsEmpty() bool {
-	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil &&
-		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil
+	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil &&
+		v.Electra == nil && v.Fulu == nil && v.Gloas == nil && v.Heze == nil
 }
 
 // Slot returns the slot of the state.
@@ -90,6 +95,18 @@ func (v *VersionedBeaconState) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.Slot, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.Slot, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return 0, errors.New("no Heze state")
+		}
+
+		return v.Heze.Slot, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -124,6 +141,18 @@ func (v *VersionedBeaconState) NextWithdrawalValidatorIndex() (phase0.ValidatorI
 		}
 
 		return v.Fulu.NextWithdrawalValidatorIndex, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.NextWithdrawalValidatorIndex, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return 0, errors.New("no Heze state")
+		}
+
+		return v.Heze.NextWithdrawalValidatorIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -174,6 +203,18 @@ func (v *VersionedBeaconState) Validators() ([]*phase0.Validator, error) {
 		}
 
 		return v.Fulu.Validators, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.Validators, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return nil, errors.New("no Heze state")
+		}
+
+		return v.Heze.Validators, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -224,6 +265,18 @@ func (v *VersionedBeaconState) ValidatorBalances() ([]phase0.Gwei, error) {
 		}
 
 		return v.Fulu.Balances, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.Balances, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return nil, errors.New("no Heze state")
+		}
+
+		return v.Heze.Balances, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -246,6 +299,18 @@ func (v *VersionedBeaconState) DepositRequestsStartIndex() (uint64, error) {
 		}
 
 		return v.Fulu.DepositRequestsStartIndex, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.DepositRequestsStartIndex, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return 0, errors.New("no Heze state")
+		}
+
+		return v.Heze.DepositRequestsStartIndex, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -268,6 +333,18 @@ func (v *VersionedBeaconState) DepositBalanceToConsume() (phase0.Gwei, error) {
 		}
 
 		return v.Fulu.DepositBalanceToConsume, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.DepositBalanceToConsume, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return 0, errors.New("no Heze state")
+		}
+
+		return v.Heze.DepositBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -290,6 +367,18 @@ func (v *VersionedBeaconState) ExitBalanceToConsume() (phase0.Gwei, error) {
 		}
 
 		return v.Fulu.ExitBalanceToConsume, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.ExitBalanceToConsume, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return 0, errors.New("no Heze state")
+		}
+
+		return v.Heze.ExitBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -312,6 +401,18 @@ func (v *VersionedBeaconState) EarliestExitEpoch() (phase0.Epoch, error) {
 		}
 
 		return v.Fulu.EarliestExitEpoch, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.EarliestExitEpoch, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return 0, errors.New("no Heze state")
+		}
+
+		return v.Heze.EarliestExitEpoch, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -334,6 +435,18 @@ func (v *VersionedBeaconState) ConsolidationBalanceToConsume() (phase0.Gwei, err
 		}
 
 		return v.Fulu.ConsolidationBalanceToConsume, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.ConsolidationBalanceToConsume, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return 0, errors.New("no Heze state")
+		}
+
+		return v.Heze.ConsolidationBalanceToConsume, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -356,6 +469,18 @@ func (v *VersionedBeaconState) EarliestConsolidationEpoch() (phase0.Epoch, error
 		}
 
 		return v.Fulu.EarliestConsolidationEpoch, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.EarliestConsolidationEpoch, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return 0, errors.New("no Heze state")
+		}
+
+		return v.Heze.EarliestConsolidationEpoch, nil
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -378,6 +503,18 @@ func (v *VersionedBeaconState) PendingDeposits() ([]*electra.PendingDeposit, err
 		}
 
 		return v.Fulu.PendingDeposits, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.PendingDeposits, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return nil, errors.New("no Heze state")
+		}
+
+		return v.Heze.PendingDeposits, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -400,6 +537,18 @@ func (v *VersionedBeaconState) PendingPartialWithdrawals() ([]*electra.PendingPa
 		}
 
 		return v.Fulu.PendingPartialWithdrawals, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.PendingPartialWithdrawals, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return nil, errors.New("no Heze state")
+		}
+
+		return v.Heze.PendingPartialWithdrawals, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -422,6 +571,64 @@ func (v *VersionedBeaconState) PendingConsolidations() ([]*electra.PendingConsol
 		}
 
 		return v.Fulu.PendingConsolidations, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.PendingConsolidations, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return nil, errors.New("no Heze state")
+		}
+
+		return v.Heze.PendingConsolidations, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// Builders returns the builders of the state.
+func (v *VersionedBeaconState) Builders() ([]*gloas.Builder, error) {
+	switch v.Version {
+	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella,
+		DataVersionDeneb, DataVersionElectra, DataVersionFulu:
+		return nil, errors.New("state does not provide builders")
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.Builders, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return nil, errors.New("no Heze state")
+		}
+
+		return v.Heze.Builders, nil
+	default:
+		return nil, errors.New("unknown version")
+	}
+}
+
+// ExecutionPayloadAvailability returns the execution payload availability of the state.
+func (v *VersionedBeaconState) ExecutionPayloadAvailability() ([]uint8, error) {
+	switch v.Version {
+	case DataVersionPhase0, DataVersionAltair, DataVersionBellatrix, DataVersionCapella,
+		DataVersionDeneb, DataVersionElectra, DataVersionFulu:
+		return nil, errors.New("state does not provide execution payload availability")
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.ExecutionPayloadAvailability, nil
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return nil, errors.New("no Heze state")
+		}
+
+		return v.Heze.ExecutionPayloadAvailability, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -470,50 +677,62 @@ func (v *VersionedBeaconState) ValidatorBalance(index phase0.ValidatorIndex) (ph
 }
 
 // GetTree returns the GetTree of the specific beacon state version.
-func (v *VersionedBeaconState) GetTree() (*ssz.Node, error) {
+func (v *VersionedBeaconState) GetTree() (*treeproof.Node, error) {
 	switch v.Version {
 	case DataVersionPhase0:
 		if v.Phase0 == nil {
 			return nil, errors.New("no Phase0 state")
 		}
 
-		return v.Phase0.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Phase0)
 	case DataVersionAltair:
 		if v.Altair == nil {
 			return nil, errors.New("no Altair state")
 		}
 
-		return v.Altair.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Altair)
 	case DataVersionBellatrix:
 		if v.Bellatrix == nil {
 			return nil, errors.New("no Bellatrix state")
 		}
 
-		return v.Bellatrix.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Bellatrix)
 	case DataVersionCapella:
 		if v.Capella == nil {
 			return nil, errors.New("no Capella state")
 		}
 
-		return v.Capella.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Capella)
 	case DataVersionDeneb:
 		if v.Deneb == nil {
 			return nil, errors.New("no Deneb state")
 		}
 
-		return v.Deneb.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Deneb)
 	case DataVersionElectra:
 		if v.Electra == nil {
 			return nil, errors.New("no Electra state")
 		}
 
-		return v.Electra.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Electra)
 	case DataVersionFulu:
 		if v.Fulu == nil {
 			return nil, errors.New("no Fulu state")
 		}
 
-		return v.Fulu.GetTree()
+		return dynssz.GetGlobalDynSsz().GetTree(v.Fulu)
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas state")
+		}
+
+		return dynssz.GetGlobalDynSsz().GetTree(v.Gloas)
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return nil, errors.New("no Heze state")
+		}
+
+		return dynssz.GetGlobalDynSsz().GetTree(v.Heze)
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -564,6 +783,18 @@ func (v *VersionedBeaconState) HashTreeRoot() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.HashTreeRoot()
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return phase0.Hash32{}, errors.New("no Gloas state")
+		}
+
+		return v.Gloas.HashTreeRoot()
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return phase0.Hash32{}, errors.New("no Heze state")
+		}
+
+		return v.Heze.HashTreeRoot()
 	default:
 		return phase0.Hash32{}, errors.New("unknown version")
 	}
@@ -616,6 +847,18 @@ func (v *VersionedBeaconState) FieldIndex(name string) (int, error) {
 		}
 
 		return proofutil.FieldIndex(v.Fulu, name)
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return proofutil.FieldIndex(v.Gloas, name)
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return 0, errors.New("no Heze state")
+		}
+
+		return proofutil.FieldIndex(v.Heze, name)
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -669,6 +912,18 @@ func (v *VersionedBeaconState) FieldGeneralizedIndex(name string) (int, error) {
 		}
 
 		return proofutil.FieldGeneralizedIndex(v.Fulu, name)
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return 0, errors.New("no Gloas state")
+		}
+
+		return proofutil.FieldGeneralizedIndex(v.Gloas, name)
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return 0, errors.New("no Heze state")
+		}
+
+		return proofutil.FieldGeneralizedIndex(v.Heze, name)
 	default:
 		return 0, errors.New("unknown version")
 	}
@@ -694,7 +949,7 @@ func (v *VersionedBeaconState) FieldRoot(name string) (phase0.Hash32, error) {
 }
 
 // FieldTree returns the Merkle subtree for a specific field in the beacon state.
-func (v *VersionedBeaconState) FieldTree(name string) (*ssz.Node, error) {
+func (v *VersionedBeaconState) FieldTree(name string) (*treeproof.Node, error) {
 	stateTree, err := v.GetTree()
 	if err != nil {
 		return nil, err
@@ -774,13 +1029,13 @@ func (v *VersionedBeaconState) VerifyFieldProof(proof []phase0.Hash32, name stri
 	}
 
 	// Create and verify the proof
-	sszProof := &ssz.Proof{
+	sszProof := &treeproof.Proof{
 		Index:  fieldGeneralizedIndex,
 		Leaf:   fieldRoot[:],
 		Hashes: proofHashes,
 	}
 
-	return ssz.VerifyProof(stateRoot[:], sszProof)
+	return treeproof.VerifyProof(stateRoot[:], sszProof)
 }
 
 // String returns a string version of the structure.
@@ -828,6 +1083,18 @@ func (v *VersionedBeaconState) String() string {
 		}
 
 		return v.Fulu.String()
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return ""
+		}
+
+		return v.Gloas.String()
+	case DataVersionHeze:
+		if v.Heze == nil {
+			return ""
+		}
+
+		return v.Heze.String()
 	default:
 		return "unknown version"
 	}

@@ -48,6 +48,7 @@ func TestSpecConformance(t *testing.T) {
 		"DOMAIN_SELECTION_PROOF":                phase0.DomainType{},
 		"DOMAIN_VOLUNTARY_EXIT":                 phase0.DomainType{},
 		"DOMAIN_APPLICATION_BUILDER":            phase0.DomainType{},
+		"DOMAIN_PROPOSER_PREFERENCES":           phase0.DomainType{},
 		"EFFECTIVE_BALANCE_INCREMENT":           uint64(0),
 		"EJECTION_BALANCE":                      uint64(0),
 		"EPOCHS_PER_ETH1_VOTING_PERIOD":         uint64(0),

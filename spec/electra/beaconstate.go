@@ -25,8 +25,6 @@ import (
 )
 
 // BeaconState represents a beacon state.
-//
-//nolint:revive
 type BeaconState struct {
 	GenesisTime                   uint64
 	GenesisValidatorsRoot         phase0.Root `ssz-size:"32"`

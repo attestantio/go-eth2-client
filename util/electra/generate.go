@@ -13,8 +13,5 @@
 
 package electra
 
-//nolint:revive
-// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f depositreceipts_ssz.go withdrawalrequests_ssz.go
-//go:generate sszgen -suffix ssz -include ../../spec/phase0,../../spec/bellatrix,../../spec/electra -path . -objs DepositReceipts,ExecutionPayloadWithdrawalRequests
-//go:generate goimports -w depositreceipts_ssz.go withdrawalrequests_ssz.go
+//go:generate rm -f *_ssz.go
+//go:generate go tool dynssz-gen -config generate.yaml

@@ -13,8 +13,5 @@
 
 package bellatrix
 
-//nolint:revive
-// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f beaconblock_ssz.go beaconblockbody_ssz.go beaconstate_ssz.go executionpayload_ssz.go executionpayloadheader_ssz.go signedbeaconblock_ssz.go
-//go:generate sszgen -suffix ssz -include ../phase0,../altair -path . -objs BeaconBlock,BeaconBlockBody,BeaconState,ExecutionPayload,ExecutionPaylodHeader,SignedBeaconBlock
-//go:generate goimports -w beaconblock_ssz.go beaconblockbody_ssz.go beaconstate_ssz.go executionpayload_ssz.go executionpayloadheader_ssz.go signedbeaconblock_ssz.go
+//go:generate rm -f *_ssz.go
+//go:generate go tool dynssz-gen -config generate.yaml

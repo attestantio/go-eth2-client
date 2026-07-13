@@ -19,8 +19,8 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/goccy/go-yaml"
-	require "github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/assert"
+	require "github.com/stretchr/testify/require"
 )
 
 func TestBlobIdentifierJSON(t *testing.T) {

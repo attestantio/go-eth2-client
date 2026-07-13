@@ -1,0 +1,41 @@
+package: .
+legacy: true
+without-dynamic-expressions: true
+
+types:
+  - name: AggregateAndProof
+    output: aggregateandproof_ssz.go
+  - name: Attestation
+    output: attestation_ssz.go
+  - name: AttesterSlashing
+    output: attesterslashing_ssz.go
+  - name: BeaconBlockBody
+    output: beaconblockbody_ssz.go
+  - name: BeaconBlock
+    output: beaconblock_ssz.go
+  - name: BeaconState
+    output: beaconstate_ssz.go
+  - name: Consolidation
+    output: consolidation_ssz.go
+  - name: ConsolidationRequest
+    output: consolidationrequest_ssz.go
+  - name: DepositRequest
+    output: depositrequest_ssz.go
+  - name: WithdrawalRequest
+    output: withdrawalrequest_ssz.go
+  - name: ExecutionRequests
+    output: executionrequests_ssz.go
+  - name: IndexedAttestation
+    output: indexedattestation_ssz.go
+  - name: PendingConsolidation
+    output: pendingconsolidation_ssz.go
+  - name: PendingDeposit
+    output: pendingdeposit_ssz.go
+  - name: PendingPartialWithdrawal
+    output: pendingpartialwithdrawal_ssz.go
+  - name: SignedAggregateAndProof
+    output: signedaggregateandproof_ssz.go
+  - name: SignedBeaconBlock
+    output: signedbeaconblock_ssz.go
+  - name: SingleAttestation
+    output: singleattestation_ssz.go

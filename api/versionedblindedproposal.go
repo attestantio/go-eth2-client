@@ -31,6 +31,7 @@ type VersionedBlindedProposal struct {
 	Deneb     *apiv1deneb.BlindedBeaconBlock
 	Electra   *apiv1electra.BlindedBeaconBlock
 	Fulu      *apiv1electra.BlindedBeaconBlock
+	Gloas     *apiv1electra.BlindedBeaconBlock
 }
 
 // IsEmpty returns true if there is no proposal.

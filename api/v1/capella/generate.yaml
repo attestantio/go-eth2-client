@@ -1,0 +1,11 @@
+package: .
+legacy: true
+without-dynamic-expressions: true
+
+types:
+  - name: BlindedBeaconBlockBody
+    output: blindedbeaconblockbody_ssz.go
+  - name: BlindedBeaconBlock
+    output: blindedbeaconblock_ssz.go
+  - name: SignedBlindedBeaconBlock
+    output: signedblindedbeaconblock_ssz.go

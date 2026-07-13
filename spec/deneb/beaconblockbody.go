@@ -23,8 +23,6 @@ import (
 )
 
 // BeaconBlockBody represents the body of a beacon block.
-//
-//nolint:revive
 type BeaconBlockBody struct {
 	RANDAOReveal          phase0.BLSSignature `ssz-size:"96"`
 	ETH1Data              *phase0.ETH1Data
