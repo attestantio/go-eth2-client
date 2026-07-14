@@ -13,5 +13,6 @@
 
 package bellatrix
 
+//nolint:revive
 //go:generate rm -f beaconblock_ssz.go beaconblockbody_ssz.go beaconstate_ssz.go executionpayload_ssz.go executionpayloadheader_ssz.go signedbeaconblock_ssz.go
 //go:generate go tool dynssz-gen -config generate.yaml

@@ -13,5 +13,6 @@
 
 package deneb
 
+//nolint:revive
 //go:generate rm -f beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go blobidentifier_ssz.go blobsidecar_ssz.go executionpayload_ssz.go executionpayloadheader_ssz.go signedbeaconblock_ssz.go
 //go:generate go tool dynssz-gen -config generate.yaml

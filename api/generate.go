@@ -13,5 +13,6 @@
 
 package api
 
+//nolint:revive
 //go:generate rm -f blobsidecars_ssz.go versionedblindedbeaconblock_ssz.go versionedsignedblindedbeaconblock_ssz.go versionedsignedvalidatorregistration_ssz.go
 //go:generate go tool dynssz-gen -config generate.yaml

@@ -13,5 +13,6 @@
 
 package altair
 
+//nolint:revive
 //go:generate rm -f beaconblock_ssz.go beaconblockbody_ssz.go beaconstate_ssz.go contributionandproof_ssz.go signedbeaconblock_ssz.go signedcontributionandproof_ssz.go syncaggregate_ssz.go syncaggregatorselectiondata_ssz.go synccommittee_ssz.go synccommitteecontribution_ssz.go synccommitteemessage_ssz.go
 //go:generate go tool dynssz-gen -config generate.yaml

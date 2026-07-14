@@ -13,5 +13,6 @@
 
 package electra
 
+//nolint:revive
 //go:generate rm -f aggregateandproof_ssz.go attestation_ssz.go attesterslashing_ssz.go beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go consolidation_ssz.go consolidationrequest_ssz.go depositrequest_ssz.go withdrawalrequest_ssz.go executionrequests_ssz.go indexedattestation_ssz.go pendingconsolidation_ssz.go pendingdeposit_ssz.go pendingpartialwithdrawal_ssz.go signedaggregateandproof_ssz.go signedbeaconblock_ssz.go singleattestation_ssz.go
 //go:generate go tool dynssz-gen -config generate.yaml

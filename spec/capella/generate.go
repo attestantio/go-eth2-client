@@ -13,5 +13,6 @@
 
 package capella
 
+//nolint:revive
 //go:generate rm -f beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go blstoexecutionchange_ssz.go executionpayloadheader_ssz.go executionpayload_ssz.go historicalsummary_ssz.go signedbeaconblock_ssz.go signedblstoexecutionchange_ssz.go withdrawal_ssz.go
 //go:generate go tool dynssz-gen -config generate.yaml
