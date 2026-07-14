@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2023 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,7 +14,6 @@
 package deneb
 
 //nolint:revive
-// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
-//go:generate rm -f blindedbeaconblock_ssz.go blindedbeaconblockbody_ssz.go blindedblobsidecar_ssz.go blindedblockcontents_ssz.go blockcontents_ssz.go signedblindedbeaconblock_ssz.go signedblindedblockcontents_ssz.go signedblockcontents_ssz.go
-//go:generate sszgen --include ../../../spec/phase0,../../../spec/altair,../../../spec/bellatrix,../../../spec/capella,../../../spec/deneb -path . --suffix ssz -objs BlindedBeaconBlock,BlindedBeaconBlockBody,BlindedBlobSidecar,BlindedBlockContents,BlockContents,SignedBlindedBeaconBlock,SignedBlindedBlockContents,SignedBlockContents
-//go:generate goimports -w blindedbeaconblock_ssz.go blindedbeaconblockbody_ssz.go blindedblobsidecar_ssz.go blindedblockcontents_ssz.go blockcontents_ssz.go signedblindedbeaconblock_ssz.go signedblindedblockcontents_ssz.go,signedblockcontents_ssz.go
+// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
+//go:generate rm -f blindedbeaconblock_ssz.go blindedbeaconblockbody_ssz.go blockcontents_ssz.go signedblindedbeaconblock_ssz.go signedblockcontents_ssz.go
+//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types BlindedBeaconBlockBody:blindedbeaconblockbody_ssz.go,BlindedBeaconBlock:blindedbeaconblock_ssz.go,BlockContents:blockcontents_ssz.go,SignedBlindedBeaconBlock:signedblindedbeaconblock_ssz.go,SignedBlockContents:signedblockcontents_ssz.go

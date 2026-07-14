@@ -1,4 +1,4 @@
-// Copyright © 2023, 2025 Attestant Limited.
+// Copyright © 2023 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,6 +16,7 @@ package deneb
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 
 	"github.com/pkg/errors"
 )
@@ -24,7 +25,25 @@ import (
 const kzgCommitmentProofElements = 17
 
 // KZGCommitmentInclusionProof is the proof of inclusion for a KZG commitment.
-type KZGCommitmentInclusionProof [kzgCommitmentProofElements]KZGCommitmentInclusionProofElement
+type KZGCommitmentInclusionProof []KZGCommitmentInclusionProofElement
+
+// MarshalJSON implements json.Marshaler.
+//
+// The proof was historically a fixed-size [17]element array, which always serialized as
+// exactly 17 hex strings.  As a slice, a nil/short proof would otherwise serialize as
+// "null" (or a truncated list), which fails to round-trip through UnmarshalJSON.  We
+// therefore always emit exactly kzgCommitmentProofElements entries, zero-filling a short
+// proof and rejecting an over-long one, preserving the original wire format.
+func (k KZGCommitmentInclusionProof) MarshalJSON() ([]byte, error) {
+	if len(k) > kzgCommitmentProofElements {
+		return nil, errors.New("incorrect number of elements")
+	}
+
+	proof := make([]KZGCommitmentInclusionProofElement, kzgCommitmentProofElements)
+	copy(proof, k)
+
+	return json.Marshal(proof)
+}
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (k *KZGCommitmentInclusionProof) UnmarshalJSON(input []byte) error {
@@ -40,6 +59,8 @@ func (k *KZGCommitmentInclusionProof) UnmarshalJSON(input []byte) error {
 	if len(values) != kzgCommitmentProofElements {
 		return errors.New("incorrect number of elements")
 	}
+
+	*k = make(KZGCommitmentInclusionProof, kzgCommitmentProofElements)
 
 	for i := range values {
 		if err := k.unmarshalElementJSON(i, bytes.TrimSpace(values[i])); err != nil {
@@ -63,7 +84,7 @@ func (k *KZGCommitmentInclusionProof) unmarshalElementJSON(element int, input []
 		return errors.New("incorrect element length")
 	}
 
-	_, err := hex.Decode(k[element][:], input[3:3+kzgCommitmentProofElementLength*2])
+	_, err := hex.Decode((*k)[element][:], input[3:3+kzgCommitmentProofElementLength*2])
 	if err != nil {
 		return errors.Wrapf(err, "invalid value %s", string(input[3:3+kzgCommitmentProofElementLength*2]))
 	}

@@ -1,3 +1,6 @@
+0.29.0:
+  - use dynssz library for SSZ handling
+
 0.28.1:
   - update to HTTP tests
   - add beacon committee selections endpoint for distributed validators

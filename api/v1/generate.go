@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,7 +14,8 @@
 package v1
 
 //nolint:revive
-// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
+// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
+// Blobs SSZ is hand-crafted in blobs_ssz.go against a dynssz.TypeWrapper, as the bare named
+// slice cannot carry the ssz-max:"72" tag that codegen needs (mirroring api.BlobSidecars).
 //go:generate rm -f signedvalidatorregistration_ssz.go validatorregistration_ssz.go
-//go:generate sszgen -suffix ssz -include ../../spec/phase0,../../spec/altair,../../spec/bellatrix -path . -objs SignedValidatorRegistration,ValidatorRegistration
-//go:generate goimports -w signedvalidatorregistration_ssz.go validatorregistration_ssz.go
+//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types SignedValidatorRegistration:signedvalidatorregistration_ssz.go,ValidatorRegistration:validatorregistration_ssz.go

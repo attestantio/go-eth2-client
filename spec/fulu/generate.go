@@ -1,4 +1,4 @@
-// Copyright © 2025 Attestant Limited.
+// Copyright © 2025 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,8 +13,6 @@
 
 package fulu
 
-// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
+// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
 //go:generate rm -f beaconstate_ssz.go
-//nolint:revive
-//go:generate sszgen --suffix=ssz --path . --include ../phase0,../altair,../bellatrix,../capella,../deneb,../electra --objs BeaconState
-//go:generate goimports -w beaconstate_ssz.go
+//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types BeaconState:beaconstate_ssz.go

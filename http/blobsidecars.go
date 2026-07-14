@@ -22,6 +22,7 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	dynssz "github.com/pk910/dynamic-ssz"
 )
 
 // BlobSidecars fetches the blobs sidecars given options.
@@ -54,7 +55,7 @@ func (s *Service) BlobSidecars(ctx context.Context,
 
 	switch httpResponse.contentType {
 	case ContentTypeSSZ:
-		response, err = s.blobSidecarsFromSSZ(httpResponse)
+		response, err = s.blobSidecarsFromSSZ(ctx, httpResponse)
 	case ContentTypeJSON:
 		response, err = s.blobSidecarsFromJSON(httpResponse)
 	default:
@@ -68,7 +69,7 @@ func (s *Service) BlobSidecars(ctx context.Context,
 	return response, nil
 }
 
-func (*Service) blobSidecarsFromSSZ(res *httpResponse) (*api.Response[[]*deneb.BlobSidecar], error) {
+func (s *Service) blobSidecarsFromSSZ(ctx context.Context, res *httpResponse) (*api.Response[[]*deneb.BlobSidecar], error) {
 	response := &api.Response[[]*deneb.BlobSidecar]{}
 
 	if len(res.body) == 0 {
@@ -80,7 +81,19 @@ func (*Service) blobSidecarsFromSSZ(res *httpResponse) (*api.Response[[]*deneb.B
 	}
 
 	data := &api.BlobSidecars{}
-	if err := data.UnmarshalSSZ(res.body); err != nil {
+
+	var err error
+	if s.customSpecSupport {
+		var specs *api.Response[map[string]any]
+		if specs, err = s.Spec(ctx, &api.SpecOpts{}); err != nil {
+			return nil, errors.Join(errors.New("failed to request specs"), err)
+		}
+		err = data.UnmarshalSSZDyn(dynssz.NewDynSsz(specs.Data), res.body)
+	} else {
+		err = data.UnmarshalSSZ(res.body)
+	}
+
+	if err != nil {
 		return nil, errors.Join(errors.New("failed to decode blob sidecars"), err)
 	}
 

@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2023 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -27,7 +27,7 @@ type BlobSidecar struct {
 	KZGCommitment               KZGCommitment `ssz-size:"48"`
 	KZGProof                    KZGProof      `ssz-size:"48"`
 	SignedBlockHeader           *phase0.SignedBeaconBlockHeader
-	KZGCommitmentInclusionProof KZGCommitmentInclusionProof `ssz-size:"544"`
+	KZGCommitmentInclusionProof KZGCommitmentInclusionProof `dynssz-size:"KZG_COMMITMENT_INCLUSION_PROOF_DEPTH,32" ssz-size:"17,32"`
 }
 
 // String returns a string version of the structure.

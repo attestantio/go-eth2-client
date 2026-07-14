@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2023 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,8 +23,8 @@ import (
 // SignedBlockContents represents the contents of a block, both block and blob.
 type SignedBlockContents struct {
 	SignedBlock *deneb.SignedBeaconBlock
-	KZGProofs   []deneb.KZGProof `ssz-max:"4096" ssz-size:"?,48"`
-	Blobs       []deneb.Blob     `ssz-max:"4096" ssz-size:"?,131072"`
+	KZGProofs   []deneb.KZGProof `dynssz-max:"MAX_BLOB_COMMITMENTS_PER_BLOCK" ssz-max:"4096" ssz-size:"?,48"`
+	Blobs       []deneb.Blob     `dynssz-max:"MAX_BLOB_COMMITMENTS_PER_BLOCK" ssz-max:"4096" ssz-size:"?,131072"`
 }
 
 // String returns a string version of the structure.

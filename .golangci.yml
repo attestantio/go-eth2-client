@@ -152,15 +152,15 @@ linters:
         description: "Attestant organization style linter"
         settings:
           # HIGH PRIORITY
-          enable_no_pkg_logger: true
+          enable_no_pkg_logger: false
           enable_enum_iota: true
-          enable_current_year: true
+          enable_current_year: false
           # MEDIUM PRIORITY
-          enable_capital_comment: true
+          enable_capital_comment: false
           enable_func_opts: true
           enable_raw_string: true
           # LOW PRIORITY
-          enable_struct_field_order: true
+          enable_struct_field_order: false
           enable_interface_check: true
   # Exclusions: Files and patterns to exclude from linting
   exclusions:

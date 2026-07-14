@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,7 +14,6 @@
 package capella
 
 //nolint:revive
-// Need to `go install github.com/ferranbt/fastssz/sszgen@latest` for this to work.
+// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
 //go:generate rm -f blindedbeaconblockbody_ssz.go blindedbeaconblock_ssz.go signedblindedbeaconblock_ssz.go
-//go:generate sszgen --include ../../../spec/phase0,../../../spec/altair,../../../spec/bellatrix,../../../spec/capella -path . --suffix ssz -objs BlindedBeaconBlockBody,BlindedBeaconBlock,SignedBlindedBeaconBlock
-//go:generate goimports -w blindedbeaconblockbody_ssz.go blindedbeaconblock_ssz.go signedblindedbeaconblock_ssz.go
+//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types BlindedBeaconBlockBody:blindedbeaconblockbody_ssz.go,BlindedBeaconBlock:blindedbeaconblock_ssz.go,SignedBlindedBeaconBlock:signedblindedbeaconblock_ssz.go
