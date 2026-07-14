@@ -15,7 +15,7 @@ package api
 
 import (
 	"github.com/attestantio/go-eth2-client/spec/deneb"
-	dynssz "github.com/pk910/dynamic-ssz"
+	"github.com/pk910/dynamic-ssz/sszutils"
 )
 
 // BlobSidecars is an API construct to allow decoding an array of blob sidecars.
@@ -23,50 +23,4 @@ type BlobSidecars struct {
 	Sidecars []*deneb.BlobSidecar
 }
 
-// blobSidecarsSSZ is the SSZ wrapper for the BlobSidecars object.
-type blobSidecarsSSZ = dynssz.TypeWrapper[struct {
-	Sidecars []*deneb.BlobSidecar `ssz-max:"72"`
-}, []*deneb.BlobSidecar]
-
-// UnmarshalSSZ ssz unmarshals the BlobSidecars object.
-func (b *BlobSidecars) UnmarshalSSZ(buf []byte) error {
-	return b.UnmarshalSSZDyn(dynssz.GetGlobalDynSsz(), buf)
-}
-
-// UnmarshalSSZDyn ssz unmarshals the BlobSidecars object using the supplied dynamic SSZ instance,
-// allowing the caller to decode against a custom (non-mainnet) spec rather than the mainnet global.
-func (b *BlobSidecars) UnmarshalSSZDyn(dynSSZ *dynssz.DynSsz, buf []byte) error {
-	blobs := blobSidecarsSSZ{}
-	if err := dynSSZ.UnmarshalSSZ(&blobs, buf); err != nil {
-		return err
-	}
-
-	b.Sidecars = blobs.Data
-
-	return nil
-}
-
-// MarshalSSZ ssz marshals the BlobSidecars object.
-func (b *BlobSidecars) MarshalSSZ() ([]byte, error) {
-	return dynssz.GetGlobalDynSsz().MarshalSSZ(&blobSidecarsSSZ{
-		Data: b.Sidecars,
-	})
-}
-
-// SizeSSZ returns the size of the BlobSidecars object.
-func (b *BlobSidecars) SizeSSZ() int {
-	// The error can only be non-nil for a structurally invalid type, which cannot
-	// happen for this wrapper, so it is safe to discard here.
-	size, _ := dynssz.GetGlobalDynSsz().SizeSSZ(&blobSidecarsSSZ{
-		Data: b.Sidecars,
-	})
-
-	return size
-}
-
-// HashTreeRoot ssz hashes the BlobSidecars object.
-func (b *BlobSidecars) HashTreeRoot() ([32]byte, error) {
-	return dynssz.GetGlobalDynSsz().HashTreeRoot(&blobSidecarsSSZ{
-		Data: b.Sidecars,
-	})
-}
+var _ = sszutils.Annotate[BlobSidecars](`ssz-type:"wrapper"`)

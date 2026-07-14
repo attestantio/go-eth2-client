@@ -3,6 +3,8 @@ legacy: true
 without-dynamic-expressions: true
 
 types:
+  - name: BlobSidecars
+    output: blobsidecars_ssz.go
   - name: VersionedBlindedBeaconBlock
     output: versionedblindedbeaconblock_ssz.go
   - name: VersionedSignedBlindedBeaconBlock
