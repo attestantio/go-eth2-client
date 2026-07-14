@@ -88,7 +88,8 @@ func (s *Service) blobSidecarsFromSSZ(ctx context.Context, res *httpResponse) (*
 		if specs, err = s.Spec(ctx, &api.SpecOpts{}); err != nil {
 			return nil, errors.Join(errors.New("failed to request specs"), err)
 		}
-		err = data.UnmarshalSSZDyn(dynssz.NewDynSsz(specs.Data), res.body)
+		dynSsz := dynssz.NewDynSsz(specs.Data)
+		err = dynSsz.UnmarshalSSZ(data, res.body)
 	} else {
 		err = data.UnmarshalSSZ(res.body)
 	}
