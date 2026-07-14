@@ -1,4 +1,4 @@
-// Copyright © 2022, 2023 Attestant Limited.
+// Copyright © 2022 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,5 +13,5 @@
 
 package capella
 
-//go:generate rm -f *_ssz.go
+//go:generate rm -f beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go blstoexecutionchange_ssz.go executionpayloadheader_ssz.go executionpayload_ssz.go historicalsummary_ssz.go signedbeaconblock_ssz.go signedblstoexecutionchange_ssz.go withdrawal_ssz.go
 //go:generate go tool dynssz-gen -config generate.yaml

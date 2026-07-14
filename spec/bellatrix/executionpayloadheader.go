@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2022 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -92,7 +92,8 @@ func (e *ExecutionPayloadHeader) MarshalJSON() ([]byte, error) {
 	// big-endian for big.Int.
 	var baseFeePerGasBEBytes [32]byte
 	for i := range 32 {
-		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i]
+		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i] //nolint:gosec
+		// G602: slice index out of range - no it isn't.
 	}
 
 	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
@@ -136,7 +137,8 @@ func (e *ExecutionPayloadHeader) MarshalYAML() ([]byte, error) {
 	// big-endian for big.Int.
 	var baseFeePerGasBEBytes [32]byte
 	for i := range 32 {
-		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i]
+		baseFeePerGasBEBytes[i] = e.BaseFeePerGas[32-1-i] //nolint:gosec
+		// G602: slice index out of range - no it isn't.
 	}
 
 	baseFeePerGas := new(big.Int).SetBytes(baseFeePerGasBEBytes[:])
@@ -383,7 +385,8 @@ func (e *ExecutionPayloadHeader) unpack(data *executionPayloadHeaderJSON) error 
 
 	baseFeeLen := len(baseFeePerGasBEBytes)
 	for i := range baseFeeLen {
-		baseFeePerGasLEBytes[i] = baseFeePerGasBEBytes[baseFeeLen-1-i]
+		baseFeePerGasLEBytes[i] = baseFeePerGasBEBytes[baseFeeLen-1-i] //nolint:gosec
+		// G602: slice index out of range - no it isn't.
 	}
 
 	copy(e.BaseFeePerGas[:], baseFeePerGasLEBytes[:])

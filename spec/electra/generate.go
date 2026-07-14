@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2023 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,5 +13,5 @@
 
 package electra
 
-//go:generate rm -f *_ssz.go
+//go:generate rm -f aggregateandproof_ssz.go attestation_ssz.go attesterslashing_ssz.go beaconblockbody_ssz.go beaconblock_ssz.go beaconstate_ssz.go consolidation_ssz.go consolidationrequest_ssz.go depositrequest_ssz.go withdrawalrequest_ssz.go executionrequests_ssz.go indexedattestation_ssz.go pendingconsolidation_ssz.go pendingdeposit_ssz.go pendingpartialwithdrawal_ssz.go signedaggregateandproof_ssz.go signedbeaconblock_ssz.go singleattestation_ssz.go
 //go:generate go tool dynssz-gen -config generate.yaml

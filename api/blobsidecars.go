@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2023 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -30,8 +30,14 @@ type blobSidecarsSSZ = dynssz.TypeWrapper[struct {
 
 // UnmarshalSSZ ssz unmarshals the BlobSidecars object.
 func (b *BlobSidecars) UnmarshalSSZ(buf []byte) error {
+	return b.UnmarshalSSZDyn(dynssz.GetGlobalDynSsz(), buf)
+}
+
+// UnmarshalSSZDyn ssz unmarshals the BlobSidecars object using the supplied dynamic SSZ instance,
+// allowing the caller to decode against a custom (non-mainnet) spec rather than the mainnet global.
+func (b *BlobSidecars) UnmarshalSSZDyn(dynSSZ *dynssz.DynSsz, buf []byte) error {
 	blobs := blobSidecarsSSZ{}
-	if err := dynssz.GetGlobalDynSsz().UnmarshalSSZ(&blobs, buf); err != nil {
+	if err := dynSSZ.UnmarshalSSZ(&blobs, buf); err != nil {
 		return err
 	}
 
@@ -49,6 +55,8 @@ func (b *BlobSidecars) MarshalSSZ() ([]byte, error) {
 
 // SizeSSZ returns the size of the BlobSidecars object.
 func (b *BlobSidecars) SizeSSZ() int {
+	// The error can only be non-nil for a structurally invalid type, which cannot
+	// happen for this wrapper, so it is safe to discard here.
 	size, _ := dynssz.GetGlobalDynSsz().SizeSSZ(&blobSidecarsSSZ{
 		Data: b.Sidecars,
 	})
