@@ -18,10 +18,13 @@ import (
 	"fmt"
 
 	"github.com/attestantio/go-eth2-client/spec/deneb"
+	"github.com/pk910/dynamic-ssz/sszutils"
 )
 
 // Blobs represents a list of blobs.
 type Blobs []*deneb.Blob
+
+var _ = sszutils.Annotate[Blobs](`ssz-max:"72"`)
 
 // String returns a string version of the structure.
 func (b *Blobs) String() string {

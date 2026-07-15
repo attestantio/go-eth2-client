@@ -87,7 +87,7 @@ func (s *Service) blobsFromSSZ(ctx context.Context, res *httpResponse) (*api.Res
 			return nil, errors.Join(errors.New("failed to request specs"), err)
 		}
 		dynSsz := dynssz.NewDynSsz(specs.Data)
-		err = dynSsz.UnmarshalSSZ(response.Data, res.body)
+		err = dynSsz.UnmarshalSSZ(&response.Data, res.body)
 	} else {
 		err = response.Data.UnmarshalSSZ(res.body)
 	}

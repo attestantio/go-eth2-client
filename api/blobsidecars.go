@@ -20,7 +20,7 @@ import (
 
 // BlobSidecars is an API construct to allow decoding an array of blob sidecars.
 type BlobSidecars struct {
-	Sidecars []*deneb.BlobSidecar
+	Sidecars []*deneb.BlobSidecar `ssz-max:"72"`
 }
 
 var _ = sszutils.Annotate[BlobSidecars](`ssz-type:"wrapper"`)
