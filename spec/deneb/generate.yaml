@@ -1,0 +1,21 @@
+package: .
+legacy: true
+without-dynamic-expressions: true
+
+types:
+  - name: BeaconBlockBody
+    output: beaconblockbody_ssz.go
+  - name: BeaconBlock
+    output: beaconblock_ssz.go
+  - name: BeaconState
+    output: beaconstate_ssz.go
+  - name: BlobIdentifier
+    output: blobidentifier_ssz.go
+  - name: BlobSidecar
+    output: blobsidecar_ssz.go
+  - name: ExecutionPayload
+    output: executionpayload_ssz.go
+  - name: ExecutionPayloadHeader
+    output: executionpayloadheader_ssz.go
+  - name: SignedBeaconBlock
+    output: signedbeaconblock_ssz.go

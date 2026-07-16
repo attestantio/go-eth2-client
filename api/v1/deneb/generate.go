@@ -14,6 +14,5 @@
 package deneb
 
 //nolint:revive
-// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
 //go:generate rm -f blindedbeaconblock_ssz.go blindedbeaconblockbody_ssz.go blockcontents_ssz.go signedblindedbeaconblock_ssz.go signedblockcontents_ssz.go
-//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types BlindedBeaconBlockBody:blindedbeaconblockbody_ssz.go,BlindedBeaconBlock:blindedbeaconblock_ssz.go,BlockContents:blockcontents_ssz.go,SignedBlindedBeaconBlock:signedblindedbeaconblock_ssz.go,SignedBlockContents:signedblockcontents_ssz.go
+//go:generate go tool dynssz-gen -config generate.yaml

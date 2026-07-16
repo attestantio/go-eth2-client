@@ -14,6 +14,5 @@
 package bellatrix
 
 //nolint:revive
-// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
 //go:generate rm -f beaconblock_ssz.go beaconblockbody_ssz.go beaconstate_ssz.go executionpayload_ssz.go executionpayloadheader_ssz.go signedbeaconblock_ssz.go
-//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types BeaconBlock:beaconblock_ssz.go,BeaconBlockBody:beaconblockbody_ssz.go,BeaconState:beaconstate_ssz.go,ExecutionPayload:executionpayload_ssz.go,ExecutionPayloadHeader:executionpayloadheader_ssz.go,SignedBeaconBlock:signedbeaconblock_ssz.go
+//go:generate go tool dynssz-gen -config generate.yaml

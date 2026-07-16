@@ -13,7 +13,5 @@
 
 package capella
 
-//nolint:revive
-// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
 //go:generate rm -f blindedbeaconblockbody_ssz.go blindedbeaconblock_ssz.go signedblindedbeaconblock_ssz.go
-//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types BlindedBeaconBlockBody:blindedbeaconblockbody_ssz.go,BlindedBeaconBlock:blindedbeaconblock_ssz.go,SignedBlindedBeaconBlock:signedblindedbeaconblock_ssz.go
+//go:generate go tool dynssz-gen -config generate.yaml

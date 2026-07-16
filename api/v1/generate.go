@@ -13,9 +13,5 @@
 
 package v1
 
-//nolint:revive
-// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
-// Blobs SSZ is hand-crafted in blobs_ssz.go against a dynssz.TypeWrapper, as the bare named
-// slice cannot carry the ssz-max:"72" tag that codegen needs (mirroring api.BlobSidecars).
-//go:generate rm -f signedvalidatorregistration_ssz.go validatorregistration_ssz.go
-//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types SignedValidatorRegistration:signedvalidatorregistration_ssz.go,ValidatorRegistration:validatorregistration_ssz.go
+//go:generate rm -f blobs_ssz.go signedvalidatorregistration_ssz.go validatorregistration_ssz.go
+//go:generate go tool dynssz-gen -config generate.yaml

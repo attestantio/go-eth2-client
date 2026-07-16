@@ -14,4 +14,4 @@
 package capella
 
 //go:generate rm -f withdrawals_ssz.go
-//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types ExecutionPayloadWithdrawals:withdrawals_ssz.go
+//go:generate go tool dynssz-gen -config generate.yaml

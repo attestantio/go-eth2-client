@@ -1,0 +1,7 @@
+package: .
+legacy: true
+without-dynamic-expressions: true
+
+types:
+  - name: BeaconBlockBlob
+    output: blob_ssz.go

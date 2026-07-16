@@ -12,7 +12,7 @@ require (
 	github.com/holiman/uint256 v1.3.2
 	github.com/huandu/go-clone v1.6.0
 	github.com/huandu/go-clone/generic v1.6.0
-	github.com/pk910/dynamic-ssz v1.3.0
+	github.com/pk910/dynamic-ssz v1.3.2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.16.0
 	github.com/r3labs/sse/v2 v2.10.0
@@ -38,15 +38,17 @@ require (
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
-	github.com/pk910/hashtree-bindings v0.1.0 // indirect
+	github.com/pk910/hashtree-bindings v0.2.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.10.1 // indirect
 	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	go.opentelemetry.io/otel/metric v1.16.0 // indirect
-	golang.org/x/net v0.44.0 // indirect
+	golang.org/x/mod v0.23.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
 	golang.org/x/sys v0.36.0 // indirect
+	golang.org/x/tools v0.30.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/cenkalti/backoff.v1 v1.1.0 // indirect
@@ -57,3 +59,5 @@ retract (
 	v1.15.2 // Retraction for 1.15.1.
 	v1.15.1 // Incorrect release number.
 )
+
+tool github.com/pk910/dynamic-ssz/dynssz-gen

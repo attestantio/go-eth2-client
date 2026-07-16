@@ -1,0 +1,11 @@
+package: .
+legacy: true
+without-dynamic-expressions: true
+
+types:
+  - name: ConsolidationRequests
+    output: consolidation_requests_ssz.go
+  - name: DepositRequests
+    output: depositrequests_ssz.go
+  - name: WithdrawalRequests
+    output: withdrawalrequests_ssz.go

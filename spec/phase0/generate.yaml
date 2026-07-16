@@ -1,0 +1,55 @@
+package: .
+legacy: true
+without-dynamic-expressions: true
+
+types:
+  - name: AggregateAndProof
+    output: aggregateandproof_ssz.go
+  - name: AttestationData
+    output: attestationdata_ssz.go
+  - name: Attestation
+    output: attestation_ssz.go
+  - name: AttesterSlashing
+    output: attesterslashing_ssz.go
+  - name: BeaconBlockBody
+    output: beaconblockbody_ssz.go
+  - name: BeaconBlock
+    output: beaconblock_ssz.go
+  - name: BeaconBlockHeader
+    output: beaconblockheader_ssz.go
+  - name: BeaconState
+    output: beaconstate_ssz.go
+  - name: Checkpoint
+    output: checkpoint_ssz.go
+  - name: DepositData
+    output: depositdata_ssz.go
+  - name: Deposit
+    output: deposit_ssz.go
+  - name: DepositMessage
+    output: depositmessage_ssz.go
+  - name: ETH1Data
+    output: eth1data_ssz.go
+  - name: ForkData
+    output: forkdata_ssz.go
+  - name: Fork
+    output: fork_ssz.go
+  - name: IndexedAttestation
+    output: indexedattestation_ssz.go
+  - name: PendingAttestation
+    output: pendingattestation_ssz.go
+  - name: ProposerSlashing
+    output: proposerslashing_ssz.go
+  - name: SignedAggregateAndProof
+    output: signedaggregateandproof_ssz.go
+  - name: SignedBeaconBlock
+    output: signedbeaconblock_ssz.go
+  - name: SignedBeaconBlockHeader
+    output: signedbeaconblockheader_ssz.go
+  - name: SignedVoluntaryExit
+    output: signedvoluntaryexit_ssz.go
+  - name: SigningData
+    output: signingdata_ssz.go
+  - name: Validator
+    output: validator_ssz.go
+  - name: VoluntaryExit
+    output: voluntaryexit_ssz.go

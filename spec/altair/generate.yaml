@@ -1,0 +1,27 @@
+package: .
+legacy: true
+without-dynamic-expressions: true
+
+types:
+  - name: BeaconBlock
+    output: beaconblock_ssz.go
+  - name: BeaconBlockBody
+    output: beaconblockbody_ssz.go
+  - name: BeaconState
+    output: beaconstate_ssz.go
+  - name: ContributionAndProof
+    output: contributionandproof_ssz.go
+  - name: SignedBeaconBlock
+    output: signedbeaconblock_ssz.go
+  - name: SignedContributionAndProof
+    output: signedcontributionandproof_ssz.go
+  - name: SyncAggregate
+    output: syncaggregate_ssz.go
+  - name: SyncAggregatorSelectionData
+    output: syncaggregatorselectiondata_ssz.go
+  - name: SyncCommittee
+    output: synccommittee_ssz.go
+  - name: SyncCommitteeContribution
+    output: synccommitteecontribution_ssz.go
+  - name: SyncCommitteeMessage
+    output: synccommitteemessage_ssz.go

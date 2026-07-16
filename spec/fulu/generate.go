@@ -13,6 +13,5 @@
 
 package fulu
 
-// Need to `go install github.com/pk910/dynamic-ssz/dynssz-gen@latest` for this to work.
 //go:generate rm -f beaconstate_ssz.go
-//go:generate dynssz-gen -package . -legacy -without-dynamic-expressions -types BeaconState:beaconstate_ssz.go
+//go:generate go tool dynssz-gen -config generate.yaml

@@ -1,0 +1,13 @@
+package: .
+legacy: true
+without-dynamic-expressions: true
+
+types:
+  - name: BlobSidecars
+    output: blobsidecars_ssz.go
+  - name: VersionedBlindedBeaconBlock
+    output: versionedblindedbeaconblock_ssz.go
+  - name: VersionedSignedBlindedBeaconBlock
+    output: versionedsignedblindedbeaconblock_ssz.go
+  - name: VersionedSignedValidatorRegistration
+    output: versionedsignedvalidatorregistration_ssz.go
