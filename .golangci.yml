@@ -154,7 +154,7 @@ linters:
           # HIGH PRIORITY
           enable_no_pkg_logger: false
           enable_enum_iota: true
-          enable_current_year: false
+          enable_current_year: true
           # MEDIUM PRIORITY
           enable_capital_comment: false
           enable_func_opts: true
