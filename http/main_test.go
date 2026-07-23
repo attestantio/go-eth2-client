@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -79,6 +79,9 @@ func initGlobalHTTPService() {
 		service, err = http.New(ctx,
 			http.WithTimeout(timeout),
 			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+			// Required for the interim Glamsterdam devnet's minimal preset; a
+			// no-op superset for mainnet-preset endpoints (see ADR-0003).
+			http.WithCustomSpecSupport(true),
 			http.WithAllowDelayedStart(true),
 			http.WithExtraHeaders(map[string]string{
 				"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN")),
@@ -88,6 +91,9 @@ func initGlobalHTTPService() {
 		service, err = http.New(ctx,
 			http.WithTimeout(timeout),
 			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+			// Required for the interim Glamsterdam devnet's minimal preset; a
+			// no-op superset for mainnet-preset endpoints (see ADR-0003).
+			http.WithCustomSpecSupport(true),
 			http.WithAllowDelayedStart(true),
 		)
 	}
@@ -130,12 +136,18 @@ func testService(ctx context.Context, t *testing.T) any {
 		service, err = http.New(ctx,
 			http.WithTimeout(timeout),
 			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+			// Required for the interim Glamsterdam devnet's minimal preset; a
+			// no-op superset for mainnet-preset endpoints (see ADR-0003).
+			http.WithCustomSpecSupport(true),
 			http.WithExtraHeaders(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN"))}),
 		)
 	} else {
 		service, err = http.New(ctx,
 			http.WithTimeout(timeout),
 			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+			// Required for the interim Glamsterdam devnet's minimal preset; a
+			// no-op superset for mainnet-preset endpoints (see ADR-0003).
+			http.WithCustomSpecSupport(true),
 		)
 	}
 

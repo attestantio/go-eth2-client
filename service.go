@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2023 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -684,4 +684,37 @@ type GenesisTimeProvider interface {
 type NodeClientProvider interface {
 	// NodeClient provides the client for the node.
 	NodeClient(ctx context.Context) (*api.Response[string], error)
+}
+
+// ExecutionPayloadProvider is the interface for providing execution payloads.
+type ExecutionPayloadProvider interface {
+	// SignedExecutionPayloadEnvelope fetches a signed execution payload
+	// envelope given a block ID. Returns a versioned wrapper so callers can
+	// branch on Version regardless of which fork's envelope is populated.
+	SignedExecutionPayloadEnvelope(ctx context.Context,
+		opts *api.SignedExecutionPayloadEnvelopeOpts,
+	) (
+		*api.Response[*spec.VersionedSignedExecutionPayloadEnvelope],
+		error,
+	)
+}
+
+// ExecutionPayloadEnvelopeSubmitter is the interface for submitting execution
+// payload envelopes.
+type ExecutionPayloadEnvelopeSubmitter interface {
+	// SubmitExecutionPayloadEnvelope submits a signed execution payload
+	// envelope (with its blobs and KZG proofs) for broadcast.
+	SubmitExecutionPayloadEnvelope(ctx context.Context,
+		opts *api.SubmitExecutionPayloadEnvelopeOpts,
+	) error
+}
+
+// ExecutionPayloadBidSubmitter is the interface for submitting execution
+// payload bids.
+type ExecutionPayloadBidSubmitter interface {
+	// SubmitExecutionPayloadBid submits a signed execution payload bid for
+	// gossip broadcast.
+	SubmitExecutionPayloadBid(ctx context.Context,
+		opts *api.SubmitExecutionPayloadBidOpts,
+	) error
 }

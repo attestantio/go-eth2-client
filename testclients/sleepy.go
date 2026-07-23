@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2023 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -831,4 +831,45 @@ func (s *Sleepy) PendingPartialWithdrawals(ctx context.Context,
 	}
 
 	return next.PendingPartialWithdrawals(ctx, opts)
+}
+
+// SignedExecutionPayloadEnvelope fetches a signed execution payload envelope given a block ID.
+func (s *Sleepy) SignedExecutionPayloadEnvelope(ctx context.Context,
+	opts *api.SignedExecutionPayloadEnvelopeOpts,
+) (
+	*api.Response[*spec.VersionedSignedExecutionPayloadEnvelope],
+	error,
+) {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.SignedExecutionPayloadEnvelope(ctx, opts)
+}
+
+// SubmitExecutionPayloadBid submits an execution payload bid.
+func (s *Sleepy) SubmitExecutionPayloadBid(ctx context.Context, opts *api.SubmitExecutionPayloadBidOpts) error {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadBidSubmitter)
+	if !isNext {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitExecutionPayloadBid(ctx, opts)
+}
+
+// SubmitExecutionPayloadEnvelope submits a signed execution payload envelope.
+func (s *Sleepy) SubmitExecutionPayloadEnvelope(ctx context.Context, opts *api.SubmitExecutionPayloadEnvelopeOpts) error {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadEnvelopeSubmitter)
+	if !isNext {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitExecutionPayloadEnvelope(ctx, opts)
 }
