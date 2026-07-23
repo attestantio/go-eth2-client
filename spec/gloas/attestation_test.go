@@ -17,7 +17,7 @@ import (
 	"testing"
 
 	"github.com/OffchainLabs/go-bitfield"
-	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -69,7 +69,7 @@ func TestAttestation_CommitteeIndex(t *testing.T) {
 					committeeBits.SetBitAt(uint64(expectedIndex), true)
 				}
 			}
-			attestation := &electra.Attestation{CommitteeBits: committeeBits}
+			attestation := &gloas.Attestation{CommitteeBits: committeeBits}
 
 			committeeIndex, err := attestation.CommitteeIndex()
 			if tt.errorMsg == "" {
@@ -131,7 +131,7 @@ func TestAttestation_AggregateValidatorIndex(t *testing.T) {
 					aggregateBits.SetBitAt(uint64(expectedIndex), true)
 				}
 			}
-			attestation := &electra.Attestation{AggregationBits: aggregateBits}
+			attestation := &gloas.Attestation{AggregationBits: aggregateBits}
 
 			aggregateValidatorIndex, err := attestation.AggregateValidatorIndex()
 			if tt.errorMsg == "" {
@@ -152,7 +152,7 @@ func TestAttestation_SSZ(t *testing.T) {
 	aggregateBits := bitfield.NewBitlist(aggregateSize)
 	committeeSize := uint64(64)
 	committeeBits := bitfield.NewBitvector64()
-	attestation := electra.Attestation{
+	attestation := gloas.Attestation{
 		AggregationBits: aggregateBits,
 		CommitteeBits:   committeeBits,
 		Data: &phase0.AttestationData{

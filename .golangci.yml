@@ -188,7 +188,6 @@ linters:
       - path: (spec|api/v1)/gloas/
         text: "line is [0-9]+ characters"
         linters:
-          - lll
           - revive
 # Formatters: Code formatting tools
 formatters:

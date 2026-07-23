@@ -80,7 +80,7 @@ func (v *VersionedSignedAggregateAndProof) AggregatorIndex() (phase0.ValidatorIn
 		return v.Fulu.Message.AggregatorIndex, nil
 	case DataVersionGloas:
 		if v.Gloas == nil {
-			return 0, errors.New("no Gloas signed aggregate and proof")
+			return 0, errors.New("no gloas signed aggregate and proof")
 		}
 
 		return v.Gloas.Message.AggregatorIndex, nil
