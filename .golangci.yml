@@ -178,6 +178,18 @@ linters:
       - third_party$ # Exclude third party code
       - builtin$ # Exclude builtin code
       - examples$ # Exclude example code
+    # Rule-based exclusions
+    rules:
+      # gloas ePBS type definitions carry long dynssz size-expression struct
+      # tags and require ssz-index tags for correct SSZ generation (removing
+      # them changes the generated SSZ). gofmt aligns these tags past the
+      # 132-char limit and struct tags cannot be wrapped, so exempt only the
+      # line-length checks for the gloas type packages.
+      - path: (spec|api/v1)/gloas/
+        text: "line is [0-9]+ characters"
+        linters:
+          - lll
+          - revive
 # Formatters: Code formatting tools
 formatters:
   enable:
