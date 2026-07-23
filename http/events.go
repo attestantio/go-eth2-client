@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2025 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -32,6 +32,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/r3labs/sse/v2"
 	"github.com/rs/zerolog"
@@ -145,12 +146,26 @@ func (*Service) checkEventSpecificHandler(opts *api.EventsOpts, topic string) er
 		hasHandler = opts.ContributionAndProofHandler != nil
 	case "data_column_sidecar":
 		hasHandler = opts.DataColumnSidecarHandler != nil
+	case "execution_payload":
+		hasHandler = opts.ExecutionPayloadHandler != nil
+	case "execution_payload_available":
+		hasHandler = opts.ExecutionPayloadAvailableHandler != nil
+	case "execution_payload_bid":
+		hasHandler = opts.ExecutionPayloadBidHandler != nil
+	case "execution_payload_gossip":
+		hasHandler = opts.ExecutionPayloadGossipHandler != nil
+	case "fast_confirmation":
+		hasHandler = opts.FastConfirmationHandler != nil
 	case "finalized_checkpoint":
 		hasHandler = opts.FinalizedCheckpointHandler != nil
 	case "head":
 		hasHandler = opts.HeadHandler != nil
+	case "payload_attestation_message":
+		hasHandler = opts.PayloadAttestationMessageHandler != nil
 	case "payload_attributes":
 		hasHandler = opts.PayloadAttributesHandler != nil
+	case "proposer_preferences":
+		hasHandler = opts.ProposerPreferencesHandler != nil
 	case "proposer_slashing":
 		hasHandler = opts.ProposerSlashingHandler != nil
 	case "single_attestation":
@@ -200,12 +215,26 @@ func (s *Service) handleEvent(ctx context.Context,
 		s.handleContributionAndProofEvent(ctx, msg, opts)
 	case "data_column_sidecar":
 		s.handleDataColumnSidecarEvent(ctx, msg, opts)
+	case "execution_payload":
+		s.handleExecutionPayloadEvent(ctx, msg, opts)
+	case "execution_payload_available":
+		s.handleExecutionPayloadAvailableEvent(ctx, msg, opts)
+	case "execution_payload_bid":
+		s.handleExecutionPayloadBidEvent(ctx, msg, opts)
+	case "execution_payload_gossip":
+		s.handleExecutionPayloadGossipEvent(ctx, msg, opts)
+	case "fast_confirmation":
+		s.handleFastConfirmationEvent(ctx, msg, opts)
 	case "finalized_checkpoint":
 		s.handleFinalizedCheckpointEvent(ctx, msg, opts)
 	case "head":
 		s.handleHeadEvent(ctx, msg, opts)
+	case "payload_attestation_message":
+		s.handlePayloadAttestationMessageEvent(ctx, msg, opts)
 	case "payload_attributes":
 		s.handlePayloadAttributesEvent(ctx, msg, opts)
+	case "proposer_preferences":
+		s.handleProposerPreferencesEvent(ctx, msg, opts)
 	case "proposer_slashing":
 		s.handleProposerSlashingEvent(ctx, msg, opts)
 	case "single_attestation":
@@ -622,4 +651,209 @@ func (*Service) handleDataColumnSidecarEvent(ctx context.Context,
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
 	}
+}
+
+func (*Service) handleExecutionPayloadEvent(ctx context.Context,
+	msg *sse.Event,
+	opts *api.EventsOpts,
+) {
+	log := zerolog.Ctx(ctx)
+	data := &apiv1.ExecutionPayloadEvent{}
+
+	err := unmarshalVersionedEventData(msg.Data, data)
+	if err != nil {
+		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse execution payload event")
+
+		return
+	}
+
+	switch {
+	case opts.ExecutionPayloadHandler != nil:
+		opts.ExecutionPayloadHandler(ctx, data)
+	case opts.Handler != nil:
+		opts.Handler(&apiv1.Event{
+			Topic: string(msg.Event),
+			Data:  data,
+		})
+	default:
+		log.Debug().Msg("No specific or generic handler supplied; ignoring")
+	}
+}
+
+func (*Service) handleExecutionPayloadAvailableEvent(ctx context.Context,
+	msg *sse.Event,
+	opts *api.EventsOpts,
+) {
+	log := zerolog.Ctx(ctx)
+	data := &apiv1.ExecutionPayloadAvailableEvent{}
+
+	err := json.Unmarshal(msg.Data, data)
+	if err != nil {
+		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse execution payload available event")
+
+		return
+	}
+
+	switch {
+	case opts.ExecutionPayloadAvailableHandler != nil:
+		opts.ExecutionPayloadAvailableHandler(ctx, data)
+	case opts.Handler != nil:
+		opts.Handler(&apiv1.Event{
+			Topic: string(msg.Event),
+			Data:  data,
+		})
+	default:
+		log.Debug().Msg("No specific or generic handler supplied; ignoring")
+	}
+}
+
+func (*Service) handleExecutionPayloadBidEvent(ctx context.Context,
+	msg *sse.Event,
+	opts *api.EventsOpts,
+) {
+	log := zerolog.Ctx(ctx)
+	data := &gloas.SignedExecutionPayloadBid{}
+
+	err := unmarshalVersionedEventData(msg.Data, data)
+	if err != nil {
+		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse execution payload bid event")
+
+		return
+	}
+
+	switch {
+	case opts.ExecutionPayloadBidHandler != nil:
+		opts.ExecutionPayloadBidHandler(ctx, data)
+	case opts.Handler != nil:
+		opts.Handler(&apiv1.Event{
+			Topic: string(msg.Event),
+			Data:  data,
+		})
+	default:
+		log.Debug().Msg("No specific or generic handler supplied; ignoring")
+	}
+}
+
+func (*Service) handleExecutionPayloadGossipEvent(ctx context.Context,
+	msg *sse.Event,
+	opts *api.EventsOpts,
+) {
+	log := zerolog.Ctx(ctx)
+	data := &apiv1.ExecutionPayloadEvent{}
+
+	err := unmarshalVersionedEventData(msg.Data, data)
+	if err != nil {
+		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse execution payload gossip event")
+
+		return
+	}
+
+	switch {
+	case opts.ExecutionPayloadGossipHandler != nil:
+		opts.ExecutionPayloadGossipHandler(ctx, data)
+	case opts.Handler != nil:
+		opts.Handler(&apiv1.Event{
+			Topic: string(msg.Event),
+			Data:  data,
+		})
+	default:
+		log.Debug().Msg("No specific or generic handler supplied; ignoring")
+	}
+}
+
+func (*Service) handleFastConfirmationEvent(ctx context.Context,
+	msg *sse.Event,
+	opts *api.EventsOpts,
+) {
+	log := zerolog.Ctx(ctx)
+	data := &apiv1.FastConfirmationEvent{}
+
+	err := json.Unmarshal(msg.Data, data)
+	if err != nil {
+		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse fast confirmation event")
+
+		return
+	}
+
+	switch {
+	case opts.FastConfirmationHandler != nil:
+		opts.FastConfirmationHandler(ctx, data)
+	case opts.Handler != nil:
+		opts.Handler(&apiv1.Event{
+			Topic: string(msg.Event),
+			Data:  data,
+		})
+	default:
+		log.Debug().Msg("No specific or generic handler supplied; ignoring")
+	}
+}
+
+func (*Service) handlePayloadAttestationMessageEvent(ctx context.Context,
+	msg *sse.Event,
+	opts *api.EventsOpts,
+) {
+	log := zerolog.Ctx(ctx)
+	data := &gloas.PayloadAttestationMessage{}
+
+	err := unmarshalVersionedEventData(msg.Data, data)
+	if err != nil {
+		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse payload attestation message event")
+
+		return
+	}
+
+	switch {
+	case opts.PayloadAttestationMessageHandler != nil:
+		opts.PayloadAttestationMessageHandler(ctx, data)
+	case opts.Handler != nil:
+		opts.Handler(&apiv1.Event{
+			Topic: string(msg.Event),
+			Data:  data,
+		})
+	default:
+		log.Debug().Msg("No specific or generic handler supplied; ignoring")
+	}
+}
+
+func (*Service) handleProposerPreferencesEvent(ctx context.Context,
+	msg *sse.Event,
+	opts *api.EventsOpts,
+) {
+	log := zerolog.Ctx(ctx)
+	data := &gloas.SignedProposerPreferences{}
+
+	err := unmarshalVersionedEventData(msg.Data, data)
+	if err != nil {
+		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse proposer preferences event")
+
+		return
+	}
+
+	switch {
+	case opts.ProposerPreferencesHandler != nil:
+		opts.ProposerPreferencesHandler(ctx, data)
+	case opts.Handler != nil:
+		opts.Handler(&apiv1.Event{
+			Topic: string(msg.Event),
+			Data:  data,
+		})
+	default:
+		log.Debug().Msg("No specific or generic handler supplied; ignoring")
+	}
+}
+
+// unmarshalVersionedEventData decodes an SSE event payload that the beacon-API
+// spec wraps as {"version": "...", "data": {...}}. Some clients (Prysm) still
+// send the bare unwrapped object, so that shape is accepted as a fallback.
+func unmarshalVersionedEventData(raw []byte, v any) error {
+	var wrapper struct {
+		Version string          `json:"version"`
+		Data    json.RawMessage `json:"data"`
+	}
+
+	if err := json.Unmarshal(raw, &wrapper); err == nil && len(wrapper.Data) > 0 && wrapper.Version != "" {
+		return json.Unmarshal(wrapper.Data, v)
+	}
+
+	return json.Unmarshal(raw, v)
 }

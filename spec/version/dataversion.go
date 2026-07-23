@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2023 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spec
+package version
 
 import (
 	"fmt"
@@ -38,6 +38,8 @@ const (
 	DataVersionElectra
 	// DataVersionFulu is data applicable for the Fulu release of the beacon chain.
 	DataVersionFulu
+	// DataVersionGloas is data applicable for the Gloas release of the beacon chain.
+	DataVersionGloas
 )
 
 var dataVersionStrings = [...]string{
@@ -49,6 +51,7 @@ var dataVersionStrings = [...]string{
 	"deneb",
 	"electra",
 	"fulu",
+	"gloas",
 }
 
 var dataVersionMap = map[string]DataVersion{
@@ -59,6 +62,7 @@ var dataVersionMap = map[string]DataVersion{
 	`"deneb"`:     DataVersionDeneb,
 	`"electra"`:   DataVersionElectra,
 	`"fulu"`:      DataVersionFulu,
+	`"gloas"`:     DataVersionGloas,
 }
 
 // MarshalJSON implements json.Marshaler.

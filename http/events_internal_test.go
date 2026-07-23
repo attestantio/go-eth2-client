@@ -16,6 +16,7 @@ package http
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -24,6 +25,7 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/r3labs/sse/v2"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
@@ -163,6 +165,114 @@ func TestEventHandler(t *testing.T) {
 			handler: handler,
 			handled: true,
 		},
+		{
+			name: "ExecutionPayloadWrappedGood",
+			message: &sse.Event{
+				Event: []byte("execution_payload"),
+				Data:  versionWrap([]byte(`{"slot":"1","builder_index":"2","block_hash":"0xaa00000000000000000000000000000000000000000000000000000000000000","block_root":"0xbb00000000000000000000000000000000000000000000000000000000000000","execution_optimistic":false}`)),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "ExecutionPayloadBareGood",
+			message: &sse.Event{
+				Event: []byte("execution_payload"),
+				Data:  []byte(`{"slot":"1","block_root":"0xbb00000000000000000000000000000000000000000000000000000000000000"}`),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "ExecutionPayloadGossipWrappedGood",
+			message: &sse.Event{
+				Event: []byte("execution_payload_gossip"),
+				Data:  versionWrap([]byte(`{"slot":"1","builder_index":"2","block_hash":"0xaa00000000000000000000000000000000000000000000000000000000000000","block_root":"0xbb00000000000000000000000000000000000000000000000000000000000000","execution_optimistic":false}`)),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "ExecutionPayloadGossipBareGood",
+			message: &sse.Event{
+				Event: []byte("execution_payload_gossip"),
+				Data:  []byte(`{"slot":"1","block_root":"0xbb00000000000000000000000000000000000000000000000000000000000000"}`),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "ExecutionPayloadAvailableGood",
+			message: &sse.Event{
+				Event: []byte("execution_payload_available"),
+				Data:  []byte(`{"block_root":"0xcc00000000000000000000000000000000000000000000000000000000000000","slot":"3"}`),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "FastConfirmationGood",
+			message: &sse.Event{
+				Event: []byte("fast_confirmation"),
+				Data:  []byte(`{"slot":"4","block":"0xdd00000000000000000000000000000000000000000000000000000000000000","current_slot":"5"}`),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "ExecutionPayloadBidWrappedGood",
+			message: &sse.Event{
+				Event: []byte("execution_payload_bid"),
+				Data:  versionWrap(mustEventJSON(t, &gloas.SignedExecutionPayloadBid{Message: &gloas.ExecutionPayloadBid{}})),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "ExecutionPayloadBidBareGood",
+			message: &sse.Event{
+				Event: []byte("execution_payload_bid"),
+				Data:  mustEventJSON(t, &gloas.SignedExecutionPayloadBid{Message: &gloas.ExecutionPayloadBid{}}),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "PayloadAttestationMessageWrappedGood",
+			message: &sse.Event{
+				Event: []byte("payload_attestation_message"),
+				Data:  versionWrap(mustEventJSON(t, &gloas.PayloadAttestationMessage{Data: &gloas.PayloadAttestationData{}})),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "PayloadAttestationMessageBareGood",
+			message: &sse.Event{
+				Event: []byte("payload_attestation_message"),
+				Data:  mustEventJSON(t, &gloas.PayloadAttestationMessage{Data: &gloas.PayloadAttestationData{}}),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "ProposerPreferencesWrappedGood",
+			message: &sse.Event{
+				Event: []byte("proposer_preferences"),
+				Data:  versionWrap(mustEventJSON(t, &gloas.SignedProposerPreferences{Message: &gloas.ProposerPreferences{}})),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "ProposerPreferencesBareGood",
+			message: &sse.Event{
+				Event: []byte("proposer_preferences"),
+				Data:  mustEventJSON(t, &gloas.SignedProposerPreferences{Message: &gloas.ProposerPreferences{}}),
+			},
+			handler: handler,
+			handled: true,
+		},
 	}
 
 	// Note: Rate limiting for internal tests would need to be implemented separately
@@ -197,4 +307,24 @@ func TestEventHandler(t *testing.T) {
 			require.Equal(t, test.handled, handled)
 		})
 	}
+}
+
+// mustEventJSON marshals v to JSON for use as synthetic SSE event data, failing
+// the test if marshaling errors. Building gloas event payloads from constructed
+// values (rather than hand-written hex) keeps the fixed-length signature and
+// root fields valid.
+func mustEventJSON(t *testing.T, v any) []byte {
+	t.Helper()
+
+	data, err := json.Marshal(v)
+	require.NoError(t, err)
+
+	return data
+}
+
+// versionWrap wraps a bare event payload in the beacon-API
+// {"version":"gloas","data":{...}} envelope, exercising the wrapped branch of
+// unmarshalVersionedEventData.
+func versionWrap(inner []byte) []byte {
+	return []byte(`{"version":"gloas","data":` + string(inner) + `}`)
 }
