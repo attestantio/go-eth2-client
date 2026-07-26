@@ -1,4 +1,4 @@
-// Copyright © 2025 Attestant Limited.
+// Copyright © 2025 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import (
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,5 +56,23 @@ func TestAggregateAttestationDecode(t *testing.T) {
 		versionKey, ok := metadata["version"]
 		require.True(t, ok)
 		require.Equal(t, versionKey, "Electra")
+	})
+
+	// A Gloas beacon node reports Eth-Consensus-Version: gloas for the aggregate attestation
+	// endpoint, which decodeAggregateAttestation reads from httpResponse.consensusVersion (not the
+	// body). The attestation wire format is unchanged from Electra, so the same body decodes into
+	// the gloas.Attestation field once the version arm is present.
+	t.Run("GloasAttestationAggregate", func(t *testing.T) {
+		response := httpResponse{
+			consensusVersion: spec.DataVersionGloas,
+			body:             []byte(responseJson),
+		}
+		data, _, err := decodeAggregateAttestation(&response)
+		require.NoError(t, err)
+
+		require.Equal(t, spec.DataVersionGloas, data.Version)
+		require.NotNil(t, data.Gloas)
+		require.Nil(t, data.Fulu)
+		require.Equal(t, phase0.Slot(84434), data.Gloas.Data.Slot)
 	})
 }
