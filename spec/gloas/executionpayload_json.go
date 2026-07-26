@@ -68,6 +68,13 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 		blockAccessList = fmt.Sprintf("%#x", e.BlockAccessList)
 	}
 
+	// BaseFeePerGas is a nilable *uint256.Int; guard the nil case as the SSZ
+	// marshaler does so a zero-value payload does not panic on .Dec().
+	baseFeePerGas := e.BaseFeePerGas
+	if baseFeePerGas == nil {
+		baseFeePerGas = new(uint256.Int)
+	}
+
 	return json.Marshal(&executionPayloadJSON{
 		ParentHash:      e.ParentHash,
 		FeeRecipient:    e.FeeRecipient,
@@ -80,7 +87,7 @@ func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 		GasUsed:         strconv.FormatUint(e.GasUsed, 10),
 		Timestamp:       strconv.FormatUint(e.Timestamp, 10),
 		ExtraData:       extraData,
-		BaseFeePerGas:   e.BaseFeePerGas.Dec(),
+		BaseFeePerGas:   baseFeePerGas.Dec(),
 		BlockHash:       e.BlockHash,
 		Transactions:    transactions,
 		Withdrawals:     e.Withdrawals,
@@ -239,10 +246,13 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 
 	e.Transactions = make([]bellatrix.Transaction, len(transactions))
 	for i := range transactions {
-		if len(transactions[i]) == 0 ||
-			bytes.Equal(transactions[i], []byte{'"', '"'}) ||
+		// A transaction is a JSON-quoted, 0x-prefixed hex string; the shortest
+		// well-formed value is "0x" (4 bytes). Reject anything shorter — which
+		// also covers empty and "" — so the (len-4)/2 make() below cannot
+		// underflow to a negative length and panic.
+		if len(transactions[i]) < 4 ||
 			bytes.Equal(transactions[i], []byte{'"', '0', 'x', '"'}) {
-			return fmt.Errorf("transaction %d: missing", i)
+			return fmt.Errorf("transaction %d: missing or malformed", i)
 		}
 
 		e.Transactions[i] = make([]byte, (len(transactions[i])-4)/2)
