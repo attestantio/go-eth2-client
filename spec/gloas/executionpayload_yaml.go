@@ -20,6 +20,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/goccy/go-yaml"
+	"github.com/holiman/uint256"
 	"github.com/pkg/errors"
 )
 
@@ -63,6 +64,13 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 		blockAccessList = fmt.Sprintf("%#x", e.BlockAccessList)
 	}
 
+	// BaseFeePerGas is a nilable *uint256.Int; guard the nil case as the SSZ
+	// marshaler does so a zero-value payload does not panic on .Dec().
+	baseFeePerGas := e.BaseFeePerGas
+	if baseFeePerGas == nil {
+		baseFeePerGas = new(uint256.Int)
+	}
+
 	yamlBytes, err := yaml.MarshalWithOptions(&executionPayloadYAML{
 		ParentHash:      e.ParentHash.String(),
 		FeeRecipient:    e.FeeRecipient.String(),
@@ -75,7 +83,7 @@ func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 		GasUsed:         e.GasUsed,
 		Timestamp:       e.Timestamp,
 		ExtraData:       extraData,
-		BaseFeePerGas:   e.BaseFeePerGas.Dec(),
+		BaseFeePerGas:   baseFeePerGas.Dec(),
 		BlockHash:       fmt.Sprintf("%#x", e.BlockHash),
 		Transactions:    transactions,
 		Withdrawals:     e.Withdrawals,

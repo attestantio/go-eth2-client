@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec/gloas"
+	"github.com/goccy/go-yaml"
 	"github.com/holiman/uint256"
 	require "github.com/stretchr/testify/require"
 )
@@ -48,6 +49,43 @@ func TestExecutionPayloadMarshalJSON(t *testing.T) {
 			})
 			require.NoError(t, err)
 			require.Contains(t, string(data), test.expected)
+		})
+	}
+}
+
+// TestExecutionPayloadMarshalYAML is the YAML counterpart of
+// TestExecutionPayloadMarshalJSON: the hand-written YAML marshaler dereferences the
+// same nilable BaseFeePerGas (*uint256.Int) and needs the same nil guard, and the pair
+// must not drift.
+func TestExecutionPayloadMarshalYAML(t *testing.T) {
+	tests := []struct {
+		name     string
+		payload  *gloas.ExecutionPayload
+		expected string
+	}{
+		{
+			name:     "NilBaseFeePerGas",
+			payload:  &gloas.ExecutionPayload{},
+			expected: `base_fee_per_gas: '0'`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var data []byte
+			var err error
+			require.NotPanics(t, func() {
+				data, err = yaml.Marshal(test.payload)
+			})
+			require.NoError(t, err)
+			require.Contains(t, string(data), test.expected)
+
+			// String() marshals through MarshalYAML, so it inherits the same guard.
+			var str string
+			require.NotPanics(t, func() {
+				str = test.payload.String()
+			})
+			require.Contains(t, str, test.expected)
 		})
 	}
 }
