@@ -1,4 +1,4 @@
-// Copyright © 2020, 2025 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -108,6 +108,34 @@ func TestEvent(t *testing.T) {
 				assert.JSONEq(t, string(test.input), string(rt))
 				assert.JSONEq(t, string(rt), res.String())
 			}
+		})
+	}
+}
+
+// TestSupportedEventTopicsGloas confirms the allow-list carries the event
+// topics introduced by the Gloas (ePBS) fork. SupportedEventTopics is what the
+// http client gates every Events() subscription on, so a topic missing from it
+// is unreachable from the public API however completely the rest of the client
+// handles it.
+//
+// This is the guard that runs unconditionally: the http package's tests are
+// skipped wholesale unless HTTP_ADDRESS names a beacon node, so none of them
+// can fail a build over a regression here.
+func TestSupportedEventTopicsGloas(t *testing.T) {
+	topics := []string{
+		"execution_payload",
+		"execution_payload_available",
+		"execution_payload_bid",
+		"execution_payload_gossip",
+		"fast_confirmation",
+		"payload_attestation_message",
+		"proposer_preferences",
+	}
+
+	for _, topic := range topics {
+		t.Run(topic, func(t *testing.T) {
+			require.True(t, api.SupportedEventTopics[topic],
+				"topic %s missing from SupportedEventTopics; Events() will reject it", topic)
 		})
 	}
 }

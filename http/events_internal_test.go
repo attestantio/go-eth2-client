@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -305,6 +305,115 @@ func TestEventHandler(t *testing.T) {
 				Handler: test.handler,
 			})
 			require.Equal(t, test.handled, handled)
+		})
+	}
+}
+
+// TestEventHandlerGloasRouting confirms each Gloas event topic routes to its
+// own handler in preference to the generic one, which pins each topic to the
+// EventsOpts field it is meant to read. TestEventHandler above already covers
+// the generic-handler path for these topics, and a topic wired to the wrong
+// field would still satisfy that test.
+//
+// A zero-value Service suffices here: handleEvent only dispatches, and every
+// handleXEvent method has an unnamed receiver and takes its logger from the
+// context, so none of them reads service state.
+func TestEventHandlerGloasRouting(t *testing.T) {
+	specificHandled, genericHandled := false, false
+
+	tests := []struct {
+		name    string
+		message *sse.Event
+		opts    *api.EventsOpts
+	}{
+		{
+			name: "ExecutionPayload",
+			message: &sse.Event{
+				Event: []byte("execution_payload"),
+				Data:  versionWrap([]byte(`{"slot":"1","builder_index":"2","block_hash":"0xaa00000000000000000000000000000000000000000000000000000000000000","block_root":"0xbb00000000000000000000000000000000000000000000000000000000000000","execution_optimistic":false}`)),
+			},
+			opts: &api.EventsOpts{
+				ExecutionPayloadHandler: func(context.Context, *apiv1.ExecutionPayloadEvent) { specificHandled = true },
+				Handler:                 func(*apiv1.Event) { genericHandled = true },
+			},
+		},
+		{
+			name: "ExecutionPayloadAvailable",
+			message: &sse.Event{
+				Event: []byte("execution_payload_available"),
+				Data:  []byte(`{"block_root":"0xcc00000000000000000000000000000000000000000000000000000000000000","slot":"3"}`),
+			},
+			opts: &api.EventsOpts{
+				ExecutionPayloadAvailableHandler: func(context.Context, *apiv1.ExecutionPayloadAvailableEvent) { specificHandled = true },
+				Handler:                          func(*apiv1.Event) { genericHandled = true },
+			},
+		},
+		{
+			name: "ExecutionPayloadBid",
+			message: &sse.Event{
+				Event: []byte("execution_payload_bid"),
+				Data:  versionWrap(mustEventJSON(t, &gloas.SignedExecutionPayloadBid{Message: &gloas.ExecutionPayloadBid{}})),
+			},
+			opts: &api.EventsOpts{
+				ExecutionPayloadBidHandler: func(context.Context, *gloas.SignedExecutionPayloadBid) { specificHandled = true },
+				Handler:                    func(*apiv1.Event) { genericHandled = true },
+			},
+		},
+		{
+			name: "ExecutionPayloadGossip",
+			message: &sse.Event{
+				Event: []byte("execution_payload_gossip"),
+				Data:  versionWrap([]byte(`{"slot":"1","builder_index":"2","block_hash":"0xaa00000000000000000000000000000000000000000000000000000000000000","block_root":"0xbb00000000000000000000000000000000000000000000000000000000000000","execution_optimistic":false}`)),
+			},
+			opts: &api.EventsOpts{
+				ExecutionPayloadGossipHandler: func(context.Context, *apiv1.ExecutionPayloadEvent) { specificHandled = true },
+				Handler:                       func(*apiv1.Event) { genericHandled = true },
+			},
+		},
+		{
+			name: "FastConfirmation",
+			message: &sse.Event{
+				Event: []byte("fast_confirmation"),
+				Data:  []byte(`{"slot":"4","block":"0xdd00000000000000000000000000000000000000000000000000000000000000","current_slot":"5"}`),
+			},
+			opts: &api.EventsOpts{
+				FastConfirmationHandler: func(context.Context, *apiv1.FastConfirmationEvent) { specificHandled = true },
+				Handler:                 func(*apiv1.Event) { genericHandled = true },
+			},
+		},
+		{
+			name: "PayloadAttestationMessage",
+			message: &sse.Event{
+				Event: []byte("payload_attestation_message"),
+				Data:  versionWrap(mustEventJSON(t, &gloas.PayloadAttestationMessage{Data: &gloas.PayloadAttestationData{}})),
+			},
+			opts: &api.EventsOpts{
+				PayloadAttestationMessageHandler: func(context.Context, *gloas.PayloadAttestationMessage) { specificHandled = true },
+				Handler:                          func(*apiv1.Event) { genericHandled = true },
+			},
+		},
+		{
+			name: "ProposerPreferences",
+			message: &sse.Event{
+				Event: []byte("proposer_preferences"),
+				Data:  versionWrap(mustEventJSON(t, &gloas.SignedProposerPreferences{Message: &gloas.ProposerPreferences{}})),
+			},
+			opts: &api.EventsOpts{
+				ProposerPreferencesHandler: func(context.Context, *gloas.SignedProposerPreferences) { specificHandled = true },
+				Handler:                    func(*apiv1.Event) { genericHandled = true },
+			},
+		},
+	}
+
+	s := &Service{}
+	ctx := zerolog.New(&bytes.Buffer{}).WithContext(context.Background())
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			specificHandled, genericHandled = false, false
+			s.handleEvent(ctx, test.message, test.opts)
+			require.True(t, specificHandled, "topic-specific handler was not called")
+			require.False(t, genericHandled, "generic handler was called despite a topic-specific one being supplied")
 		})
 	}
 }
