@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -57,6 +58,9 @@ func (s *SignedBeaconBlock) UnmarshalJSON(input []byte) error {
 	signature, err := hex.DecodeString(strings.TrimPrefix(data.Signature, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid signature")
+	}
+	if len(signature) != phase0.SignatureLength {
+		return errors.New("incorrect length for signature")
 	}
 	copy(s.Signature[:], signature)
 

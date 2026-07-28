@@ -68,6 +68,9 @@ func (p *PayloadAttestationMessage) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid signature")
 	}
+	if len(signature) != phase0.SignatureLength {
+		return errors.New("incorrect length for signature")
+	}
 	copy(p.Signature[:], signature)
 
 	return nil

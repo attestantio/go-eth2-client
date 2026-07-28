@@ -56,6 +56,9 @@ func (p *PayloadAttestationData) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid beacon block root")
 	}
+	if len(root) != phase0.RootLength {
+		return errors.New("incorrect length for beacon block root")
+	}
 	copy(p.BeaconBlockRoot[:], root)
 
 	slot, err := strconv.ParseUint(data.Slot, 10, 64)

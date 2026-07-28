@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -91,6 +92,9 @@ func (p *ProposerPreferences) UnmarshalJSON(input []byte) error {
 	feeRecipient, err := hex.DecodeString(strings.TrimPrefix(data.FeeRecipient, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid fee recipient")
+	}
+	if len(feeRecipient) != bellatrix.FeeRecipientLength {
+		return errors.New("incorrect length for fee recipient")
 	}
 	copy(p.FeeRecipient[:], feeRecipient)
 

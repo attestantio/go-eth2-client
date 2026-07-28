@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -65,6 +66,8 @@ func (e *ExecutionPayloadBid) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
+//
+//nolint:gocyclo
 func (e *ExecutionPayloadBid) UnmarshalJSON(input []byte) error {
 	var data executionPayloadBidJSON
 	if err := json.Unmarshal(input, &data); err != nil {
@@ -79,6 +82,9 @@ func (e *ExecutionPayloadBid) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid parent block hash")
 	}
+	if len(parentBlockHash) != phase0.Hash32Length {
+		return errors.New("incorrect length for parent block hash")
+	}
 	copy(e.ParentBlockHash[:], parentBlockHash)
 
 	// Parent block root
@@ -88,6 +94,9 @@ func (e *ExecutionPayloadBid) UnmarshalJSON(input []byte) error {
 	parentBlockRoot, err := hex.DecodeString(strings.TrimPrefix(data.ParentBlockRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid parent block root")
+	}
+	if len(parentBlockRoot) != phase0.RootLength {
+		return errors.New("incorrect length for parent block root")
 	}
 	copy(e.ParentBlockRoot[:], parentBlockRoot)
 
@@ -99,6 +108,9 @@ func (e *ExecutionPayloadBid) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid block hash")
 	}
+	if len(blockHash) != phase0.Hash32Length {
+		return errors.New("incorrect length for block hash")
+	}
 	copy(e.BlockHash[:], blockHash)
 
 	// Prev randao
@@ -109,6 +121,9 @@ func (e *ExecutionPayloadBid) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid prev randao")
 	}
+	if len(prevRandao) != phase0.RootLength {
+		return errors.New("incorrect length for prev randao")
+	}
 	copy(e.PrevRandao[:], prevRandao)
 
 	// Fee recipient
@@ -118,6 +133,9 @@ func (e *ExecutionPayloadBid) UnmarshalJSON(input []byte) error {
 	feeRecipient, err := hex.DecodeString(strings.TrimPrefix(data.FeeRecipient, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid fee recipient")
+	}
+	if len(feeRecipient) != bellatrix.FeeRecipientLength {
+		return errors.New("incorrect length for fee recipient")
 	}
 	copy(e.FeeRecipient[:], feeRecipient)
 
@@ -194,6 +212,9 @@ func (e *ExecutionPayloadBid) UnmarshalJSON(input []byte) error {
 	executionRequestsRoot, err := hex.DecodeString(strings.TrimPrefix(data.ExecutionRequestsRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid execution requests root")
+	}
+	if len(executionRequestsRoot) != phase0.RootLength {
+		return errors.New("incorrect length for execution requests root")
 	}
 	copy(e.ExecutionRequestsRoot[:], executionRequestsRoot)
 

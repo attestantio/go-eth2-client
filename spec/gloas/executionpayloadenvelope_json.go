@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -76,6 +77,9 @@ func (e *ExecutionPayloadEnvelope) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid beacon block root")
 	}
+	if len(root) != phase0.RootLength {
+		return errors.New("incorrect length for beacon block root")
+	}
 	copy(e.BeaconBlockRoot[:], root)
 
 	if data.ParentBeaconBlockRoot == "" {
@@ -84,6 +88,9 @@ func (e *ExecutionPayloadEnvelope) UnmarshalJSON(input []byte) error {
 	parentRoot, err := hex.DecodeString(strings.TrimPrefix(data.ParentBeaconBlockRoot, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid parent beacon block root")
+	}
+	if len(parentRoot) != phase0.RootLength {
+		return errors.New("incorrect length for parent beacon block root")
 	}
 	copy(e.ParentBeaconBlockRoot[:], parentRoot)
 

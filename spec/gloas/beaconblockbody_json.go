@@ -76,6 +76,9 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid randao reveal")
 	}
+	if len(randaoReveal) != phase0.SignatureLength {
+		return errors.New("incorrect length for randao reveal")
+	}
 	copy(b.RANDAOReveal[:], randaoReveal)
 
 	b.ETH1Data = data.ETH1Data
@@ -87,6 +90,9 @@ func (b *BeaconBlockBody) UnmarshalJSON(input []byte) error {
 	graffiti, err := hex.DecodeString(strings.TrimPrefix(data.Graffiti, "0x"))
 	if err != nil {
 		return errors.Wrap(err, "invalid graffiti")
+	}
+	if len(graffiti) != phase0.GraffitiLength {
+		return errors.New("incorrect length for graffiti")
 	}
 	copy(b.Graffiti[:], graffiti)
 

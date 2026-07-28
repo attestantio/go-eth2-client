@@ -317,6 +317,9 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "invalid latest block hash")
 	}
+	if len(latestBlockHash) != phase0.Hash32Length {
+		return errors.New("incorrect length for latest block hash")
+	}
 	copy(b.LatestBlockHash[:], latestBlockHash)
 
 	if err := b.NextWithdrawalIndex.UnmarshalJSON(raw["next_withdrawal_index"]); err != nil {
