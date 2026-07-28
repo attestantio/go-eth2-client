@@ -34,7 +34,7 @@ import (
 var timeout = 5 * time.Minute
 
 // Global HTTP service instance shared across all tests to reduce connection overhead.
-var globalHTTPService interface{}
+var globalHTTPService any
 
 // testCoordinator controls how many tests can run concurrently to avoid overwhelming the endpoint.
 // This is configured via HTTP_TEST_CONCURRENCY (default: 1 for sequential execution).
@@ -65,6 +65,34 @@ func TestMain(m *testing.M) {
 	}
 }
 
+// newTestService creates an HTTP service against HTTP_ADDRESS, authenticating with
+// HTTP_BEARER_TOKEN when one is set. customSpecSupport picks which branch the SSZ
+// decoders take, so a caller that needs a mode other than the suite's default gets it
+// without restating the address, timeout and token handling.
+func newTestService(ctx context.Context,
+	customSpecSupport bool,
+	params ...http.Parameter,
+) (
+	client.Service,
+	error,
+) {
+	// Custom spec support is required for the interim Glamsterdam devnet's minimal
+	// preset; it is a no-op superset for mainnet-preset endpoints (see ADR-0003).
+	parameters := []http.Parameter{
+		http.WithTimeout(timeout),
+		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+		http.WithCustomSpecSupport(customSpecSupport),
+	}
+
+	if token := os.Getenv("HTTP_BEARER_TOKEN"); token != "" {
+		parameters = append(parameters, http.WithExtraHeaders(map[string]string{
+			"Authorization": fmt.Sprintf("Bearer %s", token),
+		}))
+	}
+
+	return http.New(ctx, append(parameters, params...)...)
+}
+
 // initGlobalHTTPService creates a single HTTP service instance that all tests will share.
 // This reduces connection overhead and makes tests more efficient.
 func initGlobalHTTPService() {
@@ -73,37 +101,12 @@ func initGlobalHTTPService() {
 	}
 
 	ctx := context.Background()
-	var service client.Service
-	var err error
-	if os.Getenv("HTTP_BEARER_TOKEN") != "" {
-		service, err = http.New(ctx,
-			http.WithTimeout(timeout),
-			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-			// Required for the interim Glamsterdam devnet's minimal preset; a
-			// no-op superset for mainnet-preset endpoints (see ADR-0003).
-			http.WithCustomSpecSupport(true),
-			http.WithAllowDelayedStart(true),
-			http.WithExtraHeaders(map[string]string{
-				"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN")),
-			}),
-		)
-	} else {
-		service, err = http.New(ctx,
-			http.WithTimeout(timeout),
-			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-			// Required for the interim Glamsterdam devnet's minimal preset; a
-			// no-op superset for mainnet-preset endpoints (see ADR-0003).
-			http.WithCustomSpecSupport(true),
-			http.WithAllowDelayedStart(true),
-		)
-	}
 
-	if err != nil {
-		// If we can't create the service, tests will fail anyway
-		// Just log and continue - individual tests will handle the error
-		return
+	// If we can't create the service, tests will fail anyway; leave the global nil and
+	// let the individual tests handle the error.
+	if service, err := newTestService(ctx, true, http.WithAllowDelayedStart(true)); err == nil {
+		globalHTTPService = service
 	}
-	globalHTTPService = service
 }
 
 // testService returns an HTTP service for testing.
@@ -130,30 +133,11 @@ func testService(ctx context.Context, t *testing.T) any {
 	}
 
 	// Fallback: create a new service if global service is not available
-	var service client.Service
-	var err error
-	if os.Getenv("HTTP_BEARER_TOKEN") != "" {
-		service, err = http.New(ctx,
-			http.WithTimeout(timeout),
-			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-			// Required for the interim Glamsterdam devnet's minimal preset; a
-			// no-op superset for mainnet-preset endpoints (see ADR-0003).
-			http.WithCustomSpecSupport(true),
-			http.WithExtraHeaders(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN"))}),
-		)
-	} else {
-		service, err = http.New(ctx,
-			http.WithTimeout(timeout),
-			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-			// Required for the interim Glamsterdam devnet's minimal preset; a
-			// no-op superset for mainnet-preset endpoints (see ADR-0003).
-			http.WithCustomSpecSupport(true),
-		)
-	}
-
+	service, err := newTestService(ctx, true)
 	if err != nil {
 		t.Fatalf("Failed to create HTTP service: %v", err)
 	}
+
 	return service
 }
 
