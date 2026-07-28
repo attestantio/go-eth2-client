@@ -17,17 +17,17 @@ import (
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/stretchr/testify/require"
 )
 
 // TestCreateUnversionedAggregatesGloas verifies that a Gloas-versioned aggregate and proof is
-// unwrapped for submission. Under Gloas the aggregate and proof wire format is unchanged from
-// Electra (VersionedSignedAggregateAndProof.Gloas is *electra.SignedAggregateAndProof), so the
-// arm forwards the Electra-typed value; without it the switch hits its default and errors.
+// unwrapped for submission. Gloas carries its own container (gloas.Attestation merkleizes its
+// aggregation bits as a progressive bitlist), so the arm must forward the Gloas-typed value
+// unchanged; without the arm the switch hits its default and errors.
 func TestCreateUnversionedAggregatesGloas(t *testing.T) {
-	aggregate := &electra.SignedAggregateAndProof{
-		Message: &electra.AggregateAndProof{AggregatorIndex: 42},
+	aggregate := &gloas.SignedAggregateAndProof{
+		Message: &gloas.AggregateAndProof{AggregatorIndex: 42},
 	}
 	aggregateAndProofs := []*spec.VersionedSignedAggregateAndProof{
 		{Version: spec.DataVersionGloas, Gloas: aggregate},

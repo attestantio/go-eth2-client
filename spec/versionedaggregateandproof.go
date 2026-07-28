@@ -17,6 +17,7 @@ import (
 	"errors"
 
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -30,7 +31,10 @@ type VersionedAggregateAndProof struct {
 	Deneb     *phase0.AggregateAndProof
 	Electra   *electra.AggregateAndProof
 	Fulu      *electra.AggregateAndProof
-	Gloas     *electra.AggregateAndProof
+	// Gloas has its own container because gloas.Attestation merkleizes its aggregation bits as a
+	// progressive bitlist, giving a different hash tree root (and so a different signing root)
+	// from the electra container.
+	Gloas *gloas.AggregateAndProof
 }
 
 // AggregatorIndex returns the aggregator index of the aggregate.
