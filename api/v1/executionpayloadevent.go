@@ -83,7 +83,7 @@ func (e *ExecutionPayloadEvent) UnmarshalJSON(input []byte) error {
 	if data.BlockRoot == "" {
 		return errors.New("block root missing")
 	}
-	if err := decodeFixedBytes(e.BlockRoot[:], data.BlockRoot, rootLength, "block root"); err != nil {
+	if err := decodeFixedBytes(e.BlockRoot[:], data.BlockRoot, "block root"); err != nil {
 		return err
 	}
 
@@ -96,7 +96,7 @@ func (e *ExecutionPayloadEvent) UnmarshalJSON(input []byte) error {
 	}
 
 	if data.BlockHash != "" {
-		if err := decodeFixedBytes(e.BlockHash[:], data.BlockHash, phase0.Hash32Length, "block hash"); err != nil {
+		if err := decodeFixedBytes(e.BlockHash[:], data.BlockHash, "block hash"); err != nil {
 			return err
 		}
 	}
@@ -116,14 +116,15 @@ func (e *ExecutionPayloadEvent) String() string {
 	return string(data)
 }
 
-// decodeFixedBytes hex-decodes a 0x-prefixed value into dst, requiring exactly
-// wantLen bytes.
-func decodeFixedBytes(dst []byte, value string, wantLen int, name string) error {
+// decodeFixedBytes hex-decodes a value, with or without a 0x prefix, into dst,
+// requiring exactly len(dst) bytes. The length comes from dst rather than from a
+// parameter so the two cannot disagree.
+func decodeFixedBytes(dst []byte, value string, name string) error {
 	decoded, err := hex.DecodeString(strings.TrimPrefix(value, "0x"))
 	if err != nil {
 		return errors.Wrapf(err, "invalid value for %s", name)
 	}
-	if len(decoded) != wantLen {
+	if len(decoded) != len(dst) {
 		return fmt.Errorf("incorrect length %d for %s", len(decoded), name)
 	}
 	copy(dst, decoded)

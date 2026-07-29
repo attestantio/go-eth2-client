@@ -14,11 +14,9 @@
 package v1
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
@@ -71,16 +69,9 @@ func (e *FastConfirmationEvent) UnmarshalJSON(input []byte) error {
 		return errors.New("block missing")
 	}
 
-	block, err := hex.DecodeString(strings.TrimPrefix(data.Block, "0x"))
-	if err != nil {
-		return errors.Wrap(err, "invalid value for block")
+	if err := decodeFixedBytes(e.Block[:], data.Block, "block"); err != nil {
+		return err
 	}
-
-	if len(block) != rootLength {
-		return fmt.Errorf("incorrect length %d for block", len(block))
-	}
-
-	copy(e.Block[:], block)
 
 	// current_slot was added to the spec after slot/block; parse it when
 	// present but tolerate clients that do not yet emit it.

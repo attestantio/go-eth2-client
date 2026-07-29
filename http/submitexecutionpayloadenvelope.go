@@ -16,7 +16,6 @@ package http
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -73,7 +72,7 @@ func (s *Service) SubmitExecutionPayloadEnvelope(ctx context.Context,
 		)
 	}
 
-	body, contentType, err := s.submitExecutionPayloadEnvelopeData(ctx, contents)
+	body, contentType, err := s.marshalRequestBody(ctx, contents)
 	if err != nil {
 		return err
 	}
@@ -110,37 +109,6 @@ func (s *Service) postExecutionPayloadEnvelope(ctx context.Context,
 	}
 
 	return nil
-}
-
-// submitExecutionPayloadEnvelopeData marshals the envelope contents to the
-// negotiated content type (SSZ unless JSON is enforced).
-func (s *Service) submitExecutionPayloadEnvelopeData(ctx context.Context,
-	contents any,
-) (
-	[]byte,
-	ContentType,
-	error,
-) {
-	if s.enforceJSON {
-		body, err := json.Marshal(contents)
-		if err != nil {
-			return nil, ContentTypeUnknown, errors.Join(errors.New("failed to marshal JSON"), err)
-		}
-
-		return body, ContentTypeJSON, nil
-	}
-
-	ds, err := s.dynSSZForRequest(ctx)
-	if err != nil {
-		return nil, ContentTypeUnknown, err
-	}
-
-	body, err := ds.MarshalSSZ(contents)
-	if err != nil {
-		return nil, ContentTypeUnknown, errors.Join(errors.New("failed to marshal SSZ"), err)
-	}
-
-	return body, ContentTypeSSZ, nil
 }
 
 // nonNilKZGProofs normalises a nil KZG proof slice to an empty one: the

@@ -16,7 +16,6 @@ package http
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -71,31 +70,9 @@ func (s *Service) postExecutionPayloadBid(ctx context.Context,
 	consensusVersion spec.DataVersion,
 	bid any,
 ) error {
-	var (
-		body        []byte
-		contentType ContentType
-		err         error
-	)
-
-	if s.enforceJSON {
-		contentType = ContentTypeJSON
-
-		body, err = json.Marshal(bid)
-		if err != nil {
-			return errors.Join(errors.New("failed to marshal JSON"), err)
-		}
-	} else {
-		contentType = ContentTypeSSZ
-
-		ds, dsErr := s.dynSSZForRequest(ctx)
-		if dsErr != nil {
-			return dsErr
-		}
-
-		body, err = ds.MarshalSSZ(bid)
-		if err != nil {
-			return errors.Join(errors.New("failed to marshal SSZ"), err)
-		}
+	body, contentType, err := s.marshalRequestBody(ctx, bid)
+	if err != nil {
+		return err
 	}
 
 	endpoint := "/eth/v1/beacon/execution_payload_bids"
