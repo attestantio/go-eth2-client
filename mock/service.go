@@ -70,6 +70,8 @@ type Service struct {
 	NodePeersFunc                      func(context.Context, *api.NodePeersOpts) (*api.Response[[]*apiv1.Peer], error)
 	NodeSyncingFunc                    func(context.Context, *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error)
 	NodeVersionFunc                    func(context.Context, *api.NodeVersionOpts) (*api.Response[string], error)
+	PTCDutiesFunc                      func(context.Context, *api.PTCDutiesOpts) (*api.Response[[]*apiv1.PTCDuty], error)
+	PayloadAttestationDataFunc         func(context.Context, *api.PayloadAttestationDataOpts) (*api.Response[*spec.VersionedPayloadAttestationData], error)
 	PendingDepositsFunc                func(context.Context, *api.PendingDepositsOpts) (*api.Response[[]*electra.PendingDeposit], error)
 	PendingConsolidationsFunc          func(context.Context, *api.PendingConsolidationsOpts) (*api.Response[[]*electra.PendingConsolidation], error)
 	PendingPartialWithdrawalsFunc      func(context.Context, *api.PendingPartialWithdrawalsOpts) (*api.Response[[]*electra.PendingPartialWithdrawal], error)

@@ -1143,3 +1143,76 @@ func (s *Erroring) SubmitExecutionPayloadEnvelope(ctx context.Context, opts *api
 
 	return next.SubmitExecutionPayloadEnvelope(ctx, opts)
 }
+
+// PTCDuties obtains payload timeliness committee duties.
+func (s *Erroring) PTCDuties(ctx context.Context,
+	opts *api.PTCDutiesOpts,
+) (
+	*api.Response[[]*apiv1.PTCDuty],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+
+	next, isNext := s.next.(consensusclient.PTCDutiesProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.PTCDuties(ctx, opts)
+}
+
+// PayloadAttestationData obtains payload attestation data.
+func (s *Erroring) PayloadAttestationData(ctx context.Context,
+	opts *api.PayloadAttestationDataOpts,
+) (
+	*api.Response[*spec.VersionedPayloadAttestationData],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+
+	next, isNext := s.next.(consensusclient.PayloadAttestationDataProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.PayloadAttestationData(ctx, opts)
+}
+
+// PayloadAttestationPool obtains the payload attestation pool.
+func (s *Erroring) PayloadAttestationPool(ctx context.Context,
+	opts *api.PayloadAttestationPoolOpts,
+) (
+	*api.Response[[]*spec.VersionedPayloadAttestation],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+
+	next, isNext := s.next.(consensusclient.PayloadAttestationPoolProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.PayloadAttestationPool(ctx, opts)
+}
+
+// SubmitPayloadAttestationMessages submits payload attestation messages.
+func (s *Erroring) SubmitPayloadAttestationMessages(ctx context.Context,
+	opts *api.SubmitPayloadAttestationMessagesOpts,
+) error {
+	if err := s.maybeError(ctx); err != nil {
+		return err
+	}
+
+	next, isNext := s.next.(consensusclient.PayloadAttestationMessagesSubmitter)
+	if !isNext {
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.SubmitPayloadAttestationMessages(ctx, opts)
+}
