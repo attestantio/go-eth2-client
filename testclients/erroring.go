@@ -1182,6 +1182,45 @@ func (s *Erroring) PayloadAttestationData(ctx context.Context,
 	return next.PayloadAttestationData(ctx, opts)
 }
 
+// EPBSProposal fetches an ePBS proposal for signing.
+func (s *Erroring) EPBSProposal(ctx context.Context,
+	opts *api.EPBSProposalOpts,
+) (
+	*api.Response[*api.VersionedEPBSProposal],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+
+	next, isNext := s.next.(consensusclient.EPBSProposalProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.EPBSProposal(ctx, opts)
+}
+
+// ExecutionPayloadEnvelope obtains the cached execution payload envelope for the
+// given slot and beacon block root.
+func (s *Erroring) ExecutionPayloadEnvelope(ctx context.Context,
+	opts *api.ExecutionPayloadEnvelopeOpts,
+) (
+	*api.Response[*spec.VersionedExecutionPayloadEnvelope],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadEnvelopeProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.ExecutionPayloadEnvelope(ctx, opts)
+}
+
 // PayloadAttestationPool obtains the payload attestation pool.
 func (s *Erroring) PayloadAttestationPool(ctx context.Context,
 	opts *api.PayloadAttestationPoolOpts,

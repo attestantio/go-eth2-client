@@ -15,6 +15,7 @@ package http_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -23,15 +24,82 @@ import (
 	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	apiv1electra "github.com/attestantio/go-eth2-client/api/v1/electra"
 	apiv1fulu "github.com/attestantio/go-eth2-client/api/v1/fulu"
+	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
+
+// TestSubmitProposalGloas verifies that a gloas block produced by the node comes
+// back to it through the publish endpoint, in a body the node can read.
+//
+// The block cannot actually be accepted: it is unsigned, and a node only builds
+// for a slot that has not started yet, so by the time it is submitted the node
+// refuses it as being from the future.  Neither matters here.  What is being
+// checked is where the refusal comes from — the node, having decoded the block
+// and carried it as far as state transition, rather than the client declining to
+// encode a version it does not know, or the node rejecting a body it cannot
+// parse.  Both of those are what a missing or wrong arm would produce.
+//
+// Only the JSON body is exercised. The SSZ encoder marshals with the generated
+// codec, which is mainnet-preset only, and this devnet runs the minimal preset
+// (see the note on that arm).
+func TestSubmitProposalGloas(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	service := testService(ctx, t).(client.Service)
+
+	jsonService, err := newTestService(ctx, true, http.WithEnforceJSON(true))
+	require.NoError(t, err)
+
+	// Produced with the payload excluded, so the block travels alone: the
+	// envelope would be published through its own endpoint.
+	includePayload := false
+	infinity := infinitySignature()
+
+	produced, err := service.(client.EPBSProposalProvider).EPBSProposal(ctx, &api.EPBSProposalOpts{
+		Slot:                   headSlot(ctx, t, service) + 1,
+		RandaoReveal:           infinity,
+		IncludePayload:         &includePayload,
+		SkipRandaoVerification: true,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, produced.Data.Gloas)
+
+	err = jsonService.(client.ProposalSubmitter).SubmitProposal(ctx, &api.SubmitProposalOpts{
+		Proposal: &api.VersionedSignedProposal{
+			Version: spec.DataVersionGloas,
+			Gloas: &gloas.SignedBeaconBlock{
+				Message:   produced.Data.Gloas,
+				Signature: phase0.BLSSignature{0x01, 0x02, 0x03},
+			},
+		},
+	})
+	require.Error(t, err)
+
+	// A typed api.Error means the request was made and answered.  The client
+	// refusing to marshal an unknown version never reaches the network, so it
+	// cannot produce one.
+	var apiErr *api.Error
+	require.ErrorAs(t, err, &apiErr, "expected the node to refuse the block, got a client-side error: %v", err)
+
+	// And the node's complaint must be about the block rather than about the
+	// bytes.  A body it could not parse — the shape a wrong arm would send, for
+	// instance a contents wrapper where a plain signed block belongs — is
+	// rejected during deserialisation, naming the field it choked on.
+	rejection := strings.ToLower(string(apiErr.Data))
+	for _, parseFailure := range []string{"unmarshal", "could not decode", "invalid json", "malformed"} {
+		require.NotContains(t, rejection, parseFailure,
+			"node could not parse the submitted block: %s", string(apiErr.Data))
+	}
+}
 
 func TestSubmitProposal(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())

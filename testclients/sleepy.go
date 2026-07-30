@@ -908,6 +908,41 @@ func (s *Sleepy) PayloadAttestationData(ctx context.Context,
 	return next.PayloadAttestationData(ctx, opts)
 }
 
+// EPBSProposal fetches an ePBS proposal for signing.
+func (s *Sleepy) EPBSProposal(ctx context.Context,
+	opts *api.EPBSProposalOpts,
+) (
+	*api.Response[*api.VersionedEPBSProposal],
+	error,
+) {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.EPBSProposalProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.EPBSProposal(ctx, opts)
+}
+
+// ExecutionPayloadEnvelope obtains the cached execution payload envelope for the
+// given slot and beacon block root.
+func (s *Sleepy) ExecutionPayloadEnvelope(ctx context.Context,
+	opts *api.ExecutionPayloadEnvelopeOpts,
+) (
+	*api.Response[*spec.VersionedExecutionPayloadEnvelope],
+	error,
+) {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadEnvelopeProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.ExecutionPayloadEnvelope(ctx, opts)
+}
+
 // PayloadAttestationPool obtains the payload attestation pool.
 func (s *Sleepy) PayloadAttestationPool(ctx context.Context,
 	opts *api.PayloadAttestationPoolOpts,

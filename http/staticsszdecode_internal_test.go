@@ -134,12 +134,22 @@ func TestBeaconStateFromSSZStaticCodec(t *testing.T) {
 	}
 }
 
+// staticGloasSignedBeaconBlock returns a gloas block at the slot these tests
+// assert on.  Unlike the earlier forks' containers it has no encodable zero
+// value — the sync aggregate and the execution payload bid are pointers the
+// marshaler dereferences — so it reuses the fixture that already satisfies that,
+// rather than restating it.
+func staticGloasSignedBeaconBlock() *gloas.SignedBeaconBlock {
+	block := validEPBSBeaconBlock()
+	block.Slot = staticSlot
+
+	return &gloas.SignedBeaconBlock{Message: block}
+}
+
 func TestSignedBeaconBlockFromSSZStaticCodec(t *testing.T) {
 	ctx := context.Background()
 	s := &Service{}
 
-	// There is no Gloas arm: under ePBS the block carries a signed execution payload
-	// bid rather than an inline payload, and that endpoint is not yet gloas-enabled.
 	tests := []struct {
 		name    string
 		version spec.DataVersion
@@ -180,6 +190,15 @@ func TestSignedBeaconBlockFromSSZStaticCodec(t *testing.T) {
 			name:    "Fulu",
 			version: spec.DataVersionFulu,
 			body:    mustMarshalSSZ(t, &electra.SignedBeaconBlock{Message: &electra.BeaconBlock{Slot: staticSlot}}),
+		},
+		{
+			// Gloas needs its body populated where the earlier forks do not: the
+			// container's own marshaler dereferences the sync aggregate and the
+			// execution payload bid, neither of which has a zero value it can
+			// encode.
+			name:    "Gloas",
+			version: spec.DataVersionGloas,
+			body:    mustMarshalSSZ(t, staticGloasSignedBeaconBlock()),
 		},
 	}
 

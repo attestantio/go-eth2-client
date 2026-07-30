@@ -121,6 +121,11 @@ func (*Service) submitProposalJSON(_ context.Context,
 		specJSON, err = json.Marshal(proposal.Electra)
 	case spec.DataVersionFulu:
 		specJSON, err = json.Marshal(proposal.Fulu)
+	case spec.DataVersionGloas:
+		// A plain signed block, unlike the contents wrappers Deneb through Fulu
+		// publish: post-Gloas the blobs travel in the execution payload
+		// envelope, which is published through its own endpoint.
+		specJSON, err = json.Marshal(proposal.Gloas)
 	default:
 		err = errors.New("unknown proposal version")
 	}
@@ -161,6 +166,14 @@ func (*Service) submitProposalSSZ(_ context.Context,
 		specSSZ, err = proposal.Electra.MarshalSSZ()
 	case spec.DataVersionFulu:
 		specSSZ, err = proposal.Fulu.MarshalSSZ()
+	case spec.DataVersionGloas:
+		// Marshaled with the generated codec, as every arm above it is.  Note
+		// that makes this path mainnet-preset only, since a block body holds a
+		// preset-sized sync committee bitvector: at another preset the codec
+		// pads it to the mainnet length and the node rejects the result.  That
+		// affects every fork from altair onwards, not just this arm, so it is
+		// tracked as its own defect rather than worked around here.
+		specSSZ, err = proposal.Gloas.MarshalSSZ()
 	default:
 		err = errors.New("unknown proposal version")
 	}

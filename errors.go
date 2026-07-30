@@ -31,4 +31,9 @@ var (
 	// outcome rather than a failure, but it is reported as an error so that a caller cannot
 	// mistake it for a datum that is safe to sign.
 	ErrNoPayloadAttestationData = errors.New("no payload attestation data available")
+	// ErrNoExecutionPayloadEnvelope is returned when the node holds no cached execution payload
+	// envelope for the requested slot and block root.  A node caches only the envelope it built
+	// for the slot it is proposing, so this is the normal answer for any other slot, for a block
+	// the node did not build, and for a block that a re-org has moved off the chain.
+	ErrNoExecutionPayloadEnvelope = errors.New("no execution payload envelope available")
 )

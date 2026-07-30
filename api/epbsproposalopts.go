@@ -53,6 +53,11 @@ type EPBSProposalOpts struct {
 	IncludePayload *bool
 	// BuilderBoostFactor is the relative weight of the builder payload versus a locally-produced
 	// payload, as per https://ethereum.github.io/beacon-APIs/#/Validator/produceBlockV4
-	// This is optional; if not supplied it will use the default value of 100.
+	//
+	// This is optional, and when it is not supplied the parameter is left off the
+	// request entirely, leaving the choice to the node.  Note that differs from
+	// ProposalOpts, which materialises 100 client-side: the spec states no
+	// default for either endpoint, so sending nothing is what actually leaves the
+	// decision where the caller left it.
 	BuilderBoostFactor *uint64
 }

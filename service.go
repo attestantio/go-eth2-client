@@ -338,6 +338,41 @@ type ProposalProvider interface {
 	)
 }
 
+// EPBSProposalProvider is the interface for providing ePBS proposals.
+//
+// It sits alongside ProposalProvider rather than replacing it: the endpoint
+// behind it is gloas-onwards only, and the endpoint behind ProposalProvider is
+// frozen at the last pre-gloas fork, so a client needs both to span the fork.
+type EPBSProposalProvider interface {
+	// EPBSProposal fetches an ePBS proposal for signing.
+	EPBSProposal(ctx context.Context,
+		opts *api.EPBSProposalOpts,
+	) (
+		*api.Response[*api.VersionedEPBSProposal],
+		error,
+	)
+}
+
+// ExecutionPayloadEnvelopeProvider is the interface for providing the execution
+// payload envelope a node cached while producing a block.
+//
+// The name tracks the type returned, which is what distinguishes it from
+// ExecutionPayloadProvider: that one reads a published, signed envelope back off
+// the chain, this one collects an unsigned one from the node that built it so
+// the caller can sign it.
+type ExecutionPayloadEnvelopeProvider interface {
+	// ExecutionPayloadEnvelope obtains the cached execution payload envelope for
+	// the given slot and beacon block root.  It returns
+	// ErrNoExecutionPayloadEnvelope if the node holds none, which is the normal
+	// answer for any slot other than the one it is proposing.
+	ExecutionPayloadEnvelope(ctx context.Context,
+		opts *api.ExecutionPayloadEnvelopeOpts,
+	) (
+		*api.Response[*spec.VersionedExecutionPayloadEnvelope],
+		error,
+	)
+}
+
 // ProposalSlashingSubmitter is the interface for submitting proposal slashings.
 type ProposalSlashingSubmitter interface {
 	SubmitProposalSlashing(ctx context.Context, slashing *phase0.ProposerSlashing) error

@@ -54,4 +54,16 @@ var (
 	_ client.PayloadAttestationMessagesSubmitter = (*mock.Service)(nil)
 	_ client.PayloadAttestationMessagesSubmitter = (*testclients.Erroring)(nil)
 	_ client.PayloadAttestationMessagesSubmitter = (*testclients.Sleepy)(nil)
+
+	_ client.EPBSProposalProvider = (*http.Service)(nil)
+	_ client.EPBSProposalProvider = (*multi.Service)(nil)
+	_ client.EPBSProposalProvider = (*mock.Service)(nil)
+	_ client.EPBSProposalProvider = (*testclients.Erroring)(nil)
+	_ client.EPBSProposalProvider = (*testclients.Sleepy)(nil)
+
+	_ client.ExecutionPayloadEnvelopeProvider = (*http.Service)(nil)
+	_ client.ExecutionPayloadEnvelopeProvider = (*multi.Service)(nil)
+	_ client.ExecutionPayloadEnvelopeProvider = (*mock.Service)(nil)
+	_ client.ExecutionPayloadEnvelopeProvider = (*testclients.Erroring)(nil)
+	_ client.ExecutionPayloadEnvelopeProvider = (*testclients.Sleepy)(nil)
 )

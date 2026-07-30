@@ -26,6 +26,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -47,10 +48,20 @@ type VersionedSignedProposal struct {
 	ElectraBlinded   *apiv1electra.SignedBlindedBeaconBlock
 	Fulu             *apiv1fulu.SignedBlockContents
 	FuluBlinded      *apiv1electra.SignedBlindedBeaconBlock
+	// Gloas is a plain signed block, not a contents wrapper as Deneb through
+	// Fulu use: post-Gloas the blobs travel in the execution payload envelope,
+	// which is published separately, so there is nothing to bundle here.
+	//
+	// There is deliberately no GloasBlinded counterpart.  Post-Gloas a proposer
+	// commits to an execution payload bid rather than to a payload, so there is
+	// nothing to withhold and no blinded schema to carry.
+	Gloas *gloas.SignedBeaconBlock
 }
 
 // AssertPresent throws an error if the expected proposal
 // given the version and blinded fields is not present.
+//
+//nolint:gocyclo // one arm per fork, and per blinded variant within it
 func (v *VersionedSignedProposal) AssertPresent() error {
 	switch v.Version {
 	case spec.DataVersionPhase0:
@@ -101,6 +112,17 @@ func (v *VersionedSignedProposal) AssertPresent() error {
 		if v.FuluBlinded == nil && v.Blinded {
 			return errors.New("blinded fulu proposal not present")
 		}
+	case spec.DataVersionGloas:
+		// No blinded arm to consider: there is no blinded proposal post-Gloas.
+		// A proposal marked blinded here is a caller mistake rather than a
+		// second shape to look for, so it is refused outright.
+		if v.Blinded {
+			return errors.New("gloas proposals are never blinded")
+		}
+
+		if v.Gloas == nil {
+			return errors.New("gloas proposal not present")
+		}
 	default:
 		return errors.New("unsupported version")
 	}
@@ -150,6 +172,9 @@ func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
 		}
 
 		return v.Fulu.SignedBlock.Message.Slot, nil
+	case spec.DataVersionGloas:
+		// No blinded arm: there is no blinded proposal post-Gloas.
+		return v.Gloas.Message.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -196,6 +221,8 @@ func (v *VersionedSignedProposal) ProposerIndex() (phase0.ValidatorIndex, error)
 		}
 
 		return v.Fulu.SignedBlock.Message.ProposerIndex, nil
+	case spec.DataVersionGloas:
+		return v.Gloas.Message.ProposerIndex, nil
 	default:
 		return 0, ErrUnsupportedVersion
 	}
@@ -328,6 +355,12 @@ func (v *VersionedSignedProposal) String() string {
 		}
 
 		return v.Fulu.String()
+	case spec.DataVersionGloas:
+		if v.Gloas == nil {
+			return ""
+		}
+
+		return v.Gloas.String()
 	default:
 		return "unsupported version"
 	}
@@ -401,6 +434,11 @@ func (v *VersionedSignedProposal) assertMessagePresent() error {
 				v.Fulu.SignedBlock.Message == nil {
 				return ErrDataMissing
 			}
+		}
+	case spec.DataVersionGloas:
+		if v.Gloas == nil ||
+			v.Gloas.Message == nil {
+			return ErrDataMissing
 		}
 	default:
 		return ErrUnsupportedVersion

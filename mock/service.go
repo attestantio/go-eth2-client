@@ -61,7 +61,9 @@ type Service struct {
 	BeaconStateRootFunc                func(context.Context, *api.BeaconStateRootOpts) (*api.Response[*phase0.Root], error)
 	BlockRewardsFunc                   func(context.Context, *api.BlockRewardsOpts) (*api.Response[*apiv1.BlockRewards], error)
 	DepositContractFunc                func(context.Context, *api.DepositContractOpts) (*api.Response[*apiv1.DepositContract], error)
+	EPBSProposalFunc                   func(context.Context, *api.EPBSProposalOpts) (*api.Response[*api.VersionedEPBSProposal], error)
 	EventsFunc                         func(context.Context, *api.EventsOpts) error
+	ExecutionPayloadEnvelopeFunc       func(context.Context, *api.ExecutionPayloadEnvelopeOpts) (*api.Response[*spec.VersionedExecutionPayloadEnvelope], error)
 	FinalityFunc                       func(context.Context, *api.FinalityOpts) (*api.Response[*apiv1.Finality], error)
 	ForkChoiceFunc                     func(context.Context, *api.ForkChoiceOpts) (*api.Response[*apiv1.ForkChoice], error)
 	ForkFunc                           func(context.Context, *api.ForkOpts) (*api.Response[*phase0.Fork], error)
