@@ -57,8 +57,17 @@ func TestVersionedPayloadAttestationAccessors(t *testing.T) {
 	t.Run("AggregationBits", func(t *testing.T) {
 		aggregationBits, err := populated.AggregationBits()
 		require.NoError(t, err)
-		require.True(t, aggregationBits.BitAt(3))
-		require.False(t, aggregationBits.BitAt(4))
+		require.Equal(t, []int{3}, aggregationBits.BitIndices())
+
+		// Read participation through the container's accessor, not the bitvector's
+		// mainnet-only BitAt, which this mainnet-width fixture would hide.
+		attested, err := populated.Gloas.AttestedAt(3)
+		require.NoError(t, err)
+		require.True(t, attested)
+
+		attested, err = populated.Gloas.AttestedAt(4)
+		require.NoError(t, err)
+		require.False(t, attested)
 
 		_, err = nilArm.AggregationBits()
 		require.EqualError(t, err, "no gloas payload attestation")

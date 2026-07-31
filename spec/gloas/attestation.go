@@ -29,10 +29,17 @@ import (
 
 // Attestation is the Ethereum 2 attestation structure.
 type Attestation struct {
-	AggregationBits bitfield.Bitlist        `ssz-index:"0"                           ssz-type:"progressive-bitlist"`
+	AggregationBits bitfield.Bitlist        `ssz-index:"0" ssz-type:"progressive-bitlist"`
 	Data            *phase0.AttestationData `ssz-index:"1"`
-	Signature       phase0.BLSSignature     `ssz-index:"2"                           ssz-size:"96"`
-	CommitteeBits   bitfield.Bitvector64    `dynssz-size:"MAX_COMMITTEES_PER_SLOT/8" ssz-index:"3"                  ssz-size:"8"`
+	Signature       phase0.BLSSignature     `ssz-index:"2" ssz-size:"96"`
+	// CommitteeBits is Bitvector[MAX_COMMITTEES_PER_SLOT], so its width follows the
+	// preset: 8 bytes at mainnet, 1 on the minimal preset.  As with
+	// PayloadAttestation.AggregationBits, its BitAt, SetBitAt and Len methods are
+	// hard-coded to the mainnet width and must not be used, and Shift panics on a
+	// value shorter than eight bytes; CommitteeIndex below stays correct only because
+	// it reads through the length-tolerant BitIndices.
+	// electra.Attestation.CommitteeBits carries the same tag and the same trap.
+	CommitteeBits bitfield.Bitvector64 `dynssz-size:"MAX_COMMITTEES_PER_SLOT/8" ssz-index:"3" ssz-size:"8"`
 }
 
 // attestationJSON is a raw representation of the struct.

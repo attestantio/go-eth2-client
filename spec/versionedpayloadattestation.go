@@ -70,6 +70,11 @@ func (v *VersionedPayloadAttestation) Data() (*gloas.PayloadAttestationData, err
 
 // AggregationBits returns the bits of the payload timeliness committee covered
 // by the attestation's signature.
+//
+// The returned value's own BitAt, SetBitAt, Len and Shift methods are mainnet-only and
+// must not be used; read and write participation through gloas.PayloadAttestation's
+// AttestedAt, SetAttestedAt and PTCSize instead, which hold at any preset width.  Note
+// that width is the producing node's claim rather than a verified fact; see PTCSize.
 func (v *VersionedPayloadAttestation) AggregationBits() (bitfield.Bitvector512, error) {
 	attestation, err := v.attestation()
 	if err != nil {

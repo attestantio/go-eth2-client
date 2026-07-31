@@ -59,11 +59,14 @@ func TestPayloadAttestationPoolFromResponse(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, expectedSlot, data.Slot)
 
-			// Every element must carry the version, not just the first: a loop
-			// that set it once outside the body would still pass a length check.
-			aggregationBits, err := response.Data[i].AggregationBits()
+			// Every element must carry its own bits, not just the first: a loop that
+			// set them once outside the body would still pass a length check.  Read
+			// through the container's accessor, not the bitvector's mainnet-only BitAt,
+			// which this mainnet-width fixture would hide.
+			require.NotNil(t, response.Data[i].Gloas)
+			attested, err := response.Data[i].Gloas.AttestedAt(3)
 			require.NoError(t, err)
-			require.True(t, aggregationBits.BitAt(3))
+			require.True(t, attested)
 		}
 	})
 
