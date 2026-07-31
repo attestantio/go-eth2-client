@@ -15,6 +15,12 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+        with:
+          # attgo's current-year analyzer resolves the changed-file set with
+          # `git diff origin/master...HEAD`.  The default shallow checkout has no
+          # origin/master ref, so the analyzer fails open and checks every file in
+          # the repo rather than the ones this branch touches.
+          fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:
