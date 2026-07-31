@@ -27,9 +27,60 @@ jobs:
             exit 1
           fi
 
+      # No -run selection: the whole suite runs, and the fork-dependent tests leave
+      # themselves out by asking this node what it is. Selecting by name here would
+      # put the choice in YAML, where it drifts against test names and the first new
+      # ePBS test whose name misses the pattern lands in this gating job silently.
       - name: Run HTTP tests
         env:
           HTTP_ADDRESS: ${{ vars.HTTP_ADDRESS }}
           HTTP_TEST_CONCURRENCY: ${{ vars.HTTP_TEST_CONCURRENCY }}
           HTTP_BEARER_TOKEN: ${{ secrets.HTTP_BEARER_TOKEN }}
+        run: go test -v -timeout=10m ./http/...
+
+  # The same suite against a Gloas devnet, which is the only place the ePBS surface
+  # can be exercised at all: the endpoint above is on an earlier fork, and on a
+  # different preset, so between them they cover the shipped surface and the new one.
+  #
+  # Advisory for now. That devnet is interim and frequently respun, so a failure here
+  # must not block a pull request — but it must not be ignorable either, which is what
+  # the two settings below are for.
+  http-tests-gloas:
+    runs-on: ubuntu-24.04
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.2'
+
+      # Deliberately fatal rather than skipped. With no address the suite's TestMain
+      # returns before running anything and the job would report success having
+      # executed no tests at all — the silent-green outcome this job exists to avoid.
+      #
+      # The address arrives through the environment rather than being interpolated
+      # into the script, so that its content is data and never shell.
+      - name: Validate required variables
+        env:
+          HTTP_ADDRESS_GLOAS: ${{ vars.HTTP_ADDRESS_GLOAS }}
+        run: |
+          if [ -z "$HTTP_ADDRESS_GLOAS" ]; then
+            echo "Error: HTTP_ADDRESS_GLOAS variable is not set in repository variables"
+            exit 1
+          fi
+
+      # HTTP_REQUIRE_GLOAS turns every fork gate from a skip into a failure. It is
+      # not optional and must not be softened: on this endpoint a skip is always a
+      # bug — a stale address, a predicate typo, a port a docker restart moved — and
+      # without it the job degrades to an all-skip run and reports green having
+      # verified none of the Gloas surface.
+      - name: Run HTTP tests
+        env:
+          HTTP_ADDRESS: ${{ vars.HTTP_ADDRESS_GLOAS }}
+          HTTP_TEST_CONCURRENCY: ${{ vars.HTTP_TEST_CONCURRENCY }}
+          HTTP_BEARER_TOKEN: ${{ secrets.HTTP_BEARER_TOKEN_GLOAS }}
+          HTTP_REQUIRE_GLOAS: 'true'
         run: go test -v -timeout=10m ./http/...

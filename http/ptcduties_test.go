@@ -83,7 +83,13 @@ func TestPTCDuties(t *testing.T) {
 		require.True(t, errors.Is(err, client.ErrInvalidOptions))
 	})
 
+	// Only this subtest needs the fork: the two above are refused by the client
+	// before the network is reached, and they cover that refusal on any node.
+	// Duties come from the beacon state, so a pre-Gloas state has no committee to
+	// return — the node answers 500 IncorrectStateVariant rather than 404.
 	t.Run("Good", func(t *testing.T) {
+		requireOnGloas(ctx, t, service)
+
 		response, err := service.(client.PTCDutiesProvider).PTCDuties(ctx, &api.PTCDutiesOpts{
 			Epoch:   epoch,
 			Indices: indices,

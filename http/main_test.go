@@ -58,6 +58,10 @@ func TestMain(m *testing.M) {
 	}
 	testCoordinator = semaphore.NewWeighted(concurrency)
 
+	// On the validation devnet a fork-gated test that skips is a bug rather than a
+	// correct outcome, so this turns those skips into failures. See requireGloas.
+	requireGloas = strings.EqualFold(os.Getenv("HTTP_REQUIRE_GLOAS"), "true")
+
 	if os.Getenv("HTTP_ADDRESS") != "" {
 		// Initialize global HTTP service for all tests to share
 		initGlobalHTTPService()

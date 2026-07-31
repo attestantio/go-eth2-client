@@ -36,7 +36,11 @@ func TestPayloadAttestationPool(t *testing.T) {
 		require.ErrorIs(t, err, client.ErrNoOptions)
 	})
 
+	// NilOpts above is a client-side refusal and needs no fork, so the gate goes
+	// here rather than on the parent.
 	t.Run("Good", func(t *testing.T) {
+		requireOnGloas(ctx, t, service)
+
 		response, err := service.(client.PayloadAttestationPoolProvider).PayloadAttestationPool(ctx,
 			&api.PayloadAttestationPoolOpts{Slot: &slot},
 		)

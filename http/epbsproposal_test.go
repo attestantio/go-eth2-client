@@ -87,6 +87,10 @@ func TestEPBSProposal(t *testing.T) {
 
 	service := testService(ctx, t).(client.Service)
 
+	// Every subtest asks the node to produce a gloas block, so the gate belongs
+	// on the whole test rather than on each of them.
+	requireOnGloas(ctx, t, service)
+
 	// The node produces a block for the slot it is about to propose, so the
 	// target is derived from its head rather than from the wall clock.
 	slot := headSlot(ctx, t, service) + 1

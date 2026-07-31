@@ -56,6 +56,8 @@ func TestSubmitProposalGloas(t *testing.T) {
 
 	service := testService(ctx, t).(client.Service)
 
+	requireOnGloas(ctx, t, service)
+
 	jsonService, err := newTestService(ctx, true, http.WithEnforceJSON(true))
 	require.NoError(t, err)
 

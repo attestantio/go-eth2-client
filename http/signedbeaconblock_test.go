@@ -37,6 +37,8 @@ func TestSignedBeaconBlockGloas(t *testing.T) {
 
 	service := testService(ctx, t).(client.Service)
 
+	requireOnGloas(ctx, t, service)
+
 	response, err := service.(client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx,
 		&api.SignedBeaconBlockOpts{Block: "head"},
 	)

@@ -55,6 +55,8 @@ func TestSubmitPayloadAttestationMessages(t *testing.T) {
 	// messages are looked at, so a rejection that names the signature is
 	// evidence that the header and the body shape were both accepted.
 	t.Run("ReachesServer", func(t *testing.T) {
+		requireOnGloas(ctx, t, service)
+
 		err := service.(client.PayloadAttestationMessagesSubmitter).SubmitPayloadAttestationMessages(ctx,
 			&api.SubmitPayloadAttestationMessagesOpts{
 				Messages: []*spec.VersionedPayloadAttestationMessage{

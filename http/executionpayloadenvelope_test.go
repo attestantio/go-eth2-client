@@ -61,6 +61,12 @@ func TestExecutionPayloadEnvelope(t *testing.T) {
 	// a caller could not tell "this node did not build that block" — the re-org
 	// and wrong-node cases, which are recoverable — apart from a real fault.
 	t.Run("PastSlotIsSentinel", func(t *testing.T) {
+		// Gated although it passes on a pre-Gloas node, because it passes there
+		// for the wrong reason: that node has no such endpoint, and its 404 maps
+		// to the same sentinel this asserts.  What is meant to be under test is a
+		// Gloas node reporting a cache miss, which needs a gloas head.
+		requireOnGloas(ctx, t, service)
+
 		// Far enough back to be certain nothing is cached, and still comfortably
 		// after the fork, which the node rejects separately.
 		slot := headSlot(ctx, t, service) - 100
@@ -76,6 +82,13 @@ func TestExecutionPayloadEnvelope(t *testing.T) {
 	// sentinel: asking for an envelope before the fork that introduced envelopes
 	// is a caller mistake, not a cache miss to be retried elsewhere.
 	t.Run("PreGloasSlotIsNotSentinel", func(t *testing.T) {
+		// The weaker gate, and deliberately so: this is a test of pre-Gloas
+		// behaviour, whose only precondition is that an endpoint exists to do the
+		// refusing.  Gating it on the head's fork instead would keep it dark on a
+		// mainnet-lineage node forever, when it should start running there the day
+		// that node's client learns Gloas — years before the fork activates.
+		requireKnowsGloas(ctx, t, service)
+
 		_, err := provider.ExecutionPayloadEnvelope(ctx, &api.ExecutionPayloadEnvelopeOpts{
 			Slot:            1,
 			BeaconBlockRoot: phase0.Root{0x01},
