@@ -77,10 +77,18 @@ jobs:
       # bug — a stale address, a predicate typo, a port a docker restart moved — and
       # without it the job degrades to an all-skip run and reports green having
       # verified none of the Gloas surface.
+      # The timeout is a bandwidth budget rather than a hang detector, which is why
+      # it is so much larger than the endpoint above needs. This devnet is
+      # mainnet-scale — half a million validators — so the suite's wall clock is
+      # dominated by whole-collection fetches: the validator set is a 222MB response
+      # and the debug state 81MB, and a runner's link is several times slower than a
+      # workstation's. At 10m the run died inside TestValidators with a couple of
+      # tests still to go, so the report it produced was silent about them rather
+      # than green. Revisit when that validator count grows again.
       - name: Run HTTP tests
         env:
           HTTP_ADDRESS: ${{ vars.HTTP_ADDRESS_GLOAS }}
           HTTP_TEST_CONCURRENCY: ${{ vars.HTTP_TEST_CONCURRENCY }}
           HTTP_BEARER_TOKEN: ${{ secrets.HTTP_BEARER_TOKEN_GLOAS }}
           HTTP_REQUIRE_GLOAS: 'true'
-        run: go test -v -timeout=10m ./http/...
+        run: go test -v -timeout=25m ./http/...
