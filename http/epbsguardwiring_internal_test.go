@@ -64,8 +64,8 @@ func disagreeingService(ctx context.Context, t *testing.T, handler http.HandlerF
 }
 
 // TestEPBSProposalRejectsADisagreeingNode verifies that the request-consistency
-// guard is reached from EPBSProposal, by asking a node that answers with the
-// payload-inclusion mode that was not requested.
+// guard is reached from EPBSProposal, by asking a node that includes an
+// execution payload that was not requested.
 func TestEPBSProposalRejectsADisagreeingNode(t *testing.T) {
 	ctx := context.Background()
 
@@ -73,21 +73,25 @@ func TestEPBSProposalRejectsADisagreeingNode(t *testing.T) {
 
 	reveal := phase0.BLSSignature{0x0a, 0x0b, 0x0c}
 
-	// Always answers payload-excluded, whatever was asked for.
+	// Always answers payload-included, whatever was asked for.  This is the
+	// direction that remains a disagreement: a node volunteering a payload nobody
+	// asked for changes where the block can be published.  The opposite answer is
+	// what an external builder's bid legitimately looks like, so it would no
+	// longer prove the guard was reached.
 	s := disagreeingService(ctx, t, func(w http.ResponseWriter, _ *http.Request) {
-		block := validEPBSBeaconBlock()
-		block.Slot = slot
-		block.Body.RANDAOReveal = reveal
+		contents := validEPBSBlockContents()
+		contents.Block.Slot = slot
+		contents.Block.Body.RANDAOReveal = reveal
 
-		data, err := json.Marshal(block)
+		data, err := json.Marshal(contents)
 		require.NoError(t, err)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Eth-Consensus-Version", "gloas")
-		fmt.Fprintf(w, `{"version":"gloas","execution_payload_included":false,"data":%s}`, data)
+		fmt.Fprintf(w, `{"version":"gloas","execution_payload_included":true,"data":%s}`, data)
 	})
 
-	includePayload := true
+	includePayload := false
 
 	_, err := s.EPBSProposal(ctx, &api.EPBSProposalOpts{
 		Slot:           slot,
@@ -95,7 +99,7 @@ func TestEPBSProposalRejectsADisagreeingNode(t *testing.T) {
 		IncludePayload: &includePayload,
 	})
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
-	require.ErrorContains(t, err, "execution payload included false; expected true")
+	require.ErrorContains(t, err, "execution payload included true; expected false")
 }
 
 // TestExecutionPayloadEnvelopeRejectsADisagreeingNode verifies that the block-root

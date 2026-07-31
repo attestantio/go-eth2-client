@@ -38,13 +38,21 @@ type EPBSProposalOpts struct {
 	// IncludePayload selects whether a self-built proposal carries its execution
 	// payload envelope and blobs.
 	//
-	// True is stateless: everything needed to publish travels in the response, so
-	// any beacon node can publish the block.  This is what multiple-beacon-node,
-	// distributed-validator and failover setups require.
+	// True asks a self-building node for the stateless form: everything needed to
+	// publish travels in the response, so any beacon node can publish the block.
+	// This is what multiple-beacon-node, distributed-validator and failover setups
+	// require.  It is a request rather than a guarantee: a block built on an
+	// external builder's bid comes back with
+	// VersionedEPBSProposal.ExecutionPayloadIncluded false whatever was asked for,
+	// because the node does not hold the builder's payload, so those setups must
+	// read that field rather than assume this one describes what arrived.
 	//
 	// False is stateful: the producing node caches the envelope and blobs, so the
 	// block must be published via that same node, and the envelope retrieved from
-	// it with ExecutionPayloadEnvelope().
+	// it with ExecutionPayloadEnvelope() — but only when the node self-built the
+	// block. An external builder's bid comes back excluded regardless of what was
+	// asked for, and the response alone does not say which case occurred; that is
+	// operational context the caller must already know.
 	//
 	// The spec marks this parameter required with no default, and the two choices
 	// carry materially different operational constraints, so it is a pointer:

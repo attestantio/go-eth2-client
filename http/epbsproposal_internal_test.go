@@ -467,9 +467,11 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 }
 
 // TestAssertEPBSProposalMatchesRequest covers the checks made on what the node
-// returned.  None of them can be provoked against a live node — a node that
+// returned.  The faults cannot be provoked against a live node — one that
 // honours the request cannot be made to answer with the wrong slot, mode or
 // RANDAO reveal — so this is the only place they are exercised.
+// BuilderBidExcludesRequestedPayload is the other side of that: a divergence
+// the guard has to let through rather than reject.
 func TestAssertEPBSProposalMatchesRequest(t *testing.T) {
 	s := &Service{}
 
@@ -508,10 +510,10 @@ func TestAssertEPBSProposalMatchesRequest(t *testing.T) {
 		require.ErrorContains(t, err, "for slot 60300; expected 60301")
 	})
 
-	// The mode decides where the block can be published, so a node answering with
-	// the other one has changed that without saying so.  Worth checking rather
-	// than assuming: a node has been observed defaulting the parameter when it is
-	// absent, despite the spec marking it required.
+	// The mode decides where the block can be published, so a node that includes
+	// a payload nobody asked for has changed that without saying so.  This is the
+	// only direction that is a fault; the other one is what an external builder's
+	// bid legitimately looks like.
 	t.Run("WrongPayloadInclusion", func(t *testing.T) {
 		exclude := false
 		opts := matchingOpts()
@@ -520,6 +522,30 @@ func TestAssertEPBSProposalMatchesRequest(t *testing.T) {
 		err := s.assertEPBSProposalMatchesRequest(matchingProposal(), opts)
 		require.ErrorIs(t, err, client.ErrInconsistentResult)
 		require.ErrorContains(t, err, "execution payload included true; expected false")
+	})
+
+	// An external builder's bid comes back as the beacon block alone whatever
+	// include_payload asked for, because the node does not hold the builder's
+	// payload and so has none to send.  Refusing it would leave the caller with
+	// nothing to sign on every slot a builder wins.  The proposal is decoded from
+	// a response body rather than built as a struct literal so that what is proved
+	// is a real bid surviving the whole path, not just the check at the end of it
+	// agreeing with a hand-made value.
+	t.Run("BuilderBidExcludesRequestedPayload", func(t *testing.T) {
+		ctx := context.Background()
+		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+
+		response, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+			statusCode:       http.StatusOK,
+			contentType:      ContentTypeJSON,
+			consensusVersion: spec.DataVersionGloas,
+			body:             body,
+			headers:          map[string]string{},
+		})
+		require.NoError(t, err)
+		require.False(t, response.Data.ExecutionPayloadIncluded)
+
+		require.NoError(t, s.assertEPBSProposalMatchesRequest(response.Data, matchingOpts()))
 	})
 
 	t.Run("WrongRandaoReveal", func(t *testing.T) {

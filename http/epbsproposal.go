@@ -100,13 +100,15 @@ func (s *Service) assertEPBSProposalMatchesRequest(proposal *api.VersionedEPBSPr
 		)
 	}
 
-	// The payload-inclusion mode must be the one that was asked for.  The two are
-	// not interchangeable — excluded means the block can only be published
-	// through the node that produced it — so a node answering with the other mode
-	// has silently changed where the caller is able to publish.  Nodes have been
-	// observed treating the parameter as optional and supplying their own default,
-	// which is what makes this worth checking rather than assuming.
-	if proposal.ExecutionPayloadIncluded != *opts.IncludePayload {
+	// Only the node volunteering a payload is a fault.  Including one that was
+	// not asked for changes where the caller is able to publish, which is not
+	// the node's to decide.  The other direction is what the spec requires:
+	// include_payload only governs self-building, and a block built on an
+	// external builder's bid comes back alone whatever was asked for, since the
+	// node does not hold the builder's payload.  So an excluded payload can no
+	// longer be told apart from a node quietly defaulting the parameter, and the
+	// builder path is worth more than catching that.
+	if proposal.ExecutionPayloadIncluded && !*opts.IncludePayload {
 		return errors.Join(
 			fmt.Errorf("epbs beacon block proposal has execution payload included %t; expected %t",
 				proposal.ExecutionPayloadIncluded, *opts.IncludePayload),
