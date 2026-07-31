@@ -20,6 +20,7 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/stretchr/testify/require"
 )
 
@@ -94,10 +95,23 @@ func TestExecutionPayloadEnvelope(t *testing.T) {
 			BeaconBlockRoot: phase0.Root{0x01},
 		})
 		require.Error(t, err)
-		require.NotErrorIs(t, err, client.ErrNoExecutionPayloadEnvelope)
 
 		var apiErr *api.Error
 		require.ErrorAs(t, err, &apiErr)
+
+		// Knowing the fork turns out not to imply serving its endpoints. The
+		// regression endpoint publishes GLOAS_FORK_EPOCH already and has no route
+		// behind it, so every request here is a bare 404 with no pre-fork refusal
+		// inside it to inspect, and nothing for this test to assert.
+		//
+		// The escape is withheld once the chain is on Gloas, deliberately: there a
+		// 404 for a pre-fork slot is the defect this test exists to catch — it is
+		// what maps onto the sentinel — rather than a route that is not there yet.
+		if apiErr.StatusCode == 404 && !testclients.OnGloas(ctx, service) {
+			gate(t, "node knows gloas but does not serve the envelope endpoint (404)")
+		}
+
+		require.NotErrorIs(t, err, client.ErrNoExecutionPayloadEnvelope)
 		require.Equal(t, 400, apiErr.StatusCode)
 	})
 }
