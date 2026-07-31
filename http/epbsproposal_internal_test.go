@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 
@@ -557,13 +556,5 @@ func TestAssertEPBSProposalMatchesRequest(t *testing.T) {
 func customSpecService(ctx context.Context, t *testing.T) *Service {
 	t.Helper()
 
-	address := os.Getenv("HTTP_ADDRESS")
-	if address == "" {
-		t.Skip("HTTP_ADDRESS not set")
-	}
-
-	service, err := New(ctx, WithAddress(address), WithCustomSpecSupport(true))
-	require.NoError(t, err)
-
-	return service.(*Service)
+	return newTestService(ctx, t, true)
 }

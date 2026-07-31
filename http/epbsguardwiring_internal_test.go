@@ -31,7 +31,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"os"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -45,21 +44,13 @@ import (
 func disagreeingService(ctx context.Context, t *testing.T, handler http.HandlerFunc) *Service {
 	t.Helper()
 
-	address := os.Getenv("HTTP_ADDRESS")
-	if address == "" {
-		t.Skip("HTTP_ADDRESS not set")
-	}
-
 	// Built against the real node so that the spec fetch, the sync assertion and
 	// the SSZ codec are all genuine; only the endpoint under test is faked.
-	service, err := New(ctx, WithAddress(address), WithCustomSpecSupport(true), WithEnforceJSON(true))
-	require.NoError(t, err)
-
-	s := service.(*Service)
+	s := newTestService(ctx, t, true, WithEnforceJSON(true))
 
 	// Warm the spec cache while the real address is still in place, since the
 	// fake server does not serve it.
-	_, err = s.Spec(ctx, &api.SpecOpts{})
+	_, err := s.Spec(ctx, &api.SpecOpts{})
 	require.NoError(t, err)
 
 	server := httptest.NewServer(handler)

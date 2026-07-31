@@ -17,12 +17,8 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
-	"os"
 	"testing"
-	"time"
 
-	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
@@ -30,9 +26,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
-
-// timeout for tests.
-var timeout = 60 * time.Second
 
 func TestEventHandler(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -277,24 +270,7 @@ func TestEventHandler(t *testing.T) {
 
 	// Note: Rate limiting for internal tests would need to be implemented separately
 	// if needed. For now, this test runs without rate limiting.
-	var s client.Service
-	var err error
-	if os.Getenv("HTTP_BEARER_TOKEN") != "" {
-		s, err = New(ctx,
-			WithTimeout(timeout),
-			WithAddress(os.Getenv("HTTP_ADDRESS")),
-			WithExtraHeaders(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN"))}),
-		)
-	} else {
-		s, err = New(ctx,
-			WithTimeout(timeout),
-			WithAddress(os.Getenv("HTTP_ADDRESS")),
-		)
-	}
-	require.NoError(t, err)
-
-	h, isHTTPService := s.(*Service)
-	require.True(t, isHTTPService)
+	h := newTestService(ctx, t, false)
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
