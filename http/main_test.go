@@ -16,7 +16,9 @@ package http_test
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	nethttp "net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -63,10 +65,76 @@ func TestMain(m *testing.M) {
 	requireGloas = strings.EqualFold(os.Getenv("HTTP_REQUIRE_GLOAS"), "true")
 
 	if os.Getenv("HTTP_ADDRESS") != "" {
+		// Before the service, so that the address still identifies itself when the
+		// client cannot come up against it -- which is exactly when knowing what is
+		// there matters most.
+		logEndpointIdentity()
+
 		// Initialize global HTTP service for all tests to share
 		initGlobalHTTPService()
 		os.Exit(m.Run())
 	}
+}
+
+// logEndpointIdentity prints which node the suite is about to talk to, once, before any
+// test runs.
+//
+// It exists because an address is not necessarily a node. The Gloas validation devnet is
+// reached through a load balancer over ~47 nodes spanning six consensus implementations,
+// the caller cannot choose its upstream (no query parameter or header selects one), and
+// the implementations do not agree on which routes they serve or how they word their
+// errors. So the same commit against the same address produced 15 failures on one run and
+// a different 20 on another. Without this line, a reader diffing two runs has no way to
+// tell a regression from a different client having answered, because nothing else in the
+// output names the server.
+//
+// Best effort by design: a diagnostic must never decide whether the suite runs, so every
+// failure here is reported and then ignored. The timeout is deliberately short for the
+// same reason -- this must not add meaningfully to a run that is about to fail anyway.
+func logEndpointIdentity() {
+	endpoint := strings.TrimSuffix(os.Getenv("HTTP_ADDRESS"), "/") + "/eth/v1/node/version"
+
+	req, err := nethttp.NewRequest(nethttp.MethodGet, endpoint, nil)
+	if err != nil {
+		fmt.Printf("endpoint identity: unavailable (%v)\n", err)
+
+		return
+	}
+
+	if token := os.Getenv("HTTP_BEARER_TOKEN"); token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
+
+	resp, err := (&nethttp.Client{Timeout: 10 * time.Second}).Do(req)
+	if err != nil {
+		fmt.Printf("endpoint identity: unavailable (%v)\n", err)
+
+		return
+	}
+	defer resp.Body.Close()
+
+	version := "unknown"
+
+	var body struct {
+		Data struct {
+			Version string `json:"version"`
+		} `json:"data"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&body); err == nil && body.Data.Version != "" {
+		version = body.Data.Version
+	}
+
+	// Set by dugtrio, the load balancer fronting the ethpandaops devnets. Its absence
+	// means a direct connection to a single node, which is itself the thing worth
+	// knowing -- on such an address the client identity below cannot change between
+	// runs.
+	upstream := resp.Header.Get("X-Dugtrio-Endpoint-Name")
+	if upstream == "" {
+		upstream = "none (direct connection)"
+	}
+
+	fmt.Printf("endpoint identity: status=%d version=%q upstream=%s\n", resp.StatusCode, version, upstream)
 }
 
 // newTestService creates an HTTP service against HTTP_ADDRESS, authenticating with
