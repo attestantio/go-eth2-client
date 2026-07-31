@@ -280,6 +280,11 @@ func TestJSONFixedLengthGuards(t *testing.T) {
 // correctly-sized document must still unmarshal and re-marshal unchanged, which
 // would fail if a guard used the wrong length constant or a one-sided
 // comparison.
+//
+// The BeaconState row does double duty: its fixture populates all 46 fields rather
+// than only those preceding a guard, so it also catches any field whose marshal and
+// unmarshal disagree, length-guarded or not — which is how it caught gloas.Builder
+// dropping its version.
 func TestJSONFixedLengthRoundTrip(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -331,6 +336,14 @@ func TestJSONFixedLengthRoundTrip(t *testing.T) {
 			name:   "SignedBeaconBlock",
 			value:  &gloas.SignedBeaconBlock{Message: validBeaconBlock()},
 			target: &gloas.SignedBeaconBlock{},
+		},
+		{
+			// All 46 fields populated, per the note above. A field wrong the same
+			// way in both directions still passes here; TestBeaconStateJSONWireShapes
+			// is what catches those.
+			name:   "BeaconState",
+			value:  populatedBeaconState(),
+			target: &gloas.BeaconState{},
 		},
 	}
 

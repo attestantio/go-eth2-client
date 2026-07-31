@@ -95,6 +95,8 @@ func (v *Builder) unpack(builderJSON *builderJSON) error {
 
 	copy(v.PublicKey[:], publicKey)
 
+	v.Version = builderJSON.Version
+
 	if builderJSON.ExecutionAddress == "" {
 		return errors.New("execution address missing")
 	}
@@ -154,6 +156,7 @@ func (v *Builder) unpack(builderJSON *builderJSON) error {
 func (v *Builder) MarshalYAML() ([]byte, error) {
 	yamlBytes, err := yaml.MarshalWithOptions(&builderYAML{
 		PublicKey:         fmt.Sprintf("%#x", v.PublicKey),
+		Version:           v.Version,
 		ExecutionAddress:  v.ExecutionAddress.String(),
 		Balance:           fmt.Sprintf("%d", v.Balance),
 		DepositEpoch:      fmt.Sprintf("%d", v.DepositEpoch),
