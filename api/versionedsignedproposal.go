@@ -265,6 +265,11 @@ func (v *VersionedSignedProposal) ExecutionBlockHash() (phase0.Hash32, error) {
 		}
 
 		return v.Fulu.SignedBlock.Message.Body.ExecutionPayload.BlockHash, nil
+	case spec.DataVersionGloas:
+		// No blinded arm: there is no blinded proposal post-Gloas.  The bid the
+		// proposer committed to stands in for the payload and the payload header
+		// the earlier arms read.
+		return v.Gloas.Message.Body.SignedExecutionPayloadBid.Message.BlockHash, nil
 	default:
 		return phase0.Hash32{}, ErrUnsupportedVersion
 	}
@@ -533,6 +538,18 @@ func (v *VersionedSignedProposal) assertExecutionPayloadPresent() error {
 				v.Fulu.SignedBlock.Message.Body.ExecutionPayload == nil {
 				return ErrDataMissing
 			}
+		}
+	case spec.DataVersionGloas:
+		// No blinded arm to consider: there is no blinded proposal post-Gloas.
+		// The chain runs one field deeper than assertMessagePresent's Gloas arm
+		// because the execution block hash lives in the bid, so a block whose bid
+		// is absent cannot answer for one.
+		if v.Gloas == nil ||
+			v.Gloas.Message == nil ||
+			v.Gloas.Message.Body == nil ||
+			v.Gloas.Message.Body.SignedExecutionPayloadBid == nil ||
+			v.Gloas.Message.Body.SignedExecutionPayloadBid.Message == nil {
+			return ErrDataMissing
 		}
 	default:
 		return ErrUnsupportedVersion
