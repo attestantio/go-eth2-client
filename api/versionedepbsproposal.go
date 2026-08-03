@@ -211,7 +211,7 @@ func (v *VersionedEPBSProposal) block() (*gloas.BeaconBlock, error) {
 
 		return v.Gloas, nil
 	default:
-		return nil, errors.New("unknown version")
+		return nil, ErrUnsupportedVersion
 	}
 }
 
@@ -234,6 +234,6 @@ func (v *VersionedEPBSProposal) contents() (*apiv1gloas.BlockContents, error) {
 
 		return v.GloasContents, nil
 	default:
-		return nil, errors.New("unknown version")
+		return nil, ErrUnsupportedVersion
 	}
 }
