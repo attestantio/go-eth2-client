@@ -63,6 +63,41 @@ func (v *VersionedEPBSProposal) RandaoReveal() (phase0.BLSSignature, error) {
 	return block.Body.RANDAOReveal, nil
 }
 
+// ParentRoot returns the parent root of the proposal.
+func (v *VersionedEPBSProposal) ParentRoot() (phase0.Root, error) {
+	block, err := v.block()
+	if err != nil {
+		return phase0.Root{}, err
+	}
+
+	return block.ParentRoot, nil
+}
+
+// StateRoot returns the state root of the proposal.
+func (v *VersionedEPBSProposal) StateRoot() (phase0.Root, error) {
+	block, err := v.block()
+	if err != nil {
+		return phase0.Root{}, err
+	}
+
+	return block.StateRoot, nil
+}
+
+// BodyRoot returns the hash tree root of the proposal's beacon block body,
+// the value a proposer signs over.
+func (v *VersionedEPBSProposal) BodyRoot() (phase0.Root, error) {
+	block, err := v.block()
+	if err != nil {
+		return phase0.Root{}, err
+	}
+
+	if block.Body == nil {
+		return phase0.Root{}, errors.New("no gloas beacon block body")
+	}
+
+	return block.Body.HashTreeRoot()
+}
+
 // ExecutionPayloadEnvelope returns the execution payload envelope that travelled
 // with the block.  It is an error to ask for it when the execution payload was
 // not included: the caller must fetch the envelope from the producing node.

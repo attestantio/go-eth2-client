@@ -141,6 +141,286 @@ func TestVersionedEPBSProposalRandaoReveal(t *testing.T) {
 	require.EqualError(t, err, "no gloas beacon block body")
 }
 
+// TestVersionedEPBSProposalParentRoot verifies the parent root is read from
+// whichever arm the execution_payload_included flag selects, and that every
+// way of arriving without a block is an error.  Each fixture also carries a
+// distinct state root, so a fixed accessor that read the wrong field would
+// fail rather than pass by coincidence.
+func TestVersionedEPBSProposalParentRoot(t *testing.T) {
+	tests := []struct {
+		name     string
+		proposal *api.VersionedEPBSProposal
+		expected phase0.Root
+		err      string
+	}{
+		{
+			name: "PayloadExcluded",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+				Gloas:   &gloas.BeaconBlock{ParentRoot: phase0.Root{0x01}, StateRoot: phase0.Root{0xaa}},
+			},
+			expected: phase0.Root{0x01},
+		},
+		{
+			name: "PayloadIncluded",
+			proposal: &api.VersionedEPBSProposal{
+				Version:                  spec.DataVersionGloas,
+				ExecutionPayloadIncluded: true,
+				GloasContents: &apiv1gloas.BlockContents{
+					Block: &gloas.BeaconBlock{ParentRoot: phase0.Root{0x02}, StateRoot: phase0.Root{0xbb}},
+				},
+			},
+			expected: phase0.Root{0x02},
+		},
+		{
+			name: "PayloadExcludedNilBlock",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+			},
+			err: "no gloas beacon block",
+		},
+		{
+			name: "PayloadIncludedNilContents",
+			proposal: &api.VersionedEPBSProposal{
+				Version:                  spec.DataVersionGloas,
+				ExecutionPayloadIncluded: true,
+			},
+			err: "no gloas block contents",
+		},
+		{
+			name: "PayloadIncludedNilBlock",
+			proposal: &api.VersionedEPBSProposal{
+				Version:                  spec.DataVersionGloas,
+				ExecutionPayloadIncluded: true,
+				GloasContents:            &apiv1gloas.BlockContents{},
+			},
+			err: "no gloas beacon block",
+		},
+		{
+			name: "PreGloas",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionFulu,
+			},
+			err: "no epbs proposal in fulu",
+		},
+		{
+			name: "UnknownVersion",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersion(99),
+			},
+			err: "unknown version",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root, err := test.proposal.ParentRoot()
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, test.expected, root)
+			}
+		})
+	}
+}
+
+// TestVersionedEPBSProposalStateRoot mirrors TestVersionedEPBSProposalParentRoot
+// for the state root, with distinct fixture values so a parent/state field
+// swap in the accessor would fail rather than pass by coincidence.
+func TestVersionedEPBSProposalStateRoot(t *testing.T) {
+	tests := []struct {
+		name     string
+		proposal *api.VersionedEPBSProposal
+		expected phase0.Root
+		err      string
+	}{
+		{
+			name: "PayloadExcluded",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+				Gloas:   &gloas.BeaconBlock{StateRoot: phase0.Root{0x03}, ParentRoot: phase0.Root{0xcc}},
+			},
+			expected: phase0.Root{0x03},
+		},
+		{
+			name: "PayloadIncluded",
+			proposal: &api.VersionedEPBSProposal{
+				Version:                  spec.DataVersionGloas,
+				ExecutionPayloadIncluded: true,
+				GloasContents: &apiv1gloas.BlockContents{
+					Block: &gloas.BeaconBlock{StateRoot: phase0.Root{0x04}, ParentRoot: phase0.Root{0xdd}},
+				},
+			},
+			expected: phase0.Root{0x04},
+		},
+		{
+			name: "PayloadExcludedNilBlock",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+			},
+			err: "no gloas beacon block",
+		},
+		{
+			name: "PayloadIncludedNilContents",
+			proposal: &api.VersionedEPBSProposal{
+				Version:                  spec.DataVersionGloas,
+				ExecutionPayloadIncluded: true,
+			},
+			err: "no gloas block contents",
+		},
+		{
+			name: "PayloadIncludedNilBlock",
+			proposal: &api.VersionedEPBSProposal{
+				Version:                  spec.DataVersionGloas,
+				ExecutionPayloadIncluded: true,
+				GloasContents:            &apiv1gloas.BlockContents{},
+			},
+			err: "no gloas beacon block",
+		},
+		{
+			name: "PreGloas",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionFulu,
+			},
+			err: "no epbs proposal in fulu",
+		},
+		{
+			name: "UnknownVersion",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersion(99),
+			},
+			err: "unknown version",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root, err := test.proposal.StateRoot()
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, test.expected, root)
+			}
+		})
+	}
+}
+
+// TestVersionedEPBSProposalBodyRoot verifies BodyRoot returns the hash tree
+// root of the block's body, not the block itself: dirk's proposer domain
+// signs over the body root, so returning the block root instead would sign
+// gibberish.  The happy-path cases assert the result matches an
+// independently-computed body HTR and differs from the block's own HTR,
+// rather than merely asserting no error.
+func TestVersionedEPBSProposalBodyRoot(t *testing.T) {
+	newBlock := func(reveal byte) *gloas.BeaconBlock {
+		return &gloas.BeaconBlock{
+			Slot: 1,
+			Body: &gloas.BeaconBlockBody{RANDAOReveal: phase0.BLSSignature{reveal}},
+		}
+	}
+
+	t.Run("PayloadExcluded", func(t *testing.T) {
+		block := newBlock(0x01)
+		wantBodyRoot, err := block.Body.HashTreeRoot()
+		require.NoError(t, err)
+		blockRoot, err := block.HashTreeRoot()
+		require.NoError(t, err)
+		require.NotEqual(t, phase0.Root(wantBodyRoot), phase0.Root(blockRoot))
+
+		got, err := (&api.VersionedEPBSProposal{
+			Version: spec.DataVersionGloas,
+			Gloas:   block,
+		}).BodyRoot()
+		require.NoError(t, err)
+		require.NotEqual(t, phase0.Root{}, got)
+		require.Equal(t, phase0.Root(wantBodyRoot), got)
+		require.NotEqual(t, phase0.Root(blockRoot), got)
+	})
+
+	t.Run("PayloadIncluded", func(t *testing.T) {
+		block := newBlock(0x02)
+		wantBodyRoot, err := block.Body.HashTreeRoot()
+		require.NoError(t, err)
+		blockRoot, err := block.HashTreeRoot()
+		require.NoError(t, err)
+		require.NotEqual(t, phase0.Root(wantBodyRoot), phase0.Root(blockRoot))
+
+		got, err := (&api.VersionedEPBSProposal{
+			Version:                  spec.DataVersionGloas,
+			ExecutionPayloadIncluded: true,
+			GloasContents:            &apiv1gloas.BlockContents{Block: block},
+		}).BodyRoot()
+		require.NoError(t, err)
+		require.NotEqual(t, phase0.Root{}, got)
+		require.Equal(t, phase0.Root(wantBodyRoot), got)
+		require.NotEqual(t, phase0.Root(blockRoot), got)
+	})
+
+	// A block with no body cannot yield a body root, and must not report the
+	// zero root as if it were one.
+	t.Run("NilBody", func(t *testing.T) {
+		_, err := (&api.VersionedEPBSProposal{
+			Version: spec.DataVersionGloas,
+			Gloas:   &gloas.BeaconBlock{},
+		}).BodyRoot()
+		require.EqualError(t, err, "no gloas beacon block body")
+	})
+
+	errTests := []struct {
+		name     string
+		proposal *api.VersionedEPBSProposal
+		err      string
+	}{
+		{
+			name: "PayloadExcludedNilBlock",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+			},
+			err: "no gloas beacon block",
+		},
+		{
+			name: "PayloadIncludedNilContents",
+			proposal: &api.VersionedEPBSProposal{
+				Version:                  spec.DataVersionGloas,
+				ExecutionPayloadIncluded: true,
+			},
+			err: "no gloas block contents",
+		},
+		{
+			name: "PayloadIncludedNilBlock",
+			proposal: &api.VersionedEPBSProposal{
+				Version:                  spec.DataVersionGloas,
+				ExecutionPayloadIncluded: true,
+				GloasContents:            &apiv1gloas.BlockContents{},
+			},
+			err: "no gloas beacon block",
+		},
+		{
+			name: "PreGloas",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionFulu,
+			},
+			err: "no epbs proposal in fulu",
+		},
+		{
+			name: "UnknownVersion",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersion(99),
+			},
+			err: "unknown version",
+		},
+	}
+
+	for _, test := range errTests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := test.proposal.BodyRoot()
+			require.EqualError(t, err, test.err)
+		})
+	}
+}
+
 // TestVersionedEPBSProposalContents verifies that the three publish-side
 // accessors are reachable only when the execution payload actually travelled
 // with the block.  When it did not, the caller must fetch the envelope from the
