@@ -94,7 +94,7 @@ func TestVersionedEPBSProposalSlot(t *testing.T) {
 			proposal: &api.VersionedEPBSProposal{
 				Version: spec.DataVersion(99),
 			},
-			err: "unknown version",
+			err: "unsupported version",
 		},
 	}
 
@@ -208,7 +208,7 @@ func TestVersionedEPBSProposalParentRoot(t *testing.T) {
 			proposal: &api.VersionedEPBSProposal{
 				Version: spec.DataVersion(99),
 			},
-			err: "unknown version",
+			err: "unsupported version",
 		},
 	}
 
@@ -290,7 +290,7 @@ func TestVersionedEPBSProposalStateRoot(t *testing.T) {
 			proposal: &api.VersionedEPBSProposal{
 				Version: spec.DataVersion(99),
 			},
-			err: "unknown version",
+			err: "unsupported version",
 		},
 	}
 
@@ -409,7 +409,7 @@ func TestVersionedEPBSProposalBodyRoot(t *testing.T) {
 			proposal: &api.VersionedEPBSProposal{
 				Version: spec.DataVersion(99),
 			},
-			err: "unknown version",
+			err: "unsupported version",
 		},
 	}
 
