@@ -109,13 +109,6 @@ func (i *IndexedAttestation) String() string {
 
 func (i *IndexedAttestation) unpack(indexedAttestationJSON *indexedAttestationJSON) error {
 	var err error
-	// Spec tests contain indexed attestations with empty attesting indices.
-	// if indexedAttestationJSON.AttestingIndices == nil {
-	// 	return errors.New("attesting indices missing")
-	// }
-	// if len(indexedAttestationJSON.AttestingIndices) == 0 {
-	// 	return errors.New("attesting indices missing")
-	// }
 	i.AttestingIndices = make([]uint64, len(indexedAttestationJSON.AttestingIndices))
 	for j := range indexedAttestationJSON.AttestingIndices {
 		if i.AttestingIndices[j], err = strconv.ParseUint(indexedAttestationJSON.AttestingIndices[j], 10, 64); err != nil {
