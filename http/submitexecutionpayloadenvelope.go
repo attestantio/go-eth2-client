@@ -52,24 +52,20 @@ func (s *Service) SubmitExecutionPayloadEnvelope(ctx context.Context,
 
 	versioned := opts.SignedExecutionPayloadEnvelope
 
-	var contents any
-
-	switch versioned.Version {
-	case spec.DataVersionGloas:
-		if versioned.Gloas == nil {
-			return errors.Join(errors.New("no gloas envelope supplied"), client.ErrInvalidOptions)
-		}
-
-		contents = &apiv1gloas.SignedExecutionPayloadEnvelopeContents{
-			SignedExecutionPayloadEnvelope: versioned.Gloas,
-			KZGProofs:                      nonNilKZGProofs(opts.KZGProofs),
-			Blobs:                          nonNilBlobs(opts.Blobs),
-		}
-	default:
+	if versioned.Version != spec.DataVersionGloas {
 		return errors.Join(
 			fmt.Errorf("unsupported envelope version %s", versioned.Version),
 			client.ErrInvalidOptions,
 		)
+	}
+	if versioned.Gloas == nil {
+		return errors.Join(errors.New("no gloas envelope supplied"), client.ErrInvalidOptions)
+	}
+
+	contents := &apiv1gloas.SignedExecutionPayloadEnvelopeContents{
+		SignedExecutionPayloadEnvelope: versioned.Gloas,
+		KZGProofs:                      nonNilKZGProofs(opts.KZGProofs),
+		Blobs:                          nonNilBlobs(opts.Blobs),
 	}
 
 	body, contentType, err := s.marshalRequestBody(ctx, contents)
@@ -77,7 +73,7 @@ func (s *Service) SubmitExecutionPayloadEnvelope(ctx context.Context,
 		return err
 	}
 
-	return s.postExecutionPayloadEnvelope(ctx, &opts.Common, versioned.Version,
+	return s.postExecutionPayloadEnvelope(ctx, &opts.Common, spec.DataVersionGloas,
 		opts.BroadcastValidation, body, contentType)
 }
 

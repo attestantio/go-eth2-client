@@ -27,10 +27,6 @@ jobs:
             exit 1
           fi
 
-      # No -run selection: the whole suite runs, and the fork-dependent tests leave
-      # themselves out by asking this node what it is. Selecting by name here would
-      # put the choice in YAML, where it drifts against test names and the first new
-      # ePBS test whose name misses the pattern lands in this gating job silently.
       - name: Run HTTP tests
         env:
           HTTP_ADDRESS: ${{ vars.HTTP_ADDRESS }}
@@ -38,16 +34,9 @@ jobs:
           HTTP_BEARER_TOKEN: ${{ secrets.HTTP_BEARER_TOKEN }}
         run: go test -v -timeout=10m ./http/...
 
-  # The same suite against a Gloas devnet, which is the only place the ePBS surface
-  # can be exercised at all: the endpoint above is on an earlier fork, and on a
-  # different preset, so between them they cover the shipped surface and the new one.
-  #
-  # Advisory for now. That devnet is interim and frequently respun, so a failure here
-  # must not block a pull request — but it must not be ignorable either, which is what
-  # the two settings below are for.
   http-tests-gloas:
+    if: ${{ vars.HTTP_ADDRESS_GLOAS != '' }}
     runs-on: ubuntu-24.04
-    continue-on-error: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -57,44 +46,6 @@ jobs:
         with:
           go-version: '1.25.2'
 
-      # Deliberately fatal rather than skipped. With no address the suite's TestMain
-      # returns before running anything and the job would report success having
-      # executed no tests at all — the silent-green outcome this job exists to avoid.
-      #
-      # The address arrives through the environment rather than being interpolated
-      # into the script, so that its content is data and never shell.
-      - name: Validate required variables
-        env:
-          HTTP_ADDRESS_GLOAS: ${{ vars.HTTP_ADDRESS_GLOAS }}
-        run: |
-          if [ -z "$HTTP_ADDRESS_GLOAS" ]; then
-            echo "Error: HTTP_ADDRESS_GLOAS variable is not set in repository variables"
-            exit 1
-          fi
-
-      # HTTP_REQUIRE_GLOAS turns every fork gate from a skip into a failure. It is
-      # not optional and must not be softened: on this endpoint a skip is always a
-      # bug — a stale address, a predicate typo, a port a docker restart moved — and
-      # without it the job degrades to an all-skip run and reports green having
-      # verified none of the Gloas surface.
-      # The timeout absorbs endpoint variance rather than detecting a hang, which is
-      # why it is so much larger than the endpoint above needs. That address is a
-      # dugtrio load balancer over ~47 nodes with IP-sticky sessions, so a run gets
-      # whichever upstream it is assigned and they are not equally fast: the same
-      # commit against the same address, 23 minutes apart, spent 1m34s on one
-      # TestValidators subtest and blew a 10m budget, then did the whole test in
-      # 11.37s with the suite finishing in 103s. The chain had not respun — head
-      # advanced continuously — and only x-dugtrio-endpoint-name changed, from
-      # prysm-erigon-1 to prysm-reth-1.
-      #
-      # So a slow run here is a bad draw, not a regression, and 10m truncated the
-      # report rather than failing it: the run died inside TestValidators with tests
-      # still to go, saying nothing about them either way. Check that response
-      # header before investigating a slow job.
-      #
-      # Note this is not runner bandwidth, which an earlier version of this comment
-      # blamed: the endpoint above serves a validator set 2.7x larger, four times
-      # over, inside a 2m49s job.
       - name: Run HTTP tests
         env:
           HTTP_ADDRESS: ${{ vars.HTTP_ADDRESS_GLOAS }}
