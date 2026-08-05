@@ -34,7 +34,7 @@ type PayloadAttestation struct {
 	// PTCSize, which a node sending an over-wide value can provoke.
 	AggregationBits bitfield.Bitvector512   `dynssz-size:"PTC_SIZE/8" ssz-index:"0" ssz-size:"64"`
 	Data            *PayloadAttestationData `ssz-index:"1"`
-	Signature       phase0.BLSSignature     `ssz-index:"2" ssz-size:"96"`
+	Signature       phase0.BLSSignature     `ssz-index:"2"            ssz-size:"96"`
 }
 
 // PTCSize reports how many payload timeliness committee positions the aggregation
