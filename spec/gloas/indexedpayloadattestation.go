@@ -24,7 +24,7 @@ import (
 type IndexedPayloadAttestation struct {
 	AttestingIndices []phase0.ValidatorIndex `dynssz-max:"PTC_SIZE" ssz-index:"0" ssz-max:"512"`
 	Data             *PayloadAttestationData `ssz-index:"1"`
-	Signature        phase0.BLSSignature     `ssz-index:"2"`
+	Signature        phase0.BLSSignature     `ssz-index:"2" ssz-size:"96"`
 }
 
 // String returns a string version of the structure.

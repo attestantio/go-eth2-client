@@ -25,8 +25,8 @@ type ExecutionPayloadEnvelope struct {
 	Payload               *ExecutionPayload  `ssz-index:"0"`
 	ExecutionRequests     *ExecutionRequests `ssz-index:"1"`
 	BuilderIndex          BuilderIndex       `ssz-index:"2"`
-	BeaconBlockRoot       phase0.Root        `ssz-index:"3"`
-	ParentBeaconBlockRoot phase0.Root        `ssz-index:"4"`
+	BeaconBlockRoot       phase0.Root        `ssz-index:"3" ssz-size:"32"`
+	ParentBeaconBlockRoot phase0.Root        `ssz-index:"4" ssz-size:"32"`
 }
 
 // String returns a string version of the structure.

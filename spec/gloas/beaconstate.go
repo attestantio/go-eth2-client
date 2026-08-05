@@ -33,7 +33,7 @@ type BeaconState struct {
 	LatestBlockHeader             *phase0.BeaconBlockHeader           `ssz-index:"4"`
 	BlockRoots                    []phase0.Root                       `dynssz-size:"SLOTS_PER_HISTORICAL_ROOT,32"                    ssz-index:"5"               ssz-size:"8192,32"`
 	StateRoots                    []phase0.Root                       `dynssz-size:"SLOTS_PER_HISTORICAL_ROOT,32"                    ssz-index:"6"               ssz-size:"8192,32"`
-	HistoricalRoots               []phase0.Root                       `ssz-index:"7"                                                 ssz-max:"16777216"          ssz-size:"?,32"`
+	HistoricalRoots               []phase0.Root                       `dynssz-max:"HISTORICAL_ROOTS_LIMIT"                           ssz-index:"7"               ssz-max:"16777216"          ssz-size:"?,32"`
 	ETH1Data                      *phase0.ETH1Data                    `ssz-index:"8"`
 	ETH1DataVotes                 []*phase0.ETH1Data                  `dynssz-max:"EPOCHS_PER_ETH1_VOTING_PERIOD*SLOTS_PER_EPOCH"    ssz-index:"9"               ssz-max:"2048"`
 	ETH1DepositIndex              uint64                              `ssz-index:"10"`
@@ -53,7 +53,7 @@ type BeaconState struct {
 	LatestBlockHash               phase0.Hash32                       `ssz-index:"24"                                                ssz-size:"32"`
 	NextWithdrawalIndex           capella.WithdrawalIndex             `ssz-index:"25"`
 	NextWithdrawalValidatorIndex  phase0.ValidatorIndex               `ssz-index:"26"`
-	HistoricalSummaries           []*capella.HistoricalSummary        `ssz-index:"27"                                                ssz-max:"16777216"`
+	HistoricalSummaries           []*capella.HistoricalSummary        `dynssz-max:"HISTORICAL_ROOTS_LIMIT"                           ssz-index:"27"              ssz-max:"16777216"`
 	DepositRequestsStartIndex     uint64                              `ssz-index:"28"`
 	DepositBalanceToConsume       phase0.Gwei                         `ssz-index:"29"`
 	ExitBalanceToConsume          phase0.Gwei                         `ssz-index:"30"`
