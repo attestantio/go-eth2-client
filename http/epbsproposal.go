@@ -37,13 +37,9 @@ import (
 // generous room for any real value while keeping a hostile one cheap to reject.
 const maxProposalValueDigits = 40
 
+const maxEPBSResponseSize = 64 * 1024 * 1024
+
 // EPBSProposal fetches a potential ePBS beacon block for signing.
-//
-// This is the gloas-onwards block production endpoint.  Post-Gloas a proposer
-// commits to an execution payload bid rather than to a payload, so there is no
-// blinded proposal; the axis that replaced it is opts.IncludePayload, which
-// decides whether the execution payload envelope travels with the block or
-// stays cached on the producing node.
 func (s *Service) EPBSProposal(ctx context.Context,
 	opts *api.EPBSProposalOpts,
 ) (
@@ -64,7 +60,7 @@ func (s *Service) EPBSProposal(ctx context.Context,
 
 	endpoint := fmt.Sprintf("/eth/v4/validator/blocks/%d", opts.Slot)
 
-	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, true)
+	httpResponse, err := s.getWithResponseLimit(ctx, endpoint, query, &opts.Common, true, maxEPBSResponseSize)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request epbs beacon block proposal"), err)
 	}
@@ -81,10 +77,7 @@ func (s *Service) EPBSProposal(ctx context.Context,
 	return response, nil
 }
 
-// assertEPBSProposalMatchesRequest checks that the proposal a node returned is
-// the one that was asked for.  Everything checked here is something the caller is
-// about to sign or to rely on when publishing, so a node that answers with
-// something else must be refused rather than obeyed.
+// assertEPBSProposalMatchesRequest checks the returned proposal matches the request.
 func (s *Service) assertEPBSProposalMatchesRequest(proposal *api.VersionedEPBSProposal,
 	opts *api.EPBSProposalOpts,
 ) error {
@@ -100,14 +93,7 @@ func (s *Service) assertEPBSProposalMatchesRequest(proposal *api.VersionedEPBSPr
 		)
 	}
 
-	// Only the node volunteering a payload is a fault.  Including one that was
-	// not asked for changes where the caller is able to publish, which is not
-	// the node's to decide.  The other direction is what the spec requires:
-	// include_payload only governs self-building, and a block built on an
-	// external builder's bid comes back alone whatever was asked for, since the
-	// node does not hold the builder's payload.  So an excluded payload can no
-	// longer be told apart from a node quietly defaulting the parameter, and the
-	// builder path is worth more than catching that.
+	// A node must not include a payload that was not requested.
 	if proposal.ExecutionPayloadIncluded && !*opts.IncludePayload {
 		return errors.Join(
 			fmt.Errorf("epbs beacon block proposal has execution payload included %t; expected %t",
@@ -215,10 +201,7 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 
 		proposal.ExecutionPayloadIncluded = included
 
-		// A gloas block carries preset-derived fixed-size fields, so the
-		// generated codec only reads bodies encoded at the compiled-in mainnet
-		// preset.  The request-scoped codec is built from the spec the node
-		// reports, which is what makes a non-mainnet preset decodable.
+		// Custom presets require a request-scoped codec.
 		ds, err := s.dynSSZForRequest(ctx)
 		if err != nil {
 			return nil, err
@@ -239,29 +222,7 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 			)
 		}
 	case ContentTypeJSON:
-		included, err := epbsPayloadIncludedFromBody(res.body)
-		if err != nil {
-			return nil, err
-		}
-
-		proposal.ExecutionPayloadIncluded = included
-
-		// The decoder only writes the keys it finds, so seeding it with a typed
-		// nil pointer is what makes a body with no data key in it
-		// distinguishable from one carrying a zero-valued datum.
-		var jsonMetadata map[string]any
-
-		if included {
-			proposal.GloasContents, jsonMetadata, err = decodeJSONResponse(
-				bytes.NewReader(res.body),
-				(*apiv1gloas.BlockContents)(nil),
-			)
-		} else {
-			proposal.Gloas, jsonMetadata, err = decodeJSONResponse(
-				bytes.NewReader(res.body),
-				(*gloas.BeaconBlock)(nil),
-			)
-		}
+		jsonMetadata, err := decodeEPBSProposalJSON(res.body, proposal)
 
 		if err != nil {
 			return nil, errors.Join(
@@ -282,18 +243,19 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 		return nil, fmt.Errorf("no %s epbs proposal in response", res.consensusVersion)
 	}
 
+	if proposal.ExecutionPayloadIncluded {
+		if err := assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal.GloasContents); err != nil {
+			return nil, err
+		}
+	}
+
 	return &api.Response[*api.VersionedEPBSProposal]{
 		Data:     proposal,
 		Metadata: metadata,
 	}, nil
 }
 
-// populateEPBSProposalValuesFromHeaders reads the two value components from the
-// response headers.  Both are left at the zero they were seeded with when their
-// header is absent, which is what a node that predates the addition of
-// execution_payload_value to the endpoint sends; a malformed value is an error,
-// since a proposal whose worth silently reads as zero would lose an auction it
-// should have won.
+// populateEPBSProposalValuesFromHeaders reads the value components from response headers.
 func populateEPBSProposalValuesFromHeaders(proposal *api.VersionedEPBSProposal,
 	headers map[string]string,
 ) error {
@@ -364,18 +326,65 @@ func epbsPayloadIncludedFromHeaders(headers map[string]string) (bool, error) {
 // epbsPayloadIncludedFromBody reads the payload-inclusion flag from a JSON
 // response body.  The flag selects which of the two containers the data field
 // carries, so it has to be read before the data itself can be decoded.
-func epbsPayloadIncludedFromBody(body []byte) (bool, error) {
-	var wrapper struct {
-		ExecutionPayloadIncluded *bool `json:"execution_payload_included"`
+func decodeEPBSProposalJSON(body []byte, proposal *api.VersionedEPBSProposal) (map[string]any, error) {
+	response := make(map[string]json.RawMessage)
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, errors.Join(errors.New("failed to parse epbs proposal response"), err)
 	}
 
-	if err := json.Unmarshal(body, &wrapper); err != nil {
-		return false, errors.Join(errors.New("failed to parse epbs proposal response"), err)
+	included := new(bool)
+	if raw, exists := response["execution_payload_included"]; exists {
+		if err := json.Unmarshal(raw, included); err != nil {
+			return nil, errors.Join(errors.New("failed to unmarshal execution_payload_included"), err)
+		}
+	} else {
+		return nil, errors.New("no execution_payload_included in epbs proposal response")
+	}
+	proposal.ExecutionPayloadIncluded = *included
+
+	data, exists := response["data"]
+	if !exists || string(data) == "null" {
+		return nil, fmt.Errorf("no %s epbs proposal in response", proposal.Version)
+	}
+	if proposal.ExecutionPayloadIncluded {
+		proposal.GloasContents = new(apiv1gloas.BlockContents)
+		if err := json.Unmarshal(data, proposal.GloasContents); err != nil {
+			return nil, errors.Join(errors.New("failed to unmarshal data"), err)
+		}
+	} else {
+		proposal.Gloas = new(gloas.BeaconBlock)
+		if err := json.Unmarshal(data, proposal.Gloas); err != nil {
+			return nil, errors.Join(errors.New("failed to unmarshal data"), err)
+		}
 	}
 
-	if wrapper.ExecutionPayloadIncluded == nil {
-		return false, errors.New("no execution_payload_included in epbs proposal response")
+	metadata := make(map[string]any, len(response))
+	for key, raw := range response {
+		if key == "data" {
+			continue
+		}
+		var value any
+		if err := json.Unmarshal(raw, &value); err != nil {
+			return nil, errors.Join(fmt.Errorf("failed to unmarshal metadata %s", key), err)
+		}
+		metadata[key] = value
 	}
 
-	return *wrapper.ExecutionPayloadIncluded, nil
+	return metadata, nil
+}
+
+func assertIncludedEPBSProposalEnvelopeMatchesBlock(contents *apiv1gloas.BlockContents) error {
+	if contents == nil || contents.Block == nil || contents.ExecutionPayloadEnvelope == nil {
+		return errors.New("no block contents in epbs proposal response")
+	}
+
+	blockRoot, err := contents.Block.HashTreeRoot()
+	if err != nil {
+		return errors.Join(errors.New("failed to hash epbs proposal block"), err)
+	}
+	if contents.ExecutionPayloadEnvelope.BeaconBlockRoot != blockRoot {
+		return errors.Join(errors.New("execution payload envelope is for a different block"), client.ErrInconsistentResult)
+	}
+
+	return nil
 }

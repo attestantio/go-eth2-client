@@ -227,6 +227,22 @@ type httpResponse struct {
 	body             []byte
 }
 
+func readResponseBody(body io.Reader, limit int) ([]byte, error) {
+	if limit <= 0 {
+		return io.ReadAll(body)
+	}
+
+	data, err := io.ReadAll(io.LimitReader(body, int64(limit)+1))
+	if err != nil {
+		return nil, err
+	}
+	if len(data) > limit {
+		return nil, fmt.Errorf("response body exceeds %d bytes", limit)
+	}
+
+	return data, nil
+}
+
 // get sends an HTTP get request and returns the response.
 //
 //nolint:revive
@@ -235,6 +251,19 @@ func (s *Service) get(ctx context.Context,
 	query string,
 	opts *api.CommonOpts,
 	supportsSSZ bool,
+) (
+	*httpResponse,
+	error,
+) {
+	return s.getWithResponseLimit(ctx, endpoint, query, opts, supportsSSZ, 0)
+}
+
+func (s *Service) getWithResponseLimit(ctx context.Context,
+	endpoint string,
+	query string,
+	opts *api.CommonOpts,
+	supportsSSZ bool,
+	responseLimit int,
 ) (
 	*httpResponse,
 	error,
@@ -308,7 +337,7 @@ func (s *Service) get(ctx context.Context,
 	// require the calling function to be aware that it needs to close the body
 	// once it is done with it.  To avoid that complexity, we read here and store the
 	// body as a byte array.
-	res.body, err = io.ReadAll(resp.Body)
+	res.body, err = readResponseBody(resp.Body, responseLimit)
 	if err != nil {
 		switch {
 		case errors.Is(err, context.Canceled):

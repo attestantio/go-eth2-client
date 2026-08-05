@@ -29,14 +29,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-// ExecutionPayloadEnvelope obtains the execution payload envelope a node cached
-// while producing a block.
-//
-// This is the other half of asking for a proposal with the payload excluded: the
-// producing node kept the envelope, and this collects it so the caller can sign
-// and publish it.  A node caches only the envelope for the slot it is proposing,
-// so anything else — a past slot, a block another node built, a block a re-org
-// has displaced — answers ErrNoExecutionPayloadEnvelope.
+// ExecutionPayloadEnvelope obtains a cached execution payload envelope.
 func (s *Service) ExecutionPayloadEnvelope(ctx context.Context,
 	opts *api.ExecutionPayloadEnvelopeOpts,
 ) (
@@ -103,7 +96,7 @@ func (s *Service) fetchExecutionPayloadEnvelope(ctx context.Context,
 
 	endpoint := fmt.Sprintf("/eth/v1/validator/execution_payload_envelopes/%d/%#x", opts.Slot, opts.BeaconBlockRoot)
 
-	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, true)
+	httpResponse, err := s.getWithResponseLimit(ctx, endpoint, "", &opts.Common, true, maxEPBSResponseSize)
 	if err != nil {
 		return nil, notFoundToSentinel(err)
 	}
@@ -111,23 +104,7 @@ func (s *Service) fetchExecutionPayloadEnvelope(ctx context.Context,
 	return httpResponse, nil
 }
 
-// notFoundToSentinel reports a 404 as ErrNoExecutionPayloadEnvelope, and passes
-// anything else through untouched.
-//
-// The endpoint defines a 404 as "nothing cached for this slot and block root",
-// which is the normal outcome of asking any node but the one that built the
-// block; reported as the raw transport error, a caller cannot tell it apart from
-// a genuine fault.
-//
-// The api.Error is joined to the sentinel rather than replaced by it, so the
-// value answers both of the checks made of it.  errors.Is finds the sentinel,
-// which is what a caller matches on.  errors.As still finds the api.Error, which
-// matters twice over: a multi-client's failover treats an unwrappable 4xx as the
-// node's answer rather than as the node being broken, so without it every client
-// in the set is deactivated by the very response documented here as normal; and a
-// 404 also comes back from a node that does not implement this route at all, or
-// from a proxy filtering it, which the retained body is the only way to tell
-// apart from an empty cache.
+// notFoundToSentinel preserves a 404 API error while adding the cache-miss sentinel.
 func notFoundToSentinel(err error) error {
 	var apiErr *api.Error
 	if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
