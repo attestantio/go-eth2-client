@@ -15,24 +15,14 @@ package gloas
 
 import (
 	"bytes"
-	"encoding/json"
 
-	"github.com/attestantio/go-eth2-client/spec/deneb"
-	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/goccy/go-yaml"
 	"github.com/pkg/errors"
 )
 
-// signedExecutionPayloadEnvelopeContentsYAML is the spec representation of the struct.
-type signedExecutionPayloadEnvelopeContentsYAML struct {
-	SignedExecutionPayloadEnvelope *gloas.SignedExecutionPayloadEnvelope `yaml:"signed_execution_payload_envelope"`
-	KZGProofs                      []deneb.KZGProof                      `yaml:"kzg_proofs"`
-	Blobs                          []deneb.Blob                          `yaml:"blobs"`
-}
-
 // MarshalYAML implements yaml.Marshaler.
 func (s *SignedExecutionPayloadEnvelopeContents) MarshalYAML() ([]byte, error) {
-	yamlBytes, err := yaml.MarshalWithOptions(&signedExecutionPayloadEnvelopeContentsYAML{
+	yamlBytes, err := yaml.MarshalWithOptions(&signedExecutionPayloadEnvelopeContents{
 		SignedExecutionPayloadEnvelope: s.SignedExecutionPayloadEnvelope,
 		KZGProofs:                      s.KZGProofs,
 		Blobs:                          s.Blobs,
@@ -46,16 +36,12 @@ func (s *SignedExecutionPayloadEnvelopeContents) MarshalYAML() ([]byte, error) {
 
 // UnmarshalYAML implements yaml.Unmarshaler.
 func (s *SignedExecutionPayloadEnvelopeContents) UnmarshalYAML(input []byte) error {
-	// We unmarshal to the JSON struct to save on duplicate code.
-	var unmarshaled signedExecutionPayloadEnvelopeContentsJSON
+	var unmarshaled signedExecutionPayloadEnvelopeContents
 	if err := yaml.Unmarshal(input, &unmarshaled); err != nil {
 		return errors.Wrap(err, "failed to unmarshal YAML")
 	}
 
-	marshaled, err := json.Marshal(unmarshaled)
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal JSON")
-	}
+	s.unpack(&unmarshaled)
 
-	return s.UnmarshalJSON(marshaled)
+	return nil
 }

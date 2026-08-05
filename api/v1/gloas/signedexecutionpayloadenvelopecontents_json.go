@@ -17,21 +17,12 @@ import (
 	"encoding/json"
 
 	"github.com/attestantio/go-eth2-client/codecs"
-	"github.com/attestantio/go-eth2-client/spec/deneb"
-	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/pkg/errors"
 )
 
-// signedExecutionPayloadEnvelopeContentsJSON is the spec representation of the struct.
-type signedExecutionPayloadEnvelopeContentsJSON struct {
-	SignedExecutionPayloadEnvelope *gloas.SignedExecutionPayloadEnvelope `json:"signed_execution_payload_envelope"`
-	KZGProofs                      []deneb.KZGProof                      `json:"kzg_proofs"`
-	Blobs                          []deneb.Blob                          `json:"blobs"`
-}
-
 // MarshalJSON implements json.Marshaler.
 func (s *SignedExecutionPayloadEnvelopeContents) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&signedExecutionPayloadEnvelopeContentsJSON{
+	return json.Marshal(&signedExecutionPayloadEnvelopeContents{
 		SignedExecutionPayloadEnvelope: s.SignedExecutionPayloadEnvelope,
 		KZGProofs:                      s.KZGProofs,
 		Blobs:                          s.Blobs,
@@ -40,22 +31,25 @@ func (s *SignedExecutionPayloadEnvelopeContents) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (s *SignedExecutionPayloadEnvelopeContents) UnmarshalJSON(input []byte) error {
-	raw, err := codecs.RawJSON(&signedExecutionPayloadEnvelopeContentsJSON{}, input)
+	raw, err := codecs.RawJSON(&signedExecutionPayloadEnvelopeContents{}, input)
 	if err != nil {
 		return err
 	}
 
-	if err := json.Unmarshal(raw["signed_execution_payload_envelope"], &s.SignedExecutionPayloadEnvelope); err != nil {
+	var unmarshaled signedExecutionPayloadEnvelopeContents
+	if err := json.Unmarshal(raw["signed_execution_payload_envelope"], &unmarshaled.SignedExecutionPayloadEnvelope); err != nil {
 		return errors.Wrap(err, "signed_execution_payload_envelope")
 	}
 
-	if err := json.Unmarshal(raw["kzg_proofs"], &s.KZGProofs); err != nil {
+	if err := json.Unmarshal(raw["kzg_proofs"], &unmarshaled.KZGProofs); err != nil {
 		return errors.Wrap(err, "kzg_proofs")
 	}
 
-	if err := json.Unmarshal(raw["blobs"], &s.Blobs); err != nil {
+	if err := json.Unmarshal(raw["blobs"], &unmarshaled.Blobs); err != nil {
 		return errors.Wrap(err, "blobs")
 	}
+
+	s.unpack(&unmarshaled)
 
 	return nil
 }

@@ -65,3 +65,10 @@ func TestVersionedSignedExecutionPayloadEnvelopeString(t *testing.T) {
 		})
 	}
 }
+
+func TestVersionedSignedExecutionPayloadEnvelopeUnknownVersion(t *testing.T) {
+	_, err := (&spec.VersionedSignedExecutionPayloadEnvelope{
+		Version: spec.DataVersion(255),
+	}).Payload()
+	require.EqualError(t, err, "unknown version")
+}
