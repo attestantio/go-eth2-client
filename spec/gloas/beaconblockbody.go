@@ -24,9 +24,9 @@ import (
 
 // BeaconBlockBody represents the body of a beacon block for EIP-7732.
 type BeaconBlockBody struct {
-	RANDAOReveal              phase0.BLSSignature                   `ssz-index:"0"`
+	RANDAOReveal              phase0.BLSSignature                   `ssz-index:"0"  ssz-size:"96"`
 	ETH1Data                  *phase0.ETH1Data                      `ssz-index:"1"`
-	Graffiti                  [32]byte                              `ssz-index:"2"`
+	Graffiti                  [32]byte                              `ssz-index:"2"  ssz-size:"32"`
 	ProposerSlashings         []*phase0.ProposerSlashing            `ssz-index:"3"  ssz-type:"progressive-list"`
 	AttesterSlashings         []*AttesterSlashing                   `ssz-index:"4"  ssz-type:"progressive-list"`
 	Attestations              []*Attestation                        `ssz-index:"5"  ssz-type:"progressive-list"`

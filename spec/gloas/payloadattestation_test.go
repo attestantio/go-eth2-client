@@ -16,6 +16,7 @@ package gloas_test
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"slices"
 	"testing"
 
@@ -32,6 +33,32 @@ const (
 	minimalPTCBytes = 2
 	mainnetPTCBytes = 64
 )
+
+// TestPayloadAttestationSignatureSSZSize pins the Bytes96 width that the
+// consensus spec assigns to both payload-attestation signatures.
+func TestPayloadAttestationSignatureSSZSize(t *testing.T) {
+	tests := []struct {
+		name string
+		typ  reflect.Type
+	}{
+		{
+			name: "PayloadAttestation",
+			typ:  reflect.TypeFor[gloas.PayloadAttestation](),
+		},
+		{
+			name: "IndexedPayloadAttestation",
+			typ:  reflect.TypeFor[gloas.IndexedPayloadAttestation](),
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			field, found := test.typ.FieldByName("Signature")
+			require.True(t, found)
+			require.Equal(t, "96", field.Tag.Get("ssz-size"))
+		})
+	}
+}
 
 // TestPayloadAttestationAttestedAtPresets reads every position of a correctly-sized
 // bitvector at both the mainnet and minimal widths, including the highest valid
