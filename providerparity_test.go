@@ -23,6 +23,30 @@ import (
 
 // Provider assertions keep implementations in parity.
 var (
+	_ client.PTCDutiesProvider = (*http.Service)(nil)
+	_ client.PTCDutiesProvider = (*multi.Service)(nil)
+	_ client.PTCDutiesProvider = (*mock.Service)(nil)
+	_ client.PTCDutiesProvider = (*testclients.Erroring)(nil)
+	_ client.PTCDutiesProvider = (*testclients.Sleepy)(nil)
+
+	_ client.PayloadAttestationDataProvider = (*http.Service)(nil)
+	_ client.PayloadAttestationDataProvider = (*multi.Service)(nil)
+	_ client.PayloadAttestationDataProvider = (*mock.Service)(nil)
+	_ client.PayloadAttestationDataProvider = (*testclients.Erroring)(nil)
+	_ client.PayloadAttestationDataProvider = (*testclients.Sleepy)(nil)
+
+	_ client.PayloadAttestationPoolProvider = (*http.Service)(nil)
+	_ client.PayloadAttestationPoolProvider = (*multi.Service)(nil)
+	_ client.PayloadAttestationPoolProvider = (*mock.Service)(nil)
+	_ client.PayloadAttestationPoolProvider = (*testclients.Erroring)(nil)
+	_ client.PayloadAttestationPoolProvider = (*testclients.Sleepy)(nil)
+
+	_ client.PayloadAttestationMessagesSubmitter = (*http.Service)(nil)
+	_ client.PayloadAttestationMessagesSubmitter = (*multi.Service)(nil)
+	_ client.PayloadAttestationMessagesSubmitter = (*mock.Service)(nil)
+	_ client.PayloadAttestationMessagesSubmitter = (*testclients.Erroring)(nil)
+	_ client.PayloadAttestationMessagesSubmitter = (*testclients.Sleepy)(nil)
+
 	_ client.EPBSProposalProvider = (*http.Service)(nil)
 	_ client.EPBSProposalProvider = (*multi.Service)(nil)
 	_ client.EPBSProposalProvider = (*mock.Service)(nil)
