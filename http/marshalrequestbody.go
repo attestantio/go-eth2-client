@@ -35,7 +35,7 @@ func (s *Service) marshalRequestBody(ctx context.Context, value any) ([]byte, Co
 	if !s.customSpecSupport {
 		marshaler, isSSZMarshaler := value.(interface{ MarshalSSZ() ([]byte, error) })
 		if !isSSZMarshaler {
-			return nil, ContentTypeUnknown, errors.New("value does not support static SSZ marshaling")
+			return nil, ContentTypeUnknown, errors.New("failed to marshal SSZ: value does not support static SSZ marshaling")
 		}
 
 		body, err := marshaler.MarshalSSZ()

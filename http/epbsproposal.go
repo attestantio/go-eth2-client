@@ -223,7 +223,6 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 		}
 	case ContentTypeJSON:
 		jsonMetadata, err := decodeEPBSProposalJSON(res.body, proposal)
-
 		if err != nil {
 			return nil, errors.Join(
 				fmt.Errorf("failed to decode %s JSON epbs proposal", res.consensusVersion),
@@ -332,13 +331,13 @@ func decodeEPBSProposalJSON(body []byte, proposal *api.VersionedEPBSProposal) (m
 		return nil, errors.Join(errors.New("failed to parse epbs proposal response"), err)
 	}
 
-	included := new(bool)
-	if raw, exists := response["execution_payload_included"]; exists {
-		if err := json.Unmarshal(raw, included); err != nil {
-			return nil, errors.Join(errors.New("failed to unmarshal execution_payload_included"), err)
-		}
-	} else {
+	raw, exists := response["execution_payload_included"]
+	if !exists {
 		return nil, errors.New("no execution_payload_included in epbs proposal response")
+	}
+	included := new(bool)
+	if err := json.Unmarshal(raw, included); err != nil {
+		return nil, errors.Join(errors.New("failed to unmarshal execution_payload_included"), err)
 	}
 	proposal.ExecutionPayloadIncluded = *included
 
