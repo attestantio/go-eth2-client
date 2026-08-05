@@ -179,6 +179,34 @@ func TestBlockContentsJSONMissingField(t *testing.T) {
 	}
 }
 
+func TestBlockContentsJSONNullRequiredField(t *testing.T) {
+	tests := []struct {
+		name string
+		key  string
+		err  string
+	}{
+		{name: "KZGProofs", key: "kzg_proofs", err: "kzg_proofs: null"},
+		{name: "Blobs", key: "blobs", err: "blobs: null"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			data, err := json.Marshal(validBlockContents())
+			require.NoError(t, err)
+
+			var generic map[string]json.RawMessage
+			require.NoError(t, json.Unmarshal(data, &generic))
+			generic[test.key] = json.RawMessage("null")
+
+			invalid, err := json.Marshal(generic)
+			require.NoError(t, err)
+
+			var decoded apiv1gloas.BlockContents
+			require.EqualError(t, decoded.UnmarshalJSON(invalid), test.err)
+		})
+	}
+}
+
 // TestBlockContentsJSONPreservesBlobs verifies that a populated blob survives a
 // JSON round trip end to end.  A blob is a 128KiB fixed-size array, so the
 // assertions check its first and last byte rather than comparing whole values:

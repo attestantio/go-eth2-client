@@ -874,40 +874,6 @@ func (s *Sleepy) SubmitExecutionPayloadEnvelope(ctx context.Context, opts *api.S
 	return next.SubmitExecutionPayloadEnvelope(ctx, opts)
 }
 
-// PTCDuties obtains payload timeliness committee duties.
-func (s *Sleepy) PTCDuties(ctx context.Context,
-	opts *api.PTCDutiesOpts,
-) (
-	*api.Response[[]*apiv1.PTCDuty],
-	error,
-) {
-	s.sleep(ctx)
-
-	next, isNext := s.next.(consensusclient.PTCDutiesProvider)
-	if !isNext {
-		return nil, errors.New("next does not support this call")
-	}
-
-	return next.PTCDuties(ctx, opts)
-}
-
-// PayloadAttestationData obtains payload attestation data.
-func (s *Sleepy) PayloadAttestationData(ctx context.Context,
-	opts *api.PayloadAttestationDataOpts,
-) (
-	*api.Response[*spec.VersionedPayloadAttestationData],
-	error,
-) {
-	s.sleep(ctx)
-
-	next, isNext := s.next.(consensusclient.PayloadAttestationDataProvider)
-	if !isNext {
-		return nil, errors.New("next does not support this call")
-	}
-
-	return next.PayloadAttestationData(ctx, opts)
-}
-
 // EPBSProposal fetches an ePBS proposal for signing.
 func (s *Sleepy) EPBSProposal(ctx context.Context,
 	opts *api.EPBSProposalOpts,
@@ -941,35 +907,4 @@ func (s *Sleepy) ExecutionPayloadEnvelope(ctx context.Context,
 	}
 
 	return next.ExecutionPayloadEnvelope(ctx, opts)
-}
-
-// PayloadAttestationPool obtains the payload attestation pool.
-func (s *Sleepy) PayloadAttestationPool(ctx context.Context,
-	opts *api.PayloadAttestationPoolOpts,
-) (
-	*api.Response[[]*spec.VersionedPayloadAttestation],
-	error,
-) {
-	s.sleep(ctx)
-
-	next, isNext := s.next.(consensusclient.PayloadAttestationPoolProvider)
-	if !isNext {
-		return nil, errors.New("next does not support this call")
-	}
-
-	return next.PayloadAttestationPool(ctx, opts)
-}
-
-// SubmitPayloadAttestationMessages submits payload attestation messages.
-func (s *Sleepy) SubmitPayloadAttestationMessages(ctx context.Context,
-	opts *api.SubmitPayloadAttestationMessagesOpts,
-) error {
-	s.sleep(ctx)
-
-	next, isNext := s.next.(consensusclient.PayloadAttestationMessagesSubmitter)
-	if !isNext {
-		return errors.New("next does not support this call")
-	}
-
-	return next.SubmitPayloadAttestationMessages(ctx, opts)
 }

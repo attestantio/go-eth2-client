@@ -55,8 +55,16 @@ func (b *BlockContents) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "execution_payload_envelope")
 	}
 
+	if string(raw["kzg_proofs"]) == "null" {
+		return errors.New("kzg_proofs: null")
+	}
+
 	if err := json.Unmarshal(raw["kzg_proofs"], &b.KZGProofs); err != nil {
 		return errors.Wrap(err, "kzg_proofs")
+	}
+
+	if string(raw["blobs"]) == "null" {
+		return errors.New("blobs: null")
 	}
 
 	if err := json.Unmarshal(raw["blobs"], &b.Blobs); err != nil {

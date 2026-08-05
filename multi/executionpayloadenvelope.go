@@ -21,14 +21,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 )
 
-// ExecutionPayloadEnvelope obtains the cached execution payload envelope for the
-// given slot and beacon block root.
-//
-// Worth knowing when using this through a multi-client: only the node that
-// produced the block holds its envelope, so every other client in the set
-// answers ErrNoExecutionPayloadEnvelope.  A caller that excluded the payload
-// from its proposal should address the producing node directly rather than rely
-// on failover here.
+// ExecutionPayloadEnvelope obtains the cached envelope for a slot and block root.
 func (s *Service) ExecutionPayloadEnvelope(ctx context.Context,
 	opts *api.ExecutionPayloadEnvelopeOpts,
 ) (
