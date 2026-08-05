@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2025 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -73,7 +74,27 @@ func (*Service) attestationPoolFromJSON(_ context.Context,
 	*api.Response[[]*spec.VersionedAttestation],
 	error,
 ) {
-	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*spec.VersionedAttestation{})
+	var (
+		data     []*spec.VersionedAttestation
+		metadata map[string]any
+		err      error
+	)
+
+	switch httpResponse.consensusVersion {
+	case spec.DataVersionGloas:
+		gloasData, gloasMetadata, decodeErr := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*gloas.Attestation{})
+		metadata = gloasMetadata
+		err = decodeErr
+		data = make([]*spec.VersionedAttestation, len(gloasData))
+		for i, datum := range gloasData {
+			data[i] = &spec.VersionedAttestation{
+				Version: spec.DataVersionGloas,
+				Gloas:   datum,
+			}
+		}
+	default:
+		data, metadata, err = decodeJSONResponse(bytes.NewReader(httpResponse.body), []*spec.VersionedAttestation{})
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +140,10 @@ func verifyAttestationPool(opts *api.AttestationPoolOpts, data []*spec.Versioned
 			if err := verifyElectraAttestation(opts, datum.Fulu); err != nil {
 				return err
 			}
+		case spec.DataVersionGloas:
+			if err := verifyGloasAttestation(opts, datum.Gloas); err != nil {
+				return err
+			}
 		default:
 			return errors.New("unsupported attestation version")
 		}
@@ -140,7 +165,19 @@ func verifyPhase0Attestation(opts *api.AttestationPoolOpts, data *phase0.Attesta
 }
 
 func verifyElectraAttestation(opts *api.AttestationPoolOpts, data *electra.Attestation) error {
-	if opts.Slot != nil && data.Data.Slot != *opts.Slot {
+	return verifyPostElectraAttestation(opts, data.Data, data.CommitteeBits)
+}
+
+func verifyGloasAttestation(opts *api.AttestationPoolOpts, data *gloas.Attestation) error {
+	return verifyPostElectraAttestation(opts, data.Data, data.CommitteeBits)
+}
+
+func verifyPostElectraAttestation(
+	opts *api.AttestationPoolOpts,
+	data *phase0.AttestationData,
+	committeeBits interface{ BitIndices() []int },
+) error {
+	if opts.Slot != nil && data.Slot != *opts.Slot {
 		return errors.New("attestation data not for requested slot")
 	}
 
@@ -150,7 +187,7 @@ func verifyElectraAttestation(opts *api.AttestationPoolOpts, data *electra.Attes
 		return nil
 	}
 
-	for _, committeeIndex := range data.CommitteeBits.BitIndices() {
+	for _, committeeIndex := range committeeBits.BitIndices() {
 		if phase0.CommitteeIndex(committeeIndex) == *opts.CommitteeIndex {
 			// We have a match.
 			return nil

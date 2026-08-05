@@ -1,0 +1,9 @@
+package: .
+legacy: true
+without-dynamic-expressions: true
+
+types:
+  - name: BlockContents
+    output: blockcontents_ssz.go
+  - name: SignedExecutionPayloadEnvelopeContents
+    output: signedexecutionpayloadenvelopecontents_ssz.go

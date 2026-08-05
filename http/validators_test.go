@@ -47,9 +47,21 @@ func TestValidators(t *testing.T) {
 			opts:              &api.ValidatorsOpts{State: "0x000102030405060708090a0b0c0d0e0f10111213145161718191a1b1c1d1e1f"},
 			expectedErrorCode: 400,
 		},
+		// These four rows exist to prove state-id resolution -- that "0", head,
+		// finalized and justified each resolve and return a well-formed set -- and
+		// nothing below asserts anything about the set's size. Three of them
+		// therefore ask for a handful of indices instead of the whole validator
+		// set, which on a mainnet-scale network is what this test spends its time
+		// on: measured against hoodi, the four unnarrowed fetches were 94s of the
+		// test's 122s at 135MB gzipped each, and that transfer proved nothing the
+		// narrowed form does not.
+		//
+		// Head deliberately keeps the whole set. It is the only place in the suite
+		// that decodes a validator list at mainnet scale, which is worth one fetch;
+		// narrowing all four would have deleted that coverage silently.
 		{
 			name: "Genesis",
-			opts: &api.ValidatorsOpts{State: "0"},
+			opts: &api.ValidatorsOpts{State: "0", Indices: []phase0.ValidatorIndex{0, 1, 2, 3, 4}},
 		},
 		{
 			name: "Head",
@@ -57,11 +69,11 @@ func TestValidators(t *testing.T) {
 		},
 		{
 			name: "Finalized",
-			opts: &api.ValidatorsOpts{State: "finalized"},
+			opts: &api.ValidatorsOpts{State: "finalized", Indices: []phase0.ValidatorIndex{0, 1, 2, 3, 4}},
 		},
 		{
 			name: "Justified",
-			opts: &api.ValidatorsOpts{State: "justified"},
+			opts: &api.ValidatorsOpts{State: "justified", Indices: []phase0.ValidatorIndex{0, 1, 2, 3, 4}},
 		},
 		{
 			name: "ManyValidatorIndices",

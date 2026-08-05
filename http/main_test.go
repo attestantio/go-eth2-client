@@ -1,4 +1,4 @@
-// Copyright © 2020 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,7 +16,9 @@ package http_test
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	nethttp "net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -34,7 +36,7 @@ import (
 var timeout = 5 * time.Minute
 
 // Global HTTP service instance shared across all tests to reduce connection overhead.
-var globalHTTPService interface{}
+var globalHTTPService any
 
 // testCoordinator controls how many tests can run concurrently to avoid overwhelming the endpoint.
 // This is configured via HTTP_TEST_CONCURRENCY (default: 1 for sequential execution).
@@ -58,11 +60,109 @@ func TestMain(m *testing.M) {
 	}
 	testCoordinator = semaphore.NewWeighted(concurrency)
 
+	// On the validation devnet a fork-gated test that skips is a bug rather than a
+	// correct outcome, so this turns those skips into failures. See requireGloas.
+	requireGloas = strings.EqualFold(os.Getenv("HTTP_REQUIRE_GLOAS"), "true")
+
 	if os.Getenv("HTTP_ADDRESS") != "" {
+		// Before the service, so that the address still identifies itself when the
+		// client cannot come up against it -- which is exactly when knowing what is
+		// there matters most.
+		logEndpointIdentity()
+
 		// Initialize global HTTP service for all tests to share
 		initGlobalHTTPService()
 		os.Exit(m.Run())
 	}
+}
+
+// logEndpointIdentity prints which node the suite is about to talk to, once, before any
+// test runs.
+//
+// It exists because an address is not necessarily a node. The Gloas validation devnet is
+// reached through a load balancer over ~47 nodes spanning six consensus implementations,
+// the caller cannot choose its upstream (no query parameter or header selects one), and
+// the implementations do not agree on which routes they serve or how they word their
+// errors. So the same commit against the same address produced 15 failures on one run and
+// a different 20 on another. Without this line, a reader diffing two runs has no way to
+// tell a regression from a different client having answered, because nothing else in the
+// output names the server.
+//
+// Best effort by design: a diagnostic must never decide whether the suite runs, so every
+// failure here is reported and then ignored. The timeout is deliberately short for the
+// same reason -- this must not add meaningfully to a run that is about to fail anyway.
+func logEndpointIdentity() {
+	endpoint := strings.TrimSuffix(os.Getenv("HTTP_ADDRESS"), "/") + "/eth/v1/node/version"
+
+	req, err := nethttp.NewRequest(nethttp.MethodGet, endpoint, nil)
+	if err != nil {
+		fmt.Printf("endpoint identity: unavailable (%v)\n", err)
+
+		return
+	}
+
+	if token := os.Getenv("HTTP_BEARER_TOKEN"); token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+	}
+
+	resp, err := (&nethttp.Client{Timeout: 10 * time.Second}).Do(req)
+	if err != nil {
+		fmt.Printf("endpoint identity: unavailable (%v)\n", err)
+
+		return
+	}
+	defer resp.Body.Close()
+
+	version := "unknown"
+
+	var body struct {
+		Data struct {
+			Version string `json:"version"`
+		} `json:"data"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&body); err == nil && body.Data.Version != "" {
+		version = body.Data.Version
+	}
+
+	// Set by dugtrio, the load balancer fronting the ethpandaops devnets. Its absence
+	// means a direct connection to a single node, which is itself the thing worth
+	// knowing -- on such an address the client identity below cannot change between
+	// runs.
+	upstream := resp.Header.Get("X-Dugtrio-Endpoint-Name")
+	if upstream == "" {
+		upstream = "none (direct connection)"
+	}
+
+	fmt.Printf("endpoint identity: status=%d version=%q upstream=%s\n", resp.StatusCode, version, upstream)
+}
+
+// newTestService creates an HTTP service against HTTP_ADDRESS, authenticating with
+// HTTP_BEARER_TOKEN when one is set. customSpecSupport picks which branch the SSZ
+// decoders take, so a caller that needs a mode other than the suite's default gets it
+// without restating the address, timeout and token handling.
+func newTestService(ctx context.Context,
+	customSpecSupport bool,
+	params ...http.Parameter,
+) (
+	client.Service,
+	error,
+) {
+	// Custom spec support is required for the interim Glamsterdam devnet's minimal
+	// preset; it is a no-op superset for mainnet-preset endpoints (see ADR-0003).
+	parameters := []http.Parameter{
+		http.WithTimeout(timeout),
+		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+		http.WithCustomSpecSupport(customSpecSupport),
+	}
+
+	if token := os.Getenv("HTTP_BEARER_TOKEN"); token != "" {
+		parameters = append(parameters, http.WithExtraHeaders(map[string]string{
+			"Authorization": fmt.Sprintf("Bearer %s", token),
+		}))
+	}
+
+	return http.New(ctx, append(parameters, params...)...)
 }
 
 // initGlobalHTTPService creates a single HTTP service instance that all tests will share.
@@ -73,31 +173,12 @@ func initGlobalHTTPService() {
 	}
 
 	ctx := context.Background()
-	var service client.Service
-	var err error
-	if os.Getenv("HTTP_BEARER_TOKEN") != "" {
-		service, err = http.New(ctx,
-			http.WithTimeout(timeout),
-			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-			http.WithAllowDelayedStart(true),
-			http.WithExtraHeaders(map[string]string{
-				"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN")),
-			}),
-		)
-	} else {
-		service, err = http.New(ctx,
-			http.WithTimeout(timeout),
-			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-			http.WithAllowDelayedStart(true),
-		)
-	}
 
-	if err != nil {
-		// If we can't create the service, tests will fail anyway
-		// Just log and continue - individual tests will handle the error
-		return
+	// If we can't create the service, tests will fail anyway; leave the global nil and
+	// let the individual tests handle the error.
+	if service, err := newTestService(ctx, true, http.WithAllowDelayedStart(true)); err == nil {
+		globalHTTPService = service
 	}
-	globalHTTPService = service
 }
 
 // testService returns an HTTP service for testing.
@@ -124,24 +205,11 @@ func testService(ctx context.Context, t *testing.T) any {
 	}
 
 	// Fallback: create a new service if global service is not available
-	var service client.Service
-	var err error
-	if os.Getenv("HTTP_BEARER_TOKEN") != "" {
-		service, err = http.New(ctx,
-			http.WithTimeout(timeout),
-			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-			http.WithExtraHeaders(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN"))}),
-		)
-	} else {
-		service, err = http.New(ctx,
-			http.WithTimeout(timeout),
-			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-		)
-	}
-
+	service, err := newTestService(ctx, true)
 	if err != nil {
 		t.Fatalf("Failed to create HTTP service: %v", err)
 	}
+
 	return service
 }
 
