@@ -63,15 +63,7 @@ func (s *Service) ExecutionPayloadEnvelope(ctx context.Context,
 	return response, nil
 }
 
-// assertEnvelopeIsForBlock checks that a fetched envelope belongs to the block it
-// was asked for.
-//
-// The block root is the only field the request and the envelope have in common,
-// and it is the one that matters: the caller signs this envelope and publishes
-// it, so an envelope committed to another block is a payload reveal that cannot
-// be published and a missed payload for the slot.  Checking it rather than
-// trusting the node to have checked it is the stance the block-production
-// endpoint already takes on the slot and the RANDAO reveal.
+// assertEnvelopeIsForBlock checks that an envelope belongs to the requested block.
 func assertEnvelopeIsForBlock(envelope *spec.VersionedExecutionPayloadEnvelope, expected phase0.Root) error {
 	root, err := envelope.BeaconBlockRoot()
 	if err != nil {

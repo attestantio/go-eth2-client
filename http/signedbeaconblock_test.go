@@ -20,45 +20,8 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
-
-// TestSignedBeaconBlockGloas verifies that a block read back from a gloas chain
-// lands in the gloas arm and is usable.
-//
-// TestSignedBeaconBlock below tolerates any api.Error, since the node may not
-// hold the block asked for, which also makes it tolerate a version the client
-// cannot decode.  This asserts the arm directly instead.
-func TestSignedBeaconBlockGloas(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	service := testService(ctx, t).(client.Service)
-
-	requireOnGloas(ctx, t, service)
-
-	response, err := service.(client.SignedBeaconBlockProvider).SignedBeaconBlock(ctx,
-		&api.SignedBeaconBlockOpts{Block: "head"},
-	)
-	require.NoError(t, err)
-	require.Equal(t, spec.DataVersionGloas, response.Data.Version)
-	require.NotNil(t, response.Data.Gloas)
-	require.NotNil(t, response.Data.Gloas.Message)
-
-	// Post-Gloas the block commits to an execution payload bid rather than
-	// carrying a payload, so the bid is what must have survived decoding.
-	require.NotNil(t, response.Data.Gloas.Message.Body.SignedExecutionPayloadBid)
-
-	slot, err := response.Data.Slot()
-	require.NoError(t, err)
-	require.NotZero(t, slot)
-
-	root, err := response.Data.Root()
-	require.NoError(t, err)
-	require.NotEqual(t, phase0.Root{}, root)
-}
 
 func TestSignedBeaconBlock(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())

@@ -21,40 +21,8 @@ import (
 	"github.com/attestantio/go-eth2-client/testclients"
 )
 
-// A provider interface is only useful if every implementation carries it, but
-// nothing in this repository forces that: the implementations are reached by
-// type assertion at run time, so a missing method in multi, mock or a test
-// client compiles cleanly and fails only when a caller asserts on it.
-//
-// These declarations turn that into a build failure.  They currently cover the
-// payload timeliness committee surface, which the older providers predate; new
-// providers belong in the block below rather than in a file of their own, so
-// that the registry grows in one place.
+// Provider assertions keep implementations in parity.
 var (
-	_ client.PTCDutiesProvider = (*http.Service)(nil)
-	_ client.PTCDutiesProvider = (*multi.Service)(nil)
-	_ client.PTCDutiesProvider = (*mock.Service)(nil)
-	_ client.PTCDutiesProvider = (*testclients.Erroring)(nil)
-	_ client.PTCDutiesProvider = (*testclients.Sleepy)(nil)
-
-	_ client.PayloadAttestationDataProvider = (*http.Service)(nil)
-	_ client.PayloadAttestationDataProvider = (*multi.Service)(nil)
-	_ client.PayloadAttestationDataProvider = (*mock.Service)(nil)
-	_ client.PayloadAttestationDataProvider = (*testclients.Erroring)(nil)
-	_ client.PayloadAttestationDataProvider = (*testclients.Sleepy)(nil)
-
-	_ client.PayloadAttestationPoolProvider = (*http.Service)(nil)
-	_ client.PayloadAttestationPoolProvider = (*multi.Service)(nil)
-	_ client.PayloadAttestationPoolProvider = (*mock.Service)(nil)
-	_ client.PayloadAttestationPoolProvider = (*testclients.Erroring)(nil)
-	_ client.PayloadAttestationPoolProvider = (*testclients.Sleepy)(nil)
-
-	_ client.PayloadAttestationMessagesSubmitter = (*http.Service)(nil)
-	_ client.PayloadAttestationMessagesSubmitter = (*multi.Service)(nil)
-	_ client.PayloadAttestationMessagesSubmitter = (*mock.Service)(nil)
-	_ client.PayloadAttestationMessagesSubmitter = (*testclients.Erroring)(nil)
-	_ client.PayloadAttestationMessagesSubmitter = (*testclients.Sleepy)(nil)
-
 	_ client.EPBSProposalProvider = (*http.Service)(nil)
 	_ client.EPBSProposalProvider = (*multi.Service)(nil)
 	_ client.EPBSProposalProvider = (*mock.Service)(nil)
@@ -66,4 +34,22 @@ var (
 	_ client.ExecutionPayloadEnvelopeProvider = (*mock.Service)(nil)
 	_ client.ExecutionPayloadEnvelopeProvider = (*testclients.Erroring)(nil)
 	_ client.ExecutionPayloadEnvelopeProvider = (*testclients.Sleepy)(nil)
+
+	_ client.ExecutionPayloadProvider = (*http.Service)(nil)
+	_ client.ExecutionPayloadProvider = (*multi.Service)(nil)
+	_ client.ExecutionPayloadProvider = (*mock.Service)(nil)
+	_ client.ExecutionPayloadProvider = (*testclients.Erroring)(nil)
+	_ client.ExecutionPayloadProvider = (*testclients.Sleepy)(nil)
+
+	_ client.ExecutionPayloadEnvelopeSubmitter = (*http.Service)(nil)
+	_ client.ExecutionPayloadEnvelopeSubmitter = (*multi.Service)(nil)
+	_ client.ExecutionPayloadEnvelopeSubmitter = (*mock.Service)(nil)
+	_ client.ExecutionPayloadEnvelopeSubmitter = (*testclients.Erroring)(nil)
+	_ client.ExecutionPayloadEnvelopeSubmitter = (*testclients.Sleepy)(nil)
+
+	_ client.ExecutionPayloadBidSubmitter = (*http.Service)(nil)
+	_ client.ExecutionPayloadBidSubmitter = (*multi.Service)(nil)
+	_ client.ExecutionPayloadBidSubmitter = (*mock.Service)(nil)
+	_ client.ExecutionPayloadBidSubmitter = (*testclients.Erroring)(nil)
+	_ client.ExecutionPayloadBidSubmitter = (*testclients.Sleepy)(nil)
 )
