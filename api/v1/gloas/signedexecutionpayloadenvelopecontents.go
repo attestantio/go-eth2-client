@@ -32,6 +32,19 @@ type SignedExecutionPayloadEnvelopeContents struct {
 	Blobs     []deneb.Blob     `dynssz-max:"MAX_BLOB_COMMITMENTS_PER_BLOCK"                             ssz-max:"4096"     ssz-size:"?,131072"`
 }
 
+// signedExecutionPayloadEnvelopeContents is the wire representation of the struct.
+type signedExecutionPayloadEnvelopeContents struct {
+	SignedExecutionPayloadEnvelope *gloas.SignedExecutionPayloadEnvelope `json:"signed_execution_payload_envelope" yaml:"signed_execution_payload_envelope"`
+	KZGProofs                      []deneb.KZGProof                      `json:"kzg_proofs"                        yaml:"kzg_proofs"`
+	Blobs                          []deneb.Blob                          `json:"blobs"                             yaml:"blobs"`
+}
+
+func (s *SignedExecutionPayloadEnvelopeContents) unpack(value *signedExecutionPayloadEnvelopeContents) {
+	s.SignedExecutionPayloadEnvelope = value.SignedExecutionPayloadEnvelope
+	s.KZGProofs = value.KZGProofs
+	s.Blobs = value.Blobs
+}
+
 // String returns a string version of the structure.
 func (s *SignedExecutionPayloadEnvelopeContents) String() string {
 	data, err := yaml.Marshal(s)
