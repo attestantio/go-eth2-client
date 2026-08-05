@@ -17,6 +17,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"slices"
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
@@ -26,11 +27,6 @@ import (
 )
 
 // Events feeds requested events with the given topics to the supplied handler.
-//
-// The caller must not mutate opts after calling this.  Each handler supplied is captured for the
-// lifetime of the subscription, so replacing one afterwards has no effect.  The topics slice is
-// retained by reference, and is read again whenever a client that was not synced at this point
-// later comes into service, which can be long after this returns.
 func (s *Service) Events(ctx context.Context,
 	opts *api.EventsOpts,
 ) error {
@@ -73,7 +69,7 @@ func (s *Service) Events(ctx context.Context,
 				if !isProvider {
 					ah.log.Error().
 						Str("address", ah.address).
-						Strs("topics", opts.Topics).
+						Strs("topics", ah.clientOpts.Topics).
 						Msg("Not a node syncing provider")
 
 					return
@@ -83,7 +79,7 @@ func (s *Service) Events(ctx context.Context,
 				if err != nil {
 					ah.log.Error().
 						Str("address", ah.address).
-						Strs("topics", opts.Topics).
+						Strs("topics", ah.clientOpts.Topics).
 						Err(err).
 						Msg("Failed to obtain sync state from node")
 
@@ -97,7 +93,7 @@ func (s *Service) Events(ctx context.Context,
 					if err := c.(consensusclient.EventsProvider).Events(ctx, ah.clientOpts); err != nil {
 						ah.log.Error().
 							Str("address", ah.address).
-							Strs("topics", opts.Topics).
+							Strs("topics", ah.clientOpts.Topics).
 							Err(err).
 							Msg("Failed to set up events handler")
 					}
@@ -139,7 +135,7 @@ func newActiveHandler(s *Service, log zerolog.Logger, address string, opts *api.
 
 	sub := &api.EventsOpts{
 		Common: opts.Common,
-		Topics: opts.Topics,
+		Topics: slices.Clone(opts.Topics),
 	}
 	ah.clientOpts = sub
 

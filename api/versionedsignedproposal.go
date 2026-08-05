@@ -48,14 +48,7 @@ type VersionedSignedProposal struct {
 	ElectraBlinded   *apiv1electra.SignedBlindedBeaconBlock
 	Fulu             *apiv1fulu.SignedBlockContents
 	FuluBlinded      *apiv1electra.SignedBlindedBeaconBlock
-	// Gloas is a plain signed block, not a contents wrapper as Deneb through
-	// Fulu use: post-Gloas the blobs travel in the execution payload envelope,
-	// which is published separately, so there is nothing to bundle here.
-	//
-	// There is deliberately no GloasBlinded counterpart.  Post-Gloas a proposer
-	// commits to an execution payload bid rather than to a payload, so there is
-	// nothing to withhold and no blinded schema to carry.
-	Gloas *gloas.SignedBeaconBlock
+	Gloas            *gloas.SignedBeaconBlock
 }
 
 // AssertPresent throws an error if the expected proposal
@@ -113,9 +106,6 @@ func (v *VersionedSignedProposal) AssertPresent() error {
 			return errors.New("blinded fulu proposal not present")
 		}
 	case spec.DataVersionGloas:
-		// No blinded arm to consider: there is no blinded proposal post-Gloas.
-		// A proposal marked blinded here is a caller mistake rather than a
-		// second shape to look for, so it is refused outright.
 		if v.Blinded {
 			return errors.New("gloas proposals are never blinded")
 		}
@@ -173,7 +163,6 @@ func (v *VersionedSignedProposal) Slot() (phase0.Slot, error) {
 
 		return v.Fulu.SignedBlock.Message.Slot, nil
 	case spec.DataVersionGloas:
-		// No blinded arm: there is no blinded proposal post-Gloas.
 		return v.Gloas.Message.Slot, nil
 	default:
 		return 0, ErrUnsupportedVersion
@@ -540,10 +529,8 @@ func (v *VersionedSignedProposal) assertExecutionPayloadPresent() error {
 			}
 		}
 	case spec.DataVersionGloas:
-		// No blinded arm to consider: there is no blinded proposal post-Gloas.
 		// The chain runs one field deeper than assertMessagePresent's Gloas arm
-		// because the execution block hash lives in the bid, so a block whose bid
-		// is absent cannot answer for one.
+		// because the execution block hash lives in the bid.
 		if v.Gloas == nil ||
 			v.Gloas.Message == nil ||
 			v.Gloas.Message.Body == nil ||

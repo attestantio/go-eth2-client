@@ -15,7 +15,9 @@ package multi_test
 
 import (
 	"context"
+	"errors"
 	"reflect"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -27,8 +29,15 @@ import (
 	"github.com/attestantio/go-eth2-client/multi"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
+	zerologger "github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/require"
 )
+
+type writerFunc func([]byte) (int, error)
+
+func (f writerFunc) Write(data []byte) (int, error) {
+	return f(data)
+}
 
 func TestEvents(t *testing.T) {
 	ctx := context.Background()
@@ -207,6 +216,85 @@ func TestEventsPassesOptionsToClient(t *testing.T) {
 	require.NotNil(t, clientOpts(), "underlying client was never subscribed")
 	require.Equal(t, []string{"head", "block"}, clientOpts().Topics)
 	require.Equal(t, 17*time.Second, clientOpts().Common.Timeout, "common options did not reach the client")
+}
+
+// TestEventsOwnsTopics confirms that a subscription retains the requested topics even if the
+// caller later reuses its options slice.
+func TestEventsOwnsTopics(t *testing.T) {
+	ctx := context.Background()
+
+	client, clientOpts := mockCapturingEvents(ctx, t, "mock 1")
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{client}),
+	)
+	require.NoError(t, err)
+
+	topics := []string{"head", "block"}
+	require.NoError(t, multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{
+		Topics: topics,
+	}))
+
+	topics[0] = "attestation"
+
+	require.NotNil(t, clientOpts(), "underlying client was never subscribed")
+	require.Equal(t, []string{"head", "block"}, clientOpts().Topics)
+}
+
+// TestEventsOwnsTopicsForDeferredClients confirms that a later sync check retains the requested
+// topics when the caller reuses the options slice after Events returns.
+func TestEventsOwnsTopicsForDeferredClients(t *testing.T) {
+	ctx := context.Background()
+
+	logs := make(chan string, 1)
+	originalLogger := zerologger.Logger
+	zerologger.Logger = zerolog.New(writerFunc(func(data []byte) (int, error) {
+		logs <- string(data)
+
+		return len(data), nil
+	}))
+	defer func() {
+		zerologger.Logger = originalLogger
+	}()
+
+	primary, _ := mockCapturingEvents(ctx, t, "mock 1")
+	deferred, _ := mockCapturingEvents(ctx, t, "mock 2")
+	deferred.SyncDistance = 1
+	syncStarted := make(chan struct{})
+	continueSync := make(chan struct{})
+	deferred.NodeSyncingFunc = func(context.Context, *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error) {
+		close(syncStarted)
+		<-continueSync
+
+		return nil, errors.New("failed to obtain sync state")
+	}
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.ErrorLevel),
+		multi.WithClients([]consensusclient.Service{primary, deferred}),
+	)
+	require.NoError(t, err)
+
+	topics := []string{"head", "block"}
+	require.NoError(t, multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{
+		Topics: topics,
+	}))
+
+	<-syncStarted
+	topics[0] = "attestation"
+	close(continueSync)
+
+	var event string
+	require.Eventually(t, func() bool {
+		select {
+		case event = <-logs:
+			return strings.Contains(event, "Failed to obtain sync state from node")
+		default:
+			return false
+		}
+	}, time.Second, 10*time.Millisecond, "deferred sync failure was not logged")
+	require.Contains(t, event, `"topics":["head","block"]`)
 }
 
 // TestEventsForwardsEveryHandler confirms that every handler in api.EventsOpts is substituted
