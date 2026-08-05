@@ -64,8 +64,14 @@ func (s *Service) SubmitExecutionPayloadEnvelope(ctx context.Context,
 
 	contents := &apiv1gloas.SignedExecutionPayloadEnvelopeContents{
 		SignedExecutionPayloadEnvelope: versioned.Gloas,
-		KZGProofs:                      nonNilKZGProofs(opts.KZGProofs),
-		Blobs:                          nonNilBlobs(opts.Blobs),
+		KZGProofs:                      opts.KZGProofs,
+		Blobs:                          opts.Blobs,
+	}
+	if contents.KZGProofs == nil {
+		contents.KZGProofs = []deneb.KZGProof{}
+	}
+	if contents.Blobs == nil {
+		contents.Blobs = []deneb.Blob{}
 	}
 
 	body, contentType, err := s.marshalRequestBody(ctx, contents)
@@ -105,26 +111,4 @@ func (s *Service) postExecutionPayloadEnvelope(ctx context.Context,
 	}
 
 	return nil
-}
-
-// nonNilKZGProofs normalises a nil KZG proof slice to an empty one: the
-// beacon-API schema requires kzg_proofs to be present (as an empty array
-// when the payload carries no blobs).
-func nonNilKZGProofs(proofs []deneb.KZGProof) []deneb.KZGProof {
-	if proofs == nil {
-		return []deneb.KZGProof{}
-	}
-
-	return proofs
-}
-
-// nonNilBlobs normalises a nil blob slice to an empty one: the beacon-API
-// schema requires blobs to be present (as an empty array when the payload
-// carries no blobs).
-func nonNilBlobs(blobs []deneb.Blob) []deneb.Blob {
-	if blobs == nil {
-		return []deneb.Blob{}
-	}
-
-	return blobs
 }

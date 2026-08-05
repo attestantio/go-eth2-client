@@ -32,6 +32,19 @@ func (s *Service) marshalRequestBody(ctx context.Context, value any) ([]byte, Co
 
 		return body, ContentTypeJSON, nil
 	}
+	if !s.customSpecSupport {
+		marshaler, isSSZMarshaler := value.(interface{ MarshalSSZ() ([]byte, error) })
+		if !isSSZMarshaler {
+			return nil, ContentTypeUnknown, errors.New("value does not support static SSZ marshaling")
+		}
+
+		body, err := marshaler.MarshalSSZ()
+		if err != nil {
+			return nil, ContentTypeUnknown, errors.Join(errors.New("failed to marshal SSZ"), err)
+		}
+
+		return body, ContentTypeSSZ, nil
+	}
 
 	ds, err := s.dynSSZForRequest(ctx)
 	if err != nil {

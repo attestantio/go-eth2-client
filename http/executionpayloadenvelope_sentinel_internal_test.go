@@ -22,17 +22,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestExecutionPayloadEnvelopeSentinel pins the shape of the error a 404
-// produces, which carries more weight than it looks like it should.
-//
-// A multi-client's failover decides whether a node is broken by unwrapping the
-// error to an *api.Error and reading its status: an unwrappable 4xx is the node's
-// answer, anything else is the node failing. This endpoint's 404 is the answer
-// every node but the producing one gives, so a sentinel that hides the api.Error
-// turns an ordinary call into the whole set looking broken, and the set gets
-// deactivated a node at a time. Both properties therefore have to hold at once,
-// and neither is implied by the other — which is why they are asserted together
-// rather than left to the caller-facing errors.Is check alone.
+// TestExecutionPayloadEnvelopeSentinel verifies a cache-miss 404 keeps its API error.
 func TestExecutionPayloadEnvelopeSentinel(t *testing.T) {
 	notFound := &api.Error{
 		Method:     http.MethodGet,

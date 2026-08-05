@@ -104,7 +104,7 @@ func (s *Service) fetchSignedExecutionPayloadEnvelope(ctx context.Context,
 
 	endpoint := fmt.Sprintf("/eth/v1/beacon/execution_payload_envelopes/%s", opts.Block)
 
-	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, true)
+	httpResponse, err := s.getWithResponseLimit(ctx, endpoint, "", &opts.Common, true, maxEPBSResponseSize)
 	if err != nil {
 		return nil, err
 	}
@@ -116,10 +116,7 @@ func (s *Service) fetchSignedExecutionPayloadEnvelope(ctx context.Context,
 	return httpResponse, nil
 }
 
-// dynSSZForRequest returns the dynamic-SSZ codec to use for marshaling and
-// unmarshaling ePBS payloads. With custom spec support it builds a codec from
-// the node's fetched spec (needed for non-mainnet presets); otherwise it
-// returns the shared global codec built from the default (mainnet) preset.
+// dynSSZForRequest returns a codec for a custom preset or the default global codec.
 func (s *Service) dynSSZForRequest(ctx context.Context) (*dynssz.DynSsz, error) {
 	if !s.customSpecSupport {
 		return dynssz.GetGlobalDynSsz(), nil
