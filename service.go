@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2023 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -334,6 +334,41 @@ type ProposalProvider interface {
 		opts *api.ProposalOpts,
 	) (
 		*api.Response[*api.VersionedProposal],
+		error,
+	)
+}
+
+// EPBSProposalProvider is the interface for providing ePBS proposals.
+//
+// It sits alongside ProposalProvider rather than replacing it: the endpoint
+// behind it is gloas-onwards only, and the endpoint behind ProposalProvider is
+// frozen at the last pre-gloas fork, so a client needs both to span the fork.
+type EPBSProposalProvider interface {
+	// EPBSProposal fetches an ePBS proposal for signing.
+	EPBSProposal(ctx context.Context,
+		opts *api.EPBSProposalOpts,
+	) (
+		*api.Response[*api.VersionedEPBSProposal],
+		error,
+	)
+}
+
+// ExecutionPayloadEnvelopeProvider is the interface for providing the execution
+// payload envelope a node cached while producing a block.
+//
+// The name tracks the type returned, which is what distinguishes it from
+// ExecutionPayloadProvider: that one reads a published, signed envelope back off
+// the chain, this one collects an unsigned one from the node that built it so
+// the caller can sign it.
+type ExecutionPayloadEnvelopeProvider interface {
+	// ExecutionPayloadEnvelope obtains the cached execution payload envelope for
+	// the given slot and beacon block root.  It returns
+	// ErrNoExecutionPayloadEnvelope if the node holds none, which is the normal
+	// answer for any slot other than the one it is proposing.
+	ExecutionPayloadEnvelope(ctx context.Context,
+		opts *api.ExecutionPayloadEnvelopeOpts,
+	) (
+		*api.Response[*spec.VersionedExecutionPayloadEnvelope],
 		error,
 	)
 }
@@ -684,4 +719,85 @@ type GenesisTimeProvider interface {
 type NodeClientProvider interface {
 	// NodeClient provides the client for the node.
 	NodeClient(ctx context.Context) (*api.Response[string], error)
+}
+
+// ExecutionPayloadProvider is the interface for providing execution payloads.
+type ExecutionPayloadProvider interface {
+	// SignedExecutionPayloadEnvelope fetches a signed execution payload
+	// envelope given a block ID. Returns a versioned wrapper so callers can
+	// branch on Version regardless of which fork's envelope is populated.
+	SignedExecutionPayloadEnvelope(ctx context.Context,
+		opts *api.SignedExecutionPayloadEnvelopeOpts,
+	) (
+		*api.Response[*spec.VersionedSignedExecutionPayloadEnvelope],
+		error,
+	)
+}
+
+// ExecutionPayloadEnvelopeSubmitter is the interface for submitting execution
+// payload envelopes.
+type ExecutionPayloadEnvelopeSubmitter interface {
+	// SubmitExecutionPayloadEnvelope submits a signed execution payload
+	// envelope (with its blobs and KZG proofs) for broadcast.
+	SubmitExecutionPayloadEnvelope(ctx context.Context,
+		opts *api.SubmitExecutionPayloadEnvelopeOpts,
+	) error
+}
+
+// ExecutionPayloadBidSubmitter is the interface for submitting execution
+// payload bids.
+type ExecutionPayloadBidSubmitter interface {
+	// SubmitExecutionPayloadBid submits a signed execution payload bid for
+	// gossip broadcast.
+	SubmitExecutionPayloadBid(ctx context.Context,
+		opts *api.SubmitExecutionPayloadBidOpts,
+	) error
+}
+
+// PTCDutiesProvider is the interface for providing payload timeliness
+// committee duties.
+type PTCDutiesProvider interface {
+	// PTCDuties obtains payload timeliness committee duties.
+	PTCDuties(ctx context.Context,
+		opts *api.PTCDutiesOpts,
+	) (
+		*api.Response[[]*apiv1.PTCDuty],
+		error,
+	)
+}
+
+// PayloadAttestationDataProvider is the interface for providing payload
+// attestation data.
+type PayloadAttestationDataProvider interface {
+	// PayloadAttestationData obtains payload attestation data for the given
+	// options.  It returns ErrNoPayloadAttestationData if the node has seen no
+	// block for the slot, in which case the validator must not attest.
+	PayloadAttestationData(ctx context.Context,
+		opts *api.PayloadAttestationDataOpts,
+	) (
+		*api.Response[*spec.VersionedPayloadAttestationData],
+		error,
+	)
+}
+
+// PayloadAttestationPoolProvider is the interface for providing payload
+// attestation pools.
+type PayloadAttestationPoolProvider interface {
+	// PayloadAttestationPool fetches the payload attestation pool for the
+	// given options.
+	PayloadAttestationPool(ctx context.Context,
+		opts *api.PayloadAttestationPoolOpts,
+	) (
+		*api.Response[[]*spec.VersionedPayloadAttestation],
+		error,
+	)
+}
+
+// PayloadAttestationMessagesSubmitter is the interface for submitting payload
+// attestation messages.
+type PayloadAttestationMessagesSubmitter interface {
+	// SubmitPayloadAttestationMessages submits payload attestation messages.
+	SubmitPayloadAttestationMessages(ctx context.Context,
+		opts *api.SubmitPayloadAttestationMessagesOpts,
+	) error
 }
