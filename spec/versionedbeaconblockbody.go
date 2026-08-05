@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2024 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,6 +19,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -32,6 +33,7 @@ type VersionedBeaconBlockBody struct {
 	Deneb     *deneb.BeaconBlockBody
 	Electra   *electra.BeaconBlockBody
 	Fulu      *electra.BeaconBlockBody
+	Gloas     *gloas.BeaconBlockBody
 }
 
 // String returns a string version of the structure.
@@ -79,6 +81,12 @@ func (v *VersionedBeaconBlockBody) String() string {
 		}
 
 		return v.Fulu.String()
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return ""
+		}
+
+		return v.Gloas.String()
 	default:
 		return "unknown version"
 	}
