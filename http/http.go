@@ -258,6 +258,7 @@ func (s *Service) get(ctx context.Context,
 	return s.getWithResponseLimit(ctx, endpoint, query, opts, supportsSSZ, 0)
 }
 
+//nolint:revive
 func (s *Service) getWithResponseLimit(ctx context.Context,
 	endpoint string,
 	query string,
