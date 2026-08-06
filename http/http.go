@@ -126,7 +126,7 @@ func (s *Service) post(ctx context.Context,
 	}
 	populateHeaders(res, resp)
 
-	res.body, err = io.ReadAll(resp.Body)
+	res.body, err = readResponseBody(resp.Body, maxEPBSResponseSize)
 	if err != nil {
 		switch {
 		case errors.Is(err, context.Canceled):
