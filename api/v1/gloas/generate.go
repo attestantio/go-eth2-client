@@ -13,5 +13,5 @@
 
 package gloas
 
-//go:generate rm -f *_ssz.go
+//go:generate rm -f signedexecutionpayloadenvelopecontents_ssz.go
 //go:generate go tool dynssz-gen -config generate.yaml

@@ -18,6 +18,8 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/holiman/uint256"
 	require "github.com/stretchr/testify/require"
 )
 
@@ -71,4 +73,137 @@ func TestVersionedSignedExecutionPayloadEnvelopeUnknownVersion(t *testing.T) {
 		Version: spec.DataVersion(255),
 	}).Payload()
 	require.EqualError(t, err, "unknown version")
+}
+
+func TestVersionedSignedExecutionPayloadEnvelopeAccessors(t *testing.T) {
+	payload := &gloas.ExecutionPayload{BaseFeePerGas: uint256.NewInt(1)}
+	executionRequests := &gloas.ExecutionRequests{}
+	beaconBlockRoot := phase0.Root{0x01}
+	parentBeaconBlockRoot := phase0.Root{0x02}
+	message := &gloas.ExecutionPayloadEnvelope{
+		Payload:               payload,
+		ExecutionRequests:     executionRequests,
+		BuilderIndex:          3,
+		BeaconBlockRoot:       beaconBlockRoot,
+		ParentBeaconBlockRoot: parentBeaconBlockRoot,
+	}
+	signature := phase0.BLSSignature{0x04}
+	populated := &spec.VersionedSignedExecutionPayloadEnvelope{
+		Version: spec.DataVersionGloas,
+		Gloas: &gloas.SignedExecutionPayloadEnvelope{
+			Message:   message,
+			Signature: signature,
+		},
+	}
+	gloasNoMessage := &spec.VersionedSignedExecutionPayloadEnvelope{
+		Version: spec.DataVersionGloas,
+		Gloas:   &gloas.SignedExecutionPayloadEnvelope{},
+	}
+	gloasNil := &spec.VersionedSignedExecutionPayloadEnvelope{Version: spec.DataVersionGloas}
+	tests := []struct {
+		name     string
+		accessor func(*spec.VersionedSignedExecutionPayloadEnvelope) (any, error)
+		want     any
+		missing  *spec.VersionedSignedExecutionPayloadEnvelope
+	}{
+		{
+			name: "Message",
+			accessor: func(v *spec.VersionedSignedExecutionPayloadEnvelope) (any, error) {
+				return v.Message()
+			},
+			want:    message,
+			missing: gloasNoMessage,
+		},
+		{
+			name: "Payload",
+			accessor: func(v *spec.VersionedSignedExecutionPayloadEnvelope) (any, error) {
+				return v.Payload()
+			},
+			want:    payload,
+			missing: gloasNoMessage,
+		},
+		{
+			name: "ExecutionRequests",
+			accessor: func(v *spec.VersionedSignedExecutionPayloadEnvelope) (any, error) {
+				return v.ExecutionRequests()
+			},
+			want: &spec.VersionedExecutionRequests{
+				Version: spec.DataVersionGloas,
+				Gloas:   executionRequests,
+			},
+			missing: gloasNoMessage,
+		},
+		{
+			name: "BuilderIndex",
+			accessor: func(v *spec.VersionedSignedExecutionPayloadEnvelope) (any, error) {
+				return v.BuilderIndex()
+			},
+			want:    gloas.BuilderIndex(3),
+			missing: gloasNoMessage,
+		},
+		{
+			name: "BeaconBlockRoot",
+			accessor: func(v *spec.VersionedSignedExecutionPayloadEnvelope) (any, error) {
+				return v.BeaconBlockRoot()
+			},
+			want:    beaconBlockRoot,
+			missing: gloasNoMessage,
+		},
+		{
+			name: "ParentBeaconBlockRoot",
+			accessor: func(v *spec.VersionedSignedExecutionPayloadEnvelope) (any, error) {
+				return v.ParentBeaconBlockRoot()
+			},
+			want:    parentBeaconBlockRoot,
+			missing: gloasNoMessage,
+		},
+		{
+			name: "Signature",
+			accessor: func(v *spec.VersionedSignedExecutionPayloadEnvelope) (any, error) {
+				return v.Signature()
+			},
+			want:    signature,
+			missing: gloasNil,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := test.accessor(populated)
+			require.NoError(t, err)
+			require.Equal(t, test.want, got)
+
+			_, err = test.accessor(test.missing)
+			require.EqualError(t, err, "no gloas signed execution payload envelope")
+		})
+	}
+}
+
+func TestVersionedSignedExecutionPayloadEnvelopeIsEmpty(t *testing.T) {
+	tests := []struct {
+		name     string
+		envelope *spec.VersionedSignedExecutionPayloadEnvelope
+		expected bool
+	}{
+		{
+			name: "Gloas",
+			envelope: &spec.VersionedSignedExecutionPayloadEnvelope{
+				Version: spec.DataVersionGloas,
+				Gloas:   &gloas.SignedExecutionPayloadEnvelope{},
+			},
+		},
+		{
+			name: "GloasNil",
+			envelope: &spec.VersionedSignedExecutionPayloadEnvelope{
+				Version: spec.DataVersionGloas,
+			},
+			expected: true,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			require.Equal(t, test.expected, test.envelope.IsEmpty())
+		})
+	}
 }
