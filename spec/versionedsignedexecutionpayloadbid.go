@@ -41,7 +41,6 @@ func (v *VersionedSignedExecutionPayloadBid) String() string {
 
 		return v.Gloas.String()
 	default:
-
 		return "unknown version"
 	}
 }

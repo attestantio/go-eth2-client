@@ -136,3 +136,39 @@ func TestVersionedSignedProposalExecutionBlockHash(t *testing.T) {
 		})
 	}
 }
+
+func TestVersionedSignedProposalGloasBlindedState(t *testing.T) {
+	tests := []struct {
+		name     string
+		proposal *api.VersionedSignedProposal
+		err      string
+	}{
+		{
+			name: "Unblinded",
+			proposal: &api.VersionedSignedProposal{
+				Version: spec.DataVersionGloas,
+				Gloas:   &gloas.SignedBeaconBlock{},
+			},
+		},
+		{
+			name: "Blinded",
+			proposal: &api.VersionedSignedProposal{
+				Version: spec.DataVersionGloas,
+				Blinded: true,
+				Gloas:   &gloas.SignedBeaconBlock{},
+			},
+			err: "gloas proposals are never blinded",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := test.proposal.AssertPresent()
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
