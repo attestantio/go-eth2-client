@@ -36,7 +36,7 @@ func (s *Service) PTCDuties(ctx context.Context,
 	for i := range opts.Indices {
 		data[i] = &apiv1.PTCDuty{
 			ValidatorIndex: opts.Indices[i],
-			Slot:           phase0.Slot(opts.Epoch),
+			Slot:           phase0.Slot(uint64(opts.Epoch) * 32),
 		}
 	}
 

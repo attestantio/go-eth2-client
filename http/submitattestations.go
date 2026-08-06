@@ -120,6 +120,10 @@ func (s *Service) createUnversionedAttestations(attestations []*spec.VersionedAt
 
 			unversionedAttestations = append(unversionedAttestations, singleAttestation)
 		case spec.DataVersionGloas:
+			if attestations[i].Gloas == nil {
+				return nil, errors.Join(errors.New("nil gloas attestation supplied"), client.ErrInvalidOptions)
+			}
+
 			singleAttestation, err := attestations[i].Gloas.ToSingleAttestation(attestations[i].ValidatorIndex)
 			if err != nil {
 				s.log.Warn().Err(err).Msg("Failed to convert attestation to single attestation")

@@ -16,6 +16,7 @@ package http
 import (
 	"testing"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/stretchr/testify/require"
@@ -37,4 +38,10 @@ func TestCreateUnversionedAggregatesGloas(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, unversioned, 1)
 	require.Equal(t, aggregate, unversioned[0])
+}
+
+func TestCreateUnversionedAggregatesGloasNil(t *testing.T) {
+	_, err := createUnversionedAggregates([]*spec.VersionedSignedAggregateAndProof{{Version: spec.DataVersionGloas}})
+	require.ErrorIs(t, err, client.ErrInvalidOptions)
+	require.EqualError(t, err, "nil gloas aggregate and proof supplied\ninvalid options")
 }

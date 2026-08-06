@@ -106,6 +106,10 @@ func createUnversionedAggregates(aggregateAndProofs []*spec.VersionedSignedAggre
 		case spec.DataVersionFulu:
 			unversionedAggregates = append(unversionedAggregates, aggregateAndProofs[i].Fulu)
 		case spec.DataVersionGloas:
+			if aggregateAndProofs[i].Gloas == nil {
+				return nil, errors.Join(errors.New("nil gloas aggregate and proof supplied"), client.ErrInvalidOptions)
+			}
+
 			unversionedAggregates = append(unversionedAggregates, aggregateAndProofs[i].Gloas)
 		default:
 			return nil, errors.Join(errors.New("unknown aggregate and proof version"), client.ErrInvalidOptions)

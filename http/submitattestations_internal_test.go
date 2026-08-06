@@ -17,6 +17,7 @@ import (
 	"testing"
 
 	bitfield "github.com/OffchainLabs/go-bitfield"
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
@@ -60,4 +61,10 @@ func TestCreateUnversionedAttestationsGloas(t *testing.T) {
 	require.Equal(t, phase0.CommitteeIndex(2), single.CommitteeIndex)
 	require.Equal(t, validatorIndex, single.AttesterIndex)
 	require.Equal(t, attestationData, single.Data)
+}
+
+func TestCreateUnversionedAttestationsGloasNil(t *testing.T) {
+	_, err := new(Service).createUnversionedAttestations([]*spec.VersionedAttestation{{Version: spec.DataVersionGloas}})
+	require.ErrorIs(t, err, client.ErrInvalidOptions)
+	require.EqualError(t, err, "nil gloas attestation supplied\ninvalid options")
 }
