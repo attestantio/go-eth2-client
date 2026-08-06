@@ -14,10 +14,14 @@
 package http
 
 import (
+	"context"
 	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -118,11 +122,6 @@ func TestPayloadAttestationDataFromResponse(t *testing.T) {
 		require.ErrorContains(t, err, "no gloas payload attestation data in response")
 	})
 
-	// An explicit null decodes to the same nil pointer as an absent key, so
-	// the same check catches it.  It is pinned separately because it used to
-	// take a different route: the arm came back nil and only the endpoint's
-	// own Slot() call downstream refused it, which left this function
-	// reporting success on a response carrying nothing to attest to.
 	t.Run("NullData", func(t *testing.T) {
 		_, err := payloadAttestationDataFromResponse(&httpResponse{
 			statusCode:       http.StatusOK,
@@ -155,4 +154,37 @@ func TestPayloadAttestationDataFromResponse(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "failed to decode gloas payload attestation data")
 	})
+}
+
+func TestPayloadAttestationDataPath(t *testing.T) {
+	var requestPath, requestQuery string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestPath = r.URL.Path
+		requestQuery = r.URL.RawQuery
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Eth-Consensus-Version", "gloas")
+		_, err := w.Write([]byte(`{"data":{"beacon_block_root":"0x0102030000000000000000000000000000000000000000000000000000000000","slot":"42","payload_present":true,"blob_data_available":false}}`))
+		require.NoError(t, err)
+	}))
+	defer server.Close()
+
+	base, address, err := parseAddress(server.URL)
+	require.NoError(t, err)
+	service := &Service{
+		base:             base,
+		address:          address.String(),
+		client:           server.Client(),
+		timeout:          time.Second,
+		extraHeaders:     map[string]string{},
+		connectionActive: true,
+		connectionSynced: true,
+	}
+
+	response, err := service.PayloadAttestationData(context.Background(),
+		&api.PayloadAttestationDataOpts{Slot: 42},
+	)
+	require.NoError(t, err)
+	require.Equal(t, phase0.Slot(42), response.Data.Gloas.Slot)
+	require.Equal(t, "/eth/v1/validator/payload_attestation_data/42", requestPath)
+	require.Empty(t, requestQuery)
 }

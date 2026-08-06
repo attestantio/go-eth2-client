@@ -103,6 +103,17 @@ func TestPayloadAttestationPoolFromResponse(t *testing.T) {
 		})
 		require.ErrorContains(t, err, "unhandled content type")
 	})
+
+	t.Run("NilElement", func(t *testing.T) {
+		_, err := payloadAttestationPoolFromResponse(&httpResponse{
+			statusCode:       http.StatusOK,
+			contentType:      ContentTypeJSON,
+			consensusVersion: spec.DataVersionGloas,
+			body:             []byte(`{"data":[null]}`),
+			headers:          map[string]string{},
+		})
+		require.EqualError(t, err, "nil payload attestation in response")
+	})
 }
 
 // TestVerifyPayloadAttestationPool covers the filter check applied when a slot

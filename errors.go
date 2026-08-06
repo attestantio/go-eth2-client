@@ -31,4 +31,6 @@ var (
 	// for the slot it is proposing, so this is the normal answer for any other slot, for a block
 	// the node did not build, and for a block that a re-org has moved off the chain.
 	ErrNoExecutionPayloadEnvelope = errors.New("no execution payload envelope available")
+	// ErrNoPayloadAttestationData is returned when the node has no payload attestation data for a slot.
+	ErrNoPayloadAttestationData = errors.New("no payload attestation data available")
 )

@@ -46,10 +46,10 @@ func (s *Service) PayloadAttestationData(ctx context.Context,
 		return nil, client.ErrNoOptions
 	}
 
-	endpoint := "/eth/v1/validator/payload_attestation_data"
-	query := fmt.Sprintf("slot=%d", opts.Slot)
+	endpoint := fmt.Sprintf("/eth/v1/validator/payload_attestation_data/%d", opts.Slot)
+	query := ""
 
-	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, true)
+	httpResponse, err := s.getWithResponseLimit(ctx, endpoint, query, &opts.Common, true, maxEPBSResponseSize)
 	if err != nil {
 		return nil, err
 	}

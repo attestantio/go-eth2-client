@@ -51,7 +51,7 @@ func (s *Service) PayloadAttestationPool(ctx context.Context,
 
 	// The endpoint advertises SSZ, but as a bare SSZ list with no container to
 	// decode into, so JSON is requested here.
-	httpResponse, err := s.get(ctx, endpoint, query, &opts.Common, false)
+	httpResponse, err := s.getWithResponseLimit(ctx, endpoint, query, &opts.Common, false, maxEPBSResponseSize)
 	if err != nil {
 		return nil, err
 	}
@@ -102,6 +102,10 @@ func payloadAttestationPoolFromResponse(httpResponse *httpResponse) (
 
 	data := make([]*spec.VersionedPayloadAttestation, len(attestations))
 	for i := range attestations {
+		if attestations[i] == nil {
+			return nil, errors.New("nil payload attestation in response")
+		}
+
 		data[i] = &spec.VersionedPayloadAttestation{
 			Version: httpResponse.consensusVersion,
 			Gloas:   attestations[i],

@@ -92,8 +92,57 @@ func (*Service) attestationPoolFromJSON(_ context.Context,
 				Gloas:   datum,
 			}
 		}
+	case spec.DataVersionPhase0:
+		var decoded []*phase0.Attestation
+		decoded, metadata, err = decodeJSONResponse(bytes.NewReader(httpResponse.body), decoded)
+		data = make([]*spec.VersionedAttestation, len(decoded))
+		for i := range decoded {
+			data[i] = &spec.VersionedAttestation{Version: httpResponse.consensusVersion, Phase0: decoded[i]}
+		}
+	case spec.DataVersionAltair:
+		var decoded []*phase0.Attestation
+		decoded, metadata, err = decodeJSONResponse(bytes.NewReader(httpResponse.body), decoded)
+		data = make([]*spec.VersionedAttestation, len(decoded))
+		for i := range decoded {
+			data[i] = &spec.VersionedAttestation{Version: httpResponse.consensusVersion, Altair: decoded[i]}
+		}
+	case spec.DataVersionBellatrix:
+		var decoded []*phase0.Attestation
+		decoded, metadata, err = decodeJSONResponse(bytes.NewReader(httpResponse.body), decoded)
+		data = make([]*spec.VersionedAttestation, len(decoded))
+		for i := range decoded {
+			data[i] = &spec.VersionedAttestation{Version: httpResponse.consensusVersion, Bellatrix: decoded[i]}
+		}
+	case spec.DataVersionCapella:
+		var decoded []*phase0.Attestation
+		decoded, metadata, err = decodeJSONResponse(bytes.NewReader(httpResponse.body), decoded)
+		data = make([]*spec.VersionedAttestation, len(decoded))
+		for i := range decoded {
+			data[i] = &spec.VersionedAttestation{Version: httpResponse.consensusVersion, Capella: decoded[i]}
+		}
+	case spec.DataVersionDeneb:
+		var decoded []*phase0.Attestation
+		decoded, metadata, err = decodeJSONResponse(bytes.NewReader(httpResponse.body), decoded)
+		data = make([]*spec.VersionedAttestation, len(decoded))
+		for i := range decoded {
+			data[i] = &spec.VersionedAttestation{Version: httpResponse.consensusVersion, Deneb: decoded[i]}
+		}
+	case spec.DataVersionElectra:
+		var decoded []*electra.Attestation
+		decoded, metadata, err = decodeJSONResponse(bytes.NewReader(httpResponse.body), decoded)
+		data = make([]*spec.VersionedAttestation, len(decoded))
+		for i := range decoded {
+			data[i] = &spec.VersionedAttestation{Version: httpResponse.consensusVersion, Electra: decoded[i]}
+		}
+	case spec.DataVersionFulu:
+		var decoded []*electra.Attestation
+		decoded, metadata, err = decodeJSONResponse(bytes.NewReader(httpResponse.body), decoded)
+		data = make([]*spec.VersionedAttestation, len(decoded))
+		for i := range decoded {
+			data[i] = &spec.VersionedAttestation{Version: httpResponse.consensusVersion, Fulu: decoded[i]}
+		}
 	default:
-		data, metadata, err = decodeJSONResponse(bytes.NewReader(httpResponse.body), []*spec.VersionedAttestation{})
+		return nil, fmt.Errorf("unsupported attestation version %s", httpResponse.consensusVersion)
 	}
 	if err != nil {
 		return nil, err
