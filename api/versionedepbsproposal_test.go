@@ -111,6 +111,89 @@ func TestVersionedEPBSProposalSlot(t *testing.T) {
 	}
 }
 
+// TestVersionedEPBSProposalProposerIndex verifies the proposer index is read
+// from whichever arm the execution_payload_included flag selects.  The
+// proposer signs the proposal together with this index, so returning the zero
+// value for an absent block would let a caller sign with the wrong validator.
+func TestVersionedEPBSProposalProposerIndex(t *testing.T) {
+	tests := []struct {
+		name     string
+		proposal *api.VersionedEPBSProposal
+		expected phase0.ValidatorIndex
+		err      string
+	}{
+		{
+			name: "PayloadExcluded",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+				Gloas:   &gloas.BeaconBlock{ProposerIndex: 42},
+			},
+			expected: 42,
+		},
+		{
+			name: "PayloadIncluded",
+			proposal: &api.VersionedEPBSProposal{
+				Version:                  spec.DataVersionGloas,
+				ExecutionPayloadIncluded: true,
+				GloasContents: &apiv1gloas.BlockContents{
+					Block: &gloas.BeaconBlock{ProposerIndex: 43},
+				},
+			},
+			expected: 43,
+		},
+		{
+			name: "PayloadExcludedNilBlock",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+			},
+			err: "no gloas beacon block",
+		},
+		{
+			name: "PayloadIncludedNilContents",
+			proposal: &api.VersionedEPBSProposal{
+				Version:                  spec.DataVersionGloas,
+				ExecutionPayloadIncluded: true,
+			},
+			err: "no gloas block contents",
+		},
+		{
+			name: "PayloadIncludedNilBlock",
+			proposal: &api.VersionedEPBSProposal{
+				Version:                  spec.DataVersionGloas,
+				ExecutionPayloadIncluded: true,
+				GloasContents:            &apiv1gloas.BlockContents{},
+			},
+			err: "no gloas beacon block",
+		},
+		{
+			name: "PreGloas",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionFulu,
+			},
+			err: "no epbs proposal in fulu",
+		},
+		{
+			name: "UnknownVersion",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersion(99),
+			},
+			err: "unsupported version",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			index, err := test.proposal.ProposerIndex()
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, test.expected, index)
+			}
+		})
+	}
+}
+
 // TestVersionedEPBSProposalRandaoReveal verifies the RANDAO reveal is read
 // through the same arm selection as the slot.  The block production endpoint
 // compares this against the reveal it sent, so reading it from the wrong arm
