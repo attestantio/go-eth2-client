@@ -244,8 +244,6 @@ func readResponseBody(body io.Reader, limit int) ([]byte, error) {
 }
 
 // get sends an HTTP get request and returns the response.
-//
-//nolint:revive
 func (s *Service) get(ctx context.Context,
 	endpoint string,
 	query string,

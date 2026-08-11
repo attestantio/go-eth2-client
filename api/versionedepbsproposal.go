@@ -49,6 +49,16 @@ func (v *VersionedEPBSProposal) Slot() (phase0.Slot, error) {
 	return block.Slot, nil
 }
 
+// ProposerIndex returns the proposer index of the proposal.
+func (v *VersionedEPBSProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
+	block, err := v.block()
+	if err != nil {
+		return 0, err
+	}
+
+	return block.ProposerIndex, nil
+}
+
 // RandaoReveal returns the RANDAO reveal of the proposal.
 func (v *VersionedEPBSProposal) RandaoReveal() (phase0.BLSSignature, error) {
 	block, err := v.block()
