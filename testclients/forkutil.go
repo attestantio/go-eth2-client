@@ -32,6 +32,7 @@ func KnowsGloas(ctx context.Context, service any) bool {
 		return false
 	}
 	_, ok = response.Data["GLOAS_FORK_EPOCH"]
+
 	return ok
 }
 
@@ -50,5 +51,6 @@ func HeadVersion(ctx context.Context, service any) string {
 	if err != nil || response == nil || response.Data == nil {
 		return "unknown"
 	}
+
 	return response.Data.Version.String()
 }
