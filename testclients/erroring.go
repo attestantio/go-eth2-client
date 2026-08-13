@@ -1140,6 +1140,7 @@ func (s *Erroring) SubmitProposerPreferences(ctx context.Context, preferences []
 	if !ok {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
+
 	return next.SubmitProposerPreferences(ctx, preferences)
 }
 
