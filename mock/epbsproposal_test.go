@@ -71,6 +71,16 @@ func TestEPBSProposal(t *testing.T) {
 		require.NotNil(t, envelope.Payload)
 		require.NotNil(t, envelope.Payload.BaseFeePerGas)
 
+		// The mock serves mainnet-preset data, so the generated
+		// Body.HashTreeRoot() is the correct root here; BodyRoot() must
+		// return exactly that rather than erroring for want of a retained
+		// root.
+		wantBodyRoot, err := response.Data.GloasContents.Block.Body.HashTreeRoot()
+		require.NoError(t, err)
+		bodyRoot, err := response.Data.BodyRoot()
+		require.NoError(t, err)
+		require.Equal(t, phase0.Root(wantBodyRoot), bodyRoot)
+
 		_, err = response.Data.Blobs()
 		require.NoError(t, err)
 		_, err = response.Data.KZGProofs()
@@ -98,6 +108,12 @@ func TestEPBSProposal(t *testing.T) {
 		// fetch it from the node that produced the block.
 		_, err = response.Data.ExecutionPayloadEnvelope()
 		require.ErrorContains(t, err, "the execution payload was not included")
+
+		wantBodyRoot, err := response.Data.Gloas.Body.HashTreeRoot()
+		require.NoError(t, err)
+		bodyRoot, err := response.Data.BodyRoot()
+		require.NoError(t, err)
+		require.Equal(t, phase0.Root(wantBodyRoot), bodyRoot)
 
 		var marshaled []byte
 		require.NotPanics(t, func() {
