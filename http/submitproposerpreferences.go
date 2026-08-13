@@ -65,6 +65,7 @@ func (p proposerPreferencesList) MarshalSSZ() ([]byte, error) {
 		}
 		body = append(body, encoded...)
 	}
+
 	return body, nil
 }
 
@@ -112,5 +113,6 @@ func (s *Service) SubmitProposerPreferences(ctx context.Context, preferences []*
 			fmt.Errorf("unexpected status code %d", response.statusCode),
 		)
 	}
+
 	return nil
 }
