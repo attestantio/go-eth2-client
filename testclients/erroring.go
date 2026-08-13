@@ -27,6 +27,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -1128,6 +1129,18 @@ func (s *Erroring) SubmitExecutionPayloadBid(ctx context.Context, opts *api.Subm
 	}
 
 	return next.SubmitExecutionPayloadBid(ctx, opts)
+}
+
+// SubmitProposerPreferences submits signed proposer preferences.
+func (s *Erroring) SubmitProposerPreferences(ctx context.Context, preferences []*gloas.SignedProposerPreferences) error {
+	if err := s.maybeError(ctx); err != nil {
+		return err
+	}
+	next, ok := s.next.(consensusclient.ProposerPreferencesSubmitter)
+	if !ok {
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.SubmitProposerPreferences(ctx, preferences)
 }
 
 // SubmitExecutionPayloadEnvelope submits a signed execution payload envelope.
