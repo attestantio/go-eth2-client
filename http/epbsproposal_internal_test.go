@@ -57,17 +57,24 @@ func validEPBSBeaconBlock() *gloas.BeaconBlock {
 // populated one turns any assertion failure into a 256KiB hex diff.  The
 // payload's BaseFeePerGas must be non-nil, as its own marshaler dereferences it.
 func validEPBSBlockContents() *apiv1gloas.BlockContents {
-	return &apiv1gloas.BlockContents{
+	contents := &apiv1gloas.BlockContents{
 		Block: validEPBSBeaconBlock(),
 		ExecutionPayloadEnvelope: &gloas.ExecutionPayloadEnvelope{
 			Payload:           &gloas.ExecutionPayload{BaseFeePerGas: uint256.NewInt(7)},
 			ExecutionRequests: &gloas.ExecutionRequests{},
 			BuilderIndex:      12,
-			BeaconBlockRoot:   phase0.Root{0x0d, 0x0e, 0x0f},
 		},
 		KZGProofs: []deneb.KZGProof{{0x01, 0x02, 0x03}},
 		Blobs:     []deneb.Blob{},
 	}
+
+	root, err := contents.Block.HashTreeRoot()
+	if err != nil {
+		panic(err)
+	}
+	contents.ExecutionPayloadEnvelope.BeaconBlockRoot = root
+
+	return contents
 }
 
 // epbsProposalJSONBody wraps a marshaled datum in the produceBlockV4 response

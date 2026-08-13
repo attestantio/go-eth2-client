@@ -82,6 +82,9 @@ func TestEPBSProposalRejectsADisagreeingNode(t *testing.T) {
 		contents := validEPBSBlockContents()
 		contents.Block.Slot = slot
 		contents.Block.Body.RANDAOReveal = reveal
+		root, err := contents.Block.HashTreeRoot()
+		require.NoError(t, err)
+		contents.ExecutionPayloadEnvelope.BeaconBlockRoot = root
 
 		data, err := json.Marshal(contents)
 		require.NoError(t, err)
