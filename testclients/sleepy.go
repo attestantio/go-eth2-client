@@ -870,6 +870,7 @@ func (s *Sleepy) SubmitProposerPreferences(ctx context.Context, preferences []*g
 	if !ok {
 		return errors.New("next does not support this call")
 	}
+
 	return next.SubmitProposerPreferences(ctx, preferences)
 }
 
