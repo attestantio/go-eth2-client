@@ -73,17 +73,17 @@ func (s *Service) SubmitProposerPreferences(ctx context.Context, preferences []*
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
 	}
-	for _, preference := range preferences {
-		if preference == nil {
-			return errors.Join(errors.New("nil proposer preference supplied"), client.ErrInvalidOptions)
-		}
-	}
 	limit, err := s.proposerPreferencesLimit(ctx)
 	if err != nil {
 		return err
 	}
 	if uint64(len(preferences)) > limit {
 		return errors.Join(errors.New("too many proposer preferences"), client.ErrInvalidOptions)
+	}
+	for _, preference := range preferences {
+		if preference == nil {
+			return errors.Join(errors.New("nil proposer preference supplied"), client.ErrInvalidOptions)
+		}
 	}
 
 	requestPreferences := proposerPreferencesList(preferences)
