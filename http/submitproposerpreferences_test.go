@@ -148,6 +148,21 @@ func TestSubmitProposerPreferencesEnforcesStaticLimit(t *testing.T) {
 	}
 }
 
+func TestSubmitProposerPreferencesChecksLimitBeforeNilElements(t *testing.T) {
+	received := false
+	server := proposerPreferencesServer(t, nethttp.StatusOK, &received)
+	defer server.Close()
+
+	preferences := makePreferences(65)
+	preferences[0] = nil
+	service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL))
+	require.NoError(t, err)
+	err = service.(client.ProposerPreferencesSubmitter).SubmitProposerPreferences(context.Background(), preferences)
+	require.ErrorContains(t, err, "too many proposer preferences")
+	require.ErrorIs(t, err, client.ErrInvalidOptions)
+	require.False(t, received)
+}
+
 func TestSubmitProposerPreferencesUsesCustomSpecLimit(t *testing.T) {
 	for _, test := range []struct {
 		name  string
