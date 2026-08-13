@@ -26,7 +26,9 @@ func (s *Service) SubmitProposerPreferences(ctx context.Context, preferences []*
 		if err := client.(consensusclient.ProposerPreferencesSubmitter).SubmitProposerPreferences(ctx, preferences); err != nil {
 			return nil, err
 		}
+
 		return true, nil
 	}, nil)
+
 	return err
 }
