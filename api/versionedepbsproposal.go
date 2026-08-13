@@ -37,6 +37,20 @@ type VersionedEPBSProposal struct {
 	Gloas *gloas.BeaconBlock
 	// GloasContents is the proposal when the execution payload is included.
 	GloasContents *apiv1gloas.BlockContents
+	// BeaconBlockBodyRoot is the hash tree root of the proposal's beacon block
+	// body, calculated with the codec that decoded the proposal -- the one
+	// aware of whatever preset the connected node actually runs.  The
+	// generated HashTreeRoot methods on the gloas types inline mainnet preset
+	// sizes (for example a 512-bit sync committee bitvector) as Go literals
+	// and never consult that codec, so they compute the wrong root on any
+	// other preset.  A beacon block's own root has no preset-dependent field
+	// of its own: it merkleizes slot, proposer index, parent root, state root
+	// and this body root, exactly like phase0.BeaconBlockHeader.  The body
+	// root is therefore the only preset-sensitive quantity in a block, and
+	// whatever obtains the proposal is responsible for setting this field
+	// with the spec-aware root.  BodyRoot errors when it is unset rather than
+	// falling back to the generated, potentially wrong, Body.HashTreeRoot().
+	BeaconBlockBodyRoot *phase0.Root
 }
 
 // Slot returns the slot of the proposal.
@@ -95,6 +109,11 @@ func (v *VersionedEPBSProposal) StateRoot() (phase0.Root, error) {
 
 // BodyRoot returns the hash tree root of the proposal's beacon block body,
 // the value a proposer signs over.
+//
+// It returns the retained BeaconBlockBodyRoot rather than recomputing it: the
+// generated Body.HashTreeRoot() inlines mainnet preset sizes, so recomputing
+// here would silently sign the wrong root on any other preset.  There is
+// deliberately no fallback to that computation.
 func (v *VersionedEPBSProposal) BodyRoot() (phase0.Root, error) {
 	block, err := v.block()
 	if err != nil {
@@ -105,7 +124,46 @@ func (v *VersionedEPBSProposal) BodyRoot() (phase0.Root, error) {
 		return phase0.Root{}, errors.New("no gloas beacon block body")
 	}
 
-	return block.Body.HashTreeRoot()
+	if v.BeaconBlockBodyRoot == nil {
+		return phase0.Root{}, errors.New("no beacon block body root")
+	}
+
+	return *v.BeaconBlockBodyRoot, nil
+}
+
+// Root returns the hash tree root of the proposal's beacon block.
+//
+// It composes a phase0.BeaconBlockHeader from the block's own fields plus the
+// retained BodyRoot, rather than calling block.HashTreeRoot(): the generated
+// block hasher recurses into the body and inherits the same mainnet-baked
+// sizes that make Body.HashTreeRoot() wrong on other presets.  The header's
+// fields are all preset-independent, so composing it this way can never
+// disagree with BodyRoot() -- do not "simplify" this back to
+// block.HashTreeRoot(), that reintroduces the bug BeaconBlockBodyRoot exists
+// to avoid.
+func (v *VersionedEPBSProposal) Root() (phase0.Root, error) {
+	block, err := v.block()
+	if err != nil {
+		return phase0.Root{}, err
+	}
+
+	bodyRoot, err := v.BodyRoot()
+	if err != nil {
+		return phase0.Root{}, err
+	}
+
+	root, err := (&phase0.BeaconBlockHeader{
+		Slot:          block.Slot,
+		ProposerIndex: block.ProposerIndex,
+		ParentRoot:    block.ParentRoot,
+		StateRoot:     block.StateRoot,
+		BodyRoot:      bodyRoot,
+	}).HashTreeRoot()
+	if err != nil {
+		return phase0.Root{}, err
+	}
+
+	return phase0.Root(root), nil
 }
 
 // ExecutionPayloadEnvelope returns the execution payload envelope that travelled

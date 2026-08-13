@@ -48,10 +48,20 @@ func (s *Service) EPBSProposal(ctx context.Context,
 
 	block := mockGloasBeaconBlock(opts)
 
+	// The mock serves mainnet-preset data, so the generated Body.HashTreeRoot
+	// is the correct root here -- unlike the http client, which decodes
+	// against whatever preset the connected node runs and so cannot use it.
+	bodyRoot, err := block.Body.HashTreeRoot()
+	if err != nil {
+		return nil, err
+	}
+	root := phase0.Root(bodyRoot)
+
 	proposal := &api.VersionedEPBSProposal{
-		Version:        spec.DataVersionGloas,
-		ConsensusValue: big.NewInt(1),
-		ExecutionValue: big.NewInt(2),
+		Version:             spec.DataVersionGloas,
+		ConsensusValue:      big.NewInt(1),
+		ExecutionValue:      big.NewInt(2),
+		BeaconBlockBodyRoot: &root,
 	}
 
 	if opts.IncludePayload != nil && *opts.IncludePayload {

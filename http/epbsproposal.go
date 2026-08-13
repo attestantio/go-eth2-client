@@ -29,6 +29,7 @@ import (
 	apiv1gloas "github.com/attestantio/go-eth2-client/api/v1/gloas"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"go.opentelemetry.io/otel"
 )
 
@@ -192,6 +193,16 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 		return nil, err
 	}
 
+	// Custom presets require a request-scoped codec.  The same codec that
+	// decodes the proposal has to compute its body root below: the generated
+	// HashTreeRoot methods inline mainnet preset sizes and are wrong on any
+	// other preset, and that applies just as much to a JSON-decoded proposal
+	// as to an SSZ-decoded one.
+	ds, err := s.dynSSZForRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	switch res.contentType {
 	case ContentTypeSSZ:
 		included, err := epbsPayloadIncludedFromHeaders(res.headers)
@@ -200,12 +211,6 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 		}
 
 		proposal.ExecutionPayloadIncluded = included
-
-		// Custom presets require a request-scoped codec.
-		ds, err := s.dynSSZForRequest(ctx)
-		if err != nil {
-			return nil, err
-		}
 
 		if included {
 			proposal.GloasContents = &apiv1gloas.BlockContents{}
@@ -242,8 +247,30 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 		return nil, fmt.Errorf("no %s epbs proposal in response", res.consensusVersion)
 	}
 
+	block := proposal.Gloas
+	if proposal.ExecutionPayloadIncluded && proposal.GloasContents != nil {
+		block = proposal.GloasContents.Block
+	}
+
+	if block == nil || block.Body == nil {
+		return nil, fmt.Errorf("no %s beacon block body in response", res.consensusVersion)
+	}
+
+	// This is the one place BeaconBlockBodyRoot is set: ds is the codec that
+	// decoded the block above, so this is the only spec-aware root available.
+	// Every downstream consumer -- BodyRoot(), Root() and the guard below --
+	// relies on this being correct rather than falling back to the generated,
+	// mainnet-baked Body.HashTreeRoot().
+	bodyRootRaw, err := ds.HashTreeRoot(block.Body)
+	if err != nil {
+		return nil, errors.Join(errors.New("failed to compute epbs proposal body root"), err)
+	}
+
+	bodyRoot := phase0.Root(bodyRootRaw)
+	proposal.BeaconBlockBodyRoot = &bodyRoot
+
 	if proposal.ExecutionPayloadIncluded {
-		if err := assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal.GloasContents); err != nil {
+		if err := assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal); err != nil {
 			return nil, err
 		}
 	}
@@ -372,12 +399,21 @@ func decodeEPBSProposalJSON(body []byte, proposal *api.VersionedEPBSProposal) (m
 	return metadata, nil
 }
 
-func assertIncludedEPBSProposalEnvelopeMatchesBlock(contents *apiv1gloas.BlockContents) error {
+// assertIncludedEPBSProposalEnvelopeMatchesBlock checks that the execution
+// payload envelope that travelled with a proposal is for the block it
+// travelled with.  It uses proposal.Root() rather than
+// proposal.GloasContents.Block.HashTreeRoot(): the latter is the generated,
+// mainnet-baked hasher this package's body-root fix exists to avoid, so
+// calling it here would let the exact bug back in through the guard meant to
+// catch it.  Root() shares its computation with every other consumer of the
+// block root, so the guard and a proposer's signature cannot disagree.
+func assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal *api.VersionedEPBSProposal) error {
+	contents := proposal.GloasContents
 	if contents == nil || contents.Block == nil || contents.ExecutionPayloadEnvelope == nil {
 		return errors.New("no block contents in epbs proposal response")
 	}
 
-	blockRoot, err := contents.Block.HashTreeRoot()
+	blockRoot, err := proposal.Root()
 	if err != nil {
 		return errors.Join(errors.New("failed to hash epbs proposal block"), err)
 	}
