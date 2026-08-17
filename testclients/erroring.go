@@ -1192,11 +1192,14 @@ func (s *Erroring) PTCDuties(ctx context.Context, opts *api.PTCDutiesOpts) (*api
 	if !ok {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
+
 	return next.PTCDuties(ctx, opts)
 }
 
 // PayloadAttestationData obtains payload attestation data.
-func (s *Erroring) PayloadAttestationData(ctx context.Context, opts *api.PayloadAttestationDataOpts) (*api.Response[*spec.VersionedPayloadAttestationData], error) {
+func (s *Erroring) PayloadAttestationData(ctx context.Context,
+	opts *api.PayloadAttestationDataOpts,
+) (*api.Response[*spec.VersionedPayloadAttestationData], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -1204,11 +1207,14 @@ func (s *Erroring) PayloadAttestationData(ctx context.Context, opts *api.Payload
 	if !ok {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
+
 	return next.PayloadAttestationData(ctx, opts)
 }
 
 // PayloadAttestationPool obtains the payload attestation pool.
-func (s *Erroring) PayloadAttestationPool(ctx context.Context, opts *api.PayloadAttestationPoolOpts) (*api.Response[[]*spec.VersionedPayloadAttestation], error) {
+func (s *Erroring) PayloadAttestationPool(ctx context.Context,
+	opts *api.PayloadAttestationPoolOpts,
+) (*api.Response[[]*spec.VersionedPayloadAttestation], error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -1216,6 +1222,7 @@ func (s *Erroring) PayloadAttestationPool(ctx context.Context, opts *api.Payload
 	if !ok {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
+
 	return next.PayloadAttestationPool(ctx, opts)
 }
 
@@ -1228,5 +1235,6 @@ func (s *Erroring) SubmitPayloadAttestationMessages(ctx context.Context, opts *a
 	if !ok {
 		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
+
 	return next.SubmitPayloadAttestationMessages(ctx, opts)
 }

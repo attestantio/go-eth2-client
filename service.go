@@ -761,12 +761,16 @@ type PTCDutiesProvider interface {
 
 // PayloadAttestationDataProvider is the interface for providing payload attestation data.
 type PayloadAttestationDataProvider interface {
-	PayloadAttestationData(ctx context.Context, opts *api.PayloadAttestationDataOpts) (*api.Response[*spec.VersionedPayloadAttestationData], error)
+	PayloadAttestationData(ctx context.Context,
+		opts *api.PayloadAttestationDataOpts,
+	) (*api.Response[*spec.VersionedPayloadAttestationData], error)
 }
 
 // PayloadAttestationPoolProvider is the interface for providing payload attestation pools.
 type PayloadAttestationPoolProvider interface {
-	PayloadAttestationPool(ctx context.Context, opts *api.PayloadAttestationPoolOpts) (*api.Response[[]*spec.VersionedPayloadAttestation], error)
+	PayloadAttestationPool(ctx context.Context,
+		opts *api.PayloadAttestationPoolOpts,
+	) (*api.Response[[]*spec.VersionedPayloadAttestation], error)
 }
 
 // PayloadAttestationMessagesSubmitter is the interface for submitting payload attestation messages.
