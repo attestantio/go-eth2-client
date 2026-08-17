@@ -25,6 +25,30 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TestAttestationPoolFromJSONNullElement covers a null entry in the response array,
+// which decodes to a nil element.  Every version arm wraps the decoded elements in a
+// non-nil VersionedAttestation, so the nil has to be caught before the verifier reads
+// through it; without the guard the client panics on a malformed response instead of
+// returning an error.
+func TestAttestationPoolFromJSONNullElement(t *testing.T) {
+	for _, version := range []spec.DataVersion{
+		spec.DataVersionPhase0,
+		spec.DataVersionElectra,
+		spec.DataVersionGloas,
+	} {
+		t.Run(version.String(), func(t *testing.T) {
+			_, err := new(Service).attestationPoolFromJSON(context.Background(),
+				&api.AttestationPoolOpts{},
+				&httpResponse{
+					consensusVersion: version,
+					body:             []byte(`{"version":"` + version.String() + `","data":[null]}`),
+				},
+			)
+			require.EqualError(t, err, "nil attestation in response")
+		})
+	}
+}
+
 func TestAttestationPoolFromJSONGloas(t *testing.T) {
 	poolResponse, err := new(Service).attestationPoolFromJSON(context.Background(),
 		&api.AttestationPoolOpts{},
