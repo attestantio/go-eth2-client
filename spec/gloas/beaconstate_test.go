@@ -232,6 +232,71 @@ func TestBeaconStateExecutionPayloadAvailabilityYAML(t *testing.T) {
 	require.Equal(t, state.ExecutionPayloadAvailability, decoded.ExecutionPayloadAvailability)
 }
 
+// TestBeaconStatePTCWindowJSONShapes verifies that both shapes a node may serve for
+// ptc_window decode to the same window.
+//
+// The spec types the field Vector[Vector[ValidatorIndex, PTC_SIZE], (2 +
+// MIN_SEED_LOOKAHEAD) * SLOTS_PER_EPOCH], whose JSON is nested arrays of decimal
+// strings. Prysm instead wraps each inner vector in an object carrying
+// validator_indices, because proto3 cannot express a nested repeated field without an
+// intermediate message, so a Gloas state fetched from Prysm is rejected outright by a
+// decoder that admits only the spec shape.
+//
+// Accepting the wrapper on the read path alone is deliberate: TestBeaconStateJSONWireShapes
+// pins what we emit, so the deviation is tolerated where it arrives and never propagated.
+func TestBeaconStatePTCWindowJSONShapes(t *testing.T) {
+	tests := []struct {
+		name      string
+		ptcWindow string
+		err       string
+	}{
+		{
+			name:      "Spec",
+			ptcWindow: `[["57","58"],["59","60"]]`,
+		},
+		{
+			// Observed from prysm on a Gloas devnet.
+			name:      "PrysmObjectWrapper",
+			ptcWindow: `[{"validator_indices":["57","58"]},{"validator_indices":["59","60"]}]`,
+		},
+		{
+			// Neither shape: the spec shape's error is the one reported, so accepting
+			// a second shape does not cost the familiar diagnostic.
+			name:      "NeitherShape",
+			ptcWindow: `{"validator_indices":["57"]}`,
+			err:       "ptc_window: json: cannot unmarshal object into Go value of type [][]string",
+		},
+		{
+			// The wrapper is a shape, not an escape from validation.
+			name:      "PrysmObjectWrapperBadIndex",
+			ptcWindow: `[{"validator_indices":["fifty-seven"]}]`,
+			err:       `ptc_window[0][0]: strconv.ParseUint: parsing "fifty-seven": invalid syntax`,
+		},
+	}
+
+	state := populatedBeaconState()
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var doc map[string]json.RawMessage
+			require.NoError(t, json.Unmarshal([]byte(mustMarshal(t, state)), &doc))
+			doc["ptc_window"] = json.RawMessage(test.ptcWindow)
+			input, err := json.Marshal(doc)
+			require.NoError(t, err)
+
+			var decoded gloas.BeaconState
+			err = json.Unmarshal(input, &decoded)
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, [][]phase0.ValidatorIndex{{57, 58}, {59, 60}}, decoded.PTCWindow)
+		})
+	}
+}
+
 // TestBeaconStateJSONWireShapes pins the wire shape of the BeaconState fields
 // whose SSZ type does not map onto JSON in the way their Go type suggests. These
 // are the fields a round-trip cannot vouch for: a codec that is wrong the same
