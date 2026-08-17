@@ -916,26 +916,33 @@ func (s *Sleepy) PTCDuties(ctx context.Context, opts *api.PTCDutiesOpts) (*api.R
 	if !ok {
 		return nil, errors.New("next does not support this call")
 	}
+
 	return next.PTCDuties(ctx, opts)
 }
 
 // PayloadAttestationData obtains payload attestation data.
-func (s *Sleepy) PayloadAttestationData(ctx context.Context, opts *api.PayloadAttestationDataOpts) (*api.Response[*spec.VersionedPayloadAttestationData], error) {
+func (s *Sleepy) PayloadAttestationData(ctx context.Context,
+	opts *api.PayloadAttestationDataOpts,
+) (*api.Response[*spec.VersionedPayloadAttestationData], error) {
 	s.sleep(ctx)
 	next, ok := s.next.(consensusclient.PayloadAttestationDataProvider)
 	if !ok {
 		return nil, errors.New("next does not support this call")
 	}
+
 	return next.PayloadAttestationData(ctx, opts)
 }
 
 // PayloadAttestationPool obtains the payload attestation pool.
-func (s *Sleepy) PayloadAttestationPool(ctx context.Context, opts *api.PayloadAttestationPoolOpts) (*api.Response[[]*spec.VersionedPayloadAttestation], error) {
+func (s *Sleepy) PayloadAttestationPool(ctx context.Context,
+	opts *api.PayloadAttestationPoolOpts,
+) (*api.Response[[]*spec.VersionedPayloadAttestation], error) {
 	s.sleep(ctx)
 	next, ok := s.next.(consensusclient.PayloadAttestationPoolProvider)
 	if !ok {
 		return nil, errors.New("next does not support this call")
 	}
+
 	return next.PayloadAttestationPool(ctx, opts)
 }
 
@@ -946,5 +953,6 @@ func (s *Sleepy) SubmitPayloadAttestationMessages(ctx context.Context, opts *api
 	if !ok {
 		return errors.New("next does not support this call")
 	}
+
 	return next.SubmitPayloadAttestationMessages(ctx, opts)
 }
