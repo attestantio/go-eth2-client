@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strings"
 
+	bitfield "github.com/OffchainLabs/go-bitfield"
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -202,6 +203,12 @@ func verifyAttestationPool(opts *api.AttestationPoolOpts, data []*spec.Versioned
 }
 
 func verifyPhase0Attestation(opts *api.AttestationPoolOpts, data *phase0.Attestation) error {
+	// A null entry in the response array decodes to a nil element, so this must be
+	// rejected rather than dereferenced.
+	if data == nil || data.Data == nil {
+		return errors.New("nil attestation in response")
+	}
+
 	if opts.Slot != nil && data.Data.Slot != *opts.Slot {
 		return errors.New("attestation data not for requested slot")
 	}
@@ -214,18 +221,32 @@ func verifyPhase0Attestation(opts *api.AttestationPoolOpts, data *phase0.Attesta
 }
 
 func verifyElectraAttestation(opts *api.AttestationPoolOpts, data *electra.Attestation) error {
+	if data == nil {
+		return errors.New("nil attestation in response")
+	}
+
 	return verifyPostElectraAttestation(opts, data.Data, data.CommitteeBits)
 }
 
 func verifyGloasAttestation(opts *api.AttestationPoolOpts, data *gloas.Attestation) error {
+	if data == nil {
+		return errors.New("nil attestation in response")
+	}
+
 	return verifyPostElectraAttestation(opts, data.Data, data.CommitteeBits)
 }
 
+// verifyPostElectraAttestation holds the checks shared by the electra-onwards
+// attestation containers, whose committee bits are all bitfield.Bitvector64.
 func verifyPostElectraAttestation(
 	opts *api.AttestationPoolOpts,
 	data *phase0.AttestationData,
-	committeeBits interface{ BitIndices() []int },
+	committeeBits bitfield.Bitvector64,
 ) error {
+	if data == nil {
+		return errors.New("nil attestation in response")
+	}
+
 	if opts.Slot != nil && data.Slot != *opts.Slot {
 		return errors.New("attestation data not for requested slot")
 	}
