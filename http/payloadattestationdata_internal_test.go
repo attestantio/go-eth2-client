@@ -185,6 +185,7 @@ func TestPayloadAttestationDataPath(t *testing.T) {
 	)
 	require.NoError(t, err)
 	require.Equal(t, phase0.Slot(42), response.Data.Gloas.Slot)
-	require.Equal(t, "/eth/v1/validator/payload_attestation_data/42", requestPath)
-	require.Empty(t, requestQuery)
+	// The slot is a required query parameter, not a path segment.
+	require.Equal(t, "/eth/v1/validator/payload_attestation_data", requestPath)
+	require.Equal(t, "slot=42", requestQuery)
 }
