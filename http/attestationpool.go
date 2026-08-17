@@ -82,17 +82,6 @@ func (*Service) attestationPoolFromJSON(_ context.Context,
 	)
 
 	switch httpResponse.consensusVersion {
-	case spec.DataVersionGloas:
-		gloasData, gloasMetadata, decodeErr := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*gloas.Attestation{})
-		metadata = gloasMetadata
-		err = decodeErr
-		data = make([]*spec.VersionedAttestation, len(gloasData))
-		for i, datum := range gloasData {
-			data[i] = &spec.VersionedAttestation{
-				Version: spec.DataVersionGloas,
-				Gloas:   datum,
-			}
-		}
 	case spec.DataVersionPhase0:
 		var decoded []*phase0.Attestation
 		decoded, metadata, err = decodeJSONResponse(bytes.NewReader(httpResponse.body), decoded)
@@ -141,6 +130,13 @@ func (*Service) attestationPoolFromJSON(_ context.Context,
 		data = make([]*spec.VersionedAttestation, len(decoded))
 		for i := range decoded {
 			data[i] = &spec.VersionedAttestation{Version: httpResponse.consensusVersion, Fulu: decoded[i]}
+		}
+	case spec.DataVersionGloas:
+		var decoded []*gloas.Attestation
+		decoded, metadata, err = decodeJSONResponse(bytes.NewReader(httpResponse.body), decoded)
+		data = make([]*spec.VersionedAttestation, len(decoded))
+		for i := range decoded {
+			data[i] = &spec.VersionedAttestation{Version: spec.DataVersionGloas, Gloas: decoded[i]}
 		}
 	default:
 		return nil, fmt.Errorf("unsupported attestation version %s", httpResponse.consensusVersion)
