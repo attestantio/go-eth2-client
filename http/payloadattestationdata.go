@@ -46,8 +46,10 @@ func (s *Service) PayloadAttestationData(ctx context.Context,
 		return nil, client.ErrNoOptions
 	}
 
-	endpoint := fmt.Sprintf("/eth/v1/validator/payload_attestation_data/%d", opts.Slot)
-	query := ""
+	// The slot is a required query parameter, not a path segment; the endpoint was
+	// aligned with produceAttestationData in beacon-APIs #626.
+	endpoint := "/eth/v1/validator/payload_attestation_data"
+	query := fmt.Sprintf("slot=%d", opts.Slot)
 
 	httpResponse, err := s.getWithResponseLimit(ctx, endpoint, query, &opts.Common, true, maxEPBSResponseSize)
 	if err != nil {
