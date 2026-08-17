@@ -92,18 +92,46 @@ func createUnversionedAggregates(aggregateAndProofs []*spec.VersionedSignedAggre
 		// Append to unversionedAggregates.
 		switch aggregateAndProofs[i].Version {
 		case spec.DataVersionPhase0:
+			if aggregateAndProofs[i].Phase0 == nil {
+				return nil, errors.Join(errors.New("nil phase0 aggregate and proof supplied"), client.ErrInvalidOptions)
+			}
+
 			unversionedAggregates = append(unversionedAggregates, aggregateAndProofs[i].Phase0)
 		case spec.DataVersionAltair:
+			if aggregateAndProofs[i].Altair == nil {
+				return nil, errors.Join(errors.New("nil altair aggregate and proof supplied"), client.ErrInvalidOptions)
+			}
+
 			unversionedAggregates = append(unversionedAggregates, aggregateAndProofs[i].Altair)
 		case spec.DataVersionBellatrix:
+			if aggregateAndProofs[i].Bellatrix == nil {
+				return nil, errors.Join(errors.New("nil bellatrix aggregate and proof supplied"), client.ErrInvalidOptions)
+			}
+
 			unversionedAggregates = append(unversionedAggregates, aggregateAndProofs[i].Bellatrix)
 		case spec.DataVersionCapella:
+			if aggregateAndProofs[i].Capella == nil {
+				return nil, errors.Join(errors.New("nil capella aggregate and proof supplied"), client.ErrInvalidOptions)
+			}
+
 			unversionedAggregates = append(unversionedAggregates, aggregateAndProofs[i].Capella)
 		case spec.DataVersionDeneb:
+			if aggregateAndProofs[i].Deneb == nil {
+				return nil, errors.Join(errors.New("nil deneb aggregate and proof supplied"), client.ErrInvalidOptions)
+			}
+
 			unversionedAggregates = append(unversionedAggregates, aggregateAndProofs[i].Deneb)
 		case spec.DataVersionElectra:
+			if aggregateAndProofs[i].Electra == nil {
+				return nil, errors.Join(errors.New("nil electra aggregate and proof supplied"), client.ErrInvalidOptions)
+			}
+
 			unversionedAggregates = append(unversionedAggregates, aggregateAndProofs[i].Electra)
 		case spec.DataVersionFulu:
+			if aggregateAndProofs[i].Fulu == nil {
+				return nil, errors.Join(errors.New("nil fulu aggregate and proof supplied"), client.ErrInvalidOptions)
+			}
+
 			unversionedAggregates = append(unversionedAggregates, aggregateAndProofs[i].Fulu)
 		case spec.DataVersionGloas:
 			if aggregateAndProofs[i].Gloas == nil {
