@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2024 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -112,6 +112,19 @@ func (s *Service) createUnversionedAttestations(attestations []*spec.VersionedAt
 			unversionedAttestations = append(unversionedAttestations, singleAttestation)
 		case spec.DataVersionFulu:
 			singleAttestation, err := attestations[i].Fulu.ToSingleAttestation(attestations[i].ValidatorIndex)
+			if err != nil {
+				s.log.Warn().Err(err).Msg("Failed to convert attestation to single attestation")
+
+				continue
+			}
+
+			unversionedAttestations = append(unversionedAttestations, singleAttestation)
+		case spec.DataVersionGloas:
+			if attestations[i].Gloas == nil {
+				return nil, errors.Join(errors.New("nil gloas attestation supplied"), client.ErrInvalidOptions)
+			}
+
+			singleAttestation, err := attestations[i].Gloas.ToSingleAttestation(attestations[i].ValidatorIndex)
 			if err != nil {
 				s.log.Warn().Err(err).Msg("Failed to convert attestation to single attestation")
 

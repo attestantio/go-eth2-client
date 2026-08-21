@@ -446,7 +446,21 @@ func (b *BeaconState) UnmarshalJSON(input []byte) error {
 
 	ptcWindowStr := make([][]string, 0)
 	if err := json.Unmarshal(raw["ptc_window"], &ptcWindowStr); err != nil {
-		return errors.Wrap(err, "ptc_window")
+		// Prysm wraps each inner vector in an object carrying validator_indices,
+		// because proto3 cannot express a nested repeated field without an
+		// intermediate message.  The spec shape is tried first and is the only one
+		// marshalled, so the deviation is absorbed where it arrives rather than
+		// propagated; on failure of both the spec shape's error is the one reported.
+		wrapped := make([]struct {
+			ValidatorIndices []string `json:"validator_indices"`
+		}, 0)
+		if wrappedErr := json.Unmarshal(raw["ptc_window"], &wrapped); wrappedErr != nil {
+			return errors.Wrap(err, "ptc_window")
+		}
+		ptcWindowStr = make([][]string, len(wrapped))
+		for i := range wrapped {
+			ptcWindowStr[i] = wrapped[i].ValidatorIndices
+		}
 	}
 	b.PTCWindow = make([][]phase0.ValidatorIndex, len(ptcWindowStr))
 	for i := range ptcWindowStr {

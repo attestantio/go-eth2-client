@@ -753,3 +753,27 @@ type ExecutionPayloadBidSubmitter interface {
 		opts *api.SubmitExecutionPayloadBidOpts,
 	) error
 }
+
+// PTCDutiesProvider is the interface for providing payload timeliness committee duties.
+type PTCDutiesProvider interface {
+	PTCDuties(ctx context.Context, opts *api.PTCDutiesOpts) (*api.Response[[]*apiv1.PTCDuty], error)
+}
+
+// PayloadAttestationDataProvider is the interface for providing payload attestation data.
+type PayloadAttestationDataProvider interface {
+	PayloadAttestationData(ctx context.Context,
+		opts *api.PayloadAttestationDataOpts,
+	) (*api.Response[*spec.VersionedPayloadAttestationData], error)
+}
+
+// PayloadAttestationPoolProvider is the interface for providing payload attestation pools.
+type PayloadAttestationPoolProvider interface {
+	PayloadAttestationPool(ctx context.Context,
+		opts *api.PayloadAttestationPoolOpts,
+	) (*api.Response[[]*spec.VersionedPayloadAttestation], error)
+}
+
+// PayloadAttestationMessagesSubmitter is the interface for submitting payload attestation messages.
+type PayloadAttestationMessagesSubmitter interface {
+	SubmitPayloadAttestationMessages(ctx context.Context, opts *api.SubmitPayloadAttestationMessagesOpts) error
+}

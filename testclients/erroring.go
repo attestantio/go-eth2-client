@@ -1182,3 +1182,59 @@ func (s *Erroring) ExecutionPayloadEnvelope(ctx context.Context,
 
 	return next.ExecutionPayloadEnvelope(ctx, opts)
 }
+
+// PTCDuties obtains payload timeliness committee duties.
+func (s *Erroring) PTCDuties(ctx context.Context, opts *api.PTCDutiesOpts) (*api.Response[[]*apiv1.PTCDuty], error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, ok := s.next.(consensusclient.PTCDutiesProvider)
+	if !ok {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.PTCDuties(ctx, opts)
+}
+
+// PayloadAttestationData obtains payload attestation data.
+func (s *Erroring) PayloadAttestationData(ctx context.Context,
+	opts *api.PayloadAttestationDataOpts,
+) (*api.Response[*spec.VersionedPayloadAttestationData], error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, ok := s.next.(consensusclient.PayloadAttestationDataProvider)
+	if !ok {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.PayloadAttestationData(ctx, opts)
+}
+
+// PayloadAttestationPool obtains the payload attestation pool.
+func (s *Erroring) PayloadAttestationPool(ctx context.Context,
+	opts *api.PayloadAttestationPoolOpts,
+) (*api.Response[[]*spec.VersionedPayloadAttestation], error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, ok := s.next.(consensusclient.PayloadAttestationPoolProvider)
+	if !ok {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.PayloadAttestationPool(ctx, opts)
+}
+
+// SubmitPayloadAttestationMessages submits payload attestation messages.
+func (s *Erroring) SubmitPayloadAttestationMessages(ctx context.Context, opts *api.SubmitPayloadAttestationMessagesOpts) error {
+	if err := s.maybeError(ctx); err != nil {
+		return err
+	}
+	next, ok := s.next.(consensusclient.PayloadAttestationMessagesSubmitter)
+	if !ok {
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.SubmitPayloadAttestationMessages(ctx, opts)
+}

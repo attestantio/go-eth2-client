@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2024 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,6 +23,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -167,6 +168,16 @@ func decodeAggregateAttestation(httpResponse *httpResponse) (*spec.VersionedAtte
 		fuluData, fuluMetadata, decodeErr := decodeJSONResponse(bytes.NewReader(httpResponse.body), &electra.Attestation{})
 		metadata = fuluMetadata
 		data.Fulu = fuluData
+
+		if decodeErr != nil {
+			return &spec.VersionedAttestation{}, nil, decodeErr
+		}
+
+		return data, metadata, nil
+	case spec.DataVersionGloas:
+		gloasData, gloasMetadata, decodeErr := decodeJSONResponse(bytes.NewReader(httpResponse.body), &gloas.Attestation{})
+		metadata = gloasMetadata
+		data.Gloas = gloasData
 
 		if decodeErr != nil {
 			return &spec.VersionedAttestation{}, nil, decodeErr
