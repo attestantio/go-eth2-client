@@ -38,6 +38,13 @@ import (
 // generous room for any real value while keeping a hostile one cheap to reject.
 const maxProposalValueDigits = 40
 
+// maxEPBSResponseSize bounds the bodies of the ePBS fetch endpoints, the
+// largest of which is a payload-included block-contents response.  That carries
+// up to MAX_BLOB_COMMITMENTS_PER_BLOCK blobs at 128KiB each plus the block and
+// envelope; 64MiB leaves generous headroom over any current preset's blob count
+// while capping a hostile or runaway response.  Note this same value is also
+// passed to post() (see http.go), so it bounds every POST response body across
+// the library, not just the ePBS endpoints.
 const maxEPBSResponseSize = 64 * 1024 * 1024
 
 // EPBSProposal fetches a potential ePBS beacon block for signing.
@@ -349,9 +356,10 @@ func epbsPayloadIncludedFromHeaders(headers map[string]string) (bool, error) {
 	return false, errors.New("no Eth-Execution-Payload-Included header in epbs proposal response")
 }
 
-// epbsPayloadIncludedFromBody reads the payload-inclusion flag from a JSON
-// response body.  The flag selects which of the two containers the data field
-// carries, so it has to be read before the data itself can be decoded.
+// decodeEPBSProposalJSON reads the payload-inclusion flag from a JSON response
+// body and decodes the data into the container it selects.  The flag selects
+// which of the two containers the data field carries, so it has to be read
+// before the data itself can be decoded.
 func decodeEPBSProposalJSON(body []byte, proposal *api.VersionedEPBSProposal) (map[string]any, error) {
 	response := make(map[string]json.RawMessage)
 	if err := json.Unmarshal(body, &response); err != nil {
