@@ -29,12 +29,12 @@ func (s *Service) SignedExecutionPayloadEnvelope(ctx context.Context,
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		block, err := client.(consensusclient.ExecutionPayloadProvider).SignedExecutionPayloadEnvelope(ctx, opts)
+		envelope, err := client.(consensusclient.ExecutionPayloadProvider).SignedExecutionPayloadEnvelope(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
 
-		return block, nil
+		return envelope, nil
 	}, nil)
 	if err != nil {
 		return nil, err
