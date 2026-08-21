@@ -120,6 +120,8 @@ var (
 	_ consensusclient.PendingPartialWithdrawalsProvider     = (*Sleepy)(nil)
 	_ consensusclient.DomainProvider                        = (*Erroring)(nil)
 	_ consensusclient.DomainProvider                        = (*Sleepy)(nil)
-	_ consensusclient.GenesisTimeProvider                   = (*Erroring)(nil)
-	_ consensusclient.GenesisTimeProvider                   = (*Sleepy)(nil)
+	//nolint:staticcheck // GenesisTimeProvider is deprecated but still implemented.
+	_ consensusclient.GenesisTimeProvider = (*Erroring)(nil)
+	//nolint:staticcheck // GenesisTimeProvider is deprecated but still implemented.
+	_ consensusclient.GenesisTimeProvider = (*Sleepy)(nil)
 )
