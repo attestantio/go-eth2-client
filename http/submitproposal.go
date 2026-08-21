@@ -1,4 +1,4 @@
-// Copyright © 2023, 2024 Attestant Limited.
+// Copyright © 2023 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,7 +16,6 @@ package http
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"strings"
 
@@ -71,103 +70,37 @@ func (s *Service) submitProposalData(ctx context.Context,
 	ContentType,
 	error,
 ) {
-	var (
-		body        []byte
-		contentType ContentType
-		err         error
-	)
-
-	if s.enforceJSON {
-		contentType = ContentTypeJSON
-		body, err = s.submitProposalJSON(ctx, proposal)
-	} else {
-		contentType = ContentTypeSSZ
-		body, err = s.submitProposalSSZ(ctx, proposal)
-	}
-
-	if err != nil {
+	if err := proposal.AssertPresent(); err != nil {
 		return nil, ContentTypeUnknown, err
 	}
 
-	return body, contentType, nil
-}
-
-func (*Service) submitProposalJSON(_ context.Context,
-	proposal *api.VersionedSignedProposal,
-) (
-	[]byte,
-	error,
-) {
-	var (
-		specJSON []byte
-		err      error
-	)
-	if err := proposal.AssertPresent(); err != nil {
-		return nil, err
-	}
+	var container any
 
 	switch proposal.Version {
 	case spec.DataVersionPhase0:
-		specJSON, err = json.Marshal(proposal.Phase0)
+		container = proposal.Phase0
 	case spec.DataVersionAltair:
-		specJSON, err = json.Marshal(proposal.Altair)
+		container = proposal.Altair
 	case spec.DataVersionBellatrix:
-		specJSON, err = json.Marshal(proposal.Bellatrix)
+		container = proposal.Bellatrix
 	case spec.DataVersionCapella:
-		specJSON, err = json.Marshal(proposal.Capella)
+		container = proposal.Capella
 	case spec.DataVersionDeneb:
-		specJSON, err = json.Marshal(proposal.Deneb)
+		container = proposal.Deneb
 	case spec.DataVersionElectra:
-		specJSON, err = json.Marshal(proposal.Electra)
+		container = proposal.Electra
 	case spec.DataVersionFulu:
-		specJSON, err = json.Marshal(proposal.Fulu)
+		container = proposal.Fulu
+	case spec.DataVersionGloas:
+		// A plain signed block, unlike the contents wrappers Deneb through Fulu
+		// publish: post-Gloas the blobs travel in the execution payload
+		// envelope, which is published through its own endpoint.
+		container = proposal.Gloas
 	default:
-		err = errors.New("unknown proposal version")
+		// Unreachable: AssertPresent above rejects every version this switch
+		// does not name.  Kept so the two cannot drift apart silently.
+		return nil, ContentTypeUnknown, errors.New("unknown proposal version")
 	}
 
-	if err != nil {
-		return nil, errors.Join(errors.New("failed to marshal JSON"), err)
-	}
-
-	return specJSON, nil
-}
-
-func (*Service) submitProposalSSZ(_ context.Context,
-	proposal *api.VersionedSignedProposal,
-) (
-	[]byte,
-	error,
-) {
-	var (
-		specSSZ []byte
-		err     error
-	)
-	if err := proposal.AssertPresent(); err != nil {
-		return nil, err
-	}
-
-	switch proposal.Version {
-	case spec.DataVersionPhase0:
-		specSSZ, err = proposal.Phase0.MarshalSSZ()
-	case spec.DataVersionAltair:
-		specSSZ, err = proposal.Altair.MarshalSSZ()
-	case spec.DataVersionBellatrix:
-		specSSZ, err = proposal.Bellatrix.MarshalSSZ()
-	case spec.DataVersionCapella:
-		specSSZ, err = proposal.Capella.MarshalSSZ()
-	case spec.DataVersionDeneb:
-		specSSZ, err = proposal.Deneb.MarshalSSZ()
-	case spec.DataVersionElectra:
-		specSSZ, err = proposal.Electra.MarshalSSZ()
-	case spec.DataVersionFulu:
-		specSSZ, err = proposal.Fulu.MarshalSSZ()
-	default:
-		err = errors.New("unknown proposal version")
-	}
-
-	if err != nil {
-		return nil, errors.Join(errors.New("failed to marshal SSZ"), err)
-	}
-
-	return specSSZ, nil
+	return s.marshalRequestBody(ctx, container)
 }

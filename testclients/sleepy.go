@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2023 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -831,4 +831,80 @@ func (s *Sleepy) PendingPartialWithdrawals(ctx context.Context,
 	}
 
 	return next.PendingPartialWithdrawals(ctx, opts)
+}
+
+// SignedExecutionPayloadEnvelope fetches a signed execution payload envelope given a block ID.
+func (s *Sleepy) SignedExecutionPayloadEnvelope(ctx context.Context,
+	opts *api.SignedExecutionPayloadEnvelopeOpts,
+) (
+	*api.Response[*spec.VersionedSignedExecutionPayloadEnvelope],
+	error,
+) {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.SignedExecutionPayloadEnvelope(ctx, opts)
+}
+
+// SubmitExecutionPayloadBid submits an execution payload bid.
+func (s *Sleepy) SubmitExecutionPayloadBid(ctx context.Context, opts *api.SubmitExecutionPayloadBidOpts) error {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadBidSubmitter)
+	if !isNext {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitExecutionPayloadBid(ctx, opts)
+}
+
+// SubmitExecutionPayloadEnvelope submits a signed execution payload envelope.
+func (s *Sleepy) SubmitExecutionPayloadEnvelope(ctx context.Context, opts *api.SubmitExecutionPayloadEnvelopeOpts) error {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadEnvelopeSubmitter)
+	if !isNext {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitExecutionPayloadEnvelope(ctx, opts)
+}
+
+// EPBSProposal fetches an ePBS proposal for signing.
+func (s *Sleepy) EPBSProposal(ctx context.Context,
+	opts *api.EPBSProposalOpts,
+) (
+	*api.Response[*api.VersionedEPBSProposal],
+	error,
+) {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.EPBSProposalProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.EPBSProposal(ctx, opts)
+}
+
+// ExecutionPayloadEnvelope obtains the cached execution payload envelope for the
+// given slot and beacon block root.
+func (s *Sleepy) ExecutionPayloadEnvelope(ctx context.Context,
+	opts *api.ExecutionPayloadEnvelopeOpts,
+) (
+	*api.Response[*spec.VersionedExecutionPayloadEnvelope],
+	error,
+) {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadEnvelopeProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.ExecutionPayloadEnvelope(ctx, opts)
 }
