@@ -353,6 +353,22 @@ type EPBSProposalProvider interface {
 	)
 }
 
+// MultiForkProposalProvider is the interface for providing proposals on either
+// side of the gloas fork.
+//
+// It composes the two proposal providers rather than adding an endpoint of its
+// own.  ProposalProvider is frozen at the last pre-gloas fork and
+// EPBSProposalProvider is gloas-onwards only, so a caller that must produce
+// blocks across the fork boundary needs both; this states that requirement as
+// one type instead of leaving each caller to compose it.
+//
+// "MultiFork" is the number of forks spanned, not the number of nodes: it is
+// unrelated to the multi package.
+type MultiForkProposalProvider interface {
+	ProposalProvider
+	EPBSProposalProvider
+}
+
 // ExecutionPayloadEnvelopeProvider is the interface for providing the execution
 // payload envelope a node cached while producing a block.
 //
