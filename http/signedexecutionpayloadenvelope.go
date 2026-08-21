@@ -41,6 +41,18 @@ func (s *Service) SignedExecutionPayloadEnvelope(ctx context.Context,
 		return nil, err
 	}
 
+	return s.signedExecutionPayloadEnvelopeFromResponse(ctx, httpResponse)
+}
+
+// signedExecutionPayloadEnvelopeFromResponse decodes a fetched signed envelope
+// response.  It is separate from the fetch so that both encodings, and the
+// empty-response guard, stay testable without a node serving the endpoint.
+func (s *Service) signedExecutionPayloadEnvelopeFromResponse(ctx context.Context,
+	httpResponse *httpResponse,
+) (
+	*api.Response[*spec.VersionedSignedExecutionPayloadEnvelope],
+	error,
+) {
 	// The envelope is a gloas-onwards container, so the wire bytes always
 	// parse into *gloas.SignedExecutionPayloadEnvelope.
 	envelope := &gloas.SignedExecutionPayloadEnvelope{}
@@ -60,12 +72,23 @@ func (s *Service) SignedExecutionPayloadEnvelope(ctx context.Context,
 			)
 		}
 	case ContentTypeJSON:
-		decoded, jsonMetadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), envelope)
+		// Seeded with a typed nil pointer so that a body with no data key in it
+		// is distinguishable from one carrying a zero-valued envelope, matching
+		// the sibling unsigned-envelope endpoint.  decodeJSONResponse only
+		// unmarshals when a data key is present and does not error when it is
+		// absent, so a non-nil seed would return a zero-valued envelope as
+		// success and every downstream accessor would read garbage.
+		decoded, jsonMetadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body),
+			(*gloas.SignedExecutionPayloadEnvelope)(nil))
 		if err != nil {
 			return nil, errors.Join(
 				fmt.Errorf("failed to decode %s signed execution payload envelope", httpResponse.consensusVersion),
 				err,
 			)
+		}
+
+		if decoded == nil {
+			return nil, fmt.Errorf("no %s signed execution payload envelope in response", httpResponse.consensusVersion)
 		}
 
 		envelope = decoded
