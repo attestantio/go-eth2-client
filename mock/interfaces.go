@@ -75,5 +75,6 @@ var (
 	_ client.PendingConsolidationsProvider         = (*Service)(nil)
 	_ client.PendingPartialWithdrawalsProvider     = (*Service)(nil)
 	_ client.DomainProvider                        = (*Service)(nil)
-	_ client.GenesisTimeProvider                   = (*Service)(nil)
+	//nolint:staticcheck // GenesisTimeProvider is deprecated but still implemented.
+	_ client.GenesisTimeProvider = (*Service)(nil)
 )

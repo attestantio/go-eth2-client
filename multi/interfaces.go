@@ -75,5 +75,6 @@ var (
 	_ consensusclient.PendingConsolidationsProvider         = (*Service)(nil)
 	_ consensusclient.PendingPartialWithdrawalsProvider     = (*Service)(nil)
 	_ consensusclient.DomainProvider                        = (*Service)(nil)
-	_ consensusclient.GenesisTimeProvider                   = (*Service)(nil)
+	//nolint:staticcheck // GenesisTimeProvider is deprecated but still implemented.
+	_ consensusclient.GenesisTimeProvider = (*Service)(nil)
 )
