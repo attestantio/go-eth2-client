@@ -19,7 +19,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 )
 
-// SubmitBLSToExecutionChange submits a BLS to execution address change operation.
-func (*Service) SubmitBLSToExecutionChange(_ context.Context, _ *capella.SignedBLSToExecutionChange) error {
+// SubmitBLSToExecutionChanges submits BLS to execution address change operations.
+func (*Service) SubmitBLSToExecutionChanges(_ context.Context, _ []*capella.SignedBLSToExecutionChange) error {
 	return nil
 }
