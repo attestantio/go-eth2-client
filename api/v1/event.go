@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2025 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -33,23 +33,32 @@ type Event struct {
 	Data any
 }
 
-// SupportedEventTopics is a map of supported event topics.
+// SupportedEventTopics is a map of supported event topics. It is the allow-list
+// against which the HTTP client validates Events() subscriptions, and is
+// maintained separately from the topic switch in Event.UnmarshalJSON below.
 var SupportedEventTopics = map[string]bool{
-	"attestation":             true,
-	"attester_slashing":       true,
-	"blob_sidecar":            true,
-	"block":                   true,
-	"block_gossip":            true,
-	"bls_to_execution_change": true,
-	"chain_reorg":             true,
-	"contribution_and_proof":  true,
-	"data_column_sidecar":     true,
-	"finalized_checkpoint":    true,
-	"head":                    true,
-	"payload_attributes":      true,
-	"proposer_slashing":       true,
-	"single_attestation":      true,
-	"voluntary_exit":          true,
+	"attestation":                 true,
+	"attester_slashing":           true,
+	"blob_sidecar":                true,
+	"block":                       true,
+	"block_gossip":                true,
+	"bls_to_execution_change":     true,
+	"chain_reorg":                 true,
+	"contribution_and_proof":      true,
+	"data_column_sidecar":         true,
+	"execution_payload":           true,
+	"execution_payload_available": true,
+	"execution_payload_bid":       true,
+	"execution_payload_gossip":    true,
+	"fast_confirmation":           true,
+	"finalized_checkpoint":        true,
+	"head":                        true,
+	"payload_attestation_message": true,
+	"payload_attributes":          true,
+	"proposer_preferences":        true,
+	"proposer_slashing":           true,
+	"single_attestation":          true,
+	"voluntary_exit":              true,
 }
 
 // eventJSON is the spec representation of the struct.
