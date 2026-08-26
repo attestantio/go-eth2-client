@@ -66,7 +66,11 @@ func TestSubmitProposalGloas(t *testing.T) {
 	includePayload := false
 	infinity := infinitySignature()
 
-	produced, err := service.(client.EPBSProposalProvider).EPBSProposal(ctx, &api.EPBSProposalOpts{
+	// Produced through jsonService rather than the shared one: the shared service
+	// has no custom spec support, so on the minimal preset this devnet runs it
+	// would fail to decode the block the node sends back over SSZ, and this test
+	// would never reach the publish path it exists to exercise.
+	produced, err := jsonService.(client.EPBSProposalProvider).EPBSProposal(ctx, &api.EPBSProposalOpts{
 		Slot:                   headSlot(ctx, t, service) + 1,
 		RandaoReveal:           infinity,
 		IncludePayload:         &includePayload,

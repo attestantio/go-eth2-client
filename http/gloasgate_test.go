@@ -20,7 +20,9 @@ func requireKnowsGloas(ctx context.Context, t gateT, service any) {
 	if testclients.KnowsGloas(ctx, service) {
 		return
 	}
-	gate(t, "node does not know gloas (GLOAS_FORK_EPOCH absent)")
+	// KnowsGloas cannot tell a node without the fork from a node it failed to
+	// ask, so the reason must not claim the former.
+	gate(t, "node does not report knowing gloas (no GLOAS_FORK_EPOCH in its spec, or the spec could not be read)")
 }
 
 func requireOnGloas(ctx context.Context, t gateT, service any) {
@@ -80,7 +82,9 @@ func TestGloasGatesNameTheirLevel(t *testing.T) {
 
 	knows := &recordingT{}
 	requireKnowsGloas(ctx, knows, "not a service")
-	require.Equal(t, "node does not know gloas (GLOAS_FORK_EPOCH absent)", knows.skipped)
+	require.Equal(t,
+		"node does not report knowing gloas (no GLOAS_FORK_EPOCH in its spec, or the spec could not be read)",
+		knows.skipped)
 
 	on := &recordingT{}
 	requireOnGloas(ctx, on, "not a service")

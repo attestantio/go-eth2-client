@@ -69,8 +69,14 @@ func TestExecutionPayloadEnvelope(t *testing.T) {
 		requireOnGloas(ctx, t, service)
 
 		// Far enough back to be certain nothing is cached, and still comfortably
-		// after the fork, which the node rejects separately.
-		slot := headSlot(ctx, t, service) - 100
+		// after the fork, which the node rejects separately.  Slot is unsigned, so
+		// a head below the offset would wrap to a slot in the far future and be
+		// refused for an entirely different reason.
+		head := headSlot(ctx, t, service)
+		if head <= 100 {
+			t.Skipf("chain is too young to have a past slot (head is %d)", head)
+		}
+		slot := head - 100
 
 		_, err := provider.ExecutionPayloadEnvelope(ctx, &api.ExecutionPayloadEnvelopeOpts{
 			Slot:            slot,
