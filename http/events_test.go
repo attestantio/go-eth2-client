@@ -82,9 +82,9 @@ var gloasEventTopics = []string{
 // Events() gates every requested topic on apiv1.SupportedEventTopics, via
 // checkEventsOpts, before it builds the subscription, so a topic absent from
 // that allow-list is refused here and never reaches the wire, however
-// completely the dispatcher downstream handles it. TestEventHandler and
-// TestEventHandlerGloasRouting both call handleEvent directly, downstream of
-// this check, so neither exercises it.
+// completely the dispatcher downstream handles it. Any test that calls
+// handleEvent directly sits downstream of this check and so cannot exercise
+// it, which leaves this test the only coverage of the gate itself.
 //
 // Every topic is subscribed to with its own topic-specific handler, which must
 // be accepted outright — that also pins each topic to the EventsOpts field
