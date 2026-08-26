@@ -24,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -776,4 +777,9 @@ type PayloadAttestationPoolProvider interface {
 // PayloadAttestationMessagesSubmitter is the interface for submitting payload attestation messages.
 type PayloadAttestationMessagesSubmitter interface {
 	SubmitPayloadAttestationMessages(ctx context.Context, opts *api.SubmitPayloadAttestationMessagesOpts) error
+}
+
+// ProposerPreferencesSubmitter is the interface for submitting proposer preferences.
+type ProposerPreferencesSubmitter interface {
+	SubmitProposerPreferences(ctx context.Context, preferences []*gloas.SignedProposerPreferences) error
 }
