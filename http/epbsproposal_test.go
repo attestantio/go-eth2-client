@@ -91,13 +91,14 @@ func TestEPBSProposal(t *testing.T) {
 	// on the whole test rather than on each of them.
 	requireOnGloas(ctx, t, service)
 
-	// The node produces a block for the slot it is about to propose, so the
-	// target is derived from its head rather than from the wall clock.
-	slot := headSlot(ctx, t, service) + 1
+	// Custom spec support is on for both services, not just the JSON one: the
+	// validation devnet runs the minimal preset, and a gloas block is undecodable
+	// against the compiled-in one.  The shared service from testService does not
+	// have it, so it cannot be used for either encoding here.
+	sszService, err := newTestService(ctx, true)
+	require.NoError(t, err)
 
-	// A service that pins JSON, so the two encodings are both reached.  Custom
-	// spec support is on either way: the validation devnet runs the minimal
-	// preset, and a gloas block is undecodable against the compiled-in one.
+	// A service that pins JSON, so the two encodings are both reached.
 	jsonService, err := newTestService(ctx, true, http.WithEnforceJSON(true))
 	require.NoError(t, err)
 
@@ -106,8 +107,8 @@ func TestEPBSProposal(t *testing.T) {
 		service  client.Service
 		included bool
 	}{
-		{name: "SSZPayloadExcluded", service: service, included: false},
-		{name: "SSZPayloadIncluded", service: service, included: true},
+		{name: "SSZPayloadExcluded", service: sszService, included: false},
+		{name: "SSZPayloadIncluded", service: sszService, included: true},
 		{name: "JSONPayloadExcluded", service: jsonService, included: false},
 		{name: "JSONPayloadIncluded", service: jsonService, included: true},
 	}
@@ -116,6 +117,13 @@ func TestEPBSProposal(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			includePayload := test.included
 			infinity := infinitySignature()
+
+			// The node produces a block for the slot it is about to propose, so
+			// the target is derived from its head.  Re-read per subtest rather
+			// than once: each row produces a whole block against a live node, and
+			// on a short-slot devnet the head moves past a slot fixed up front,
+			// which the node then refuses to build for.
+			slot := headSlot(ctx, t, service) + 1
 
 			response, err := test.service.(client.EPBSProposalProvider).EPBSProposal(ctx,
 				&api.EPBSProposalOpts{
