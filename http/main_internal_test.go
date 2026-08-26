@@ -116,7 +116,7 @@ func TestInternalTestServicesAuthenticate(t *testing.T) {
 			// under inspection.
 			name: "DisagreeingService",
 			build: func(ctx context.Context, t *testing.T) *Service {
-				return disagreeingService(ctx, t, func(http.ResponseWriter, *http.Request) {})
+				return disagreeingService(ctx, t, "/never-requested", func(http.ResponseWriter, *http.Request) {})
 			},
 		},
 	}

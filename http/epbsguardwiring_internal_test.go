@@ -20,9 +20,15 @@ package http
 // live test and deleting the call sites leaves the whole suite green.
 //
 // These tests close that by answering from a server that deliberately disagrees.
-// A service is built against the live node first, so its spec and genesis are
-// real and cached, then its base URL is repointed at the local server for the one
-// call under test.
+// That server fronts the live node: it answers the one endpoint under test from
+// the handler and forwards everything else on, so the spec fetch, the sync
+// assertion and the SSZ codec are all still genuine.
+//
+// It fronts the node rather than the service's base URL being repointed after
+// construction, which is what this used to do.  New hands the service to
+// background goroutines that ping it on their own schedule, and those read base
+// with no synchronisation, so writing it afterwards is a data race that
+// go test -race reports as soon as HTTP_ADDRESS is set.
 
 import (
 	"context"
@@ -30,7 +36,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
+	"net/http/httputil"
+	"os"
+	"strings"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -39,28 +47,47 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// disagreeingService returns a service whose requests are answered by handler,
-// and which is otherwise configured from the live node.
-func disagreeingService(ctx context.Context, t *testing.T, handler http.HandlerFunc) *Service {
+// disagreeingService returns a service whose requests for endpoints under prefix
+// are answered by handler, and which is otherwise configured from, and talks to,
+// the live node.
+func disagreeingService(ctx context.Context,
+	t *testing.T,
+	prefix string,
+	handler http.HandlerFunc,
+) *Service {
 	t.Helper()
 
-	// Built against the real node so that the spec fetch, the sync assertion and
-	// the SSZ codec are all genuine; only the endpoint under test is faked.
-	s := newTestService(ctx, t, true, WithEnforceJSON(true))
+	address := os.Getenv("HTTP_ADDRESS")
+	if address == "" {
+		t.Skip("HTTP_ADDRESS not set")
+	}
 
-	// Warm the spec cache while the real address is still in place, since the
-	// fake server does not serve it.
-	_, err := s.Spec(ctx, &api.SpecOpts{})
+	target, _, err := parseAddress(address)
 	require.NoError(t, err)
 
-	server := httptest.NewServer(handler)
+	proxy := &httputil.ReverseProxy{
+		Rewrite: func(r *httputil.ProxyRequest) {
+			r.SetURL(target)
+			// The transport the proxy uses does not act on URL credentials the way
+			// the client does, so they have to be sent explicitly.
+			if target.User != nil {
+				password, _ := target.User.Password()
+				r.Out.SetBasicAuth(target.User.Username(), password)
+			}
+		},
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, prefix) {
+			handler(w, r)
+
+			return
+		}
+		proxy.ServeHTTP(w, r)
+	}))
 	t.Cleanup(server.Close)
 
-	base, err := url.Parse(server.URL)
-	require.NoError(t, err)
-	s.base = base
-
-	return s
+	return newTestService(ctx, t, true, WithEnforceJSON(true), WithAddress(server.URL))
 }
 
 // TestEPBSProposalRejectsADisagreeingNode verifies that the request-consistency
@@ -73,22 +100,26 @@ func TestEPBSProposalRejectsADisagreeingNode(t *testing.T) {
 
 	reveal := phase0.BLSSignature{0x0a, 0x0b, 0x0c}
 
+	// The response is assembled here rather than inside the handler: a failed
+	// assertion in the handler's goroutine calls runtime.Goexit outside the test's
+	// own goroutine, which abandons the request half-answered and reports the
+	// failure as a transport error naming nothing.
+	contents := validEPBSBlockContents()
+	contents.Block.Slot = slot
+	contents.Block.Body.RANDAOReveal = reveal
+	root, err := contents.Block.HashTreeRoot()
+	require.NoError(t, err)
+	contents.ExecutionPayloadEnvelope.BeaconBlockRoot = root
+
+	data, err := json.Marshal(contents)
+	require.NoError(t, err)
+
 	// Always answers payload-included, whatever was asked for.  This is the
 	// direction that remains a disagreement: a node volunteering a payload nobody
 	// asked for changes where the block can be published.  The opposite answer is
 	// what an external builder's bid legitimately looks like, so it would no
 	// longer prove the guard was reached.
-	s := disagreeingService(ctx, t, func(w http.ResponseWriter, _ *http.Request) {
-		contents := validEPBSBlockContents()
-		contents.Block.Slot = slot
-		contents.Block.Body.RANDAOReveal = reveal
-		root, err := contents.Block.HashTreeRoot()
-		require.NoError(t, err)
-		contents.ExecutionPayloadEnvelope.BeaconBlockRoot = root
-
-		data, err := json.Marshal(contents)
-		require.NoError(t, err)
-
+	s := disagreeingService(ctx, t, "/eth/v4/validator/blocks/", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Eth-Consensus-Version", "gloas")
 		fmt.Fprintf(w, `{"version":"gloas","execution_payload_included":true,"data":%s}`, data)
@@ -96,7 +127,7 @@ func TestEPBSProposalRejectsADisagreeingNode(t *testing.T) {
 
 	includePayload := false
 
-	_, err := s.EPBSProposal(ctx, &api.EPBSProposalOpts{
+	_, err = s.EPBSProposal(ctx, &api.EPBSProposalOpts{
 		Slot:           slot,
 		RandaoReveal:   reveal,
 		IncludePayload: &includePayload,
@@ -111,17 +142,20 @@ func TestEPBSProposalRejectsADisagreeingNode(t *testing.T) {
 func TestExecutionPayloadEnvelopeRejectsADisagreeingNode(t *testing.T) {
 	ctx := context.Background()
 
+	data, err := json.Marshal(validExecutionPayloadEnvelope())
+	require.NoError(t, err)
+
 	// Always answers with the fixture's own root, whatever was asked for.
-	s := disagreeingService(ctx, t, func(w http.ResponseWriter, _ *http.Request) {
-		data, err := json.Marshal(validExecutionPayloadEnvelope())
-		require.NoError(t, err)
+	s := disagreeingService(ctx, t,
+		"/eth/v1/validator/execution_payload_envelopes/",
+		func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Eth-Consensus-Version", "gloas")
+			fmt.Fprintf(w, `{"version":"gloas","data":%s}`, data)
+		},
+	)
 
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Eth-Consensus-Version", "gloas")
-		fmt.Fprintf(w, `{"version":"gloas","data":%s}`, data)
-	})
-
-	_, err := s.ExecutionPayloadEnvelope(ctx, &api.ExecutionPayloadEnvelopeOpts{
+	_, err = s.ExecutionPayloadEnvelope(ctx, &api.ExecutionPayloadEnvelopeOpts{
 		Slot:            60300,
 		BeaconBlockRoot: phase0.Root{0xde, 0xad, 0xbe, 0xef},
 	})
