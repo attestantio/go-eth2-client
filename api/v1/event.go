@@ -21,6 +21,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -34,8 +35,11 @@ type Event struct {
 }
 
 // SupportedEventTopics is a map of supported event topics. It is the allow-list
-// against which the HTTP client validates Events() subscriptions, and is
-// maintained separately from the topic switch in Event.UnmarshalJSON below.
+// against which the HTTP client validates Events() subscriptions. The topic switch
+// in Event.UnmarshalJSON below is a second, separate list, and it must cover every
+// topic named here: a topic Events() accepts but UnmarshalJSON does not cannot be
+// round-tripped through JSON. TestEventUnmarshalCoversSupportedTopics holds the two
+// together.
 var SupportedEventTopics = map[string]bool{
 	"attestation":                 true,
 	"attester_slashing":           true,
@@ -124,12 +128,24 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		e.Data = &altair.SignedContributionAndProof{}
 	case "data_column_sidecar":
 		e.Data = &DataColumnSidecarEvent{}
+	case "execution_payload", "execution_payload_gossip":
+		e.Data = &ExecutionPayloadEvent{}
+	case "execution_payload_available":
+		e.Data = &ExecutionPayloadAvailableEvent{}
+	case "execution_payload_bid":
+		e.Data = &gloas.SignedExecutionPayloadBid{}
+	case "fast_confirmation":
+		e.Data = &FastConfirmationEvent{}
 	case "finalized_checkpoint":
 		e.Data = &FinalizedCheckpointEvent{}
 	case "head":
 		e.Data = &HeadEvent{}
+	case "payload_attestation_message":
+		e.Data = &gloas.PayloadAttestationMessage{}
 	case "payload_attributes":
 		e.Data = &PayloadAttributesEvent{}
+	case "proposer_preferences":
+		e.Data = &gloas.SignedProposerPreferences{}
 	case "proposer_slashing":
 		e.Data = &phase0.ProposerSlashing{}
 	case "single_attestation":
