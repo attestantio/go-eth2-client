@@ -33,3 +33,33 @@ jobs:
           HTTP_TEST_CONCURRENCY: ${{ vars.HTTP_TEST_CONCURRENCY }}
           HTTP_BEARER_TOKEN: ${{ secrets.HTTP_BEARER_TOKEN }}
         run: go test -v -timeout=10m ./http/...
+
+  gloas:
+    # Optional: only runs when a Gloas endpoint is configured. Without the
+    # HTTP_ADDRESS_GLOAS repository variable the job is skipped, so forks and
+    # branches that have no devnet to point at are unaffected.
+    if: vars.HTTP_ADDRESS_GLOAS != ''
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.2'
+
+      - name: Run Gloas HTTP tests
+        env:
+          HTTP_ADDRESS: ${{ vars.HTTP_ADDRESS_GLOAS }}
+          HTTP_TEST_CONCURRENCY: ${{ vars.HTTP_TEST_CONCURRENCY }}
+          HTTP_BEARER_TOKEN: ${{ secrets.HTTP_BEARER_TOKEN_GLOAS }}
+          # Turns every Gloas fork gate from a skip into a failure. The point of
+          # the job is to prove the gated tests run, so a skip here means the
+          # endpoint is not on Gloas or the gate itself is broken.
+          HTTP_REQUIRE_GLOAS: 'true'
+        # Scoped rather than the whole package: post-Gloas block production is
+        # v4-only, so the v3 rows of ./http/... fail permanently against a Gloas
+        # node for reasons this job is not testing. A new Gloas live test needs a
+        # name matching one of these to be picked up.
+        run: go test -v -timeout=10m -run 'Gloas|EPBS|ExecutionPayload' ./http/...

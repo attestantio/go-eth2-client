@@ -24,6 +24,7 @@ import (
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/rs/zerolog"
@@ -39,6 +40,8 @@ var globalHTTPService interface{}
 // testCoordinator controls how many tests can run concurrently to avoid overwhelming the endpoint.
 // This is configured via HTTP_TEST_CONCURRENCY (default: 1 for sequential execution).
 var testCoordinator *semaphore.Weighted
+
+var requireGloas bool
 
 func TestMain(m *testing.M) {
 	if logLevel := os.Getenv("HTTP_DEBUG_LOG_ENABLED"); strings.ToLower(logLevel) == "true" {
@@ -57,12 +60,38 @@ func TestMain(m *testing.M) {
 		}
 	}
 	testCoordinator = semaphore.NewWeighted(concurrency)
+	requireGloas = strings.EqualFold(os.Getenv("HTTP_REQUIRE_GLOAS"), "true")
 
 	if os.Getenv("HTTP_ADDRESS") != "" {
 		// Initialize global HTTP service for all tests to share
 		initGlobalHTTPService()
 		os.Exit(m.Run())
 	}
+}
+
+func newTestService(ctx context.Context, customSpecSupport bool, params ...http.Parameter) (client.Service, error) {
+	parameters := []http.Parameter{
+		http.WithTimeout(timeout),
+		http.WithAddress(os.Getenv("HTTP_ADDRESS")),
+		http.WithCustomSpecSupport(customSpecSupport),
+	}
+
+	if token := os.Getenv("HTTP_BEARER_TOKEN"); token != "" {
+		parameters = append(parameters, http.WithExtraHeaders(map[string]string{
+			"Authorization": fmt.Sprintf("Bearer %s", token),
+		}))
+	}
+
+	return http.New(ctx, append(parameters, params...)...)
+}
+
+func headSlot(ctx context.Context, t *testing.T, service client.Service) phase0.Slot {
+	t.Helper()
+	response, err := service.(client.NodeSyncingProvider).NodeSyncing(ctx, &api.NodeSyncingOpts{})
+	if err != nil {
+		t.Fatalf("failed to fetch head slot: %v", err)
+	}
+	return response.Data.HeadSlot
 }
 
 // initGlobalHTTPService creates a single HTTP service instance that all tests will share.
@@ -73,31 +102,9 @@ func initGlobalHTTPService() {
 	}
 
 	ctx := context.Background()
-	var service client.Service
-	var err error
-	if os.Getenv("HTTP_BEARER_TOKEN") != "" {
-		service, err = http.New(ctx,
-			http.WithTimeout(timeout),
-			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-			http.WithAllowDelayedStart(true),
-			http.WithExtraHeaders(map[string]string{
-				"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN")),
-			}),
-		)
-	} else {
-		service, err = http.New(ctx,
-			http.WithTimeout(timeout),
-			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-			http.WithAllowDelayedStart(true),
-		)
+	if service, err := newTestService(ctx, false, http.WithAllowDelayedStart(true)); err == nil {
+		globalHTTPService = service
 	}
-
-	if err != nil {
-		// If we can't create the service, tests will fail anyway
-		// Just log and continue - individual tests will handle the error
-		return
-	}
-	globalHTTPService = service
 }
 
 // testService returns an HTTP service for testing.
@@ -124,21 +131,7 @@ func testService(ctx context.Context, t *testing.T) any {
 	}
 
 	// Fallback: create a new service if global service is not available
-	var service client.Service
-	var err error
-	if os.Getenv("HTTP_BEARER_TOKEN") != "" {
-		service, err = http.New(ctx,
-			http.WithTimeout(timeout),
-			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-			http.WithExtraHeaders(map[string]string{"Authorization": fmt.Sprintf("Bearer %s", os.Getenv("HTTP_BEARER_TOKEN"))}),
-		)
-	} else {
-		service, err = http.New(ctx,
-			http.WithTimeout(timeout),
-			http.WithAddress(os.Getenv("HTTP_ADDRESS")),
-		)
-	}
-
+	service, err := newTestService(ctx, false)
 	if err != nil {
 		t.Fatalf("Failed to create HTTP service: %v", err)
 	}
