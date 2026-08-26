@@ -15,42 +15,89 @@ package testclients
 
 import (
 	"context"
+	"strings"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// KnowsGloas reports whether the node's configuration includes the Gloas fork.
-func KnowsGloas(ctx context.Context, service any) bool {
-	provider, ok := service.(client.SpecProvider)
-	if !ok {
-		return false
+// unknownFork is what the helpers below report when the node cannot be asked.
+const unknownFork = "unknown"
+
+// nodeSpec fetches the node's configuration, or nil if it cannot be obtained.
+func nodeSpec(ctx context.Context, service any) map[string]any {
+	provider, isProvider := service.(client.SpecProvider)
+	if !isProvider {
+		return nil
 	}
 	response, err := provider.Spec(ctx, &api.SpecOpts{})
 	if err != nil || response == nil || response.Data == nil {
+		return nil
+	}
+
+	return response.Data
+}
+
+// headForkVersion fetches the fork version in force at the chain head.
+func headForkVersion(ctx context.Context, service any) (phase0.Version, bool) {
+	provider, isProvider := service.(client.ForkProvider)
+	if !isProvider {
+		return phase0.Version{}, false
+	}
+	response, err := provider.Fork(ctx, &api.ForkOpts{State: "head"})
+	if err != nil || response == nil || response.Data == nil {
+		return phase0.Version{}, false
+	}
+
+	return response.Data.CurrentVersion, true
+}
+
+// KnowsGloas reports whether the node's configuration includes the Gloas fork.
+func KnowsGloas(ctx context.Context, service any) bool {
+	config := nodeSpec(ctx, service)
+	if config == nil {
 		return false
 	}
-	_, ok = response.Data["GLOAS_FORK_EPOCH"]
+	_, isPresent := config["GLOAS_FORK_EPOCH"]
 
-	return ok
+	return isPresent
 }
 
-// OnGloas reports whether the node's head block is a Gloas block.
+// OnGloas reports whether the chain head is in the Gloas fork.
+//
+// The head's fork version is compared against GLOAS_FORK_VERSION rather than the
+// head block being fetched and its version read: a block fetched over SSZ by a
+// service without custom spec support cannot be decoded at all on a non-mainnet
+// preset, which would report every Gloas chain as not being on Gloas.
 func OnGloas(ctx context.Context, service any) bool {
-	return HeadVersion(ctx, service) == spec.DataVersionGloas.String()
+	head, haveHead := headForkVersion(ctx, service)
+	if !haveHead {
+		return false
+	}
+
+	gloas, isVersion := nodeSpec(ctx, service)["GLOAS_FORK_VERSION"].(phase0.Version)
+
+	return isVersion && head == gloas
 }
 
-// HeadVersion returns the fork name of the node's head block, or "unknown".
+// HeadVersion returns the name of the fork in force at the chain head, or
+// "unknown".  It is diagnostic only: use OnGloas to decide.
 func HeadVersion(ctx context.Context, service any) string {
-	provider, ok := service.(client.SignedBeaconBlockProvider)
-	if !ok {
-		return "unknown"
-	}
-	response, err := provider.SignedBeaconBlock(ctx, &api.SignedBeaconBlockOpts{Block: "head"})
-	if err != nil || response == nil || response.Data == nil {
-		return "unknown"
+	head, haveHead := headForkVersion(ctx, service)
+	if !haveHead {
+		return unknownFork
 	}
 
-	return response.Data.Version.String()
+	for key, value := range nodeSpec(ctx, service) {
+		version, isVersion := value.(phase0.Version)
+		if !isVersion || version != head {
+			continue
+		}
+		if name, isForkVersion := strings.CutSuffix(key, "_FORK_VERSION"); isForkVersion {
+			return strings.ToLower(name)
+		}
+	}
+
+	return unknownFork
 }
