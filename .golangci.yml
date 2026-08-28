@@ -41,12 +41,14 @@ linters:
     - err113           # Disable error 113 check
     - exhaustive       # Disable exhaustive check
     - exhaustruct      # Disable exhaustruct check
+    - exhaustruct_v5   # Disable exhaustruct check
     - forcetypeassert  # Disable force type assert check
     - funlen           # Disable function length check
     - gochecknoglobals # Disable global variable check
     - gochecknoinits   # Disable global variable check
     - gocognit         # Disable cognitive complexity check
     - goconst          # Disable constant check
+    - gomodguard       # Superseded by gomodguard_v2, which default: all enables
     - intrange         # Disable integer range check
     - ireturn          # Disable return check
     - lll              # Disable line length check
