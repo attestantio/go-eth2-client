@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
+	"github.com/attestantio/go-eth2-client/api"
 	clienthttp "github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/stretchr/testify/require"
@@ -76,7 +77,8 @@ func TestSubmitProposerPreferencesPosts(t *testing.T) {
 			}
 			service, err := clienthttp.New(ctx, params...)
 			require.NoError(t, err)
-			err = service.(client.ProposerPreferencesSubmitter).SubmitProposerPreferences(ctx, []*gloas.SignedProposerPreferences{{Message: &gloas.ProposerPreferences{}}})
+			err = service.(client.ProposerPreferencesSubmitter).
+				SubmitProposerPreferences(ctx, preferencesOpts(onePreference()))
 			require.NoError(t, err)
 			require.True(t, received)
 		})
@@ -105,9 +107,22 @@ func TestSubmitProposerPreferencesReportsTransportError(t *testing.T) {
 
 	service, err := clienthttp.New(ctx, clienthttp.WithAddress(server.URL))
 	require.NoError(t, err)
-	err = service.(client.ProposerPreferencesSubmitter).SubmitProposerPreferences(ctx, []*gloas.SignedProposerPreferences{{Message: &gloas.ProposerPreferences{}}})
+	err = service.(client.ProposerPreferencesSubmitter).
+		SubmitProposerPreferences(ctx, preferencesOpts(onePreference()))
 	require.ErrorContains(t, err, "failed to submit proposer preferences")
 	require.True(t, received)
+}
+
+func TestSubmitProposerPreferencesRequiresOptions(t *testing.T) {
+	received := false
+	server := proposerPreferencesServer(t, nethttp.StatusOK, &received)
+	defer server.Close()
+
+	service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL))
+	require.NoError(t, err)
+	err = service.(client.ProposerPreferencesSubmitter).SubmitProposerPreferences(context.Background(), nil)
+	require.ErrorIs(t, err, client.ErrNoOptions)
+	require.False(t, received)
 }
 
 func TestSubmitProposerPreferencesRequiresExactStatusOK(t *testing.T) {
@@ -117,10 +132,14 @@ func TestSubmitProposerPreferencesRequiresExactStatusOK(t *testing.T) {
 
 	service, err := clienthttp.New(ctx, clienthttp.WithAddress(server.URL))
 	require.NoError(t, err)
-	err = service.(client.ProposerPreferencesSubmitter).SubmitProposerPreferences(ctx, onePreference())
+	err = service.(client.ProposerPreferencesSubmitter).
+		SubmitProposerPreferences(ctx, preferencesOpts(onePreference()))
 	require.EqualError(t, err, "failed to submit proposer preferences\nunexpected status code 204")
 }
 
+// TestSubmitProposerPreferencesEnforcesStaticLimit covers a node that does not
+// publish the spec at all: the mainnet preset stands in for the chain's own
+// lookahead length rather than the submission failing.
 func TestSubmitProposerPreferencesEnforcesStaticLimit(t *testing.T) {
 	for _, test := range []struct {
 		name  string
@@ -136,7 +155,8 @@ func TestSubmitProposerPreferencesEnforcesStaticLimit(t *testing.T) {
 			defer server.Close()
 			service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL))
 			require.NoError(t, err)
-			err = service.(client.ProposerPreferencesSubmitter).SubmitProposerPreferences(context.Background(), makePreferences(test.count))
+			err = service.(client.ProposerPreferencesSubmitter).
+				SubmitProposerPreferences(context.Background(), preferencesOpts(makePreferences(test.count)))
 			if test.err != "" {
 				require.ErrorContains(t, err, test.err)
 				require.False(t, received)
@@ -157,13 +177,18 @@ func TestSubmitProposerPreferencesChecksLimitBeforeNilElements(t *testing.T) {
 	preferences[0] = nil
 	service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL))
 	require.NoError(t, err)
-	err = service.(client.ProposerPreferencesSubmitter).SubmitProposerPreferences(context.Background(), preferences)
+	err = service.(client.ProposerPreferencesSubmitter).
+		SubmitProposerPreferences(context.Background(), preferencesOpts(preferences))
 	require.ErrorContains(t, err, "too many proposer preferences")
 	require.ErrorIs(t, err, client.ErrInvalidOptions)
 	require.False(t, received)
 }
 
-func TestSubmitProposerPreferencesUsesCustomSpecLimit(t *testing.T) {
+// TestSubmitProposerPreferencesUsesSpecDerivedLimit covers a minimal-preset chain
+// whose lookahead is shorter than mainnet's.  The limit comes from the spec
+// without WithCustomSpecSupport, which selects SSZ codecs rather than governing
+// whether the spec is available.
+func TestSubmitProposerPreferencesUsesSpecDerivedLimit(t *testing.T) {
 	for _, test := range []struct {
 		name  string
 		count int
@@ -176,9 +201,10 @@ func TestSubmitProposerPreferencesUsesCustomSpecLimit(t *testing.T) {
 			received := false
 			server := proposerPreferencesServerWithSpec(t, nethttp.StatusOK, &received, 1, 2)
 			defer server.Close()
-			service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL), clienthttp.WithCustomSpecSupport(true))
+			service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL))
 			require.NoError(t, err)
-			err = service.(client.ProposerPreferencesSubmitter).SubmitProposerPreferences(context.Background(), makePreferences(test.count))
+			err = service.(client.ProposerPreferencesSubmitter).
+				SubmitProposerPreferences(context.Background(), preferencesOpts(makePreferences(test.count)))
 			if test.err != "" {
 				require.ErrorContains(t, err, test.err)
 				require.False(t, received)
@@ -209,12 +235,42 @@ func TestSubmitProposerPreferencesRejectsNilElement(t *testing.T) {
 			}
 			service, err := clienthttp.New(context.Background(), params...)
 			require.NoError(t, err)
-			err = service.(client.ProposerPreferencesSubmitter).SubmitProposerPreferences(context.Background(), []*gloas.SignedProposerPreferences{nil})
+			err = service.(client.ProposerPreferencesSubmitter).
+				SubmitProposerPreferences(context.Background(), preferencesOpts([]*gloas.SignedProposerPreferences{nil}))
 			require.ErrorContains(t, err, "nil proposer preference supplied")
 			require.ErrorIs(t, err, client.ErrInvalidOptions)
 			require.False(t, received)
 		})
 	}
+}
+
+func TestSubmitProposerPreferencesRejectsNilMessage(t *testing.T) {
+	received := false
+	server := proposerPreferencesServer(t, nethttp.StatusOK, &received)
+	defer server.Close()
+
+	service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL))
+	require.NoError(t, err)
+	err = service.(client.ProposerPreferencesSubmitter).
+		SubmitProposerPreferences(context.Background(), preferencesOpts([]*gloas.SignedProposerPreferences{{}}))
+	require.ErrorContains(t, err, "nil proposer preference message supplied")
+	require.ErrorIs(t, err, client.ErrInvalidOptions)
+	require.False(t, received)
+}
+
+// TestSubmitProposerPreferencesFallsBackWhenSpecIncomplete covers a node that
+// publishes the spec but omits one of the two keys the limit is derived from.
+func TestSubmitProposerPreferencesFallsBackWhenSpecIncomplete(t *testing.T) {
+	received := false
+	server := preferencesServer(t, nethttp.StatusOK, &received, `{"data":{"SLOTS_PER_EPOCH":"32"}}`)
+	defer server.Close()
+
+	service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL))
+	require.NoError(t, err)
+	err = service.(client.ProposerPreferencesSubmitter).
+		SubmitProposerPreferences(context.Background(), preferencesOpts(makePreferences(64)))
+	require.NoError(t, err)
+	require.True(t, received)
 }
 
 func TestSubmitProposerPreferencesAllowsEmptyList(t *testing.T) {
@@ -236,11 +292,16 @@ func TestSubmitProposerPreferencesAllowsEmptyList(t *testing.T) {
 			}
 			service, err := clienthttp.New(context.Background(), params...)
 			require.NoError(t, err)
-			err = service.(client.ProposerPreferencesSubmitter).SubmitProposerPreferences(context.Background(), nil)
+			err = service.(client.ProposerPreferencesSubmitter).
+				SubmitProposerPreferences(context.Background(), &api.SubmitProposerPreferencesOpts{})
 			require.NoError(t, err)
 			require.True(t, received)
 		})
 	}
+}
+
+func preferencesOpts(preferences []*gloas.SignedProposerPreferences) *api.SubmitProposerPreferencesOpts {
+	return &api.SubmitProposerPreferencesOpts{Preferences: preferences}
 }
 
 func onePreference() []*gloas.SignedProposerPreferences {
@@ -252,15 +313,36 @@ func makePreferences(count int) []*gloas.SignedProposerPreferences {
 	for i := range preferences {
 		preferences[i] = onePreference()[0]
 	}
+
 	return preferences
 }
 
+// proposerPreferencesServer serves a node that does not publish the spec, so the
+// static limit applies.
 func proposerPreferencesServer(t *testing.T, status int, received *bool) *httptest.Server {
-	return proposerPreferencesServerWithSpec(t, status, received, 1, 32)
+	t.Helper()
+
+	return preferencesServer(t, status, received, "")
 }
 
-func proposerPreferencesServerWithSpec(t *testing.T, status int, received *bool, minSeedLookahead, slotsPerEpoch uint64) *httptest.Server {
+// proposerPreferencesServerWithSpec serves a node publishing both of the keys the
+// limit is derived from.
+func proposerPreferencesServerWithSpec(t *testing.T,
+	status int,
+	received *bool,
+	minSeedLookahead, slotsPerEpoch uint64,
+) *httptest.Server {
 	t.Helper()
+
+	return preferencesServer(t, status, received,
+		fmt.Sprintf(`{"data":{"MIN_SEED_LOOKAHEAD":"%d","SLOTS_PER_EPOCH":"%d"}}`, minSeedLookahead, slotsPerEpoch))
+}
+
+// preferencesServer serves the submission endpoint with the given status.  An
+// empty specResponse serves a node with no spec endpoint at all.
+func preferencesServer(t *testing.T, status int, received *bool, specResponse string) *httptest.Server {
+	t.Helper()
+
 	return httptest.NewServer(nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
 		switch r.URL.Path {
 		case "/eth/v1/node/version":
@@ -268,7 +350,12 @@ func proposerPreferencesServerWithSpec(t *testing.T, status int, received *bool,
 		case "/eth/v1/node/syncing":
 			_, _ = w.Write([]byte(`{"data":{"is_syncing":false,"is_optimistic":false,"el_offline":false,"head_slot":"1","sync_distance":"0"}}`))
 		case "/eth/v1/config/spec":
-			_, _ = w.Write([]byte(fmt.Sprintf(`{"data":{"MIN_SEED_LOOKAHEAD":"%d","SLOTS_PER_EPOCH":"%d"}}`, minSeedLookahead, slotsPerEpoch)))
+			if specResponse == "" {
+				w.WriteHeader(nethttp.StatusNotFound)
+
+				return
+			}
+			_, _ = w.Write([]byte(specResponse))
 		case "/eth/v1/validator/proposer_preferences":
 			if received != nil {
 				*received = true
@@ -282,6 +369,7 @@ func proposerPreferencesServerWithSpec(t *testing.T, status int, received *bool,
 
 func emptyPreferencesServer(t *testing.T, enforceJSON bool, received *bool) *httptest.Server {
 	t.Helper()
+
 	return httptest.NewServer(nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
 		switch r.URL.Path {
 		case "/eth/v1/node/version":

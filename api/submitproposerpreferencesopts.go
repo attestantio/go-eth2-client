@@ -11,15 +11,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package api
 
 import (
-	"context"
-
-	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 )
 
-// SubmitProposerPreferences submits signed proposer preferences.
-func (*Service) SubmitProposerPreferences(_ context.Context, _ *api.SubmitProposerPreferencesOpts) error {
-	return nil
+// SubmitProposerPreferencesOpts are the options for submitting proposer
+// preferences.
+type SubmitProposerPreferencesOpts struct {
+	Common CommonOpts
+
+	// Preferences are the signed proposer preferences to submit.  Proposer
+	// preferences exist only from Gloas onwards, so they are unversioned.  An
+	// empty list is a valid submission.
+	Preferences []*gloas.SignedProposerPreferences
 }
