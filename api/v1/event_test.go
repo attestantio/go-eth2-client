@@ -1,4 +1,4 @@
-// Copyright © 2020, 2025 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -107,6 +107,60 @@ func TestEvent(t *testing.T) {
 				require.NoError(t, err)
 				assert.JSONEq(t, string(test.input), string(rt))
 				assert.JSONEq(t, string(rt), res.String())
+			}
+		})
+	}
+}
+
+// TestSupportedEventTopicsGloas confirms the allow-list carries the event
+// topics introduced by the Gloas (ePBS) fork. SupportedEventTopics is what the
+// http client gates every Events() subscription on, so a topic missing from it
+// is unreachable from the public API however completely the rest of the client
+// handles it.
+//
+// This is the guard that runs unconditionally: the http package's tests are
+// skipped wholesale unless HTTP_ADDRESS names a beacon node, so none of them
+// can fail a build over a regression here.
+func TestSupportedEventTopicsGloas(t *testing.T) {
+	topics := []string{
+		"execution_payload",
+		"execution_payload_available",
+		"execution_payload_bid",
+		"execution_payload_gossip",
+		"fast_confirmation",
+		"payload_attestation_message",
+		"proposer_preferences",
+	}
+
+	for _, topic := range topics {
+		t.Run(topic, func(t *testing.T) {
+			require.True(t, api.SupportedEventTopics[topic],
+				"topic %s missing from SupportedEventTopics; Events() will reject it", topic)
+		})
+	}
+}
+
+// TestEventUnmarshalCoversSupportedTopics pins the two topic lists in event.go
+// together. SupportedEventTopics is the allow-list the http client gates
+// subscriptions on; the switch in Event.UnmarshalJSON is what turns a topic back
+// into a typed payload. They are maintained separately, so a fork that adds to
+// one and not the other leaves a topic that Events() accepts but that cannot be
+// round-tripped: a caller using the generic handler, marshalling an Event onto a
+// queue and unmarshalling it elsewhere gets "unsupported event topic <topic>".
+//
+// The assertion is deliberately only that the topic is recognised. An empty data
+// object legitimately fails to populate most payload types, so any other error
+// is fine here; it is the unsupported-topic rejection that means the lists have
+// drifted.
+func TestEventUnmarshalCoversSupportedTopics(t *testing.T) {
+	for topic := range api.SupportedEventTopics {
+		t.Run(topic, func(t *testing.T) {
+			var event api.Event
+			err := json.Unmarshal([]byte(`{"topic":"`+topic+`","data":{}}`), &event)
+
+			if err != nil {
+				require.NotEqual(t, "unsupported event topic "+topic, err.Error(),
+					"topic %s is in SupportedEventTopics but absent from the Event.UnmarshalJSON switch", topic)
 			}
 		})
 	}

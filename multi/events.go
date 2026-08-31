@@ -1,4 +1,4 @@
-// Copyright © 2021, 2025 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,16 +17,12 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"slices"
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/attestantio/go-eth2-client/spec/altair"
-	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/attestantio/go-eth2-client/spec/electra"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/rs/zerolog"
 )
 
@@ -52,29 +48,9 @@ func (s *Service) Events(ctx context.Context,
 
 	// Call all active clients immediately.
 	for _, client := range activeClients {
-		ah := &activeHandler{
-			s:       s,
-			log:     log.With().Logger(),
-			address: client.Address(),
-			opts: &api.EventsOpts{
-				Common: opts.Common,
-			},
-		}
-		ah.opts.Handler = ah.genericHandler
-		ah.opts.AttestationHandler = ah.attestationHandler
-		ah.opts.AttesterSlashingHandler = ah.attesterSlashingHandler
-		ah.opts.BlobSidecarHandler = ah.blobSidecarHandler
-		ah.opts.BLSToExecutionChangeHandler = ah.blsToExecutionChangeHandler
-		ah.opts.ChainReorgHandler = ah.chainReorgHandler
-		ah.opts.ContributionAndProofHandler = ah.contributionAndProofHandler
-		ah.opts.FinalizedCheckpointHandler = ah.finalizedCheckpointHandler
-		ah.opts.HeadHandler = ah.headHandler
-		ah.opts.PayloadAttributesHandler = ah.payloadAttributesHandler
-		ah.opts.ProposerSlashingHandler = ah.proposerSlashingHandler
-		ah.opts.SingleAttestationHandler = ah.singleAttestationHandler
-		ah.opts.VoluntaryExitHandler = ah.voluntaryExitHandler
+		ah := newActiveHandler(s, log, client.Address(), opts)
 
-		if err := client.(consensusclient.EventsProvider).Events(ctx, ah.opts); err != nil {
+		if err := client.(consensusclient.EventsProvider).Events(ctx, ah.clientOpts); err != nil {
 			inactiveClients = append(inactiveClients, client)
 
 			continue
@@ -85,19 +61,15 @@ func (s *Service) Events(ctx context.Context,
 
 	// Periodically try all inactive clients, quitting as they become active.
 	for _, inactiveClient := range inactiveClients {
-		ah := &activeHandler{
-			s:       s,
-			log:     log.With().Logger(),
-			address: inactiveClient.Address(),
-			opts:    opts,
-		}
+		ah := newActiveHandler(s, log, inactiveClient.Address(), opts)
+
 		go func(c consensusclient.Service, ah *activeHandler) {
 			for {
 				provider, isProvider := c.(consensusclient.NodeSyncingProvider)
 				if !isProvider {
 					ah.log.Error().
 						Str("address", ah.address).
-						Strs("topics", opts.Topics).
+						Strs("topics", ah.clientOpts.Topics).
 						Msg("Not a node syncing provider")
 
 					return
@@ -107,7 +79,7 @@ func (s *Service) Events(ctx context.Context,
 				if err != nil {
 					ah.log.Error().
 						Str("address", ah.address).
-						Strs("topics", opts.Topics).
+						Strs("topics", ah.clientOpts.Topics).
 						Err(err).
 						Msg("Failed to obtain sync state from node")
 
@@ -115,11 +87,13 @@ func (s *Service) Events(ctx context.Context,
 				}
 
 				if !syncResponse.Data.IsSyncing {
-					// Client is now synced, set up the events call.
-					if err := c.(consensusclient.EventsProvider).Events(ctx, opts); err != nil {
+					// Client is now synced, set up the events call.  This uses the same substituted
+					// options as an initially-active client, so that events from it are subject to
+					// the same active-address filtering.
+					if err := c.(consensusclient.EventsProvider).Events(ctx, ah.clientOpts); err != nil {
 						ah.log.Error().
 							Str("address", ah.address).
-							Strs("topics", opts.Topics).
+							Strs("topics", ah.clientOpts.Topics).
 							Err(err).
 							Msg("Failed to set up events handler")
 					}
@@ -140,215 +114,110 @@ type activeHandler struct {
 	s       *Service
 	log     zerolog.Logger
 	address string
-	opts    *api.EventsOpts
+
+	// clientOpts are the options handed to the underlying client: the caller's topics and common
+	// options, with each handler the caller supplied replaced by a wrapper that filters on the
+	// active address before forwarding to it.  This is always a struct of its own and never the
+	// caller's own options modified in place, because one handler is built per client: wrapping
+	// in place would have the second client's wrapper wrap the first's, filtering an event
+	// against two addresses at once.
+	clientOpts *api.EventsOpts
 }
 
-func (h *activeHandler) attestationHandler(ctx context.Context, data *spec.VersionedAttestation) {
-	log := h.log.With().Str("address", h.address).Logger()
-	log.Trace().Msg("Attestation event received")
-
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
+// newActiveHandler creates a handler that filters the events of the client at the given address,
+// forwarding those from the currently active client to the caller's handlers.
+func newActiveHandler(s *Service, log zerolog.Logger, address string, opts *api.EventsOpts) *activeHandler {
+	ah := &activeHandler{
+		s:       s,
+		log:     log,
+		address: address,
 	}
 
-	log.Trace().Msg("Forwarding due to primary active address")
+	sub := &api.EventsOpts{
+		Common: opts.Common,
+		Topics: slices.Clone(opts.Topics),
+	}
+	ah.clientOpts = sub
 
-	h.opts.AttestationHandler(ctx, data)
+	// These need no nil check of their own: substitute leaves a handler the caller did not
+	// supply nil, for the reason given on it.
+	sub.Handler = substituteGeneric(ah, opts.Handler)
+	sub.AttestationHandler = substitute(ah, "attestation", opts.AttestationHandler)
+	sub.AttesterSlashingHandler = substitute(ah, "attester_slashing", opts.AttesterSlashingHandler)
+	sub.BlobSidecarHandler = substitute(ah, "blob_sidecar", opts.BlobSidecarHandler)
+	sub.BlockHandler = substitute(ah, "block", opts.BlockHandler)
+	sub.BlockGossipHandler = substitute(ah, "block_gossip", opts.BlockGossipHandler)
+	sub.BLSToExecutionChangeHandler = substitute(ah, "bls_to_execution_change", opts.BLSToExecutionChangeHandler)
+	sub.ChainReorgHandler = substitute(ah, "chain_reorg", opts.ChainReorgHandler)
+	sub.ContributionAndProofHandler = substitute(ah, "contribution_and_proof", opts.ContributionAndProofHandler)
+	sub.DataColumnSidecarHandler = substitute(ah, "data_column_sidecar", opts.DataColumnSidecarHandler)
+	sub.ExecutionPayloadHandler = substitute(ah, "execution_payload", opts.ExecutionPayloadHandler)
+	sub.ExecutionPayloadAvailableHandler = substitute(ah, "execution_payload_available", opts.ExecutionPayloadAvailableHandler)
+	sub.ExecutionPayloadBidHandler = substitute(ah, "execution_payload_bid", opts.ExecutionPayloadBidHandler)
+	sub.ExecutionPayloadGossipHandler = substitute(ah, "execution_payload_gossip", opts.ExecutionPayloadGossipHandler)
+	sub.FastConfirmationHandler = substitute(ah, "fast_confirmation", opts.FastConfirmationHandler)
+	sub.FinalizedCheckpointHandler = substitute(ah, "finalized_checkpoint", opts.FinalizedCheckpointHandler)
+	sub.HeadHandler = substitute(ah, "head", opts.HeadHandler)
+	sub.PayloadAttestationMessageHandler = substitute(ah, "payload_attestation_message", opts.PayloadAttestationMessageHandler)
+	sub.PayloadAttributesHandler = substitute(ah, "payload_attributes", opts.PayloadAttributesHandler)
+	sub.ProposerPreferencesHandler = substitute(ah, "proposer_preferences", opts.ProposerPreferencesHandler)
+	sub.ProposerSlashingHandler = substitute(ah, "proposer_slashing", opts.ProposerSlashingHandler)
+	sub.SingleAttestationHandler = substitute(ah, "single_attestation", opts.SingleAttestationHandler)
+	sub.VoluntaryExitHandler = substitute(ah, "voluntary_exit", opts.VoluntaryExitHandler)
+
+	return ah
 }
 
-func (h *activeHandler) attesterSlashingHandler(ctx context.Context, data *electra.AttesterSlashing) {
-	log := h.log.With().Str("address", h.address).Logger()
-	log.Trace().Msg("Attester slashing event received")
+// forwards reports whether an event just received from this handler's client should be passed on
+// to the caller.  We only forward events from the currently active provider.  If we did not do
+// this then we could end up with inconsistent results, for example a client may receive a `head`
+// event and a subsequent call to fetch the head block end up with an earlier block.
+func (h *activeHandler) forwards(topic string) bool {
+	forwarding := h.s.Address() == h.address
 
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
-	}
+	h.log.Trace().
+		Str("address", h.address).
+		Str("topic", topic).
+		Bool("forwarding", forwarding).
+		Msg("Event received")
 
-	log.Trace().Msg("Forwarding due to primary active address")
-
-	h.opts.AttesterSlashingHandler(ctx, data)
+	return forwarding
 }
 
-func (h *activeHandler) blobSidecarHandler(ctx context.Context, data *apiv1.BlobSidecarEvent) {
-	log := h.log.With().Str("address", h.address).Logger()
-	log.Trace().Msg("Blob sidecar event received")
-
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
+// substitute wraps one of the caller's topic handlers so that an event reaches it only when this
+// handler's client is the currently active one.  The wrapper is what the underlying client is
+// given in place of the caller's own handler.  A nil handler yields a nil wrapper, leaving the
+// field unset, because clients fall back to the generic handler for any topic whose specific
+// handler is nil and substituting one the caller did not supply would starve that fallback.
+//
+// topic is diagnostic only.  It names the handler in the trace log and has no bearing on whether
+// the event is forwarded, so a wrong one here mislabels a log line rather than misrouting a call.
+func substitute[T any](h *activeHandler, topic string, handler func(context.Context, T)) func(context.Context, T) {
+	if handler == nil {
+		return nil
 	}
 
-	log.Trace().Msg("Forwarding due to primary active address")
+	return func(ctx context.Context, data T) {
+		if !h.forwards(topic) {
+			return
+		}
 
-	h.opts.BlobSidecarHandler(ctx, data)
+		handler(ctx, data)
+	}
 }
 
-func (h *activeHandler) blsToExecutionChangeHandler(ctx context.Context, data *capella.SignedBLSToExecutionChange) {
-	log := h.log.With().Str("address", h.address).Logger()
-	log.Trace().Msg("BLS to execution change event received")
-
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
+// substituteGeneric is substitute for the caller's generic handler, which carries its own topic
+// and takes no context, and so does not fit substitute's shape.
+func substituteGeneric(h *activeHandler, handler api.EventHandlerFunc) api.EventHandlerFunc {
+	if handler == nil {
+		return nil
 	}
 
-	log.Trace().Msg("Forwarding due to primary active address")
+	return func(event *apiv1.Event) {
+		if !h.forwards(event.Topic) {
+			return
+		}
 
-	h.opts.BLSToExecutionChangeHandler(ctx, data)
-}
-
-func (h *activeHandler) chainReorgHandler(ctx context.Context, data *apiv1.ChainReorgEvent) {
-	log := h.log.With().Str("address", h.address).Logger()
-	log.Trace().Msg("Chain reorg event received")
-
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
-	}
-
-	log.Trace().Msg("Forwarding due to primary active address")
-
-	h.opts.ChainReorgHandler(ctx, data)
-}
-
-func (h *activeHandler) contributionAndProofHandler(ctx context.Context, data *altair.SignedContributionAndProof) {
-	log := h.log.With().Str("address", h.address).Logger()
-	log.Trace().Msg("Chain reorg event received")
-
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
-	}
-
-	log.Trace().Msg("Forwarding due to primary active address")
-
-	h.opts.ContributionAndProofHandler(ctx, data)
-}
-
-func (h *activeHandler) finalizedCheckpointHandler(ctx context.Context, data *apiv1.FinalizedCheckpointEvent) {
-	log := h.log.With().Str("address", h.address).Logger()
-	log.Trace().Msg("Finalized checkpoint event received")
-
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
-	}
-
-	log.Trace().Msg("Forwarding due to primary active address")
-
-	h.opts.FinalizedCheckpointHandler(ctx, data)
-}
-
-func (h *activeHandler) headHandler(ctx context.Context, data *apiv1.HeadEvent) {
-	log := h.log.With().Str("address", h.address).Logger()
-	log.Trace().Msg("Head event received")
-
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
-	}
-
-	log.Trace().Msg("Forwarding due to primary active address")
-
-	h.opts.HeadHandler(ctx, data)
-}
-
-func (h *activeHandler) payloadAttributesHandler(ctx context.Context, data *apiv1.PayloadAttributesEvent) {
-	log := h.log.With().Str("address", h.address).Logger()
-	log.Trace().Msg("Payload attributes event received")
-
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
-	}
-
-	log.Trace().Msg("Forwarding due to primary active address")
-
-	h.opts.PayloadAttributesHandler(ctx, data)
-}
-
-func (h *activeHandler) proposerSlashingHandler(ctx context.Context, data *phase0.ProposerSlashing) {
-	log := h.log.With().Str("address", h.address).Logger()
-	log.Trace().Msg("Proposer slashing event received")
-
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
-	}
-
-	log.Trace().Msg("Forwarding due to primary active address")
-
-	h.opts.ProposerSlashingHandler(ctx, data)
-}
-
-func (h *activeHandler) singleAttestationHandler(ctx context.Context, data *electra.SingleAttestation) {
-	log := h.log.With().Str("address", h.address).Logger()
-	log.Trace().Msg("Single attestation event received")
-
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
-	}
-
-	log.Trace().Msg("Forwarding due to primary active address")
-
-	h.opts.SingleAttestationHandler(ctx, data)
-}
-
-func (h *activeHandler) voluntaryExitHandler(ctx context.Context, data *phase0.SignedVoluntaryExit) {
-	log := h.log.With().Str("address", h.address).Logger()
-	log.Trace().Msg("Voluntary exit event received")
-
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
-	}
-
-	log.Trace().Msg("Forwarding due to primary active address")
-
-	h.opts.VoluntaryExitHandler(ctx, data)
-}
-
-func (h *activeHandler) genericHandler(event *apiv1.Event) {
-	log := h.log.With().Str("address", h.address).Str("topic", event.Topic).Logger()
-	log.Trace().Msg("Event received")
-
-	// We only forward events from the currently active provider.  If we did not do this then we could end up with
-	// inconsistent results, for example a client may receive a `head` event and a subsequent call to fetch the head
-	// block end up with an earlier block.
-	if h.s.Address() != h.address {
-		return
-	}
-
-	log.Trace().Msg("Forwarding due to primary active address")
-
-	if h.opts.Handler != nil {
-		h.opts.Handler(event)
+		handler(event)
 	}
 }
