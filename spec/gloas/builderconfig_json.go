@@ -16,6 +16,7 @@ package gloas
 import (
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -97,10 +98,10 @@ func (b *BuilderRequestAuth) UnmarshalJSON(input []byte) error {
 		return err
 	}
 	if data.Data == "" {
-		return fmt.Errorf("authorization data missing")
+		return errors.New("authorization data missing")
 	}
 	if !strings.HasPrefix(data.Data, "0x") {
-		return fmt.Errorf("authorization data missing 0x prefix")
+		return errors.New("authorization data missing 0x prefix")
 	}
 
 	authData, err := hex.DecodeString(strings.TrimPrefix(data.Data, "0x"))
@@ -108,7 +109,7 @@ func (b *BuilderRequestAuth) UnmarshalJSON(input []byte) error {
 		return fmt.Errorf("invalid data: %w", err)
 	}
 	if len(authData) == 0 {
-		return fmt.Errorf("authorization data empty")
+		return errors.New("authorization data empty")
 	}
 	if len(authData) > 4096 {
 		return fmt.Errorf("authorization data exceeds 4096 bytes")
