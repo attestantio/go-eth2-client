@@ -68,6 +68,13 @@ func validEPBSBlockContents() *apiv1gloas.BlockContents {
 		Blobs:     []deneb.Blob{},
 	}
 
+	contents.Block.Body.SignedExecutionPayloadBid.Message.BuilderIndex = contents.ExecutionPayloadEnvelope.BuilderIndex
+	executionRequestsRoot, err := contents.ExecutionPayloadEnvelope.ExecutionRequests.HashTreeRoot()
+	if err != nil {
+		panic(err)
+	}
+	contents.Block.Body.SignedExecutionPayloadBid.Message.ExecutionRequestsRoot = phase0.Root(executionRequestsRoot)
+
 	root, err := contents.Block.HashTreeRoot()
 	if err != nil {
 		panic(err)
@@ -424,11 +431,9 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 		require.ErrorContains(t, err, "not a valid integer")
 	})
 
-	// Both values are absent from a node that predates execution_payload_value
-	// being added to this endpoint, which is what the validation devnet's client
-	// sends today.  Absence is a zero, not an error: the endpoint is still usable
-	// without knowing what the block is worth.
-	t.Run("AbsentValueHeadersAreZero", func(t *testing.T) {
+	// An omitted execution value is unknown, not zero.  A caller must not use
+	// it as evidence that the execution bid has no value.
+	t.Run("AbsentExecutionValueIsUnknown", func(t *testing.T) {
 		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
 
 		response, err := s.epbsProposalFromResponse(ctx, &httpResponse{
@@ -439,9 +444,9 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 			headers:          map[string]string{},
 		})
 		require.NoError(t, err)
-		require.Equal(t, big.NewInt(0), response.Data.ConsensusValue)
-		require.Equal(t, big.NewInt(0), response.Data.ExecutionValue)
-		require.Equal(t, big.NewInt(0), response.Data.Value())
+		require.Nil(t, response.Data.ConsensusValue)
+		require.Nil(t, response.Data.ExecutionValue)
+		require.Nil(t, response.Data.Value())
 	})
 
 	t.Run("CorruptJSON", func(t *testing.T) {

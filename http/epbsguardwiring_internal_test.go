@@ -35,6 +35,7 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
@@ -99,6 +100,7 @@ func TestEPBSProposalRejectsADisagreeingNode(t *testing.T) {
 	_, err := s.EPBSProposal(ctx, &api.EPBSProposalOpts{
 		Slot:           slot,
 		RandaoReveal:   reveal,
+		BuilderConfig:  &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{}},
 		IncludePayload: &includePayload,
 	})
 	require.ErrorIs(t, err, client.ErrInconsistentResult)

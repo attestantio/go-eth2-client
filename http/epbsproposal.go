@@ -86,7 +86,16 @@ func (s *Service) EPBSProposal(ctx context.Context,
 		responseLimit = maxEPBSJSONResponseSize
 	}
 
-	httpResponse, err := s.postWithResponseLimit(ctx, endpoint, query, &opts.Common, bytes.NewReader(body), contentType, headers, responseLimit)
+	httpResponse, err := s.postWithResponseLimit(
+		ctx,
+		endpoint,
+		query,
+		&opts.Common,
+		bytes.NewReader(body),
+		contentType,
+		headers,
+		responseLimit,
+	)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request epbs beacon block proposal"), err)
 	}
@@ -208,7 +217,8 @@ func validateBuilderConfig(config *gloas.BuilderConfig) error {
 		if len(builder.URL) == 0 || len(builder.URL) > 2048 || !utf8.Valid(builder.URL) {
 			return errors.Join(fmt.Errorf("builder %d has invalid URL", i), client.ErrInvalidOptions)
 		}
-		if builder.Auth == nil || builder.Auth.Message == nil || len(builder.Auth.Message.Data) == 0 || len(builder.Auth.Message.Data) > 4096 {
+		auth := builder.Auth
+		if auth == nil || auth.Message == nil || len(auth.Message.Data) == 0 || len(auth.Message.Data) > 4096 {
 			return errors.Join(fmt.Errorf("builder %d has invalid authorization", i), client.ErrInvalidOptions)
 		}
 		if len(builder.BuilderPubkeys) > 64 {
@@ -494,13 +504,15 @@ func assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal *api.VersionedEPBSP
 	if contents.ExecutionPayloadEnvelope.BeaconBlockRoot != blockRoot {
 		return errors.Join(errors.New("execution payload envelope is for a different block"), client.ErrInconsistentResult)
 	}
-	if contents.ExecutionPayloadEnvelope.BuilderIndex != contents.Block.Body.SignedExecutionPayloadBid.Message.BuilderIndex {
+	envelope := contents.ExecutionPayloadEnvelope
+	bid := contents.Block.Body.SignedExecutionPayloadBid.Message
+	if envelope.BuilderIndex != bid.BuilderIndex {
 		return errors.Join(errors.New("execution payload envelope builder index does not match bid"), client.ErrInconsistentResult)
 	}
-	if contents.ExecutionPayloadEnvelope.Payload == nil || contents.ExecutionPayloadEnvelope.Payload.BlockHash != contents.Block.Body.SignedExecutionPayloadBid.Message.BlockHash {
+	if envelope.Payload == nil || envelope.Payload.BlockHash != bid.BlockHash {
 		return errors.Join(errors.New("execution payload block hash does not match bid"), client.ErrInconsistentResult)
 	}
-	if contents.ExecutionPayloadEnvelope.ParentBeaconBlockRoot != contents.Block.Body.SignedExecutionPayloadBid.Message.ParentBlockRoot {
+	if envelope.ParentBeaconBlockRoot != bid.ParentBlockRoot {
 		return errors.Join(errors.New("execution payload envelope parent root does not match bid"), client.ErrInconsistentResult)
 	}
 	if contents.ExecutionPayloadEnvelope.ExecutionRequests == nil {
