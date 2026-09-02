@@ -31,7 +31,7 @@ type SignedBuilderRequestAuth struct {
 type BuilderEntry struct {
 	URL                 []byte                    `ssz-index:"0" ssz-max:"2048"`
 	Auth                *SignedBuilderRequestAuth `ssz-index:"1"`
-	BuilderPubkeys      []phase0.BLSPubKey        `ssz-index:"2" ssz-max:"64" ssz-size:"?,48"`
+	BuilderPubkeys      []phase0.BLSPubKey        `ssz-index:"2" ssz-max:"64"   ssz-size:"?,48"`
 	MaxExecutionPayment phase0.Gwei               `ssz-index:"3"`
 	MinBid              phase0.Gwei               `ssz-index:"4"`
 	BuilderBoostFactor  uint64                    `ssz-index:"5"`
