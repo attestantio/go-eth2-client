@@ -17,6 +17,14 @@ types:
     output: beaconstate_ssz.go
   - name: Builder
     output: builder_ssz.go
+  - name: BuilderRequestAuth
+    output: builderrequestauth_ssz.go
+  - name: SignedBuilderRequestAuth
+    output: signedbuilderrequestauth_ssz.go
+  - name: BuilderEntry
+    output: builderentry_ssz.go
+  - name: BuilderConfig
+    output: builderconfig_ssz.go
   - name: BuilderPendingPayment
     output: builderpendingpayment_ssz.go
   - name: BuilderPendingWithdrawal

@@ -15,6 +15,8 @@ package http_test
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -25,8 +27,12 @@ import (
 	apiv1gloas "github.com/attestantio/go-eth2-client/api/v1/gloas"
 	eth2http "github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
+	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/holiman/uint256"
 	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
@@ -34,6 +40,11 @@ import (
 
 // TestEPBSProposalCustomSpec verifies that an ePBS proposal decoded against a
 // custom (minimal) preset is accepted and yields the correct roots.
+//
+// The request wire contract is pinned to beacon-APIs 159622d983a703eb03a8a37bb1edeab7ffc3b6bc:
+// its required POST body, fields, static SSZ bounds, query parameters and response headers match
+// Prysm 393e9b3c8c7b58bee90da9ae03d0f89988427afb's BuilderConfig proto and handler. Prysm retains
+// a legacy GET handler, but this client deliberately sends only the pinned POST contract.
 //
 // Generated HashTreeRoot methods inline mainnet preset sizes (a 512-bit sync
 // committee bitvector here) as Go literals and never consult the request's
@@ -53,6 +64,10 @@ func TestEPBSProposalCustomSpec(t *testing.T) {
 	slot := phase0.Slot(123)
 	randaoReveal := phase0.BLSSignature{0x01, 0x02}
 	graffiti := [32]byte{0x03, 0x04}
+	builderConfig := &gloas.BuilderConfig{
+		BuilderBoostFactor: 100,
+		Builders:           []*gloas.BuilderEntry{},
+	}
 
 	block := &gloas.BeaconBlock{
 		Slot:          slot,
@@ -62,6 +77,9 @@ func TestEPBSProposalCustomSpec(t *testing.T) {
 		Body: &gloas.BeaconBlockBody{
 			RANDAOReveal: randaoReveal,
 			Graffiti:     graffiti,
+			SignedExecutionPayloadBid: &gloas.SignedExecutionPayloadBid{
+				Message: &gloas.ExecutionPayloadBid{BuilderIndex: 3},
+			},
 			SyncAggregate: &altair.SyncAggregate{
 				// Sized for the minimal preset (32 sync committee members,
 				// 4 bytes); the mainnet-sized generated hasher pads this to
@@ -97,9 +115,41 @@ func TestEPBSProposalCustomSpec(t *testing.T) {
 	contents := &apiv1gloas.BlockContents{
 		Block: block,
 		ExecutionPayloadEnvelope: &gloas.ExecutionPayloadEnvelope{
+			Payload: &gloas.ExecutionPayload{
+				BaseFeePerGas:   uint256.NewInt(0),
+				ExtraData:       []byte{},
+				Transactions:    []bellatrix.Transaction{},
+				Withdrawals:     []*capella.Withdrawal{},
+				BlockAccessList: []byte{},
+			},
+			ExecutionRequests: &gloas.ExecutionRequests{
+				Deposits:        []*electra.DepositRequest{},
+				Withdrawals:     []*electra.WithdrawalRequest{},
+				Consolidations:  []*electra.ConsolidationRequest{},
+				BuilderDeposits: []*gloas.BuilderDepositRequest{},
+				BuilderExits:    []*gloas.BuilderExitRequest{},
+			},
+			BuilderIndex:    3,
 			BeaconBlockRoot: wantBlockRoot,
 		},
 	}
+
+	executionRequestsRoot, err := dynamicSSZ.HashTreeRoot(contents.ExecutionPayloadEnvelope.ExecutionRequests)
+	require.NoError(t, err)
+	block.Body.SignedExecutionPayloadBid.Message.ExecutionRequestsRoot = phase0.Root(executionRequestsRoot)
+	wantBodyRootRaw, err = dynamicSSZ.HashTreeRoot(block.Body)
+	require.NoError(t, err)
+	wantBodyRoot = phase0.Root(wantBodyRootRaw)
+	wantBlockRootRaw, err = (&phase0.BeaconBlockHeader{
+		Slot:          block.Slot,
+		ProposerIndex: block.ProposerIndex,
+		ParentRoot:    block.ParentRoot,
+		StateRoot:     block.StateRoot,
+		BodyRoot:      wantBodyRoot,
+	}).HashTreeRoot()
+	require.NoError(t, err)
+	wantBlockRoot = phase0.Root(wantBlockRootRaw)
+	contents.ExecutionPayloadEnvelope.BeaconBlockRoot = wantBlockRoot
 
 	encoded, err := dynamicSSZ.MarshalSSZ(contents)
 	require.NoError(t, err)
@@ -122,11 +172,21 @@ func TestEPBSProposalCustomSpec(t *testing.T) {
 			_, err := w.Write([]byte(`{"data":{"SYNC_COMMITTEE_SIZE":"32"}}`))
 			require.NoError(t, err)
 		case "/eth/v4/validator/blocks/123":
-			require.Equal(t, http.MethodGet, r.Method)
-			require.Contains(t, r.Header.Get("Accept"), "application/octet-stream")
+			require.Equal(t, http.MethodPost, r.Method)
+			require.Equal(t, "gloas", r.Header.Get("Eth-Consensus-Version"))
+			require.Equal(t, "true", r.URL.Query().Get("include_payload"))
+			require.Equal(t, fmt.Sprintf("%#x", randaoReveal), r.URL.Query().Get("randao_reveal"))
+			require.Equal(t, fmt.Sprintf("%#x", graffiti), r.URL.Query().Get("graffiti"))
+			require.Contains(t, r.Header.Get("Content-Type"), "application/octet-stream")
+			body, readErr := io.ReadAll(r.Body)
+			require.NoError(t, readErr)
+			var gotBuilderConfig gloas.BuilderConfig
+			require.NoError(t, gotBuilderConfig.UnmarshalSSZ(body))
+			require.Equal(t, builderConfig, &gotBuilderConfig)
 			w.Header().Set("Content-Type", "application/octet-stream")
 			w.Header().Set("Eth-Consensus-Version", "gloas")
 			w.Header().Set("Eth-Execution-Payload-Included", "true")
+			w.Header().Set("Eth-Builder-Url", "https://builder.example")
 			_, err := w.Write(encoded)
 			require.NoError(t, err)
 		default:
@@ -147,10 +207,15 @@ func TestEPBSProposalCustomSpec(t *testing.T) {
 		Slot:           slot,
 		RandaoReveal:   randaoReveal,
 		Graffiti:       graffiti,
+		BuilderConfig:  builderConfig,
 		IncludePayload: &includePayload,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, response)
+	require.Equal(t, "https://builder.example", response.Metadata["Eth-Builder-Url"])
+	require.NotNil(t, response.Data.BuilderIndex)
+	require.Equal(t, gloas.BuilderIndex(3), *response.Data.BuilderIndex)
+	require.Nil(t, response.Data.ExecutionValue)
 	require.True(t, response.Data.ExecutionPayloadIncluded)
 
 	gotBodyRoot, err := response.Data.BodyRoot()

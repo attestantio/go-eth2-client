@@ -14,6 +14,7 @@
 package api
 
 import (
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -35,6 +36,8 @@ type EPBSProposalOpts struct {
 	// SkipRandaoVerification is true if we do not want the server to verify our RANDAO reveal.
 	// If this is set then the RANDAO reveal should be passed as the point at infinity (0xc0…00)
 	SkipRandaoVerification bool
+	// BuilderConfig supplies the required P2P and direct-builder bid policy.
+	BuilderConfig *gloas.BuilderConfig
 	// IncludePayload selects whether a self-built proposal carries its execution
 	// payload envelope and blobs.
 	//
@@ -59,13 +62,4 @@ type EPBSProposalOpts struct {
 	// there is no safe value to assume on the caller's behalf, and leaving it
 	// unset is rejected rather than silently resolved to the constraining mode.
 	IncludePayload *bool
-	// BuilderBoostFactor is the relative weight of the builder payload versus a locally-produced
-	// payload, as per https://ethereum.github.io/beacon-APIs/#/Validator/produceBlockV4
-	//
-	// This is optional, and when it is not supplied the parameter is left off the
-	// request entirely, leaving the choice to the node.  Note that differs from
-	// ProposalOpts, which materialises 100 client-side: the spec states no
-	// default for either endpoint, so sending nothing is what actually leaves the
-	// decision where the caller left it.
-	BuilderBoostFactor *uint64
 }
