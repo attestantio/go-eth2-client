@@ -49,7 +49,7 @@ func (s *Service) post(ctx context.Context,
 	*httpResponse,
 	error,
 ) {
-	return s.postWithResponseLimit(ctx, endpoint, query, opts, body, contentType, headers, 0)
+	return s.postWithResponseLimit(ctx, endpoint, query, opts, body, contentType, headers, maxEPBSResponseSize)
 }
 
 // postWithResponseLimit sends an HTTP POST request and bounds its response body when requested.

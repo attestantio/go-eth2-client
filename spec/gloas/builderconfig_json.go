@@ -87,8 +87,20 @@ func (b *BuilderConfig) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&builderConfigJSON{
 		MinBid:             fmt.Sprintf("%d", b.MinBid),
 		BuilderBoostFactor: fmt.Sprintf("%d", b.BuilderBoostFactor),
-		Builders:           b.Builders,
+		Builders:           b.buildersForWire(),
 	})
+}
+
+// buildersForWire normalises a nil builders slice to an empty one.  builders is
+// a required array on the wire and an empty list is meaningful -- it asks for
+// no builder bids, leaving only p2p ones -- so a nil slice has to encode as []
+// rather than as null, which nothing will accept back.
+func (b *BuilderConfig) buildersForWire() []*BuilderEntry {
+	if b.Builders == nil {
+		return []*BuilderEntry{}
+	}
+
+	return b.Builders
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -112,7 +124,7 @@ func (b *BuilderRequestAuth) UnmarshalJSON(input []byte) error {
 		return errors.New("authorization data empty")
 	}
 	if len(authData) > 4096 {
-		return fmt.Errorf("authorization data exceeds 4096 bytes")
+		return errors.New("authorization data exceeds 4096 bytes")
 	}
 
 	slot, err := strconv.ParseUint(data.Slot, 10, 64)
@@ -133,7 +145,7 @@ func (b *SignedBuilderRequestAuth) UnmarshalJSON(input []byte) error {
 		return err
 	}
 	if !strings.HasPrefix(data.Signature, "0x") {
-		return fmt.Errorf("authorization signature missing 0x prefix")
+		return errors.New("authorization signature missing 0x prefix")
 	}
 
 	signature, err := hex.DecodeString(strings.TrimPrefix(data.Signature, "0x"))
@@ -157,13 +169,13 @@ func (b *BuilderEntry) UnmarshalJSON(input []byte) error {
 		return err
 	}
 	if data.URL == "" {
-		return fmt.Errorf("builder URL missing")
+		return errors.New("builder URL missing")
 	}
 	if len(data.URL) > 2048 {
-		return fmt.Errorf("builder URL exceeds 2048 bytes")
+		return errors.New("builder URL exceeds 2048 bytes")
 	}
 	if data.Auth == nil || data.Auth.Message == nil {
-		return fmt.Errorf("builder authorization missing")
+		return errors.New("builder authorization missing")
 	}
 
 	maxExecutionPayment, err := strconv.ParseUint(data.MaxExecutionPayment, 10, 64)
@@ -180,7 +192,7 @@ func (b *BuilderEntry) UnmarshalJSON(input []byte) error {
 	}
 
 	if len(data.BuilderPubkeys) > 64 {
-		return fmt.Errorf("too many builder public keys")
+		return errors.New("too many builder public keys")
 	}
 
 	builderPubkeys := make([]phase0.BLSPubKey, len(data.BuilderPubkeys))
@@ -226,10 +238,10 @@ func (b *BuilderConfig) UnmarshalJSON(input []byte) error {
 	}
 
 	if data.Builders == nil {
-		return fmt.Errorf("builders missing")
+		return errors.New("builders missing")
 	}
 	if len(data.Builders) > 64 {
-		return fmt.Errorf("too many builders")
+		return errors.New("too many builders")
 	}
 
 	b.MinBid = phase0.Gwei(minBid)
