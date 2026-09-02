@@ -25,6 +25,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/holiman/uint256"
+	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/stretchr/testify/require"
 )
 
@@ -59,10 +60,13 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlock(t *testing.T) {
 	blockRoot, err := proposal.Root()
 	require.NoError(t, err)
 	contents.ExecutionPayloadEnvelope.BeaconBlockRoot = blockRoot
-	require.NoError(t, assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal))
+	executionRequestsRoot, err := dynssz.GetGlobalDynSsz().HashTreeRoot(contents.ExecutionPayloadEnvelope.ExecutionRequests)
+	require.NoError(t, err)
+	contents.Block.Body.SignedExecutionPayloadBid.Message.ExecutionRequestsRoot = phase0.Root(executionRequestsRoot)
+	require.NoError(t, assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal, dynssz.GetGlobalDynSsz()))
 
 	contents.ExecutionPayloadEnvelope.BeaconBlockRoot = phase0.Root{0xff}
-	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal)
+	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal, dynssz.GetGlobalDynSsz())
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 
 	// A proposal whose body root was never retained must not fall back to
@@ -70,7 +74,7 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlock(t *testing.T) {
 	// must error rather than pass.
 	contents.ExecutionPayloadEnvelope.BeaconBlockRoot = blockRoot
 	proposal.BeaconBlockBodyRoot = nil
-	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal)
+	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal, dynssz.GetGlobalDynSsz())
 	require.Error(t, err)
 	require.NotErrorIs(t, err, client.ErrInconsistentResult)
 }

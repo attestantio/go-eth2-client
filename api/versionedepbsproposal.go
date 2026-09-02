@@ -31,6 +31,7 @@ type VersionedEPBSProposal struct {
 	Version spec.DataVersion
 	// ExecutionPayloadIncluded selects which arm below carries the proposal.
 	ExecutionPayloadIncluded bool
+	BuilderIndex             *gloas.BuilderIndex
 	ConsensusValue           *big.Int
 	ExecutionValue           *big.Int
 	// Gloas is the proposal when the execution payload is not included.
@@ -202,21 +203,19 @@ func (v *VersionedEPBSProposal) Blobs() ([]deneb.Blob, error) {
 	return contents.Blobs, nil
 }
 
-// Value returns the total value of the proposal: the consensus rewards plus the
-// execution payload value.  Both components are populated from response headers
-// that a node may omit, so both are treated as zero when absent.
+// Value returns the total value of the proposal, or nil when its execution
+// value was not supplied by the beacon node.
 func (v *VersionedEPBSProposal) Value() *big.Int {
+	if v.ExecutionValue == nil {
+		return nil
+	}
+
 	value := big.NewInt(0)
-
 	if v.ConsensusValue != nil {
-		value = value.Add(value, v.ConsensusValue)
+		value.Add(value, v.ConsensusValue)
 	}
 
-	if v.ExecutionValue != nil {
-		value = value.Add(value, v.ExecutionValue)
-	}
-
-	return value
+	return value.Add(value, v.ExecutionValue)
 }
 
 // IsEmpty returns true if no proposal is populated.

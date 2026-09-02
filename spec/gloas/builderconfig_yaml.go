@@ -1,4 +1,4 @@
-// Copyright © 2024 Attestant Limited.
+// Copyright © 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,20 +11,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package api
+package gloas
 
-import apiv2 "github.com/attestantio/go-eth2-client/api/v2"
+import (
+	"bytes"
+	"fmt"
 
-// SubmitProposalOpts are the options for submitting proposals.
-type SubmitProposalOpts struct {
-	Common CommonOpts
+	"github.com/goccy/go-yaml"
+)
 
-	// Proposal is the proposal to submit.
-	Proposal *VersionedSignedProposal
+// MarshalYAML implements yaml.Marshaler.
+func (b *BuilderConfig) MarshalYAML() ([]byte, error) {
+	data, err := yaml.MarshalWithOptions(&builderConfigJSON{
+		MinBid:             fmt.Sprintf("%d", b.MinBid),
+		BuilderBoostFactor: fmt.Sprintf("%d", b.BuilderBoostFactor),
+		Builders:           b.Builders,
+	}, yaml.Flow(true))
+	if err != nil {
+		return nil, err
+	}
 
-	// BroadcastValidation is the validation required of the consensus node before broadcasting the proposal.
-	BroadcastValidation *apiv2.BroadcastValidation
-
-	// BuilderURL is the optional direct-builder route returned by block production.
-	BuilderURL string
+	return bytes.ReplaceAll(data, []byte(`"`), []byte(`'`)), nil
 }

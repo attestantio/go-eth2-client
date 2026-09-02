@@ -49,6 +49,22 @@ func (s *Service) post(ctx context.Context,
 	*httpResponse,
 	error,
 ) {
+	return s.postWithResponseLimit(ctx, endpoint, query, opts, body, contentType, headers, 0)
+}
+
+// postWithResponseLimit sends an HTTP POST request and bounds its response body when requested.
+func (s *Service) postWithResponseLimit(ctx context.Context,
+	endpoint string,
+	query string,
+	opts *api.CommonOpts,
+	body io.Reader,
+	contentType ContentType,
+	headers map[string]string,
+	responseLimit int,
+) (
+	*httpResponse,
+	error,
+) {
 	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "post")
 	defer span.End()
 
@@ -89,7 +105,7 @@ func (s *Service) post(ctx context.Context,
 
 	s.addExtraHeaders(req)
 	req.Header.Set("Content-Type", contentType.MediaType())
-	// Always take response of POST in JSON, as it's generally small.
+	// POST defaults to JSON responses; endpoint headers may negotiate another encoding.
 	req.Header.Set("Accept", "application/json")
 
 	for k, v := range headers {
@@ -126,7 +142,7 @@ func (s *Service) post(ctx context.Context,
 	}
 	populateHeaders(res, resp)
 
-	res.body, err = readResponseBody(resp.Body, maxEPBSResponseSize)
+	res.body, err = readResponseBody(resp.Body, responseLimit)
 	if err != nil {
 		switch {
 		case errors.Is(err, context.Canceled):
