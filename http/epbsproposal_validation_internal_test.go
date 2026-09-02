@@ -52,9 +52,10 @@ func TestValidateBuilderConfig(t *testing.T) {
 			err:  "no builder config supplied",
 		},
 		{
+			// An empty builders list solicits no builder bids and leaves only
+			// p2p ones, which the endpoint documents as a valid request.
 			name:   "BuildersOmitted",
 			config: &gloas.BuilderConfig{},
-			err:    "no builders supplied",
 		},
 		{
 			name:   "TooManyBuilders",
