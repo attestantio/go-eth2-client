@@ -73,23 +73,8 @@ func TestBuilderConfigUnmarshalJSONRejectsTooManyBuilders(t *testing.T) {
 	input, err := json.Marshal(&gloas.BuilderConfig{Builders: builders})
 	require.NoError(t, err)
 
-	tests := []struct {
-		name string
-		err  string
-	}{
-		{
-			name: "TooManyBuilders",
-			err:  "too many builders",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var config gloas.BuilderConfig
-			err := json.Unmarshal(input, &config)
-			require.EqualError(t, err, test.err)
-		})
-	}
+	var config gloas.BuilderConfig
+	require.EqualError(t, json.Unmarshal(input, &config), "too many builders")
 }
 
 func TestBuilderConfigUnmarshalJSONRequiresBuilders(t *testing.T) {
@@ -99,31 +84,16 @@ func TestBuilderConfigUnmarshalJSONRequiresBuilders(t *testing.T) {
 }
 
 func TestSignedBuilderRequestAuthUnmarshalJSONRequiresHexPrefix(t *testing.T) {
-	tests := []struct {
-		name  string
-		input string
-		err   string
-	}{
-		{
-			name: "UnprefixedSignature",
-			input: fmt.Sprintf(`{
-				"message":{"data":"0x01","slot":"123"},
-				"signature":"%x"
-			}`, phase0.BLSSignature{0x02}),
-			err: "authorization signature missing 0x prefix",
-		},
-	}
+	input := fmt.Sprintf(`{
+		"message":{"data":"0x01","slot":"123"},
+		"signature":"%x"
+	}`, phase0.BLSSignature{0x02})
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var auth gloas.SignedBuilderRequestAuth
-			err := json.Unmarshal([]byte(test.input), &auth)
-			require.EqualError(t, err, test.err)
-		})
-	}
+	var auth gloas.SignedBuilderRequestAuth
+	require.EqualError(t, json.Unmarshal([]byte(input), &auth), "authorization signature missing 0x prefix")
 }
 
-func TestBuilderRequestAuthUnmarshalJSONRejectsMissingData(t *testing.T) {
+func TestBuilderRequestAuthUnmarshalJSONRejectsBadData(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
@@ -134,67 +104,16 @@ func TestBuilderRequestAuthUnmarshalJSONRejectsMissingData(t *testing.T) {
 			input: `{"slot":"123"}`,
 			err:   "authorization data missing",
 		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var auth gloas.BuilderRequestAuth
-			err := json.Unmarshal([]byte(test.input), &auth)
-			require.EqualError(t, err, test.err)
-		})
-	}
-}
-
-func TestBuilderRequestAuthUnmarshalJSONRequiresHexPrefix(t *testing.T) {
-	tests := []struct {
-		name  string
-		input string
-		err   string
-	}{
 		{
 			name:  "UnprefixedData",
 			input: `{"data":"01","slot":"123"}`,
 			err:   "authorization data missing 0x prefix",
 		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var auth gloas.BuilderRequestAuth
-			err := json.Unmarshal([]byte(test.input), &auth)
-			require.EqualError(t, err, test.err)
-		})
-	}
-}
-
-func TestBuilderRequestAuthUnmarshalJSONRejectsEmptyData(t *testing.T) {
-	tests := []struct {
-		name  string
-		input string
-		err   string
-	}{
 		{
 			name:  "EmptyData",
 			input: `{"data":"0x","slot":"123"}`,
 			err:   "authorization data empty",
 		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var auth gloas.BuilderRequestAuth
-			err := json.Unmarshal([]byte(test.input), &auth)
-			require.EqualError(t, err, test.err)
-		})
-	}
-}
-
-func TestBuilderRequestAuthUnmarshalJSONRejectsOversizedData(t *testing.T) {
-	tests := []struct {
-		name  string
-		input string
-		err   string
-	}{
 		{
 			name:  "OversizedData",
 			input: fmt.Sprintf(`{"data":"0x%s","slot":"123"}`, strings.Repeat("01", 4097)),
@@ -218,23 +137,8 @@ func TestBuilderEntryUnmarshalJSONRequiresPubkeyHexPrefix(t *testing.T) {
 	require.NoError(t, err)
 	input = []byte(strings.Replace(string(input), `"0x03`, `"03`, 1))
 
-	tests := []struct {
-		name string
-		err  string
-	}{
-		{
-			name: "UnprefixedPubkey",
-			err:  "builder public key 0 missing 0x prefix",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var decoded gloas.BuilderEntry
-			err := json.Unmarshal(input, &decoded)
-			require.EqualError(t, err, test.err)
-		})
-	}
+	var decoded gloas.BuilderEntry
+	require.EqualError(t, json.Unmarshal(input, &decoded), "builder public key 0 missing 0x prefix")
 }
 
 func TestBuilderEntryUnmarshalJSONRejectsTooManyPubkeys(t *testing.T) {
@@ -243,23 +147,8 @@ func TestBuilderEntryUnmarshalJSONRejectsTooManyPubkeys(t *testing.T) {
 	input, err := json.Marshal(entry)
 	require.NoError(t, err)
 
-	tests := []struct {
-		name string
-		err  string
-	}{
-		{
-			name: "TooManyPubkeys",
-			err:  "too many builder public keys",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var decoded gloas.BuilderEntry
-			err := json.Unmarshal(input, &decoded)
-			require.EqualError(t, err, test.err)
-		})
-	}
+	var decoded gloas.BuilderEntry
+	require.EqualError(t, json.Unmarshal(input, &decoded), "too many builder public keys")
 }
 
 func TestBuilderEntryUnmarshalJSONRejectsOversizedURL(t *testing.T) {
@@ -268,26 +157,11 @@ func TestBuilderEntryUnmarshalJSONRejectsOversizedURL(t *testing.T) {
 	input, err := json.Marshal(entry)
 	require.NoError(t, err)
 
-	tests := []struct {
-		name string
-		err  string
-	}{
-		{
-			name: "OversizedURL",
-			err:  "builder URL exceeds 2048 bytes",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var decoded gloas.BuilderEntry
-			err := json.Unmarshal(input, &decoded)
-			require.EqualError(t, err, test.err)
-		})
-	}
+	var decoded gloas.BuilderEntry
+	require.EqualError(t, json.Unmarshal(input, &decoded), "builder URL exceeds 2048 bytes")
 }
 
-func TestBuilderEntryUnmarshalJSONRejectsMissingURL(t *testing.T) {
+func TestBuilderEntryUnmarshalJSONRejectsMissingFields(t *testing.T) {
 	tests := []struct {
 		name  string
 		input string
@@ -304,23 +178,6 @@ func TestBuilderEntryUnmarshalJSONRejectsMissingURL(t *testing.T) {
 			}`, phase0.BLSSignature{0x02}),
 			err: "builder URL missing",
 		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var entry gloas.BuilderEntry
-			err := json.Unmarshal([]byte(test.input), &entry)
-			require.EqualError(t, err, test.err)
-		})
-	}
-}
-
-func TestBuilderEntryUnmarshalJSONRejectsMissingAuth(t *testing.T) {
-	tests := []struct {
-		name  string
-		input string
-		err   string
-	}{
 		{
 			name: "MissingAuth",
 			input: `{
@@ -354,6 +211,44 @@ func TestBuilderConfigYAML(t *testing.T) {
 	require.Contains(t, string(data), "min_bid: '0'")
 	require.Contains(t, string(data), "builder_boost_factor: '100'")
 	require.Contains(t, string(data), "builders: []")
+}
+
+// TestBuilderConfigYAMLWithBuilders round-trips a populated config.  An empty
+// builders list exercises none of the entry encoding, so a nested entry has to
+// be present for the wire names -- and the URL's "://", which a plain YAML
+// scalar cannot carry in flow style -- to be checked at all.
+func TestBuilderConfigYAMLWithBuilders(t *testing.T) {
+	config := &gloas.BuilderConfig{
+		BuilderBoostFactor: 100,
+		Builders:           []*gloas.BuilderEntry{validBuilderEntry()},
+	}
+	config.Builders[0].BuilderPubkeys = []phase0.BLSPubKey{{0x03}}
+
+	data, err := yaml.Marshal(config)
+	require.NoError(t, err)
+	require.Contains(t, string(data), "url: 'https://builder.example'")
+	require.Contains(t, string(data), "max_execution_payment: '4'")
+	require.Contains(t, string(data), "builder_pubkeys: ['0x03")
+
+	var decoded gloas.BuilderConfig
+	require.NoError(t, yaml.Unmarshal(data, &decoded))
+	require.Equal(t, config, &decoded)
+}
+
+// TestBuilderConfigNilBuildersEncodeAsEmpty verifies a nil builders slice
+// reaches the wire as [], not null: builders is a required array and an empty
+// one is a meaningful request, so null would be rejected by the node and by
+// this package's own decoder.
+func TestBuilderConfigNilBuildersEncodeAsEmpty(t *testing.T) {
+	config := &gloas.BuilderConfig{BuilderBoostFactor: 100}
+
+	data, err := json.Marshal(config)
+	require.NoError(t, err)
+	require.JSONEq(t, `{"min_bid":"0","builder_boost_factor":"100","builders":[]}`, string(data))
+
+	var decoded gloas.BuilderConfig
+	require.NoError(t, json.Unmarshal(data, &decoded))
+	require.Empty(t, decoded.Builders)
 }
 
 func TestBuilderConfigSSZ(t *testing.T) {

@@ -75,24 +75,12 @@ func TestEPBSProposalJSONRequest(t *testing.T) {
 	require.NoError(t, err)
 
 	includePayload := true
-	tests := []struct {
-		name string
-	}{
-		{
-			name: "NegotiatesJSON",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			_, err := service.(client.EPBSProposalProvider).EPBSProposal(context.Background(), &api.EPBSProposalOpts{
-				Slot:           123,
-				BuilderConfig:  validEPBSBuilderConfig(),
-				IncludePayload: &includePayload,
-			})
-			require.Error(t, err)
-		})
-	}
+	_, err = service.(client.EPBSProposalProvider).EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+		Slot:           123,
+		BuilderConfig:  validEPBSBuilderConfig(),
+		IncludePayload: &includePayload,
+	})
+	require.Error(t, err)
 }
 
 func TestEPBSProposalJSONResponseAcceptsBareBuilderWin(t *testing.T) {
@@ -182,25 +170,11 @@ func TestEPBSProposalRejectsNonUTF8BuilderURL(t *testing.T) {
 	config := validEPBSBuilderConfig()
 	config.Builders[0].URL = []byte{0xff}
 
-	tests := []struct {
-		name string
-		err  string
-	}{
-		{
-			name: "NonUTF8URL",
-			err:  "builder 0 has invalid URL",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			_, err := service.(client.EPBSProposalProvider).EPBSProposal(context.Background(), &api.EPBSProposalOpts{
-				Slot:           123,
-				BuilderConfig:  config,
-				IncludePayload: &includePayload,
-			})
-			require.ErrorContains(t, err, test.err)
-			require.Zero(t, blockRequests.Load())
-		})
-	}
+	_, err = service.(client.EPBSProposalProvider).EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+		Slot:           123,
+		BuilderConfig:  config,
+		IncludePayload: &includePayload,
+	})
+	require.ErrorContains(t, err, "builder 0 has invalid URL")
+	require.Zero(t, blockRequests.Load())
 }

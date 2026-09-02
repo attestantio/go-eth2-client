@@ -65,23 +65,9 @@ func TestDecodeEPBSProposalJSONRejectsNullPayloadInclusion(t *testing.T) {
 	body := append([]byte(`{"execution_payload_included":null,"data":`), data...)
 	body = append(body, '}')
 
-	tests := []struct {
-		name string
-		err  string
-	}{
-		{
-			name: "NullPayloadInclusion",
-			err:  "execution_payload_included cannot be null",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			proposal := &api.VersionedEPBSProposal{Version: spec.DataVersionGloas}
-			_, err := decodeEPBSProposalJSON(body, proposal)
-			require.EqualError(t, err, test.err)
-		})
-	}
+	proposal := &api.VersionedEPBSProposal{Version: spec.DataVersionGloas}
+	_, err = decodeEPBSProposalJSON(body, proposal)
+	require.EqualError(t, err, "execution_payload_included cannot be null")
 }
 
 func TestDecodeEPBSProposalJSONRejectsMissingOrMalformedMetadata(t *testing.T) {
@@ -132,23 +118,9 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedBuilderI
 	response.Data.GloasContents.Block.Body.SignedExecutionPayloadBid.Message.BuilderIndex = 1
 	response.Data.GloasContents.ExecutionPayloadEnvelope.BuilderIndex = 2
 
-	tests := []struct {
-		name string
-		err  string
-	}{
-		{
-			name: "MismatchedBuilderIndex",
-			err:  "execution payload envelope builder index does not match bid",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			err := assertIncludedEPBSProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
-			require.ErrorContains(t, err, test.err)
-			require.ErrorIs(t, err, client.ErrInconsistentResult)
-		})
-	}
+	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
+	require.ErrorContains(t, err, "execution payload envelope builder index does not match bid")
+	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
 func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedBlockHash(t *testing.T) {
@@ -167,23 +139,9 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedBlockHas
 	response.Data.GloasContents.Block.Body.SignedExecutionPayloadBid.Message.BlockHash[0] = 1
 	response.Data.GloasContents.ExecutionPayloadEnvelope.Payload.BlockHash[0] = 2
 
-	tests := []struct {
-		name string
-		err  string
-	}{
-		{
-			name: "MismatchedBlockHash",
-			err:  "execution payload block hash does not match bid",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			err := assertIncludedEPBSProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
-			require.ErrorContains(t, err, test.err)
-			require.ErrorIs(t, err, client.ErrInconsistentResult)
-		})
-	}
+	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
+	require.ErrorContains(t, err, "execution payload block hash does not match bid")
+	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
 func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedParentRoot(t *testing.T) {
@@ -201,23 +159,9 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedParentRo
 	response.Data.GloasContents.ExecutionPayloadEnvelope.BeaconBlockRoot = blockRoot
 	response.Data.GloasContents.ExecutionPayloadEnvelope.ParentBeaconBlockRoot[0] = 1
 
-	tests := []struct {
-		name string
-		err  string
-	}{
-		{
-			name: "MismatchedParentRoot",
-			err:  "execution payload envelope parent root does not match bid",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			err := assertIncludedEPBSProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
-			require.ErrorContains(t, err, test.err)
-			require.ErrorIs(t, err, client.ErrInconsistentResult)
-		})
-	}
+	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
+	require.ErrorContains(t, err, "execution payload envelope parent root does not match bid")
+	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
 func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedExecutionRequests(t *testing.T) {
@@ -235,23 +179,9 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedExecutio
 	response.Data.GloasContents.ExecutionPayloadEnvelope.BeaconBlockRoot = blockRoot
 	response.Data.GloasContents.Block.Body.SignedExecutionPayloadBid.Message.ExecutionRequestsRoot[0] = 1
 
-	tests := []struct {
-		name string
-		err  string
-	}{
-		{
-			name: "MismatchedExecutionRequests",
-			err:  "execution payload envelope requests do not match bid",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			err := assertIncludedEPBSProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
-			require.ErrorContains(t, err, test.err)
-			require.ErrorIs(t, err, client.ErrInconsistentResult)
-		})
-	}
+	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
+	require.ErrorContains(t, err, "execution payload envelope requests do not match bid")
+	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
 func TestAssertEPBSProposalMatchesRequestAllowsBareBuilderWin(t *testing.T) {
@@ -266,28 +196,10 @@ func TestAssertEPBSProposalMatchesRequestAllowsBareBuilderWin(t *testing.T) {
 	require.NoError(t, err)
 
 	requestedIncluded := true
-	tests := []struct {
-		name string
-		err  string
-	}{
-		{
-			name: "BareBuilderWin",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			err := (&Service{}).assertEPBSProposalMatchesRequest(response.Data, &api.EPBSProposalOpts{
-				Slot:           123,
-				IncludePayload: &requestedIncluded,
-			})
-			if test.err == "" {
-				require.NoError(t, err)
-			} else {
-				require.EqualError(t, err, test.err)
-			}
-		})
-	}
+	require.NoError(t, (&Service{}).assertEPBSProposalMatchesRequest(response.Data, &api.EPBSProposalOpts{
+		Slot:           123,
+		IncludePayload: &requestedIncluded,
+	}))
 }
 
 func TestAssertEPBSProposalMatchesRequestRejectsUnexpectedContents(t *testing.T) {
@@ -302,25 +214,11 @@ func TestAssertEPBSProposalMatchesRequestRejectsUnexpectedContents(t *testing.T)
 	require.NoError(t, err)
 
 	requestedIncluded := false
-	tests := []struct {
-		name string
-		err  string
-	}{
-		{
-			name: "UnexpectedContents",
-			err:  "epbs beacon block proposal has execution payload included true; expected false\ninconsistent result",
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			err := (&Service{}).assertEPBSProposalMatchesRequest(response.Data, &api.EPBSProposalOpts{
-				Slot:           123,
-				IncludePayload: &requestedIncluded,
-			})
-			require.EqualError(t, err, test.err)
-		})
-	}
+	err = (&Service{}).assertEPBSProposalMatchesRequest(response.Data, &api.EPBSProposalOpts{
+		Slot:           123,
+		IncludePayload: &requestedIncluded,
+	})
+	require.EqualError(t, err, "epbs beacon block proposal has execution payload included true; expected false\ninconsistent result")
 }
 
 func TestEPBSPayloadIncludedFromHeaders(t *testing.T) {

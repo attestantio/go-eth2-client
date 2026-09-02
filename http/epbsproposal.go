@@ -40,12 +40,22 @@ import (
 // generous room for any real value while keeping a hostile one cheap to reject.
 const maxProposalValueDigits = 40
 
-// maxEPBSResponseSize bounds a full SSZ payload-included response under the
-// pinned Gloas static bounds: 4096 128KiB blobs plus 33,554,432 KZG proofs.
-const maxEPBSResponseSize = 2*1024*1024*1024 + 64*1024*1024
+// maxEPBSResponseSize bounds the bodies of the ePBS fetch endpoints and, via
+// post() (see http.go), every POST response body across the library.  Those
+// bodies are an execution payload envelope, a payload-attestation datum or
+// pool, or a small acknowledgement or error, so 64MiB is orders of magnitude
+// above any legitimate response while capping a hostile or runaway one.  Block
+// production is the one endpoint whose response can be far larger, and it
+// passes its own limit below rather than raising this one for everybody.
+const maxEPBSResponseSize = 64 * 1024 * 1024
 
-// maxEPBSJSONResponseSize accommodates the same bounded values as JSON hex.
-const maxEPBSJSONResponseSize = 5 * 1024 * 1024 * 1024
+// maxEPBSProposalResponseSize bounds a full SSZ payload-included block
+// production response under the pinned Gloas static bounds: 4096 128KiB blobs
+// plus 33,554,432 KZG proofs.
+const maxEPBSProposalResponseSize = 2*1024*1024*1024 + 64*1024*1024
+
+// maxEPBSProposalJSONResponseSize accommodates the same bounded values as JSON hex.
+const maxEPBSProposalJSONResponseSize = 5 * 1024 * 1024 * 1024
 
 // EPBSProposal fetches a potential ePBS beacon block for signing.
 func (s *Service) EPBSProposal(ctx context.Context,
@@ -81,9 +91,9 @@ func (s *Service) EPBSProposal(ctx context.Context,
 		"Eth-Consensus-Version": spec.DataVersionGloas.String(),
 	}
 
-	responseLimit := maxEPBSResponseSize
+	responseLimit := maxEPBSProposalResponseSize
 	if contentType == ContentTypeJSON {
-		responseLimit = maxEPBSJSONResponseSize
+		responseLimit = maxEPBSProposalJSONResponseSize
 	}
 
 	httpResponse, err := s.postWithResponseLimit(
@@ -203,9 +213,10 @@ func validateBuilderConfig(config *gloas.BuilderConfig) error {
 	if config == nil {
 		return errors.Join(errors.New("no builder config supplied"), client.ErrInvalidOptions)
 	}
-	if config.Builders == nil {
-		return errors.Join(errors.New("no builders supplied"), client.ErrInvalidOptions)
-	}
+	// An empty builders list is a legitimate request -- it solicits no builder
+	// bids, leaving only p2p ones -- so only the endpoint's maximum is enforced
+	// here.  A nil slice says the same thing as an empty one and encodes
+	// identically in both JSON and SSZ, so it is accepted too.
 	if len(config.Builders) > 64 {
 		return errors.Join(errors.New("too many builders supplied"), client.ErrInvalidOptions)
 	}
