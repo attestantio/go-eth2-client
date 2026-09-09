@@ -21,6 +21,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
@@ -102,14 +103,19 @@ func TestEPBSProposal(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name     string
-		service  client.Service
-		included bool
+		name          string
+		service       client.Service
+		included      bool
+		builderConfig *gloas.BuilderConfig
 	}{
-		{name: "SSZPayloadExcluded", service: service, included: false},
-		{name: "SSZPayloadIncluded", service: service, included: true},
-		{name: "JSONPayloadExcluded", service: jsonService, included: false},
-		{name: "JSONPayloadIncluded", service: jsonService, included: true},
+		{name: "SSZPayloadExcluded", service: service, included: false, builderConfig: localPreferredBuilderConfig()},
+		{name: "SSZPayloadIncluded", service: service, included: true, builderConfig: localPreferredBuilderConfig()},
+		{name: "JSONPayloadExcluded", service: jsonService, included: false, builderConfig: localPreferredBuilderConfig()},
+		{name: "JSONPayloadIncluded", service: jsonService, included: true, builderConfig: localPreferredBuilderConfig()},
+		// A populated builders list is a different body on the wire, in both
+		// encodings, and nothing an empty one sends reaches it.
+		{name: "SSZBuilderRequested", service: service, included: false, builderConfig: builderRequestedConfig(slot)},
+		{name: "JSONBuilderRequested", service: jsonService, included: false, builderConfig: builderRequestedConfig(slot)},
 	}
 
 	for _, test := range tests {
@@ -123,6 +129,7 @@ func TestEPBSProposal(t *testing.T) {
 					RandaoReveal:           infinity,
 					IncludePayload:         &includePayload,
 					SkipRandaoVerification: true,
+					BuilderConfig:          test.builderConfig,
 				},
 			)
 			require.NoError(t, err)
@@ -153,6 +160,45 @@ func TestEPBSProposal(t *testing.T) {
 			require.NotNil(t, envelope.Payload)
 			require.NotNil(t, envelope.Payload.BaseFeePerGas)
 		})
+	}
+}
+
+// localPreferredBuilderConfig asks for a build with no direct builder bids
+// solicited.  The contract documents the empty list as exactly that -- "Empty
+// means request none, so only p2p bids are considered" -- and a zero boost
+// factor expresses no preference among those.
+func localPreferredBuilderConfig() *gloas.BuilderConfig {
+	return &gloas.BuilderConfig{
+		Builders: []*gloas.BuilderEntry{},
+	}
+}
+
+// builderRequestedConfig solicits a direct bid from one builder.
+//
+// The bid cannot be won from a test: auth.message carries a signature the
+// slot's proposer makes, whose key a test does not hold, so the builder
+// declines and the node falls back to a p2p or local build.  Everything up to
+// that point is still exercised, and none of it is reachable with an empty
+// list: a populated BuilderEntry through both encodings, and the node parsing
+// the entry and routing on its URL.
+//
+// The URL is a refused loopback port rather than a devnet builder so the node's
+// dial fails at once instead of holding the request open for a timeout.
+// devnet-8 publishes no builder API to point at in any case -- its buildoor
+// pairs expose only a beacon and an EL RPC endpoint.
+//
+// The authorization slot has to be the request's own; validateBuilderConfig
+// refuses a mismatch before the request is sent.
+func builderRequestedConfig(slot phase0.Slot) *gloas.BuilderConfig {
+	return &gloas.BuilderConfig{
+		BuilderBoostFactor: 100,
+		Builders: []*gloas.BuilderEntry{{
+			URL: []byte("http://127.0.0.1:1"),
+			Auth: &gloas.SignedBuilderRequestAuth{
+				Message: &gloas.BuilderRequestAuth{Data: []byte{0x01}, Slot: slot},
+			},
+			BuilderPubkeys: []phase0.BLSPubKey{},
+		}},
 	}
 }
 
