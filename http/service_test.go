@@ -15,7 +15,6 @@ package http_test
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 
@@ -49,7 +48,7 @@ func TestService(t *testing.T) {
 		{
 			name: "TimeoutZero",
 			parameters: []v1.Parameter{
-				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),
+				v1.WithAddress("http://localhost:5052"),
 				v1.WithTimeout(0),
 			},
 			err: "problem with parameters\nno timeout specified",
@@ -65,7 +64,7 @@ func TestService(t *testing.T) {
 		{
 			name: "IndexChunkSizeZero",
 			parameters: []v1.Parameter{
-				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),
+				v1.WithAddress("http://localhost:5052"),
 				v1.WithTimeout(5 * time.Second),
 				v1.WithIndexChunkSize(0),
 			},
@@ -74,7 +73,7 @@ func TestService(t *testing.T) {
 		{
 			name: "PubKeyChunkSizeZero",
 			parameters: []v1.Parameter{
-				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),
+				v1.WithAddress("http://localhost:5052"),
 				v1.WithTimeout(5 * time.Second),
 				v1.WithPubKeyChunkSize(0),
 			},
@@ -83,7 +82,7 @@ func TestService(t *testing.T) {
 		{
 			name: "HooksMissing",
 			parameters: []v1.Parameter{
-				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),
+				v1.WithAddress("http://localhost:5052"),
 				v1.WithTimeout(5 * time.Second),
 				v1.WithHooks(nil),
 			},
@@ -92,7 +91,7 @@ func TestService(t *testing.T) {
 		{
 			name: "Good",
 			parameters: []v1.Parameter{
-				v1.WithAddress(os.Getenv("HTTP_ADDRESS")),
+				v1.WithAddress("http://localhost:5052"),
 				v1.WithTimeout(5 * time.Second),
 				v1.WithAllowDelayedStart(true),
 			},

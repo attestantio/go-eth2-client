@@ -1,4 +1,4 @@
-// Copyright © 2025 Attestant Limited.
+// Copyright © 2025 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,6 +21,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -53,12 +54,28 @@ type EventsOpts struct {
 	ContributionAndProofHandler ContributionAndProofEventHandlerFunc
 	// DataColumnSidecarHandler is a handler for the data_column_sidecar event.
 	DataColumnSidecarHandler DataColumnSidecarEventHandlerFunc
+	// ExecutionPayloadHandler is a handler for the execution_payload event
+	// (SignedExecutionPayloadEnvelope successfully imported on the fork-choice).
+	ExecutionPayloadHandler ExecutionPayloadEventHandlerFunc
+	// ExecutionPayloadAvailableHandler is a handler for the execution_payload_available event.
+	ExecutionPayloadAvailableHandler ExecutionPayloadAvailableEventHandlerFunc
+	// ExecutionPayloadBidHandler is a handler for the execution_payload_bid event.
+	ExecutionPayloadBidHandler ExecutionPayloadBidEventHandlerFunc
+	// ExecutionPayloadGossipHandler is a handler for the execution_payload_gossip event
+	// (SignedExecutionPayloadEnvelope passed gossip validation).
+	ExecutionPayloadGossipHandler ExecutionPayloadGossipEventHandlerFunc
+	// FastConfirmationHandler is a handler for the fast_confirmation event.
+	FastConfirmationHandler FastConfirmationEventHandlerFunc
 	// FinalizedCheckpointHandler is a handler for the finalized_checkpoint event.
 	FinalizedCheckpointHandler FinalizedCheckpointEventHandlerFunc
 	// HeadHandler is a handler for the head event.
 	HeadHandler HeadEventHandlerFunc
+	// PayloadAttestationMessageHandler is a handler for the payload_attestation_message event.
+	PayloadAttestationMessageHandler PayloadAttestationMessageEventHandlerFunc
 	// PayloadAttributesHandler is a handler for the payload_attributes event.
 	PayloadAttributesHandler PayloadAttributesEventHandlerFunc
+	// ProposerPreferencesHandler is a handler for the proposer_preferences event.
+	ProposerPreferencesHandler ProposerPreferencesEventHandlerFunc
 	// ProposerSlashingHandler is a handler for the proposer_slashing event.
 	ProposerSlashingHandler ProposerSlashingEventHandlerFunc
 	// SingleAttestationHandler is a handler for the single_attestation event.
@@ -114,3 +131,24 @@ type VoluntaryExitEventHandlerFunc func(context.Context, *phase0.SignedVoluntary
 
 // DataColumnSidecarEventHandlerFunc is the handler for data_column_sidecar events.
 type DataColumnSidecarEventHandlerFunc func(context.Context, *apiv1.DataColumnSidecarEvent)
+
+// ExecutionPayloadEventHandlerFunc is the handler for execution_payload events.
+type ExecutionPayloadEventHandlerFunc func(context.Context, *apiv1.ExecutionPayloadEvent)
+
+// ExecutionPayloadAvailableEventHandlerFunc is the handler for execution_payload_available events.
+type ExecutionPayloadAvailableEventHandlerFunc func(context.Context, *apiv1.ExecutionPayloadAvailableEvent)
+
+// ExecutionPayloadBidEventHandlerFunc is the handler for execution_payload_bid events.
+type ExecutionPayloadBidEventHandlerFunc func(context.Context, *gloas.SignedExecutionPayloadBid)
+
+// ExecutionPayloadGossipEventHandlerFunc is the handler for execution_payload_gossip events.
+type ExecutionPayloadGossipEventHandlerFunc func(context.Context, *apiv1.ExecutionPayloadEvent)
+
+// FastConfirmationEventHandlerFunc is the handler for fast_confirmation events.
+type FastConfirmationEventHandlerFunc func(context.Context, *apiv1.FastConfirmationEvent)
+
+// PayloadAttestationMessageEventHandlerFunc is the handler for payload_attestation_message events.
+type PayloadAttestationMessageEventHandlerFunc func(context.Context, *gloas.PayloadAttestationMessage)
+
+// ProposerPreferencesEventHandlerFunc is the handler for proposer_preferences events.
+type ProposerPreferencesEventHandlerFunc func(context.Context, *gloas.SignedProposerPreferences)
