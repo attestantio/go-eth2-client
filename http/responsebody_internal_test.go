@@ -44,3 +44,34 @@ func TestReadResponseBody(t *testing.T) {
 		})
 	}
 }
+
+// TestEPBSProposalResponseLimitsAreSurvivable pins the property that makes the
+// block-production limits a defence rather than a comment.  readResponseBody
+// reaches its length check only after io.ReadAll has buffered the whole body,
+// and ReadAll grows its buffer geometrically, so peak allocation is close to
+// twice the limit.  A limit taken from the protocol's theoretical maximum
+// (~2GiB of SSZ, ~5GiB of JSON hex) is therefore never reached -- the process
+// dies first -- and a body admitted just under one is equally fatal.
+//
+// The ceiling below is an allocation budget, not a protocol bound: every live
+// preset produces a payload-included response orders of magnitude smaller, so
+// the JSON limit sitting exactly at half the budget is the deliberate ceiling
+// rather than a coincidence.  Raising either limit past it is the regression
+// this test exists to catch.
+func TestEPBSProposalResponseLimitsAreSurvivable(t *testing.T) {
+	const maxProposalResponsePeakAllocation = 1024 * 1024 * 1024
+
+	tests := []struct {
+		name  string
+		limit int
+	}{
+		{name: "SSZ", limit: maxEPBSProposalResponseSize},
+		{name: "JSON", limit: maxEPBSProposalJSONResponseSize},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			require.LessOrEqual(t, 2*test.limit, maxProposalResponsePeakAllocation)
+		})
+	}
+}

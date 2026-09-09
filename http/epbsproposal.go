@@ -50,12 +50,22 @@ const maxProposalValueDigits = 40
 const maxEPBSResponseSize = 64 * 1024 * 1024
 
 // maxEPBSProposalResponseSize bounds a full SSZ payload-included block
-// production response under the pinned Gloas static bounds: 4096 128KiB blobs
-// plus 33,554,432 KZG proofs.
-const maxEPBSProposalResponseSize = 2*1024*1024*1024 + 64*1024*1024
+// production response.  It is an allocation budget, not the protocol's static
+// maximum: readResponseBody has to buffer a body in full before it can reject
+// it, so a limit derived from the pinned Gloas worst case -- 4096 128KiB blobs
+// plus 33,554,432 KZG proofs, upwards of 2GiB -- is one the process cannot
+// survive reaching, and admitting a body just under it is no better.  Every
+// live preset proposes orders of magnitude below this.  A legitimate response
+// refused here fails loudly with the limit in the message, so a future preset
+// that genuinely outgrows it needs this raised deliberately;
+// TestEPBSProposalResponseLimitsAreSurvivable holds the ceiling it must respect.
+const maxEPBSProposalResponseSize = 256 * 1024 * 1024
 
-// maxEPBSProposalJSONResponseSize accommodates the same bounded values as JSON hex.
-const maxEPBSProposalJSONResponseSize = 5 * 1024 * 1024 * 1024
+// maxEPBSProposalJSONResponseSize covers the same response as JSON, whose hex
+// costs slightly over two bytes per SSZ byte.  It is therefore a marginally
+// tighter bound on the payload than its SSZ counterpart rather than an equal
+// one, which the headroom above makes immaterial.
+const maxEPBSProposalJSONResponseSize = 512 * 1024 * 1024
 
 // EPBSProposal fetches a potential ePBS beacon block for signing.
 func (s *Service) EPBSProposal(ctx context.Context,
@@ -76,7 +86,7 @@ func (s *Service) EPBSProposal(ctx context.Context,
 		return nil, err
 	}
 
-	if err := validateBuilderConfig(opts.BuilderConfig); err != nil {
+	if err := validateBuilderConfig(opts.BuilderConfig, opts.Slot); err != nil {
 		return nil, err
 	}
 
@@ -209,7 +219,7 @@ func epbsProposalQuery(opts *api.EPBSProposalOpts) (string, error) {
 	return query, nil
 }
 
-func validateBuilderConfig(config *gloas.BuilderConfig) error {
+func validateBuilderConfig(config *gloas.BuilderConfig, slot phase0.Slot) error {
 	if config == nil {
 		return errors.Join(errors.New("no builder config supplied"), client.ErrInvalidOptions)
 	}
@@ -231,6 +241,17 @@ func validateBuilderConfig(config *gloas.BuilderConfig) error {
 		auth := builder.Auth
 		if auth == nil || auth.Message == nil || len(auth.Message.Data) == 0 || len(auth.Message.Data) > 4096 {
 			return errors.Join(fmt.Errorf("builder %d has invalid authorization", i), client.ErrInvalidOptions)
+		}
+		// The authorization slot is verified by the builder rather than by the
+		// beacon node, so a stale one is not rejected anywhere on the request
+		// path: the node forwards it, the builder declines to bid, and the
+		// proposal succeeds on a p2p or local build with no error raised.
+		// Refusing it here is the only point at which the caller learns.
+		if auth.Message.Slot != slot {
+			return errors.Join(
+				fmt.Errorf("builder %d has authorization for slot %d, not %d", i, auth.Message.Slot, slot),
+				client.ErrInvalidOptions,
+			)
 		}
 		if len(builder.BuilderPubkeys) > 64 {
 			return errors.Join(fmt.Errorf("builder %d has too many public keys", i), client.ErrInvalidOptions)

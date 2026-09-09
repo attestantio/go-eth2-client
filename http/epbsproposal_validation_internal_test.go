@@ -21,12 +21,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// requestSlot is the slot the configs below are validated against.  It is
+// non-zero so that the per-entry slot check is genuinely exercised: a zero
+// authorization slot matching a zero request slot would assert nothing.
+const requestSlot = phase0.Slot(123)
+
 func validBuilderConfigForValidation() *gloas.BuilderConfig {
 	return &gloas.BuilderConfig{
 		Builders: []*gloas.BuilderEntry{{
 			URL: []byte("https://builder.example"),
 			Auth: &gloas.SignedBuilderRequestAuth{
-				Message:   &gloas.BuilderRequestAuth{Data: []byte{0x01}},
+				Message:   &gloas.BuilderRequestAuth{Data: []byte{0x01}, Slot: requestSlot},
 				Signature: phase0.BLSSignature{0x02},
 			},
 		}},
@@ -95,6 +100,21 @@ func TestValidateBuilderConfig(t *testing.T) {
 			err: "builder 0 has invalid authorization",
 		},
 		{
+			// The authorization slot sits inside the signed message and is
+			// verified by the builder, not the beacon node.  A stale one --
+			// an auth object cached across slots -- costs that builder's bid
+			// every slot with no error anywhere in the stack, so the request
+			// is refused here instead.
+			name: "AuthorizationForWrongSlot",
+			config: func() *gloas.BuilderConfig {
+				config := validBuilderConfigForValidation()
+				config.Builders[0].Auth.Message.Slot = requestSlot - 1
+
+				return config
+			}(),
+			err: "builder 0 has authorization for slot 122, not 123",
+		},
+		{
 			name:   "TooManyPubkeys",
 			config: tooManyPubkeys,
 			err:    "builder 0 has too many public keys",
@@ -103,7 +123,7 @@ func TestValidateBuilderConfig(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			err := validateBuilderConfig(test.config)
+			err := validateBuilderConfig(test.config, requestSlot)
 			if test.err == "" {
 				require.NoError(t, err)
 			} else {
