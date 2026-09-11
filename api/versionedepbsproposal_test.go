@@ -691,6 +691,7 @@ func TestVersionedEPBSProposalValue(t *testing.T) {
 		{name: "Both", consensus: big.NewInt(3), execution: big.NewInt(4), expected: big.NewInt(7)},
 		{name: "NeitherSet"},
 		{name: "ConsensusOnly", consensus: big.NewInt(5)},
+		{name: "ExecutionZero", execution: big.NewInt(0), expected: big.NewInt(0)},
 		{name: "ExecutionOnly", execution: big.NewInt(6), expected: big.NewInt(6)},
 	}
 
