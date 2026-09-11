@@ -258,8 +258,12 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 		require.Equal(t, big.NewInt(3476149000000999), response.Data.Value())
 	})
 
-	// A reported zero must survive parsing. It differs from an omitted header,
-	// which leaves the value unknown.
+	// A reported zero must survive parsing.  It differs from an omitted header,
+	// which leaves the value unknown.  The consensus header is omitted here, so
+	// it must stay unknown alongside the known zero: asserting only the total
+	// would not catch a regression that defaulted an absent component to zero or
+	// wrote the execution header to the wrong field.  Headers are the sole
+	// source, so the body's own value fields are metadata and do not contribute.
 	t.Run("ZeroExecutionValueFromHeaders", func(t *testing.T) {
 		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
 
@@ -273,6 +277,7 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
+		require.Nil(t, response.Data.ConsensusValue)
 		require.Equal(t, big.NewInt(0), response.Data.ExecutionValue)
 		require.Equal(t, big.NewInt(0), response.Data.Value())
 	})
