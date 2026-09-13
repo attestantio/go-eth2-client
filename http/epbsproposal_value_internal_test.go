@@ -28,7 +28,7 @@ import (
 func TestValidateEPBSProposalExecutionValueRejectsMismatchedP2PHeader(t *testing.T) {
 	proposal := epbsProposalWithBid(1, 10, 0, 11_000_000_000)
 
-	err := validateEPBSProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "")
+	err := validateEPBSProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "", staticBuilderIndexSelfBuild)
 	require.Error(t, err)
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
@@ -36,7 +36,7 @@ func TestValidateEPBSProposalExecutionValueRejectsMismatchedP2PHeader(t *testing
 func TestValidateEPBSProposalExecutionValueRejectsP2PBelowMinimum(t *testing.T) {
 	proposal := epbsProposalWithBid(1, 9, 0, 9_000_000_000)
 
-	err := validateEPBSProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "")
+	err := validateEPBSProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "", staticBuilderIndexSelfBuild)
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
@@ -48,46 +48,116 @@ func TestValidateEPBSProposalExecutionValueRejectsMismatchedDirectHeader(t *test
 		MinBid:              12,
 	}}}
 
-	err := validateEPBSProposalExecutionValue(proposal, config, "https://builder.example")
+	err := validateEPBSProposalExecutionValue(proposal, config, "https://builder.example", staticBuilderIndexSelfBuild)
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
 func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
-	config := &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{
+	duplicateURLs := &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{
 		{URL: []byte("https://duplicate.example"), MaxExecutionPayment: 2},
 		{URL: []byte("https://duplicate.example"), MaxExecutionPayment: 3},
 	}}
+	direct := func(maxPayment, minBid phase0.Gwei) *gloas.BuilderConfig {
+		return &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{
+			{URL: []byte("https://direct.example"), MaxExecutionPayment: maxPayment, MinBid: minBid},
+		}}
+	}
 	tests := []struct {
 		name     string
 		proposal *api.VersionedEPBSProposal
+		config   *gloas.BuilderConfig
 		url      string
 		err      bool
 		unknown  bool
 	}{
-		{name: "UnknownHeader", proposal: epbsProposalWithBid(1, 10, 0, 0)},
-		{name: "DuplicateBuilderURL", proposal: epbsProposalWithBid(1, 10, 0, 10_000_000_000), url: "https://duplicate.example", unknown: true},
-		{name: "SelfBuild", proposal: epbsProposalWithBid(gloas.BuilderIndex(^uint64(0)), 0, 7, 7_000_000_000), unknown: true},
-		{name: "SelfBuildNonZeroBid", proposal: epbsProposalWithBid(gloas.BuilderIndex(^uint64(0)), 1, 0, 1_000_000_000), err: true},
-		{name: "DirectBelowMinimum", proposal: epbsProposalWithBid(1, 10, 2, 12_000_000_000), url: "https://direct.example", err: true},
+		{
+			name:     "NoHeader",
+			proposal: epbsProposalWithoutValue(1, 10, 0),
+			config:   &gloas.BuilderConfig{MinBid: 10},
+			unknown:  true,
+		},
+		{
+			name:     "NoHeaderBelowMinimum",
+			proposal: epbsProposalWithoutValue(1, 9, 0),
+			config:   &gloas.BuilderConfig{MinBid: 10},
+			err:      true,
+		},
+		{
+			name:     "P2PPaymentUncheckable",
+			proposal: epbsProposalWithBid(1, 10, 3, 13_000_000_000),
+			config:   &gloas.BuilderConfig{MinBid: 10},
+			unknown:  true,
+		},
+		{
+			name:     "DuplicateBuilderURL",
+			proposal: epbsProposalWithBid(1, 10, 0, 10_000_000_000),
+			config:   duplicateURLs,
+			url:      "https://duplicate.example",
+			unknown:  true,
+		},
+		{
+			name:     "SelfBuild",
+			proposal: epbsProposalWithBid(staticBuilderIndexSelfBuild, 0, 7, 7_000_000_000),
+			config:   duplicateURLs,
+			unknown:  true,
+		},
+		{
+			name:     "SelfBuildNonZeroBid",
+			proposal: epbsProposalWithBid(staticBuilderIndexSelfBuild, 1, 0, 1_000_000_000),
+			config:   duplicateURLs,
+			err:      true,
+		},
+		{
+			name:     "DirectBelowMinimum",
+			proposal: epbsProposalWithBid(1, 10, 2, 12_000_000_000),
+			config:   direct(2, 13),
+			url:      "https://direct.example",
+			err:      true,
+		},
+		// beacon-APIs does not say whether the reported value includes the
+		// execution payment, so both ends of the bid-bound bracket are accepted
+		// and anything outside it is not.
+		{
+			name:     "P2PValueMatches",
+			proposal: epbsProposalWithBid(1, 10, 0, 10_000_000_000),
+			config:   &gloas.BuilderConfig{MinBid: 10},
+		},
+		{
+			name:     "DirectValueWithoutPayment",
+			proposal: epbsProposalWithBid(1, 10, 3, 10_000_000_000),
+			config:   direct(5, 10),
+			url:      "https://direct.example",
+		},
+		{
+			name:     "DirectValueWithPayment",
+			proposal: epbsProposalWithBid(1, 10, 3, 13_000_000_000),
+			config:   direct(5, 10),
+			url:      "https://direct.example",
+		},
+		{
+			name:     "DirectValueWithUncappedPayment",
+			proposal: epbsProposalWithBid(1, 10, 3, 13_000_000_000),
+			config:   direct(2, 10),
+			url:      "https://direct.example",
+			err:      true,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			configured := config
-			if test.name == "DirectBelowMinimum" {
-				configured = &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{{URL: []byte(test.url), MaxExecutionPayment: 2, MinBid: 13}}}
-			}
-			if test.name == "UnknownHeader" {
-				test.proposal.ExecutionValue = nil
-			}
-			err := validateEPBSProposalExecutionValue(test.proposal, configured, test.url)
+			value := test.proposal.ExecutionValue
+			err := validateEPBSProposalExecutionValue(test.proposal, test.config, test.url, staticBuilderIndexSelfBuild)
 			if test.err {
 				require.ErrorIs(t, err, client.ErrInconsistentResult)
-			} else {
-				require.NoError(t, err)
+
+				return
 			}
+			require.NoError(t, err)
 			if test.unknown {
 				require.Nil(t, test.proposal.ExecutionValue)
+
+				return
 			}
+			require.Equal(t, value, test.proposal.ExecutionValue)
 		})
 	}
 }
@@ -108,4 +178,14 @@ func epbsProposalWithBid(builderIndex gloas.BuilderIndex,
 			}},
 		}},
 	}
+}
+
+func epbsProposalWithoutValue(builderIndex gloas.BuilderIndex,
+	value phase0.Gwei,
+	executionPayment phase0.Gwei,
+) *api.VersionedEPBSProposal {
+	proposal := epbsProposalWithBid(builderIndex, value, executionPayment, 0)
+	proposal.ExecutionValue = nil
+
+	return proposal
 }

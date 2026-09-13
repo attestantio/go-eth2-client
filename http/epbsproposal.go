@@ -132,7 +132,11 @@ func (s *Service) EPBSProposal(ctx context.Context,
 		return nil, err
 	}
 	builderURL := headerValue(httpResponse.headers, "Eth-Builder-Url")
-	if err := validateEPBSProposalExecutionValue(response.Data, opts.BuilderConfig, builderURL); err != nil {
+	selfBuildIndex, err := s.builderIndexSelfBuild(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := validateEPBSProposalExecutionValue(response.Data, opts.BuilderConfig, builderURL, selfBuildIndex); err != nil {
 		return nil, err
 	}
 
@@ -186,17 +190,52 @@ func (s *Service) assertEPBSProposalMatchesRequest(proposal *api.VersionedEPBSPr
 	return nil
 }
 
-func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal, config *gloas.BuilderConfig, builderURL string) error {
-	if proposal.ExecutionValue == nil {
-		return nil
+// staticBuilderIndexSelfBuild is the mainnet value of the BUILDER_INDEX_SELF_BUILD
+// spec constant, the bid builder index that marks a proposer self-build.  It is
+// a configurable spec value rather than a fixed sentinel, so a custom preset can
+// move it; builderIndexSelfBuild reads it from the node in that case.
+const staticBuilderIndexSelfBuild = gloas.BuilderIndex(^uint64(0))
+
+// builderIndexSelfBuild returns the builder index that marks a self-built bid.
+func (s *Service) builderIndexSelfBuild(ctx context.Context) (gloas.BuilderIndex, error) {
+	if !s.customSpecSupport {
+		return staticBuilderIndexSelfBuild, nil
 	}
 
+	response, err := s.Spec(ctx, &api.SpecOpts{})
+	if err != nil {
+		return 0, err
+	}
+
+	value, isCorrectType := response.Data["BUILDER_INDEX_SELF_BUILD"].(uint64)
+	if !isCorrectType {
+		return 0, ErrIncorrectType
+	}
+
+	return gloas.BuilderIndex(value), nil
+}
+
+// validateEPBSProposalExecutionValue checks the bid a proposal commits to against
+// the policy that was requested, and checks the execution value the node reported
+// against the bid that is signed in the block.  A value the block gives no way to
+// check -- because the winning builder cannot be identified, or the bid is
+// self-built -- is cleared rather than passed on, so a caller ranking proposals
+// never treats an unverified number as a verified one.
+func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
+	config *gloas.BuilderConfig,
+	builderURL string,
+	selfBuildIndex gloas.BuilderIndex,
+) error {
 	block := proposal.Gloas
 	if proposal.ExecutionPayloadIncluded {
 		block = proposal.GloasContents.Block
 	}
 	bid := block.Body.SignedExecutionPayloadBid.Message
-	if bid.BuilderIndex == gloas.BuilderIndex(^uint64(0)) {
+
+	// The bid checks below run whether or not the node sent a value header.
+	// They are statements about the block, and the header is the node's to
+	// omit, so gating them on it would let a node skip them by leaving it out.
+	if bid.BuilderIndex == selfBuildIndex {
 		if bid.Value != 0 {
 			return errors.Join(errors.New("self-built execution payload bid has non-zero value"), client.ErrInconsistentResult)
 		}
@@ -214,23 +253,49 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal, con
 			return nil
 		}
 
+		// A builder-API bid is judged against the entry it was solicited
+		// under, not the config-wide minimum, which gates p2p bids only.
 		policy = &gloas.BuilderConfig{MinBid: entry.MinBid, Builders: []*gloas.BuilderEntry{entry}}
 	} else if bid.ExecutionPayment != 0 {
+		// No builder URL means p2p or self-build.  The cap a p2p payment
+		// counts up to is the maximum over the configured entries whose
+		// pubkeys include the bidding builder's, and the block carries no
+		// pubkey to resolve the builder index against, so the payment -- and
+		// with it the value -- cannot be checked here.
 		proposal.ExecutionValue = nil
 
 		return nil
 	}
 
-	payment := bid.ExecutionPayment
-	if len(policy.Builders) == 1 && payment > policy.Builders[0].MaxExecutionPayment {
-		payment = policy.Builders[0].MaxExecutionPayment
+	// The proposer's take counts the execution payment only up to the cap of
+	// the entry the bid was solicited under.  A p2p bid has no such entry, and
+	// the payment check above is what makes a zero cap right for it.
+	maxPayment := phase0.Gwei(0)
+	if len(policy.Builders) == 1 {
+		maxPayment = policy.Builders[0].MaxExecutionPayment
 	}
-	total := new(big.Int).Add(new(big.Int).SetUint64(uint64(bid.Value)), new(big.Int).SetUint64(uint64(payment)))
+	payment := min(bid.ExecutionPayment, maxPayment)
+
+	value := new(big.Int).SetUint64(uint64(bid.Value))
+	total := new(big.Int).Add(value, new(big.Int).SetUint64(uint64(payment)))
 	if total.Cmp(new(big.Int).SetUint64(uint64(policy.MinBid))) < 0 {
 		return errors.Join(errors.New("execution payload bid below minimum"), client.ErrInconsistentResult)
 	}
-	expected := total.Mul(total, big.NewInt(1_000_000_000))
-	if proposal.ExecutionValue.Cmp(expected) != 0 {
+
+	if proposal.ExecutionValue == nil {
+		return nil
+	}
+
+	// beacon-APIs calls the reported value "the total value of the builder bid"
+	// without saying whether the execution payment is part of that total.
+	// Prysm reports the bid value alone; the wording equally admits value plus
+	// the payment the proposer actually collects.  Both ends of that bracket
+	// are bound to the signed bid, so a value inside it is accepted rather than
+	// failing the proposal over a reading of an ambiguous sentence.
+	gwei := big.NewInt(1_000_000_000)
+	low := value.Mul(value, gwei)
+	high := total.Mul(total, gwei)
+	if proposal.ExecutionValue.Cmp(low) < 0 || proposal.ExecutionValue.Cmp(high) > 0 {
 		return errors.Join(errors.New("execution payload value does not match bid"), client.ErrInconsistentResult)
 	}
 
