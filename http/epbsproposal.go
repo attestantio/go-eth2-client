@@ -131,6 +131,10 @@ func (s *Service) EPBSProposal(ctx context.Context,
 	if err := s.assertEPBSProposalMatchesRequest(response.Data, opts); err != nil {
 		return nil, err
 	}
+	builderURL := headerValue(httpResponse.headers, "Eth-Builder-Url")
+	if err := validateEPBSProposalExecutionValue(response.Data, opts.BuilderConfig, builderURL); err != nil {
+		return nil, err
+	}
 
 	return response, nil
 }
@@ -180,6 +184,82 @@ func (s *Service) assertEPBSProposalMatchesRequest(proposal *api.VersionedEPBSPr
 	}
 
 	return nil
+}
+
+func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal, config *gloas.BuilderConfig, builderURL string) error {
+	if proposal.ExecutionValue == nil {
+		return nil
+	}
+
+	block := proposal.Gloas
+	if proposal.ExecutionPayloadIncluded {
+		block = proposal.GloasContents.Block
+	}
+	bid := block.Body.SignedExecutionPayloadBid.Message
+	if bid.BuilderIndex == gloas.BuilderIndex(^uint64(0)) {
+		if bid.Value != 0 {
+			return errors.Join(errors.New("self-built execution payload bid has non-zero value"), client.ErrInconsistentResult)
+		}
+		proposal.ExecutionValue = nil
+
+		return nil
+	}
+
+	policy := config
+	if builderURL != "" {
+		entry := builderEntryForURL(config, builderURL)
+		if entry == nil {
+			proposal.ExecutionValue = nil
+
+			return nil
+		}
+
+		policy = &gloas.BuilderConfig{MinBid: entry.MinBid, Builders: []*gloas.BuilderEntry{entry}}
+	} else if bid.ExecutionPayment != 0 {
+		proposal.ExecutionValue = nil
+
+		return nil
+	}
+
+	payment := bid.ExecutionPayment
+	if len(policy.Builders) == 1 && payment > policy.Builders[0].MaxExecutionPayment {
+		payment = policy.Builders[0].MaxExecutionPayment
+	}
+	total := new(big.Int).Add(new(big.Int).SetUint64(uint64(bid.Value)), new(big.Int).SetUint64(uint64(payment)))
+	if total.Cmp(new(big.Int).SetUint64(uint64(policy.MinBid))) < 0 {
+		return errors.Join(errors.New("execution payload bid below minimum"), client.ErrInconsistentResult)
+	}
+	expected := total.Mul(total, big.NewInt(1_000_000_000))
+	if proposal.ExecutionValue.Cmp(expected) != 0 {
+		return errors.Join(errors.New("execution payload value does not match bid"), client.ErrInconsistentResult)
+	}
+
+	return nil
+}
+
+func builderEntryForURL(config *gloas.BuilderConfig, builderURL string) *gloas.BuilderEntry {
+	var entry *gloas.BuilderEntry
+	for _, candidate := range config.Builders {
+		if string(candidate.URL) == builderURL {
+			if entry != nil {
+				return nil
+			}
+
+			entry = candidate
+		}
+	}
+
+	return entry
+}
+
+func headerValue(headers map[string]string, name string) string {
+	for key, value := range headers {
+		if strings.EqualFold(key, name) {
+			return value
+		}
+	}
+
+	return ""
 }
 
 // epbsProposalQuery validates the options and builds the endpoint's query
