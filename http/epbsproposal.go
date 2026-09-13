@@ -207,7 +207,14 @@ func (s *Service) builderIndexSelfBuild(ctx context.Context) (gloas.BuilderIndex
 		return 0, err
 	}
 
-	value, isCorrectType := response.Data["BUILDER_INDEX_SELF_BUILD"].(uint64)
+	// BUILDER_INDEX_SELF_BUILD arrived with Gloas, so a node on an earlier
+	// release does not serve it.  Absence is not an error: fall back to the
+	// mainnet value, which is what such a node is using anyway.
+	raw, exists := response.Data["BUILDER_INDEX_SELF_BUILD"]
+	if !exists {
+		return staticBuilderIndexSelfBuild, nil
+	}
+	value, isCorrectType := raw.(uint64)
 	if !isCorrectType {
 		return 0, ErrIncorrectType
 	}
