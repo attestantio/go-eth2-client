@@ -16,4 +16,13 @@ jobs:
       - uses: n8maninger/action-golang-test@v2
         with:
           args: "-race;-timeout=30m"
+  build-32-bit:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/setup-go@v5
+        with:
+          cache: false
+          go-version: '1.25.2'
+      - uses: actions/checkout@v4
+      - run: GOOS=linux GOARCH=386 CGO_ENABLED=0 go build ./...
 
