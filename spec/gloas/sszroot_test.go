@@ -151,6 +151,29 @@ func TestAttestationSSZCustomPreset(t *testing.T) {
 	require.Equal(t, rootFromHex(t, "2c107e8672069142b8bfa7924cdb90be0fd9f7ebb61c6157f8f40fc608df5bf5"), root)
 }
 
+// TestExecutionPayloadEnvelopeHashTreeRootMinimalPreset verifies generated
+// hashing against dynamic SSZ with the canonical minimal preset value relevant
+// to this envelope.  MAX_EXTRA_DATA_BYTES is 32 for both mainnet and minimal;
+// its payload and execution request lists are progressive, and
+// BlobKZGCommitments is not an envelope field.
+func TestExecutionPayloadEnvelopeHashTreeRootMinimalPreset(t *testing.T) {
+	envelope := &gloas.ExecutionPayloadEnvelope{
+		Payload:           testExecutionPayload(),
+		ExecutionRequests: testExecutionRequests(),
+		BuilderIndex:      3,
+	}
+	envelope.Payload.ExtraData = []byte{1}
+
+	generatedRoot, err := envelope.HashTreeRoot()
+	require.NoError(t, err)
+
+	dynamicRoot, err := dynssz.NewDynSsz(map[string]any{
+		"MAX_EXTRA_DATA_BYTES": uint64(32),
+	}).HashTreeRoot(envelope)
+	require.NoError(t, err)
+	require.Equal(t, generatedRoot, dynamicRoot)
+}
+
 func rootFromHex(t *testing.T, input string) [32]byte {
 	t.Helper()
 
