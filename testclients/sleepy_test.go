@@ -20,11 +20,34 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
+
+func TestSleepyProposerDutiesV2(t *testing.T) {
+	ctx := context.Background()
+	expected := &api.Response[[]*apiv1.ProposerDuty]{
+		Data: []*apiv1.ProposerDuty{{ValidatorIndex: 7}},
+	}
+
+	client, err := mock.New(ctx)
+	require.NoError(t, err)
+	client.ProposerDutiesV2Func = func(_ context.Context, _ *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error) {
+		return expected, nil
+	}
+
+	service, err := testclients.NewSleepy(ctx, time.Millisecond, 2*time.Millisecond, client)
+	require.NoError(t, err)
+	provider, supported := service.(consensusclient.ProposerDutiesV2Provider)
+	require.True(t, supported)
+
+	response, err := provider.ProposerDutiesV2(ctx, &api.ProposerDutiesOpts{Epoch: 2})
+	require.NoError(t, err)
+	require.Same(t, expected, response)
+}
 
 func TestSleepyNew(t *testing.T) {
 	ctx := context.Background()

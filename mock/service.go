@@ -79,6 +79,7 @@ type Service struct {
 	PendingPartialWithdrawalsFunc      func(context.Context, *api.PendingPartialWithdrawalsOpts) (*api.Response[[]*electra.PendingPartialWithdrawal], error)
 	ProposalFunc                       func(context.Context, *api.ProposalOpts) (*api.Response[*api.VersionedProposal], error)
 	ProposerDutiesFunc                 func(context.Context, *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error)
+	ProposerDutiesV2Func               func(context.Context, *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error)
 	SignedBeaconBlockFunc              func(context.Context, *api.SignedBeaconBlockOpts) (*api.Response[*spec.VersionedSignedBeaconBlock], error)
 	SignedExecutionPayloadEnvelopeFunc func(context.Context, *api.SignedExecutionPayloadEnvelopeOpts) (*api.Response[*spec.VersionedSignedExecutionPayloadEnvelope], error)
 	SpecFunc                           func(context.Context, *api.SpecOpts) (*api.Response[map[string]any], error)

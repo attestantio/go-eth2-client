@@ -546,6 +546,23 @@ func (s *Sleepy) ProposerDuties(ctx context.Context,
 	return next.ProposerDuties(ctx, opts)
 }
 
+// ProposerDutiesV2 obtains proposer duties for the given epoch using the v2 API.
+func (s *Sleepy) ProposerDutiesV2(ctx context.Context,
+	opts *api.ProposerDutiesOpts,
+) (
+	*api.Response[[]*apiv1.ProposerDuty],
+	error,
+) {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ProposerDutiesV2Provider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.ProposerDutiesV2(ctx, opts)
+}
+
 // Spec provides the spec information of the chain.
 func (s *Sleepy) Spec(ctx context.Context,
 	opts *api.SpecOpts,

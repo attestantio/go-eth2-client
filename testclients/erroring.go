@@ -697,6 +697,25 @@ func (s *Erroring) ProposerDuties(ctx context.Context,
 	return next.ProposerDuties(ctx, opts)
 }
 
+// ProposerDutiesV2 obtains proposer duties for the given epoch using the v2 API.
+func (s *Erroring) ProposerDutiesV2(ctx context.Context,
+	opts *api.ProposerDutiesOpts,
+) (
+	*api.Response[[]*apiv1.ProposerDuty],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+
+	next, isNext := s.next.(consensusclient.ProposerDutiesV2Provider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.ProposerDutiesV2(ctx, opts)
+}
+
 // SyncCommittee fetches the sync committee for the given state.
 func (s *Erroring) SyncCommittee(ctx context.Context,
 	opts *api.SyncCommitteeOpts,
