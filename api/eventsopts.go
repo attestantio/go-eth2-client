@@ -70,6 +70,8 @@ type EventsOpts struct {
 	FinalizedCheckpointHandler FinalizedCheckpointEventHandlerFunc
 	// HeadHandler is a handler for the head event.
 	HeadHandler HeadEventHandlerFunc
+	// HeadV2Handler is a handler for the head_v2 event.
+	HeadV2Handler HeadV2EventHandlerFunc
 	// PayloadAttestationMessageHandler is a handler for the payload_attestation_message event.
 	PayloadAttestationMessageHandler PayloadAttestationMessageEventHandlerFunc
 	// PayloadAttributesHandler is a handler for the payload_attributes event.
@@ -116,6 +118,9 @@ type FinalizedCheckpointEventHandlerFunc func(context.Context, *apiv1.FinalizedC
 
 // HeadEventHandlerFunc is the handler for head events.
 type HeadEventHandlerFunc func(context.Context, *apiv1.HeadEvent)
+
+// HeadV2EventHandlerFunc is the handler for head_v2 events.
+type HeadV2EventHandlerFunc func(context.Context, *apiv1.HeadEventV2)
 
 // PayloadAttributesEventHandlerFunc is the handler for payload_attributes events.
 type PayloadAttributesEventHandlerFunc func(context.Context, *apiv1.PayloadAttributesEvent)
