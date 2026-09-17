@@ -107,7 +107,9 @@ func (s *Service) Events(ctx context.Context, opts *api.EventsOpts) error {
 func (s *Service) checkEventsOpts(opts *api.EventsOpts) error {
 	// Ensure we support the requested topic(s), and have a handler for each.
 	for _, topic := range opts.Topics {
-		if _, exists := apiv1.SupportedEventTopics[topic]; !exists {
+		_, supported := apiv1.SupportedEventTopics[topic]
+		// blob_sidecar predates the pinned beacon-APIs catalog and remains accepted for compatibility.
+		if !supported && topic != "blob_sidecar" {
 			return fmt.Errorf("unsupported event topic %s", topic)
 		}
 
@@ -160,6 +162,10 @@ func (*Service) checkEventSpecificHandler(opts *api.EventsOpts, topic string) er
 		hasHandler = opts.FinalizedCheckpointHandler != nil
 	case "head":
 		hasHandler = opts.HeadHandler != nil
+	case "head_v2":
+		hasHandler = opts.HeadV2Handler != nil
+	case "light_client_finality_update", "light_client_optimistic_update":
+		hasHandler = false
 	case "payload_attestation_message":
 		hasHandler = opts.PayloadAttestationMessageHandler != nil
 	case "payload_attributes":
@@ -229,6 +235,12 @@ func (s *Service) handleEvent(ctx context.Context,
 		s.handleFinalizedCheckpointEvent(ctx, msg, opts)
 	case "head":
 		s.handleHeadEvent(ctx, msg, opts)
+	case "head_v2":
+		s.handleHeadV2Event(ctx, msg, opts)
+	case "light_client_finality_update":
+		s.handleLightClientFinalityUpdateEvent(ctx, msg, opts)
+	case "light_client_optimistic_update":
+		s.handleLightClientOptimisticUpdateEvent(ctx, msg, opts)
 	case "payload_attestation_message":
 		s.handlePayloadAttestationMessageEvent(ctx, msg, opts)
 	case "payload_attributes":
@@ -515,6 +527,68 @@ func (*Service) handleHeadEvent(ctx context.Context,
 		})
 	default:
 		log.Debug().Msg("No specific or generic handler supplied; ignoring")
+	}
+}
+
+func (*Service) handleHeadV2Event(ctx context.Context,
+	msg *sse.Event,
+	opts *api.EventsOpts,
+) {
+	log := zerolog.Ctx(ctx)
+	data := &apiv1.HeadEventV2{}
+
+	if err := json.Unmarshal(msg.Data, data); err != nil {
+		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse head_v2 event")
+
+		return
+	}
+
+	switch {
+	case opts.HeadV2Handler != nil:
+		opts.HeadV2Handler(ctx, data)
+	case opts.Handler != nil:
+		opts.Handler(&apiv1.Event{
+			Topic: string(msg.Event),
+			Data:  data,
+		})
+	default:
+		log.Debug().Msg("No specific or generic handler supplied; ignoring")
+	}
+}
+
+func (*Service) handleLightClientFinalityUpdateEvent(ctx context.Context,
+	msg *sse.Event,
+	opts *api.EventsOpts,
+) {
+	log := zerolog.Ctx(ctx)
+	data := &apiv1.LightClientFinalityUpdateEvent{}
+
+	if err := json.Unmarshal(msg.Data, data); err != nil {
+		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse light client finality update event")
+
+		return
+	}
+
+	if opts.Handler != nil {
+		opts.Handler(&apiv1.Event{Topic: string(msg.Event), Data: data})
+	}
+}
+
+func (*Service) handleLightClientOptimisticUpdateEvent(ctx context.Context,
+	msg *sse.Event,
+	opts *api.EventsOpts,
+) {
+	log := zerolog.Ctx(ctx)
+	data := &apiv1.LightClientOptimisticUpdateEvent{}
+
+	if err := json.Unmarshal(msg.Data, data); err != nil {
+		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse light client optimistic update event")
+
+		return
+	}
+
+	if opts.Handler != nil {
+		opts.Handler(&apiv1.Event{Topic: string(msg.Event), Data: data})
 	}
 }
 
