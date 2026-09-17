@@ -27,6 +27,21 @@ func (s *Service) ProposerDuties(ctx context.Context, opts *api.ProposerDutiesOp
 		return s.ProposerDutiesFunc(ctx, opts)
 	}
 
+	return proposerDuties(opts), nil
+}
+
+// ProposerDutiesV2 obtains proposer duties for the given epoch using the v2 API.
+func (s *Service) ProposerDutiesV2(ctx context.Context,
+	opts *api.ProposerDutiesOpts,
+) (*api.Response[[]*apiv1.ProposerDuty], error) {
+	if s.ProposerDutiesV2Func != nil {
+		return s.ProposerDutiesV2Func(ctx, opts)
+	}
+
+	return proposerDuties(opts), nil
+}
+
+func proposerDuties(opts *api.ProposerDutiesOpts) *api.Response[[]*apiv1.ProposerDuty] {
 	data := make([]*apiv1.ProposerDuty, len(opts.Indices))
 	for i := range opts.Indices {
 		data[i] = &apiv1.ProposerDuty{
@@ -37,5 +52,5 @@ func (s *Service) ProposerDuties(ctx context.Context, opts *api.ProposerDutiesOp
 	return &api.Response[[]*apiv1.ProposerDuty]{
 		Data:     data,
 		Metadata: make(map[string]any),
-	}, nil
+	}
 }
