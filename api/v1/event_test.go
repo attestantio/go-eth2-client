@@ -18,15 +18,17 @@ import (
 	"testing"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
 )
 
 func TestEvent(t *testing.T) {
 	tests := []struct {
-		name  string
-		input []byte
-		err   string
+		name       string
+		input      []byte
+		err        string
+		normalizes bool
 	}{
 		{
 			name: "Empty",
@@ -58,20 +60,23 @@ func TestEvent(t *testing.T) {
 			err:   "data missing",
 		},
 		{
-			name:  "GoodPhase0Attestation",
-			input: []byte(`{"topic":"attestation","data":{"aggregation_bits":"0x010203","data":{"beacon_block_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","index":"1","slot":"100","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}},"signature":"0x606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf"}}`),
+			name:       "GoodPhase0Attestation",
+			normalizes: true,
+			input:      []byte(`{"topic":"attestation","data":{"aggregation_bits":"0x010203","data":{"beacon_block_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","index":"1","slot":"100","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}},"signature":"0x606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf"}}`),
 		},
 		{
-			name:  "GoodElectraAttestation",
-			input: []byte(`{"topic":"attestation","data":{"aggregation_bits":"0xf77ffffffdfbfffffffdbfffffe5fff71f","data":{"slot":"98106","index":"0","beacon_block_root":"0xf8df02ed08b9adcb88a22cb22cd2a6074b184128ae6a240e3172109fdfacaa7b","source":{"epoch":"3064","root":"0x19ffd95e92753046cf63b4298f859e1fb1271a160ef0139ea1eb9f06d45d3b93"},"target":{"epoch":"3065","root":"0xffac9506e2262991ed19b1804bec9f7a1c4c4e61eb37444e6c8826bb362716d6"}},"signature":"0xb4f12c02e0f1a5db07999ceb8c1a4ccd41a3cb46ca15abe1c145337f1287360c49d5780fb7b44dfebeb96f3898824605008c9d458bdd2413358da3edf1b181d4e98edfe90d5fd016ac8f6aebc6646b2da83ab98722a7b4ee5264506bf6ae08e9","committee_bits":"0x0040000000000000"}}`),
+			name:       "GoodElectraAttestation",
+			normalizes: true,
+			input:      []byte(`{"topic":"attestation","data":{"aggregation_bits":"0xf77ffffffdfbfffffffdbfffffe5fff71f","data":{"slot":"98106","index":"0","beacon_block_root":"0xf8df02ed08b9adcb88a22cb22cd2a6074b184128ae6a240e3172109fdfacaa7b","source":{"epoch":"3064","root":"0x19ffd95e92753046cf63b4298f859e1fb1271a160ef0139ea1eb9f06d45d3b93"},"target":{"epoch":"3065","root":"0xffac9506e2262991ed19b1804bec9f7a1c4c4e61eb37444e6c8826bb362716d6"}},"signature":"0xb4f12c02e0f1a5db07999ceb8c1a4ccd41a3cb46ca15abe1c145337f1287360c49d5780fb7b44dfebeb96f3898824605008c9d458bdd2413358da3edf1b181d4e98edfe90d5fd016ac8f6aebc6646b2da83ab98722a7b4ee5264506bf6ae08e9","committee_bits":"0x0040000000000000"}}`),
 		},
 		{
 			name:  "GoodSingleAttestation",
 			input: []byte(`{"topic":"single_attestation","data":{"committee_index":"11","attester_index":"23784","data":{"slot":"98122","index":"0","beacon_block_root":"0x497033a5af8e64b748c554524e1e269da3c3af71515cf31f2d7bf9bab256a03c","source":{"epoch":"3065","root":"0xffac9506e2262991ed19b1804bec9f7a1c4c4e61eb37444e6c8826bb362716d6"},"target":{"epoch":"3066","root":"0x5982836668f92d786ef82f8841011a0888be5583bd09ab73760563855789d49b"}},"signature":"0xa448d3dc9520d4cb8e70094108169893a94ef7d074151ba333169ea92e2586da6f6efa622722743725c8012707f78efa02d99dd8ee094fa5bf5ca2b24066096ab0bc7671d4037521cbe69411871dd614e60d2c0eed8d2a0b2e4b77602b39d50e"}}`),
 		},
 		{
-			name:  "GoodBlock",
-			input: []byte(`{"topic":"block","data":{"block":"0xbe36e714a6114cf718e35dafc4ac530ce8f01e4a9a360e78098eb129772dcc39","slot":"1"}}`),
+			name:       "GoodBlock",
+			normalizes: true,
+			input:      []byte(`{"topic":"block","data":{"block":"0xbe36e714a6114cf718e35dafc4ac530ce8f01e4a9a360e78098eb129772dcc39","slot":"1"}}`),
 		},
 		{
 			name:  "GoodChainReorg",
@@ -109,11 +114,56 @@ func TestEvent(t *testing.T) {
 				require.NoError(t, err)
 				rt, err := json.Marshal(&res)
 				require.NoError(t, err)
-				assert.JSONEq(t, string(test.input), string(rt))
+				if !test.normalizes {
+					assert.JSONEq(t, string(test.input), string(rt))
+				}
 				assert.JSONEq(t, string(rt), res.String())
 			}
 		})
 	}
+}
+
+func TestEventVersionedGloasRoundTrip(t *testing.T) {
+	tests := []struct {
+		name  string
+		topic string
+		data  any
+	}{
+		{name: "Bid", topic: "execution_payload_bid", data: &gloas.SignedExecutionPayloadBid{Message: &gloas.ExecutionPayloadBid{}}},
+		{name: "Attestation", topic: "payload_attestation_message", data: &gloas.PayloadAttestationMessage{Data: &gloas.PayloadAttestationData{}}},
+		{name: "Preferences", topic: "proposer_preferences", data: &gloas.SignedProposerPreferences{Message: &gloas.ProposerPreferences{}}},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			inner, err := json.Marshal(test.data)
+			require.NoError(t, err)
+			input, err := json.Marshal(map[string]any{"topic": test.topic, "data": map[string]any{"version": "gloas", "data": json.RawMessage(inner)}})
+			require.NoError(t, err)
+
+			var event api.Event
+			require.NoError(t, json.Unmarshal(input, &event))
+			require.IsType(t, test.data, event.Data)
+			output, err := json.Marshal(&event)
+			require.NoError(t, err)
+			require.JSONEq(t, string(input), string(output))
+
+			wrongFork, err := json.Marshal(map[string]any{"topic": test.topic, "data": map[string]any{"version": "fulu", "data": json.RawMessage(inner)}})
+			require.NoError(t, err)
+			require.ErrorContains(t, json.Unmarshal(wrongFork, &event), "unsupported version")
+		})
+	}
+}
+
+func TestEventUnmarshalHeadV2Typed(t *testing.T) {
+	input := []byte(`{"topic":"head_v2","data":{"version":"gloas","data":{"slot":"10","block":"0x9a2fefd2fdb57f74993c7780ea5b9030d2897b615b89f808011ca5aebed54eaf","state":"0x600e852a08c1200654ddf11025f1ceacb3c2e74bdd5c630cde0838b2591b69f9","payload_status":"empty","epoch_transition":false,"current_epoch_dependent_root":"0x5e0043f107cb57913498fbf2f99ff55e730bf1e151f02f221e977c91a90a0e91","next_epoch_dependent_root":"0x5e0043f107cb57913498fbf2f99ff55e730bf1e151f02f221e977c91a90a0e91","execution_optimistic":false}}}`)
+
+	var event api.Event
+	require.NoError(t, json.Unmarshal(input, &event))
+	require.IsType(t, &api.HeadEventV2{}, event.Data)
+	require.Equal(t, "empty", event.Data.(*api.HeadEventV2).PayloadStatus)
+	encoded, err := json.Marshal(&event)
+	require.NoError(t, err)
+	require.JSONEq(t, string(input), string(encoded))
 }
 
 // TestSupportedEventTopicsGloas confirms SupportedEventTopics lists the event

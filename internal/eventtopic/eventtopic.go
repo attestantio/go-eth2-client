@@ -30,6 +30,10 @@ type Descriptor interface {
 	Name() string
 	// NewData returns a new value of the type into which the data of the topic's events decodes.
 	NewData() any
+	// DecodeData decodes the data sent on the event stream.
+	DecodeData(input []byte) (any, error)
+	// Version returns the fork of wrapped events, or DataVersionUnknown for bare events.
+	Version() spec.DataVersion
 	// dataType returns that type.
 	dataType() reflect.Type
 }
@@ -68,6 +72,14 @@ func (t Topic[T]) Name() string {
 // NewData returns a new T.
 func (Topic[T]) NewData() any {
 	return new(T)
+}
+
+func (t Topic[T]) DecodeData(input []byte) (any, error) {
+	return t.Decode(input)
+}
+
+func (t Topic[T]) Version() spec.DataVersion {
+	return t.version
 }
 
 func (Topic[T]) dataType() reflect.Type {

@@ -15,6 +15,7 @@ package v1
 
 import (
 	"encoding/json"
+	"maps"
 	"reflect"
 	"testing"
 
@@ -53,6 +54,9 @@ func TestEventTopicDecodeTypes(t *testing.T) {
 		{name: "fast_confirmation", expected: &FastConfirmationEvent{}},
 		{name: "finalized_checkpoint", expected: &FinalizedCheckpointEvent{}},
 		{name: "head", expected: &HeadEvent{}},
+		{name: "head_v2", expected: &HeadEventV2{}},
+		{name: "light_client_finality_update", expected: &LightClientFinalityUpdateEvent{}},
+		{name: "light_client_optimistic_update", expected: &LightClientOptimisticUpdateEvent{}},
 		{name: "payload_attestation_message", expected: &gloas.PayloadAttestationMessage{}},
 		{name: "payload_attributes", expected: &PayloadAttributesEvent{}},
 		{name: "proposer_preferences", expected: &gloas.SignedProposerPreferences{}},
@@ -79,6 +83,29 @@ func TestEventTopicDecodeTypes(t *testing.T) {
 			require.Equal(t, test.name, registered.Name())
 		})
 	}
+}
+
+// TestEventTopicsMatchCatalog pins the topic enum from beacon-APIs commit
+// ef98d512c03c8ca6b9d7cbdc45b9293ec2b24722.
+func TestEventTopicsMatchCatalog(t *testing.T) {
+	catalog := map[string]bool{
+		"attestation": true, "attester_slashing": true, "block": true,
+		"block_gossip": true, "bls_to_execution_change": true, "chain_reorg": true,
+		"contribution_and_proof": true, "data_column_sidecar": true,
+		"execution_payload": true, "execution_payload_available": true,
+		"execution_payload_bid": true, "execution_payload_gossip": true,
+		"fast_confirmation": true, "finalized_checkpoint": true,
+		"head": true, "head_v2": true,
+		"light_client_finality_update": true, "light_client_optimistic_update": true,
+		"payload_attestation_message": true, "payload_attributes": true,
+		"proposer_preferences": true, "proposer_slashing": true,
+		"single_attestation": true, "voluntary_exit": true,
+	}
+
+	registered := maps.Clone(SupportedEventTopics)
+	require.True(t, registered["blob_sidecar"], "legacy topic must remain supported")
+	delete(registered, "blob_sidecar")
+	require.Equal(t, catalog, registered)
 }
 
 // TestEventTopicsRejectNullData confirms that the data type of every topic rejects null.  Decode

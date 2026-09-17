@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/pkg/errors"
 )
 
@@ -45,6 +46,13 @@ func (e *Event) MarshalJSON() ([]byte, error) {
 	var unmarshalled map[string]any
 	if err := json.Unmarshal(data, &unmarshalled); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal data")
+	}
+
+	if topic, exists := eventTopicsByName[e.Topic]; exists && topic.Version() != spec.DataVersionUnknown {
+		unmarshalled = map[string]any{
+			"version": topic.Version().String(),
+			"data":    unmarshalled,
+		}
 	}
 
 	return json.Marshal(&eventJSON{
@@ -77,18 +85,15 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		return fmt.Errorf("unsupported event topic %s", eventJSON.Topic)
 	}
 
-	e.Data = topic.NewData()
-
 	data, err := json.Marshal(eventJSON.Data)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
 
-	if err := json.Unmarshal(data, &e.Data); err != nil {
-		return errors.New("data missing")
+	e.Data, err = topic.DecodeData(data)
+	if err != nil {
+		return errors.Wrap(err, "invalid event data")
 	}
-
-	e.Data = eventJSON.Data
 
 	return nil
 }

@@ -24,9 +24,11 @@ import (
 )
 
 // eventTopics is the single list of supported event topics, each with the type into which the
-// data of its events decodes.  SupportedEventTopics and Event.UnmarshalJSON are derived from it,
+// data of its events decodes. SupportedEventTopics and Event.UnmarshalJSON are derived from it,
 // and the HTTP and multi clients reach it through the eventtopic package, with which it is
-// registered.
+// registered. The catalog is pinned to beacon-APIs commit ef98d512c03c8ca6b9d7cbdc45b9293ec2b24722:
+// https://github.com/ethereum/beacon-APIs/blob/ef98d512c03c8ca6b9d7cbdc45b9293ec2b24722/apis/eventstream/index.yaml.
+// blob_sidecar is accepted for compatibility but is not in that catalog.
 var eventTopics = []eventtopic.Descriptor{
 	eventtopic.New[spec.VersionedAttestation]("attestation"),
 	eventtopic.New[electra.AttesterSlashing]("attester_slashing"),
@@ -44,6 +46,9 @@ var eventTopics = []eventtopic.Descriptor{
 	eventtopic.New[FastConfirmationEvent]("fast_confirmation"),
 	eventtopic.New[FinalizedCheckpointEvent]("finalized_checkpoint"),
 	eventtopic.New[HeadEvent]("head"),
+	eventtopic.New[HeadEventV2]("head_v2"),
+	eventtopic.New[LightClientFinalityUpdateEvent]("light_client_finality_update"),
+	eventtopic.New[LightClientOptimisticUpdateEvent]("light_client_optimistic_update"),
 	eventtopic.NewVersioned[gloas.PayloadAttestationMessage]("payload_attestation_message", spec.DataVersionGloas),
 	eventtopic.New[PayloadAttributesEvent]("payload_attributes"),
 	eventtopic.NewVersioned[gloas.SignedProposerPreferences]("proposer_preferences", spec.DataVersionGloas),
