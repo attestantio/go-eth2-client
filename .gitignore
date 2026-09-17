@@ -7,6 +7,9 @@
 # Test binary, build with `go test -c`
 *.test
 
+# Custom golangci-lint binary built via `golangci-lint custom` (config: .custom-gcl.yml)
+custom-gcl
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 coverage.html

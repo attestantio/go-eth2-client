@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2023 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -26,6 +26,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -831,4 +832,139 @@ func (s *Sleepy) PendingPartialWithdrawals(ctx context.Context,
 	}
 
 	return next.PendingPartialWithdrawals(ctx, opts)
+}
+
+// SignedExecutionPayloadEnvelope fetches a signed execution payload envelope given a block ID.
+func (s *Sleepy) SignedExecutionPayloadEnvelope(ctx context.Context,
+	opts *api.SignedExecutionPayloadEnvelopeOpts,
+) (
+	*api.Response[*spec.VersionedSignedExecutionPayloadEnvelope],
+	error,
+) {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.SignedExecutionPayloadEnvelope(ctx, opts)
+}
+
+// SubmitExecutionPayloadBid submits an execution payload bid.
+func (s *Sleepy) SubmitExecutionPayloadBid(ctx context.Context, opts *api.SubmitExecutionPayloadBidOpts) error {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadBidSubmitter)
+	if !isNext {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitExecutionPayloadBid(ctx, opts)
+}
+
+// SubmitProposerPreferences submits signed proposer preferences.
+func (s *Sleepy) SubmitProposerPreferences(ctx context.Context, preferences []*gloas.SignedProposerPreferences) error {
+	s.sleep(ctx)
+	next, ok := s.next.(consensusclient.ProposerPreferencesSubmitter)
+	if !ok {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitProposerPreferences(ctx, preferences)
+}
+
+// SubmitExecutionPayloadEnvelope submits a signed execution payload envelope.
+func (s *Sleepy) SubmitExecutionPayloadEnvelope(ctx context.Context, opts *api.SubmitExecutionPayloadEnvelopeOpts) error {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadEnvelopeSubmitter)
+	if !isNext {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitExecutionPayloadEnvelope(ctx, opts)
+}
+
+// EPBSProposal fetches an ePBS proposal for signing.
+func (s *Sleepy) EPBSProposal(ctx context.Context,
+	opts *api.EPBSProposalOpts,
+) (
+	*api.Response[*api.VersionedEPBSProposal],
+	error,
+) {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.EPBSProposalProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.EPBSProposal(ctx, opts)
+}
+
+// ExecutionPayloadEnvelope obtains the cached execution payload envelope for the
+// given slot and beacon block root.
+func (s *Sleepy) ExecutionPayloadEnvelope(ctx context.Context,
+	opts *api.ExecutionPayloadEnvelopeOpts,
+) (
+	*api.Response[*spec.VersionedExecutionPayloadEnvelope],
+	error,
+) {
+	s.sleep(ctx)
+
+	next, isNext := s.next.(consensusclient.ExecutionPayloadEnvelopeProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.ExecutionPayloadEnvelope(ctx, opts)
+}
+
+// PTCDuties obtains payload timeliness committee duties.
+func (s *Sleepy) PTCDuties(ctx context.Context, opts *api.PTCDutiesOpts) (*api.Response[[]*apiv1.PTCDuty], error) {
+	s.sleep(ctx)
+	next, ok := s.next.(consensusclient.PTCDutiesProvider)
+	if !ok {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.PTCDuties(ctx, opts)
+}
+
+// PayloadAttestationData obtains payload attestation data.
+func (s *Sleepy) PayloadAttestationData(ctx context.Context,
+	opts *api.PayloadAttestationDataOpts,
+) (*api.Response[*spec.VersionedPayloadAttestationData], error) {
+	s.sleep(ctx)
+	next, ok := s.next.(consensusclient.PayloadAttestationDataProvider)
+	if !ok {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.PayloadAttestationData(ctx, opts)
+}
+
+// PayloadAttestationPool obtains the payload attestation pool.
+func (s *Sleepy) PayloadAttestationPool(ctx context.Context,
+	opts *api.PayloadAttestationPoolOpts,
+) (*api.Response[[]*spec.VersionedPayloadAttestation], error) {
+	s.sleep(ctx)
+	next, ok := s.next.(consensusclient.PayloadAttestationPoolProvider)
+	if !ok {
+		return nil, errors.New("next does not support this call")
+	}
+
+	return next.PayloadAttestationPool(ctx, opts)
+}
+
+// SubmitPayloadAttestationMessages submits payload attestation messages.
+func (s *Sleepy) SubmitPayloadAttestationMessages(ctx context.Context, opts *api.SubmitPayloadAttestationMessagesOpts) error {
+	s.sleep(ctx)
+	next, ok := s.next.(consensusclient.PayloadAttestationMessagesSubmitter)
+	if !ok {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitPayloadAttestationMessages(ctx, opts)
 }

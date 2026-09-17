@@ -1,4 +1,4 @@
-// Copyright © 2024 Attestant Limited.
+// Copyright © 2024 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,4 +24,7 @@ type SubmitProposalOpts struct {
 
 	// BroadcastValidation is the validation required of the consensus node before broadcasting the proposal.
 	BroadcastValidation *apiv2.BroadcastValidation
+
+	// BuilderURL is the optional direct-builder route returned by block production.
+	BuilderURL string
 }
