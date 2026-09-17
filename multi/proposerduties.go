@@ -15,11 +15,45 @@ package multi
 
 import (
 	"context"
+	"fmt"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
+
+// ProposerDutiesV2 obtains proposer duties for the given epoch using the v2 API.
+// If opts.Indices is empty all duties are returned, otherwise only matching duties are returned.
+func (s *Service) ProposerDutiesV2(ctx context.Context,
+	opts *api.ProposerDutiesOpts,
+) (
+	*api.Response[[]*apiv1.ProposerDuty],
+	error,
+) {
+	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
+		provider, supported := client.(consensusclient.ProposerDutiesV2Provider)
+		if !supported {
+			return nil, fmt.Errorf("%s@%s does not support this call", client.Name(), client.Address())
+		}
+
+		duties, err := provider.ProposerDutiesV2(ctx, opts)
+		if err != nil {
+			return nil, err
+		}
+
+		return duties, nil
+	}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	response, isResponse := res.(*api.Response[[]*apiv1.ProposerDuty])
+	if !isResponse {
+		return nil, ErrIncorrectType
+	}
+
+	return response, nil
+}
 
 // ProposerDuties obtains proposer duties for the given epoch.
 // If validatorIndices is empty all duties are returned, otherwise only matching duties are returned.

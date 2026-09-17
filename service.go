@@ -601,6 +601,17 @@ type ProposerDutiesProvider interface {
 	)
 }
 
+// ProposerDutiesV2Provider is the interface for providing proposer duties using the v2 API.
+type ProposerDutiesV2Provider interface {
+	// ProposerDutiesV2 obtains proposer duties for the given options.
+	ProposerDutiesV2(ctx context.Context,
+		opts *api.ProposerDutiesOpts,
+	) (
+		*api.Response[[]*apiv1.ProposerDuty],
+		error,
+	)
+}
+
 // SpecProvider is the interface for providing spec data.
 type SpecProvider interface {
 	// Spec provides the spec information of the chain.

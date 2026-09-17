@@ -19,12 +19,74 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
+
+type proposerDutiesV1Only struct {
+	consensusclient.Service
+}
+
+func TestProposerDutiesV2FallsBackFromUnsupportedClient(t *testing.T) {
+	ctx := context.Background()
+
+	unsupportedClient, err := mock.New(ctx, mock.WithName("unsupported"))
+	require.NoError(t, err)
+	supportedClient, err := mock.New(ctx, mock.WithName("supported"))
+	require.NoError(t, err)
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{
+			&proposerDutiesV1Only{Service: unsupportedClient},
+			supportedClient,
+		}),
+	)
+	require.NoError(t, err)
+
+	response, err := multiClient.(consensusclient.ProposerDutiesV2Provider).ProposerDutiesV2(ctx, &api.ProposerDutiesOpts{})
+	require.NoError(t, err)
+	require.NotNil(t, response)
+	require.Equal(t, "supported", multiClient.Address())
+}
+
+func TestProposerDutiesV2(t *testing.T) {
+	ctx := context.Background()
+	root := phase0.Root{0xaa}
+	duties := []*v1.ProposerDuty{{ValidatorIndex: 7, Slot: 65}}
+
+	mockClient, err := mock.New(ctx)
+	require.NoError(t, err)
+	mockClient.ProposerDutiesV2Func = func(_ context.Context, _ *api.ProposerDutiesOpts) (*api.Response[[]*v1.ProposerDuty], error) {
+		return &api.Response[[]*v1.ProposerDuty]{
+			Data: duties,
+			Metadata: map[string]any{
+				"dependent_root":       root,
+				"execution_optimistic": true,
+			},
+		}, nil
+	}
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{mockClient}),
+	)
+	require.NoError(t, err)
+
+	provider, supported := multiClient.(consensusclient.ProposerDutiesV2Provider)
+	require.True(t, supported)
+
+	response, err := provider.ProposerDutiesV2(ctx, &api.ProposerDutiesOpts{Epoch: 2})
+	require.NoError(t, err)
+	require.Same(t, duties[0], response.Data[0])
+	require.Equal(t, root, response.Metadata["dependent_root"])
+	require.Equal(t, true, response.Metadata["execution_optimistic"])
+}
 
 func TestProposerDuties(t *testing.T) {
 	ctx := context.Background()
