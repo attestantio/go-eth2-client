@@ -124,6 +124,28 @@ func TestEventsForwardsTopicHandler(t *testing.T) {
 	require.Equal(t, 1, received)
 }
 
+func TestEventsForwardsHeadV2Handler(t *testing.T) {
+	ctx := context.Background()
+
+	client, clientOpts := mockCapturingEvents(ctx, t, "mock 1")
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{client}),
+	)
+	require.NoError(t, err)
+
+	received := 0
+	require.NoError(t, multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{
+		Topics:        []string{"head_v2"},
+		HeadV2Handler: func(context.Context, *apiv1.HeadEventV2) { received++ },
+	}))
+
+	require.NotNil(t, clientOpts())
+	require.NotNil(t, clientOpts().HeadV2Handler)
+	clientOpts().HeadV2Handler(ctx, &apiv1.HeadEventV2{})
+	require.Equal(t, 1, received)
+}
+
 // TestEventsFiltersNonPrimaryClient confirms that events are forwarded only from the client
 // that is currently the primary active one.  Were events from every active client forwarded we
 // could end up with inconsistent results, a `head` event arriving from one client while a

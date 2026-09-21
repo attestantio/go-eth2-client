@@ -21,6 +21,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
@@ -33,32 +34,35 @@ type Event struct {
 	Data any
 }
 
-// SupportedEventTopics is a map of supported event topics. It is the allow-list
-// against which the HTTP client validates Events() subscriptions, and is
-// maintained separately from the topic switch in Event.UnmarshalJSON below.
+// SupportedEventTopics is the event-topic catalog from beacon-APIs commit
+// ef98d512c03c8ca6b9d7cbdc45b9293ec2b24722:
+// https://github.com/ethereum/beacon-APIs/blob/ef98d512c03c8ca6b9d7cbdc45b9293ec2b24722/apis/eventstream/index.yaml.
+// The HTTP client uses it to validate Events() subscriptions.
 var SupportedEventTopics = map[string]bool{
-	"attestation":                 true,
-	"attester_slashing":           true,
-	"blob_sidecar":                true,
-	"block":                       true,
-	"block_gossip":                true,
-	"bls_to_execution_change":     true,
-	"chain_reorg":                 true,
-	"contribution_and_proof":      true,
-	"data_column_sidecar":         true,
-	"execution_payload":           true,
-	"execution_payload_available": true,
-	"execution_payload_bid":       true,
-	"execution_payload_gossip":    true,
-	"fast_confirmation":           true,
-	"finalized_checkpoint":        true,
-	"head":                        true,
-	"payload_attestation_message": true,
-	"payload_attributes":          true,
-	"proposer_preferences":        true,
-	"proposer_slashing":           true,
-	"single_attestation":          true,
-	"voluntary_exit":              true,
+	"attestation":                    true,
+	"attester_slashing":              true,
+	"block":                          true,
+	"block_gossip":                   true,
+	"bls_to_execution_change":        true,
+	"chain_reorg":                    true,
+	"contribution_and_proof":         true,
+	"data_column_sidecar":            true,
+	"execution_payload":              true,
+	"execution_payload_available":    true,
+	"execution_payload_bid":          true,
+	"execution_payload_gossip":       true,
+	"fast_confirmation":              true,
+	"finalized_checkpoint":           true,
+	"head":                           true,
+	"head_v2":                        true,
+	"light_client_finality_update":   true,
+	"light_client_optimistic_update": true,
+	"payload_attestation_message":    true,
+	"payload_attributes":             true,
+	"proposer_preferences":           true,
+	"proposer_slashing":              true,
+	"single_attestation":             true,
+	"voluntary_exit":                 true,
 }
 
 // eventJSON is the spec representation of the struct.
@@ -69,20 +73,25 @@ type eventJSON struct {
 
 // MarshalJSON implements json.Marshaler.
 func (e *Event) MarshalJSON() ([]byte, error) {
-	// Need to turn event data in to a generic map.
-	data, err := json.Marshal(e.Data)
+	marshalled, err := json.Marshal(e.Data)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to marshal data")
 	}
 
-	var unmarshalled map[string]any
-	if err := json.Unmarshal(data, &unmarshalled); err != nil {
+	var data map[string]any
+	if err := json.Unmarshal(marshalled, &data); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal data")
+	}
+	if isVersionedGloasEventTopic(e.Topic) {
+		data = map[string]any{
+			"version": spec.DataVersionGloas.String(),
+			"data":    data,
+		}
 	}
 
 	return json.Marshal(&eventJSON{
 		Topic: e.Topic,
-		Data:  unmarshalled,
+		Data:  data,
 	})
 }
 
@@ -124,12 +133,30 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		e.Data = &altair.SignedContributionAndProof{}
 	case "data_column_sidecar":
 		e.Data = &DataColumnSidecarEvent{}
+	case "execution_payload", "execution_payload_gossip":
+		e.Data = &ExecutionPayloadEvent{}
+	case "execution_payload_available":
+		e.Data = &ExecutionPayloadAvailableEvent{}
+	case "execution_payload_bid":
+		e.Data = &gloas.SignedExecutionPayloadBid{}
+	case "fast_confirmation":
+		e.Data = &FastConfirmationEvent{}
 	case "finalized_checkpoint":
 		e.Data = &FinalizedCheckpointEvent{}
 	case "head":
 		e.Data = &HeadEvent{}
+	case "head_v2":
+		e.Data = &HeadEventV2{}
+	case "light_client_finality_update":
+		e.Data = &LightClientFinalityUpdateEvent{}
+	case "light_client_optimistic_update":
+		e.Data = &LightClientOptimisticUpdateEvent{}
+	case "payload_attestation_message":
+		e.Data = &gloas.PayloadAttestationMessage{}
 	case "payload_attributes":
 		e.Data = &PayloadAttributesEvent{}
+	case "proposer_preferences":
+		e.Data = &gloas.SignedProposerPreferences{}
 	case "proposer_slashing":
 		e.Data = &phase0.ProposerSlashing{}
 	case "single_attestation":
@@ -144,14 +171,37 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
-
-	if err := json.Unmarshal(data, &e.Data); err != nil {
-		return errors.New("data missing")
+	if isVersionedGloasEventTopic(eventJSON.Topic) {
+		var versionedData struct {
+			Version spec.DataVersion `json:"version"`
+			Data    json.RawMessage  `json:"data"`
+		}
+		if err := json.Unmarshal(data, &versionedData); err != nil {
+			return errors.Wrap(err, "invalid versioned event data")
+		}
+		if versionedData.Version != spec.DataVersionGloas {
+			return fmt.Errorf("unsupported event data version %s", versionedData.Version)
+		}
+		if len(versionedData.Data) == 0 {
+			return errors.New("event data missing")
+		}
+		data = versionedData.Data
 	}
 
-	e.Data = eventJSON.Data
+	if err := json.Unmarshal(data, e.Data); err != nil {
+		return errors.Wrap(err, "invalid event data")
+	}
 
 	return nil
+}
+
+func isVersionedGloasEventTopic(topic string) bool {
+	switch topic {
+	case "execution_payload_bid", "payload_attestation_message", "proposer_preferences":
+		return true
+	default:
+		return false
+	}
 }
 
 // String returns a string version of the structure.

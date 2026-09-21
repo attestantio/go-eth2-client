@@ -158,6 +158,7 @@ func newActiveHandler(s *Service, log zerolog.Logger, address string, opts *api.
 	sub.FastConfirmationHandler = substitute(ah, "fast_confirmation", opts.FastConfirmationHandler)
 	sub.FinalizedCheckpointHandler = substitute(ah, "finalized_checkpoint", opts.FinalizedCheckpointHandler)
 	sub.HeadHandler = substitute(ah, "head", opts.HeadHandler)
+	sub.HeadV2Handler = substitute(ah, "head_v2", opts.HeadV2Handler)
 	sub.PayloadAttestationMessageHandler = substitute(ah, "payload_attestation_message", opts.PayloadAttestationMessageHandler)
 	sub.PayloadAttributesHandler = substitute(ah, "payload_attributes", opts.PayloadAttributesHandler)
 	sub.ProposerPreferencesHandler = substitute(ah, "proposer_preferences", opts.ProposerPreferencesHandler)
