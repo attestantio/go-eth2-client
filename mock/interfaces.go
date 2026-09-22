@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,13 +13,6 @@
 
 package mock
 
-import (
-	"context"
+import client "github.com/attestantio/go-eth2-client"
 
-	"github.com/attestantio/go-eth2-client/api"
-)
-
-// SubmitProposal submits a proposal.
-func (*Service) SubmitProposal(_ context.Context, _ *api.SubmitProposalOpts) error {
-	return nil
-}
+var _ client.ProposalSubmitter = (*Service)(nil)

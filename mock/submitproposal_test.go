@@ -1,4 +1,4 @@
-// Copyright © 2023 Attestant Limited.
+// Copyright © 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -11,15 +11,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package mock_test
 
 import (
 	"context"
+	"testing"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/mock"
+	"github.com/stretchr/testify/require"
 )
 
-// SubmitProposal submits a proposal.
-func (*Service) SubmitProposal(_ context.Context, _ *api.SubmitProposalOpts) error {
-	return nil
+func TestSubmitProposal(t *testing.T) {
+	ctx := context.Background()
+	service, err := mock.New(ctx)
+	require.NoError(t, err)
+
+	submitter, supported := any(service).(client.ProposalSubmitter)
+	require.True(t, supported)
+
+	err = submitter.SubmitProposal(ctx, &api.SubmitProposalOpts{})
+	require.NoError(t, err)
 }

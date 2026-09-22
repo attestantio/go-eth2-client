@@ -32,6 +32,26 @@ func (s *Service) ProposerDuties(ctx context.Context,
 	*api.Response[[]*apiv1.ProposerDuty],
 	error,
 ) {
+	return s.proposerDutiesAtEndpoint(ctx, opts, "/eth/v1/validator/duties/proposer")
+}
+
+// ProposerDutiesV2 obtains proposer duties for the given options using the v2 API.
+func (s *Service) ProposerDutiesV2(ctx context.Context,
+	opts *api.ProposerDutiesOpts,
+) (
+	*api.Response[[]*apiv1.ProposerDuty],
+	error,
+) {
+	return s.proposerDutiesAtEndpoint(ctx, opts, "/eth/v2/validator/duties/proposer")
+}
+
+func (s *Service) proposerDutiesAtEndpoint(ctx context.Context,
+	opts *api.ProposerDutiesOpts,
+	baseEndpoint string,
+) (
+	*api.Response[[]*apiv1.ProposerDuty],
+	error,
+) {
 	if err := s.assertIsActive(ctx); err != nil {
 		return nil, err
 	}
@@ -40,7 +60,7 @@ func (s *Service) ProposerDuties(ctx context.Context,
 		return nil, client.ErrNoOptions
 	}
 
-	endpoint := fmt.Sprintf("/eth/v1/validator/duties/proposer/%d", opts.Epoch)
+	endpoint := fmt.Sprintf("%s/%d", baseEndpoint, opts.Epoch)
 
 	httpResponse, err := s.get(ctx, endpoint, "", &opts.Common, false)
 	if err != nil {
