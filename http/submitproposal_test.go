@@ -71,6 +71,9 @@ func TestSubmitProposalGloas(t *testing.T) {
 		RandaoReveal:           infinity,
 		IncludePayload:         &includePayload,
 		SkipRandaoVerification: true,
+		// Only a block to submit is wanted here, so no builder bids are
+		// solicited; the builder-request body is covered by TestEPBSProposal.
+		BuilderConfig: localPreferredBuilderConfig(),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, produced.Data.Gloas)
@@ -79,8 +82,14 @@ func TestSubmitProposalGloas(t *testing.T) {
 		Proposal: &api.VersionedSignedProposal{
 			Version: spec.DataVersionGloas,
 			Gloas: &gloas.SignedBeaconBlock{
-				Message:   produced.Data.Gloas,
-				Signature: phase0.BLSSignature{0x01, 0x02, 0x03},
+				Message: produced.Data.Gloas,
+				// The point at infinity, not an arbitrary byte pattern: this
+				// has to be a decodable compressed G2 point or the node fails
+				// in deserialisation, which is the one outcome the assertions
+				// below are there to rule out.  It is still not a valid
+				// signature for the block, so the refusal arrives from
+				// verification, having decoded it.
+				Signature: infinitySignature(),
 			},
 		},
 	})

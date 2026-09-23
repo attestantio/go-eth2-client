@@ -408,19 +408,19 @@ func TestVersionedEPBSProposalBodyRoot(t *testing.T) {
 		block := newBlock(0x01)
 		wantBodyRoot, err := block.Body.HashTreeRoot()
 		require.NoError(t, err)
-		bodyRoot := phase0.Root(wantBodyRoot)
 		blockRoot, err := block.HashTreeRoot()
 		require.NoError(t, err)
-		require.NotEqual(t, bodyRoot, phase0.Root(blockRoot))
+		require.NotEqual(t, phase0.Root(wantBodyRoot), phase0.Root(blockRoot))
 
+		root := phase0.Root(wantBodyRoot)
 		got, err := (&api.VersionedEPBSProposal{
 			Version:             spec.DataVersionGloas,
 			Gloas:               block,
-			BeaconBlockBodyRoot: &bodyRoot,
+			BeaconBlockBodyRoot: &root,
 		}).BodyRoot()
 		require.NoError(t, err)
 		require.NotEqual(t, phase0.Root{}, got)
-		require.Equal(t, bodyRoot, got)
+		require.Equal(t, phase0.Root(wantBodyRoot), got)
 		require.NotEqual(t, phase0.Root(blockRoot), got)
 	})
 
@@ -428,20 +428,20 @@ func TestVersionedEPBSProposalBodyRoot(t *testing.T) {
 		block := newBlock(0x02)
 		wantBodyRoot, err := block.Body.HashTreeRoot()
 		require.NoError(t, err)
-		bodyRoot := phase0.Root(wantBodyRoot)
 		blockRoot, err := block.HashTreeRoot()
 		require.NoError(t, err)
-		require.NotEqual(t, bodyRoot, phase0.Root(blockRoot))
+		require.NotEqual(t, phase0.Root(wantBodyRoot), phase0.Root(blockRoot))
 
+		root := phase0.Root(wantBodyRoot)
 		got, err := (&api.VersionedEPBSProposal{
 			Version:                  spec.DataVersionGloas,
 			ExecutionPayloadIncluded: true,
 			GloasContents:            &apiv1gloas.BlockContents{Block: block},
-			BeaconBlockBodyRoot:      &bodyRoot,
+			BeaconBlockBodyRoot:      &root,
 		}).BodyRoot()
 		require.NoError(t, err)
 		require.NotEqual(t, phase0.Root{}, got)
-		require.Equal(t, bodyRoot, got)
+		require.Equal(t, phase0.Root(wantBodyRoot), got)
 		require.NotEqual(t, phase0.Root(blockRoot), got)
 	})
 
@@ -677,8 +677,10 @@ func TestVersionedEPBSProposalContents(t *testing.T) {
 	})
 }
 
-// TestVersionedEPBSProposalValue verifies the two reward components are summed
-// nil-safely.  Both are populated from response headers that a node may omit.
+// TestVersionedEPBSProposalValue verifies the total is unknown -- nil -- unless
+// the execution value arrived, and that a missing consensus value counts as
+// zero rather than poisoning a known execution value.  Both components are
+// populated from response headers that a node may omit.
 func TestVersionedEPBSProposalValue(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -687,8 +689,8 @@ func TestVersionedEPBSProposalValue(t *testing.T) {
 		expected  *big.Int
 	}{
 		{name: "Both", consensus: big.NewInt(3), execution: big.NewInt(4), expected: big.NewInt(7)},
-		{name: "NeitherSet", expected: big.NewInt(0)},
-		{name: "ConsensusOnly", consensus: big.NewInt(5), expected: big.NewInt(5)},
+		{name: "NeitherSet"},
+		{name: "ConsensusOnly", consensus: big.NewInt(5)},
 		{name: "ExecutionOnly", execution: big.NewInt(6), expected: big.NewInt(6)},
 	}
 
