@@ -34,35 +34,46 @@ type Event struct {
 	Data any
 }
 
+// eventTopicData is the set of supported event topics, each with a function returning a new
+// value of the type into which the data of an event of that topic decodes.  It is the single
+// list of topics in this package: SupportedEventTopics and Event.UnmarshalJSON are both derived
+// from it.
+var eventTopicData = map[string]func() any{
+	"attestation":                 func() any { return &spec.VersionedAttestation{} },
+	"attester_slashing":           func() any { return &phase0.AttesterSlashing{} },
+	"blob_sidecar":                func() any { return &BlobSidecarEvent{} },
+	"block":                       func() any { return &BlockEvent{} },
+	"block_gossip":                func() any { return &BlockGossipEvent{} },
+	"bls_to_execution_change":     func() any { return &capella.SignedBLSToExecutionChange{} },
+	"chain_reorg":                 func() any { return &ChainReorgEvent{} },
+	"contribution_and_proof":      func() any { return &altair.SignedContributionAndProof{} },
+	"data_column_sidecar":         func() any { return &DataColumnSidecarEvent{} },
+	"execution_payload":           func() any { return &ExecutionPayloadEvent{} },
+	"execution_payload_available": func() any { return &ExecutionPayloadAvailableEvent{} },
+	"execution_payload_bid":       func() any { return &gloas.SignedExecutionPayloadBid{} },
+	"execution_payload_gossip":    func() any { return &ExecutionPayloadGossipEvent{} },
+	"fast_confirmation":           func() any { return &FastConfirmationEvent{} },
+	"finalized_checkpoint":        func() any { return &FinalizedCheckpointEvent{} },
+	"head":                        func() any { return &HeadEvent{} },
+	"payload_attestation_message": func() any { return &gloas.PayloadAttestationMessage{} },
+	"payload_attributes":          func() any { return &PayloadAttributesEvent{} },
+	"proposer_preferences":        func() any { return &gloas.SignedProposerPreferences{} },
+	"proposer_slashing":           func() any { return &phase0.ProposerSlashing{} },
+	"single_attestation":          func() any { return &electra.SingleAttestation{} },
+	"voluntary_exit":              func() any { return &phase0.SignedVoluntaryExit{} },
+}
+
 // SupportedEventTopics is a map of supported event topics. It is the allow-list
-// against which the HTTP client validates Events() subscriptions. The topic switch
-// in Event.UnmarshalJSON below is a second, separate list, and it must cover every
-// topic named here: a topic Events() accepts but UnmarshalJSON does not cannot be
-// round-tripped through JSON. TestEventUnmarshalCoversSupportedTopics holds the two
-// together.
-var SupportedEventTopics = map[string]bool{
-	"attestation":                 true,
-	"attester_slashing":           true,
-	"blob_sidecar":                true,
-	"block":                       true,
-	"block_gossip":                true,
-	"bls_to_execution_change":     true,
-	"chain_reorg":                 true,
-	"contribution_and_proof":      true,
-	"data_column_sidecar":         true,
-	"execution_payload":           true,
-	"execution_payload_available": true,
-	"execution_payload_bid":       true,
-	"execution_payload_gossip":    true,
-	"fast_confirmation":           true,
-	"finalized_checkpoint":        true,
-	"head":                        true,
-	"payload_attestation_message": true,
-	"payload_attributes":          true,
-	"proposer_preferences":        true,
-	"proposer_slashing":           true,
-	"single_attestation":          true,
-	"voluntary_exit":              true,
+// against which the HTTP client validates Events() subscriptions.
+var SupportedEventTopics = supportedEventTopics()
+
+func supportedEventTopics() map[string]bool {
+	topics := make(map[string]bool, len(eventTopicData))
+	for topic := range eventTopicData {
+		topics[topic] = true
+	}
+
+	return topics
 }
 
 // eventJSON is the spec representation of the struct.
@@ -109,54 +120,12 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		return errors.New("data missing")
 	}
 
-	switch eventJSON.Topic {
-	case "attestation":
-		e.Data = &spec.VersionedAttestation{}
-	case "attester_slashing":
-		e.Data = &phase0.AttesterSlashing{}
-	case "blob_sidecar":
-		e.Data = &BlobSidecarEvent{}
-	case "block":
-		e.Data = &BlockEvent{}
-	case "block_gossip":
-		e.Data = &BlockGossipEvent{}
-	case "bls_to_execution_change":
-		e.Data = &capella.SignedBLSToExecutionChange{}
-	case "chain_reorg":
-		e.Data = &ChainReorgEvent{}
-	case "contribution_and_proof":
-		e.Data = &altair.SignedContributionAndProof{}
-	case "data_column_sidecar":
-		e.Data = &DataColumnSidecarEvent{}
-	case "execution_payload":
-		e.Data = &ExecutionPayloadEvent{}
-	case "execution_payload_gossip":
-		e.Data = &ExecutionPayloadGossipEvent{}
-	case "execution_payload_available":
-		e.Data = &ExecutionPayloadAvailableEvent{}
-	case "execution_payload_bid":
-		e.Data = &gloas.SignedExecutionPayloadBid{}
-	case "fast_confirmation":
-		e.Data = &FastConfirmationEvent{}
-	case "finalized_checkpoint":
-		e.Data = &FinalizedCheckpointEvent{}
-	case "head":
-		e.Data = &HeadEvent{}
-	case "payload_attestation_message":
-		e.Data = &gloas.PayloadAttestationMessage{}
-	case "payload_attributes":
-		e.Data = &PayloadAttributesEvent{}
-	case "proposer_preferences":
-		e.Data = &gloas.SignedProposerPreferences{}
-	case "proposer_slashing":
-		e.Data = &phase0.ProposerSlashing{}
-	case "single_attestation":
-		e.Data = &electra.SingleAttestation{}
-	case "voluntary_exit":
-		e.Data = &phase0.SignedVoluntaryExit{}
-	default:
+	newData, exists := eventTopicData[eventJSON.Topic]
+	if !exists {
 		return fmt.Errorf("unsupported event topic %s", eventJSON.Topic)
 	}
+
+	e.Data = newData()
 
 	data, err := json.Marshal(eventJSON.Data)
 	if err != nil {
