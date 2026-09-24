@@ -30,6 +30,7 @@ import (
 	clone "github.com/huandu/go-clone/generic"
 	"github.com/pk910/dynamic-ssz/sszutils"
 	require "github.com/stretchr/testify/require"
+	specyaml "gopkg.in/yaml.v3"
 )
 
 // TestConsensusSpec tests the types against the Ethereum consensus spec tests.
@@ -39,8 +40,9 @@ func TestConsensusSpec(t *testing.T) {
 	}
 
 	tests := []struct {
-		name string
-		s    any
+		name      string
+		s         any
+		yamlValue any
 	}{
 		{
 			name: "AggregateAndProof",
@@ -243,8 +245,9 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &altair.SyncAggregate{},
 		},
 		{
-			name: "SyncAggregatorSelectionData",
-			s:    &altair.SyncAggregatorSelectionData{},
+			name:      "SyncAggregatorSelectionData",
+			s:         &altair.SyncAggregatorSelectionData{},
+			yamlValue: &syncAggregatorSelectionDataVector{},
 		},
 		{
 			name: "SyncCommittee",
@@ -287,9 +290,18 @@ func TestConsensusSpec(t *testing.T) {
 			require.NoError(t, err)
 			if info.IsDir() {
 				t.Run(fmt.Sprintf("%s/%s", test.name, info.Name()), func(t *testing.T) {
-					s1 := clone.Clone(test.s)
+					yamlValue := test.s
+					if test.yamlValue != nil {
+						yamlValue = test.yamlValue
+					}
+					s1 := clone.Clone(yamlValue)
 					// Obtain the struct from the YAML.
 					specYAML, err := os.ReadFile(filepath.Join(path, "value.yaml"))
+					require.NoError(t, err)
+					var vector specyaml.Node
+					require.NoError(t, specyaml.Unmarshal(specYAML, &vector))
+					blockVectorFlow(&vector)
+					specYAML, err = specyaml.Marshal(&vector)
 					require.NoError(t, err)
 					require.NoError(t, yaml.Unmarshal(specYAML, s1))
 					// Confirm we can return to the YAML.
@@ -328,11 +340,11 @@ func TestConsensusSpec(t *testing.T) {
 
 func testYAMLFormat(input []byte) string {
 	val := make(map[string]any)
-	if err := yaml.UnmarshalWithOptions(input, &val, yaml.UseOrderedMap()); err != nil {
+	if err := yaml.Unmarshal(input, &val); err != nil {
 		panic(err)
 	}
 
-	res, err := yaml.MarshalWithOptions(val, yaml.Flow(true))
+	res, err := yaml.MarshalWithOptions(normalizeVectorNumbers(val), yaml.Flow(true))
 	if err != nil {
 		panic(err)
 	}
@@ -347,4 +359,36 @@ func testYAMLFormat(input []byte) string {
 	}
 
 	return string(bytes.ToLower(res))
+}
+
+// The Altair type has no YAML field tag; this fixture shape does not change its public codec.
+type syncAggregatorSelectionDataVector struct {
+	Slot              phase0.Slot `yaml:"slot"`
+	SubcommitteeIndex uint64      `yaml:"subcommittee_index"`
+}
+
+func blockVectorFlow(node *specyaml.Node) {
+	if node.Kind == specyaml.MappingNode || node.Kind == specyaml.SequenceNode {
+		node.Style &^= specyaml.FlowStyle
+	}
+	for _, child := range node.Content {
+		blockVectorFlow(child)
+	}
+}
+
+func normalizeVectorNumbers(value any) any {
+	switch v := value.(type) {
+	case map[string]any:
+		for key, item := range v {
+			v[key] = normalizeVectorNumbers(item)
+		}
+	case []any:
+		for i, item := range v {
+			v[i] = normalizeVectorNumbers(item)
+		}
+	case int, int64, uint, uint64:
+		return fmt.Sprint(value)
+	}
+
+	return value
 }

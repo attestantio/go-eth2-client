@@ -22,9 +22,9 @@ import (
 
 // BuilderPendingPayment represents a builder pending payment.
 type BuilderPendingPayment struct {
-	Weight        phase0.Gwei
-	Withdrawal    *BuilderPendingWithdrawal
-	ProposerIndex phase0.ValidatorIndex
+	Weight        phase0.Gwei               `json:"weight"         yaml:"weight"`
+	Withdrawal    *BuilderPendingWithdrawal `json:"withdrawal"     yaml:"withdrawal"`
+	ProposerIndex phase0.ValidatorIndex     `json:"proposer_index" yaml:"proposer_index"`
 }
 
 // String returns a string version of the structure.

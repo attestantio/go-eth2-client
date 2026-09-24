@@ -55,7 +55,10 @@ type executionPayloadJSON struct {
 func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 	transactions := make([]string, len(e.Transactions))
 	for i := range e.Transactions {
-		transactions[i] = fmt.Sprintf("%#x", e.Transactions[i])
+		transactions[i] = "0x"
+		if len(e.Transactions[i]) > 0 {
+			transactions[i] = fmt.Sprintf("%#x", e.Transactions[i])
+		}
 	}
 
 	extraData := "0x"
@@ -246,12 +249,9 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 
 	e.Transactions = make([]bellatrix.Transaction, len(transactions))
 	for i := range transactions {
-		// A transaction is a JSON-quoted, 0x-prefixed hex string; the shortest
-		// well-formed value is "0x" (4 bytes). Reject anything shorter — which
-		// also covers empty and "" — so the (len-4)/2 make() below cannot
-		// underflow to a negative length and panic.
-		if len(transactions[i]) < 4 ||
-			bytes.Equal(transactions[i], []byte{'"', '0', 'x', '"'}) {
+		// "0x" is a valid empty transaction. Shorter values cannot carry
+		// the prefix and would underflow the allocation below.
+		if len(transactions[i]) < 4 {
 			return fmt.Errorf("transaction %d: missing or malformed", i)
 		}
 
