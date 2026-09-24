@@ -38,21 +38,13 @@ func (s *Service) Events(ctx context.Context, opts *api.EventsOpts) error {
 		return err
 	}
 
-	if opts == nil {
-		return client.ErrNoOptions
-	}
-
-	if len(opts.Topics) == 0 {
-		return errors.Join(errors.New("no topics supplied"), client.ErrInvalidOptions)
+	if err := ValidateEventsOpts(opts); err != nil {
+		return err
 	}
 
 	// #nosec G404
 	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Logger()
 	ctx = log.WithContext(ctx)
-
-	if err := s.checkEventsOpts(opts); err != nil {
-		return err
-	}
 
 	endpoint := "/eth/v1/events"
 	query := "topics=" + strings.Join(opts.Topics, "&topics=")
@@ -98,27 +90,33 @@ func (s *Service) Events(ctx context.Context, opts *api.EventsOpts) error {
 	return nil
 }
 
-func (s *Service) checkEventsOpts(opts *api.EventsOpts) error {
-	// Ensure we support the requested topic(s), and have a handler for each.
+// ValidateEventsOpts checks the options for an events subscription.
+func ValidateEventsOpts(opts *api.EventsOpts) error {
+	if opts == nil {
+		return client.ErrNoOptions
+	}
+	if len(opts.Topics) == 0 {
+		return errors.Join(errors.New("no topics supplied"), client.ErrInvalidOptions)
+	}
+
 	for _, topic := range opts.Topics {
 		if _, exists := apiv1.SupportedEventTopics[topic]; !exists {
-			return fmt.Errorf("unsupported event topic %s", topic)
+			return fmt.Errorf("unsupported event topic %s: %w", topic, client.ErrInvalidOptions)
 		}
 
 		if opts.Handler != nil {
-			// There is a generic handler in place, no further checks for this topic required.
 			continue
 		}
 
-		if err := s.checkEventSpecificHandler(opts, topic); err != nil {
-			return err
+		if err := checkEventSpecificHandler(opts, topic); err != nil {
+			return fmt.Errorf("%w: %w", err, client.ErrInvalidOptions)
 		}
 	}
 
 	return nil
 }
 
-func (*Service) checkEventSpecificHandler(opts *api.EventsOpts, topic string) error {
+func checkEventSpecificHandler(opts *api.EventsOpts, topic string) error {
 	handling, exists := eventTopics[topic]
 	if !exists {
 		return fmt.Errorf("unsupported event %s", topic)

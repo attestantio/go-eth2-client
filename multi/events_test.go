@@ -31,6 +31,56 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestEventsRejectsMissingHandler(t *testing.T) {
+	ctx := context.Background()
+	client, subscribed := mockCapturingEvents(ctx, t, "mock 1")
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{client}),
+	)
+	require.NoError(t, err)
+
+	err = multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{Topics: []string{"head"}})
+	require.ErrorIs(t, err, consensusclient.ErrInvalidOptions)
+	require.ErrorContains(t, err, "no handler for head event")
+	require.Nil(t, subscribed(), "invalid options were passed to a client")
+}
+
+func TestEventsRejectsUnknownTopic(t *testing.T) {
+	ctx := context.Background()
+	client, subscribed := mockCapturingEvents(ctx, t, "mock 1")
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{client}),
+	)
+	require.NoError(t, err)
+
+	err = multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{
+		Topics:  []string{"head", "typo"},
+		Handler: func(*apiv1.Event) {},
+	})
+	require.ErrorIs(t, err, consensusclient.ErrInvalidOptions)
+	require.ErrorContains(t, err, "unsupported event topic typo")
+	require.Nil(t, subscribed(), "invalid options were passed to a client")
+}
+
+func TestEventsRejectsEmptyTopics(t *testing.T) {
+	ctx := context.Background()
+	client, subscribed := mockCapturingEvents(ctx, t, "mock 1")
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{client}),
+	)
+	require.NoError(t, err)
+
+	err = multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{})
+	require.ErrorIs(t, err, consensusclient.ErrInvalidOptions)
+	require.Nil(t, subscribed(), "invalid options were passed to a client")
+}
+
 func TestEvents(t *testing.T) {
 	ctx := context.Background()
 
@@ -56,7 +106,8 @@ func TestEvents(t *testing.T) {
 	require.NoError(t, err)
 
 	require.NoError(t, multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{
-		Topics: []string{"block"},
+		Topics:       []string{"block"},
+		BlockHandler: func(context.Context, *apiv1.BlockEvent) {},
 	}))
 }
 
@@ -225,7 +276,8 @@ func TestEventsOwnsTopics(t *testing.T) {
 
 	topics := []string{"head", "block"}
 	require.NoError(t, multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{
-		Topics: topics,
+		Topics:  topics,
+		Handler: func(*apiv1.Event) {},
 	}))
 
 	topics[0] = "attestation"
@@ -260,7 +312,8 @@ func TestEventsOwnsTopicsForDeferredClients(t *testing.T) {
 
 	topics := []string{"head", "block"}
 	require.NoError(t, multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{
-		Topics: topics,
+		Topics:  topics,
+		Handler: func(*apiv1.Event) {},
 	}))
 
 	<-syncStarted
@@ -396,9 +449,12 @@ func TestEventsForwardsEveryHandler(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			// Supply this handler, and only this handler.
+			// Supply this specific handler and a generic handler for the head subscription.
 			received := 0
-			opts := &api.EventsOpts{Topics: []string{"head"}}
+			opts := &api.EventsOpts{
+				Topics:  []string{"head"},
+				Handler: func(*apiv1.Event) {},
+			}
 			reflect.ValueOf(opts).Elem().FieldByName(handler.Name).Set(
 				reflect.MakeFunc(handler.Type, func([]reflect.Value) []reflect.Value {
 					received++
@@ -413,11 +469,10 @@ func TestEventsForwardsEveryHandler(t *testing.T) {
 			substituted := reflect.ValueOf(clientOpts()).Elem().FieldByName(handler.Name)
 			require.False(t, substituted.IsNil(), "handler not passed to the underlying client")
 
-			// No other handler is substituted.  Clients fall back to the generic handler for any
-			// topic whose specific handler is nil, so substituting one the caller did not supply
-			// would both starve that fallback and forward to a nil function.
+			// No other specific handler is substituted.  The generic handler makes the head
+			// subscription valid even when testing another topic's handler.
 			for _, other := range handlers {
-				if other.Name == handler.Name {
+				if other.Name == handler.Name || other.Name == "Handler" {
 					continue
 				}
 

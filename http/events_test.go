@@ -22,9 +22,14 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	beaconhttp "github.com/attestantio/go-eth2-client/http"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/stretchr/testify/require"
 )
+
+func TestValidateEventsOptsNil(t *testing.T) {
+	require.ErrorIs(t, beaconhttp.ValidateEventsOpts(nil), client.ErrNoOptions)
+}
 
 func TestEvents(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -80,7 +85,7 @@ var gloasEventTopics = []string{
 // subscription naming any of the Gloas event topics.
 //
 // Events() gates every requested topic on apiv1.SupportedEventTopics, via
-// checkEventsOpts, before it builds the subscription, so a topic absent from
+// ValidateEventsOpts, before it builds the subscription, so a topic absent from
 // that allow-list is refused here and never reaches the wire, however
 // completely the dispatcher downstream handles it. Any test that calls
 // handleEvent directly sits downstream of this check and so cannot exercise
@@ -111,7 +116,7 @@ func TestEventsGloasTopics(t *testing.T) {
 			// can only be reached once that check has passed.
 			name: "ExecutionPayloadNoHandler",
 			opts: &api.EventsOpts{Topics: []string{"execution_payload"}},
-			err:  "no handler for execution_payload event",
+			err:  "no handler for execution_payload event: invalid options",
 		},
 		{
 			name: "ExecutionPayloadSpecificHandler",
@@ -177,7 +182,7 @@ func TestEventsGloasTopics(t *testing.T) {
 				Topics:  []string{"not_an_event_topic"},
 				Handler: func(*apiv1.Event) {},
 			},
-			err: "unsupported event topic not_an_event_topic",
+			err: "unsupported event topic not_an_event_topic: invalid options",
 		},
 	}
 

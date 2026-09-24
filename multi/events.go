@@ -23,6 +23,7 @@ import (
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/http"
 	"github.com/rs/zerolog"
 )
 
@@ -30,8 +31,8 @@ import (
 func (s *Service) Events(ctx context.Context,
 	opts *api.EventsOpts,
 ) error {
-	if opts == nil {
-		return consensusclient.ErrNoOptions
+	if err := http.ValidateEventsOpts(opts); err != nil {
+		return err
 	}
 
 	// #nosec G404
