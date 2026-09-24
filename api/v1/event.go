@@ -17,12 +17,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/attestantio/go-eth2-client/spec/altair"
-	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/attestantio/go-eth2-client/spec/electra"
-	"github.com/attestantio/go-eth2-client/spec/gloas"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -34,47 +28,9 @@ type Event struct {
 	Data any
 }
 
-// eventTopicData is the set of supported event topics, each with a function returning a new
-// value of the type into which the data of an event of that topic decodes.  It is the single
-// list of topics in this package: SupportedEventTopics and Event.UnmarshalJSON are both derived
-// from it.
-var eventTopicData = map[string]func() any{
-	"attestation":                 func() any { return &spec.VersionedAttestation{} },
-	"attester_slashing":           func() any { return &phase0.AttesterSlashing{} },
-	"blob_sidecar":                func() any { return &BlobSidecarEvent{} },
-	"block":                       func() any { return &BlockEvent{} },
-	"block_gossip":                func() any { return &BlockGossipEvent{} },
-	"bls_to_execution_change":     func() any { return &capella.SignedBLSToExecutionChange{} },
-	"chain_reorg":                 func() any { return &ChainReorgEvent{} },
-	"contribution_and_proof":      func() any { return &altair.SignedContributionAndProof{} },
-	"data_column_sidecar":         func() any { return &DataColumnSidecarEvent{} },
-	"execution_payload":           func() any { return &ExecutionPayloadEvent{} },
-	"execution_payload_available": func() any { return &ExecutionPayloadAvailableEvent{} },
-	"execution_payload_bid":       func() any { return &gloas.SignedExecutionPayloadBid{} },
-	"execution_payload_gossip":    func() any { return &ExecutionPayloadGossipEvent{} },
-	"fast_confirmation":           func() any { return &FastConfirmationEvent{} },
-	"finalized_checkpoint":        func() any { return &FinalizedCheckpointEvent{} },
-	"head":                        func() any { return &HeadEvent{} },
-	"payload_attestation_message": func() any { return &gloas.PayloadAttestationMessage{} },
-	"payload_attributes":          func() any { return &PayloadAttributesEvent{} },
-	"proposer_preferences":        func() any { return &gloas.SignedProposerPreferences{} },
-	"proposer_slashing":           func() any { return &phase0.ProposerSlashing{} },
-	"single_attestation":          func() any { return &electra.SingleAttestation{} },
-	"voluntary_exit":              func() any { return &phase0.SignedVoluntaryExit{} },
-}
-
 // SupportedEventTopics is a map of supported event topics. It is the allow-list
 // against which the HTTP client validates Events() subscriptions.
-var SupportedEventTopics = supportedEventTopics()
-
-func supportedEventTopics() map[string]bool {
-	topics := make(map[string]bool, len(eventTopicData))
-	for topic := range eventTopicData {
-		topics[topic] = true
-	}
-
-	return topics
-}
+var SupportedEventTopics map[string]bool
 
 // eventJSON is the spec representation of the struct.
 type eventJSON struct {

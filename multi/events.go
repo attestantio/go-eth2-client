@@ -22,7 +22,6 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/http"
 	"github.com/rs/zerolog"
 )
@@ -114,7 +113,7 @@ func (s *Service) Events(ctx context.Context,
 						Err(err).
 						Msg("Failed to obtain sync state from node; will retry")
 				case !syncResponse.Data.IsSyncing:
-					// Client is now synced, set up the events call.  This uses the same substituted
+					// Client is now synced, set up the events call.  This uses the same filtered
 					// options as an initially-active client, so that events from it are subject to
 					// the same active-address filtering.
 					err := eventsProvider.Events(ctx, ah.clientOpts)
@@ -150,12 +149,8 @@ type activeHandler struct {
 	log     zerolog.Logger
 	address string
 
-	// clientOpts are the options handed to the underlying client: the caller's topics and common
-	// options, with each handler the caller supplied replaced by a wrapper that filters on the
-	// active address before forwarding to it.  This is always a struct of its own and never the
-	// caller's own options modified in place, because one handler is built per client: wrapping
-	// in place would have the second client's wrapper wrap the first's, filtering an event
-	// against two addresses at once.
+	// clientOpts are the options handed to the underlying client: the caller's options filtered
+	// on the active address.  One handler is built per client, each with options of its own.
 	clientOpts *api.EventsOpts
 }
 
@@ -167,38 +162,7 @@ func newActiveHandler(s *Service, log zerolog.Logger, address string, opts *api.
 		log:     log,
 		address: address,
 	}
-
-	sub := &api.EventsOpts{
-		Common: opts.Common,
-		Topics: slices.Clone(opts.Topics),
-	}
-	ah.clientOpts = sub
-
-	// These need no nil check of their own: substitute leaves a handler the caller did not
-	// supply nil, for the reason given on it.
-	sub.Handler = substituteGeneric(ah, opts.Handler)
-	sub.AttestationHandler = substitute(ah, "attestation", opts.AttestationHandler)
-	sub.AttesterSlashingHandler = substitute(ah, "attester_slashing", opts.AttesterSlashingHandler)
-	sub.BlobSidecarHandler = substitute(ah, "blob_sidecar", opts.BlobSidecarHandler)
-	sub.BlockHandler = substitute(ah, "block", opts.BlockHandler)
-	sub.BlockGossipHandler = substitute(ah, "block_gossip", opts.BlockGossipHandler)
-	sub.BLSToExecutionChangeHandler = substitute(ah, "bls_to_execution_change", opts.BLSToExecutionChangeHandler)
-	sub.ChainReorgHandler = substitute(ah, "chain_reorg", opts.ChainReorgHandler)
-	sub.ContributionAndProofHandler = substitute(ah, "contribution_and_proof", opts.ContributionAndProofHandler)
-	sub.DataColumnSidecarHandler = substitute(ah, "data_column_sidecar", opts.DataColumnSidecarHandler)
-	sub.ExecutionPayloadHandler = substitute(ah, "execution_payload", opts.ExecutionPayloadHandler)
-	sub.ExecutionPayloadAvailableHandler = substitute(ah, "execution_payload_available", opts.ExecutionPayloadAvailableHandler)
-	sub.ExecutionPayloadBidHandler = substitute(ah, "execution_payload_bid", opts.ExecutionPayloadBidHandler)
-	sub.ExecutionPayloadGossipHandler = substitute(ah, "execution_payload_gossip", opts.ExecutionPayloadGossipHandler)
-	sub.FastConfirmationHandler = substitute(ah, "fast_confirmation", opts.FastConfirmationHandler)
-	sub.FinalizedCheckpointHandler = substitute(ah, "finalized_checkpoint", opts.FinalizedCheckpointHandler)
-	sub.HeadHandler = substitute(ah, "head", opts.HeadHandler)
-	sub.PayloadAttestationMessageHandler = substitute(ah, "payload_attestation_message", opts.PayloadAttestationMessageHandler)
-	sub.PayloadAttributesHandler = substitute(ah, "payload_attributes", opts.PayloadAttributesHandler)
-	sub.ProposerPreferencesHandler = substitute(ah, "proposer_preferences", opts.ProposerPreferencesHandler)
-	sub.ProposerSlashingHandler = substitute(ah, "proposer_slashing", opts.ProposerSlashingHandler)
-	sub.SingleAttestationHandler = substitute(ah, "single_attestation", opts.SingleAttestationHandler)
-	sub.VoluntaryExitHandler = substitute(ah, "voluntary_exit", opts.VoluntaryExitHandler)
+	ah.clientOpts = opts.Filtered(ah.forwards)
 
 	return ah
 }
@@ -217,42 +181,4 @@ func (h *activeHandler) forwards(topic string) bool {
 		Msg("Event received")
 
 	return forwarding
-}
-
-// substitute wraps one of the caller's topic handlers so that an event reaches it only when this
-// handler's client is the currently active one.  The wrapper is what the underlying client is
-// given in place of the caller's own handler.  A nil handler yields a nil wrapper, leaving the
-// field unset, because clients fall back to the generic handler for any topic whose specific
-// handler is nil and substituting one the caller did not supply would starve that fallback.
-//
-// topic is diagnostic only.  It names the handler in the trace log and has no bearing on whether
-// the event is forwarded, so a wrong one here mislabels a log line rather than misrouting a call.
-func substitute[T any](h *activeHandler, topic string, handler func(context.Context, T)) func(context.Context, T) {
-	if handler == nil {
-		return nil
-	}
-
-	return func(ctx context.Context, data T) {
-		if !h.forwards(topic) {
-			return
-		}
-
-		handler(ctx, data)
-	}
-}
-
-// substituteGeneric is substitute for the caller's generic handler, which carries its own topic
-// and takes no context, and so does not fit substitute's shape.
-func substituteGeneric(h *activeHandler, handler api.EventHandlerFunc) api.EventHandlerFunc {
-	if handler == nil {
-		return nil
-	}
-
-	return func(event *apiv1.Event) {
-		if !h.forwards(event.Topic) {
-			return
-		}
-
-		handler(event)
-	}
 }

@@ -254,43 +254,6 @@ func TestHandleEventControls(t *testing.T) {
 	}
 }
 
-func TestUnmarshalVersionedEventData(t *testing.T) {
-	tests := []struct {
-		name      string
-		input     []byte
-		expected  *apiv1.ExecutionPayloadEvent
-		wantError bool
-	}{
-		{
-			name:     "Wrapped",
-			input:    eventData(t, &apiv1.ExecutionPayloadEvent{Slot: 1, BuilderIndex: 2}, true),
-			expected: &apiv1.ExecutionPayloadEvent{Slot: 1, BuilderIndex: 2},
-		},
-		{
-			name:     "Bare",
-			input:    eventData(t, &apiv1.ExecutionPayloadEvent{Slot: 3, BuilderIndex: 4}, false),
-			expected: &apiv1.ExecutionPayloadEvent{Slot: 3, BuilderIndex: 4},
-		},
-		{
-			name:      "Malformed",
-			input:     []byte(`invalid`),
-			wantError: true,
-		},
-	}
-
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			var event apiv1.ExecutionPayloadEvent
-			err := unmarshalVersionedEventData(test.input, &event)
-			if test.wantError {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, test.expected, &event)
-			}
-		})
-	}
-}
 
 func eventData(t *testing.T, data any, versioned bool) []byte {
 	t.Helper()
