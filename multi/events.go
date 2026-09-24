@@ -62,50 +62,58 @@ func (s *Service) Events(ctx context.Context,
 		log.Trace().Str("address", ah.address).Strs("topics", opts.Topics).Msg("Events handler active")
 	}
 
-	// Periodically try all inactive clients, quitting as they become active.
+	// Periodically try all inactive clients, quitting as they become active.  A failure to check
+	// sync state or to subscribe is retried rather than final: the client can still be made the
+	// active one later, and were it left unsubscribed its events would then never arrive.
 	for _, inactiveClient := range inactiveClients {
 		ah := newActiveHandler(s, log, inactiveClient.Address(), opts)
 
 		go func(c consensusclient.Service, ah *activeHandler) {
+			provider, isProvider := c.(consensusclient.NodeSyncingProvider)
+			if !isProvider {
+				ah.log.Error().
+					Str("address", ah.address).
+					Strs("topics", ah.clientOpts.Topics).
+					Msg("Not a node syncing provider")
+
+				return
+			}
+
 			for {
-				provider, isProvider := c.(consensusclient.NodeSyncingProvider)
-				if !isProvider {
-					ah.log.Error().
-						Str("address", ah.address).
-						Strs("topics", ah.clientOpts.Topics).
-						Msg("Not a node syncing provider")
-
-					return
-				}
-
 				syncResponse, err := provider.NodeSyncing(ctx, &api.NodeSyncingOpts{})
-				if err != nil {
-					ah.log.Error().
+
+				switch {
+				case err != nil:
+					ah.log.Warn().
 						Str("address", ah.address).
 						Strs("topics", ah.clientOpts.Topics).
 						Err(err).
-						Msg("Failed to obtain sync state from node")
-
-					return
-				}
-
-				if !syncResponse.Data.IsSyncing {
+						Msg("Failed to obtain sync state from node; will retry")
+				case !syncResponse.Data.IsSyncing:
 					// Client is now synced, set up the events call.  This uses the same substituted
 					// options as an initially-active client, so that events from it are subject to
 					// the same active-address filtering.
-					if err := c.(consensusclient.EventsProvider).Events(ctx, ah.clientOpts); err != nil {
-						ah.log.Error().
-							Str("address", ah.address).
-							Strs("topics", ah.clientOpts.Topics).
-							Err(err).
-							Msg("Failed to set up events handler")
+					err := c.(consensusclient.EventsProvider).Events(ctx, ah.clientOpts)
+					if err == nil {
+						ah.log.Trace().Str("address", ah.address).Strs("topics", ah.clientOpts.Topics).Msg("Events handler active")
+
+						return
 					}
 
-					// Return either way.
-					return
+					ah.log.Warn().
+						Str("address", ah.address).
+						Strs("topics", ah.clientOpts.Topics).
+						Err(err).
+						Msg("Failed to set up events handler; will retry")
+				default:
+					// Still syncing; check again after the interval.
 				}
 
-				time.Sleep(5 * time.Second)
+				select {
+				case <-ctx.Done():
+					return
+				case <-time.After(s.eventsRetryInterval):
+				}
 			}
 		}(inactiveClient, ah)
 	}

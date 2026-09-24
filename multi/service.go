@@ -1,4 +1,4 @@
-// Copyright © 2021, 2024 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,6 +16,7 @@ package multi
 import (
 	"context"
 	"sync"
+	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/http"
@@ -33,6 +34,10 @@ type Service struct {
 	clientsMu       sync.RWMutex
 	activeClients   []consensusclient.Service
 	inactiveClients []consensusclient.Service
+
+	// eventsRetryInterval is how long Events waits between attempts to subscribe a client that
+	// was not synced, or failed to subscribe, when Events was called.
+	eventsRetryInterval time.Duration
 }
 
 // New creates a new Ethereum 2 client with multiple endpoints.
@@ -102,10 +107,11 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 	log.Trace().Int("active", len(activeClients)).Int("inactive", len(inactiveClients)).Msg("Initial providers")
 
 	s := &Service{
-		log:             log,
-		name:            parameters.name,
-		activeClients:   activeClients,
-		inactiveClients: inactiveClients,
+		log:                 log,
+		name:                parameters.name,
+		activeClients:       activeClients,
+		inactiveClients:     inactiveClients,
+		eventsRetryInterval: 5 * time.Second,
 	}
 
 	// Set initial metrics.
