@@ -15,6 +15,7 @@ package v1
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
@@ -96,8 +97,10 @@ func (t EventTopic[T]) Name() string {
 }
 
 // Decode decodes the data of an event of the topic as sent on the events stream.  For a topic
-// whose events the beacon-API spec wraps as {"version": "...", "data": {...}}, the data is
-// unwrapped.  A bare, unwrapped object is accepted as well, for nodes that do not wrap it.
+// whose events the beacon-API spec wraps as {"version": "...", "data": {...}}, the version must
+// be the fork of T, as data of another fork could decode into T without error while dropping
+// fields T does not have.  A bare, unwrapped object is accepted as well, for nodes that do not
+// wrap it.
 func (t EventTopic[T]) Decode(input []byte) (*T, error) {
 	data := new(T)
 
@@ -108,6 +111,11 @@ func (t EventTopic[T]) Decode(input []byte) (*T, error) {
 		}
 
 		if err := json.Unmarshal(input, &wrapper); err == nil && len(wrapper.Data) > 0 && wrapper.Version != "" {
+			version, err := spec.DataVersionFromString(wrapper.Version)
+			if err != nil || version != t.version {
+				return nil, fmt.Errorf("unsupported version %q for %s event", wrapper.Version, t.name)
+			}
+
 			input = wrapper.Data
 		}
 	}
