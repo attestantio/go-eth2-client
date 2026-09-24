@@ -16,12 +16,14 @@ package eventdispatch
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/internal/eventtopic"
+	"github.com/rs/zerolog"
 )
 
 // topicHandler is the handling in api.EventsOpts of the events of a single topic.
@@ -118,12 +120,16 @@ func bind[T any, H ~func(context.Context, *T)](field func(opts *api.EventsOpts) 
 					return nil
 				}
 
-				if opts.Handler != nil {
-					opts.Handler(&apiv1.Event{
-						Topic: name,
-						Data:  data,
-					})
+				if opts.Handler == nil {
+					zerolog.Ctx(ctx).Debug().Str("topic", name).Msg("No specific or generic handler supplied; ignoring")
+
+					return nil
 				}
+
+				opts.Handler(&apiv1.Event{
+					Topic: name,
+					Data:  data,
+				})
 
 				return nil
 			},
@@ -143,6 +149,9 @@ func bind[T any, H ~func(context.Context, *T)](field func(opts *api.EventsOpts) 
 	}
 }
 
+// ErrUnsupportedTopic is returned by Handle for an event of a topic that is not supported.
+var ErrUnsupportedTopic = errors.New("unsupported event topic")
+
 // HasTopicHandler reports whether the options carry a handler specific to the given topic.
 func HasTopicHandler(opts *api.EventsOpts, topic string) bool {
 	handler, exists := topicHandlers[topic]
@@ -156,7 +165,7 @@ func HasTopicHandler(opts *api.EventsOpts, topic string) bool {
 func Handle(ctx context.Context, opts *api.EventsOpts, topic string, data []byte) error {
 	handler, exists := topicHandlers[topic]
 	if !exists {
-		return fmt.Errorf("unsupported event topic %s", topic)
+		return fmt.Errorf("%w %s", ErrUnsupportedTopic, topic)
 	}
 
 	return handler.handle(ctx, opts, data)

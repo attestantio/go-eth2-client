@@ -14,6 +14,7 @@
 package http
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"reflect"
@@ -28,6 +29,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/r3labs/sse/v2"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
@@ -254,7 +256,6 @@ func TestHandleEventControls(t *testing.T) {
 	}
 }
 
-
 func eventData(t *testing.T, data any, versioned bool) []byte {
 	t.Helper()
 
@@ -305,6 +306,43 @@ func TestExecutionPayloadTopicsSpecExamples(t *testing.T) {
 			encoded, err := json.Marshal(event.Data)
 			require.NoError(t, err)
 			require.JSONEq(t, test.input, string(encoded))
+		})
+	}
+}
+
+// TestHandleEventLogs confirms that an event of an unsupported topic is reported as such, at
+// warning, and an event whose data does not decode as a parse failure, at error.
+func TestHandleEventLogs(t *testing.T) {
+	// Other tests in the package disable logging globally.
+	level := zerolog.GlobalLevel()
+	zerolog.SetGlobalLevel(zerolog.TraceLevel)
+	t.Cleanup(func() { zerolog.SetGlobalLevel(level) })
+
+	tests := []struct {
+		name     string
+		message  *sse.Event
+		expected string
+	}{
+		{
+			name:     "UnsupportedTopic",
+			message:  &sse.Event{Event: []byte("unknown"), Data: []byte(`{}`)},
+			expected: `{"level":"warn","topic":"unknown","message":"Received message with unhandled topic; ignoring"}`,
+		},
+		{
+			name:     "Malformed",
+			message:  &sse.Event{Event: []byte("head"), Data: []byte(`{}`)},
+			expected: `{"level":"error","error":"slot missing","topic":"head","data":{},"message":"Failed to parse event"}`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var output bytes.Buffer
+			ctx := zerolog.New(&output).WithContext(context.Background())
+
+			(&Service{}).handleEvent(ctx, test.message, &api.EventsOpts{Handler: func(*apiv1.Event) {}})
+
+			require.JSONEq(t, test.expected, output.String())
 		})
 	}
 }

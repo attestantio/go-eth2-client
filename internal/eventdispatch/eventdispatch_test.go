@@ -14,6 +14,7 @@
 package eventdispatch_test
 
 import (
+	"bytes"
 	"context"
 	"reflect"
 	"testing"
@@ -21,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/internal/eventdispatch"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
@@ -83,11 +85,18 @@ func TestHandle(t *testing.T) {
 	})
 
 	t.Run("NoHandler", func(t *testing.T) {
-		require.NoError(t, eventdispatch.Handle(ctx, &api.EventsOpts{}, "execution_payload_available", data))
+		var output bytes.Buffer
+		logCtx := zerolog.New(&output).Level(zerolog.DebugLevel).WithContext(ctx)
+
+		require.NoError(t, eventdispatch.Handle(logCtx, &api.EventsOpts{}, "execution_payload_available", data))
+		require.JSONEq(t, `{"level":"debug","topic":"execution_payload_available","message":"No specific or generic handler supplied; ignoring"}`,
+			output.String())
 	})
 
 	t.Run("UnsupportedTopic", func(t *testing.T) {
-		require.EqualError(t, eventdispatch.Handle(ctx, &api.EventsOpts{}, "unknown", data), "unsupported event topic unknown")
+		err := eventdispatch.Handle(ctx, &api.EventsOpts{}, "unknown", data)
+		require.ErrorIs(t, err, eventdispatch.ErrUnsupportedTopic)
+		require.EqualError(t, err, "unsupported event topic unknown")
 	})
 
 	t.Run("Malformed", func(t *testing.T) {

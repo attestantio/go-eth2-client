@@ -127,14 +127,18 @@ func (*Service) handleEvent(ctx context.Context,
 
 	topic := string(msg.Event)
 
-	switch {
-	case len(topic) == 0:
+	if len(topic) == 0 {
 		// Used as keepalive.  Ignore.
-	case !apiv1.SupportedEventTopics[topic]:
+		return
+	}
+
+	err := eventdispatch.Handle(ctx, opts, topic, msg.Data)
+
+	switch {
+	case err == nil:
+	case errors.Is(err, eventdispatch.ErrUnsupportedTopic):
 		log.Warn().Str("topic", topic).Msg("Received message with unhandled topic; ignoring")
 	default:
-		if err := eventdispatch.Handle(ctx, opts, topic, msg.Data); err != nil {
-			log.Error().Err(err).Str("topic", topic).RawJSON("data", msg.Data).Msg("Failed to parse event")
-		}
+		log.Error().Err(err).Str("topic", topic).RawJSON("data", msg.Data).Msg("Failed to parse event")
 	}
 }
