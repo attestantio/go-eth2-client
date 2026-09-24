@@ -17,6 +17,7 @@
 package eventtopic
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -78,7 +79,7 @@ func (Topic[T]) dataType() reflect.Type {
 // whose events the beacon-API spec wraps as {"version": "...", "data": {...}}, the version must
 // be the topic's fork, as data of another fork could decode into T without error while dropping
 // fields T does not have; supporting a later fork means adding it here.  A bare, unwrapped
-// object is accepted as well, for nodes that do not wrap it.
+// object is accepted as well, for nodes that do not wrap it.  Null data is rejected.
 func (t Topic[T]) Decode(input []byte) (*T, error) {
 	if t.version != spec.DataVersionUnknown {
 		var wrapper struct {
@@ -94,6 +95,12 @@ func (t Topic[T]) Decode(input []byte) (*T, error) {
 
 			input = wrapper.Data
 		}
+	}
+
+	// A null would decode into a zero T without error, handing handlers a value with none of its
+	// fields set.
+	if bytes.Equal(bytes.TrimSpace(input), []byte("null")) {
+		return nil, fmt.Errorf("no data for %s event", t.name)
 	}
 
 	data := new(T)
