@@ -82,7 +82,7 @@ func TestHandleEventDispatchesEverySupportedTopic(t *testing.T) {
 			},
 			expected: &apiv1.DataColumnSidecarEvent{},
 		},
-		{topic: "execution_payload", data: &apiv1.ExecutionPayloadEvent{}, expected: &apiv1.ExecutionPayloadEvent{}, versioned: true},
+		{topic: "execution_payload", data: &apiv1.ExecutionPayloadEvent{}, expected: &apiv1.ExecutionPayloadEvent{}},
 		{topic: "execution_payload_available", data: &apiv1.ExecutionPayloadAvailableEvent{}, expected: &apiv1.ExecutionPayloadAvailableEvent{}},
 		{
 			topic:     "execution_payload_bid",
@@ -90,7 +90,7 @@ func TestHandleEventDispatchesEverySupportedTopic(t *testing.T) {
 			expected:  &gloas.SignedExecutionPayloadBid{},
 			versioned: true,
 		},
-		{topic: "execution_payload_gossip", data: &apiv1.ExecutionPayloadGossipEvent{}, expected: &apiv1.ExecutionPayloadGossipEvent{}, versioned: true},
+		{topic: "execution_payload_gossip", data: &apiv1.ExecutionPayloadGossipEvent{}, expected: &apiv1.ExecutionPayloadGossipEvent{}},
 		{topic: "fast_confirmation", data: &apiv1.FastConfirmationEvent{}, expected: &apiv1.FastConfirmationEvent{}},
 		{topic: "finalized_checkpoint", data: &apiv1.FinalizedCheckpointEvent{}, expected: &apiv1.FinalizedCheckpointEvent{}},
 		{

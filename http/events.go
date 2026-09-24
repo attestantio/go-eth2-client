@@ -184,7 +184,7 @@ var eventTopics = map[string]eventTopic{
 		func(o *api.EventsOpts) api.ContributionAndProofEventHandlerFunc { return o.ContributionAndProofHandler }),
 	"data_column_sidecar": newEventTopic(json.Unmarshal,
 		func(o *api.EventsOpts) api.DataColumnSidecarEventHandlerFunc { return o.DataColumnSidecarHandler }),
-	"execution_payload": newEventTopic(unmarshalVersionedEventData,
+	"execution_payload": newEventTopic(json.Unmarshal,
 		func(o *api.EventsOpts) api.ExecutionPayloadEventHandlerFunc { return o.ExecutionPayloadHandler }),
 	"execution_payload_available": newEventTopic(json.Unmarshal,
 		func(o *api.EventsOpts) api.ExecutionPayloadAvailableEventHandlerFunc {
@@ -192,7 +192,7 @@ var eventTopics = map[string]eventTopic{
 		}),
 	"execution_payload_bid": newEventTopic(unmarshalVersionedEventData,
 		func(o *api.EventsOpts) api.ExecutionPayloadBidEventHandlerFunc { return o.ExecutionPayloadBidHandler }),
-	"execution_payload_gossip": newEventTopic(unmarshalVersionedEventData,
+	"execution_payload_gossip": newEventTopic(json.Unmarshal,
 		func(o *api.EventsOpts) api.ExecutionPayloadGossipEventHandlerFunc {
 			return o.ExecutionPayloadGossipHandler
 		}),
@@ -253,9 +253,10 @@ func newEventTopic[T any, H ~func(context.Context, *T)](decode func([]byte, any)
 	}
 }
 
-// unmarshalVersionedEventData decodes an SSE event payload that the beacon-API
-// spec wraps as {"version": "...", "data": {...}}. Some clients (Prysm) still
-// send the bare unwrapped object, so that shape is accepted as a fallback.
+// unmarshalVersionedEventData decodes the payload of an SSE event that the beacon-API spec wraps
+// as {"version": "...", "data": {...}}, being those of the execution_payload_bid,
+// payload_attestation_message and proposer_preferences topics.  A bare, unwrapped object is
+// accepted as well, for nodes that do not wrap it.
 func unmarshalVersionedEventData(raw []byte, v any) error {
 	var wrapper struct {
 		Version string          `json:"version"`
