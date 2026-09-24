@@ -106,4 +106,13 @@ func TestFastConfirmationEventJSON(t *testing.T) {
 		require.NoError(t, err)
 		require.Nil(t, res.CurrentSlot)
 	})
+
+	t.Run("CurrentSlotAbsentOnReuse", func(t *testing.T) {
+		var res api.FastConfirmationEvent
+		require.NoError(t, json.Unmarshal([]byte(`{"slot":"525277","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","current_slot":"525278"}`), &res))
+		require.NotNil(t, res.CurrentSlot)
+
+		require.NoError(t, json.Unmarshal([]byte(`{"slot":"525279","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028"}`), &res))
+		require.Nil(t, res.CurrentSlot, "current_slot kept from the previous event")
+	})
 }

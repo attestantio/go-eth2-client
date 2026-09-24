@@ -81,6 +81,7 @@ func (e *FastConfirmationEvent) UnmarshalJSON(input []byte) error {
 	// current_slot was added to the spec after slot/block; parse it when
 	// present but tolerate clients that do not yet emit it, leaving it nil
 	// rather than 0 so that it is not re-marshalled with a made-up value.
+	e.CurrentSlot = nil
 	if data.CurrentSlot != "" {
 		currentSlot, err := strconv.ParseUint(data.CurrentSlot, 10, 64)
 		if err != nil {
