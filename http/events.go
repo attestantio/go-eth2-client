@@ -26,7 +26,6 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
-	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/internal/eventdispatch"
 	"github.com/r3labs/sse/v2"
 	"github.com/rs/zerolog"
@@ -100,7 +99,7 @@ func ValidateEventsOpts(opts *api.EventsOpts) error {
 	}
 
 	for _, topic := range opts.Topics {
-		if _, exists := apiv1.SupportedEventTopics[topic]; !exists {
+		if !eventdispatch.Supports(topic) {
 			return fmt.Errorf("unsupported event topic %s: %w", topic, client.ErrInvalidOptions)
 		}
 

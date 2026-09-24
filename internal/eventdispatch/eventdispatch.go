@@ -152,6 +152,14 @@ func bind[T any, H ~func(context.Context, *T)](field func(opts *api.EventsOpts) 
 // ErrUnsupportedTopic is returned by Handle for an event of a topic that is not supported.
 var ErrUnsupportedTopic = errors.New("unsupported event topic")
 
+// Supports reports whether events of the given topic can be handled.  It is to be used in place
+// of apiv1.SupportedEventTopics, which is an exported map that callers can change.
+func Supports(topic string) bool {
+	_, exists := topicHandlers[topic]
+
+	return exists
+}
+
 // HasTopicHandler reports whether the options carry a handler specific to the given topic.
 func HasTopicHandler(opts *api.EventsOpts, topic string) bool {
 	handler, exists := topicHandlers[topic]

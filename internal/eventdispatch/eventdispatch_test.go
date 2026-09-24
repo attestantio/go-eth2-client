@@ -144,3 +144,11 @@ func TestFiltered(t *testing.T) {
 	filtered.Topics[0] = "changed"
 	require.Equal(t, "execution_payload_available", opts.Topics[0], "topics shared with the original options")
 }
+
+func TestSupports(t *testing.T) {
+	for topic := range apiv1.SupportedEventTopics {
+		require.True(t, eventdispatch.Supports(topic), topic)
+	}
+	require.False(t, eventdispatch.Supports("unknown"))
+	require.False(t, eventdispatch.Supports(""))
+}

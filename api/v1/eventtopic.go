@@ -62,8 +62,8 @@ var eventTopicsByName = func() map[string]eventtopic.Descriptor {
 	return byName
 }()
 
-// SupportedEventTopics is a map of supported event topics. It is the allow-list
-// against which the HTTP client validates Events() subscriptions.
+// SupportedEventTopics is a map of supported event topics.  It is informational: the clients
+// validate Events() subscriptions against the topics themselves, so changing it has no effect.
 var SupportedEventTopics = func() map[string]bool {
 	supported := make(map[string]bool, len(eventTopics))
 	for _, topic := range eventTopics {

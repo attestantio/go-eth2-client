@@ -84,10 +84,10 @@ var gloasEventTopics = []string{
 // TestEventsGloasTopics confirms the public Events() entry point accepts a
 // subscription naming any of the Gloas event topics.
 //
-// Events() gates every requested topic on apiv1.SupportedEventTopics, via
-// ValidateEventsOpts, before it builds the subscription, so a topic absent from
-// that allow-list is refused here and never reaches the wire, however
-// completely the dispatcher downstream handles it. Any test that calls
+// Events() gates every requested topic on the topics the dispatcher supports, via
+// ValidateEventsOpts, before it builds the subscription, so a topic the gate
+// refuses never reaches the wire, however completely the dispatcher downstream
+// would handle it. Any test that calls
 // handleEvent directly sits downstream of this check and so cannot exercise
 // it, which leaves this test the only coverage of the gate itself.
 //
