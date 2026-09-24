@@ -15,6 +15,7 @@ package multi
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/rand"
 	"slices"
@@ -27,7 +28,17 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// Events feeds requested events with the given topics to the supplied handler.
+// deferredEventsClient is a client whose subscription can be retried until it is synced.
+type deferredEventsClient interface {
+	consensusclient.Service
+	consensusclient.EventsProvider
+	consensusclient.NodeSyncingProvider
+}
+
+var _ deferredEventsClient = (*Service)(nil)
+
+// Events feeds requested events with the given topics to the supplied handler.  It returns an
+// error if no client is subscribed or awaiting a retry, as no event would then arrive.
 func (s *Service) Events(ctx context.Context,
 	opts *api.EventsOpts,
 ) error {
@@ -51,6 +62,7 @@ func (s *Service) Events(ctx context.Context,
 	s.clientsMu.RUnlock()
 
 	// Call all active clients immediately.
+	subscribed := 0
 	for _, client := range activeClients {
 		ah := newActiveHandler(s, log, client.Address(), opts)
 
@@ -67,38 +79,39 @@ func (s *Service) Events(ctx context.Context,
 			continue
 		}
 
+		subscribed++
 		log.Trace().Str("address", ah.address).Strs("topics", opts.Topics).Msg("Events handler active")
+	}
+
+	deferredClients := make([]deferredEventsClient, 0, len(inactiveClients))
+	for _, inactiveClient := range inactiveClients {
+		deferredClient, isDeferrable := inactiveClient.(deferredEventsClient)
+		if !isDeferrable {
+			log.Error().
+				Str("address", inactiveClient.Address()).
+				Strs("topics", opts.Topics).
+				Msg("Not an events and node syncing provider")
+
+			continue
+		}
+
+		deferredClients = append(deferredClients, deferredClient)
+	}
+
+	// With no client subscribed or to be retried, no event would ever arrive.
+	if subscribed == 0 && len(deferredClients) == 0 {
+		return errors.New("no client can provide events")
 	}
 
 	// Periodically try all inactive clients, quitting as they become active.  A failure to check
 	// sync state or to subscribe is retried rather than final: the client can still be made the
 	// active one later, and were it left unsubscribed its events would then never arrive.
-	for _, inactiveClient := range inactiveClients {
-		ah := newActiveHandler(s, log, inactiveClient.Address(), opts)
+	for _, deferredClient := range deferredClients {
+		ah := newActiveHandler(s, log, deferredClient.Address(), opts)
 
-		go func(c consensusclient.Service, ah *activeHandler) {
-			syncingProvider, isSyncingProvider := c.(consensusclient.NodeSyncingProvider)
-			if !isSyncingProvider {
-				ah.log.Error().
-					Str("address", ah.address).
-					Strs("topics", ah.clientOpts.Topics).
-					Msg("Not a node syncing provider")
-
-				return
-			}
-
-			eventsProvider, isEventsProvider := c.(consensusclient.EventsProvider)
-			if !isEventsProvider {
-				ah.log.Error().
-					Str("address", ah.address).
-					Strs("topics", ah.clientOpts.Topics).
-					Msg("Not an events provider")
-
-				return
-			}
-
+		go func(c deferredEventsClient, ah *activeHandler) {
 			for {
-				syncResponse, err := syncingProvider.NodeSyncing(ctx, &api.NodeSyncingOpts{})
+				syncResponse, err := c.NodeSyncing(ctx, &api.NodeSyncingOpts{})
 
 				switch {
 				case err != nil:
@@ -111,7 +124,7 @@ func (s *Service) Events(ctx context.Context,
 					// Client is now synced, set up the events call.  This uses the same filtered
 					// options as an initially-active client, so that events from it are subject to
 					// the same active-address filtering.
-					err := eventsProvider.Events(ctx, ah.clientOpts)
+					err := c.Events(ctx, ah.clientOpts)
 					if err == nil {
 						ah.log.Trace().Str("address", ah.address).Strs("topics", ah.clientOpts.Topics).Msg("Events handler active")
 
@@ -133,7 +146,7 @@ func (s *Service) Events(ctx context.Context,
 				case <-time.After(s.retryInterval()):
 				}
 			}
-		}(inactiveClient, ah)
+		}(deferredClient, ah)
 	}
 
 	return nil

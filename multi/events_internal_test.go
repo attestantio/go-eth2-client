@@ -110,27 +110,63 @@ func (syncingOnlyClient) NodeSyncing(context.Context, *api.NodeSyncingOpts) (*ap
 }
 
 // TestEventsSkipsClientsWithoutEvents confirms that a client that does not provide events, be it
-// active or awaiting retry, is skipped rather than panicking Events or its retry goroutine.
+// active or awaiting retry, is skipped rather than panicking Events, and that Events fails when
+// that leaves no client to provide them.
 func TestEventsSkipsClientsWithoutEvents(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	provider, err := mock.New(context.Background(), mock.WithName("provider"))
+	require.NoError(t, err)
+	provider.EventsFunc = func(context.Context, *api.EventsOpts) error { return nil }
 
-	s := &Service{
-		log:                 zerolog.Nop(),
-		activeClients:       []consensusclient.Service{syncingOnlyClient{}},
-		inactiveClients:     []consensusclient.Service{syncingOnlyClient{}},
-		eventsRetryInterval: time.Millisecond,
+	tests := []struct {
+		name            string
+		activeClients   []consensusclient.Service
+		inactiveClients []consensusclient.Service
+		err             string
+	}{
+		{
+			name:            "NoneProvide",
+			activeClients:   []consensusclient.Service{syncingOnlyClient{}},
+			inactiveClients: []consensusclient.Service{syncingOnlyClient{}},
+			err:             "no client can provide events",
+		},
+		{
+			name:            "OtherActiveProvides",
+			activeClients:   []consensusclient.Service{syncingOnlyClient{}, provider},
+			inactiveClients: []consensusclient.Service{syncingOnlyClient{}},
+		},
+		{
+			name:            "OtherDeferredProvides",
+			activeClients:   []consensusclient.Service{syncingOnlyClient{}},
+			inactiveClients: []consensusclient.Service{syncingOnlyClient{}, provider},
+		},
 	}
 
-	require.NotPanics(t, func() {
-		require.NoError(t, s.Events(ctx, &api.EventsOpts{
-			Topics:  []string{"head"},
-			Handler: func(*apiv1.Event) {},
-		}))
-	})
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 
-	// Give the retry goroutine time to reach the check; a panic there crashes the test binary.
-	time.Sleep(20 * time.Millisecond)
+			s := &Service{
+				log:                 zerolog.Nop(),
+				activeClients:       test.activeClients,
+				inactiveClients:     test.inactiveClients,
+				eventsRetryInterval: time.Millisecond,
+			}
+
+			var err error
+			require.NotPanics(t, func() {
+				err = s.Events(ctx, &api.EventsOpts{
+					Topics:  []string{"head"},
+					Handler: func(*apiv1.Event) {},
+				})
+			})
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestRetryInterval(t *testing.T) {
