@@ -24,27 +24,32 @@ import (
 
 // FastConfirmationEvent is the data for the fast confirmation event. Slot and
 // Block identify the most recent confirmed block; CurrentSlot is the wall-clock
-// slot at which the fast-confirmation algorithm was executed.
+// slot at which the fast-confirmation algorithm was executed, or nil if the node
+// did not supply it.
 type FastConfirmationEvent struct {
 	Slot        phase0.Slot
 	Block       phase0.Root
-	CurrentSlot phase0.Slot
+	CurrentSlot *phase0.Slot
 }
 
 // fastConfirmationEventJSON is the spec representation of the struct.
 type fastConfirmationEventJSON struct {
 	Slot        string `json:"slot"`
 	Block       string `json:"block"`
-	CurrentSlot string `json:"current_slot"`
+	CurrentSlot string `json:"current_slot,omitempty"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (e *FastConfirmationEvent) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&fastConfirmationEventJSON{
-		Slot:        fmt.Sprintf("%d", e.Slot),
-		Block:       fmt.Sprintf("%#x", e.Block),
-		CurrentSlot: fmt.Sprintf("%d", e.CurrentSlot),
-	})
+	data := &fastConfirmationEventJSON{
+		Slot:  fmt.Sprintf("%d", e.Slot),
+		Block: fmt.Sprintf("%#x", e.Block),
+	}
+	if e.CurrentSlot != nil {
+		data.CurrentSlot = fmt.Sprintf("%d", *e.CurrentSlot)
+	}
+
+	return json.Marshal(data)
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
@@ -74,14 +79,16 @@ func (e *FastConfirmationEvent) UnmarshalJSON(input []byte) error {
 	}
 
 	// current_slot was added to the spec after slot/block; parse it when
-	// present but tolerate clients that do not yet emit it.
+	// present but tolerate clients that do not yet emit it, leaving it nil
+	// rather than 0 so that it is not re-marshalled with a made-up value.
 	if data.CurrentSlot != "" {
 		currentSlot, err := strconv.ParseUint(data.CurrentSlot, 10, 64)
 		if err != nil {
 			return errors.Wrap(err, "invalid value for current slot")
 		}
 
-		e.CurrentSlot = phase0.Slot(currentSlot)
+		value := phase0.Slot(currentSlot)
+		e.CurrentSlot = &value
 	}
 
 	return nil

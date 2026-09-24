@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
 )
@@ -77,6 +76,12 @@ func TestFastConfirmationEventJSON(t *testing.T) {
 			name:  "Good",
 			input: []byte(`{"slot":"525277","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","current_slot":"525278"}`),
 		},
+		{
+			// current_slot was added to the spec after slot/block, so clients that do not emit
+			// it must still parse cleanly, and re-marshal without inventing a value for it.
+			name:  "GoodNoCurrentSlot",
+			input: []byte(`{"slot":"525277","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028"}`),
+		},
 	}
 
 	for _, test := range tests {
@@ -95,16 +100,10 @@ func TestFastConfirmationEventJSON(t *testing.T) {
 		})
 	}
 
-	// current_slot was added to the spec after slot/block, so clients that do
-	// not emit it must still parse cleanly (defaulting CurrentSlot to 0). This
-	// input intentionally omits current_slot, so it does not round-trip
-	// byte-for-byte (MarshalJSON always emits current_slot); assert on the
-	// parsed fields instead.
-	t.Run("GoodNoCurrentSlot", func(t *testing.T) {
+	t.Run("CurrentSlotAbsent", func(t *testing.T) {
 		var res api.FastConfirmationEvent
 		err := json.Unmarshal([]byte(`{"slot":"525277","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028"}`), &res)
 		require.NoError(t, err)
-		require.Equal(t, phase0.Slot(525277), res.Slot)
-		require.Equal(t, phase0.Slot(0), res.CurrentSlot)
+		require.Nil(t, res.CurrentSlot)
 	})
 }
