@@ -16,7 +16,9 @@ package multi
 import (
 	"context"
 	"errors"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -31,24 +33,28 @@ import (
 // service's lists with spare capacity, so appending to a copy of the slice header would write
 // into the service's backing array outside the lock, racing with those functions' own appends.
 func TestEventsDoesNotWriteServiceClientLists(t *testing.T) {
-	ctx := context.Background()
+	// The failing client is retried until the context is done, so end it with the test.  The
+	// mocks are given a context of their own, as ending theirs has them race on mock's logger.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	failing, err := mock.New(ctx, mock.WithName("failing"))
+	failing, err := mock.New(context.Background(), mock.WithName("failing"))
 	require.NoError(t, err)
 	failing.EventsFunc = func(context.Context, *api.EventsOpts) error {
 		return errors.New("failed to subscribe")
 	}
 
-	inactive, err := mock.New(ctx, mock.WithName("inactive"))
+	inactive, err := mock.New(context.Background(), mock.WithName("inactive"))
 	require.NoError(t, err)
 
 	inactiveClients := make([]consensusclient.Service, 1, 2)
 	inactiveClients[0] = inactive
 
 	s := &Service{
-		log:             zerolog.Nop(),
-		activeClients:   []consensusclient.Service{failing},
-		inactiveClients: inactiveClients,
+		log:                 zerolog.Nop(),
+		activeClients:       []consensusclient.Service{failing},
+		inactiveClients:     inactiveClients,
+		eventsRetryInterval: time.Millisecond,
 	}
 
 	require.NoError(t, s.Events(ctx, &api.EventsOpts{
@@ -59,4 +65,34 @@ func TestEventsDoesNotWriteServiceClientLists(t *testing.T) {
 	s.clientsMu.RLock()
 	defer s.clientsMu.RUnlock()
 	require.Nil(t, s.inactiveClients[:cap(s.inactiveClients)][1], "Events wrote into the service's inactive client list")
+}
+
+// TestEventsRetriesWithDefaultIntervalWhenUnset confirms that a Service whose retry interval is
+// unset, as one not built by New, waits between attempts rather than retrying without pause.
+func TestEventsRetriesWithDefaultIntervalWhenUnset(t *testing.T) {
+	// As in TestEventsDoesNotWriteServiceClientLists, the mock has a context of its own.
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var attempts atomic.Int32
+	failing, err := mock.New(context.Background(), mock.WithName("failing"))
+	require.NoError(t, err)
+	failing.EventsFunc = func(context.Context, *api.EventsOpts) error {
+		attempts.Add(1)
+
+		return errors.New("failed to subscribe")
+	}
+
+	s := &Service{
+		log:             zerolog.Nop(),
+		inactiveClients: []consensusclient.Service{failing},
+	}
+
+	require.NoError(t, s.Events(ctx, &api.EventsOpts{
+		Topics:  []string{"head"},
+		Handler: func(*apiv1.Event) {},
+	}))
+
+	time.Sleep(50 * time.Millisecond)
+	require.LessOrEqual(t, attempts.Load(), int32(1), "retried without waiting for an interval")
 }

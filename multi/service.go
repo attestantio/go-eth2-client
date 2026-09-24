@@ -40,6 +40,9 @@ type Service struct {
 	eventsRetryInterval time.Duration
 }
 
+// defaultEventsRetryInterval is the default for Service.eventsRetryInterval.
+const defaultEventsRetryInterval = 5 * time.Second
+
 // New creates a new Ethereum 2 client with multiple endpoints.
 // The endpoints are periodically checked to see if they are active,
 // and requests will retry a different client if the currently active
@@ -111,7 +114,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 		name:                parameters.name,
 		activeClients:       activeClients,
 		inactiveClients:     inactiveClients,
-		eventsRetryInterval: 5 * time.Second,
+		eventsRetryInterval: defaultEventsRetryInterval,
 	}
 
 	// Set initial metrics.

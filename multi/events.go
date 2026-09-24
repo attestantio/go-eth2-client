@@ -63,6 +63,12 @@ func (s *Service) Events(ctx context.Context,
 		log.Trace().Str("address", ah.address).Strs("topics", opts.Topics).Msg("Events handler active")
 	}
 
+	// A zero interval, as in a Service not built by New, would have the loop below spin.
+	retryInterval := s.eventsRetryInterval
+	if retryInterval <= 0 {
+		retryInterval = defaultEventsRetryInterval
+	}
+
 	// Periodically try all inactive clients, quitting as they become active.  A failure to check
 	// sync state or to subscribe is retried rather than final: the client can still be made the
 	// active one later, and were it left unsubscribed its events would then never arrive.
@@ -113,7 +119,7 @@ func (s *Service) Events(ctx context.Context,
 				select {
 				case <-ctx.Done():
 					return
-				case <-time.After(s.eventsRetryInterval):
+				case <-time.After(retryInterval):
 				}
 			}
 		}(inactiveClient, ah)
