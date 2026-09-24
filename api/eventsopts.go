@@ -142,7 +142,7 @@ type ExecutionPayloadAvailableEventHandlerFunc func(context.Context, *apiv1.Exec
 type ExecutionPayloadBidEventHandlerFunc func(context.Context, *gloas.SignedExecutionPayloadBid)
 
 // ExecutionPayloadGossipEventHandlerFunc is the handler for execution_payload_gossip events.
-type ExecutionPayloadGossipEventHandlerFunc func(context.Context, *apiv1.ExecutionPayloadEvent)
+type ExecutionPayloadGossipEventHandlerFunc func(context.Context, *apiv1.ExecutionPayloadGossipEvent)
 
 // FastConfirmationEventHandlerFunc is the handler for fast_confirmation events.
 type FastConfirmationEventHandlerFunc func(context.Context, *apiv1.FastConfirmationEvent)

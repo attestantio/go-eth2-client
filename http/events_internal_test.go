@@ -16,6 +16,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"github.com/OffchainLabs/go-bitfield"
@@ -89,7 +90,7 @@ func TestHandleEventDispatchesEverySupportedTopic(t *testing.T) {
 			expected:  &gloas.SignedExecutionPayloadBid{},
 			versioned: true,
 		},
-		{topic: "execution_payload_gossip", data: &apiv1.ExecutionPayloadEvent{}, expected: &apiv1.ExecutionPayloadEvent{}, versioned: true},
+		{topic: "execution_payload_gossip", data: &apiv1.ExecutionPayloadGossipEvent{}, expected: &apiv1.ExecutionPayloadGossipEvent{}, versioned: true},
 		{topic: "fast_confirmation", data: &apiv1.FastConfirmationEvent{}, expected: &apiv1.FastConfirmationEvent{}},
 		{topic: "finalized_checkpoint", data: &apiv1.FinalizedCheckpointEvent{}, expected: &apiv1.FinalizedCheckpointEvent{}},
 		{
@@ -198,9 +199,9 @@ func gloasHandlerTests() []gloasHandlerTest {
 		},
 		{
 			topic: "execution_payload_gossip",
-			data:  &apiv1.ExecutionPayloadEvent{},
+			data:  &apiv1.ExecutionPayloadGossipEvent{},
 			setHandler: func(opts *api.EventsOpts, handled func()) {
-				opts.ExecutionPayloadGossipHandler = func(context.Context, *apiv1.ExecutionPayloadEvent) { handled() }
+				opts.ExecutionPayloadGossipHandler = func(context.Context, *apiv1.ExecutionPayloadGossipEvent) { handled() }
 			},
 		},
 		{
@@ -375,4 +376,37 @@ func eventData(t *testing.T, data any, versioned bool) []byte {
 	require.NoError(t, err)
 
 	return wrapped
+}
+
+func TestExecutionPayloadTopicsSpecExamples(t *testing.T) {
+	// Verbatim data lines from beacon-APIs apis/eventstream/index.yaml.
+	tests := []struct {
+		name       string
+		input      string
+		optimistic bool
+	}{
+		{
+			name:       "execution_payload",
+			input:      `{"slot":"10", "builder_index":"42", "block_hash":"0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", "block_root":"0x9a2fefd2fdb57f74993c7780ea5b9030d2897b615b89f808011ca5aebed54eaf", "execution_optimistic": false}`,
+			optimistic: true,
+		},
+		{
+			name:  "execution_payload_gossip",
+			input: `{"slot":"10", "builder_index":"42", "block_hash":"0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef", "block_root":"0x9a2fefd2fdb57f74993c7780ea5b9030d2897b615b89f808011ca5aebed54eaf"}`,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var event *apiv1.Event
+			(&Service{}).handleEvent(context.Background(), &sse.Event{Event: []byte(test.name), Data: []byte(test.input)}, &api.EventsOpts{
+				Handler: func(received *apiv1.Event) { event = received },
+			})
+			require.NotNil(t, event)
+			_, hasOptimistic := reflect.TypeOf(event.Data).Elem().FieldByName("ExecutionOptimistic")
+			require.Equal(t, test.optimistic, hasOptimistic)
+			encoded, err := json.Marshal(event.Data)
+			require.NoError(t, err)
+			require.JSONEq(t, test.input, string(encoded))
+		})
+	}
 }

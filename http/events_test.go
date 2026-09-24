@@ -138,7 +138,7 @@ func TestEventsGloasTopics(t *testing.T) {
 			name: "ExecutionPayloadGossipSpecificHandler",
 			opts: &api.EventsOpts{
 				Topics:                        []string{"execution_payload_gossip"},
-				ExecutionPayloadGossipHandler: func(context.Context, *apiv1.ExecutionPayloadEvent) {},
+				ExecutionPayloadGossipHandler: func(context.Context, *apiv1.ExecutionPayloadGossipEvent) {},
 			},
 		},
 		{

@@ -739,7 +739,7 @@ func (*Service) handleExecutionPayloadGossipEvent(ctx context.Context,
 	opts *api.EventsOpts,
 ) {
 	log := zerolog.Ctx(ctx)
-	data := &apiv1.ExecutionPayloadEvent{}
+	data := &apiv1.ExecutionPayloadGossipEvent{}
 
 	err := unmarshalVersionedEventData(msg.Data, data)
 	if err != nil {

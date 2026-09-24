@@ -128,8 +128,10 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		e.Data = &altair.SignedContributionAndProof{}
 	case "data_column_sidecar":
 		e.Data = &DataColumnSidecarEvent{}
-	case "execution_payload", "execution_payload_gossip":
+	case "execution_payload":
 		e.Data = &ExecutionPayloadEvent{}
+	case "execution_payload_gossip":
+		e.Data = &ExecutionPayloadGossipEvent{}
 	case "execution_payload_available":
 		e.Data = &ExecutionPayloadAvailableEvent{}
 	case "execution_payload_bid":
