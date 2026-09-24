@@ -41,9 +41,12 @@ func (s *Service) Events(ctx context.Context,
 	// We listen to all active clients, and only pass along events from the currently active provider.
 
 	// Grab local copy of both active and inactive clients in case it is updated whilst we are using it.
+	// The inactive list is cloned rather than shared, as active clients that fail to subscribe are
+	// appended to it below, outside the lock, and the service's own list can have spare capacity
+	// for that append to write into.
 	s.clientsMu.RLock()
 	activeClients := s.activeClients
-	inactiveClients := s.inactiveClients
+	inactiveClients := slices.Clone(s.inactiveClients)
 	s.clientsMu.RUnlock()
 
 	// Call all active clients immediately.
