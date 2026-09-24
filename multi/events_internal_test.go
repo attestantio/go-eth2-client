@@ -14,6 +14,7 @@
 package multi
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"sync/atomic"
@@ -185,4 +186,40 @@ func TestRetryInterval(t *testing.T) {
 			require.Equal(t, test.expected, (&Service{eventsRetryInterval: test.interval}).retryInterval())
 		})
 	}
+}
+
+// eventsOnlyClient is a client that provides events, failing to subscribe, but does not report its
+// sync state.
+type eventsOnlyClient struct{}
+
+func (eventsOnlyClient) Name() string    { return "events only" }
+func (eventsOnlyClient) Address() string { return "events only" }
+func (eventsOnlyClient) IsActive() bool  { return true }
+func (eventsOnlyClient) IsSynced() bool  { return true }
+
+func (eventsOnlyClient) Events(context.Context, *api.EventsOpts) error {
+	return errors.New("subscription refused")
+}
+
+// TestEventsLogsWhyClientIsDropped confirms that an active client that fails to subscribe has the
+// failure logged, and that one that then cannot be retried is logged as lacking sync state rather
+// than events.
+func TestEventsLogsWhyClientIsDropped(t *testing.T) {
+	var output bytes.Buffer
+	s := &Service{
+		log:                 zerolog.New(&output),
+		activeClients:       []consensusclient.Service{eventsOnlyClient{}},
+		eventsRetryInterval: time.Millisecond,
+	}
+
+	err := s.Events(context.Background(), &api.EventsOpts{
+		Topics:  []string{"head"},
+		Handler: func(*apiv1.Event) {},
+	})
+	require.EqualError(t, err, "no client can provide events")
+
+	logged := output.String()
+	require.Contains(t, logged, `"error":"subscription refused"`)
+	require.Contains(t, logged, "Not a node syncing provider; cannot retry events subscription")
+	require.NotContains(t, logged, "Not an events")
 }
