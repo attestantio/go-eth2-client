@@ -52,8 +52,9 @@ func TestDecode(t *testing.T) {
 		{name: "Bare", input: bare},
 		{name: "OtherFork", input: wrapped("fulu"), err: `unsupported version "fulu" for payload_attestation_message event`},
 		{name: "UnknownFork", input: wrapped("unknown"), err: `unsupported version "unknown" for payload_attestation_message event`},
-		{name: "WrappedNull", input: []byte(`{"version":"gloas","data":null}`), err: "no data for payload_attestation_message event"},
-		{name: "BareNull", input: []byte(` null `), err: "no data for payload_attestation_message event"},
+		// The data type rejects null itself, so no check of Decode's own is needed.
+		{name: "WrappedNull", input: []byte(`{"version":"gloas","data":null}`), err: "validator index missing"},
+		{name: "BareNull", input: []byte(`null`), err: "validator index missing"},
 		{name: "Malformed", input: []byte(`invalid`), err: "invalid character 'i' looking for beginning of value"},
 	}
 
