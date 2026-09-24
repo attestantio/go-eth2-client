@@ -129,10 +129,14 @@ func LookupType(dataType reflect.Type) (Descriptor, bool) {
 // Lookup returns the registered topic whose data decodes into a T.  It panics if there is none.
 func Lookup[T any]() Topic[T] {
 	descriptor, _ := LookupType(reflect.TypeFor[T]())
-	topic, exists := descriptor.(Topic[T])
-	if !exists {
+
+	// A topic can be registered by value or, as *Topic also implements Descriptor, by pointer.
+	switch topic := descriptor.(type) {
+	case Topic[T]:
+		return topic
+	case *Topic[T]:
+		return *topic
+	default:
 		panic(fmt.Sprintf("no event topic decodes into %v", reflect.TypeFor[T]()))
 	}
-
-	return topic
 }

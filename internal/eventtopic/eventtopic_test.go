@@ -89,3 +89,11 @@ func TestLookupPanicsWithoutTopic(t *testing.T) {
 
 	require.Panics(t, func() { eventtopic.Lookup[unregistered]() })
 }
+
+func TestLookupRegisteredByPointer(t *testing.T) {
+	type data struct{}
+	topic := eventtopic.New[data]("by_pointer")
+	eventtopic.Register(&topic)
+
+	require.Equal(t, "by_pointer", eventtopic.Lookup[data]().Name())
+}

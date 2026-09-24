@@ -41,6 +41,10 @@ type topicHandler struct {
 // topicHandlers binds each field of api.EventsOpts holding the handler for a topic to that
 // topic, by the name of the topic.  It is the only list of those fields.  Each field's topic is
 // the one whose data decodes into the type its handler takes, so no topic is named here.
+//
+// Building it looks the topics up in eventtopic's registry, into which api/v1 registers them as
+// it is initialised.  Go initialises api/v1 first because this package imports it; were that
+// import dropped, every lookup here would panic.
 var topicHandlers = topicHandlersByName(
 	bind(func(o *api.EventsOpts) *api.AttestationEventHandlerFunc { return &o.AttestationHandler }),
 	bind(func(o *api.EventsOpts) *api.AttesterSlashingEventHandlerFunc { return &o.AttesterSlashingHandler }),
