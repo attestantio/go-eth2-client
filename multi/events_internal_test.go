@@ -96,3 +96,39 @@ func TestEventsRetriesWithDefaultIntervalWhenUnset(t *testing.T) {
 	time.Sleep(50 * time.Millisecond)
 	require.LessOrEqual(t, attempts.Load(), int32(1), "retried without waiting for an interval")
 }
+
+// syncingOnlyClient is a client that reports its sync state but does not provide events.
+type syncingOnlyClient struct{}
+
+func (syncingOnlyClient) Name() string    { return "syncing only" }
+func (syncingOnlyClient) Address() string { return "syncing only" }
+func (syncingOnlyClient) IsActive() bool  { return true }
+func (syncingOnlyClient) IsSynced() bool  { return true }
+
+func (syncingOnlyClient) NodeSyncing(context.Context, *api.NodeSyncingOpts) (*api.Response[*apiv1.SyncState], error) {
+	return &api.Response[*apiv1.SyncState]{Data: &apiv1.SyncState{}}, nil
+}
+
+// TestEventsSkipsClientsWithoutEvents confirms that a client that does not provide events, be it
+// active or awaiting retry, is skipped rather than panicking Events or its retry goroutine.
+func TestEventsSkipsClientsWithoutEvents(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	s := &Service{
+		log:                 zerolog.Nop(),
+		activeClients:       []consensusclient.Service{syncingOnlyClient{}},
+		inactiveClients:     []consensusclient.Service{syncingOnlyClient{}},
+		eventsRetryInterval: time.Millisecond,
+	}
+
+	require.NotPanics(t, func() {
+		require.NoError(t, s.Events(ctx, &api.EventsOpts{
+			Topics:  []string{"head"},
+			Handler: func(*apiv1.Event) {},
+		}))
+	})
+
+	// Give the retry goroutine time to reach the check; a panic there crashes the test binary.
+	time.Sleep(20 * time.Millisecond)
+}

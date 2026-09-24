@@ -54,7 +54,14 @@ func (s *Service) Events(ctx context.Context,
 	for _, client := range activeClients {
 		ah := newActiveHandler(s, log, client.Address(), opts)
 
-		if err := client.(consensusclient.EventsProvider).Events(ctx, ah.clientOpts); err != nil {
+		provider, isProvider := client.(consensusclient.EventsProvider)
+		if !isProvider {
+			ah.log.Error().Str("address", ah.address).Strs("topics", opts.Topics).Msg("Not an events provider")
+
+			continue
+		}
+
+		if err := provider.Events(ctx, ah.clientOpts); err != nil {
 			inactiveClients = append(inactiveClients, client)
 
 			continue
@@ -76,8 +83,8 @@ func (s *Service) Events(ctx context.Context,
 		ah := newActiveHandler(s, log, inactiveClient.Address(), opts)
 
 		go func(c consensusclient.Service, ah *activeHandler) {
-			provider, isProvider := c.(consensusclient.NodeSyncingProvider)
-			if !isProvider {
+			syncingProvider, isSyncingProvider := c.(consensusclient.NodeSyncingProvider)
+			if !isSyncingProvider {
 				ah.log.Error().
 					Str("address", ah.address).
 					Strs("topics", ah.clientOpts.Topics).
@@ -86,8 +93,18 @@ func (s *Service) Events(ctx context.Context,
 				return
 			}
 
+			eventsProvider, isEventsProvider := c.(consensusclient.EventsProvider)
+			if !isEventsProvider {
+				ah.log.Error().
+					Str("address", ah.address).
+					Strs("topics", ah.clientOpts.Topics).
+					Msg("Not an events provider")
+
+				return
+			}
+
 			for {
-				syncResponse, err := provider.NodeSyncing(ctx, &api.NodeSyncingOpts{})
+				syncResponse, err := syncingProvider.NodeSyncing(ctx, &api.NodeSyncingOpts{})
 
 				switch {
 				case err != nil:
@@ -100,7 +117,7 @@ func (s *Service) Events(ctx context.Context,
 					// Client is now synced, set up the events call.  This uses the same substituted
 					// options as an initially-active client, so that events from it are subject to
 					// the same active-address filtering.
-					err := c.(consensusclient.EventsProvider).Events(ctx, ah.clientOpts)
+					err := eventsProvider.Events(ctx, ah.clientOpts)
 					if err == nil {
 						ah.log.Trace().Str("address", ah.address).Strs("topics", ah.clientOpts.Topics).Msg("Events handler active")
 
