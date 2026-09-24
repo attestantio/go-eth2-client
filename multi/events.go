@@ -35,7 +35,12 @@ type deferredEventsClient interface {
 	consensusclient.NodeSyncingProvider
 }
 
-var _ deferredEventsClient = (*Service)(nil)
+var (
+	_ deferredEventsClient = (*Service)(nil)
+	// The clients a multi service is given are HTTP clients, and one that is not a
+	// deferredEventsClient is never retried, so check they are.
+	_ deferredEventsClient = (*http.Service)(nil)
+)
 
 // Events feeds requested events with the given topics to the supplied handler.  It returns an
 // error if no client is subscribed or awaiting a retry, as no event would then arrive.
