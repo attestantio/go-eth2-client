@@ -27,6 +27,7 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/internal/eventdispatch"
 	"github.com/r3labs/sse/v2"
 	"github.com/rs/zerolog"
 )
@@ -103,7 +104,7 @@ func ValidateEventsOpts(opts *api.EventsOpts) error {
 			return fmt.Errorf("unsupported event topic %s: %w", topic, client.ErrInvalidOptions)
 		}
 
-		if opts.Handler == nil && !opts.HasTopicHandler(topic) {
+		if opts.Handler == nil && !eventdispatch.HasTopicHandler(opts, topic) {
 			return fmt.Errorf("no handler for %s event: %w", topic, client.ErrInvalidOptions)
 		}
 	}
@@ -132,7 +133,7 @@ func (*Service) handleEvent(ctx context.Context,
 	case !apiv1.SupportedEventTopics[topic]:
 		log.Warn().Str("topic", topic).Msg("Received message with unhandled topic; ignoring")
 	default:
-		if err := opts.HandleEvent(ctx, topic, msg.Data); err != nil {
+		if err := eventdispatch.Handle(ctx, opts, topic, msg.Data); err != nil {
 			log.Error().Err(err).Str("topic", topic).RawJSON("data", msg.Data).Msg("Failed to parse event")
 		}
 	}

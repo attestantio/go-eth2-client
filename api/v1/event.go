@@ -28,10 +28,6 @@ type Event struct {
 	Data any
 }
 
-// SupportedEventTopics is a map of supported event topics. It is the allow-list
-// against which the HTTP client validates Events() subscriptions.
-var SupportedEventTopics map[string]bool
-
 // eventJSON is the spec representation of the struct.
 type eventJSON struct {
 	Topic string         `json:"topic"`
@@ -76,12 +72,12 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		return errors.New("data missing")
 	}
 
-	newData, exists := eventTopicData[eventJSON.Topic]
+	topic, exists := eventTopicsByName[eventJSON.Topic]
 	if !exists {
 		return fmt.Errorf("unsupported event topic %s", eventJSON.Topic)
 	}
 
-	e.Data = newData()
+	e.Data = topic.NewData()
 
 	data, err := json.Marshal(eventJSON.Data)
 	if err != nil {

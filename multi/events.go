@@ -23,6 +23,7 @@ import (
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/http"
+	"github.com/attestantio/go-eth2-client/internal/eventdispatch"
 	"github.com/rs/zerolog"
 )
 
@@ -162,7 +163,7 @@ func newActiveHandler(s *Service, log zerolog.Logger, address string, opts *api.
 		log:     log,
 		address: address,
 	}
-	ah.clientOpts = opts.Filtered(ah.forwards)
+	ah.clientOpts = eventdispatch.Filtered(opts, ah.forwards)
 
 	return ah
 }
