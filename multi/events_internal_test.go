@@ -132,3 +132,21 @@ func TestEventsSkipsClientsWithoutEvents(t *testing.T) {
 	// Give the retry goroutine time to reach the check; a panic there crashes the test binary.
 	time.Sleep(20 * time.Millisecond)
 }
+
+func TestRetryInterval(t *testing.T) {
+	tests := []struct {
+		name     string
+		interval time.Duration
+		expected time.Duration
+	}{
+		{name: "Set", interval: time.Millisecond, expected: time.Millisecond},
+		{name: "Zero", interval: 0, expected: defaultEventsRetryInterval},
+		{name: "Negative", interval: -time.Second, expected: defaultEventsRetryInterval},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			require.Equal(t, test.expected, (&Service{eventsRetryInterval: test.interval}).retryInterval())
+		})
+	}
+}

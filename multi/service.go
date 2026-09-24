@@ -36,7 +36,8 @@ type Service struct {
 	inactiveClients []consensusclient.Service
 
 	// eventsRetryInterval is how long Events waits between attempts to subscribe a client that
-	// was not synced, or failed to subscribe, when Events was called.
+	// was not synced, or failed to subscribe, when Events was called.  Read it through
+	// retryInterval, which covers it being unset.
 	eventsRetryInterval time.Duration
 }
 
