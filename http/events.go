@@ -28,12 +28,6 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
-	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/attestantio/go-eth2-client/spec/altair"
-	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/attestantio/go-eth2-client/spec/electra"
-	"github.com/attestantio/go-eth2-client/spec/gloas"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/r3labs/sse/v2"
 	"github.com/rs/zerolog"
 )
@@ -125,58 +119,12 @@ func (s *Service) checkEventsOpts(opts *api.EventsOpts) error {
 }
 
 func (*Service) checkEventSpecificHandler(opts *api.EventsOpts, topic string) error {
-	var hasHandler bool
-
-	switch topic {
-	case "attestation":
-		hasHandler = opts.AttestationHandler != nil
-	case "attester_slashing":
-		hasHandler = opts.AttesterSlashingHandler != nil
-	case "blob_sidecar":
-		hasHandler = opts.BlobSidecarHandler != nil
-	case "block":
-		hasHandler = opts.BlockHandler != nil
-	case "block_gossip":
-		hasHandler = opts.BlockGossipHandler != nil
-	case "bls_to_execution_change":
-		hasHandler = opts.BLSToExecutionChangeHandler != nil
-	case "chain_reorg":
-		hasHandler = opts.ChainReorgHandler != nil
-	case "contribution_and_proof":
-		hasHandler = opts.ContributionAndProofHandler != nil
-	case "data_column_sidecar":
-		hasHandler = opts.DataColumnSidecarHandler != nil
-	case "execution_payload":
-		hasHandler = opts.ExecutionPayloadHandler != nil
-	case "execution_payload_available":
-		hasHandler = opts.ExecutionPayloadAvailableHandler != nil
-	case "execution_payload_bid":
-		hasHandler = opts.ExecutionPayloadBidHandler != nil
-	case "execution_payload_gossip":
-		hasHandler = opts.ExecutionPayloadGossipHandler != nil
-	case "fast_confirmation":
-		hasHandler = opts.FastConfirmationHandler != nil
-	case "finalized_checkpoint":
-		hasHandler = opts.FinalizedCheckpointHandler != nil
-	case "head":
-		hasHandler = opts.HeadHandler != nil
-	case "payload_attestation_message":
-		hasHandler = opts.PayloadAttestationMessageHandler != nil
-	case "payload_attributes":
-		hasHandler = opts.PayloadAttributesHandler != nil
-	case "proposer_preferences":
-		hasHandler = opts.ProposerPreferencesHandler != nil
-	case "proposer_slashing":
-		hasHandler = opts.ProposerSlashingHandler != nil
-	case "single_attestation":
-		hasHandler = opts.SingleAttestationHandler != nil
-	case "voluntary_exit":
-		hasHandler = opts.VoluntaryExitHandler != nil
-	default:
+	handling, exists := eventTopics[topic]
+	if !exists {
 		return fmt.Errorf("unsupported event %s", topic)
 	}
 
-	if !hasHandler {
+	if !handling.hasHandler(opts) {
 		return fmt.Errorf("no handler for %s event", topic)
 	}
 
@@ -184,7 +132,7 @@ func (*Service) checkEventSpecificHandler(opts *api.EventsOpts, topic string) er
 }
 
 // handleEvent handles all events.
-func (s *Service) handleEvent(ctx context.Context,
+func (*Service) handleEvent(ctx context.Context,
 	msg *sse.Event,
 	opts *api.EventsOpts,
 ) {
@@ -196,649 +144,112 @@ func (s *Service) handleEvent(ctx context.Context,
 		return
 	}
 
-	switch string(msg.Event) {
-	case "attestation":
-		s.handleAttestationEvent(ctx, msg, opts)
-	case "attester_slashing":
-		s.handleAttesterSlashingEvent(ctx, msg, opts)
-	case "blob_sidecar":
-		s.handleBlobSidecarEvent(ctx, msg, opts)
-	case "block":
-		s.handleBlockEvent(ctx, msg, opts)
-	case "block_gossip":
-		s.handleBlockGossipEvent(ctx, msg, opts)
-	case "bls_to_execution_change":
-		s.handleBLSToExecutionChangeEvent(ctx, msg, opts)
-	case "chain_reorg":
-		s.handleChainReorgEvent(ctx, msg, opts)
-	case "contribution_and_proof":
-		s.handleContributionAndProofEvent(ctx, msg, opts)
-	case "data_column_sidecar":
-		s.handleDataColumnSidecarEvent(ctx, msg, opts)
-	case "execution_payload":
-		s.handleExecutionPayloadEvent(ctx, msg, opts)
-	case "execution_payload_available":
-		s.handleExecutionPayloadAvailableEvent(ctx, msg, opts)
-	case "execution_payload_bid":
-		s.handleExecutionPayloadBidEvent(ctx, msg, opts)
-	case "execution_payload_gossip":
-		s.handleExecutionPayloadGossipEvent(ctx, msg, opts)
-	case "fast_confirmation":
-		s.handleFastConfirmationEvent(ctx, msg, opts)
-	case "finalized_checkpoint":
-		s.handleFinalizedCheckpointEvent(ctx, msg, opts)
-	case "head":
-		s.handleHeadEvent(ctx, msg, opts)
-	case "payload_attestation_message":
-		s.handlePayloadAttestationMessageEvent(ctx, msg, opts)
-	case "payload_attributes":
-		s.handlePayloadAttributesEvent(ctx, msg, opts)
-	case "proposer_preferences":
-		s.handleProposerPreferencesEvent(ctx, msg, opts)
-	case "proposer_slashing":
-		s.handleProposerSlashingEvent(ctx, msg, opts)
-	case "single_attestation":
-		s.handleSingleAttestationEvent(ctx, msg, opts)
-	case "voluntary_exit":
-		s.handleVoluntaryExitEvent(ctx, msg, opts)
-	case "":
+	handling, exists := eventTopics[string(msg.Event)]
+
+	switch {
+	case exists:
+		handling.handle(ctx, msg, opts)
+	case len(msg.Event) == 0:
 		// Used as keepalive.  Ignore.
 	default:
 		log.Warn().Str("topic", string(msg.Event)).Msg("Received message with unhandled topic; ignoring")
 	}
 }
 
-func (*Service) handleAttestationEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &spec.VersionedAttestation{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse attestation")
-
-		return
-	}
-
-	switch {
-	case opts.AttestationHandler != nil:
-		opts.AttestationHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
+// eventTopic is the handling of the events of a single topic.
+type eventTopic struct {
+	// hasHandler reports whether the options carry a handler specific to the topic.
+	hasHandler func(opts *api.EventsOpts) bool
+	// handle decodes an event of the topic and passes it to the handler for it in the options.
+	handle func(ctx context.Context, msg *sse.Event, opts *api.EventsOpts)
 }
 
-func (*Service) handleAttesterSlashingEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &electra.AttesterSlashing{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse attester slashing event")
-
-		return
-	}
-
-	switch {
-	case opts.AttesterSlashingHandler != nil:
-		opts.AttesterSlashingHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
+// eventTopics is the handling of each event topic the client can decode, by topic.
+var eventTopics = map[string]eventTopic{
+	"attestation": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.AttestationEventHandlerFunc { return o.AttestationHandler }),
+	"attester_slashing": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.AttesterSlashingEventHandlerFunc { return o.AttesterSlashingHandler }),
+	"blob_sidecar": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.BlobSidecarEventHandlerFunc { return o.BlobSidecarHandler }),
+	"block": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.BlockEventHandlerFunc { return o.BlockHandler }),
+	"block_gossip": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.BlockGossipEventHandlerFunc { return o.BlockGossipHandler }),
+	"bls_to_execution_change": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.BLSToExecutionChangeEventHandlerFunc { return o.BLSToExecutionChangeHandler }),
+	"chain_reorg": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.ChainReorgEventHandlerFunc { return o.ChainReorgHandler }),
+	"contribution_and_proof": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.ContributionAndProofEventHandlerFunc { return o.ContributionAndProofHandler }),
+	"data_column_sidecar": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.DataColumnSidecarEventHandlerFunc { return o.DataColumnSidecarHandler }),
+	"execution_payload": newEventTopic(unmarshalVersionedEventData,
+		func(o *api.EventsOpts) api.ExecutionPayloadEventHandlerFunc { return o.ExecutionPayloadHandler }),
+	"execution_payload_available": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.ExecutionPayloadAvailableEventHandlerFunc {
+			return o.ExecutionPayloadAvailableHandler
+		}),
+	"execution_payload_bid": newEventTopic(unmarshalVersionedEventData,
+		func(o *api.EventsOpts) api.ExecutionPayloadBidEventHandlerFunc { return o.ExecutionPayloadBidHandler }),
+	"execution_payload_gossip": newEventTopic(unmarshalVersionedEventData,
+		func(o *api.EventsOpts) api.ExecutionPayloadGossipEventHandlerFunc {
+			return o.ExecutionPayloadGossipHandler
+		}),
+	"fast_confirmation": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.FastConfirmationEventHandlerFunc { return o.FastConfirmationHandler }),
+	"finalized_checkpoint": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.FinalizedCheckpointEventHandlerFunc { return o.FinalizedCheckpointHandler }),
+	"head": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.HeadEventHandlerFunc { return o.HeadHandler }),
+	"payload_attestation_message": newEventTopic(unmarshalVersionedEventData,
+		func(o *api.EventsOpts) api.PayloadAttestationMessageEventHandlerFunc {
+			return o.PayloadAttestationMessageHandler
+		}),
+	"payload_attributes": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.PayloadAttributesEventHandlerFunc { return o.PayloadAttributesHandler }),
+	"proposer_preferences": newEventTopic(unmarshalVersionedEventData,
+		func(o *api.EventsOpts) api.ProposerPreferencesEventHandlerFunc { return o.ProposerPreferencesHandler }),
+	"proposer_slashing": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.ProposerSlashingEventHandlerFunc { return o.ProposerSlashingHandler }),
+	"single_attestation": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.SingleAttestationEventHandlerFunc { return o.SingleAttestationHandler }),
+	"voluntary_exit": newEventTopic(json.Unmarshal,
+		func(o *api.EventsOpts) api.VoluntaryExitEventHandlerFunc { return o.VoluntaryExitHandler }),
 }
 
-func (*Service) handleBlobSidecarEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &apiv1.BlobSidecarEvent{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse blob sidecar event")
-
-		return
-	}
-
-	switch {
-	case opts.BlobSidecarHandler != nil:
-		opts.BlobSidecarHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleBlockEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &apiv1.BlockEvent{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse block event")
-
-		return
-	}
-
-	switch {
-	case opts.BlockHandler != nil:
-		opts.BlockHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleBlockGossipEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &apiv1.BlockGossipEvent{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse block gossip event")
-
-		return
-	}
-
-	switch {
-	case opts.BlockGossipHandler != nil:
-		opts.BlockGossipHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleBLSToExecutionChangeEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &capella.SignedBLSToExecutionChange{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse bls to execution change event")
-
-		return
-	}
-
-	switch {
-	case opts.BLSToExecutionChangeHandler != nil:
-		opts.BLSToExecutionChangeHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleChainReorgEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &apiv1.ChainReorgEvent{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse chain reorg event")
-
-		return
-	}
-
-	switch {
-	case opts.ChainReorgHandler != nil:
-		opts.ChainReorgHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleContributionAndProofEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &altair.SignedContributionAndProof{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse contribution and proof event")
-
-		return
-	}
-
-	switch {
-	case opts.ContributionAndProofHandler != nil:
-		opts.ContributionAndProofHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleFinalizedCheckpointEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &apiv1.FinalizedCheckpointEvent{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse finalized checkpoint event")
-
-		return
-	}
-
-	switch {
-	case opts.FinalizedCheckpointHandler != nil:
-		opts.FinalizedCheckpointHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleHeadEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &apiv1.HeadEvent{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse head event")
-
-		return
-	}
-
-	switch {
-	case opts.HeadHandler != nil:
-		opts.HeadHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handlePayloadAttributesEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &apiv1.PayloadAttributesEvent{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse payload attributes event")
-
-		return
-	}
-
-	switch {
-	case opts.PayloadAttributesHandler != nil:
-		opts.PayloadAttributesHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleProposerSlashingEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &phase0.ProposerSlashing{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse proposer slashing event")
-
-		return
-	}
-
-	switch {
-	case opts.ProposerSlashingHandler != nil:
-		opts.ProposerSlashingHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleSingleAttestationEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &electra.SingleAttestation{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse single attestation")
-
-		return
-	}
-
-	switch {
-	case opts.SingleAttestationHandler != nil:
-		opts.SingleAttestationHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleVoluntaryExitEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &phase0.SignedVoluntaryExit{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse voluntary exit")
-
-		return
-	}
-
-	switch {
-	case opts.VoluntaryExitHandler != nil:
-		opts.VoluntaryExitHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleDataColumnSidecarEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &apiv1.DataColumnSidecarEvent{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse data column sidecar event")
-
-		return
-	}
-
-	switch {
-	case opts.DataColumnSidecarHandler != nil:
-		opts.DataColumnSidecarHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleExecutionPayloadEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &apiv1.ExecutionPayloadEvent{}
-
-	err := unmarshalVersionedEventData(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse execution payload event")
-
-		return
-	}
-
-	switch {
-	case opts.ExecutionPayloadHandler != nil:
-		opts.ExecutionPayloadHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleExecutionPayloadAvailableEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &apiv1.ExecutionPayloadAvailableEvent{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse execution payload available event")
-
-		return
-	}
-
-	switch {
-	case opts.ExecutionPayloadAvailableHandler != nil:
-		opts.ExecutionPayloadAvailableHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleExecutionPayloadBidEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &gloas.SignedExecutionPayloadBid{}
-
-	err := unmarshalVersionedEventData(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse execution payload bid event")
-
-		return
-	}
-
-	switch {
-	case opts.ExecutionPayloadBidHandler != nil:
-		opts.ExecutionPayloadBidHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleExecutionPayloadGossipEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &apiv1.ExecutionPayloadGossipEvent{}
-
-	err := unmarshalVersionedEventData(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse execution payload gossip event")
-
-		return
-	}
-
-	switch {
-	case opts.ExecutionPayloadGossipHandler != nil:
-		opts.ExecutionPayloadGossipHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleFastConfirmationEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &apiv1.FastConfirmationEvent{}
-
-	err := json.Unmarshal(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse fast confirmation event")
-
-		return
-	}
-
-	switch {
-	case opts.FastConfirmationHandler != nil:
-		opts.FastConfirmationHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handlePayloadAttestationMessageEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &gloas.PayloadAttestationMessage{}
-
-	err := unmarshalVersionedEventData(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse payload attestation message event")
-
-		return
-	}
-
-	switch {
-	case opts.PayloadAttestationMessageHandler != nil:
-		opts.PayloadAttestationMessageHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
-	}
-}
-
-func (*Service) handleProposerPreferencesEvent(ctx context.Context,
-	msg *sse.Event,
-	opts *api.EventsOpts,
-) {
-	log := zerolog.Ctx(ctx)
-	data := &gloas.SignedProposerPreferences{}
-
-	err := unmarshalVersionedEventData(msg.Data, data)
-	if err != nil {
-		log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse proposer preferences event")
-
-		return
-	}
-
-	switch {
-	case opts.ProposerPreferencesHandler != nil:
-		opts.ProposerPreferencesHandler(ctx, data)
-	case opts.Handler != nil:
-		opts.Handler(&apiv1.Event{
-			Topic: string(msg.Event),
-			Data:  data,
-		})
-	default:
-		log.Debug().Msg("No specific or generic handler supplied; ignoring")
+// newEventTopic creates the handling of a topic whose events decode, with the given decoder,
+// into a T.  handler selects the topic's specific handler from the options; an event is passed
+// to it if it is set, and otherwise to the generic handler.
+func newEventTopic[T any, H ~func(context.Context, *T)](decode func([]byte, any) error,
+	handler func(opts *api.EventsOpts) H,
+) eventTopic {
+	return eventTopic{
+		hasHandler: func(opts *api.EventsOpts) bool {
+			return handler(opts) != nil
+		},
+		handle: func(ctx context.Context, msg *sse.Event, opts *api.EventsOpts) {
+			log := zerolog.Ctx(ctx)
+
+			data := new(T)
+			if err := decode(msg.Data, data); err != nil {
+				log.Error().Err(err).Str("topic", string(msg.Event)).RawJSON("data", msg.Data).Msg("Failed to parse event")
+
+				return
+			}
+
+			switch specific := handler(opts); {
+			case specific != nil:
+				specific(ctx, data)
+			case opts.Handler != nil:
+				opts.Handler(&apiv1.Event{
+					Topic: string(msg.Event),
+					Data:  data,
+				})
+			default:
+				log.Debug().Msg("No specific or generic handler supplied; ignoring")
+			}
+		},
 	}
 }
 
