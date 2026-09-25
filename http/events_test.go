@@ -31,6 +31,26 @@ func TestValidateEventsOptsNil(t *testing.T) {
 	require.ErrorIs(t, beaconhttp.ValidateEventsOpts(nil), client.ErrNoOptions)
 }
 
+// TestValidateEventsOptsIgnoresSupportedEventTopics confirms that changing the exported
+// apiv1.SupportedEventTopics map changes neither which topics are accepted nor which refused, as
+// validation checks the topics the dispatcher supports.  No test in the package runs in parallel,
+// so changing the map here, and restoring it, races with no other.
+func TestValidateEventsOptsIgnoresSupportedEventTopics(t *testing.T) {
+	apiv1.SupportedEventTopics["injected"] = true
+	delete(apiv1.SupportedEventTopics, "head")
+	t.Cleanup(func() {
+		delete(apiv1.SupportedEventTopics, "injected")
+		apiv1.SupportedEventTopics["head"] = true
+	})
+
+	handler := func(*apiv1.Event) {}
+
+	require.EqualError(t,
+		beaconhttp.ValidateEventsOpts(&api.EventsOpts{Topics: []string{"injected"}, Handler: handler}),
+		"unsupported event topic injected: invalid options")
+	require.NoError(t, beaconhttp.ValidateEventsOpts(&api.EventsOpts{Topics: []string{"head"}, Handler: handler}))
+}
+
 func TestEvents(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
