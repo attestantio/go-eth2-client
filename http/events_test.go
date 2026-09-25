@@ -93,10 +93,9 @@ var gloasEventTopics = []string{
 //
 // Every topic is subscribed to with its own topic-specific handler, which must
 // be accepted outright — that also pins each topic to the EventsOpts field
-// checkEventSpecificHandler consults for it, which a topic-agnostic generic
-// handler would not. One topic is additionally subscribed to with no handler at
-// all: "no handler for <topic> event" is only reachable past the allow-list
-// check, so it is direct evidence of clearing the gate rather than of merely
+// the dispatcher binds to it, which a topic-agnostic generic handler would not.
+// One topic is additionally subscribed to with no handler at all: "no handler
+// for <topic> event" is only reachable past the supported-topic check, so it is direct evidence of clearing the gate rather than of merely
 // getting a nil error afterwards.
 func TestEventsGloasTopics(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -112,7 +111,7 @@ func TestEventsGloasTopics(t *testing.T) {
 		{
 			// The gate's two rejections are near-identical in wording, so this
 			// asserts the exact message: "unsupported event topic X" is the
-			// allow-list check's own return, while "no handler for X event"
+			// supported-topic check's own return, while "no handler for X event"
 			// can only be reached once that check has passed.
 			name: "ExecutionPayloadNoHandler",
 			opts: &api.EventsOpts{Topics: []string{"execution_payload"}},
@@ -175,7 +174,7 @@ func TestEventsGloasTopics(t *testing.T) {
 			},
 		},
 		{
-			// Control: shows what a topic the allow-list does not carry looks
+			// Control: shows what a topic the dispatcher does not support looks
 			// like, so the assertions above cannot pass vacuously.
 			name: "UnknownTopic",
 			opts: &api.EventsOpts{

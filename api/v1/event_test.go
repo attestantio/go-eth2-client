@@ -116,11 +116,10 @@ func TestEvent(t *testing.T) {
 	}
 }
 
-// TestSupportedEventTopicsGloas confirms the allow-list carries the event
-// topics introduced by the Gloas (ePBS) fork. SupportedEventTopics is what the
-// http client gates every Events() subscription on, so a topic missing from it
-// is unreachable from the public API however completely the rest of the client
-// handles it.
+// TestSupportedEventTopicsGloas confirms SupportedEventTopics lists the event
+// topics introduced by the Gloas (ePBS) fork. It is derived from the same topic
+// list the clients subscribe and dispatch from, so a topic missing from it is
+// missing from the clients too.
 //
 // The http package's dispatch test also pins the list, but this keeps a guard
 // beside the list itself that does not depend on the http client.
