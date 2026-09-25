@@ -375,9 +375,9 @@ func TestEventsRetriesDeferredClient(t *testing.T) {
 			multiClient, err := multi.New(ctx,
 				multi.WithLogLevel(zerolog.Disabled),
 				multi.WithClients([]consensusclient.Service{primary, deferred}),
+				multi.WithEventsRetryInterval(time.Millisecond),
 			)
 			require.NoError(t, err)
-			multi.SetEventsRetryInterval(multiClient, time.Millisecond)
 
 			require.NoError(t, multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{
 				Topics:  []string{"head"},
@@ -388,6 +388,41 @@ func TestEventsRetriesDeferredClient(t *testing.T) {
 				"the deferred client was abandoned after a failure")
 		})
 	}
+}
+
+// TestEventsRetriesFailedActiveClient confirms that an active client that fails to subscribe is
+// retried after the configured interval, and subscribed, rather than abandoned.
+func TestEventsRetriesFailedActiveClient(t *testing.T) {
+	ctx := context.Background()
+
+	failing, failingOpts := mockCapturingEvents(ctx, t, "mock 1")
+	other, _ := mockCapturingEvents(ctx, t, "mock 2")
+
+	subscribe := failing.EventsFunc
+	var eventCalls atomic.Int32
+	failing.EventsFunc = func(ctx context.Context, opts *api.EventsOpts) error {
+		if eventCalls.Add(1) == 1 {
+			return errors.New("failed to subscribe")
+		}
+
+		return subscribe(ctx, opts)
+	}
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{failing, other}),
+		multi.WithEventsRetryInterval(time.Millisecond),
+	)
+	require.NoError(t, err)
+
+	require.NoError(t, multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{
+		Topics:  []string{"head"},
+		Handler: func(*apiv1.Event) {},
+	}))
+
+	require.Eventually(t, func() bool { return failingOpts() != nil }, 5*time.Second, time.Millisecond,
+		"the client that failed to subscribe was never retried")
+	require.Equal(t, int32(2), eventCalls.Load())
 }
 
 // TestEventsStopsRetryingOnContextDone confirms that a deferred client is retried only for as
@@ -408,9 +443,9 @@ func TestEventsStopsRetryingOnContextDone(t *testing.T) {
 	multiClient, err := multi.New(context.Background(),
 		multi.WithLogLevel(zerolog.Disabled),
 		multi.WithClients([]consensusclient.Service{primary, deferred}),
+		multi.WithEventsRetryInterval(time.Millisecond),
 	)
 	require.NoError(t, err)
-	multi.SetEventsRetryInterval(multiClient, time.Millisecond)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	require.NoError(t, multiClient.(consensusclient.EventsProvider).Events(ctx, &api.EventsOpts{

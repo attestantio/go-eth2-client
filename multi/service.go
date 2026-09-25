@@ -115,7 +115,7 @@ func New(ctx context.Context, params ...Parameter) (consensusclient.Service, err
 		name:                parameters.name,
 		activeClients:       activeClients,
 		inactiveClients:     inactiveClients,
-		eventsRetryInterval: defaultEventsRetryInterval,
+		eventsRetryInterval: parameters.eventsRetryInterval,
 	}
 
 	// Set initial metrics.
