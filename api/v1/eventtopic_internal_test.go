@@ -14,6 +14,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 
@@ -76,6 +77,17 @@ func TestEventTopicDecodeTypes(t *testing.T) {
 			registered, exists := eventtopic.LookupType(reflect.TypeOf(test.expected).Elem())
 			require.True(t, exists, "no topic registered for the type")
 			require.Equal(t, test.name, registered.Name())
+		})
+	}
+}
+
+// TestEventTopicsRejectNullData confirms that the data type of every topic rejects null.  Decode
+// relies on this: a type without an UnmarshalJSON of its own would decode null into a zero value
+// without error, handing handlers a value with none of its fields set.
+func TestEventTopicsRejectNullData(t *testing.T) {
+	for _, topic := range eventTopics {
+		t.Run(topic.Name(), func(t *testing.T) {
+			require.Error(t, json.Unmarshal([]byte(`null`), topic.NewData()))
 		})
 	}
 }
