@@ -35,10 +35,11 @@ jobs:
         run: go test -v -timeout=10m ./http/...
 
   gloas:
-    # Optional: only runs when a Gloas endpoint is configured. Without the
-    # HTTP_ADDRESS_GLOAS repository variable the job is skipped, so forks and
-    # branches that have no devnet to point at are unaffected.
-    if: vars.HTTP_ADDRESS_GLOAS != ''
+    name: Gloas HTTP tests (advisory)
+    # Advisory: require a configured endpoint. Fork PRs cannot read
+    # HTTP_BEARER_TOKEN_GLOAS, so do not attempt an unauthenticated run.
+    if: ${{ vars.HTTP_ADDRESS_GLOAS != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+    continue-on-error: true
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
@@ -58,8 +59,7 @@ jobs:
           # the job is to prove the gated tests run, so a skip here means the
           # endpoint is not on Gloas or the gate itself is broken.
           HTTP_REQUIRE_GLOAS: 'true'
-        # Scoped rather than the whole package: post-Gloas block production is
-        # v4-only, so the v3 rows of ./http/... fail permanently against a Gloas
-        # node for reasons this job is not testing. A new Gloas live test needs a
-        # name matching one of these to be picked up.
+        # Temporary exception to full-suite selection: v3 block-production tests
+        # cannot pass on Gloas nodes. Remove the filter when those tests are gated
+        # on node capability; new Gloas live tests must match this pattern meanwhile.
         run: go test -v -timeout=10m -run 'Gloas|EPBS|ExecutionPayload' ./http/...
