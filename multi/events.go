@@ -80,7 +80,21 @@ func (s *Service) Events(ctx context.Context,
 		}
 
 		if err := provider.Events(ctx, ah.clientOpts); err != nil {
-			ah.log.Warn().Str("address", ah.address).Strs("topics", opts.Topics).Err(err).Msg("Failed to set up events handler")
+			if _, isDeferrable := client.(deferredEventsClient); !isDeferrable {
+				ah.log.Error().
+					Str("address", ah.address).
+					Strs("topics", opts.Topics).
+					Err(err).
+					Msg("Failed to set up events handler; not a node syncing provider, so will not retry")
+
+				continue
+			}
+
+			ah.log.Warn().
+				Str("address", ah.address).
+				Strs("topics", opts.Topics).
+				Err(err).
+				Msg("Failed to set up events handler; will retry")
 			inactiveClients = append(inactiveClients, client)
 
 			continue
@@ -96,7 +110,7 @@ func (s *Service) Events(ctx context.Context,
 		if !isDeferrable {
 			msg := "Not an events provider"
 			if _, isEventsProvider := inactiveClient.(consensusclient.EventsProvider); isEventsProvider {
-				msg = "Not a node syncing provider; cannot retry events subscription"
+				msg = "Not a node syncing provider; not subscribing to events"
 			}
 			log.Error().Str("address", inactiveClient.Address()).Strs("topics", opts.Topics).Msg(msg)
 

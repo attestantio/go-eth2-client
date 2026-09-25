@@ -16,7 +16,10 @@ package multi
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
+	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -201,25 +204,104 @@ func (eventsOnlyClient) Events(context.Context, *api.EventsOpts) error {
 	return errors.New("subscription refused")
 }
 
-// TestEventsLogsWhyClientIsDropped confirms that an active client that fails to subscribe has the
-// failure logged, and that one that then cannot be retried is logged as lacking sync state rather
-// than events.
+// lockedBuffer is a buffer that can be written by one goroutine while read by another.
+type lockedBuffer struct {
+	mu     sync.Mutex
+	buffer bytes.Buffer
+}
+
+func (b *lockedBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return b.buffer.Write(p)
+}
+
+func (b *lockedBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return b.buffer.String()
+}
+
+// TestEventsLogsWhyClientIsDropped confirms that each client Events does not subscribe is logged
+// once, saying whether it will be retried and, if not, what it lacks.
 func TestEventsLogsWhyClientIsDropped(t *testing.T) {
-	var output bytes.Buffer
-	s := &Service{
-		log:                 zerolog.New(&output),
-		activeClients:       []consensusclient.Service{eventsOnlyClient{}},
-		eventsRetryInterval: time.Millisecond,
+	failing, err := mock.New(context.Background(), mock.WithName("failing"))
+	require.NoError(t, err)
+	failing.EventsFunc = func(context.Context, *api.EventsOpts) error {
+		return errors.New("subscription refused")
 	}
 
-	err := s.Events(context.Background(), &api.EventsOpts{
-		Topics:  []string{"head"},
-		Handler: func(*apiv1.Event) {},
-	})
-	require.EqualError(t, err, "no client can provide events")
+	provider, err := mock.New(context.Background(), mock.WithName("provider"))
+	require.NoError(t, err)
+	provider.EventsFunc = func(context.Context, *api.EventsOpts) error { return nil }
 
-	logged := output.String()
-	require.Contains(t, logged, `"error":"subscription refused"`)
-	require.Contains(t, logged, "Not a node syncing provider; cannot retry events subscription")
-	require.NotContains(t, logged, "Not an events")
+	tests := []struct {
+		name            string
+		activeClients   []consensusclient.Service
+		inactiveClients []consensusclient.Service
+		deferred        bool
+		expected        string
+	}{
+		{
+			name:          "ActiveFailsDeferrable",
+			activeClients: []consensusclient.Service{failing},
+			deferred:      true,
+			expected:      `{"level":"warn","address":"failing","topics":["head"],"error":"subscription refused","message":"Failed to set up events handler; will retry"}`,
+		},
+		{
+			name:          "ActiveFailsNotDeferrable",
+			activeClients: []consensusclient.Service{provider, eventsOnlyClient{}},
+			expected:      `{"level":"error","address":"events only","topics":["head"],"error":"subscription refused","message":"Failed to set up events handler; not a node syncing provider, so will not retry"}`,
+		},
+		{
+			name:            "InactiveNotEventsProvider",
+			activeClients:   []consensusclient.Service{provider},
+			inactiveClients: []consensusclient.Service{syncingOnlyClient{}},
+			expected:        `{"level":"error","address":"syncing only","topics":["head"],"message":"Not an events provider"}`,
+		},
+		{
+			name:            "InactiveNotSyncingProvider",
+			activeClients:   []consensusclient.Service{provider},
+			inactiveClients: []consensusclient.Service{eventsOnlyClient{}},
+			expected:        `{"level":"error","address":"events only","topics":["head"],"message":"Not a node syncing provider; not subscribing to events"}`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// The deferred client is retried until the context is done, so end it with the test.
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			output := &lockedBuffer{}
+			s := &Service{
+				log:                 zerolog.New(output).Level(zerolog.WarnLevel),
+				activeClients:       test.activeClients,
+				inactiveClients:     test.inactiveClients,
+				eventsRetryInterval: time.Hour,
+			}
+
+			require.NoError(t, s.Events(ctx, &api.EventsOpts{
+				Topics:  []string{"head"},
+				Handler: func(*apiv1.Event) {},
+			}))
+
+			// Events writes the line before it returns.  A deferred client's retry goroutine can
+			// log further lines of its own, so only without one is the line the only one.
+			lines := strings.Split(strings.TrimSpace(output.String()), "\n")
+			if !test.deferred {
+				require.Len(t, lines, 1, "expected exactly one log line")
+			}
+
+			// Each line carries a random call id, which is dropped before comparing.
+			var logged map[string]any
+			require.NoError(t, json.Unmarshal([]byte(lines[0]), &logged))
+			delete(logged, "id")
+			actual, err := json.Marshal(logged)
+			require.NoError(t, err)
+			require.JSONEq(t, test.expected, string(actual))
+		})
+	}
 }
