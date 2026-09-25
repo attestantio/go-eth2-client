@@ -117,9 +117,10 @@ func TestEvent(t *testing.T) {
 }
 
 // TestSupportedEventTopicsGloas confirms SupportedEventTopics lists the event
-// topics introduced by the Gloas (ePBS) fork. It is derived from the same topic
-// list the clients subscribe and dispatch from, so a topic missing from it is
-// missing from the clients too.
+// topics introduced by the Gloas (ePBS) fork. It is built from the topic list
+// the clients subscribe and dispatch from, so a topic missing from it when the
+// package loads is missing from that list too. Callers can edit the map
+// afterwards, which changes nothing the clients do.
 //
 // The http package's dispatch test also pins the list, but this keeps a guard
 // beside the list itself that does not depend on the http client.

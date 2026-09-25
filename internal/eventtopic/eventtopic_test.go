@@ -55,7 +55,8 @@ func TestDecode(t *testing.T) {
 		{name: "UnknownFork", input: wrapped("unknown"), err: `unsupported version "unknown" for payload_attestation_message event`},
 		// The data type rejects null itself, so no check of Decode's own is needed.
 		{name: "WrappedNull", input: []byte(`{"version":"gloas","data":null}`), err: "validator index missing"},
-		{name: "BareNull", input: []byte(` null `), err: "validator index missing"},
+		{name: "BareNull", input: []byte(`null`), err: "validator index missing"},
+		{name: "BareNullWithWhitespace", input: []byte(` null `), err: "validator index missing"},
 		{name: "Malformed", input: []byte(`invalid`), err: "invalid character 'i' looking for beginning of value"},
 	}
 
@@ -78,15 +79,15 @@ func TestDecode(t *testing.T) {
 // registerOnce registers a topic unless one with its type already is.  The registry is global, so
 // without this a test registering a topic would panic when run again in the same process, as
 // with -count.
-func registerOnce[T any](topic eventtopic.Descriptor) {
-	if _, exists := eventtopic.LookupType(reflect.TypeFor[T]()); !exists {
+func registerOnce(topic eventtopic.Descriptor) {
+	if _, exists := eventtopic.LookupType(reflect.TypeOf(topic.NewData()).Elem()); !exists {
 		eventtopic.Register(topic)
 	}
 }
 
 func TestRegisterRejectsSharedType(t *testing.T) {
 	type data struct{}
-	registerOnce[data](eventtopic.New[data]("first"))
+	registerOnce(eventtopic.New[data]("first"))
 
 	require.PanicsWithValue(t, "event topics first and second both decode into eventtopic_test.data", func() {
 		eventtopic.Register(eventtopic.New[data]("second"))
@@ -103,7 +104,7 @@ func TestLookupPanicsWithoutTopic(t *testing.T) {
 func TestLookupRegisteredByPointer(t *testing.T) {
 	type data struct{}
 	topic := eventtopic.New[data]("by_pointer")
-	registerOnce[data](&topic)
+	registerOnce(&topic)
 
 	require.Equal(t, "by_pointer", eventtopic.Lookup[data]().Name())
 }

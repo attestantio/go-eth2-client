@@ -107,16 +107,18 @@ var gloasEventTopics = []string{
 // Events() gates every requested topic on the topics the dispatcher supports, via
 // ValidateEventsOpts, before it builds the subscription, so a topic the gate
 // refuses never reaches the wire, however completely the dispatcher downstream
-// would handle it. Any test that calls
-// handleEvent directly sits downstream of this check and so cannot exercise
-// it, which leaves this test the only coverage of the gate itself.
+// would handle it. A test that calls handleEvent directly sits downstream of
+// this check and so cannot exercise it. This test covers the gate through
+// Events() against a node; TestValidateEventsOptsIgnoresSupportedEventTopics
+// covers it without one.
 //
 // Every topic is subscribed to with its own topic-specific handler, which must
 // be accepted outright — that also pins each topic to the EventsOpts field
 // the dispatcher binds to it, which a topic-agnostic generic handler would not.
 // One topic is additionally subscribed to with no handler at all: "no handler
-// for <topic> event" is only reachable past the supported-topic check, so it is direct evidence of clearing the gate rather than of merely
-// getting a nil error afterwards.
+// for <topic> event" is only reachable past the supported-topic check, so it
+// is direct evidence of clearing the gate rather than of merely getting a nil
+// error afterwards.
 func TestEventsGloasTopics(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
