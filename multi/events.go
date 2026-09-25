@@ -37,8 +37,9 @@ type deferredEventsClient interface {
 
 var (
 	_ deferredEventsClient = (*Service)(nil)
-	// The clients a multi service is given are HTTP clients, and one that is not a
-	// deferredEventsClient is never retried, so check they are.
+	// A client that is not a deferredEventsClient is never retried.  This covers the HTTP
+	// clients WithAddresses creates; those supplied through WithClients are checked when Events
+	// is called.
 	_ deferredEventsClient = (*http.Service)(nil)
 )
 
