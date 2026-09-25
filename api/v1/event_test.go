@@ -138,7 +138,7 @@ func TestSupportedEventTopicsGloas(t *testing.T) {
 	for _, topic := range topics {
 		t.Run(topic, func(t *testing.T) {
 			require.True(t, api.SupportedEventTopics[topic],
-				"topic %s missing from SupportedEventTopics; Events() will reject it", topic)
+				"topic %s missing from SupportedEventTopics, so from the event topic list", topic)
 		})
 	}
 }

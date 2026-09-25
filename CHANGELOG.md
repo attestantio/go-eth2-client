@@ -1,5 +1,6 @@
 dev:
-  - Events() no longer checks topics against SupportedEventTopics, so removing a topic from the map no longer refuses subscriptions to it
+  - Events() no longer checks topics against SupportedEventTopics: removing a topic from the map no longer refuses subscriptions to it, and adding one no longer lets it through
+  - multi Events() waits one retry interval before retrying a client that failed to subscribe, rather than retrying at once; set the interval, 5s by default, with WithEventsRetryInterval
 
 0.29.0:
   - use dynssz library for SSZ handling

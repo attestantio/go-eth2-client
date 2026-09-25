@@ -108,9 +108,10 @@ var gloasEventTopics = []string{
 // ValidateEventsOpts, before it builds the subscription, so a topic the gate
 // refuses never reaches the wire, however completely the dispatcher downstream
 // would handle it. A test that calls handleEvent directly sits downstream of
-// this check and so cannot exercise it. This test covers the gate through
-// Events() against a node; TestValidateEventsOptsIgnoresSupportedEventTopics
-// covers it without one.
+// this check and so cannot exercise it. This test is the only one that checks
+// the gate accepts the Gloas topics, and it needs a node.
+// TestValidateEventsOptsIgnoresSupportedEventTopics checks, without one, only
+// that the gate consults the dispatcher rather than SupportedEventTopics.
 //
 // Every topic is subscribed to with its own topic-specific handler, which must
 // be accepted outright — that also pins each topic to the EventsOpts field
