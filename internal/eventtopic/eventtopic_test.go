@@ -15,6 +15,7 @@ package eventtopic_test
 
 import (
 	"encoding/json"
+	"reflect"
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/internal/eventtopic"
@@ -74,9 +75,18 @@ func TestDecode(t *testing.T) {
 	}
 }
 
+// registerOnce registers a topic unless one with its type already is.  The registry is global, so
+// without this a test registering a topic would panic when run again in the same process, as
+// with -count.
+func registerOnce[T any](topic eventtopic.Descriptor) {
+	if _, exists := eventtopic.LookupType(reflect.TypeFor[T]()); !exists {
+		eventtopic.Register(topic)
+	}
+}
+
 func TestRegisterRejectsSharedType(t *testing.T) {
 	type data struct{}
-	eventtopic.Register(eventtopic.New[data]("first"))
+	registerOnce[data](eventtopic.New[data]("first"))
 
 	require.PanicsWithValue(t, "event topics first and second both decode into eventtopic_test.data", func() {
 		eventtopic.Register(eventtopic.New[data]("second"))
@@ -93,7 +103,7 @@ func TestLookupPanicsWithoutTopic(t *testing.T) {
 func TestLookupRegisteredByPointer(t *testing.T) {
 	type data struct{}
 	topic := eventtopic.New[data]("by_pointer")
-	eventtopic.Register(&topic)
+	registerOnce[data](&topic)
 
 	require.Equal(t, "by_pointer", eventtopic.Lookup[data]().Name())
 }
