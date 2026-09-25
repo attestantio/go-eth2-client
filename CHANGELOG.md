@@ -1,3 +1,6 @@
+dev:
+  - Events() no longer checks topics against SupportedEventTopics, so removing a topic from the map no longer refuses subscriptions to it
+
 0.29.0:
   - use dynssz library for SSZ handling
 
