@@ -58,6 +58,8 @@ func (s *Service) Events(ctx context.Context,
 	// We listen to all active clients, and only pass along events from the currently active provider.
 
 	// Grab local copy of both active and inactive clients in case it is updated whilst we are using it.
+	// The copies are only read.  Clients to retry go on a list of Events' own, as the service's
+	// lists can have spare capacity, into which appending here, outside the lock, would write.
 	s.clientsMu.RLock()
 	activeClients := s.activeClients
 	inactiveClients := s.inactiveClients
@@ -68,10 +70,10 @@ func (s *Service) Events(ctx context.Context,
 	subscribed := 0
 	retries := make([]eventsRetry, 0, len(activeClients)+len(inactiveClients))
 	for _, client := range activeClients {
-		ah := newActiveHandler(s, log, client.Address(), opts)
-
+		var ah *activeHandler
 		var err error
 		if provider, isProvider := client.(consensusclient.EventsProvider); isProvider {
+			ah = newActiveHandler(s, log, client.Address(), opts)
 			err = provider.Events(ctx, ah.clientOpts)
 			if err == nil {
 				subscribed++
@@ -82,13 +84,16 @@ func (s *Service) Events(ctx context.Context,
 		}
 
 		if deferredClient, isRetryable := retryableEventsClient(log, client, opts.Topics, err); isRetryable {
-			retries = append(retries, eventsRetry{client: deferredClient, wait: true})
+			retries = append(retries, eventsRetry{client: deferredClient, handler: ah, wait: true})
 		}
 	}
 
 	for _, inactiveClient := range inactiveClients {
 		if deferredClient, isRetryable := retryableEventsClient(log, inactiveClient, opts.Topics, nil); isRetryable {
-			retries = append(retries, eventsRetry{client: deferredClient})
+			retries = append(retries, eventsRetry{
+				client:  deferredClient,
+				handler: newActiveHandler(s, log, deferredClient.Address(), opts),
+			})
 		}
 	}
 
@@ -97,12 +102,10 @@ func (s *Service) Events(ctx context.Context,
 		return errors.New("no client can provide events")
 	}
 
-	// Periodically try all inactive clients, quitting as they become active.  A failure to check
+	// Periodically try each client to retry, quitting as it becomes active.  A failure to check
 	// sync state or to subscribe is retried rather than final: the client can still be made the
 	// active one later, and were it left unsubscribed its events would then never arrive.
 	for _, retry := range retries {
-		ah := newActiveHandler(s, log, retry.client.Address(), opts)
-
 		go func(c deferredEventsClient, ah *activeHandler, wait bool) {
 			for {
 				if wait {
@@ -143,7 +146,7 @@ func (s *Service) Events(ctx context.Context,
 					// Still syncing; check again after the interval.
 				}
 			}
-		}(retry.client, ah, retry.wait)
+		}(retry.client, retry.handler, retry.wait)
 	}
 
 	return nil
@@ -152,6 +155,8 @@ func (s *Service) Events(ctx context.Context,
 // eventsRetry is a client whose subscription Events retries.
 type eventsRetry struct {
 	client deferredEventsClient
+	// handler forwards the client's events while it is the active one.
+	handler *activeHandler
 	// wait is set if the client has just failed to subscribe, so is to wait an interval before
 	// it is first retried.
 	wait bool
