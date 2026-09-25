@@ -241,18 +241,23 @@ func TestEventsLogsWhyClientIsDropped(t *testing.T) {
 		name            string
 		activeClients   []consensusclient.Service
 		inactiveClients []consensusclient.Service
-		deferred        bool
+		err             string
 		expected        string
 	}{
 		{
 			name:          "ActiveFailsDeferrable",
 			activeClients: []consensusclient.Service{failing},
-			deferred:      true,
 			expected:      `{"level":"warn","address":"failing","topics":["head"],"error":"subscription refused","message":"Failed to set up events handler; will retry"}`,
 		},
 		{
 			name:          "ActiveFailsNotDeferrable",
 			activeClients: []consensusclient.Service{provider, eventsOnlyClient{}},
+			expected:      `{"level":"error","address":"events only","topics":["head"],"error":"subscription refused","message":"Failed to set up events handler; not a node syncing provider, so will not retry"}`,
+		},
+		{
+			name:          "OnlyClientFailsNotDeferrable",
+			activeClients: []consensusclient.Service{eventsOnlyClient{}},
+			err:           "no client can provide events",
 			expected:      `{"level":"error","address":"events only","topics":["head"],"error":"subscription refused","message":"Failed to set up events handler; not a node syncing provider, so will not retry"}`,
 		},
 		{
@@ -283,17 +288,23 @@ func TestEventsLogsWhyClientIsDropped(t *testing.T) {
 				eventsRetryInterval: time.Hour,
 			}
 
-			require.NoError(t, s.Events(ctx, &api.EventsOpts{
+			err := s.Events(ctx, &api.EventsOpts{
 				Topics:  []string{"head"},
 				Handler: func(*apiv1.Event) {},
-			}))
-
-			// Events writes the line before it returns.  A deferred client's retry goroutine can
-			// log further lines of its own, so only without one is the line the only one.
-			lines := strings.Split(strings.TrimSpace(output.String()), "\n")
-			if !test.deferred {
-				require.Len(t, lines, 1, "expected exactly one log line")
+			})
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+			} else {
+				require.NoError(t, err)
 			}
+
+			// Events writes the line before it returns.  A client that failed to subscribe waits
+			// an interval before its retry goroutine tries again, so no further line follows.
+			require.Never(t, func() bool {
+				return strings.Count(output.String(), "\n") > 1
+			}, 50*time.Millisecond, 5*time.Millisecond, "expected exactly one log line")
+			lines := strings.Split(strings.TrimSpace(output.String()), "\n")
+			require.Len(t, lines, 1, "expected exactly one log line")
 
 			// Each line carries a random call id, which is dropped before comparing.
 			var logged map[string]any

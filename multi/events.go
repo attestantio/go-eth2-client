@@ -18,7 +18,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"slices"
 	"time"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
@@ -59,80 +58,62 @@ func (s *Service) Events(ctx context.Context,
 	// We listen to all active clients, and only pass along events from the currently active provider.
 
 	// Grab local copy of both active and inactive clients in case it is updated whilst we are using it.
-	// The inactive list is cloned rather than shared, as active clients that fail to subscribe are
-	// appended to it below, outside the lock, and the service's own list can have spare capacity
-	// for that append to write into.
 	s.clientsMu.RLock()
 	activeClients := s.activeClients
-	inactiveClients := slices.Clone(s.inactiveClients)
+	inactiveClients := s.inactiveClients
 	s.clientsMu.RUnlock()
 
-	// Call all active clients immediately.
+	// Call all active clients immediately.  Those that fail are retried with the inactive clients,
+	// but only after an interval, as they have just been tried.
 	subscribed := 0
+	retries := make([]eventsRetry, 0, len(activeClients)+len(inactiveClients))
 	for _, client := range activeClients {
 		ah := newActiveHandler(s, log, client.Address(), opts)
 
-		provider, isProvider := client.(consensusclient.EventsProvider)
-		if !isProvider {
-			ah.log.Error().Str("address", ah.address).Strs("topics", opts.Topics).Msg("Not an events provider")
-
-			continue
-		}
-
-		if err := provider.Events(ctx, ah.clientOpts); err != nil {
-			if _, isDeferrable := client.(deferredEventsClient); !isDeferrable {
-				ah.log.Error().
-					Str("address", ah.address).
-					Strs("topics", opts.Topics).
-					Err(err).
-					Msg("Failed to set up events handler; not a node syncing provider, so will not retry")
+		var err error
+		if provider, isProvider := client.(consensusclient.EventsProvider); isProvider {
+			err = provider.Events(ctx, ah.clientOpts)
+			if err == nil {
+				subscribed++
+				log.Trace().Str("address", ah.address).Strs("topics", opts.Topics).Msg("Events handler active")
 
 				continue
 			}
-
-			ah.log.Warn().
-				Str("address", ah.address).
-				Strs("topics", opts.Topics).
-				Err(err).
-				Msg("Failed to set up events handler; will retry")
-			inactiveClients = append(inactiveClients, client)
-
-			continue
 		}
 
-		subscribed++
-		log.Trace().Str("address", ah.address).Strs("topics", opts.Topics).Msg("Events handler active")
+		if deferredClient, isRetryable := retryableEventsClient(log, client, opts.Topics, err); isRetryable {
+			retries = append(retries, eventsRetry{client: deferredClient, wait: true})
+		}
 	}
 
-	deferredClients := make([]deferredEventsClient, 0, len(inactiveClients))
 	for _, inactiveClient := range inactiveClients {
-		deferredClient, isDeferrable := inactiveClient.(deferredEventsClient)
-		if !isDeferrable {
-			msg := "Not an events provider"
-			if _, isEventsProvider := inactiveClient.(consensusclient.EventsProvider); isEventsProvider {
-				msg = "Not a node syncing provider; not subscribing to events"
-			}
-			log.Error().Str("address", inactiveClient.Address()).Strs("topics", opts.Topics).Msg(msg)
-
-			continue
+		if deferredClient, isRetryable := retryableEventsClient(log, inactiveClient, opts.Topics, nil); isRetryable {
+			retries = append(retries, eventsRetry{client: deferredClient})
 		}
-
-		deferredClients = append(deferredClients, deferredClient)
 	}
 
 	// With no client subscribed or to be retried, no event would ever arrive.
-	if subscribed == 0 && len(deferredClients) == 0 {
+	if subscribed == 0 && len(retries) == 0 {
 		return errors.New("no client can provide events")
 	}
 
 	// Periodically try all inactive clients, quitting as they become active.  A failure to check
 	// sync state or to subscribe is retried rather than final: the client can still be made the
 	// active one later, and were it left unsubscribed its events would then never arrive.
-	for _, deferredClient := range deferredClients {
-		ah := newActiveHandler(s, log, deferredClient.Address(), opts)
+	for _, retry := range retries {
+		ah := newActiveHandler(s, log, retry.client.Address(), opts)
 
-		go func(c deferredEventsClient, ah *activeHandler) {
+		go func(c deferredEventsClient, ah *activeHandler, wait bool) {
 			for {
+				if wait {
+					select {
+					case <-ctx.Done():
+						return
+					case <-time.After(s.retryInterval()):
+					}
+				}
+				wait = true
+
 				syncResponse, err := c.NodeSyncing(ctx, &api.NodeSyncingOpts{})
 
 				switch {
@@ -161,17 +142,52 @@ func (s *Service) Events(ctx context.Context,
 				default:
 					// Still syncing; check again after the interval.
 				}
-
-				select {
-				case <-ctx.Done():
-					return
-				case <-time.After(s.retryInterval()):
-				}
 			}
-		}(deferredClient, ah)
+		}(retry.client, ah, retry.wait)
 	}
 
 	return nil
+}
+
+// eventsRetry is a client whose subscription Events retries.
+type eventsRetry struct {
+	client deferredEventsClient
+	// wait is set if the client has just failed to subscribe, so is to wait an interval before
+	// it is first retried.
+	wait bool
+}
+
+// retryableEventsClient reports whether the subscription of a client that is not subscribed can
+// be retried, logging once for the client why it is being retried or dropped.  subscribeErr is
+// the error from an attempt to subscribe the client, or nil if none was made.
+func retryableEventsClient(log zerolog.Logger,
+	client consensusclient.Service,
+	topics []string,
+	subscribeErr error,
+) (
+	deferredEventsClient,
+	bool,
+) {
+	deferredClient, isDeferrable := client.(deferredEventsClient)
+	_, isProvider := client.(consensusclient.EventsProvider)
+
+	level := zerolog.ErrorLevel
+	var msg string
+	switch {
+	case !isProvider:
+		msg = "Not an events provider"
+	case isDeferrable && subscribeErr == nil:
+		return deferredClient, true
+	case isDeferrable:
+		level, msg = zerolog.WarnLevel, "Failed to set up events handler; will retry"
+	case subscribeErr != nil:
+		msg = "Failed to set up events handler; not a node syncing provider, so will not retry"
+	default:
+		msg = "Not a node syncing provider; not subscribing to events"
+	}
+	log.WithLevel(level).Str("address", client.Address()).Strs("topics", topics).Err(subscribeErr).Msg(msg)
+
+	return deferredClient, isDeferrable
 }
 
 // retryInterval returns how long Events waits between attempts to subscribe a deferred client.
