@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -116,6 +116,10 @@ func (e *HeadEvent) UnmarshalJSON(input []byte) error {
 
 	copy(e.State[:], state)
 	e.EpochTransition = headEventJSON.EpochTransition
+	// The dependent roots only have partial coverage so do not complain if not present, but
+	// clear them so that a value reused for an event without them does not keep an earlier one.
+	e.CurrentDutyDependentRoot = phase0.Root{}
+	e.PreviousDutyDependentRoot = phase0.Root{}
 	// CurrentDutyDependentRoot only has partial coverage so do not complain if not present.
 	if headEventJSON.CurrentDutyDependentRoot != "" {
 		currentDutyDependentRoot, err := hex.DecodeString(strings.TrimPrefix(headEventJSON.CurrentDutyDependentRoot, "0x"))

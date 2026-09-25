@@ -32,6 +32,8 @@ type parameters struct {
 	enforceJSON       bool
 	allowDelayedStart bool
 	name              string
+
+	eventsRetryInterval time.Duration
 }
 
 // Parameter is the interface for service parameters.
@@ -108,12 +110,22 @@ func WithName(name string) Parameter {
 	})
 }
 
+// WithEventsRetryInterval sets how long Events waits between attempts to subscribe a client that
+// is not subscribed.  A client that fails to subscribe when Events is called waits this long
+// before its first retry; one that was not synced then is tried at once.
+func WithEventsRetryInterval(interval time.Duration) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.eventsRetryInterval = interval
+	})
+}
+
 // parseAndCheckParameters parses and checks parameters to ensure that mandatory parameters are present and correct.
 func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	parameters := parameters{
-		logLevel:     zerolog.GlobalLevel(),
-		timeout:      2 * time.Second,
-		extraHeaders: make(map[string]string),
+		logLevel:            zerolog.GlobalLevel(),
+		timeout:             2 * time.Second,
+		extraHeaders:        make(map[string]string),
+		eventsRetryInterval: defaultEventsRetryInterval,
 	}
 
 	for _, p := range params {
@@ -124,6 +136,10 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 
 	if len(parameters.addresses) > 0 && parameters.timeout == 0 {
 		return nil, errors.New("no timeout specified")
+	}
+
+	if parameters.eventsRetryInterval <= 0 {
+		return nil, errors.New("events retry interval must be positive")
 	}
 
 	if len(parameters.clients)+len(parameters.addresses) == 0 {

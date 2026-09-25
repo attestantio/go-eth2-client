@@ -21,6 +21,7 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/stretchr/testify/require"
@@ -37,6 +38,16 @@ func TestBlobsSidecars(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NotNil(t, headBlock)
+
+	if headBlock.Data.Version < spec.DataVersionDeneb {
+		t.Skip("Client does not support Deneb")
+	}
+
+	blobKZGCommitments, err := headBlock.Data.BlobKZGCommitments()
+	require.NoError(t, err)
+	if len(blobKZGCommitments) == 0 {
+		t.Skip("Head block has no blobs")
+	}
 
 	headBlockSlot, err := headBlock.Data.Slot()
 	require.NoError(t, err)

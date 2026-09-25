@@ -56,3 +56,6 @@ func (v *BuilderIndex) UnmarshalJSON(input []byte) error {
 func (v BuilderIndex) MarshalJSON() ([]byte, error) {
 	return fmt.Appendf(nil, `"%d"`, v), nil
 }
+
+// BuilderIndexSelfBuild identifies a self-built payload.
+const BuilderIndexSelfBuild BuilderIndex = 18446744073709551615
