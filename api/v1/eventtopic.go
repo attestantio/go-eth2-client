@@ -64,7 +64,6 @@ var eventTopicsByName = func() map[string]eventtopic.Descriptor {
 
 // SupportedEventTopics is a map of supported event topics.  It is informational and legacy: the
 // clients validate Events() subscriptions against the topics themselves, so changing it has no effect.
-// TODO: Shall we remove it?
 var SupportedEventTopics = func() map[string]bool {
 	supported := make(map[string]bool, len(eventTopics))
 	for _, topic := range eventTopics {
