@@ -105,7 +105,7 @@ func TestHandle(t *testing.T) {
 	})
 }
 
-func TestFiltered(t *testing.T) {
+func TestForwardingGuarded(t *testing.T) {
 	ctx := context.Background()
 	data := []byte(`{"slot":"10","block_root":"0x9a2fefd2fdb57f74993c7780ea5b9030d2897b615b89f808011ca5aebed54eaf"}`)
 
@@ -121,7 +121,7 @@ func TestFiltered(t *testing.T) {
 
 	forward := false
 	var forwardedTopics []string
-	filtered := eventdispatch.Filtered(opts, func(topic string) bool {
+	filtered := eventdispatch.ForwardingGuarded(opts, func(topic string) bool {
 		forwardedTopics = append(forwardedTopics, topic)
 
 		return forward

@@ -224,7 +224,7 @@ func newActiveHandler(s *Service, log zerolog.Logger, address string, opts *api.
 		log:     log,
 		address: address,
 	}
-	ah.clientOpts = eventdispatch.Filtered(opts, ah.forwards)
+	ah.clientOpts = eventdispatch.ForwardingGuarded(opts, ah.forwards)
 
 	return ah
 }

@@ -183,15 +183,11 @@ func Handle(ctx context.Context, opts *api.EventsOpts, topic string, data []byte
 	return handler.handle(ctx, opts, data)
 }
 
-// Filtered returns new options with the same topics and common options as those given, in which
-// each handler passes an event on to the matching handler in the given options only if forward
-// allows the event's topic.  A handler the given options do not have is left nil, because events
-// of a topic whose specific handler is nil go to the generic handler, and setting one would
-// starve it.
-//
-// The returned options are always a struct of their own and never the given options modified in
-// place, so filtering the same options more than once never has one filter wrap another.
-func Filtered(opts *api.EventsOpts, forward func(topic string) bool) *api.EventsOpts {
+// ForwardingGuarded returns a copy of opts whose handlers forward events only when forward
+// allows their topic.  It leaves missing topic handlers nil so events can reach the generic
+// handler.  It copies the topics slice and never changes opts, so guards for different clients
+// do not stack.
+func ForwardingGuarded(opts *api.EventsOpts, forward func(topic string) bool) *api.EventsOpts {
 	filtered := &api.EventsOpts{
 		Common: opts.Common,
 		Topics: slices.Clone(opts.Topics),
