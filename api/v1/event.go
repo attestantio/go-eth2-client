@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2025 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,11 +17,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/attestantio/go-eth2-client/spec"
-	"github.com/attestantio/go-eth2-client/spec/altair"
-	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/attestantio/go-eth2-client/spec/electra"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
@@ -31,25 +26,6 @@ type Event struct {
 	Topic string
 	// Data is the data of the event.
 	Data any
-}
-
-// SupportedEventTopics is a map of supported event topics.
-var SupportedEventTopics = map[string]bool{
-	"attestation":             true,
-	"attester_slashing":       true,
-	"blob_sidecar":            true,
-	"block":                   true,
-	"block_gossip":            true,
-	"bls_to_execution_change": true,
-	"chain_reorg":             true,
-	"contribution_and_proof":  true,
-	"data_column_sidecar":     true,
-	"finalized_checkpoint":    true,
-	"head":                    true,
-	"payload_attributes":      true,
-	"proposer_slashing":       true,
-	"single_attestation":      true,
-	"voluntary_exit":          true,
 }
 
 // eventJSON is the spec representation of the struct.
@@ -96,40 +72,12 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		return errors.New("data missing")
 	}
 
-	switch eventJSON.Topic {
-	case "attestation":
-		e.Data = &spec.VersionedAttestation{}
-	case "attester_slashing":
-		e.Data = &phase0.AttesterSlashing{}
-	case "blob_sidecar":
-		e.Data = &BlobSidecarEvent{}
-	case "block":
-		e.Data = &BlockEvent{}
-	case "block_gossip":
-		e.Data = &BlockGossipEvent{}
-	case "bls_to_execution_change":
-		e.Data = &capella.SignedBLSToExecutionChange{}
-	case "chain_reorg":
-		e.Data = &ChainReorgEvent{}
-	case "contribution_and_proof":
-		e.Data = &altair.SignedContributionAndProof{}
-	case "data_column_sidecar":
-		e.Data = &DataColumnSidecarEvent{}
-	case "finalized_checkpoint":
-		e.Data = &FinalizedCheckpointEvent{}
-	case "head":
-		e.Data = &HeadEvent{}
-	case "payload_attributes":
-		e.Data = &PayloadAttributesEvent{}
-	case "proposer_slashing":
-		e.Data = &phase0.ProposerSlashing{}
-	case "single_attestation":
-		e.Data = &electra.SingleAttestation{}
-	case "voluntary_exit":
-		e.Data = &phase0.SignedVoluntaryExit{}
-	default:
+	topic, exists := eventTopicsByName[eventJSON.Topic]
+	if !exists {
 		return fmt.Errorf("unsupported event topic %s", eventJSON.Topic)
 	}
+
+	e.Data = topic.NewData()
 
 	data, err := json.Marshal(eventJSON.Data)
 	if err != nil {

@@ -1,4 +1,4 @@
-// Copyright © 2020, 2025 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -86,6 +86,10 @@ func TestEvent(t *testing.T) {
 			input: []byte(`{"topic":"head","data":{"block":"0xbe36e714a6114cf718e35dafc4ac530ce8f01e4a9a360e78098eb129772dcc39","current_duty_dependent_root":"0x92c6b763f610d5941d2041906007bf9449d37772aacf0483a76275ac27c096b4","epoch_transition":false,"previous_duty_dependent_root":"0xa692c095bbca3eeaf99eeabada78874c028c02b176ccf691f3e8fa075d67f5c6","slot":"231192","state":"0x61099b2c1dee0104c93ce0e14e5f5fc4b6faceff4cb863278d055bdfb73b7dc7"}}`),
 		},
 		{
+			name:  "GoodExecutionPayloadAvailable",
+			input: []byte(`{"topic":"execution_payload_available","data":{"slot":"10","block_root":"0x9a2fefd2fdb57f74993c7780ea5b9030d2897b615b89f808011ca5aebed54eaf"}}`),
+		},
+		{
 			name:  "GoodVoluntaryExit",
 			input: []byte(`{"topic":"voluntary_exit","data":{"message":{"epoch":"1","validator_index":"2"},"signature":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}}`),
 		},
@@ -108,6 +112,33 @@ func TestEvent(t *testing.T) {
 				assert.JSONEq(t, string(test.input), string(rt))
 				assert.JSONEq(t, string(rt), res.String())
 			}
+		})
+	}
+}
+
+// TestSupportedEventTopicsGloas confirms SupportedEventTopics lists the event
+// topics introduced by the Gloas (ePBS) fork. It is built from the topic list
+// the clients subscribe and dispatch from, so a topic missing from it when the
+// package loads is missing from that list too. Callers can edit the map
+// afterwards, which changes nothing the clients do.
+//
+// The http package's dispatch test also pins the list, but this keeps a guard
+// beside the list itself that does not depend on the http client.
+func TestSupportedEventTopicsGloas(t *testing.T) {
+	topics := []string{
+		"execution_payload",
+		"execution_payload_available",
+		"execution_payload_bid",
+		"execution_payload_gossip",
+		"fast_confirmation",
+		"payload_attestation_message",
+		"proposer_preferences",
+	}
+
+	for _, topic := range topics {
+		t.Run(topic, func(t *testing.T) {
+			require.True(t, api.SupportedEventTopics[topic],
+				"topic %s missing from SupportedEventTopics, so from the event topic list", topic)
 		})
 	}
 }

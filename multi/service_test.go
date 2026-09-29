@@ -16,6 +16,7 @@ package multi_test
 import (
 	"context"
 	"testing"
+	"time"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/mock"
@@ -58,6 +59,24 @@ func TestService(t *testing.T) {
 				}),
 			},
 			err: "client is not active",
+		},
+		{
+			name: "EventsRetryIntervalZero",
+			params: []multi.Parameter{
+				multi.WithLogLevel(zerolog.Disabled),
+				multi.WithClients([]client.Service{consensusclient1}),
+				multi.WithEventsRetryInterval(0),
+			},
+			err: "problem with parameters: events retry interval must be positive",
+		},
+		{
+			name: "EventsRetryIntervalNegative",
+			params: []multi.Parameter{
+				multi.WithLogLevel(zerolog.Disabled),
+				multi.WithClients([]client.Service{consensusclient1}),
+				multi.WithEventsRetryInterval(-time.Second),
+			},
+			err: "problem with parameters: events retry interval must be positive",
 		},
 		{
 			name: "Good",

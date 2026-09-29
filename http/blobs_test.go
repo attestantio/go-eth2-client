@@ -44,6 +44,12 @@ func TestBlobs(t *testing.T) {
 		return
 	}
 
+	blobKZGCommitments, err := headBlock.Data.BlobKZGCommitments()
+	require.NoError(t, err)
+	if len(blobKZGCommitments) == 0 {
+		t.Skip("Head block has no blobs")
+	}
+
 	headBlockSlot, err := headBlock.Data.Slot()
 	require.NoError(t, err)
 	headBlockRoot, err := headBlock.Data.Root()

@@ -61,8 +61,9 @@ func TestMain(m *testing.M) {
 	if os.Getenv("HTTP_ADDRESS") != "" {
 		// Initialize global HTTP service for all tests to share
 		initGlobalHTTPService()
-		os.Exit(m.Run())
 	}
+
+	os.Exit(m.Run())
 }
 
 // initGlobalHTTPService creates a single HTTP service instance that all tests will share.
@@ -108,6 +109,10 @@ func initGlobalHTTPService() {
 // test execution, preventing endpoint overload. The semaphore is automatically
 // released when the test completes via t.Cleanup().
 func testService(ctx context.Context, t *testing.T) any {
+	if os.Getenv("HTTP_ADDRESS") == "" {
+		t.Skip("HTTP_ADDRESS not set")
+	}
+
 	// Acquire test coordinator semaphore to limit concurrent tests
 	if testCoordinator != nil {
 		if err := testCoordinator.Acquire(ctx, 1); err != nil {
