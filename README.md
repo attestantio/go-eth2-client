@@ -3,7 +3,7 @@
 [![Tag](https://img.shields.io/github/tag/attestantio/go-eth2-client.svg)](https://github.com/attestantio/go-eth2-client/releases/)
 [![License](https://img.shields.io/github/license/attestantio/go-eth2-client.svg)](LICENSE)
 [![GoDoc](https://godoc.org/github.com/attestantio/go-eth2-client?status.svg)](https://godoc.org/github.com/attestantio/go-eth2-client)
-![Lint](https://github.com/attestantio/go-eth2-client/workflows/golangci-lint/badge.svg)
+[![Lint](https://github.com/attestantio/go-eth2-client/workflows/golangci-lint/badge.svg)](https://github.com/attestantio/go-eth2-client/actions/workflows/golangci-lint.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/attestantio/go-eth2-client)](https://goreportcard.com/report/github.com/attestantio/go-eth2-client)
 
 Go library providing an abstraction to multiple Ethereum 2 beacon nodes.  Its external API follows the official [Ethereum beacon APIs](https://github.com/ethereum/beacon-APIs) specification.
