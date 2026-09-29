@@ -23,6 +23,7 @@ import (
 	"math/big"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -30,6 +31,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	dynssz "github.com/pk910/dynamic-ssz"
 	"go.opentelemetry.io/otel"
 )
 
@@ -38,14 +40,32 @@ import (
 // generous room for any real value while keeping a hostile one cheap to reject.
 const maxProposalValueDigits = 40
 
-// maxEPBSResponseSize bounds the bodies of the ePBS fetch endpoints, the
-// largest of which is a payload-included block-contents response.  That carries
-// up to MAX_BLOB_COMMITMENTS_PER_BLOCK blobs at 128KiB each plus the block and
-// envelope; 64MiB leaves generous headroom over any current preset's blob count
-// while capping a hostile or runaway response.  Note this same value is also
-// passed to post() (see http.go), so it bounds every POST response body across
-// the library, not just the ePBS endpoints.
+// maxEPBSResponseSize bounds the bodies of the ePBS fetch endpoints and, via
+// post() (see http.go), every POST response body across the library.  Those
+// bodies are an execution payload envelope, a payload-attestation datum or
+// pool, or a small acknowledgement or error, so 64MiB is orders of magnitude
+// above any legitimate response while capping a hostile or runaway one.  Block
+// production is the one endpoint whose response can be far larger, and it
+// passes its own limit below rather than raising this one for everybody.
 const maxEPBSResponseSize = 64 * 1024 * 1024
+
+// maxEPBSProposalResponseSize bounds a full SSZ payload-included block
+// production response.  It is an allocation budget, not the protocol's static
+// maximum: readResponseBody has to buffer a body in full before it can reject
+// it, so a limit derived from the pinned Gloas worst case -- 4096 128KiB blobs
+// plus 33,554,432 KZG proofs, upwards of 2GiB -- is one the process cannot
+// survive reaching, and admitting a body just under it is no better.  Every
+// live preset proposes orders of magnitude below this.  A legitimate response
+// refused here fails loudly with the limit in the message, so a future preset
+// that genuinely outgrows it needs this raised deliberately;
+// TestEPBSProposalResponseLimitsAreSurvivable holds the ceiling it must respect.
+const maxEPBSProposalResponseSize = 256 * 1024 * 1024
+
+// maxEPBSProposalJSONResponseSize covers the same response as JSON, whose hex
+// costs slightly over two bytes per SSZ byte.  It is therefore a marginally
+// tighter bound on the payload than its SSZ counterpart rather than an equal
+// one, which the headroom above makes immaterial.
+const maxEPBSProposalJSONResponseSize = 512 * 1024 * 1024
 
 // EPBSProposal fetches a potential ePBS beacon block for signing.
 func (s *Service) EPBSProposal(ctx context.Context,
@@ -66,11 +86,41 @@ func (s *Service) EPBSProposal(ctx context.Context,
 		return nil, err
 	}
 
-	endpoint := fmt.Sprintf("/eth/v4/validator/blocks/%d", opts.Slot)
+	if err := validateBuilderConfig(opts.BuilderConfig, opts.Slot); err != nil {
+		return nil, err
+	}
 
-	httpResponse, err := s.getWithResponseLimit(ctx, endpoint, query, &opts.Common, true, maxEPBSResponseSize)
+	body, contentType, err := s.marshalRequestBody(ctx, opts.BuilderConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	endpoint := fmt.Sprintf("/eth/v4/validator/blocks/%d", opts.Slot)
+	headers := map[string]string{
+		"Accept":                contentType.MediaType(),
+		"Eth-Consensus-Version": spec.DataVersionGloas.String(),
+	}
+
+	responseLimit := maxEPBSProposalResponseSize
+	if contentType == ContentTypeJSON {
+		responseLimit = maxEPBSProposalJSONResponseSize
+	}
+
+	httpResponse, err := s.postWithResponseLimit(
+		ctx,
+		endpoint,
+		query,
+		&opts.Common,
+		bytes.NewReader(body),
+		contentType,
+		headers,
+		responseLimit,
+	)
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request epbs beacon block proposal"), err)
+	}
+	if err := populateConsensusVersionFromHeaders(httpResponse); err != nil {
+		return nil, err
 	}
 
 	response, err := s.epbsProposalFromResponse(ctx, httpResponse)
@@ -166,14 +216,65 @@ func epbsProposalQuery(opts *api.EPBSProposalOpts) (string, error) {
 		query += "&skip_randao_verification"
 	}
 
-	// Unlike the v3 endpoint, builder_boost_factor is optional here with a
-	// server-side default, so an unset one is left off the query rather than
-	// materialised client-side.
-	if opts.BuilderBoostFactor != nil {
-		query = fmt.Sprintf("%s&builder_boost_factor=%d", query, *opts.BuilderBoostFactor)
+	return query, nil
+}
+
+func validateBuilderConfig(config *gloas.BuilderConfig, slot phase0.Slot) error {
+	if config == nil {
+		return errors.Join(errors.New("no builder config supplied"), client.ErrInvalidOptions)
+	}
+	// An empty builders list is a legitimate request -- it solicits no builder
+	// bids, leaving only p2p ones -- so only the endpoint's maximum is enforced
+	// here.  A nil slice says the same thing as an empty one and encodes
+	// identically in both JSON and SSZ, so it is accepted too.
+	if len(config.Builders) > 64 {
+		return errors.Join(errors.New("too many builders supplied"), client.ErrInvalidOptions)
 	}
 
-	return query, nil
+	for i, builder := range config.Builders {
+		if builder == nil {
+			return errors.Join(fmt.Errorf("builder %d missing", i), client.ErrInvalidOptions)
+		}
+		if len(builder.URL) == 0 || len(builder.URL) > 2048 || !utf8.Valid(builder.URL) {
+			return errors.Join(fmt.Errorf("builder %d has invalid URL", i), client.ErrInvalidOptions)
+		}
+		auth := builder.Auth
+		if auth == nil || auth.Message == nil || len(auth.Message.Data) == 0 || len(auth.Message.Data) > 4096 {
+			return errors.Join(fmt.Errorf("builder %d has invalid authorization", i), client.ErrInvalidOptions)
+		}
+		// The authorization slot is verified by the builder rather than by the
+		// beacon node, so a stale one is not rejected anywhere on the request
+		// path: the node forwards it, the builder declines to bid, and the
+		// proposal succeeds on a p2p or local build with no error raised.
+		// Refusing it here is the only point at which the caller learns.
+		if auth.Message.Slot != slot {
+			return errors.Join(
+				fmt.Errorf("builder %d has authorization for slot %d, not %d", i, auth.Message.Slot, slot),
+				client.ErrInvalidOptions,
+			)
+		}
+		if len(builder.BuilderPubkeys) > 64 {
+			return errors.Join(fmt.Errorf("builder %d has too many public keys", i), client.ErrInvalidOptions)
+		}
+	}
+
+	return nil
+}
+
+func populateConsensusVersionFromHeaders(res *httpResponse) error {
+	for key, value := range res.headers {
+		if !strings.EqualFold(key, "Eth-Consensus-Version") {
+			continue
+		}
+
+		if err := res.consensusVersion.UnmarshalJSON(fmt.Appendf(nil, "%q", value)); err != nil {
+			return errors.Join(errors.New("failed to parse consensus version"), err)
+		}
+
+		return nil
+	}
+
+	return errors.New("no Eth-Consensus-Version header in epbs proposal response")
 }
 
 // epbsProposalFromResponse decodes a fetched ePBS block-production response.
@@ -190,9 +291,7 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 	}
 
 	proposal := &api.VersionedEPBSProposal{
-		Version:        res.consensusVersion,
-		ConsensusValue: big.NewInt(0),
-		ExecutionValue: big.NewInt(0),
+		Version: res.consensusVersion,
 	}
 	metadata := metadataFromHeaders(res.headers)
 
@@ -262,6 +361,12 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 	if block == nil || block.Body == nil {
 		return nil, fmt.Errorf("no %s beacon block body in response", res.consensusVersion)
 	}
+	if block.Body.SignedExecutionPayloadBid == nil || block.Body.SignedExecutionPayloadBid.Message == nil {
+		return nil, errors.Join(errors.New("no execution payload bid in epbs proposal response"), client.ErrInconsistentResult)
+	}
+
+	builderIndex := block.Body.SignedExecutionPayloadBid.Message.BuilderIndex
+	proposal.BuilderIndex = &builderIndex
 
 	// This is the one place BeaconBlockBodyRoot is set: ds is the codec that
 	// decoded the block above, so this is the only spec-aware root available.
@@ -277,7 +382,7 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 	proposal.BeaconBlockBodyRoot = &bodyRoot
 
 	if proposal.ExecutionPayloadIncluded {
-		if err := assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal); err != nil {
+		if err := assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal, ds); err != nil {
 			return nil, err
 		}
 	}
@@ -370,9 +475,12 @@ func decodeEPBSProposalJSON(body []byte, proposal *api.VersionedEPBSProposal) (m
 	if !exists {
 		return nil, errors.New("no execution_payload_included in epbs proposal response")
 	}
-	included := new(bool)
-	if err := json.Unmarshal(raw, included); err != nil {
+	var included *bool
+	if err := json.Unmarshal(raw, &included); err != nil {
 		return nil, errors.Join(errors.New("failed to unmarshal execution_payload_included"), err)
+	}
+	if included == nil {
+		return nil, errors.New("execution_payload_included cannot be null")
 	}
 	proposal.ExecutionPayloadIncluded = *included
 
@@ -415,7 +523,7 @@ func decodeEPBSProposalJSON(body []byte, proposal *api.VersionedEPBSProposal) (m
 // calling it here would let the exact bug back in through the guard meant to
 // catch it.  Root() shares its computation with every other consumer of the
 // block root, so the guard and a proposer's signature cannot disagree.
-func assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal *api.VersionedEPBSProposal) error {
+func assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal *api.VersionedEPBSProposal, ds *dynssz.DynSsz) error {
 	contents := proposal.GloasContents
 	if contents == nil || contents.Block == nil || contents.ExecutionPayloadEnvelope == nil {
 		return errors.New("no block contents in epbs proposal response")
@@ -427,6 +535,27 @@ func assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal *api.VersionedEPBSP
 	}
 	if contents.ExecutionPayloadEnvelope.BeaconBlockRoot != blockRoot {
 		return errors.Join(errors.New("execution payload envelope is for a different block"), client.ErrInconsistentResult)
+	}
+	envelope := contents.ExecutionPayloadEnvelope
+	bid := contents.Block.Body.SignedExecutionPayloadBid.Message
+	if envelope.BuilderIndex != bid.BuilderIndex {
+		return errors.Join(errors.New("execution payload envelope builder index does not match bid"), client.ErrInconsistentResult)
+	}
+	if envelope.Payload == nil || envelope.Payload.BlockHash != bid.BlockHash {
+		return errors.Join(errors.New("execution payload block hash does not match bid"), client.ErrInconsistentResult)
+	}
+	if envelope.ParentBeaconBlockRoot != bid.ParentBlockRoot {
+		return errors.Join(errors.New("execution payload envelope parent root does not match bid"), client.ErrInconsistentResult)
+	}
+	if contents.ExecutionPayloadEnvelope.ExecutionRequests == nil {
+		return errors.Join(errors.New("execution payload envelope has no execution requests"), client.ErrInconsistentResult)
+	}
+	executionRequestsRoot, err := ds.HashTreeRoot(contents.ExecutionPayloadEnvelope.ExecutionRequests)
+	if err != nil {
+		return errors.Join(errors.New("failed to hash execution payload envelope requests"), err)
+	}
+	if phase0.Root(executionRequestsRoot) != contents.Block.Body.SignedExecutionPayloadBid.Message.ExecutionRequestsRoot {
+		return errors.Join(errors.New("execution payload envelope requests do not match bid"), client.ErrInconsistentResult)
 	}
 
 	return nil

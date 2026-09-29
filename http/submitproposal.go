@@ -54,6 +54,9 @@ func (s *Service) SubmitProposal(ctx context.Context,
 
 	headers := make(map[string]string)
 	headers["Eth-Consensus-Version"] = strings.ToLower(opts.Proposal.Version.String())
+	if opts.BuilderURL != "" {
+		headers["Eth-Builder-Url"] = opts.BuilderURL
+	}
 
 	_, err = s.post(ctx, endpoint, query, &opts.Common, bytes.NewBuffer(body), contentType, headers)
 	if err != nil {
