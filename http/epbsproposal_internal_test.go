@@ -258,6 +258,48 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 		require.Equal(t, big.NewInt(3476149000000999), response.Data.Value())
 	})
 
+	// A reported zero must survive parsing.  It differs from an omitted header,
+	// which leaves the value unknown.  The consensus header is omitted here, so
+	// it must stay unknown alongside the known zero: asserting only the total
+	// would not catch a regression that defaulted an absent component to zero or
+	// wrote the execution header to the wrong field.  Headers are the sole
+	// source, so the body's own value fields are metadata and do not contribute.
+	t.Run("ZeroExecutionValueFromHeaders", func(t *testing.T) {
+		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+
+		response, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+			statusCode:       http.StatusOK,
+			contentType:      ContentTypeJSON,
+			consensusVersion: spec.DataVersionGloas,
+			body:             body,
+			headers: map[string]string{
+				"Eth-Execution-Payload-Value": "0",
+			},
+		})
+		require.NoError(t, err)
+		require.Nil(t, response.Data.ConsensusValue)
+		require.Equal(t, big.NewInt(0), response.Data.ExecutionValue)
+		require.Equal(t, big.NewInt(0), response.Data.Value())
+	})
+
+	// A proposal without a signed execution payload bid has no builder index,
+	// so it is not valid for downstream selection.
+	t.Run("MissingExecutionPayloadBid", func(t *testing.T) {
+		block := validEPBSBeaconBlock()
+		block.Body.SignedExecutionPayloadBid = nil
+		body, _ := epbsProposalJSONBody(t, false, block)
+
+		_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+			statusCode:       http.StatusOK,
+			contentType:      ContentTypeJSON,
+			consensusVersion: spec.DataVersionGloas,
+			body:             body,
+			headers:          map[string]string{},
+		})
+		require.ErrorIs(t, err, client.ErrInconsistentResult)
+		require.ErrorContains(t, err, "no execution payload bid in epbs proposal response")
+	})
+
 	// The JSON decoder fills in only the keys it finds, so a body carrying no
 	// data key at all, or an explicit null, leaves the seeded nil pointer
 	// untouched.  That has to be an error rather than a success wrapping
