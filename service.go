@@ -793,3 +793,8 @@ type PayloadAttestationPoolProvider interface {
 type PayloadAttestationMessagesSubmitter interface {
 	SubmitPayloadAttestationMessages(ctx context.Context, opts *api.SubmitPayloadAttestationMessagesOpts) error
 }
+
+// ProposerPreferencesSubmitter is the interface for submitting proposer preferences.
+type ProposerPreferencesSubmitter interface {
+	SubmitProposerPreferences(ctx context.Context, opts *api.SubmitProposerPreferencesOpts) error
+}

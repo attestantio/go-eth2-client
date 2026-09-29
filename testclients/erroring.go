@@ -1130,6 +1130,19 @@ func (s *Erroring) SubmitExecutionPayloadBid(ctx context.Context, opts *api.Subm
 	return next.SubmitExecutionPayloadBid(ctx, opts)
 }
 
+// SubmitProposerPreferences submits signed proposer preferences.
+func (s *Erroring) SubmitProposerPreferences(ctx context.Context, opts *api.SubmitProposerPreferencesOpts) error {
+	if err := s.maybeError(ctx); err != nil {
+		return err
+	}
+	next, ok := s.next.(consensusclient.ProposerPreferencesSubmitter)
+	if !ok {
+		return fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.SubmitProposerPreferences(ctx, opts)
+}
+
 // SubmitExecutionPayloadEnvelope submits a signed execution payload envelope.
 func (s *Erroring) SubmitExecutionPayloadEnvelope(ctx context.Context, opts *api.SubmitExecutionPayloadEnvelopeOpts) error {
 	if err := s.maybeError(ctx); err != nil {

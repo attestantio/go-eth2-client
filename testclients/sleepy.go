@@ -862,6 +862,17 @@ func (s *Sleepy) SubmitExecutionPayloadBid(ctx context.Context, opts *api.Submit
 	return next.SubmitExecutionPayloadBid(ctx, opts)
 }
 
+// SubmitProposerPreferences submits signed proposer preferences.
+func (s *Sleepy) SubmitProposerPreferences(ctx context.Context, opts *api.SubmitProposerPreferencesOpts) error {
+	s.sleep(ctx)
+	next, ok := s.next.(consensusclient.ProposerPreferencesSubmitter)
+	if !ok {
+		return errors.New("next does not support this call")
+	}
+
+	return next.SubmitProposerPreferences(ctx, opts)
+}
+
 // SubmitExecutionPayloadEnvelope submits a signed execution payload envelope.
 func (s *Sleepy) SubmitExecutionPayloadEnvelope(ctx context.Context, opts *api.SubmitExecutionPayloadEnvelopeOpts) error {
 	s.sleep(ctx)
