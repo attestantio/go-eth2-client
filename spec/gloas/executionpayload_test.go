@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/goccy/go-yaml"
 	"github.com/holiman/uint256"
@@ -90,9 +91,23 @@ func TestExecutionPayloadMarshalYAML(t *testing.T) {
 	}
 }
 
-// TestExecutionPayloadUnmarshalJSON verifies that unmarshaling does not panic on
-// a transaction element too short to carry the "0x" framing, whose decoded
-// length (len-4)/2 would otherwise underflow to a negative make() size.
+func TestExecutionPayloadEmptyTransactionEncoding(t *testing.T) {
+	payload := &gloas.ExecutionPayload{
+		BaseFeePerGas: uint256.NewInt(0),
+		Transactions:  []bellatrix.Transaction{{}},
+	}
+
+	jsonData, err := json.Marshal(payload)
+	require.NoError(t, err)
+	require.Contains(t, string(jsonData), `"transactions":["0x"]`)
+
+	yamlData, err := yaml.Marshal(payload)
+	require.NoError(t, err)
+	require.Contains(t, string(yamlData), "transactions: ['0x']")
+}
+
+// TestExecutionPayloadUnmarshalJSON rejects short transaction elements without
+// panicking and accepts the empty "0x" transaction.
 func TestExecutionPayloadUnmarshalJSON(t *testing.T) {
 	// A valid payload marshaled to JSON gives a well-formed prefix up to the
 	// (empty) transactions array; each case replaces it with a single raw
@@ -116,6 +131,10 @@ func TestExecutionPayloadUnmarshalJSON(t *testing.T) {
 			transactions: `[12]`,
 			err:          "transaction 0: missing or malformed",
 		},
+		{
+			name:         "EmptyTransaction",
+			transactions: `["0x"]`,
+		},
 	}
 
 	for _, test := range tests {
@@ -126,7 +145,13 @@ func TestExecutionPayloadUnmarshalJSON(t *testing.T) {
 			require.NotPanics(t, func() {
 				err = json.Unmarshal(input, &payload)
 			})
-			require.EqualError(t, err, test.err)
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+			} else {
+				require.NoError(t, err)
+				require.Len(t, payload.Transactions, 1)
+				require.Empty(t, payload.Transactions[0])
+			}
 		})
 	}
 }
