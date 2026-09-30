@@ -101,10 +101,14 @@ func (s *Service) EPBSProposal(ctx context.Context,
 		"Eth-Consensus-Version": spec.DataVersionGloas.String(),
 	}
 
-	responseLimit := maxEPBSProposalResponseSize
-	if contentType == ContentTypeJSON {
-		responseLimit = maxEPBSProposalJSONResponseSize
-	}
+	// The limit has to be chosen before the body is read, and contentType here
+	// is what the request body was encoded as, not what the response will be:
+	// Accept is advisory, and a node with partial SSZ support answers this
+	// endpoint in JSON regardless.  Sizing the bound from the request would
+	// then cap a JSON body at the SSZ limit -- roughly 120MiB of equivalent
+	// payload -- and reject it with a byte count that points nowhere near the
+	// mismatch.  Use the larger of the two and let the encodings differ.
+	responseLimit := maxEPBSProposalJSONResponseSize
 
 	httpResponse, err := s.postWithResponseLimit(
 		ctx,
@@ -119,8 +123,12 @@ func (s *Service) EPBSProposal(ctx context.Context,
 	if err != nil {
 		return nil, errors.Join(errors.New("failed to request epbs beacon block proposal"), err)
 	}
-	if err := populateConsensusVersionFromHeaders(httpResponse); err != nil {
-		return nil, err
+	// post() populates this from the header, falling back to the version in a
+	// JSON body when the node omits the header -- which real nodes do.  A
+	// proposal is unusable without it, so absence is an error here even though
+	// it is not for endpoints that do not carry a version.
+	if httpResponse.consensusVersion == spec.DataVersionUnknown {
+		return nil, errors.New("no consensus version in epbs proposal response")
 	}
 
 	response, err := s.epbsProposalFromResponse(ctx, httpResponse)
@@ -411,22 +419,6 @@ func validateBuilderConfig(config *gloas.BuilderConfig, slot phase0.Slot) error 
 	}
 
 	return nil
-}
-
-func populateConsensusVersionFromHeaders(res *httpResponse) error {
-	for key, value := range res.headers {
-		if !strings.EqualFold(key, "Eth-Consensus-Version") {
-			continue
-		}
-
-		if err := res.consensusVersion.UnmarshalJSON(fmt.Appendf(nil, "%q", value)); err != nil {
-			return errors.Join(errors.New("failed to parse consensus version"), err)
-		}
-
-		return nil
-	}
-
-	return errors.New("no Eth-Consensus-Version header in epbs proposal response")
 }
 
 // epbsProposalFromResponse decodes a fetched ePBS block-production response.

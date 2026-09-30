@@ -202,6 +202,14 @@ func (s *Service) postWithResponseLimit(ctx context.Context,
 		}
 	}
 
+	// Populated here as well as on the GET path so that the two agree.  Nodes do
+	// omit Eth-Consensus-Version, and this is the only place the body fallback
+	// for that lives; a caller that re-derived it from headers alone would
+	// hard-fail on a response the GET path handles.
+	if err := populateConsensusVersion(res, resp); err != nil {
+		return nil, errors.Join(errors.New("failed to parse consensus version"), err)
+	}
+
 	s.monitorPostComplete(ctx, callURL.Path, "succeeded")
 
 	return res, nil
@@ -427,9 +435,9 @@ func populateConsensusVersion(res *httpResponse, resp *http.Response) error {
 	respConsensusVersions, exists := resp.Header["Eth-Consensus-Version"]
 	if !exists {
 		// No consensus version supplied in response; obtain it from the body if possible.
-		if res.contentType != ContentTypeJSON {
-			// Not present here either.  Many responses do not provide this information, so assume
-			// this is one of them.
+		if res.contentType != ContentTypeJSON || len(res.body) == 0 {
+			// Not present here either.  Many responses do not provide this information, and a
+			// successful submission commonly has no body at all, so assume this is one of them.
 			return nil
 		}
 

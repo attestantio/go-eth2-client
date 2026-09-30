@@ -16,6 +16,7 @@ package http
 import (
 	"context"
 	"encoding/json"
+	nethttp "net/http"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -254,6 +255,72 @@ func TestEPBSPayloadIncludedFromHeaders(t *testing.T) {
 			} else {
 				require.EqualError(t, err, test.err)
 			}
+		})
+	}
+}
+
+// TestPopulateConsensusVersionOnThePostPath covers the version the ePBS
+// proposal path depends on being available from a POST response.
+//
+// The header is the primary source, but real nodes omit it, so a JSON body
+// carrying "version" is the documented fallback -- the GET path has always had
+// it.  A POST-only re-implementation that read headers alone would hard-fail
+// every proposal from such a node.
+func TestPopulateConsensusVersionOnThePostPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		header   []string
+		body     string
+		expected spec.DataVersion
+		err      string
+	}{
+		{
+			name:     "FromHeader",
+			header:   []string{"gloas"},
+			body:     `{"data":{}}`,
+			expected: spec.DataVersionGloas,
+		},
+		{
+			name:     "FromBodyWhenHeaderAbsent",
+			body:     `{"version":"gloas","execution_payload_included":false,"data":{}}`,
+			expected: spec.DataVersionGloas,
+		},
+		{
+			name:     "UnknownWhenNeitherCarriesIt",
+			body:     `{"data":{}}`,
+			expected: spec.DataVersionUnknown,
+		},
+		{
+			name:     "EmptyBodyIsNotAParseFailure",
+			expected: spec.DataVersionUnknown,
+		},
+		{
+			// populateHeaders joins repeated headers with ";", so a
+			// header-only reader would report the unhelpful
+			// `unrecognised data version "gloas;gloas"`.
+			name:   "RepeatedHeaderIsNamedAsSuch",
+			header: []string{"gloas", "gloas"},
+			body:   `{"data":{}}`,
+			err:    "malformed consensus version (2 entries)",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			res := &httpResponse{contentType: ContentTypeJSON, body: []byte(test.body)}
+			resp := &nethttp.Response{Header: nethttp.Header{}}
+			if test.header != nil {
+				resp.Header["Eth-Consensus-Version"] = test.header
+			}
+
+			err := populateConsensusVersion(res, resp)
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, test.expected, res.consensusVersion)
 		})
 	}
 }
