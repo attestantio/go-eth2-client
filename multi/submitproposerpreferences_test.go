@@ -47,6 +47,27 @@ func (c *invalidOptionsPreferencesClient) SubmitProposerPreferences(_ context.Co
 	return errors.Join(errors.New("too many proposer preferences"), consensusclient.ErrInvalidOptions)
 }
 
+// noOptionsPreferencesClient rejects every submission with ErrNoOptions, as the
+// HTTP service does for a nil opts.  That is a separate sentinel from
+// ErrInvalidOptions rather than one joined with it, so it needs its own double.
+type noOptionsPreferencesClient struct {
+	name  string
+	calls int
+}
+
+func (c *noOptionsPreferencesClient) Name() string    { return c.name }
+func (c *noOptionsPreferencesClient) Address() string { return c.name }
+func (*noOptionsPreferencesClient) IsActive() bool    { return true }
+func (*noOptionsPreferencesClient) IsSynced() bool    { return true }
+
+func (c *noOptionsPreferencesClient) SubmitProposerPreferences(_ context.Context,
+	_ *api.SubmitProposerPreferencesOpts,
+) error {
+	c.calls++
+
+	return consensusclient.ErrNoOptions
+}
+
 func TestSubmitProposerPreferences(t *testing.T) {
 	ctx := context.Background()
 
@@ -92,4 +113,30 @@ func TestSubmitProposerPreferencesDoesNotFailOverOnInvalidOptions(t *testing.T) 
 	require.Equal(t, 0, client2.calls)
 	// The first client is still active, so it remains the multi client's address.
 	require.Equal(t, "invalid 1", multiClient.Address())
+}
+
+// TestSubmitProposerPreferencesDoesNotFailOverOnNoOptions is the ErrNoOptions
+// half of the same property.  A nil opts is a caller error, not a provider
+// fault, so it must not walk the cluster deactivating healthy clients: doing so
+// leaves the multi client itself inactive and makes every subsequent call on it,
+// not just this endpoint, pay a recheck first.
+func TestSubmitProposerPreferencesDoesNotFailOverOnNoOptions(t *testing.T) {
+	ctx := context.Background()
+
+	client1 := &noOptionsPreferencesClient{name: "no options 1"}
+	client2 := &noOptionsPreferencesClient{name: "no options 2"}
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{client1, client2}),
+	)
+	require.NoError(t, err)
+
+	err = multiClient.(consensusclient.ProposerPreferencesSubmitter).
+		SubmitProposerPreferences(ctx, nil)
+	require.ErrorIs(t, err, consensusclient.ErrNoOptions)
+	require.Equal(t, 1, client1.calls)
+	require.Equal(t, 0, client2.calls)
+	require.True(t, multiClient.IsActive())
+	require.Equal(t, "no options 1", multiClient.Address())
 }

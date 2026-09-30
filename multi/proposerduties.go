@@ -15,7 +15,9 @@ package multi
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	nethttp "net/http"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -24,6 +26,11 @@ import (
 
 // ProposerDutiesV2 obtains proposer duties for the given epoch using the v2 API.
 // If opts.Indices is empty all duties are returned, otherwise only matching duties are returned.
+//
+// v2 is an optional endpoint, so a client that cannot serve it is skipped rather
+// than deactivated: support is a static property of the node, not a sign that it
+// is unhealthy, and evicting it here would take it out of the rotation for every
+// other call until the next recheck.
 func (s *Service) ProposerDutiesV2(ctx context.Context,
 	opts *api.ProposerDutiesOpts,
 ) (
@@ -33,11 +40,25 @@ func (s *Service) ProposerDutiesV2(ctx context.Context,
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		provider, supported := client.(consensusclient.ProposerDutiesV2Provider)
 		if !supported {
-			return nil, fmt.Errorf("%s@%s does not support this call", client.Name(), client.Address())
+			return nil, fmt.Errorf("%s@%s does not implement proposer duties v2: %w",
+				client.Name(), client.Address(), ErrCallNotSupported)
 		}
 
 		duties, err := provider.ProposerDutiesV2(ctx, opts)
 		if err != nil {
+			// *http.Service implements the provider whether or not the node
+			// behind it serves /eth/v2/validator/duties/proposer, so in
+			// production the "no v2 endpoint" case arrives here as a 404
+			// rather than failing the assertion above.  doCall returns 4xx to
+			// the caller without failing over, so on a mixed cluster the first
+			// client without v2 would otherwise answer for all of them.
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) &&
+				(apiErr.StatusCode == nethttp.StatusNotFound || apiErr.StatusCode == nethttp.StatusMethodNotAllowed) {
+				return nil, fmt.Errorf("%s@%s does not serve proposer duties v2: %w",
+					client.Name(), client.Address(), ErrCallNotSupported)
+			}
+
 			return nil, err
 		}
 

@@ -17,3 +17,11 @@ import "errors"
 
 // ErrIncorrectType is returned when the multi client obtain a response type it is not expecting.
 var ErrIncorrectType = errors.New("incorrect response type")
+
+// ErrCallNotSupported marks an error as saying that a client cannot serve this
+// particular call -- it does not implement the provider interface, or the node
+// behind it does not serve the endpoint.  That is a static property of the
+// client rather than a health signal, so doCall moves on to the next client
+// without deactivating this one: lacking an optional endpoint must not cost a
+// healthy client its place in the rotation for every other call.
+var ErrCallNotSupported = errors.New("client does not support this call")
