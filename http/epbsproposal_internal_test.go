@@ -486,9 +486,12 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 			headers:          map[string]string{},
 		})
 		require.NoError(t, err)
+		// The components stay nil so a caller can tell "not supplied" from
+		// "zero", while the total stays usable without a nil check.
 		require.Nil(t, response.Data.ConsensusValue)
 		require.Nil(t, response.Data.ExecutionValue)
-		require.Nil(t, response.Data.Value())
+		require.NotNil(t, response.Data.Value())
+		require.Zero(t, response.Data.Value().Sign())
 	})
 
 	t.Run("CorruptJSON", func(t *testing.T) {
