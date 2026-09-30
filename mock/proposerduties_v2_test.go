@@ -65,3 +65,23 @@ func TestProposerDutiesV2Default(t *testing.T) {
 	}, response.Data)
 	require.Empty(t, response.Metadata)
 }
+
+// TestProposerDutiesRequiresOptions keeps the double honest: http.Service
+// returns ErrNoOptions for a nil opts, and the mock used to dereference
+// opts.Indices and panic on it, so a downstream test exercising that path
+// crashed instead of asserting the error.
+func TestProposerDutiesRequiresOptions(t *testing.T) {
+	ctx := context.Background()
+
+	service, err := mock.New(ctx)
+	require.NoError(t, err)
+
+	require.NotPanics(t, func() {
+		_, err := service.ProposerDuties(ctx, nil)
+		require.ErrorIs(t, err, client.ErrNoOptions)
+	})
+	require.NotPanics(t, func() {
+		_, err := service.ProposerDutiesV2(ctx, nil)
+		require.ErrorIs(t, err, client.ErrNoOptions)
+	})
+}
