@@ -29,38 +29,57 @@ import (
 
 type proposerPreferencesList []*gloas.SignedProposerPreferences
 
-// staticProposerPreferencesLimit is the mainnet-preset proposer lookahead length,
-// used whenever the chain's own values are not available.
-const staticProposerPreferencesLimit uint64 = 64
-
-// proposerPreferencesLimit returns the maximum number of proposer preferences that
-// may be submitted at once: the proposer lookahead length,
-// (MIN_SEED_LOOKAHEAD + 1) * SLOTS_PER_EPOCH.
+// proposerPreferencesLimit returns the maximum number of proposer preferences
+// that may be submitted at once -- the proposer lookahead length,
+// (MIN_SEED_LOOKAHEAD + 1) * SLOTS_PER_EPOCH -- and whether it could be derived
+// at all.
 //
-// This is a client-side sanity bound and the node remains the authority on what it
-// accepts, so every way of failing to derive the chain's own value falls back to the
-// mainnet preset rather than failing the submission.  That is what allows the limit
-// to be derived unconditionally: Spec() is cached, and a node that does not publish
-// the spec, or publishes it without these keys, costs a fallback rather than an error.
-func (s *Service) proposerPreferencesLimit(ctx context.Context) uint64 {
+// The node is the authority on what it accepts; this is only a client-side
+// sanity bound.  So when the chain's own values cannot be derived the bound is
+// skipped rather than replaced with the mainnet preset.  Mainnet's 64 fails
+// open on a chain with a shorter lookahead, where the extra entries are simply
+// rejected by the node, but on one with a longer lookahead -- SLOTS_PER_EPOCH
+// 64 gives a real limit of 128 -- it would reject a 65-to-128 entry submission
+// the node would have accepted, with ErrInvalidOptions and no network call.
+//
+// The derived value is cached because the comment this replaces assumed Spec()
+// already was.  It is not: Spec() assigns s.spec only on success, so against a
+// node that does not serve /eth/v1/config/spec the fetch is repeated on every
+// submission, and clearStaticValues nils it every 5 minutes, while preferences
+// are submitted about once per epoch -- so in practice most submissions were
+// the call that refilled the cache.  Spec() holds specMutex across the whole
+// round trip, so that refill also blocked every other spec consumer while a
+// time-sensitive submission waited on it.
+func (s *Service) proposerPreferencesLimit(ctx context.Context) (uint64, bool) {
+	if cached := s.proposerPreferencesLimitCache.Load(); cached != 0 {
+		return cached, true
+	}
+
 	response, err := s.Spec(ctx, &api.SpecOpts{})
 	if err != nil {
-		return staticProposerPreferencesLimit
+		return 0, false
 	}
 
 	minSeedLookahead, ok := response.Data["MIN_SEED_LOOKAHEAD"].(uint64)
 	if !ok {
-		return staticProposerPreferencesLimit
+		return 0, false
 	}
 	slotsPerEpoch, ok := response.Data["SLOTS_PER_EPOCH"].(uint64)
 	if !ok {
-		return staticProposerPreferencesLimit
+		return 0, false
 	}
 	if minSeedLookahead == ^uint64(0) || slotsPerEpoch > ^uint64(0)/(minSeedLookahead+1) {
-		return staticProposerPreferencesLimit
+		return 0, false
 	}
 
-	return (minSeedLookahead + 1) * slotsPerEpoch
+	limit := (minSeedLookahead + 1) * slotsPerEpoch
+	if limit == 0 {
+		return 0, false
+	}
+
+	s.proposerPreferencesLimitCache.Store(limit)
+
+	return limit, true
 }
 
 // MarshalSSZ encodes the list as an SSZ list of fixed-size elements, which is the
@@ -88,8 +107,13 @@ func (s *Service) SubmitProposerPreferences(ctx context.Context, opts *api.Submi
 		return client.ErrNoOptions
 	}
 
-	if uint64(len(opts.Preferences)) > s.proposerPreferencesLimit(ctx) {
-		return errors.Join(errors.New("too many proposer preferences"), client.ErrInvalidOptions)
+	// Guarded on a non-empty list: Go evaluates the right-hand operand of >
+	// unconditionally, so without this the common "nothing to publish" call
+	// pays the spec lookup to check a bound it cannot exceed.
+	if len(opts.Preferences) > 0 {
+		if limit, known := s.proposerPreferencesLimit(ctx); known && uint64(len(opts.Preferences)) > limit {
+			return errors.Join(errors.New("too many proposer preferences"), client.ErrInvalidOptions)
+		}
 	}
 	for _, preference := range opts.Preferences {
 		if preference == nil {

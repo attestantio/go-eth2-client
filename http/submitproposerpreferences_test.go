@@ -137,17 +137,20 @@ func TestSubmitProposerPreferencesRequiresExactStatusOK(t *testing.T) {
 	require.EqualError(t, err, "failed to submit proposer preferences\nunexpected status code 204")
 }
 
-// TestSubmitProposerPreferencesEnforcesStaticLimit covers a node that does not
-// publish the spec at all: the mainnet preset stands in for the chain's own
-// lookahead length rather than the submission failing.
-func TestSubmitProposerPreferencesEnforcesStaticLimit(t *testing.T) {
+// TestSubmitProposerPreferencesSkipsLimitWithoutSpec covers a node that does not
+// publish the spec at all.  The bound is a client-side sanity check and the node
+// is the authority, so a chain whose own lookahead cannot be derived gets no
+// client-side bound rather than the mainnet preset: substituting 64 fails open
+// on a shorter-lookahead chain, but rejects a submission a longer-lookahead
+// chain would have accepted, without ever reaching the node.
+func TestSubmitProposerPreferencesSkipsLimitWithoutSpec(t *testing.T) {
 	for _, test := range []struct {
 		name  string
 		count int
-		err   string
 	}{
-		{name: "AtLimit", count: 64},
-		{name: "OneOverLimit", count: 65, err: "too many proposer preferences"},
+		{name: "AtMainnetLimit", count: 64},
+		{name: "OverMainnetLimit", count: 65},
+		{name: "OverALongerChainsLimit", count: 129},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			received := false
@@ -157,23 +160,19 @@ func TestSubmitProposerPreferencesEnforcesStaticLimit(t *testing.T) {
 			require.NoError(t, err)
 			err = service.(client.ProposerPreferencesSubmitter).
 				SubmitProposerPreferences(context.Background(), preferencesOpts(makePreferences(test.count)))
-			if test.err != "" {
-				require.ErrorContains(t, err, test.err)
-				require.False(t, received)
-			} else {
-				require.NoError(t, err)
-				require.True(t, received)
-			}
+			require.NoError(t, err)
+			require.True(t, received)
 		})
 	}
 }
 
 func TestSubmitProposerPreferencesChecksLimitBeforeNilElements(t *testing.T) {
 	received := false
-	server := proposerPreferencesServer(t, nethttp.StatusOK, &received)
+	// A chain whose limit is derivable, so that there is a limit to hit first.
+	server := proposerPreferencesServerWithSpec(t, nethttp.StatusOK, &received, 1, 2)
 	defer server.Close()
 
-	preferences := makePreferences(65)
+	preferences := makePreferences(5)
 	preferences[0] = nil
 	service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL))
 	require.NoError(t, err)
@@ -258,9 +257,12 @@ func TestSubmitProposerPreferencesRejectsNilMessage(t *testing.T) {
 	require.False(t, received)
 }
 
-// TestSubmitProposerPreferencesFallsBackWhenSpecIncomplete covers a node that
+// TestSubmitProposerPreferencesSkipsLimitWhenSpecIncomplete covers a node that
 // publishes the spec but omits one of the two keys the limit is derived from.
-func TestSubmitProposerPreferencesFallsBackWhenSpecIncomplete(t *testing.T) {
+// The chain's own lookahead is no more knowable than for a node serving no spec
+// at all, so there is no client-side bound: a count that mainnet would refuse
+// still reaches the node, which is the authority on it.
+func TestSubmitProposerPreferencesSkipsLimitWhenSpecIncomplete(t *testing.T) {
 	received := false
 	server := preferencesServer(t, nethttp.StatusOK, &received, `{"data":{"SLOTS_PER_EPOCH":"32"}}`)
 	defer server.Close()
@@ -268,7 +270,7 @@ func TestSubmitProposerPreferencesFallsBackWhenSpecIncomplete(t *testing.T) {
 	service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL))
 	require.NoError(t, err)
 	err = service.(client.ProposerPreferencesSubmitter).
-		SubmitProposerPreferences(context.Background(), preferencesOpts(makePreferences(64)))
+		SubmitProposerPreferences(context.Background(), preferencesOpts(makePreferences(65)))
 	require.NoError(t, err)
 	require.True(t, received)
 }
@@ -336,6 +338,93 @@ func proposerPreferencesServerWithSpec(t *testing.T,
 
 	return preferencesServer(t, status, received,
 		fmt.Sprintf(`{"data":{"MIN_SEED_LOOKAHEAD":"%d","SLOTS_PER_EPOCH":"%d"}}`, minSeedLookahead, slotsPerEpoch))
+}
+
+// countingPreferencesServer serves the submission endpoint and counts requests
+// to the spec endpoint, so that what reaches the network on a submission can be
+// asserted rather than inferred.
+func countingPreferencesServer(t *testing.T, specResponse string, specRequests *int) *httptest.Server {
+	t.Helper()
+
+	return httptest.NewServer(nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		switch r.URL.Path {
+		case "/eth/v1/node/version":
+			_, _ = w.Write([]byte(`{"data":{"version":"test"}}`))
+		case "/eth/v1/node/syncing":
+			_, _ = w.Write([]byte(`{"data":{"is_syncing":false,"is_optimistic":false,"el_offline":false,"head_slot":"1","sync_distance":"0"}}`))
+		case "/eth/v1/config/spec":
+			*specRequests++
+			if specResponse == "" {
+				w.WriteHeader(nethttp.StatusNotFound)
+
+				return
+			}
+			_, _ = w.Write([]byte(specResponse))
+		case "/eth/v1/validator/proposer_preferences":
+			w.WriteHeader(nethttp.StatusOK)
+		default:
+			w.WriteHeader(nethttp.StatusNotFound)
+		}
+	}))
+}
+
+// TestSubmitProposerPreferencesDerivesTheLimitOnce pins the limit being cached.
+//
+// Spec() assigns s.spec only on success and clearStaticValues nils it every 5
+// minutes, while preferences are submitted about once per epoch -- so consulting
+// it per submission put a blocking spec round trip on the publish path roughly
+// every time, holding specMutex across it and stalling every other spec consumer
+// with it.  The lookahead is a property of the chain, so one derivation is
+// enough for the life of the service.
+func TestSubmitProposerPreferencesDerivesTheLimitOnce(t *testing.T) {
+	ctx := context.Background()
+	specRequests := 0
+	server := countingPreferencesServer(t,
+		`{"data":{"MIN_SEED_LOOKAHEAD":"1","SLOTS_PER_EPOCH":"2"}}`, &specRequests)
+	defer server.Close()
+
+	service, err := clienthttp.New(ctx, clienthttp.WithAddress(server.URL))
+	require.NoError(t, err)
+	submitter := service.(client.ProposerPreferencesSubmitter)
+
+	// Whatever the connection setup asked for, no submission adds to it after
+	// the first that has to derive the limit.
+	for range 5 {
+		require.NoError(t, submitter.SubmitProposerPreferences(ctx, preferencesOpts(makePreferences(1))))
+	}
+	afterFirst := specRequests
+
+	for range 5 {
+		require.NoError(t, submitter.SubmitProposerPreferences(ctx, preferencesOpts(makePreferences(1))))
+	}
+	require.Equal(t, afterFirst, specRequests)
+
+	// And the cached limit is still enforced.
+	err = submitter.SubmitProposerPreferences(ctx, preferencesOpts(makePreferences(5)))
+	require.ErrorContains(t, err, "too many proposer preferences")
+}
+
+// TestSubmitProposerPreferencesSkipsTheLimitForAnEmptyList covers the common
+// "nothing to publish" call.  Go evaluates the right-hand operand of > without
+// regard to the left, so an unguarded comparison made an empty submission pay
+// the spec lookup to check a bound it cannot exceed.
+func TestSubmitProposerPreferencesSkipsTheLimitForAnEmptyList(t *testing.T) {
+	ctx := context.Background()
+	specRequests := 0
+	// A node with no spec endpoint, so each lookup is a failed round trip that
+	// is not cached and is repeated on every submission.
+	server := countingPreferencesServer(t, "", &specRequests)
+	defer server.Close()
+
+	service, err := clienthttp.New(ctx, clienthttp.WithAddress(server.URL))
+	require.NoError(t, err)
+	submitter := service.(client.ProposerPreferencesSubmitter)
+
+	before := specRequests
+	for range 5 {
+		require.NoError(t, submitter.SubmitProposerPreferences(ctx, preferencesOpts(nil)))
+	}
+	require.Equal(t, before, specRequests)
 }
 
 // preferencesServer serves the submission endpoint with the given status.  An
