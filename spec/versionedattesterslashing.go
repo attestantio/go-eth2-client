@@ -1,4 +1,4 @@
-// Copyright © 2024 Attestant Limited.
+// Copyright © 2024 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,6 +17,7 @@ import (
 	"errors"
 
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -30,12 +31,13 @@ type VersionedAttesterSlashing struct {
 	Deneb     *phase0.AttesterSlashing
 	Electra   *electra.AttesterSlashing
 	Fulu      *electra.AttesterSlashing
+	Gloas     *gloas.AttesterSlashing
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedAttesterSlashing) IsEmpty() bool {
 	return v.Phase0 == nil && v.Altair == nil && v.Bellatrix == nil &&
-		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil
+		v.Capella == nil && v.Deneb == nil && v.Electra == nil && v.Fulu == nil && v.Gloas == nil
 }
 
 // Attestation1 returns the first indexed attestation.
@@ -115,6 +117,17 @@ func (v *VersionedAttesterSlashing) Attestation1() (*VersionedIndexedAttestation
 		versionedIndexedAttestation := VersionedIndexedAttestation{
 			Version: DataVersionFulu,
 			Fulu:    v.Fulu.Attestation1,
+		}
+
+		return &versionedIndexedAttestation, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas indexed attestation")
+		}
+
+		versionedIndexedAttestation := VersionedIndexedAttestation{
+			Version: DataVersionGloas,
+			Gloas:   v.Gloas.Attestation1,
 		}
 
 		return &versionedIndexedAttestation, nil
@@ -203,6 +216,17 @@ func (v *VersionedAttesterSlashing) Attestation2() (*VersionedIndexedAttestation
 		}
 
 		return &versionedIndexedAttestation, nil
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return nil, errors.New("no Gloas indexed attestation")
+		}
+
+		versionedIndexedAttestation := VersionedIndexedAttestation{
+			Version: DataVersionGloas,
+			Gloas:   v.Gloas.Attestation2,
+		}
+
+		return &versionedIndexedAttestation, nil
 	default:
 		return nil, errors.New("unknown version")
 	}
@@ -253,6 +277,12 @@ func (v *VersionedAttesterSlashing) String() string {
 		}
 
 		return v.Fulu.String()
+	case DataVersionGloas:
+		if v.Gloas == nil {
+			return ""
+		}
+
+		return v.Gloas.String()
 	default:
 		return "unknown version"
 	}

@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,8 +22,34 @@ import (
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
+	beaconhttp "github.com/attestantio/go-eth2-client/http"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/stretchr/testify/require"
 )
+
+func TestValidateEventsOptsNil(t *testing.T) {
+	require.ErrorIs(t, beaconhttp.ValidateEventsOpts(nil), client.ErrNoOptions)
+}
+
+// TestValidateEventsOptsIgnoresSupportedEventTopics confirms that changing the exported
+// apiv1.SupportedEventTopics map changes neither which topics are accepted nor which refused, as
+// validation checks the topics the dispatcher supports.  No test in the package runs in parallel,
+// so changing the map here, and restoring it, races with no other.
+func TestValidateEventsOptsIgnoresSupportedEventTopics(t *testing.T) {
+	apiv1.SupportedEventTopics["injected"] = true
+	delete(apiv1.SupportedEventTopics, "head")
+	t.Cleanup(func() {
+		delete(apiv1.SupportedEventTopics, "injected")
+		apiv1.SupportedEventTopics["head"] = true
+	})
+
+	handler := func(*apiv1.Event) {}
+
+	require.EqualError(t,
+		beaconhttp.ValidateEventsOpts(&api.EventsOpts{Topics: []string{"injected"}, Handler: handler}),
+		"unsupported event topic injected: invalid options")
+	require.NoError(t, beaconhttp.ValidateEventsOpts(&api.EventsOpts{Topics: []string{"head"}, Handler: handler}))
+}
 
 func TestEvents(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
@@ -60,6 +86,141 @@ func TestEvents(t *testing.T) {
 			defer eventsMu.Unlock()
 			require.NotEqual(t, 0, events)
 			cancel()
+		})
+	}
+}
+
+// gloasEventTopics are the SSE topics introduced by the Gloas (ePBS) fork.
+var gloasEventTopics = []string{
+	"execution_payload",
+	"execution_payload_available",
+	"execution_payload_bid",
+	"execution_payload_gossip",
+	"fast_confirmation",
+	"payload_attestation_message",
+	"proposer_preferences",
+}
+
+// TestEventsGloasTopics confirms the public Events() entry point accepts a
+// subscription naming any of the Gloas event topics.
+//
+// Events() gates every requested topic on the topics the dispatcher supports, via
+// ValidateEventsOpts, before it builds the subscription, so a topic the gate
+// refuses never reaches the wire, however completely the dispatcher downstream
+// would handle it. A test that calls handleEvent directly sits downstream of
+// this check and so cannot exercise it. This test is the only one that checks
+// the gate accepts the Gloas topics, and it needs a node.
+// TestValidateEventsOptsIgnoresSupportedEventTopics checks, without one, only
+// that the gate consults the dispatcher rather than SupportedEventTopics.
+//
+// Every topic is subscribed to with its own topic-specific handler, which must
+// be accepted outright — that also pins each topic to the EventsOpts field
+// the dispatcher binds to it, which a topic-agnostic generic handler would not.
+// One topic is additionally subscribed to with no handler at all: "no handler
+// for <topic> event" is only reachable past the supported-topic check, so it
+// is direct evidence of clearing the gate rather than of merely getting a nil
+// error afterwards.
+func TestEventsGloasTopics(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	service := testService(ctx, t).(client.EventsProvider)
+
+	tests := []struct {
+		name string
+		opts *api.EventsOpts
+		err  string
+	}{
+		{
+			// The gate's two rejections are near-identical in wording, so this
+			// asserts the exact message: "unsupported event topic X" is the
+			// supported-topic check's own return, while "no handler for X event"
+			// can only be reached once that check has passed.
+			name: "ExecutionPayloadNoHandler",
+			opts: &api.EventsOpts{Topics: []string{"execution_payload"}},
+			err:  "no handler for execution_payload event: invalid options",
+		},
+		{
+			name: "ExecutionPayloadSpecificHandler",
+			opts: &api.EventsOpts{
+				Topics:                  []string{"execution_payload"},
+				ExecutionPayloadHandler: func(context.Context, *apiv1.ExecutionPayloadEvent) {},
+			},
+		},
+		{
+			name: "ExecutionPayloadAvailableSpecificHandler",
+			opts: &api.EventsOpts{
+				Topics:                           []string{"execution_payload_available"},
+				ExecutionPayloadAvailableHandler: func(context.Context, *apiv1.ExecutionPayloadAvailableEvent) {},
+			},
+		},
+		{
+			name: "ExecutionPayloadBidSpecificHandler",
+			opts: &api.EventsOpts{
+				Topics:                     []string{"execution_payload_bid"},
+				ExecutionPayloadBidHandler: func(context.Context, *gloas.SignedExecutionPayloadBid) {},
+			},
+		},
+		{
+			name: "ExecutionPayloadGossipSpecificHandler",
+			opts: &api.EventsOpts{
+				Topics:                        []string{"execution_payload_gossip"},
+				ExecutionPayloadGossipHandler: func(context.Context, *apiv1.ExecutionPayloadGossipEvent) {},
+			},
+		},
+		{
+			name: "FastConfirmationSpecificHandler",
+			opts: &api.EventsOpts{
+				Topics:                  []string{"fast_confirmation"},
+				FastConfirmationHandler: func(context.Context, *apiv1.FastConfirmationEvent) {},
+			},
+		},
+		{
+			name: "PayloadAttestationMessageSpecificHandler",
+			opts: &api.EventsOpts{
+				Topics:                           []string{"payload_attestation_message"},
+				PayloadAttestationMessageHandler: func(context.Context, *gloas.PayloadAttestationMessage) {},
+			},
+		},
+		{
+			name: "ProposerPreferencesSpecificHandler",
+			opts: &api.EventsOpts{
+				Topics:                     []string{"proposer_preferences"},
+				ProposerPreferencesHandler: func(context.Context, *gloas.SignedProposerPreferences) {},
+			},
+		},
+		{
+			name: "AllGloasTopicsGenericHandler",
+			opts: &api.EventsOpts{
+				Topics:  gloasEventTopics,
+				Handler: func(*apiv1.Event) {},
+			},
+		},
+		{
+			// Control: shows what a topic the dispatcher does not support looks
+			// like, so the assertions above cannot pass vacuously.
+			name: "UnknownTopic",
+			opts: &api.EventsOpts{
+				Topics:  []string{"not_an_event_topic"},
+				Handler: func(*apiv1.Event) {},
+			},
+			err: "unsupported event topic not_an_event_topic: invalid options",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			// A fresh context per subtest, so that any subscription Events()
+			// does accept is torn down as soon as the subtest ends.
+			ctx, cancel := context.WithCancel(ctx)
+			defer cancel()
+
+			err := service.Events(ctx, test.opts)
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }
