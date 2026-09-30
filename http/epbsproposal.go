@@ -136,7 +136,7 @@ func (s *Service) EPBSProposal(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	if err := validateEPBSProposalExecutionValue(response.Data, opts.BuilderConfig, builderURL, selfBuildIndex); err != nil {
+	if err := validateEPBSProposalExecutionValue(response.Data, opts.BuilderConfig, builderURL, selfBuildIndex, response.Metadata); err != nil {
 		return nil, err
 	}
 
@@ -193,8 +193,9 @@ func (s *Service) assertEPBSProposalMatchesRequest(proposal *api.VersionedEPBSPr
 // staticBuilderIndexSelfBuild is the mainnet value of the BUILDER_INDEX_SELF_BUILD
 // spec constant, the bid builder index that marks a proposer self-build.  It is
 // a configurable spec value rather than a fixed sentinel, so a custom preset can
-// move it; builderIndexSelfBuild reads it from the node in that case.
-const staticBuilderIndexSelfBuild = gloas.BuilderIndex(^uint64(0))
+// move it; builderIndexSelfBuild reads it from the node in that case.  The value
+// itself is defined once, in the spec package.
+const staticBuilderIndexSelfBuild = gloas.BuilderIndexSelfBuild
 
 // builderIndexSelfBuild returns the builder index that marks a self-built bid.
 func (s *Service) builderIndexSelfBuild(ctx context.Context) (gloas.BuilderIndex, error) {
@@ -224,20 +225,26 @@ func (s *Service) builderIndexSelfBuild(ctx context.Context) (gloas.BuilderIndex
 
 // validateEPBSProposalExecutionValue checks the bid a proposal commits to against
 // the policy that was requested, and checks the execution value the node reported
-// against the bid that is signed in the block.  A value the block gives no way to
-// check -- because the winning builder cannot be identified, or the bid is
-// self-built -- is cleared rather than passed on, so a caller ranking proposals
-// never treats an unverified number as a verified one.
+// against the bid that is signed in the block.
+//
+// The minimum-bid check runs on every path.  Where the winning builder cannot be
+// identified the cap on the execution payment is unresolvable, so the most
+// permissive cap the config allows is used instead: that can only make the check
+// more permissive, never falsely reject, and it leaves the node no way to opt out
+// of the proposer's floor.  A reported value that the block gives no way to tie to
+// a specific builder entry is cleared -- from the typed field and from the response
+// metadata alike -- so a caller ranking proposals never treats an unverified number
+// as a verified one.
 func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 	config *gloas.BuilderConfig,
 	builderURL string,
 	selfBuildIndex gloas.BuilderIndex,
+	metadata map[string]any,
 ) error {
-	block := proposal.Gloas
-	if proposal.ExecutionPayloadIncluded {
-		block = proposal.GloasContents.Block
+	bid, err := proposal.ExecutionPayloadBid()
+	if err != nil {
+		return errors.Join(err, client.ErrInconsistentResult)
 	}
-	bid := block.Body.SignedExecutionPayloadBid.Message
 
 	// The bid checks below run whether or not the node sent a value header.
 	// They are statements about the block, and the header is the node's to
@@ -246,47 +253,58 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 		if bid.Value != 0 {
 			return errors.Join(errors.New("self-built execution payload bid has non-zero value"), client.ErrInconsistentResult)
 		}
-		proposal.ExecutionValue = nil
 
+		// A self-build has no signed bid the reported value could contradict,
+		// and since bid.Value is zero by construction that value is the only
+		// signal of what the block is worth.  Clearing it here would make every
+		// locally built proposal unrankable, so it is left in place.
 		return nil
 	}
 
-	policy := config
-	if builderURL != "" {
-		entry := builderEntryForURL(config, builderURL)
-		if entry == nil {
-			proposal.ExecutionValue = nil
+	// minBid is the floor the bid has to clear and maxPayment the cap the
+	// execution payment counts up to.  Both start at the config-wide values,
+	// which is what applies when the bid cannot be attributed to an entry.
+	minBid := config.MinBid
+	maxPayment := maxConfiguredExecutionPayment(config)
+	attributed := false
 
-			return nil
+	switch {
+	case builderURL != "":
+		// builderEntryForURL returns nil for a URL that matches no entry or
+		// more than one, and the header is the node's to choose, so an
+		// unrecognised value leaves the bid unattributed rather than unchecked.
+		if entry := builderEntryForURL(config, builderURL); entry != nil {
+			// A builder-API bid is judged against the entry it was solicited
+			// under as well as the config-wide minimum: the per-entry value is
+			// an additional constraint on that builder, not a replacement, so
+			// leaving it unset does not remove the global floor.
+			minBid = max(config.MinBid, entry.MinBid)
+			maxPayment = entry.MaxExecutionPayment
+			attributed = true
 		}
-
-		// A builder-API bid is judged against the entry it was solicited
-		// under, not the config-wide minimum, which gates p2p bids only.
-		policy = &gloas.BuilderConfig{MinBid: entry.MinBid, Builders: []*gloas.BuilderEntry{entry}}
-	} else if bid.ExecutionPayment != 0 {
-		// No builder URL means p2p or self-build.  The cap a p2p payment
-		// counts up to is the maximum over the configured entries whose
-		// pubkeys include the bidding builder's, and the block carries no
-		// pubkey to resolve the builder index against, so the payment -- and
-		// with it the value -- cannot be checked here.
-		proposal.ExecutionValue = nil
-
-		return nil
+	case bid.ExecutionPayment == 0:
+		// No builder URL means p2p or self-build.  With no payment to cap there
+		// is nothing left to resolve, so the value is checkable against the bid.
+		maxPayment = 0
+		attributed = true
+	default:
+		// A p2p bid with a payment: the cap that applies is the one for the
+		// entry whose pubkeys include the bidding builder's, and the block
+		// carries no pubkey to resolve the builder index against.
 	}
 
-	// The proposer's take counts the execution payment only up to the cap of
-	// the entry the bid was solicited under.  A p2p bid has no such entry, and
-	// the payment check above is what makes a zero cap right for it.
-	maxPayment := phase0.Gwei(0)
-	if len(policy.Builders) == 1 {
-		maxPayment = policy.Builders[0].MaxExecutionPayment
-	}
 	payment := min(bid.ExecutionPayment, maxPayment)
 
 	value := new(big.Int).SetUint64(uint64(bid.Value))
 	total := new(big.Int).Add(value, new(big.Int).SetUint64(uint64(payment)))
-	if total.Cmp(new(big.Int).SetUint64(uint64(policy.MinBid))) < 0 {
+	if total.Cmp(new(big.Int).SetUint64(uint64(minBid))) < 0 {
 		return errors.Join(errors.New("execution payload bid below minimum"), client.ErrInconsistentResult)
+	}
+
+	if !attributed {
+		clearExecutionValue(proposal, metadata)
+
+		return nil
 	}
 
 	if proposal.ExecutionValue == nil {
@@ -300,13 +318,42 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 	// are bound to the signed bid, so a value inside it is accepted rather than
 	// failing the proposal over a reading of an ambiguous sentence.
 	gwei := big.NewInt(1_000_000_000)
-	low := value.Mul(value, gwei)
-	high := total.Mul(total, gwei)
+	low := new(big.Int).Mul(value, gwei)
+	high := new(big.Int).Mul(total, gwei)
 	if proposal.ExecutionValue.Cmp(low) < 0 || proposal.ExecutionValue.Cmp(high) > 0 {
 		return errors.Join(errors.New("execution payload value does not match bid"), client.ErrInconsistentResult)
 	}
 
 	return nil
+}
+
+// clearExecutionValue withholds an execution value that could not be checked
+// against the signed bid.  metadataFromHeaders copies every response header into
+// the response metadata, so dropping the typed field alone would leave the same
+// unverified number reachable through Metadata with nothing marking it unchecked.
+func clearExecutionValue(proposal *api.VersionedEPBSProposal, metadata map[string]any) {
+	proposal.ExecutionValue = nil
+
+	for key := range metadata {
+		if strings.EqualFold(key, "Eth-Execution-Payload-Value") {
+			delete(metadata, key)
+		}
+	}
+}
+
+// maxConfiguredExecutionPayment returns the largest execution payment any entry
+// in the config permits, which is an upper bound on what the proposer can collect
+// from a bid that cannot be attributed to one of them.  It is 0 when no builders
+// are configured, since then no payment is permitted at all.
+func maxConfiguredExecutionPayment(config *gloas.BuilderConfig) phase0.Gwei {
+	maximum := phase0.Gwei(0)
+	for _, entry := range config.Builders {
+		if entry != nil && entry.MaxExecutionPayment > maximum {
+			maximum = entry.MaxExecutionPayment
+		}
+	}
+
+	return maximum
 }
 
 func builderEntryForURL(config *gloas.BuilderConfig, builderURL string) *gloas.BuilderEntry {
