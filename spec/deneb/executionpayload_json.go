@@ -53,7 +53,13 @@ type executionPayloadJSON struct {
 func (e *ExecutionPayload) MarshalJSON() ([]byte, error) {
 	transactions := make([]string, len(e.Transactions))
 	for i := range e.Transactions {
-		transactions[i] = fmt.Sprintf("%#x", e.Transactions[i])
+		// fmt.Sprintf("%#x", []byte{}) returns "" rather than "0x", so an
+		// empty transaction -- a legal ByteList, and one that appears in the
+		// random spec vectors -- marshalled to "" and would not decode again.
+		transactions[i] = "0x"
+		if len(e.Transactions[i]) > 0 {
+			transactions[i] = fmt.Sprintf("%#x", e.Transactions[i])
+		}
 	}
 
 	extraData := "0x"
@@ -225,15 +231,21 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	}
 
 	if len(transactions) > bellatrix.MaxTransactionsPerPayload {
-		return errors.Wrap(err, "incorrect length for transactions")
+		// Not errors.Wrap: the in-scope err is nil here, as json.Unmarshal
+		// above binds its own inside the if, and pkg/errors.Wrap(nil, ...)
+		// returns nil -- which made this report success and return early,
+		// leaving the rest of the payload unparsed.
+		return fmt.Errorf("incorrect length %d for transactions", len(transactions))
 	}
 
 	e.Transactions = make([]bellatrix.Transaction, len(transactions))
 	for i := range transactions {
-		if len(transactions[i]) == 0 ||
-			bytes.Equal(transactions[i], []byte{'"', '"'}) ||
-			bytes.Equal(transactions[i], []byte{'"', '0', 'x', '"'}) {
-			return fmt.Errorf("transaction %d: missing", i)
+		// "0x" is a valid empty transaction.  Shorter values cannot carry the
+		// prefix and would underflow the allocation below: the previous guard
+		// rejected "0x" but let a 1-to-3 byte element such as [12] through to
+		// make([]byte, (2-4)/2), which panics on a negative length.
+		if len(transactions[i]) < 4 {
+			return fmt.Errorf("transaction %d: missing or malformed", i)
 		}
 
 		e.Transactions[i] = make([]byte, (len(transactions[i])-4)/2)
@@ -242,7 +254,8 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 		}
 
 		if len(e.Transactions[i]) > bellatrix.MaxBytesPerTransaction {
-			return errors.Wrapf(err, "incorrect length for transaction %d", i)
+			// As above: errors.Wrapf of a nil err returns nil.
+			return fmt.Errorf("incorrect length %d for transaction %d", len(e.Transactions[i]), i)
 		}
 	}
 

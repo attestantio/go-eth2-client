@@ -48,7 +48,11 @@ type executionPayloadYAML struct {
 func (e *ExecutionPayload) MarshalYAML() ([]byte, error) {
 	transactions := make([]string, len(e.Transactions))
 	for i := range e.Transactions {
-		transactions[i] = fmt.Sprintf("%#x", e.Transactions[i])
+		// See MarshalJSON: %#x of an empty slice has no 0x prefix.
+		transactions[i] = "0x"
+		if len(e.Transactions[i]) > 0 {
+			transactions[i] = fmt.Sprintf("%#x", e.Transactions[i])
+		}
 	}
 
 	extraData := "0x"

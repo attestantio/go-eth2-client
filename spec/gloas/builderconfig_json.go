@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
@@ -67,6 +68,16 @@ func (b *SignedBuilderRequestAuth) MarshalJSON() ([]byte, error) {
 
 // MarshalJSON implements json.Marshaler.
 func (b *BuilderEntry) MarshalJSON() ([]byte, error) {
+	// json.Marshal of a Go string replaces every byte that is not valid UTF-8
+	// with U+FFFD rather than erroring, so without this an entry whose URL
+	// carries a stray byte would emit a different URL and the config would no
+	// longer round-trip, with no error raised anywhere.  The SSZ encoder writes
+	// the bytes verbatim, so the two transports would also disagree about the
+	// same config.
+	if !utf8.Valid(b.URL) {
+		return nil, errors.New("builder URL is not valid UTF-8")
+	}
+
 	builderPubkeys := make([]string, len(b.BuilderPubkeys))
 	for i := range b.BuilderPubkeys {
 		builderPubkeys[i] = fmt.Sprintf("%#x", b.BuilderPubkeys[i])
@@ -242,6 +253,15 @@ func (b *BuilderConfig) UnmarshalJSON(input []byte) error {
 	}
 	if len(data.Builders) > 64 {
 		return errors.New("too many builders")
+	}
+	// The check above covers the slice, not its elements.  {"builders":[null]}
+	// decodes to a nil element, which MarshalSSZTo then substitutes a zero
+	// BuilderEntry for -- putting an entry with an empty URL, zero auth and
+	// zero slot on the wire without an error being raised.
+	for i := range data.Builders {
+		if data.Builders[i] == nil {
+			return fmt.Errorf("builder %d missing", i)
+		}
 	}
 
 	b.MinBid = phase0.Gwei(minBid)

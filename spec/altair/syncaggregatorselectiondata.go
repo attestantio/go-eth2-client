@@ -20,6 +20,6 @@ import (
 // SyncAggregatorSelectionData is an internal struct for
 // sync committee selection proofs.
 type SyncAggregatorSelectionData struct {
-	Slot              phase0.Slot
-	SubcommitteeIndex uint64
+	Slot              phase0.Slot `json:"slot"               yaml:"slot"`
+	SubcommitteeIndex uint64      `json:"subcommittee_index" yaml:"subcommittee_index"`
 }
