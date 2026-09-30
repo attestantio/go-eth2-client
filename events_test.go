@@ -168,8 +168,17 @@ func TestEventsHeadV2Generic(t *testing.T) {
 
 	received := make(chan *apiv1.Event, 1)
 	require.NoError(t, service.(client.EventsProvider).Events(ctx, &api.EventsOpts{
-		Topics:  []string{"head_v2"},
-		Handler: func(event *apiv1.Event) { received <- event },
+		Topics: []string{"head_v2"},
+		// Non-blocking, as in the sibling tests above.  The SSE client
+		// reconnects every second for the life of ctx and the stub replays the
+		// same frame on each connection, so a blocking send parks the handler
+		// goroutine on the second delivery and it never returns.
+		Handler: func(event *apiv1.Event) {
+			select {
+			case received <- event:
+			default:
+			}
+		},
 	}))
 	select {
 	case event := <-received:

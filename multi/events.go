@@ -107,6 +107,28 @@ func (s *Service) Events(ctx context.Context,
 	// active one later, and were it left unsubscribed its events would then never arrive.
 	for _, retry := range retries {
 		go func(c deferredEventsClient, ah *activeHandler, wait bool) {
+			// The retry is unbounded by design -- a client can become the
+			// active one at any point, and were it left unsubscribed its events
+			// would never arrive -- so the goroutine lives until the context is
+			// done.  reported keeps that from also being unbounded logging: a
+			// permanently unreachable endpoint would otherwise emit a warning
+			// every interval for the life of the context, multiplied by every
+			// subscription and every dead endpoint.
+			reported := false
+			report := func(err error, msg string) {
+				event := ah.log.Trace()
+				if !reported {
+					event = ah.log.Warn()
+					reported = true
+				}
+
+				event.
+					Str("address", ah.address).
+					Strs("topics", ah.clientOpts.Topics).
+					Err(err).
+					Msg(msg)
+			}
+
 			for {
 				if wait {
 					select {
@@ -121,11 +143,14 @@ func (s *Service) Events(ctx context.Context,
 
 				switch {
 				case err != nil:
-					ah.log.Warn().
-						Str("address", ah.address).
-						Strs("topics", ah.clientOpts.Topics).
-						Err(err).
-						Msg("Failed to obtain sync state from node; will retry")
+					report(err, "Failed to obtain sync state from node; will retry")
+				case syncResponse == nil || syncResponse.Data == nil:
+					// A WithClients-supplied provider is not obliged to behave.
+					// There is no recover on this path, so dereferencing a nil
+					// here would take the process down -- and this now runs
+					// every interval rather than once, so a client returning a
+					// malformed response would do so repeatedly.
+					report(nil, "Node returned no sync state; will retry")
 				case !syncResponse.Data.IsSyncing:
 					// Client is now synced, set up the events call.  This uses the same filtered
 					// options as an initially-active client, so that events from it are subject to
@@ -137,11 +162,7 @@ func (s *Service) Events(ctx context.Context,
 						return
 					}
 
-					ah.log.Warn().
-						Str("address", ah.address).
-						Strs("topics", ah.clientOpts.Topics).
-						Err(err).
-						Msg("Failed to set up events handler; will retry")
+					report(err, "Failed to set up events handler; will retry")
 				default:
 					// Still syncing; check again after the interval.
 				}

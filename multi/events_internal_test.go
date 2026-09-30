@@ -316,3 +316,78 @@ func TestEventsLogsWhyClientIsDropped(t *testing.T) {
 		})
 	}
 }
+
+// malformedSyncStateClient answers NodeSyncing the way an odd third-party
+// provider supplied through WithClients might: successfully, but with nothing
+// in it.  Both shapes are reachable -- a nil response with a nil error, and a
+// response whose Data is nil.
+type malformedSyncStateClient struct {
+	response *api.Response[*apiv1.SyncState]
+	events   atomic.Int64
+}
+
+func (*malformedSyncStateClient) Name() string    { return "malformed" }
+func (*malformedSyncStateClient) Address() string { return "malformed" }
+func (*malformedSyncStateClient) IsActive() bool  { return true }
+func (*malformedSyncStateClient) IsSynced() bool  { return false }
+
+func (c *malformedSyncStateClient) NodeSyncing(context.Context,
+	*api.NodeSyncingOpts,
+) (*api.Response[*apiv1.SyncState], error) {
+	return c.response, nil
+}
+
+func (c *malformedSyncStateClient) Events(context.Context, *api.EventsOpts) error {
+	c.events.Add(1)
+
+	return nil
+}
+
+// TestEventsSurvivesAMalformedSyncState confirms that the retry goroutine does
+// not dereference a sync state a client did not supply.
+//
+// There is no recover on that path, so a panic there takes the process down,
+// and the retry now runs every interval rather than once -- so a client
+// returning a malformed response is hit repeatedly rather than a single time.
+// The surrounding code goes to some trouble to keep odd third-party clients
+// non-fatal, so this was the inconsistent gap.
+func TestEventsSurvivesAMalformedSyncState(t *testing.T) {
+	tests := []struct {
+		name     string
+		response *api.Response[*apiv1.SyncState]
+	}{
+		{name: "NilResponse"},
+		{name: "NilData", response: &api.Response[*apiv1.SyncState]{}},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			provider, err := mock.New(context.Background(), mock.WithName("provider"))
+			require.NoError(t, err)
+			provider.EventsFunc = func(context.Context, *api.EventsOpts) error { return nil }
+
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+
+			client := &malformedSyncStateClient{response: test.response}
+			s := &Service{
+				log:                 zerolog.Nop(),
+				activeClients:       []consensusclient.Service{provider},
+				inactiveClients:     []consensusclient.Service{client},
+				eventsRetryInterval: time.Millisecond,
+			}
+
+			require.NotPanics(t, func() {
+				require.NoError(t, s.Events(ctx, &api.EventsOpts{
+					Topics:  []string{"head"},
+					Handler: func(*apiv1.Event) {},
+				}))
+			})
+
+			// Let the retry goroutine go round several times on the malformed
+			// response before the context releases it.
+			time.Sleep(20 * time.Millisecond)
+			require.Zero(t, client.events.Load())
+		})
+	}
+}

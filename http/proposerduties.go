@@ -78,6 +78,13 @@ func (s *Service) proposerDutiesAtEndpoint(ctx context.Context,
 		return nil, errors.Join(errors.New("failed to obtain slots per epoch"), err)
 	}
 
+	if slotsPerEpoch == 0 {
+		// Without this endSlot underflows to MaxUint64 and the range check
+		// below silently accepts every duty the node cares to return, which is
+		// the whole point of the check.  verifyPTCDuties guards the same way.
+		return nil, errors.New("invalid slots per epoch 0")
+	}
+
 	startSlot := phase0.Slot(uint64(opts.Epoch) * slotsPerEpoch)
 
 	endSlot := phase0.Slot(uint64(opts.Epoch)*slotsPerEpoch + slotsPerEpoch - 1)
