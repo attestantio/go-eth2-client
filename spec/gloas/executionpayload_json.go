@@ -244,7 +244,12 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 	}
 
 	if len(transactions) > bellatrix.MaxTransactionsPerPayload {
-		return errors.Wrap(err, "incorrect length for transactions")
+		// Not errors.Wrap: the in-scope err is nil here, as json.Unmarshal
+		// above binds its own inside the if, and pkg/errors.Wrap(nil, ...)
+		// returns nil.  That made this report success and return early,
+		// leaving withdrawals, blob_gas_used, excess_blob_gas,
+		// block_access_list and slot_number unparsed and zero.
+		return fmt.Errorf("incorrect length %d for transactions", len(transactions))
 	}
 
 	e.Transactions = make([]bellatrix.Transaction, len(transactions))
@@ -261,7 +266,8 @@ func (e *ExecutionPayload) UnmarshalJSON(input []byte) error {
 		}
 
 		if len(e.Transactions[i]) > bellatrix.MaxBytesPerTransaction {
-			return errors.Wrapf(err, "incorrect length for transaction %d", i)
+			// As above: errors.Wrapf of a nil err returns nil.
+			return fmt.Errorf("incorrect length %d for transaction %d", len(e.Transactions[i]), i)
 		}
 	}
 

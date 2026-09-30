@@ -245,9 +245,8 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &altair.SyncAggregate{},
 		},
 		{
-			name:      "SyncAggregatorSelectionData",
-			s:         &altair.SyncAggregatorSelectionData{},
-			yamlValue: &syncAggregatorSelectionDataVector{},
+			name: "SyncAggregatorSelectionData",
+			s:    &altair.SyncAggregatorSelectionData{},
 		},
 		{
 			name: "SyncCommittee",
@@ -359,12 +358,6 @@ func testYAMLFormat(input []byte) string {
 	}
 
 	return string(bytes.ToLower(res))
-}
-
-// The Altair type has no YAML field tag; this fixture shape does not change its public codec.
-type syncAggregatorSelectionDataVector struct {
-	Slot              phase0.Slot `yaml:"slot"`
-	SubcommitteeIndex uint64      `yaml:"subcommittee_index"`
 }
 
 func blockVectorFlow(node *specyaml.Node) {

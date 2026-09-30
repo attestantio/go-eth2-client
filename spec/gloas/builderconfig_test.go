@@ -308,3 +308,30 @@ func TestBuilderConfigJSON(t *testing.T) {
 		}]
 	}`, config.Builders[0].Auth.Signature), string(data))
 }
+
+// TestBuilderConfigRejectsInvalidUTF8URL covers a URL that json.Marshal would
+// silently rewrite.  Marshalling a Go string replaces every byte that is not
+// valid UTF-8 with U+FFFD rather than erroring, so the config would emit a
+// different URL and no longer round-trip, with nothing raised anywhere.  The
+// SSZ encoder writes the bytes verbatim, so the two transports would disagree
+// about the same config.
+func TestBuilderConfigRejectsInvalidUTF8URL(t *testing.T) {
+	entry := &gloas.BuilderEntry{URL: []byte{'h', 't', 't', 'p', ':', 0xff}}
+
+	_, err := json.Marshal(entry)
+	require.ErrorContains(t, err, "builder URL is not valid UTF-8")
+
+	config := &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{entry}}
+	_, err = json.Marshal(config)
+	require.ErrorContains(t, err, "builder URL is not valid UTF-8")
+}
+
+// TestBuilderConfigRejectsNullBuilderEntry covers a null element, which the
+// slice-level nil check did not.  MarshalSSZTo substitutes a zero BuilderEntry
+// for a nil one, so such a config went onto the wire carrying an entry with an
+// empty URL, zero auth and zero slot without an error being raised.
+func TestBuilderConfigRejectsNullBuilderEntry(t *testing.T) {
+	var config gloas.BuilderConfig
+	err := json.Unmarshal([]byte(`{"min_bid":"0","builder_boost_factor":"0","builders":[null]}`), &config)
+	require.ErrorContains(t, err, "builder 0 missing")
+}
