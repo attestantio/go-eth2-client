@@ -146,7 +146,16 @@ func TestEPBSProposal(t *testing.T) {
 			)
 			require.NoError(t, err)
 			require.Equal(t, spec.DataVersionGloas, response.Data.Version)
-			require.Equal(t, test.included, response.Data.ExecutionPayloadIncluded)
+			// Only one direction is the client's to enforce.  A payload
+			// included when none was asked for is rejected by
+			// assertEPBSProposalMatchesRequest; a payload-excluded answer to
+			// include_payload=true is legal, and is exactly what an external
+			// builder's bid looks like -- see BuilderBidExcludesRequestedPayload
+			// below.  Asserting the node honoured the request would fail on any
+			// slot where a builder bid wins.
+			if !test.included {
+				require.False(t, response.Data.ExecutionPayloadIncluded)
+			}
 			require.False(t, response.Data.IsEmpty())
 
 			proposalSlot, err := response.Data.Slot()
@@ -162,7 +171,7 @@ func TestEPBSProposal(t *testing.T) {
 			// caller error, not an empty result: the envelope has to be fetched
 			// from the node that produced the block.
 			envelope, err := response.Data.ExecutionPayloadEnvelope()
-			if !test.included {
+			if !response.Data.ExecutionPayloadIncluded {
 				require.ErrorContains(t, err, "the execution payload was not included")
 
 				return

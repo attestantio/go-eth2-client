@@ -351,8 +351,13 @@ func testYAMLFormat(input []byte) string {
 
 	replacements := [][][]byte{
 		{[]byte(`"`), []byte(`'`)},
-		// Field 'extra_data' in ExecutionPayloadHeader/case_1 has a non-standard format, fix here.
-		{[]byte(`extra_data: 0,`), []byte(`extra_data: '0x',`)},
+		// Field 'extra_data' in ExecutionPayloadHeader/case_1 has a non-standard
+		// format, fix here.  goccy parses the vector's unquoted `extra_data: 0x`
+		// as the integer 0, and normalizeVectorNumbers has already stringified
+		// it by the time this runs, so the pattern is the quoted form.  The
+		// generated side marshals an empty ExtraData as '0x', so without this
+		// a vector carrying one compares '0' against '0x' and fails.
+		{[]byte(`extra_data: '0',`), []byte(`extra_data: '0x',`)},
 	}
 	for _, replacement := range replacements {
 		res = bytes.ReplaceAll(res, replacement[0], replacement[1])
@@ -376,6 +381,17 @@ func blockVectorFlow(node *specyaml.Node) {
 	}
 }
 
+// normalizeVectorNumbers renders every integer as a string so that the two
+// sides of the comparison agree on scalar shape.
+//
+// This makes the YAML check shape-only -- field names and values -- rather than
+// type-faithful: `123` and `'123'` both normalize to `'123'`, so a field that
+// marshals as the wrong scalar type still passes.  That is deliberate while the
+// package is internally inconsistent about it (builderYAML.Balance is a string,
+// so Builder emits `balance: '123'`, while BuilderPendingPayment emits
+// `weight: 123` as a bare int, and the spec vectors use bare ints throughout).
+// Normalizing in the other direction -- parsing the remarshalled strings back
+// to numbers -- would restore the type check, but only once those codecs agree.
 func normalizeVectorNumbers(value any) any {
 	switch v := value.(type) {
 	case map[string]any:
