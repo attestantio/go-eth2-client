@@ -16,6 +16,7 @@ package eventdispatch_test
 import (
 	"bytes"
 	"context"
+	"maps"
 	"reflect"
 	"testing"
 
@@ -27,9 +28,9 @@ import (
 )
 
 // TestBindsEveryTopicHandler confirms that each specific handler field of
-// api.EventsOpts is bound to exactly one supported topic, and each supported topic to exactly
-// one field.  The fields are walked reflectively, so a handler added to api.EventsOpts but not
-// bound fails here.
+// api.EventsOpts is bound to exactly one supported topic. The two light-client topics have only
+// the generic handler. The fields are walked reflectively, so a handler added to api.EventsOpts
+// but not bound fails here.
 func TestBindsEveryTopicHandler(t *testing.T) {
 	optsType := reflect.TypeFor[api.EventsOpts]()
 
@@ -57,7 +58,10 @@ func TestBindsEveryTopicHandler(t *testing.T) {
 		})
 	}
 
-	require.Equal(t, apiv1.SupportedEventTopics, boundTopics)
+	withSpecificHandlers := maps.Clone(apiv1.SupportedEventTopics)
+	delete(withSpecificHandlers, "light_client_finality_update")
+	delete(withSpecificHandlers, "light_client_optimistic_update")
+	require.Equal(t, withSpecificHandlers, boundTopics)
 }
 
 func TestHandle(t *testing.T) {

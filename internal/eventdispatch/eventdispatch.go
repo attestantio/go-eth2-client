@@ -70,6 +70,9 @@ var topicHandlers = topicHandlersByName(
 	bind(func(o *api.EventsOpts) *api.FastConfirmationEventHandlerFunc { return &o.FastConfirmationHandler }),
 	bind(func(o *api.EventsOpts) *api.FinalizedCheckpointEventHandlerFunc { return &o.FinalizedCheckpointHandler }),
 	bind(func(o *api.EventsOpts) *api.HeadEventHandlerFunc { return &o.HeadHandler }),
+	bind(func(o *api.EventsOpts) *api.HeadV2EventHandlerFunc { return &o.HeadV2Handler }),
+	bindGeneric[apiv1.LightClientFinalityUpdateEvent](),
+	bindGeneric[apiv1.LightClientOptimisticUpdateEvent](),
 	bind(func(o *api.EventsOpts) *api.PayloadAttestationMessageEventHandlerFunc {
 		return &o.PayloadAttestationMessageHandler
 	}),
@@ -149,6 +152,32 @@ func bind[T any, H ~func(context.Context, *T)](field func(opts *api.EventsOpts) 
 					}
 				})
 			},
+		},
+	}
+}
+
+// bindGeneric binds a topic that has only the generic handler.
+func bindGeneric[T any]() namedTopicHandler {
+	topic := eventtopic.Lookup[T]()
+	name := topic.Name()
+
+	return namedTopicHandler{
+		name: name,
+		handler: topicHandler{
+			isSet: func(*api.EventsOpts) bool { return false },
+			handle: func(_ context.Context, opts *api.EventsOpts, input []byte) error {
+				data, err := topic.Decode(input)
+				if err != nil {
+					return err
+				}
+
+				if opts.Handler != nil {
+					opts.Handler(&apiv1.Event{Topic: name, Data: data})
+				}
+
+				return nil
+			},
+			filter: func(*api.EventsOpts, *api.EventsOpts, func(string) bool) {},
 		},
 	}
 }
