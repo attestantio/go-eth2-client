@@ -15,9 +15,11 @@ package mock
 
 import (
 	"context"
+	"errors"
 	"math/big"
 
 	"github.com/OffchainLabs/go-bitfield"
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1gloas "github.com/attestantio/go-eth2-client/api/v1/gloas"
 	"github.com/attestantio/go-eth2-client/spec"
@@ -46,6 +48,22 @@ func (s *Service) EPBSProposal(ctx context.Context,
 		return s.EPBSProposalFunc(ctx, opts)
 	}
 
+	// The preconditions below mirror http.Service.EPBSProposal.  A double that
+	// accepts what the real client refuses lets a downstream project's unit
+	// tests pass against options that fail against a node.
+	if opts == nil {
+		return nil, client.ErrNoOptions
+	}
+	if opts.Slot == 0 {
+		return nil, errors.Join(errors.New("no slot specified"), client.ErrInvalidOptions)
+	}
+	if opts.IncludePayload == nil {
+		return nil, errors.Join(errors.New("no payload inclusion specified"), client.ErrInvalidOptions)
+	}
+	if opts.BuilderConfig == nil {
+		return nil, errors.Join(errors.New("no builder config supplied"), client.ErrInvalidOptions)
+	}
+
 	block := mockGloasBeaconBlock(opts)
 
 	// The mock serves mainnet-preset data, so the generated Body.HashTreeRoot
@@ -57,8 +75,13 @@ func (s *Service) EPBSProposal(ctx context.Context,
 	}
 	root := phase0.Root(bodyRoot)
 
+	// Set as the http client always sets it, so that code reading it does not
+	// nil-deref under the mock and not in production.
+	builderIndex := block.Body.SignedExecutionPayloadBid.Message.BuilderIndex
+
 	proposal := &api.VersionedEPBSProposal{
 		Version:             spec.DataVersionGloas,
+		BuilderIndex:        &builderIndex,
 		ConsensusValue:      big.NewInt(1),
 		ExecutionValue:      big.NewInt(2),
 		BeaconBlockBodyRoot: &root,

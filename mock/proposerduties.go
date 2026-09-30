@@ -16,6 +16,8 @@ package mock
 import (
 	"context"
 
+	client "github.com/attestantio/go-eth2-client"
+
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 )
@@ -27,7 +29,7 @@ func (s *Service) ProposerDuties(ctx context.Context, opts *api.ProposerDutiesOp
 		return s.ProposerDutiesFunc(ctx, opts)
 	}
 
-	return proposerDuties(opts), nil
+	return proposerDuties(opts)
 }
 
 // ProposerDutiesV2 obtains proposer duties for the given epoch using the v2 API.
@@ -38,10 +40,17 @@ func (s *Service) ProposerDutiesV2(ctx context.Context,
 		return s.ProposerDutiesV2Func(ctx, opts)
 	}
 
-	return proposerDuties(opts), nil
+	return proposerDuties(opts)
 }
 
-func proposerDuties(opts *api.ProposerDutiesOpts) *api.Response[[]*apiv1.ProposerDuty] {
+func proposerDuties(opts *api.ProposerDutiesOpts) (*api.Response[[]*apiv1.ProposerDuty], error) {
+	// http.Service returns ErrNoOptions for a nil opts; without this the mock
+	// panics on the same input, so a downstream test exercising that path
+	// crashes instead of asserting the error.
+	if opts == nil {
+		return nil, client.ErrNoOptions
+	}
+
 	data := make([]*apiv1.ProposerDuty, len(opts.Indices))
 	for i := range opts.Indices {
 		data[i] = &apiv1.ProposerDuty{
@@ -52,5 +61,5 @@ func proposerDuties(opts *api.ProposerDutiesOpts) *api.Response[[]*apiv1.Propose
 	return &api.Response[[]*apiv1.ProposerDuty]{
 		Data:     data,
 		Metadata: make(map[string]any),
-	}
+	}, nil
 }

@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/stretchr/testify/require"
 )
@@ -33,6 +34,7 @@ func TestDecodeEPBSProposalJSONAcceptsBareBuilderWin(t *testing.T) {
 	response, err := service.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
 		Slot:           123,
 		IncludePayload: &includePayload,
+		BuilderConfig:  &gloas.BuilderConfig{},
 	})
 	require.NoError(t, err)
 	block := response.Data.Gloas
@@ -58,6 +60,7 @@ func TestDecodeEPBSProposalJSONRejectsNullPayloadInclusion(t *testing.T) {
 	response, err := service.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
 		Slot:           123,
 		IncludePayload: &includePayload,
+		BuilderConfig:  &gloas.BuilderConfig{},
 	})
 	require.NoError(t, err)
 	data, err := json.Marshal(response.Data.Gloas)
@@ -110,6 +113,7 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedBuilderI
 	response, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
 		Slot:           123,
 		IncludePayload: &includePayload,
+		BuilderConfig:  &gloas.BuilderConfig{},
 	})
 	require.NoError(t, err)
 	blockRoot, err := response.Data.Root()
@@ -131,6 +135,7 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedBlockHas
 	response, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
 		Slot:           123,
 		IncludePayload: &includePayload,
+		BuilderConfig:  &gloas.BuilderConfig{},
 	})
 	require.NoError(t, err)
 	blockRoot, err := response.Data.Root()
@@ -152,6 +157,7 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedParentRo
 	response, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
 		Slot:           123,
 		IncludePayload: &includePayload,
+		BuilderConfig:  &gloas.BuilderConfig{},
 	})
 	require.NoError(t, err)
 	blockRoot, err := response.Data.Root()
@@ -172,6 +178,7 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedExecutio
 	response, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
 		Slot:           123,
 		IncludePayload: &includePayload,
+		BuilderConfig:  &gloas.BuilderConfig{},
 	})
 	require.NoError(t, err)
 	blockRoot, err := response.Data.Root()
@@ -192,6 +199,7 @@ func TestAssertEPBSProposalMatchesRequestAllowsBareBuilderWin(t *testing.T) {
 	response, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
 		Slot:           123,
 		IncludePayload: &payloadIncluded,
+		BuilderConfig:  &gloas.BuilderConfig{},
 	})
 	require.NoError(t, err)
 
@@ -210,6 +218,7 @@ func TestAssertEPBSProposalMatchesRequestRejectsUnexpectedContents(t *testing.T)
 	response, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
 		Slot:           123,
 		IncludePayload: &payloadIncluded,
+		BuilderConfig:  &gloas.BuilderConfig{},
 	})
 	require.NoError(t, err)
 

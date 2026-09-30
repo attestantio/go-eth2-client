@@ -18,9 +18,11 @@ import (
 	"encoding/json"
 	"testing"
 
+	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/stretchr/testify/require"
 )
@@ -48,6 +50,7 @@ func TestEPBSProposal(t *testing.T) {
 			Slot:           123,
 			RandaoReveal:   phase0.BLSSignature{0x01, 0x02},
 			IncludePayload: &includePayload,
+			BuilderConfig:  &gloas.BuilderConfig{},
 		})
 		require.NoError(t, err)
 		require.Equal(t, spec.DataVersionGloas, response.Data.Version)
@@ -98,6 +101,7 @@ func TestEPBSProposal(t *testing.T) {
 		response, err := service.EPBSProposal(ctx, &api.EPBSProposalOpts{
 			Slot:           123,
 			IncludePayload: &excludePayload,
+			BuilderConfig:  &gloas.BuilderConfig{},
 		})
 		require.NoError(t, err)
 		require.False(t, response.Data.ExecutionPayloadIncluded)
@@ -177,4 +181,77 @@ func TestExecutionPayloadEnvelope(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NotEmpty(t, marshaled)
+}
+
+// TestEPBSProposalMirrorsTheHTTPPreconditions keeps the double honest.  A mock
+// that accepts options the real client refuses lets a downstream project's unit
+// tests pass against a call that fails against a node.
+func TestEPBSProposalMirrorsTheHTTPPreconditions(t *testing.T) {
+	ctx := context.Background()
+
+	service, err := mock.New(ctx)
+	require.NoError(t, err)
+
+	includePayload := true
+
+	tests := []struct {
+		name string
+		opts *api.EPBSProposalOpts
+		err  error
+		msg  string
+	}{
+		{
+			name: "NoOptions",
+			err:  client.ErrNoOptions,
+		},
+		{
+			name: "NoSlot",
+			opts: &api.EPBSProposalOpts{IncludePayload: &includePayload, BuilderConfig: &gloas.BuilderConfig{}},
+			err:  client.ErrInvalidOptions,
+			msg:  "no slot specified",
+		},
+		{
+			name: "NoPayloadInclusion",
+			opts: &api.EPBSProposalOpts{Slot: 123, BuilderConfig: &gloas.BuilderConfig{}},
+			err:  client.ErrInvalidOptions,
+			msg:  "no payload inclusion specified",
+		},
+		{
+			name: "NoBuilderConfig",
+			opts: &api.EPBSProposalOpts{Slot: 123, IncludePayload: &includePayload},
+			err:  client.ErrInvalidOptions,
+			msg:  "no builder config supplied",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := service.EPBSProposal(ctx, test.opts)
+			require.ErrorIs(t, err, test.err)
+			if test.msg != "" {
+				require.ErrorContains(t, err, test.msg)
+			}
+		})
+	}
+}
+
+// TestEPBSProposalPopulatesBuilderIndex covers the other half of the drift: the
+// http client always sets BuilderIndex, so code reading it nil-dereferenced
+// under the mock and not in production.
+func TestEPBSProposalPopulatesBuilderIndex(t *testing.T) {
+	ctx := context.Background()
+
+	service, err := mock.New(ctx)
+	require.NoError(t, err)
+
+	for _, included := range []bool{true, false} {
+		includePayload := included
+		response, err := service.EPBSProposal(ctx, &api.EPBSProposalOpts{
+			Slot:           123,
+			IncludePayload: &includePayload,
+			BuilderConfig:  &gloas.BuilderConfig{},
+		})
+		require.NoError(t, err)
+		require.NotNil(t, response.Data.BuilderIndex)
+	}
 }

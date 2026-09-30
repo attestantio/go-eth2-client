@@ -90,6 +90,7 @@ func TestEPBSProposalJSONResponseAcceptsBareBuilderWin(t *testing.T) {
 	mockResponse, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
 		Slot:           123,
 		IncludePayload: &excludePayload,
+		BuilderConfig:  &gloas.BuilderConfig{},
 	})
 	require.NoError(t, err)
 	block, err := json.Marshal(mockResponse.Data.Gloas)
