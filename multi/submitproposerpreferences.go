@@ -31,8 +31,15 @@ func (s *Service) SubmitProposerPreferences(ctx context.Context, opts *api.Submi
 		return true, nil
 	}, func(_ context.Context, _ consensusclient.Service, err error) (bool, error) {
 		// Invalid input is invalid for every client, so neither fail over nor
-		// deactivate a healthy client because the caller supplied bad preferences.
-		return !errors.Is(err, consensusclient.ErrInvalidOptions), err
+		// deactivate a healthy client because the caller supplied bad
+		// preferences.  ErrNoOptions is a separate sentinel from
+		// ErrInvalidOptions rather than joined with it, so both have to be
+		// named here: a nil opts would otherwise deactivate every provider in
+		// turn and leave the multi client itself inactive.
+		callerError := errors.Is(err, consensusclient.ErrInvalidOptions) ||
+			errors.Is(err, consensusclient.ErrNoOptions)
+
+		return !callerError, err
 	})
 
 	return err
