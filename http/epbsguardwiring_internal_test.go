@@ -88,7 +88,17 @@ func disagreeingService(ctx context.Context,
 	}))
 	t.Cleanup(server.Close)
 
-	return newTestService(ctx, t, true, WithEnforceJSON(true), WithAddress(server.URL))
+	// customSpecSupport is off deliberately.  Both fixtures below are sized to
+	// the compiled-in mainnet preset -- validEPBSBlockContents uses
+	// bitfield.NewBitvector512() -- and with custom spec support on, the body
+	// root is computed through a codec built from the node's spec.  On a
+	// minimal-preset node (the Gloas devnet) that codec rejects a 64-byte
+	// bitvector with "vector length 64 exceeds limit 4", so
+	// epbsProposalFromResponse fails before either guard runs and the test
+	// passes its require.ErrorIs on the wrong error entirely.  The guards being
+	// proven here are about request consistency, not about presets, so the
+	// fixture and the codec are simply held at the same preset.
+	return newTestService(ctx, t, false, WithEnforceJSON(true), WithAddress(server.URL))
 }
 
 // TestEPBSProposalRejectsADisagreeingNode verifies that the request-consistency
