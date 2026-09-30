@@ -183,6 +183,10 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 
 			var apiErr *api.Error
 			switch {
+			case errors.Is(err, ErrCallNotSupported):
+				log.Trace().Err(err).Msg("Client cannot serve this call; trying the next without deactivating it")
+
+				continue
 			case errors.As(err, &apiErr) && statusCodeFamily(apiErr.StatusCode) == 4:
 				log.Trace().Err(err).Msg("Not deactivating client on user error")
 
