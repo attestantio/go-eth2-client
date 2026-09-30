@@ -55,19 +55,20 @@ type headEventV2DataJSON struct {
 }
 
 // MarshalJSON implements json.Marshaler.
+//
+// It emits the bare data object, not the {"version": ..., "data": ...} wrapper.
+// The topic is registered as versioned, so eventtopic.Topic and Event.MarshalJSON
+// add the wrapper; emitting one here as well would nest it twice.
 func (e *HeadEventV2) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&headEventV2JSON{
-		Version: e.Version,
-		Data: &headEventV2DataJSON{
-			Slot:                      fmt.Sprintf("%d", e.Slot),
-			Block:                     fmt.Sprintf("%#x", e.Block),
-			State:                     fmt.Sprintf("%#x", e.State),
-			PayloadStatus:             e.PayloadStatus,
-			EpochTransition:           e.EpochTransition,
-			CurrentEpochDependentRoot: fmt.Sprintf("%#x", e.CurrentEpochDependentRoot),
-			NextEpochDependentRoot:    fmt.Sprintf("%#x", e.NextEpochDependentRoot),
-			ExecutionOptimistic:       e.ExecutionOptimistic,
-		},
+	return json.Marshal(&headEventV2DataJSON{
+		Slot:                      fmt.Sprintf("%d", e.Slot),
+		Block:                     fmt.Sprintf("%#x", e.Block),
+		State:                     fmt.Sprintf("%#x", e.State),
+		PayloadStatus:             e.PayloadStatus,
+		EpochTransition:           e.EpochTransition,
+		CurrentEpochDependentRoot: fmt.Sprintf("%#x", e.CurrentEpochDependentRoot),
+		NextEpochDependentRoot:    fmt.Sprintf("%#x", e.NextEpochDependentRoot),
+		ExecutionOptimistic:       e.ExecutionOptimistic,
 	})
 }
 
@@ -82,66 +83,87 @@ func (e *HeadEventV2) String() string {
 }
 
 // UnmarshalJSON implements json.Unmarshaler.
+//
+// Both the bare data object and the {"version": ..., "data": ...} wrapper are
+// accepted.  eventtopic.Topic.Decode strips the wrapper and checks the fork
+// before this is reached on the events stream, so the wrapped form is here for
+// callers decoding a HeadEventV2 directly.
 func (e *HeadEventV2) UnmarshalJSON(input []byte) error {
-	var event headEventV2JSON
-	if err := json.Unmarshal(input, &event); err != nil {
+	version := spec.DataVersionGloas
+	data := input
+
+	var wrapper headEventV2JSON
+	if err := json.Unmarshal(input, &wrapper); err == nil &&
+		wrapper.Version != spec.DataVersionUnknown && wrapper.Data != nil {
+		version = wrapper.Version
+		if data, err = json.Marshal(wrapper.Data); err != nil {
+			return errors.Wrap(err, "invalid JSON")
+		}
+	}
+
+	var event headEventV2DataJSON
+	if err := json.Unmarshal(data, &event); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
-	if event.Version == spec.DataVersionUnknown {
-		return errors.New("version missing")
-	}
-	if event.Data == nil {
-		return errors.New("data missing")
-	}
-	if event.Data.PayloadStatus == "" {
+
+	if event.PayloadStatus == "" {
 		return errors.New("payload status missing")
 	}
-	if event.Data.Slot == "" {
+	if event.Slot == "" {
 		return errors.New("slot missing")
 	}
 
-	slot, err := strconv.ParseUint(event.Data.Slot, 10, 64)
+	slot, err := strconv.ParseUint(event.Slot, 10, 64)
 	if err != nil {
 		return errors.Wrap(err, "invalid value for slot")
 	}
-	if event.Data.Block == "" {
+	if event.Block == "" {
 		return errors.New("block missing")
 	}
-	if err := decodeFixedBytes(e.Block[:], event.Data.Block, "block"); err != nil {
+	if err := decodeFixedBytes(e.Block[:], event.Block, "block"); err != nil {
 		return err
 	}
-	if event.Data.State == "" {
+	if event.State == "" {
 		return errors.New("state missing")
 	}
-	if err := decodeFixedBytes(e.State[:], event.Data.State, "state"); err != nil {
-		return err
-	}
-	if event.Data.CurrentEpochDependentRoot == "" {
-		return errors.New("current epoch dependent root missing")
-	}
-	if err := decodeFixedBytes(
-		e.CurrentEpochDependentRoot[:],
-		event.Data.CurrentEpochDependentRoot,
-		"current epoch dependent root",
-	); err != nil {
-		return err
-	}
-	if event.Data.NextEpochDependentRoot == "" {
-		return errors.New("next epoch dependent root missing")
-	}
-	if err := decodeFixedBytes(
-		e.NextEpochDependentRoot[:],
-		event.Data.NextEpochDependentRoot,
-		"next epoch dependent root",
-	); err != nil {
+	if err := decodeFixedBytes(e.State[:], event.State, "state"); err != nil {
 		return err
 	}
 
-	e.Version = event.Version
+	// The dependent roots are optional, as they are on the head event: node
+	// implementations of head_v2 are still landing, and a missing root would
+	// otherwise fail Topic.Decode, which makes http.handleEvent log "Failed to
+	// parse event" and drop it -- so a consumer subscribed only to head_v2
+	// would silently receive no head events at all.  They are cleared when
+	// absent so that a value reused for an event without them does not keep an
+	// earlier one.
+	e.CurrentEpochDependentRoot = phase0.Root{}
+	if event.CurrentEpochDependentRoot != "" {
+		if err := decodeFixedBytes(
+			e.CurrentEpochDependentRoot[:],
+			event.CurrentEpochDependentRoot,
+			"current epoch dependent root",
+		); err != nil {
+			return err
+		}
+	}
+
+	e.NextEpochDependentRoot = phase0.Root{}
+	if event.NextEpochDependentRoot != "" {
+		if err := decodeFixedBytes(
+			e.NextEpochDependentRoot[:],
+			event.NextEpochDependentRoot,
+			"next epoch dependent root",
+		); err != nil {
+			return err
+		}
+	}
+
+	e.Version = version
 	e.Slot = phase0.Slot(slot)
-	e.PayloadStatus = event.Data.PayloadStatus
-	e.EpochTransition = event.Data.EpochTransition
-	e.ExecutionOptimistic = event.Data.ExecutionOptimistic
+	e.PayloadStatus = event.PayloadStatus
+	e.EpochTransition = event.EpochTransition
+	e.ExecutionOptimistic = event.ExecutionOptimistic
 
 	return nil
 }
