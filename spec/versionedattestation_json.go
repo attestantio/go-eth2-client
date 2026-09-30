@@ -26,6 +26,49 @@ type attestationIdentificationJSON struct {
 	CommitteeBits *string `json:"committee_bits"`
 }
 
+// MarshalJSON implements json.Marshaler.
+//
+// It emits the attestation of the populated fork, which is the shape
+// UnmarshalJSON reads and the shape a node sends on the attestation event
+// topic.  Without it, marshalling falls back to the struct's own layout and
+// produces {"Altair":null,...,"Electra":{...},"Version":"electra"} -- Go field
+// names, one key per fork -- so an attestation decoded from an event and
+// re-marshalled is no longer the beacon-API shape it arrived as.
+func (v *VersionedAttestation) MarshalJSON() ([]byte, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return marshalVersionedAttestation(v.Phase0)
+	case DataVersionAltair:
+		return marshalVersionedAttestation(v.Altair)
+	case DataVersionBellatrix:
+		return marshalVersionedAttestation(v.Bellatrix)
+	case DataVersionCapella:
+		return marshalVersionedAttestation(v.Capella)
+	case DataVersionDeneb:
+		return marshalVersionedAttestation(v.Deneb)
+	case DataVersionElectra:
+		return marshalVersionedAttestation(v.Electra)
+	case DataVersionFulu:
+		return marshalVersionedAttestation(v.Fulu)
+	case DataVersionGloas:
+		return marshalVersionedAttestation(v.Gloas)
+	case DataVersionUnknown:
+		return nil, errors.New("unknown version")
+	default:
+		return nil, errors.New("unsupported version")
+	}
+}
+
+// marshalVersionedAttestation marshals the attestation of the populated fork,
+// rejecting a version whose arm is nil rather than emitting "null".
+func marshalVersionedAttestation[T any](attestation *T) ([]byte, error) {
+	if attestation == nil {
+		return nil, errors.New("no attestation")
+	}
+
+	return json.Marshal(attestation)
+}
+
 // UnmarshalJSON implements json.Unmarshaler.
 func (v *VersionedAttestation) UnmarshalJSON(input []byte) error {
 	var id attestationIdentificationJSON

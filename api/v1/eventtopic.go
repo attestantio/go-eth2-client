@@ -46,7 +46,7 @@ var eventTopics = []eventtopic.Descriptor{
 	eventtopic.New[FastConfirmationEvent]("fast_confirmation"),
 	eventtopic.New[FinalizedCheckpointEvent]("finalized_checkpoint"),
 	eventtopic.New[HeadEvent]("head"),
-	eventtopic.New[HeadEventV2]("head_v2"),
+	eventtopic.NewVersioned[HeadEventV2]("head_v2", spec.DataVersionGloas),
 	eventtopic.New[LightClientFinalityUpdateEvent]("light_client_finality_update"),
 	eventtopic.New[LightClientOptimisticUpdateEvent]("light_client_optimistic_update"),
 	eventtopic.NewVersioned[gloas.PayloadAttestationMessage]("payload_attestation_message", spec.DataVersionGloas),

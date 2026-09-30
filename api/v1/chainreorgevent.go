@@ -33,29 +33,36 @@ type ChainReorgEvent struct {
 	OldHeadState phase0.Root
 	NewHeadState phase0.Root
 	Epoch        phase0.Epoch
+	// ExecutionOptimistic reports whether the node considers the chain
+	// optimistically synced at this point.  The node sends it on this topic and
+	// dropping it means json.Marshal of a decoded event is no longer what the
+	// node sent.
+	ExecutionOptimistic bool
 }
 
 // chainReorgEventJSON is the spec representation of the struct.
 type chainReorgEventJSON struct {
-	Slot         string `json:"slot"`
-	Depth        string `json:"depth"`
-	OldHeadBlock string `json:"old_head_block"`
-	NewHeadBlock string `json:"new_head_block"`
-	OldHeadState string `json:"old_head_state"`
-	NewHeadState string `json:"new_head_state"`
-	Epoch        string `json:"epoch"`
+	Slot                string `json:"slot"`
+	Depth               string `json:"depth"`
+	OldHeadBlock        string `json:"old_head_block"`
+	NewHeadBlock        string `json:"new_head_block"`
+	OldHeadState        string `json:"old_head_state"`
+	NewHeadState        string `json:"new_head_state"`
+	Epoch               string `json:"epoch"`
+	ExecutionOptimistic bool   `json:"execution_optimistic"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (e *ChainReorgEvent) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&chainReorgEventJSON{
-		Slot:         fmt.Sprintf("%d", e.Slot),
-		Depth:        strconv.FormatUint(e.Depth, 10),
-		OldHeadBlock: fmt.Sprintf("%#x", e.OldHeadBlock),
-		NewHeadBlock: fmt.Sprintf("%#x", e.NewHeadBlock),
-		OldHeadState: fmt.Sprintf("%#x", e.OldHeadState),
-		NewHeadState: fmt.Sprintf("%#x", e.NewHeadState),
-		Epoch:        fmt.Sprintf("%d", e.Epoch),
+		Slot:                fmt.Sprintf("%d", e.Slot),
+		Depth:               strconv.FormatUint(e.Depth, 10),
+		OldHeadBlock:        fmt.Sprintf("%#x", e.OldHeadBlock),
+		NewHeadBlock:        fmt.Sprintf("%#x", e.NewHeadBlock),
+		OldHeadState:        fmt.Sprintf("%#x", e.OldHeadState),
+		NewHeadState:        fmt.Sprintf("%#x", e.NewHeadState),
+		Epoch:               fmt.Sprintf("%d", e.Epoch),
+		ExecutionOptimistic: e.ExecutionOptimistic,
 	})
 }
 
@@ -157,6 +164,7 @@ func (e *ChainReorgEvent) UnmarshalJSON(input []byte) error {
 	}
 
 	e.Epoch = phase0.Epoch(epoch)
+	e.ExecutionOptimistic = chainReorgEventJSON.ExecutionOptimistic
 
 	return nil
 }

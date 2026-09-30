@@ -15,6 +15,7 @@ package v1_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	api "github.com/attestantio/go-eth2-client/api/v1"
@@ -25,10 +26,14 @@ import (
 
 func TestEvent(t *testing.T) {
 	tests := []struct {
-		name       string
-		input      []byte
-		err        string
-		normalizes bool
+		name  string
+		input []byte
+		err   string
+		// expected is the JSON the event re-marshals to, where that is not the
+		// input.  A boolean "this one does not round-trip" flag hid the
+		// difference instead of recording it, so a regression in any of these
+		// marshallers was invisible.
+		expected string
 	}{
 		{
 			name: "Empty",
@@ -60,35 +65,34 @@ func TestEvent(t *testing.T) {
 			err:   "data missing",
 		},
 		{
-			name:       "GoodPhase0Attestation",
-			normalizes: true,
-			input:      []byte(`{"topic":"attestation","data":{"aggregation_bits":"0x010203","data":{"beacon_block_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","index":"1","slot":"100","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}},"signature":"0x606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf"}}`),
+			name:  "GoodPhase0Attestation",
+			input: []byte(`{"topic":"attestation","data":{"aggregation_bits":"0x010203","data":{"beacon_block_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","index":"1","slot":"100","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}},"signature":"0x606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf"}}`),
 		},
 		{
-			name:       "GoodElectraAttestation",
-			normalizes: true,
-			input:      []byte(`{"topic":"attestation","data":{"aggregation_bits":"0xf77ffffffdfbfffffffdbfffffe5fff71f","data":{"slot":"98106","index":"0","beacon_block_root":"0xf8df02ed08b9adcb88a22cb22cd2a6074b184128ae6a240e3172109fdfacaa7b","source":{"epoch":"3064","root":"0x19ffd95e92753046cf63b4298f859e1fb1271a160ef0139ea1eb9f06d45d3b93"},"target":{"epoch":"3065","root":"0xffac9506e2262991ed19b1804bec9f7a1c4c4e61eb37444e6c8826bb362716d6"}},"signature":"0xb4f12c02e0f1a5db07999ceb8c1a4ccd41a3cb46ca15abe1c145337f1287360c49d5780fb7b44dfebeb96f3898824605008c9d458bdd2413358da3edf1b181d4e98edfe90d5fd016ac8f6aebc6646b2da83ab98722a7b4ee5264506bf6ae08e9","committee_bits":"0x0040000000000000"}}`),
+			name:  "GoodElectraAttestation",
+			input: []byte(`{"topic":"attestation","data":{"aggregation_bits":"0xf77ffffffdfbfffffffdbfffffe5fff71f","data":{"slot":"98106","index":"0","beacon_block_root":"0xf8df02ed08b9adcb88a22cb22cd2a6074b184128ae6a240e3172109fdfacaa7b","source":{"epoch":"3064","root":"0x19ffd95e92753046cf63b4298f859e1fb1271a160ef0139ea1eb9f06d45d3b93"},"target":{"epoch":"3065","root":"0xffac9506e2262991ed19b1804bec9f7a1c4c4e61eb37444e6c8826bb362716d6"}},"signature":"0xb4f12c02e0f1a5db07999ceb8c1a4ccd41a3cb46ca15abe1c145337f1287360c49d5780fb7b44dfebeb96f3898824605008c9d458bdd2413358da3edf1b181d4e98edfe90d5fd016ac8f6aebc6646b2da83ab98722a7b4ee5264506bf6ae08e9","committee_bits":"0x0040000000000000"}}`),
 		},
 		{
 			name:  "GoodSingleAttestation",
 			input: []byte(`{"topic":"single_attestation","data":{"committee_index":"11","attester_index":"23784","data":{"slot":"98122","index":"0","beacon_block_root":"0x497033a5af8e64b748c554524e1e269da3c3af71515cf31f2d7bf9bab256a03c","source":{"epoch":"3065","root":"0xffac9506e2262991ed19b1804bec9f7a1c4c4e61eb37444e6c8826bb362716d6"},"target":{"epoch":"3066","root":"0x5982836668f92d786ef82f8841011a0888be5583bd09ab73760563855789d49b"}},"signature":"0xa448d3dc9520d4cb8e70094108169893a94ef7d074151ba333169ea92e2586da6f6efa622722743725c8012707f78efa02d99dd8ee094fa5bf5ca2b24066096ab0bc7671d4037521cbe69411871dd614e60d2c0eed8d2a0b2e4b77602b39d50e"}}`),
 		},
 		{
-			name:       "GoodBlock",
-			normalizes: true,
-			input:      []byte(`{"topic":"block","data":{"block":"0xbe36e714a6114cf718e35dafc4ac530ce8f01e4a9a360e78098eb129772dcc39","slot":"1"}}`),
+			name:  "GoodBlock",
+			input: []byte(`{"topic":"block","data":{"block":"0xbe36e714a6114cf718e35dafc4ac530ce8f01e4a9a360e78098eb129772dcc39","slot":"1"}}`),
+			// BlockEvent carries execution_optimistic, which the node omitted here.
+			expected: `{"topic":"block","data":{"block":"0xbe36e714a6114cf718e35dafc4ac530ce8f01e4a9a360e78098eb129772dcc39","slot":"1","execution_optimistic":false}}`,
 		},
 		{
 			name:  "GoodChainReorg",
-			input: []byte(`{"topic":"chain_reorg","data":{"depth":"2","epoch":"16405","new_head_block":"0xa3fe14d8d749318359aa3790d3588a23e12ea3b02bd879fbfbf04c3a66770df7","new_head_state":"0x4ab800aaa51c14c786fe7e924abd1355aa2ac2e0434d7cb5ae568720ed1bf522","old_head_block":"0x2ffc0a5b75de20f2a12853dff3e09b263e7c3cb19515134cba756b28e5ba25ee","old_head_state":"0x97cc0a37b77fbac6fa140f330c92521ddcd5b1dfefeef99d86996a51f1993d60","slot":"524986"}}`),
+			input: []byte(`{"topic":"chain_reorg","data":{"depth":"2","epoch":"16405","new_head_block":"0xa3fe14d8d749318359aa3790d3588a23e12ea3b02bd879fbfbf04c3a66770df7","new_head_state":"0x4ab800aaa51c14c786fe7e924abd1355aa2ac2e0434d7cb5ae568720ed1bf522","old_head_block":"0x2ffc0a5b75de20f2a12853dff3e09b263e7c3cb19515134cba756b28e5ba25ee","old_head_state":"0x97cc0a37b77fbac6fa140f330c92521ddcd5b1dfefeef99d86996a51f1993d60","slot":"524986","execution_optimistic":false}}`),
 		},
 		{
 			name:  "GoodFinalizedCheckpoint",
-			input: []byte(`{"topic":"finalized_checkpoint","data":{"block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","epoch":"2","state":"0x749a95b1355828b758864ea601c007e69aabed7b34a0f2084c43c26242f77e28"}}`),
+			input: []byte(`{"topic":"finalized_checkpoint","data":{"block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","epoch":"2","state":"0x749a95b1355828b758864ea601c007e69aabed7b34a0f2084c43c26242f77e28","execution_optimistic":false}}`),
 		},
 		{
 			name:  "GoodHead",
-			input: []byte(`{"topic":"head","data":{"block":"0xbe36e714a6114cf718e35dafc4ac530ce8f01e4a9a360e78098eb129772dcc39","current_duty_dependent_root":"0x92c6b763f610d5941d2041906007bf9449d37772aacf0483a76275ac27c096b4","epoch_transition":false,"previous_duty_dependent_root":"0xa692c095bbca3eeaf99eeabada78874c028c02b176ccf691f3e8fa075d67f5c6","slot":"231192","state":"0x61099b2c1dee0104c93ce0e14e5f5fc4b6faceff4cb863278d055bdfb73b7dc7"}}`),
+			input: []byte(`{"topic":"head","data":{"block":"0xbe36e714a6114cf718e35dafc4ac530ce8f01e4a9a360e78098eb129772dcc39","current_duty_dependent_root":"0x92c6b763f610d5941d2041906007bf9449d37772aacf0483a76275ac27c096b4","epoch_transition":false,"previous_duty_dependent_root":"0xa692c095bbca3eeaf99eeabada78874c028c02b176ccf691f3e8fa075d67f5c6","slot":"231192","state":"0x61099b2c1dee0104c93ce0e14e5f5fc4b6faceff4cb863278d055bdfb73b7dc7","execution_optimistic":true}}`),
 		},
 		{
 			name:  "GoodExecutionPayloadAvailable",
@@ -114,9 +118,11 @@ func TestEvent(t *testing.T) {
 				require.NoError(t, err)
 				rt, err := json.Marshal(&res)
 				require.NoError(t, err)
-				if !test.normalizes {
-					assert.JSONEq(t, string(test.input), string(rt))
+				expected := test.expected
+				if expected == "" {
+					expected = string(test.input)
 				}
+				assert.JSONEq(t, expected, string(rt))
 				assert.JSONEq(t, string(rt), res.String())
 			}
 		})
@@ -189,6 +195,72 @@ func TestSupportedEventTopicsGloas(t *testing.T) {
 		t.Run(topic, func(t *testing.T) {
 			require.True(t, api.SupportedEventTopics[topic],
 				"topic %s missing from SupportedEventTopics, so from the event topic list", topic)
+		})
+	}
+}
+
+// TestEventRoundTripsTheAttestationTopic pins the shape a decoded attestation
+// re-marshals to.  spec.VersionedAttestation had no MarshalJSON, so an event
+// logged or persisted after decoding came out as the struct's own layout --
+// {"Altair":null,...,"Electra":{...},"Version":"electra"} -- rather than the
+// beacon-API object the node sent.
+func TestEventRoundTripsTheAttestationTopic(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		input string
+	}{
+		{
+			name:  "Phase0",
+			input: `{"aggregation_bits":"0x010203","data":{"beacon_block_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","index":"1","slot":"100","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}},"signature":"0x606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf"}`,
+		},
+		{
+			name:  "Electra",
+			input: `{"aggregation_bits":"0xf77ffffffdfbfffffffdbfffffe5fff71f","data":{"slot":"98106","index":"0","beacon_block_root":"0xf8df02ed08b9adcb88a22cb22cd2a6074b184128ae6a240e3172109fdfacaa7b","source":{"epoch":"3064","root":"0x19ffd95e92753046cf63b4298f859e1fb1271a160ef0139ea1eb9f06d45d3b93"},"target":{"epoch":"3065","root":"0xffac9506e2262991ed19b1804bec9f7a1c4c4e61eb37444e6c8826bb362716d6"}},"signature":"0xb4f12c02e0f1a5db07999ceb8c1a4ccd41a3cb46ca15abe1c145337f1287360c49d5780fb7b44dfebeb96f3898824605008c9d458bdd2413358da3edf1b181d4e98edfe90d5fd016ac8f6aebc6646b2da83ab98722a7b4ee5264506bf6ae08e9","committee_bits":"0x0040000000000000"}`,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			input := fmt.Sprintf(`{"topic":"attestation","data":%s}`, test.input)
+
+			var event api.Event
+			require.NoError(t, json.Unmarshal([]byte(input), &event))
+
+			output, err := json.Marshal(&event)
+			require.NoError(t, err)
+			assert.JSONEq(t, input, string(output))
+			assert.NotContains(t, string(output), `"Version"`)
+		})
+	}
+}
+
+// TestEventRoundTripsExecutionOptimistic pins the field that decoding through
+// the typed topics used to drop: the node sends it on these topics, and a
+// re-marshalled event that has lost it is no longer what arrived.
+func TestEventRoundTripsExecutionOptimistic(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		input string
+	}{
+		{
+			name:  "Head",
+			input: `{"topic":"head","data":{"slot":"231192","block":"0xbe36e714a6114cf718e35dafc4ac530ce8f01e4a9a360e78098eb129772dcc39","state":"0x61099b2c1dee0104c93ce0e14e5f5fc4b6faceff4cb863278d055bdfb73b7dc7","epoch_transition":false,"execution_optimistic":true}}`,
+		},
+		{
+			name:  "ChainReorg",
+			input: `{"topic":"chain_reorg","data":{"depth":"2","epoch":"16405","new_head_block":"0xa3fe14d8d749318359aa3790d3588a23e12ea3b02bd879fbfbf04c3a66770df7","new_head_state":"0x4ab800aaa51c14c786fe7e924abd1355aa2ac2e0434d7cb5ae568720ed1bf522","old_head_block":"0x2ffc0a5b75de20f2a12853dff3e09b263e7c3cb19515134cba756b28e5ba25ee","old_head_state":"0x97cc0a37b77fbac6fa140f330c92521ddcd5b1dfefeef99d86996a51f1993d60","slot":"524986","execution_optimistic":true}}`,
+		},
+		{
+			name:  "FinalizedCheckpoint",
+			input: `{"topic":"finalized_checkpoint","data":{"block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","epoch":"2","state":"0x749a95b1355828b758864ea601c007e69aabed7b34a0f2084c43c26242f77e28","execution_optimistic":true}}`,
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var event api.Event
+			require.NoError(t, json.Unmarshal([]byte(test.input), &event))
+
+			output, err := json.Marshal(&event)
+			require.NoError(t, err)
+			assert.JSONEq(t, test.input, string(output))
+			assert.Contains(t, string(output), `"execution_optimistic":true`)
 		})
 	}
 }

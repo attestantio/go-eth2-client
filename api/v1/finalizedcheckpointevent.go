@@ -29,21 +29,28 @@ type FinalizedCheckpointEvent struct {
 	Block phase0.Root
 	State phase0.Root
 	Epoch phase0.Epoch
+	// ExecutionOptimistic reports whether the node considers the chain
+	// optimistically synced at this point.  The node sends it on this topic and
+	// dropping it means json.Marshal of a decoded event is no longer what the
+	// node sent.
+	ExecutionOptimistic bool
 }
 
 // finalizedCheckpointEventJSON is the spec representation of the struct.
 type finalizedCheckpointEventJSON struct {
-	Block string `json:"block"`
-	State string `json:"state"`
-	Epoch string `json:"epoch"`
+	Block               string `json:"block"`
+	State               string `json:"state"`
+	Epoch               string `json:"epoch"`
+	ExecutionOptimistic bool   `json:"execution_optimistic"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (e *FinalizedCheckpointEvent) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&finalizedCheckpointEventJSON{
-		Block: fmt.Sprintf("%#x", e.Block),
-		State: fmt.Sprintf("%#x", e.State),
-		Epoch: fmt.Sprintf("%d", e.Epoch),
+		Block:               fmt.Sprintf("%#x", e.Block),
+		State:               fmt.Sprintf("%#x", e.State),
+		Epoch:               fmt.Sprintf("%d", e.Epoch),
+		ExecutionOptimistic: e.ExecutionOptimistic,
 	})
 }
 
@@ -96,6 +103,7 @@ func (e *FinalizedCheckpointEvent) UnmarshalJSON(input []byte) error {
 	}
 
 	e.Epoch = phase0.Epoch(epoch)
+	e.ExecutionOptimistic = finalizedCheckpointEventJSON.ExecutionOptimistic
 
 	return nil
 }

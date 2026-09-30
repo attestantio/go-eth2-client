@@ -33,6 +33,11 @@ type HeadEvent struct {
 	EpochTransition           bool
 	CurrentDutyDependentRoot  phase0.Root
 	PreviousDutyDependentRoot phase0.Root
+	// ExecutionOptimistic reports whether the node considers the chain
+	// optimistically synced at this point.  The node sends it on this topic and
+	// dropping it means json.Marshal of a decoded event is no longer what the
+	// node sent.
+	ExecutionOptimistic bool
 }
 
 // headEventJSON is the spec representation of the struct.
@@ -43,15 +48,17 @@ type headEventJSON struct {
 	EpochTransition           bool   `json:"epoch_transition"`
 	CurrentDutyDependentRoot  string `json:"current_duty_dependent_root,omitempty"`
 	PreviousDutyDependentRoot string `json:"previous_duty_dependent_root,omitempty"`
+	ExecutionOptimistic       bool   `json:"execution_optimistic"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (e *HeadEvent) MarshalJSON() ([]byte, error) {
 	data := &headEventJSON{
-		Slot:            fmt.Sprintf("%d", e.Slot),
-		Block:           fmt.Sprintf("%#x", e.Block),
-		State:           fmt.Sprintf("%#x", e.State),
-		EpochTransition: e.EpochTransition,
+		Slot:                fmt.Sprintf("%d", e.Slot),
+		Block:               fmt.Sprintf("%#x", e.Block),
+		State:               fmt.Sprintf("%#x", e.State),
+		EpochTransition:     e.EpochTransition,
+		ExecutionOptimistic: e.ExecutionOptimistic,
 	}
 	// Optional fields (for now).
 	var zeroRoot phase0.Root
@@ -146,6 +153,7 @@ func (e *HeadEvent) UnmarshalJSON(input []byte) error {
 
 		copy(e.PreviousDutyDependentRoot[:], previousDutyDependentRoot)
 	}
+	e.ExecutionOptimistic = headEventJSON.ExecutionOptimistic
 
 	return nil
 }
