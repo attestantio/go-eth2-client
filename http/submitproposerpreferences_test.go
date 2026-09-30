@@ -125,16 +125,47 @@ func TestSubmitProposerPreferencesRequiresOptions(t *testing.T) {
 	require.False(t, received)
 }
 
-func TestSubmitProposerPreferencesRequiresExactStatusOK(t *testing.T) {
+// TestSubmitProposerPreferencesAcceptsAnySuccessStatus covers a node that
+// answers a successful store-and-broadcast with a 2xx other than 200.
+// beacon-APIs documents 200 as the only success code, but treating anything
+// else as a failure is asymmetric: the error is neither an api.Error 4xx nor
+// ErrInvalidOptions, so multi reads it as a provider fault and deactivates that
+// client on every submission.  post() already rejects non-2xx, and every other
+// submitter in this package accepts any 2xx.
+func TestSubmitProposerPreferencesAcceptsAnySuccessStatus(t *testing.T) {
+	for _, status := range []int{
+		nethttp.StatusOK,
+		nethttp.StatusAccepted,
+		nethttp.StatusNoContent,
+	} {
+		t.Run(nethttp.StatusText(status), func(t *testing.T) {
+			ctx := context.Background()
+			received := false
+			server := proposerPreferencesServer(t, status, &received)
+			defer server.Close()
+
+			service, err := clienthttp.New(ctx, clienthttp.WithAddress(server.URL))
+			require.NoError(t, err)
+			err = service.(client.ProposerPreferencesSubmitter).
+				SubmitProposerPreferences(ctx, preferencesOpts(onePreference()))
+			require.NoError(t, err)
+			require.True(t, received)
+		})
+	}
+}
+
+// TestSubmitProposerPreferencesRejectsFailureStatus verifies the other side of
+// that: a non-2xx is still an error, raised by post().
+func TestSubmitProposerPreferencesRejectsFailureStatus(t *testing.T) {
 	ctx := context.Background()
-	server := proposerPreferencesServer(t, nethttp.StatusNoContent, nil)
+	server := proposerPreferencesServer(t, nethttp.StatusInternalServerError, nil)
 	defer server.Close()
 
 	service, err := clienthttp.New(ctx, clienthttp.WithAddress(server.URL))
 	require.NoError(t, err)
 	err = service.(client.ProposerPreferencesSubmitter).
 		SubmitProposerPreferences(ctx, preferencesOpts(onePreference()))
-	require.EqualError(t, err, "failed to submit proposer preferences\nunexpected status code 204")
+	require.ErrorContains(t, err, "failed to submit proposer preferences")
 }
 
 // TestSubmitProposerPreferencesEnforcesStaticLimit covers a node that does not

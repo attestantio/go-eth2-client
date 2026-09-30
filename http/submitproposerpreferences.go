@@ -17,8 +17,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
-	nethttp "net/http"
 	"strings"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -112,23 +110,43 @@ func (s *Service) SubmitProposerPreferences(ctx context.Context, opts *api.Submi
 		return err
 	}
 
-	response, err := s.post(ctx,
+	// post() already rejects anything outside the 2xx family, and every other
+	// submitter in this package takes that as success.  beacon-APIs documents
+	// 200 as the only success code here, but insisting on exactly 200 is
+	// asymmetric: a node that answers 202 or 204 on a successful
+	// store-and-broadcast would produce an error that is neither an api.Error
+	// 4xx nor ErrInvalidOptions, which multi reads as a provider fault and
+	// deactivates the client for, on every submission.
+	_, err = s.post(ctx,
 		"/eth/v1/validator/proposer_preferences",
 		"",
 		&opts.Common,
 		bytes.NewReader(body),
 		contentType,
-		map[string]string{"Eth-Consensus-Version": strings.ToLower(spec.DataVersionGloas.String())},
+		map[string]string{"Eth-Consensus-Version": strings.ToLower(proposerPreferencesConsensusVersion.String())},
 	)
 	if err != nil {
 		return errors.Join(errors.New("failed to submit proposer preferences"), err)
 	}
-	if response.statusCode != nethttp.StatusOK {
-		return errors.Join(
-			errors.New("failed to submit proposer preferences"),
-			fmt.Errorf("unexpected status code %d", response.statusCode),
-		)
-	}
 
 	return nil
 }
+
+// proposerPreferencesConsensusVersion is the fork named in the
+// Eth-Consensus-Version header on a proposer preferences submission.
+//
+// beacon-APIs describes that header as "the active consensus version to which
+// the signed proposer preferences being submitted belongs".
+// SignedProposerPreferences is unversioned in this client because the type is
+// Gloas-only, but the header is about the chain's active fork, not the type: a
+// node validating it against its own active version will reject submissions
+// once the fork after Gloas activates, even though the message encoding has not
+// changed.
+//
+// It is a constant rather than a value derived from the node's fork schedule
+// because Gloas is the newest fork this library has a DataVersion for, so
+// deriving it cannot produce a different answer today -- it would only add a
+// genesis lookup to the submission path.  Whoever adds the DataVersion for the
+// next fork has to replace this with that derivation: the active version then
+// depends on the chain's clock, not on which forks the library knows.
+const proposerPreferencesConsensusVersion = spec.DataVersionGloas
