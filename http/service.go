@@ -23,6 +23,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -56,6 +57,13 @@ type Service struct {
 	forkScheduleMutex    sync.RWMutex
 	nodeVersion          string
 	nodeVersionMutex     sync.RWMutex
+
+	// proposerPreferencesLimitCache holds the derived proposer lookahead
+	// length, or 0 if it has not been derived yet.  It is not cleared with the
+	// other static values: it is a property of the chain rather than of the
+	// node's answer, so it cannot change under a running service, and
+	// rederiving it would put a spec round trip back on the submission path.
+	proposerPreferencesLimitCache atomic.Uint64
 
 	// User-specified chunk sizes.
 	userIndexChunkSize  int
