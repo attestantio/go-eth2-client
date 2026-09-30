@@ -164,3 +164,43 @@ func TestProposerDuties(t *testing.T) {
 		})
 	}
 }
+
+// TestProposerDutiesRejectsAZeroSlotsPerEpoch covers a node publishing
+// SLOTS_PER_EPOCH of 0.  endSlot would underflow to MaxUint64 and the range
+// check would then accept every duty the node cared to return, defeating the
+// point of the validation.  verifyPTCDuties guards the same way.
+func TestProposerDutiesRejectsAZeroSlotsPerEpoch(t *testing.T) {
+	ctx := context.Background()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		switch r.URL.Path {
+		case "/eth/v1/node/version":
+			fmt.Fprint(w, `{"data":{"version":"stub"}}`)
+		case "/eth/v1/node/syncing":
+			fmt.Fprint(w, `{"data":{"head_slot":"64","sync_distance":"0","is_syncing":false,"is_optimistic":false}}`)
+		case "/eth/v1/config/spec":
+			fmt.Fprint(w, `{"data":{"SLOTS_PER_EPOCH":"0"}}`)
+		case "/eth/v1/validator/duties/proposer/2", "/eth/v2/validator/duties/proposer/2":
+			// A duty from a completely different epoch, which the range check
+			// exists to reject.
+			fmt.Fprint(w, `{"dependent_root":"0xaa00000000000000000000000000000000000000000000000000000000000000","execution_optimistic":false,"data":[{"pubkey":"0xee0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000","validator_index":"7","slot":"999999"}]}`)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	service, err := eth2http.New(ctx,
+		eth2http.WithAddress(server.URL),
+		eth2http.WithLogLevel(zerolog.Disabled),
+	)
+	require.NoError(t, err)
+
+	_, err = service.(client.ProposerDutiesProvider).ProposerDuties(ctx, &api.ProposerDutiesOpts{Epoch: 2})
+	require.ErrorContains(t, err, "invalid slots per epoch 0")
+
+	_, err = service.(client.ProposerDutiesV2Provider).ProposerDutiesV2(ctx, &api.ProposerDutiesOpts{Epoch: 2})
+	require.ErrorContains(t, err, "invalid slots per epoch 0")
+}

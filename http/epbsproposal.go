@@ -693,7 +693,15 @@ func assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal *api.VersionedEPBSP
 	if envelope.BuilderIndex != bid.BuilderIndex {
 		return errors.Join(errors.New("execution payload envelope builder index does not match bid"), client.ErrInconsistentResult)
 	}
-	if envelope.Payload == nil || envelope.Payload.BlockHash != bid.BlockHash {
+	// Split from the hash comparison below.  Neither decode path can produce a
+	// nil payload today -- the gloas JSON unmarshaller rejects an envelope
+	// without "payload", and SSZ always allocates the container -- so this is
+	// defensive, and the point of separating it is the message: fused into the
+	// comparison it reported a hash mismatch that does not exist.
+	if envelope.Payload == nil {
+		return errors.Join(errors.New("execution payload envelope has no execution payload"), client.ErrInconsistentResult)
+	}
+	if envelope.Payload.BlockHash != bid.BlockHash {
 		return errors.Join(errors.New("execution payload block hash does not match bid"), client.ErrInconsistentResult)
 	}
 	if envelope.ParentBeaconBlockRoot != bid.ParentBlockRoot {

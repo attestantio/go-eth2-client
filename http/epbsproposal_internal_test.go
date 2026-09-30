@@ -32,6 +32,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/holiman/uint256"
+	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/stretchr/testify/require"
 )
 
@@ -637,4 +638,39 @@ func customSpecService(ctx context.Context, t *testing.T) *Service {
 	t.Helper()
 
 	return newTestService(ctx, t, true)
+}
+
+// TestAssertIncludedEPBSProposalEnvelopeMatchesBlockNamesAnAbsentPayload covers
+// an envelope whose Payload is nil.
+//
+// Neither decode path can produce one today -- the gloas JSON unmarshaller
+// rejects an envelope without "payload", and SSZ always allocates the container
+// -- so this is defensive code and the helper is called directly.  The point of
+// the change is the message: fused into the hash comparison below it, a nil
+// payload reported "execution payload block hash does not match bid" and sent
+// whoever read the log looking for a difference that does not exist.
+func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockNamesAnAbsentPayload(t *testing.T) {
+	contents := validEPBSBlockContents()
+
+	proposal := &api.VersionedEPBSProposal{
+		Version:                  spec.DataVersionGloas,
+		ExecutionPayloadIncluded: true,
+		GloasContents:            contents,
+	}
+
+	bodyRoot, err := contents.Block.Body.HashTreeRoot()
+	require.NoError(t, err)
+	root := phase0.Root(bodyRoot)
+	proposal.BeaconBlockBodyRoot = &root
+
+	blockRoot, err := proposal.Root()
+	require.NoError(t, err)
+	contents.ExecutionPayloadEnvelope.BeaconBlockRoot = blockRoot
+	contents.ExecutionPayloadEnvelope.BuilderIndex = contents.Block.Body.SignedExecutionPayloadBid.Message.BuilderIndex
+	contents.ExecutionPayloadEnvelope.Payload = nil
+
+	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal, dynssz.NewDynSsz(nil))
+	require.ErrorIs(t, err, client.ErrInconsistentResult)
+	require.ErrorContains(t, err, "execution payload envelope has no execution payload")
+	require.NotContains(t, err.Error(), "block hash does not match bid")
 }
