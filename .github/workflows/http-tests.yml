@@ -61,5 +61,14 @@ jobs:
           HTTP_REQUIRE_GLOAS: 'true'
         # Temporary exception to full-suite selection: v3 block-production tests
         # cannot pass on Gloas nodes. Remove the filter when those tests are gated
-        # on node capability; new Gloas live tests must match this pattern meanwhile.
-        run: go test -v -timeout=10m -run 'Gloas|EPBS|ExecutionPayload' ./http/...
+        # on node capability.
+        #
+        # Until then this is an allowlist, and the failure mode is silent: a new
+        # Gloas live test whose name matches none of these is simply not run, and
+        # nothing reports that. Preset and Authenticate are here because
+        # TestSubmitProposalDataAtTheNodesPreset -- which builds a Gloas block
+        # against the node's own spec, and is exactly the preset-sensitive case
+        # this job exists for -- and TestInternalTestServicesAuthenticate matched
+        # none of the original three. Either name a new test to match, or add its
+        # pattern here.
+        run: go test -v -timeout=10m -run 'Gloas|EPBS|ExecutionPayload|Preset|Authenticate' ./http/...
