@@ -278,26 +278,66 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 		})
 		require.NoError(t, err)
 		require.Nil(t, response.Data.ConsensusValue)
-		require.Equal(t, big.NewInt(0), response.Data.ExecutionValue)
-		require.Equal(t, big.NewInt(0), response.Data.Value())
+		// Assert the value rather than its representation: require.Equal on a
+		// *big.Int is reflect.DeepEqual over the unexported neg/abs fields, so
+		// a numerically identical zero built with a non-nil empty backing array
+		// -- which SetBytes or a pooled nat would produce -- would fail it.
+		require.NotNil(t, response.Data.ExecutionValue)
+		require.Zero(t, response.Data.ExecutionValue.Sign())
+		require.Zero(t, response.Data.Value().Sign())
 	})
 
 	// A proposal without a signed execution payload bid has no builder index,
 	// so it is not valid for downstream selection.
+	//
+	// Both arms are covered.  The payload-included arm is the dangerous one:
+	// there the guard is the only thing between a bid-less response and
+	// assertIncludedEPBSProposalEnvelopeMatchesBlock, which walks straight to
+	// contents.Block.Body.SignedExecutionPayloadBid.Message having checked only
+	// that Block and ExecutionPayloadEnvelope are non-nil.  Move the guard below
+	// the included/excluded branch, or give that helper a second caller, and the
+	// excluded case alone would not notice.
 	t.Run("MissingExecutionPayloadBid", func(t *testing.T) {
-		block := validEPBSBeaconBlock()
-		block.Body.SignedExecutionPayloadBid = nil
-		body, _ := epbsProposalJSONBody(t, false, block)
+		tests := []struct {
+			name  string
+			datum func() any
+		}{
+			{
+				name: "Excluded",
+				datum: func() any {
+					block := validEPBSBeaconBlock()
+					block.Body.SignedExecutionPayloadBid = nil
 
-		_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
-			statusCode:       http.StatusOK,
-			contentType:      ContentTypeJSON,
-			consensusVersion: spec.DataVersionGloas,
-			body:             body,
-			headers:          map[string]string{},
-		})
-		require.ErrorIs(t, err, client.ErrInconsistentResult)
-		require.ErrorContains(t, err, "no execution payload bid in epbs proposal response")
+					return block
+				},
+			},
+			{
+				name: "Included",
+				datum: func() any {
+					contents := validEPBSBlockContents()
+					contents.Block.Body.SignedExecutionPayloadBid = nil
+
+					return contents
+				},
+			},
+		}
+
+		for _, test := range tests {
+			t.Run(test.name, func(t *testing.T) {
+				included := test.name == "Included"
+				body, _ := epbsProposalJSONBody(t, included, test.datum())
+
+				_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+					statusCode:       http.StatusOK,
+					contentType:      ContentTypeJSON,
+					consensusVersion: spec.DataVersionGloas,
+					body:             body,
+					headers:          map[string]string{},
+				})
+				require.ErrorIs(t, err, client.ErrInconsistentResult)
+				require.ErrorContains(t, err, "no execution payload bid in epbs proposal response")
+			})
+		}
 	})
 
 	// The JSON decoder fills in only the keys it finds, so a body carrying no
