@@ -617,8 +617,23 @@ type ProposerDutiesProvider interface {
 }
 
 // ProposerDutiesV2Provider is the interface for providing proposer duties using the v2 API.
+//
+// v2 is not just a second path to the same data.  The duties themselves are
+// identical, and so are the Go types, but the dependent root in the response
+// metadata is not: per beacon-APIs apis/validator/duties/proposer.v2.yaml, v2
+// reports get_block_root_at_slot(state, compute_start_slot_at_epoch(epoch - 1) - 1),
+// one epoch earlier than v1's, and it is meant to be matched against the
+// head_v2 event's current_epoch_dependent_root / next_epoch_dependent_root.
+//
+// Because the signatures are interchangeable, a caller that swaps ProposerDuties
+// for ProposerDutiesV2 and keeps comparing the returned dependent_root against a
+// v1 head event's root sees a permanent mismatch, and re-fetches duties on every
+// head event.  Move to the head_v2 event along with the duties.
 type ProposerDutiesV2Provider interface {
 	// ProposerDutiesV2 obtains proposer duties for the given options.
+	//
+	// The dependent_root in the response metadata is the v2 one; see the
+	// interface documentation before comparing it against a head event.
 	ProposerDutiesV2(ctx context.Context,
 		opts *api.ProposerDutiesOpts,
 	) (

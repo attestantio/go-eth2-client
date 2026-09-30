@@ -5,6 +5,10 @@ dev:
   - multi Events() validates its options as http Events() does, and returns an error if no client is subscribed or awaiting a retry
   - Events() no longer checks topics against SupportedEventTopics: removing a topic from the map no longer refuses subscriptions to it, and adding one no longer lets it through
   - multi Events() waits one retry interval before retrying a client that failed to subscribe, rather than retrying at once; set the interval, 5s by default, with WithEventsRetryInterval
+  - add the head_v2 event topic, with api.EventsOpts.HeadV2Handler and apiv1.HeadEventV2; head_v2 carries payload_status and the current and next epoch dependent roots, and the beacon-APIs eventstream enum deprecates head in its favour
+  - add the light_client_finality_update and light_client_optimistic_update event topics; these have no typed handler field, so subscribing to them requires the generic api.EventsOpts.Handler
+  - **breaking**: Event.UnmarshalJSON now puts the topic's typed value in Event.Data rather than a map[string]any, so a caller doing event.Data.(map[string]any) has to switch on the topic's type instead
+  - add ProposerDutiesV2Provider, with http, multi and mock implementations, for /eth/v2/validator/duties/proposer; note that v2's dependent_root is taken one epoch earlier than v1's and is meant to be matched against the head_v2 event's roots, so the two are not interchangeable
 
 0.29.0:
   - use dynssz library for SSZ handling
