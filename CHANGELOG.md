@@ -1,3 +1,6 @@
+dev:
+  - add Gloas consensus-spec vector CI and weekly release support review issues
+
 0.30.0:
    - support Gloas consensus types and versioned helpers
    - add execution payload envelope retrieval and bid/envelope submission APIs
