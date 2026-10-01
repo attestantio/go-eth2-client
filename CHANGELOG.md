@@ -1,4 +1,5 @@
 dev:
+  - add Gloas consensus-spec vector CI and weekly release support review issues
  - fix a data race in the multi client, which read its lists of clients outside their lock when rechecking them
 
 0.30.3:

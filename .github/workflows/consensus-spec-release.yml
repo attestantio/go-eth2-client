@@ -1,0 +1,101 @@
+name: consensus-spec-release
+
+on:
+  schedule:
+    - cron: '0 10 * * 5'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: consensus-spec-release
+  cancel-in-progress: false
+
+jobs:
+  check:
+    permissions:
+      contents: read
+      issues: read
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      version: ${{ steps.candidate.outputs.version }}
+      fork: ${{ steps.candidate.outputs.fork }}
+      supported: ${{ steps.candidate.outputs.supported }}
+      sha: ${{ steps.candidate.outputs.sha }}
+      result: ${{ steps.vectors.outputs.result }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Find an unreviewed release, including prereleases
+        id: candidate
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          FORK: ${{ vars.CONSENSUS_SPEC_FORK }}
+        with:
+          script: |
+            const {selectRelease, supportedVersion, alreadyReported} = require('./.github/scripts/consensus-spec-release.cjs');
+            const fork = process.env.FORK;
+            const supported = supportedVersion(require('./.github/consensus-spec-versions.json'), fork);
+            const releases = await github.paginate(github.rest.repos.listReleases, {
+              owner: 'ethereum', repo: 'consensus-specs', per_page: 100,
+            });
+            const candidate = selectRelease(releases, supported);
+            if (!candidate) { core.info('No newer release'); return; }
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo, state: 'all', per_page: 100,
+            });
+            if (alreadyReported(issues, fork, candidate.tag_name)) {
+              core.info('Release already has a review issue'); return;
+            }
+            core.setOutput('version', candidate.tag_name);
+            core.setOutput('fork', fork);
+            core.setOutput('supported', supported);
+            core.setOutput('sha', (await exec.getExecOutput('git', ['rev-parse', 'HEAD'])).stdout.trim());
+      - name: Check candidate release vectors
+        id: vectors
+        if: steps.candidate.outputs.version != ''
+        uses: ./.github/actions/consensus-vectors
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          version: ${{ steps.candidate.outputs.version }}
+          fork: ${{ steps.candidate.outputs.fork }}
+
+  report:
+    needs: check
+    if: always() && needs.check.result != 'cancelled' && needs.check.outputs.version != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ needs.check.outputs.sha }}
+          persist-credentials: false
+      - name: Open release support review issue
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        env:
+          FORK: ${{ needs.check.outputs.fork }}
+          VERSION: ${{ needs.check.outputs.version }}
+          SUPPORTED: ${{ needs.check.outputs.supported }}
+          SHA: ${{ needs.check.outputs.sha }}
+          RESULT: ${{ needs.check.outputs.result || 'not-run' }}
+        with:
+          script: |
+            const {alreadyReported, issueBody} = require('./.github/scripts/consensus-spec-release.cjs');
+            const fork = process.env.FORK, tag = process.env.VERSION;
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              ...context.repo, state: 'all', per_page: 100,
+            });
+            if (alreadyReported(issues, fork, tag)) return;
+            await github.rest.issues.create({
+              ...context.repo,
+              title: `Review consensus-spec ${tag} support for ${fork}`,
+              body: issueBody({fork, tag, supported: process.env.SUPPORTED,
+                sha: process.env.SHA, result: process.env.RESULT,
+                runURL: `https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`}),
+            });
