@@ -28,3 +28,6 @@ Makefile
 
 # Local TODO
 TODO.md
+
+# Consensus-spec CI helper bytecode
+.github/scripts/__pycache__/
