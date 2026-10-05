@@ -176,4 +176,15 @@ func TestHeadEventJSON(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("DependentRootsAbsentOnReuse", func(t *testing.T) {
+		var res api.HeadEvent
+		require.NoError(t, json.Unmarshal([]byte(`{"slot":"525277","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","state":"0x749a95b1355828b758864ea601c007e69aabed7b34a0f2084c43c26242f77e28","epoch_transition":false,"current_duty_dependent_root":"0x907a3462a2905e3df2624869aa7f9a8635eb35bdcf9ce68a26fab691f9dada61","previous_duty_dependent_root":"0x935569bdc1aaad65dbeb532a125390d039058924ea81799238ed53e4e4639a11"}`), &res))
+
+		input := []byte(`{"slot":"525278","block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","state":"0x749a95b1355828b758864ea601c007e69aabed7b34a0f2084c43c26242f77e28","epoch_transition":false}`)
+		require.NoError(t, json.Unmarshal(input, &res))
+		rt, err := json.Marshal(&res)
+		require.NoError(t, err)
+		assert.Equal(t, string(input), string(rt), "dependent roots kept from the previous event")
+	})
 }

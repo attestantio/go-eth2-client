@@ -1,3 +1,11 @@
+dev:
+  - add Gloas events: execution_payload, execution_payload_gossip, execution_payload_available, execution_payload_bid, payload_attestation_message, proposer_preferences and fast_confirmation
+  - add http.ValidateEventsOpts, the events options check shared by the http and multi clients
+  - Event.UnmarshalJSON decodes attester_slashing data as electra.AttesterSlashing rather than phase0.AttesterSlashing, matching the events stream
+  - multi Events() validates its options as http Events() does, and returns an error if no client is subscribed or awaiting a retry
+  - Events() no longer checks topics against SupportedEventTopics: removing a topic from the map no longer refuses subscriptions to it, and adding one no longer lets it through
+  - multi Events() waits one retry interval before retrying a client that failed to subscribe, rather than retrying at once; set the interval, 5s by default, with WithEventsRetryInterval
+
 0.29.0:
   - use dynssz library for SSZ handling
 
