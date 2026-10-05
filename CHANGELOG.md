@@ -1,4 +1,4 @@
-dev:
+0.30.0:
   - add Gloas events: execution_payload, execution_payload_gossip, execution_payload_available, execution_payload_bid, payload_attestation_message, proposer_preferences and fast_confirmation
   - add http.ValidateEventsOpts, the events options check shared by the http and multi clients
   - Event.UnmarshalJSON decodes attester_slashing data as electra.AttesterSlashing rather than phase0.AttesterSlashing, matching the events stream
