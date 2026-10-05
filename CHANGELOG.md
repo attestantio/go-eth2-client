@@ -1,4 +1,25 @@
-dev:
+0.30.0:
+   - support Gloas consensus types and versioned helpers
+   - add execution payload envelope retrieval and bid/envelope submission APIs
+   - add payload timeliness committee duties and payload attestation APIs
+   - add MultiForkProposalProvider for proposal production across the Gloas fork
+   - support Gloas attestation hashing, submission and payload-availability votes
+   - fix attestation-pool decoding and validation across forks
+   - honor custom SSZ presets when submitting proposals
+   - add mock SubmitBLSToExecutionChanges
+   - handle invalid DataVersion values without panicking
+   - bound HTTP response sizes for POSTs and Gloas fetch endpoints
+   - add SubmitProposerPreferences with JSON and SSZ support in http, multi and mock clients
+   - update ePBS block production to POST /eth/v4/validator/blocks/{slot} with a required EPBSProposalOpts.BuilderConfig
+     - add Gloas BuilderConfig, BuilderEntry, BuilderRequestAuth and SignedBuilderRequestAuth types with JSON, YAML and SSZ support
+   - add VersionedEPBSProposal.BuilderIndex and SubmitProposalOpts.BuilderURL for direct-builder proposal routing
+   - validate ePBS bid policy and execution-value metadata, including minimum bids and execution-payment caps
+   - add head_v2 events and HeadV2Handler, including fork version, payload status and epoch-dependent roots
+   - add light_client_finality_update and light_client_optimistic_update events through the generic event handler
+   - add ProposerDutiesV2Provider and ProposerDutiesV2 in http, multi and mock clients
+     - use /eth/v2/validator/duties/proposer/{epoch} and its dependent-root semantics with head_v2; existing v1 behavior is unchanged
+   - fix multi event subscriptions to preserve topics and handlers, forward only the active client's events, and continue retrying failed subscriptions
+   - encode empty Gloas execution-payload transactions as "0x" in JSON and YAML, and accept them on JSON decode
   - add Gloas events: execution_payload, execution_payload_gossip, execution_payload_available, execution_payload_bid, payload_attestation_message, proposer_preferences and fast_confirmation
   - add http.ValidateEventsOpts, the events options check shared by the http and multi clients
   - Event.UnmarshalJSON decodes attester_slashing data as electra.AttesterSlashing rather than phase0.AttesterSlashing, matching the events stream
