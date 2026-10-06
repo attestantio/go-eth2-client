@@ -24,9 +24,10 @@ import (
 
 func TestDataColumnSidecarEventJSON(t *testing.T) {
 	tests := []struct {
-		name  string
-		input []byte
-		err   string
+		name   string
+		input  []byte
+		output []byte
+		err    string
 	}{
 		{
 			name: "Empty",
@@ -70,12 +71,16 @@ func TestDataColumnSidecarEventJSON(t *testing.T) {
 		{
 			name:  "KZGCommitmentsMissing",
 			input: []byte(`{"block_root":"0xcf8e0d4e9587369b2301d0790347320302cc0943d5a1884560367e8208d920f2","slot":"1","index":"1"}`),
-			err:   "kzg_commitments missing",
 		},
 		{
-			name:  "KZGCommitmentsEmpty",
-			input: []byte(`{"block_root":"0xcf8e0d4e9587369b2301d0790347320302cc0943d5a1884560367e8208d920f2","slot":"1","index":"1","kzg_commitments":[]}`),
-			err:   "kzg_commitments missing",
+			name:   "KZGCommitmentsEmpty",
+			input:  []byte(`{"block_root":"0xcf8e0d4e9587369b2301d0790347320302cc0943d5a1884560367e8208d920f2","slot":"1","index":"1","kzg_commitments":[]}`),
+			output: []byte(`{"block_root":"0xcf8e0d4e9587369b2301d0790347320302cc0943d5a1884560367e8208d920f2","slot":"1","index":"1"}`),
+		},
+		{
+			name:  "KZGCommitmentInvalid",
+			input: []byte(`{"block_root":"0xcf8e0d4e9587369b2301d0790347320302cc0943d5a1884560367e8208d920f2","slot":"1","index":"1","kzg_commitments":[""]}`),
+			err:   "kzg_commitments[0] missing",
 		},
 		{
 			name:  "Good",
@@ -97,7 +102,11 @@ func TestDataColumnSidecarEventJSON(t *testing.T) {
 				require.NoError(t, err)
 				rt, err := json.Marshal(&res)
 				require.NoError(t, err)
-				assert.Equal(t, string(test.input), string(rt))
+				expected := test.input
+				if test.output != nil {
+					expected = test.output
+				}
+				assert.Equal(t, string(expected), string(rt))
 				assert.Equal(t, string(rt), res.String())
 			}
 		})

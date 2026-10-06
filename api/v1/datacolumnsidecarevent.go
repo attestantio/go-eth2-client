@@ -23,6 +23,10 @@ import (
 )
 
 // DataColumnSidecarEvent is the data for the data column sidecar event.
+//
+// KZGCommitments may be empty: beacon-APIs #583 removed kzg_commitments from
+// the event, as the Gloas DataColumnSidecar no longer carries them, and beacon
+// nodes that follow it omit the field on every fork.
 type DataColumnSidecarEvent struct {
 	BlockRoot      phase0.Root
 	Slot           phase0.Slot
@@ -35,14 +39,17 @@ type dataColumnSidecarEventJSON struct {
 	BlockRoot      string   `json:"block_root"`
 	Slot           string   `json:"slot"`
 	Index          string   `json:"index"`
-	KZGCommitments []string `json:"kzg_commitments"`
+	KZGCommitments []string `json:"kzg_commitments,omitempty"`
 }
 
 // MarshalJSON implements json.Marshaler.
 func (e *DataColumnSidecarEvent) MarshalJSON() ([]byte, error) {
-	commitments := make([]string, len(e.KZGCommitments))
-	for i, commitment := range e.KZGCommitments {
-		commitments[i] = fmt.Sprintf("%#x", commitment)
+	var commitments []string
+	if len(e.KZGCommitments) > 0 {
+		commitments = make([]string, len(e.KZGCommitments))
+		for i, commitment := range e.KZGCommitments {
+			commitments[i] = fmt.Sprintf("%#x", commitment)
+		}
 	}
 
 	return json.Marshal(&dataColumnSidecarEventJSON{
@@ -89,10 +96,7 @@ func (e *DataColumnSidecarEvent) UnmarshalJSON(input []byte) error {
 		return errors.Wrap(err, "invalid value for index")
 	}
 
-	if len(dataColumnSidecarEventJSON.KZGCommitments) == 0 {
-		return errors.New("kzg_commitments missing")
-	}
-
+	// kzg_commitments is optional since beacon-APIs #583.
 	e.KZGCommitments = make([]deneb.KZGCommitment, len(dataColumnSidecarEventJSON.KZGCommitments))
 	for i, commitment := range dataColumnSidecarEventJSON.KZGCommitments {
 		if commitment == "" {
