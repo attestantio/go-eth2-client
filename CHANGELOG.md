@@ -1,3 +1,6 @@
+dev:
+  - accept data_column_sidecar events without kzg_commitments, removed from the event in beacon-APIs #583
+
 0.30.0:
    - support Gloas consensus types and versioned helpers
    - add execution payload envelope retrieval and bid/envelope submission APIs
