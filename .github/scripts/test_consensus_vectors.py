@@ -1,5 +1,7 @@
+from contextlib import chdir, redirect_stdout
 import hashlib
 import io
+import json
 import os
 import subprocess
 import sys
@@ -8,7 +10,7 @@ import tarfile
 import tempfile
 import unittest
 
-from consensus_vectors import validate_inputs, extract_vectors, classify_result, select_asset, verify_digest, go_test_environment
+from consensus_vectors import validate_inputs, extract_vectors, covered_cases, classify_result, select_asset, verify_digest, go_test_environment, run_vectors
 
 
 class ConsensusVectorsTest(unittest.TestCase):
@@ -30,7 +32,7 @@ class ConsensusVectorsTest(unittest.TestCase):
                         member.size = 6
                         tar.addfile(member, io.BytesIO(b'vector'))
             destination = root / 'extracted'
-            self.assertEqual(extract_vectors(archive, 'gloas', destination), 3)
+            self.assertEqual(extract_vectors(archive, 'gloas', destination), {'TestConsensusSpec/BeaconState/case_0'})
             self.assertEqual(len(list(destination.rglob('*.*'))), 3)
             self.assertFalse((destination / 'tests/mainnet/fulu').exists())
             self.assertEqual((destination / 'tests/mainnet/gloas/ssz_static/BeaconState/ssz_random/case_0/value.yaml').read_bytes(), b'vector')
@@ -52,20 +54,86 @@ class ConsensusVectorsTest(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     extract_vectors(archive, 'gloas', Path(directory) / 'extracted')
 
-    def test_success_requires_executed_vector_cases_without_skips(self):
-        for code, log, expected in [
-            (0, '    --- PASS: TestConsensusSpec/BeaconState/case_0\n--- PASS: TestConsensusSpec (1s)\n', 'pass'),
-            (1, '    --- FAIL: TestConsensusSpec/BeaconState/case_0\n--- FAIL: TestConsensusSpec (1s)\n', 'fail'),
-            (0, '--- SKIP: TestConsensusSpec (0s)\n', 'not-run'),
-            (0, '--- PASS: TestConsensusSpec (0s)\n', 'not-run'),
-            (1, 'build failed\n', 'not-run'),
-            (1, '    --- PASS: TestConsensusSpec/BeaconState/case_0\n    --- SKIP: TestConsensusSpec/BeaconState/case_1\n--- FAIL: TestConsensusSpec (1s)\n', 'not-run'),
-            (1, '    --- PASS: TestConsensusSpec/BeaconState/case_0\n--- FAIL: TestConsensusSpec (1s)\n', 'not-run'),
-            (1, '    --- FAIL: TestConsensusSpec/BeaconState/case_0\n    --- SKIP: TestConsensusSpec/BeaconState/case_1\n--- FAIL: TestConsensusSpec (1s)\n', 'fail'),
-            (0, '    --- PASS: TestConsensusSpec/BeaconState/case_0\n    --- SKIP: TestConsensusSpec/BeaconState/case_1\n--- PASS: TestConsensusSpec (1s)\n', 'not-run'),
+    def test_rejects_incomplete_or_unrecognized_case_layouts(self):
+        for case, files in [
+            ('Fork/ssz_random/case_0', ['value.yaml']),
+            ('Fork/ssz_other/case_0', ['value.yaml', 'roots.yaml', 'serialized.ssz_snappy']),
+            ('Fork/ssz_random/case 0', ['value.yaml', 'roots.yaml', 'serialized.ssz_snappy']),
         ]:
-            with self.subTest(code=code, log=log):
-                self.assertEqual(classify_result(code, log), expected)
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as directory:
+                archive = Path(directory) / 'vectors.tar.gz'
+                with tarfile.open(archive, 'w:gz') as tar:
+                    for name in files:
+                        tar.addfile(tarfile.TarInfo(f'tests/mainnet/gloas/ssz_static/{case}/{name}'))
+                with self.assertRaises(ValueError):
+                    extract_vectors(archive, 'gloas', Path(directory) / 'extracted')
+
+    def test_classifies_json_terminal_events_not_printed_test_output(self):
+        for code, statuses, expected in [
+            (0, [('pass', 'TestConsensusSpec/Fork/case_0'), ('pass', 'TestConsensusSpec'), ('pass', '')], 'pass'),
+            (1, [('fail', 'TestConsensusSpec/Fork/case_0'), ('fail', 'TestConsensusSpec'), ('fail', '')], 'fail'),
+            (0, [('skip', 'TestConsensusSpec'), ('pass', '')], 'not-run'),
+            (0, [('pass', 'TestConsensusSpec'), ('pass', '')], 'not-run'),
+            (1, [('fail', '')], 'not-run'),
+            (1, [('pass', 'TestConsensusSpec/Fork/case_0'), ('fail', 'TestConsensusSpec'), ('fail', '')], 'not-run'),
+            (1, [('fail', 'TestConsensusSpec/Fork/case_0'), ('skip', 'TestConsensusSpec/Fork/case_1'),
+                 ('fail', 'TestConsensusSpec'), ('fail', '')], 'fail'),
+            (0, [('pass', 'TestConsensusSpec/Fork/case_0'), ('skip', 'TestConsensusSpec/Fork/case_1'),
+                 ('pass', 'TestConsensusSpec'), ('pass', '')], 'not-run'),
+            (0, [('pass', 'TestConsensusSpec/Fork/case_0'), ('pass', 'TestConsensusSpec')], 'not-run'),
+            (0, [('output', 'TestConsensusSpec'), ('pass', 'TestConsensusSpec'), ('pass', '')], 'not-run'),
+        ]:
+            log = '\n'.join(json.dumps({'Package': 'gloas', 'Action': action, 'Test': name,
+                                       'Output': '--- PASS: TestConsensusSpec/Fork/case_0'})
+                            for action, name in statuses)
+            with self.subTest(code=code, statuses=statuses):
+                self.assertEqual(classify_result(code, log, {'TestConsensusSpec/Fork/case_0'}), expected)
+        self.assertEqual(classify_result(0, 'malformed JSON', {'TestConsensusSpec/Fork/case_0'}), 'not-run')
+
+    def test_pass_requires_every_inventory_case_exactly_once(self):
+        case = 'TestConsensusSpec/Fork/case_0'
+        for executed, inventory in [
+            ([case], {case, 'TestConsensusSpec/FutureContainer/case_0'}),
+            ([case], {'TestConsensusSpec/RenamedFork/case_0'}),
+            ([case, case], {case}),
+            ([case, 'TestConsensusSpec/Unexpected/case_0'], {case}),
+            ([case], set()),
+        ]:
+            events = [{'Package': 'gloas', 'Action': 'pass', 'Test': name}
+                      for name in [*executed, 'TestConsensusSpec', '']]
+            log = '\n'.join(map(json.dumps, events))
+            with self.subTest(executed=executed, inventory=inventory):
+                self.assertEqual(classify_result(0, log, inventory), 'not-run')
+
+    def test_only_declared_exclusions_are_removed_from_required_coverage(self):
+        excluded_types = {'DataColumnSidecar', 'DataColumnsByRootIdentifier', 'Eth1Block',
+                          'LightClientBootstrap', 'LightClientFinalityUpdate', 'LightClientHeader',
+                          'LightClientOptimisticUpdate', 'LightClientUpdate', 'MatrixEntry',
+                          'NewPayloadRequest', 'PartialDataColumnGroupID', 'PartialDataColumnPartsMetadata',
+                          'PartialDataColumnSidecar', 'PowBlock', 'SigningData'}
+        included = {'TestConsensusSpec/Fork/case_0', 'TestConsensusSpec/FutureContainer/case_0'}
+        all_cases = included | {f'TestConsensusSpec/{name}/case_0' for name in excluded_types}
+        output = io.StringIO()
+        with redirect_stdout(output):
+            self.assertEqual(covered_cases(all_cases, 'gloas'), included)
+        self.assertIn('15 excluded cases', output.getvalue())
+        for name in excluded_types:
+            self.assertIn(name, output.getvalue())
+        self.assertEqual(covered_cases(all_cases, 'fulu'), all_cases)
+        self.assertEqual(len(all_cases), 17)
+
+    def test_invalid_or_cross_package_events_cannot_prove_execution(self):
+        case = 'TestConsensusSpec/Fork/case_0'
+        for events in [
+            [None], [[]],
+            [{'Action': 'pass', 'Test': name} for name in [case, 'TestConsensusSpec', '']],
+            [{'Package': 'gloas', 'Action': 'pass', 'Test': 123}],
+            [{'Package': 'other', 'Action': 'pass', 'Test': case},
+             {'Package': 'gloas', 'Action': 'pass', 'Test': 'TestConsensusSpec'},
+             {'Package': 'gloas', 'Action': 'pass'}],
+        ]:
+            with self.subTest(events=events):
+                self.assertEqual(classify_result(0, '\n'.join(map(json.dumps, events)), {case}), 'not-run')
 
     def test_requires_mainnet_asset_with_published_checksum_and_official_url(self):
         asset = {'name': 'mainnet.tar.gz', 'digest': 'sha256:' + 'a' * 64,
@@ -88,10 +156,22 @@ class ConsensusVectorsTest(unittest.TestCase):
     def test_test_process_gets_vectors_but_no_github_credentials_or_output_file(self):
         environment = {'PATH': '/usr/bin', 'GH_TOKEN': 'secret', 'GITHUB_TOKEN': 'secret',
                        'ACTIONS_RUNTIME_TOKEN': 'secret', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN': 'secret',
-                       'GITHUB_OUTPUT': '/tmp/output'}
+                       'GITHUB_OUTPUT': '/tmp/output', 'GITHUB_ENV': '/tmp/env', 'GITHUB_PATH': '/tmp/path',
+                       'GITHUB_STEP_SUMMARY': '/tmp/summary', 'GITHUB_STATE': '/tmp/state'}
         result = go_test_environment(environment, Path('/tmp/vectors'))
         self.assertEqual(result, {'PATH': '/usr/bin', 'CONSENSUS_SPEC_TESTS_DIR': str(Path('/tmp/vectors').resolve())})
         self.assertIn('GH_TOKEN', environment)
+
+    def test_go_command_diagnostics_do_not_enter_the_json_stream(self):
+        with tempfile.TemporaryDirectory() as directory, chdir(directory):
+            Path('go.mod').write_text('module example.com/target\n\ngo 1.20\n')
+            Path('spec/gloas').mkdir(parents=True)
+            process = run_vectors('gloas', Path(directory) / 'vectors')
+            self.assertNotEqual(process.returncode, 0)
+            self.assertIsInstance(process.stderr, str)
+            self.assertIn('matched no packages', process.stderr)
+            self.assertNotIn('matched no packages', process.stdout)
+            self.assertEqual(classify_result(process.returncode, process.stdout, set()), 'not-run')
 
     def test_cli_rejects_invalid_inputs_and_reports_no_conformance_result(self):
         with tempfile.TemporaryDirectory() as directory:
