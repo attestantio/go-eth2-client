@@ -28,6 +28,7 @@ import (
 	"github.com/goccy/go-yaml"
 	"github.com/golang/snappy"
 	clone "github.com/huandu/go-clone/generic"
+	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/pk910/dynamic-ssz/sszutils"
 	require "github.com/stretchr/testify/require"
 )
@@ -262,6 +263,11 @@ func TestConsensusSpec(t *testing.T) {
 					require.NoError(t, err)
 					generatedRoot := fmt.Sprintf("{root: '%#x'}\n", string(generatedRootBytes[:]))
 					require.YAMLEq(t, string(specYAMLRoot), generatedRoot)
+
+					// Confirm the merkle tree hashes to the same root, as proofs are generated from it.
+					tree, err := dynssz.GetGlobalDynSsz().GetTree(s2)
+					require.NoError(t, err)
+					require.Equal(t, generatedRootBytes[:], tree.Hash())
 				})
 			}
 
