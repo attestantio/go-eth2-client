@@ -28,10 +28,10 @@ export GOTOOLCHAIN=go1.25.2
 
 The pilot's full suite passes on Go 1.25.2. Go 1.27.2 changes JSON error strings and
 fails existing assertions. The tidy check also detects pre-existing module drift:
-`gopkg.in/yaml.v3` needs to be direct rather than indirect. The initial pilot commit
-and its review follow-up used separately approved tidy-only bypasses. The committed
-check stays enabled. A normal commit remains blocked until that drift is addressed
-separately. Do not disable the check permanently.
+`gopkg.in/yaml.v3` needs to be direct rather than indirect. The pilot commits used
+separately approved tidy-only bypasses. The committed check stays enabled. A normal
+commit remains blocked until that drift is addressed separately. Do not disable
+the check permanently.
 
 ## Commit checks
 
