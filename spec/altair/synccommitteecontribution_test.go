@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021, 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,8 +18,11 @@ import (
 	"encoding/json"
 	"testing"
 
+	bitfield "github.com/OffchainLabs/go-bitfield"
 	"github.com/attestantio/go-eth2-client/spec/altair"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
+	dynssz "github.com/pk910/dynamic-ssz"
 	"github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
 )
@@ -186,3 +189,161 @@ func TestSyncCommitteeContributionYAML(t *testing.T) {
 		})
 	}
 }
+
+func TestSyncCommitteeContributionSSZ(t *testing.T) {
+	t.Run("Static", func(t *testing.T) {
+		contribution := &altair.SyncCommitteeContribution{
+			Slot:              phase0.Slot(1024),
+			BeaconBlockRoot:   phase0.Root{0x01, 0x02, 0x03, 0x04},
+			SubcommitteeIndex: 3,
+			AggregationBits:   bitfield.Bitvector128{0xaa, 0xbb, 0xcc, 0xdd, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c},
+			Signature:         phase0.BLSSignature{0x99},
+		}
+
+		encoded, err := contribution.MarshalSSZ()
+		require.NoError(t, err)
+		require.Equal(t, contribution.SizeSSZ(), len(encoded))
+		require.Len(t, encoded, 160)
+
+		var decoded altair.SyncCommitteeContribution
+		require.NoError(t, decoded.UnmarshalSSZ(encoded))
+		require.Equal(t, contribution.Slot, decoded.Slot)
+		require.Equal(t, contribution.BeaconBlockRoot, decoded.BeaconBlockRoot)
+		require.Equal(t, contribution.SubcommitteeIndex, decoded.SubcommitteeIndex)
+		require.Equal(t, contribution.AggregationBits, decoded.AggregationBits)
+		require.Equal(t, contribution.Signature, decoded.Signature)
+
+		root, err := contribution.HashTreeRoot()
+		require.NoError(t, err)
+		require.NotEqual(t, [32]byte{}, root)
+
+		decodedRoot, err := decoded.HashTreeRoot()
+		require.NoError(t, err)
+		require.Equal(t, root, decodedRoot)
+
+		// Short buffer.
+		require.Error(t, decoded.UnmarshalSSZ(encoded[:len(encoded)-1]))
+
+		// Trailing data.
+		longBuf := append(append([]byte{}, encoded...), 0x00)
+		require.Error(t, decoded.UnmarshalSSZ(longBuf))
+	})
+
+	t.Run("DynamicStandardSpec", func(t *testing.T) {
+		dynamicSSZ := dynssz.NewDynSsz(map[string]any{
+			"SYNC_COMMITTEE_SIZE":         uint64(512),
+			"SYNC_COMMITTEE_SUBNET_COUNT": uint64(4),
+		})
+
+		contribution := &altair.SyncCommitteeContribution{
+			Slot:              phase0.Slot(2048),
+			BeaconBlockRoot:   phase0.Root{0x10, 0x20, 0x30},
+			SubcommitteeIndex: 2,
+			AggregationBits:   bitfield.Bitvector128{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10},
+			Signature:         phase0.BLSSignature{0x42},
+		}
+
+		encoded, err := dynamicSSZ.MarshalSSZ(contribution)
+		require.NoError(t, err)
+		require.Len(t, encoded, 160)
+
+		var decoded altair.SyncCommitteeContribution
+		require.NoError(t, dynamicSSZ.UnmarshalSSZ(&decoded, encoded))
+		require.Equal(t, contribution.AggregationBits, decoded.AggregationBits)
+
+		staticRoot, err := contribution.HashTreeRoot()
+		require.NoError(t, err)
+
+		dynRoot, err := dynamicSSZ.HashTreeRoot(contribution)
+		require.NoError(t, err)
+		require.Equal(t, staticRoot, dynRoot)
+	})
+
+	t.Run("DynamicCustomSpecSubnetCount8", func(t *testing.T) {
+		// When SYNC_COMMITTEE_SUBNET_COUNT is 8, AggregationBits is 512 / 8 / 8 = 8 bytes.
+		// Total SSZ size is 8 + 32 + 8 + 8 + 96 = 152 bytes.
+		dynamicSSZ := dynssz.NewDynSsz(map[string]any{
+			"SYNC_COMMITTEE_SIZE":         uint64(512),
+			"SYNC_COMMITTEE_SUBNET_COUNT": uint64(8),
+		})
+
+		contribution := &altair.SyncCommitteeContribution{
+			Slot:              phase0.Slot(4096),
+			BeaconBlockRoot:   phase0.Root{0xde, 0xad, 0xbe, 0xef},
+			SubcommitteeIndex: 1,
+			AggregationBits:   bitfield.Bitvector128{0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08},
+			Signature:         phase0.BLSSignature{0x55},
+		}
+
+		encoded, err := dynamicSSZ.MarshalSSZ(contribution)
+		require.NoError(t, err)
+		require.Len(t, encoded, 152)
+
+		var decoded altair.SyncCommitteeContribution
+		require.NoError(t, dynamicSSZ.UnmarshalSSZ(&decoded, encoded))
+		require.Equal(t, contribution.Slot, decoded.Slot)
+		require.Equal(t, contribution.BeaconBlockRoot, decoded.BeaconBlockRoot)
+		require.Equal(t, contribution.SubcommitteeIndex, decoded.SubcommitteeIndex)
+		require.Equal(t, []byte(contribution.AggregationBits), []byte(decoded.AggregationBits))
+		require.Equal(t, contribution.Signature, decoded.Signature)
+
+		root, err := dynamicSSZ.HashTreeRoot(contribution)
+		require.NoError(t, err)
+		require.NotEqual(t, [32]byte{}, root)
+
+		decodedRoot, err := dynamicSSZ.HashTreeRoot(&decoded)
+		require.NoError(t, err)
+		require.Equal(t, root, decodedRoot)
+
+		// Static unmarshaler expects standard 160 bytes and fails on 152 bytes.
+		var staticDecoded altair.SyncCommitteeContribution
+		require.Error(t, staticDecoded.UnmarshalSSZ(encoded))
+	})
+
+	t.Run("DynamicCustomSpecSubnetCount2", func(t *testing.T) {
+		// When SYNC_COMMITTEE_SUBNET_COUNT is 2, AggregationBits is 512 / 2 / 8 = 32 bytes.
+		// Total SSZ size is 8 + 32 + 8 + 32 + 96 = 176 bytes.
+		dynamicSSZ := dynssz.NewDynSsz(map[string]any{
+			"SYNC_COMMITTEE_SIZE":         uint64(512),
+			"SYNC_COMMITTEE_SUBNET_COUNT": uint64(2),
+		})
+
+		aggBits := make(bitfield.Bitvector128, 32)
+		for i := range aggBits {
+			aggBits[i] = byte(i + 1)
+		}
+
+		contribution := &altair.SyncCommitteeContribution{
+			Slot:              phase0.Slot(8192),
+			BeaconBlockRoot:   phase0.Root{0xaa, 0xbb},
+			SubcommitteeIndex: 0,
+			AggregationBits:   aggBits,
+			Signature:         phase0.BLSSignature{0x77},
+		}
+
+		encoded, err := dynamicSSZ.MarshalSSZ(contribution)
+		require.NoError(t, err)
+		require.Len(t, encoded, 176)
+
+		var decoded altair.SyncCommitteeContribution
+		require.NoError(t, dynamicSSZ.UnmarshalSSZ(&decoded, encoded))
+		require.Equal(t, contribution.Slot, decoded.Slot)
+		require.Equal(t, contribution.BeaconBlockRoot, decoded.BeaconBlockRoot)
+		require.Equal(t, contribution.SubcommitteeIndex, decoded.SubcommitteeIndex)
+		require.Equal(t, []byte(contribution.AggregationBits), []byte(decoded.AggregationBits))
+		require.Equal(t, contribution.Signature, decoded.Signature)
+
+		root, err := dynamicSSZ.HashTreeRoot(contribution)
+		require.NoError(t, err)
+		require.NotEqual(t, [32]byte{}, root)
+
+		decodedRoot, err := dynamicSSZ.HashTreeRoot(&decoded)
+		require.NoError(t, err)
+		require.Equal(t, root, decodedRoot)
+
+		// Static unmarshaler expects standard 160 bytes and fails on 176 bytes.
+		var staticDecoded altair.SyncCommitteeContribution
+		require.Error(t, staticDecoded.UnmarshalSSZ(encoded))
+	})
+}
+
