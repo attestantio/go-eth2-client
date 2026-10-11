@@ -25,9 +25,11 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// VersionedEPBSProposal contains a versioned ePBS block proposal, as produced by
-// the gloas-onwards block production endpoint.
-type VersionedEPBSProposal struct {
+// VersionedBidProposal contains a versioned block proposal that commits to a
+// builder's execution payload bid rather than carrying the payload itself, as
+// produced by the gloas-onwards block production endpoint.  The payload may
+// optionally travel alongside the block; see ExecutionPayloadIncluded.
+type VersionedBidProposal struct {
 	Version spec.DataVersion
 	// ExecutionPayloadIncluded selects which arm below carries the proposal.
 	ExecutionPayloadIncluded bool
@@ -55,7 +57,7 @@ type VersionedEPBSProposal struct {
 }
 
 // Slot returns the slot of the proposal.
-func (v *VersionedEPBSProposal) Slot() (phase0.Slot, error) {
+func (v *VersionedBidProposal) Slot() (phase0.Slot, error) {
 	block, err := v.block()
 	if err != nil {
 		return 0, err
@@ -65,7 +67,7 @@ func (v *VersionedEPBSProposal) Slot() (phase0.Slot, error) {
 }
 
 // ProposerIndex returns the proposer index of the proposal.
-func (v *VersionedEPBSProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
+func (v *VersionedBidProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
 	block, err := v.block()
 	if err != nil {
 		return 0, err
@@ -75,7 +77,7 @@ func (v *VersionedEPBSProposal) ProposerIndex() (phase0.ValidatorIndex, error) {
 }
 
 // RandaoReveal returns the RANDAO reveal of the proposal.
-func (v *VersionedEPBSProposal) RandaoReveal() (phase0.BLSSignature, error) {
+func (v *VersionedBidProposal) RandaoReveal() (phase0.BLSSignature, error) {
 	block, err := v.block()
 	if err != nil {
 		return phase0.BLSSignature{}, err
@@ -89,7 +91,7 @@ func (v *VersionedEPBSProposal) RandaoReveal() (phase0.BLSSignature, error) {
 }
 
 // ParentRoot returns the parent root of the proposal.
-func (v *VersionedEPBSProposal) ParentRoot() (phase0.Root, error) {
+func (v *VersionedBidProposal) ParentRoot() (phase0.Root, error) {
 	block, err := v.block()
 	if err != nil {
 		return phase0.Root{}, err
@@ -99,7 +101,7 @@ func (v *VersionedEPBSProposal) ParentRoot() (phase0.Root, error) {
 }
 
 // StateRoot returns the state root of the proposal.
-func (v *VersionedEPBSProposal) StateRoot() (phase0.Root, error) {
+func (v *VersionedBidProposal) StateRoot() (phase0.Root, error) {
 	block, err := v.block()
 	if err != nil {
 		return phase0.Root{}, err
@@ -115,7 +117,7 @@ func (v *VersionedEPBSProposal) StateRoot() (phase0.Root, error) {
 // generated Body.HashTreeRoot() inlines mainnet preset sizes, so recomputing
 // here would silently sign the wrong root on any other preset.  There is
 // deliberately no fallback to that computation.
-func (v *VersionedEPBSProposal) BodyRoot() (phase0.Root, error) {
+func (v *VersionedBidProposal) BodyRoot() (phase0.Root, error) {
 	block, err := v.block()
 	if err != nil {
 		return phase0.Root{}, err
@@ -142,7 +144,7 @@ func (v *VersionedEPBSProposal) BodyRoot() (phase0.Root, error) {
 // disagree with BodyRoot() -- do not "simplify" this back to
 // block.HashTreeRoot(), that reintroduces the bug BeaconBlockBodyRoot exists
 // to avoid.
-func (v *VersionedEPBSProposal) Root() (phase0.Root, error) {
+func (v *VersionedBidProposal) Root() (phase0.Root, error) {
 	block, err := v.block()
 	if err != nil {
 		return phase0.Root{}, err
@@ -170,7 +172,7 @@ func (v *VersionedEPBSProposal) Root() (phase0.Root, error) {
 // ExecutionPayloadEnvelope returns the execution payload envelope that travelled
 // with the block.  It is an error to ask for it when the execution payload was
 // not included: the caller must fetch the envelope from the producing node.
-func (v *VersionedEPBSProposal) ExecutionPayloadEnvelope() (*gloas.ExecutionPayloadEnvelope, error) {
+func (v *VersionedBidProposal) ExecutionPayloadEnvelope() (*gloas.ExecutionPayloadEnvelope, error) {
 	contents, err := v.contents()
 	if err != nil {
 		return nil, err
@@ -184,7 +186,7 @@ func (v *VersionedEPBSProposal) ExecutionPayloadEnvelope() (*gloas.ExecutionPayl
 }
 
 // KZGProofs returns the KZG proofs that travelled with the block.
-func (v *VersionedEPBSProposal) KZGProofs() ([]deneb.KZGProof, error) {
+func (v *VersionedBidProposal) KZGProofs() ([]deneb.KZGProof, error) {
 	contents, err := v.contents()
 	if err != nil {
 		return nil, err
@@ -194,7 +196,7 @@ func (v *VersionedEPBSProposal) KZGProofs() ([]deneb.KZGProof, error) {
 }
 
 // Blobs returns the blobs that travelled with the block.
-func (v *VersionedEPBSProposal) Blobs() ([]deneb.Blob, error) {
+func (v *VersionedBidProposal) Blobs() ([]deneb.Blob, error) {
 	contents, err := v.contents()
 	if err != nil {
 		return nil, err
@@ -205,7 +207,7 @@ func (v *VersionedEPBSProposal) Blobs() ([]deneb.Blob, error) {
 
 // Value returns the total value of the proposal, or nil when its execution
 // value was not supplied by the beacon node.
-func (v *VersionedEPBSProposal) Value() *big.Int {
+func (v *VersionedBidProposal) Value() *big.Int {
 	if v.ExecutionValue == nil {
 		return nil
 	}
@@ -219,12 +221,12 @@ func (v *VersionedEPBSProposal) Value() *big.Int {
 }
 
 // IsEmpty returns true if no proposal is populated.
-func (v *VersionedEPBSProposal) IsEmpty() bool {
+func (v *VersionedBidProposal) IsEmpty() bool {
 	return v.Gloas == nil && v.GloasContents == nil
 }
 
 // String returns a string version of the structure.
-func (v *VersionedEPBSProposal) String() string {
+func (v *VersionedBidProposal) String() string {
 	switch v.Version {
 	case spec.DataVersionPhase0, spec.DataVersionAltair, spec.DataVersionBellatrix,
 		spec.DataVersionCapella, spec.DataVersionDeneb, spec.DataVersionElectra,
@@ -252,12 +254,12 @@ func (v *VersionedEPBSProposal) String() string {
 // block returns the beacon block the proposal carries, or an error explaining
 // why there is none.  Every accessor that reads the block funnels through here,
 // so the version, arm-selection and nil checks cannot drift between them.
-func (v *VersionedEPBSProposal) block() (*gloas.BeaconBlock, error) {
+func (v *VersionedBidProposal) block() (*gloas.BeaconBlock, error) {
 	switch v.Version {
 	case spec.DataVersionPhase0, spec.DataVersionAltair, spec.DataVersionBellatrix,
 		spec.DataVersionCapella, spec.DataVersionDeneb, spec.DataVersionElectra,
 		spec.DataVersionFulu:
-		return nil, fmt.Errorf("no epbs proposal in %s", v.Version)
+		return nil, fmt.Errorf("no bid proposal in %s", v.Version)
 	case spec.DataVersionGloas:
 		if v.ExecutionPayloadIncluded {
 			contents, err := v.contents()
@@ -284,12 +286,12 @@ func (v *VersionedEPBSProposal) block() (*gloas.BeaconBlock, error) {
 
 // contents returns the block contents the proposal carries when the execution
 // payload is included, or an error explaining why there are none.
-func (v *VersionedEPBSProposal) contents() (*apiv1gloas.BlockContents, error) {
+func (v *VersionedBidProposal) contents() (*apiv1gloas.BlockContents, error) {
 	switch v.Version {
 	case spec.DataVersionPhase0, spec.DataVersionAltair, spec.DataVersionBellatrix,
 		spec.DataVersionCapella, spec.DataVersionDeneb, spec.DataVersionElectra,
 		spec.DataVersionFulu:
-		return nil, fmt.Errorf("no epbs proposal in %s", v.Version)
+		return nil, fmt.Errorf("no bid proposal in %s", v.Version)
 	case spec.DataVersionGloas:
 		if !v.ExecutionPayloadIncluded {
 			return nil, errors.New("no block contents; the execution payload was not included")

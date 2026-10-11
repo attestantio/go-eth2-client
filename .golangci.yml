@@ -182,7 +182,7 @@ linters:
       - examples$ # Exclude example code
     # Rule-based exclusions
     rules:
-      # gloas ePBS type definitions carry long dynssz size-expression struct
+      # gloas type definitions carry long dynssz size-expression struct
       # tags and require ssz-index tags for correct SSZ generation (removing
       # them changes the generated SSZ). gofmt aligns these tags past the
       # 132-char limit and struct tags cannot be wrapped, so exempt only the

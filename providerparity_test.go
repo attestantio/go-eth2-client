@@ -58,11 +58,11 @@ var (
 	_ client.ProposerPreferencesSubmitter        = (*testclients.Erroring)(nil)
 	_ client.ProposerPreferencesSubmitter        = (*testclients.Sleepy)(nil)
 
-	_ client.EPBSProposalProvider = (*http.Service)(nil)
-	_ client.EPBSProposalProvider = (*multi.Service)(nil)
-	_ client.EPBSProposalProvider = (*mock.Service)(nil)
-	_ client.EPBSProposalProvider = (*testclients.Erroring)(nil)
-	_ client.EPBSProposalProvider = (*testclients.Sleepy)(nil)
+	_ client.BidProposalProvider = (*http.Service)(nil)
+	_ client.BidProposalProvider = (*multi.Service)(nil)
+	_ client.BidProposalProvider = (*mock.Service)(nil)
+	_ client.BidProposalProvider = (*testclients.Erroring)(nil)
+	_ client.BidProposalProvider = (*testclients.Sleepy)(nil)
 
 	_ client.ExecutionPayloadEnvelopeProvider = (*http.Service)(nil)
 	_ client.ExecutionPayloadEnvelopeProvider = (*multi.Service)(nil)

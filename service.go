@@ -338,17 +338,17 @@ type ProposalProvider interface {
 	)
 }
 
-// EPBSProposalProvider is the interface for providing ePBS proposals.
+// BidProposalProvider is the interface for providing bid proposals.
 //
 // It sits alongside ProposalProvider rather than replacing it: the endpoint
 // behind it is gloas-onwards only, and the endpoint behind ProposalProvider is
 // frozen at the last pre-gloas fork, so a client needs both to span the fork.
-type EPBSProposalProvider interface {
-	// EPBSProposal fetches an ePBS proposal for signing.
-	EPBSProposal(ctx context.Context,
-		opts *api.EPBSProposalOpts,
+type BidProposalProvider interface {
+	// BidProposal fetches a bid proposal for signing.
+	BidProposal(ctx context.Context,
+		opts *api.BidProposalOpts,
 	) (
-		*api.Response[*api.VersionedEPBSProposal],
+		*api.Response[*api.VersionedBidProposal],
 		error,
 	)
 }
@@ -358,7 +358,7 @@ type EPBSProposalProvider interface {
 //
 // It composes the two proposal providers rather than adding an endpoint of its
 // own.  ProposalProvider is frozen at the last pre-gloas fork and
-// EPBSProposalProvider is gloas-onwards only, so a caller that must produce
+// BidProposalProvider is gloas-onwards only, so a caller that must produce
 // blocks across the fork boundary needs both; this states that requirement as
 // one type instead of leaving each caller to compose it.
 //
@@ -366,7 +366,7 @@ type EPBSProposalProvider interface {
 // unrelated to the multi package.
 type MultiForkProposalProvider interface {
 	ProposalProvider
-	EPBSProposalProvider
+	BidProposalProvider
 }
 
 // ExecutionPayloadEnvelopeProvider is the interface for providing the execution

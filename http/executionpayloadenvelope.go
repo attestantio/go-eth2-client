@@ -96,7 +96,7 @@ func (s *Service) fetchExecutionPayloadEnvelope(ctx context.Context,
 
 	endpoint := fmt.Sprintf("/eth/v1/validator/execution_payload_envelopes/%d/%#x", opts.Slot, opts.BeaconBlockRoot)
 
-	httpResponse, err := s.getWithResponseLimit(ctx, endpoint, "", &opts.Common, true, maxEPBSResponseSize)
+	httpResponse, err := s.getWithResponseLimit(ctx, endpoint, "", &opts.Common, true, maxGloasResponseSize)
 	if err != nil {
 		return nil, notFoundToSentinel(err)
 	}

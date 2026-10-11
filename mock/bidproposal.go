@@ -31,19 +31,19 @@ import (
 	"github.com/holiman/uint256"
 )
 
-// EPBSProposal fetches an ePBS proposal for signing.
+// BidProposal fetches a bid proposal for signing.
 //
 // The response follows opts.IncludePayload, since that is the axis a caller is
 // most likely to be exercising: with it set the proposal carries the envelope,
 // blobs and proofs needed to publish from anywhere, and without it only a block.
-func (s *Service) EPBSProposal(ctx context.Context,
-	opts *api.EPBSProposalOpts,
+func (s *Service) BidProposal(ctx context.Context,
+	opts *api.BidProposalOpts,
 ) (
-	*api.Response[*api.VersionedEPBSProposal],
+	*api.Response[*api.VersionedBidProposal],
 	error,
 ) {
-	if s.EPBSProposalFunc != nil {
-		return s.EPBSProposalFunc(ctx, opts)
+	if s.BidProposalFunc != nil {
+		return s.BidProposalFunc(ctx, opts)
 	}
 
 	block := mockGloasBeaconBlock(opts)
@@ -57,7 +57,7 @@ func (s *Service) EPBSProposal(ctx context.Context,
 	}
 	root := phase0.Root(bodyRoot)
 
-	proposal := &api.VersionedEPBSProposal{
+	proposal := &api.VersionedBidProposal{
 		Version:             spec.DataVersionGloas,
 		ConsensusValue:      big.NewInt(1),
 		ExecutionValue:      big.NewInt(2),
@@ -76,7 +76,7 @@ func (s *Service) EPBSProposal(ctx context.Context,
 		proposal.Gloas = block
 	}
 
-	return &api.Response[*api.VersionedEPBSProposal]{
+	return &api.Response[*api.VersionedBidProposal]{
 		Data:     proposal,
 		Metadata: make(map[string]any),
 	}, nil
@@ -84,7 +84,7 @@ func (s *Service) EPBSProposal(ctx context.Context,
 
 // mockGloasBeaconBlock returns a block for the requested slot, echoing back the
 // RANDAO reveal and graffiti so that a caller's own consistency checks pass.
-func mockGloasBeaconBlock(opts *api.EPBSProposalOpts) *gloas.BeaconBlock {
+func mockGloasBeaconBlock(opts *api.BidProposalOpts) *gloas.BeaconBlock {
 	return &gloas.BeaconBlock{
 		Slot: opts.Slot,
 		Body: &gloas.BeaconBlockBody{

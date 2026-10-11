@@ -35,10 +35,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// validEPBSBeaconBlock returns a gloas beacon block populated just far enough
+// validBidBeaconBlock returns a gloas beacon block populated just far enough
 // for its own JSON marshaler to run: every pointer the marshaler dereferences
 // is non-nil.
-func validEPBSBeaconBlock() *gloas.BeaconBlock {
+func validBidBeaconBlock() *gloas.BeaconBlock {
 	return &gloas.BeaconBlock{
 		Slot:          60300,
 		ProposerIndex: 403,
@@ -52,13 +52,13 @@ func validEPBSBeaconBlock() *gloas.BeaconBlock {
 	}
 }
 
-// validEPBSBlockContents returns block contents carrying one KZG proof and no
+// validBidBlockContents returns block contents carrying one KZG proof and no
 // blobs.  Blobs are left empty deliberately: deneb.Blob is a 128KiB array, so a
 // populated one turns any assertion failure into a 256KiB hex diff.  The
 // payload's BaseFeePerGas must be non-nil, as its own marshaler dereferences it.
-func validEPBSBlockContents() *apiv1gloas.BlockContents {
+func validBidBlockContents() *apiv1gloas.BlockContents {
 	contents := &apiv1gloas.BlockContents{
-		Block: validEPBSBeaconBlock(),
+		Block: validBidBeaconBlock(),
 		ExecutionPayloadEnvelope: &gloas.ExecutionPayloadEnvelope{
 			Payload:           &gloas.ExecutionPayload{BaseFeePerGas: uint256.NewInt(7)},
 			ExecutionRequests: &gloas.ExecutionRequests{},
@@ -84,11 +84,11 @@ func validEPBSBlockContents() *apiv1gloas.BlockContents {
 	return contents
 }
 
-// epbsProposalJSONBody wraps a marshaled datum in the produceBlockV4 response
+// bidProposalJSONBody wraps a marshaled datum in the produceBlockV4 response
 // object, whose value fields and payload-inclusion flag sit alongside the data.
 // It returns the marshaled datum as well, so a test can compare what came back
 // against the exact bytes that went in.
-func epbsProposalJSONBody(t *testing.T, included bool, datum any) (body, data []byte) {
+func bidProposalJSONBody(t *testing.T, included bool, datum any) (body, data []byte) {
 	t.Helper()
 
 	data, err := json.Marshal(datum)
@@ -114,19 +114,19 @@ func requireJSONEquals(t *testing.T, want []byte, got any) {
 	require.JSONEq(t, string(want), string(reencoded))
 }
 
-// TestEPBSProposalFromResponse covers the decode half of the block-production
+// TestBidProposalFromResponse covers the decode half of the block-production
 // endpoint, which takes an already-fetched response and so needs no beacon
 // node.
-func TestEPBSProposalFromResponse(t *testing.T) {
+func TestBidProposalFromResponse(t *testing.T) {
 	ctx := context.Background()
 	s := &Service{}
 
 	// With the execution payload excluded the data is a bare beacon block, and
 	// the caller must fetch the envelope from the producing node to publish it.
 	t.Run("JSONPayloadExcluded", func(t *testing.T) {
-		body, data := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+		body, data := bidProposalJSONBody(t, false, validBidBeaconBlock())
 
-		response, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		response, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
@@ -147,9 +147,9 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 	// node.  The flag is what selects between the two containers, so decoding
 	// this body as a bare block would silently discard everything but the block.
 	t.Run("JSONPayloadIncluded", func(t *testing.T) {
-		body, data := epbsProposalJSONBody(t, true, validEPBSBlockContents())
+		body, data := bidProposalJSONBody(t, true, validBidBlockContents())
 
-		response, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		response, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
@@ -174,11 +174,11 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 	// SSZ carries no field names and no response wrapper, so the header is the
 	// only place the payload-inclusion flag can be read from.
 	t.Run("SSZPayloadExcluded", func(t *testing.T) {
-		block := validEPBSBeaconBlock()
+		block := validBidBeaconBlock()
 		sszBody, err := block.MarshalSSZ()
 		require.NoError(t, err)
 
-		response, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		response, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeSSZ,
 			consensusVersion: spec.DataVersionGloas,
@@ -218,13 +218,13 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 		syncCommitteeSize, isUint64 := specResponse.Data["SYNC_COMMITTEE_SIZE"].(uint64)
 		require.True(t, isUint64, "SYNC_COMMITTEE_SIZE missing from spec")
 
-		block := validEPBSBeaconBlock()
+		block := validBidBeaconBlock()
 		block.Body.SyncAggregate.SyncCommitteeBits = make(bitfield.Bitvector512, syncCommitteeSize/8)
 
 		sszBody, err := ds.MarshalSSZ(block)
 		require.NoError(t, err)
 
-		response, err := custom.epbsProposalFromResponse(ctx, &httpResponse{
+		response, err := custom.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeSSZ,
 			consensusVersion: spec.DataVersionGloas,
@@ -240,9 +240,9 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 	// choosing between proposals is comparing consensus rewards plus execution
 	// payload value.
 	t.Run("ValuesFromHeaders", func(t *testing.T) {
-		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+		body, _ := bidProposalJSONBody(t, false, validBidBeaconBlock())
 
-		response, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		response, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
@@ -265,9 +265,9 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 	// wrote the execution header to the wrong field.  Headers are the sole
 	// source, so the body's own value fields are metadata and do not contribute.
 	t.Run("ZeroExecutionValueFromHeaders", func(t *testing.T) {
-		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+		body, _ := bidProposalJSONBody(t, false, validBidBeaconBlock())
 
-		response, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		response, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
@@ -285,11 +285,11 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 	// A proposal without a signed execution payload bid has no builder index,
 	// so it is not valid for downstream selection.
 	t.Run("MissingExecutionPayloadBid", func(t *testing.T) {
-		block := validEPBSBeaconBlock()
+		block := validBidBeaconBlock()
 		block.Body.SignedExecutionPayloadBid = nil
-		body, _ := epbsProposalJSONBody(t, false, block)
+		body, _ := bidProposalJSONBody(t, false, block)
 
-		_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		_, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
@@ -297,7 +297,7 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 			headers:          map[string]string{},
 		})
 		require.ErrorIs(t, err, client.ErrInconsistentResult)
-		require.ErrorContains(t, err, "no execution payload bid in epbs proposal response")
+		require.ErrorContains(t, err, "no execution payload bid in bid proposal response")
 	})
 
 	// The JSON decoder fills in only the keys it finds, so a body carrying no
@@ -318,14 +318,14 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 
 		for _, test := range tests {
 			t.Run(test.name, func(t *testing.T) {
-				_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+				_, err := s.bidProposalFromResponse(ctx, &httpResponse{
 					statusCode:       http.StatusOK,
 					contentType:      ContentTypeJSON,
 					consensusVersion: spec.DataVersionGloas,
 					body:             []byte(test.body),
 					headers:          map[string]string{},
 				})
-				require.ErrorContains(t, err, "no gloas epbs proposal in response")
+				require.ErrorContains(t, err, "no gloas bid proposal in response")
 			})
 		}
 	})
@@ -333,22 +333,22 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 	// The endpoint is gloas-onwards, so a response claiming any earlier fork is
 	// a node answering a request it should have rejected.
 	t.Run("PreGloasVersion", func(t *testing.T) {
-		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+		body, _ := bidProposalJSONBody(t, false, validBidBeaconBlock())
 
-		_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		_, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionFulu,
 			body:             body,
 			headers:          map[string]string{},
 		})
-		require.ErrorContains(t, err, "epbs proposal not available for version fulu")
+		require.ErrorContains(t, err, "bid proposal not available for version fulu")
 	})
 
 	t.Run("UnknownContentType", func(t *testing.T) {
-		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+		body, _ := bidProposalJSONBody(t, false, validBidBeaconBlock())
 
-		_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		_, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeUnknown,
 			consensusVersion: spec.DataVersionGloas,
@@ -361,34 +361,34 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 	// The flag has no default in the spec, and the two containers are not
 	// interchangeable, so a body that omits it cannot be decoded at all.
 	t.Run("JSONWithoutInclusionFlag", func(t *testing.T) {
-		_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		_, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
 			body:             []byte(`{"version":"gloas","data":{}}`),
 			headers:          map[string]string{},
 		})
-		require.ErrorContains(t, err, "no execution_payload_included in epbs proposal response")
+		require.ErrorContains(t, err, "no execution_payload_included in bid proposal response")
 	})
 
 	// On the SSZ path the header is the only source for the flag.  Absent, the
 	// body cannot be attributed to either container.
 	t.Run("SSZWithoutInclusionHeader", func(t *testing.T) {
-		_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		_, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeSSZ,
 			consensusVersion: spec.DataVersionGloas,
 			body:             []byte{},
 			headers:          map[string]string{},
 		})
-		require.ErrorContains(t, err, "no Eth-Execution-Payload-Included header in epbs proposal response")
+		require.ErrorContains(t, err, "no Eth-Execution-Payload-Included header in bid proposal response")
 	})
 
 	// A malformed flag must be rejected rather than read as false.  Treating an
 	// unparseable value as false would decode block contents as a bare block and
 	// silently drop the envelope, blobs and proofs.
 	t.Run("SSZWithMalformedInclusionHeader", func(t *testing.T) {
-		_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		_, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeSSZ,
 			consensusVersion: spec.DataVersionGloas,
@@ -400,7 +400,7 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 		// The offending value is named but not quoted back.  Its length is the
 		// node's to choose, so an error carrying it puts however much the node
 		// sent into a log line.
-		_, err = s.epbsProposalFromResponse(ctx, &httpResponse{
+		_, err = s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeSSZ,
 			consensusVersion: spec.DataVersionGloas,
@@ -416,9 +416,9 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 	// multi-megabyte value burns minutes of CPU on the one path that has a slot
 	// to meet.  Rejected on length before parsing.
 	t.Run("OverlongValueHeader", func(t *testing.T) {
-		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+		body, _ := bidProposalJSONBody(t, false, validBidBeaconBlock())
 
-		_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		_, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
@@ -431,7 +431,7 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 
 		// A value at the limit is still accepted, so the bound rejects only what
 		// no real node sends.
-		response, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		response, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
@@ -448,9 +448,9 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 	// minus, and Value() would then subtract it from the total, making a proposal
 	// look cheaper than a rival's.
 	t.Run("NegativeValueHeader", func(t *testing.T) {
-		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+		body, _ := bidProposalJSONBody(t, false, validBidBeaconBlock())
 
-		_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		_, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
@@ -461,9 +461,9 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 	})
 
 	t.Run("MalformedValueHeader", func(t *testing.T) {
-		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+		body, _ := bidProposalJSONBody(t, false, validBidBeaconBlock())
 
-		_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		_, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
@@ -476,9 +476,9 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 	// An omitted execution value is unknown, not zero.  A caller must not use
 	// it as evidence that the execution bid has no value.
 	t.Run("AbsentExecutionValueIsUnknown", func(t *testing.T) {
-		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+		body, _ := bidProposalJSONBody(t, false, validBidBeaconBlock())
 
-		response, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		response, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
@@ -492,74 +492,74 @@ func TestEPBSProposalFromResponse(t *testing.T) {
 	})
 
 	t.Run("CorruptJSON", func(t *testing.T) {
-		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+		body, _ := bidProposalJSONBody(t, false, validBidBeaconBlock())
 
-		_, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		_, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
 			body:             body[:len(body)-1],
 			headers:          map[string]string{},
 		})
-		require.ErrorContains(t, err, "failed to parse epbs proposal response")
+		require.ErrorContains(t, err, "failed to parse bid proposal response")
 	})
 
 	t.Run("CorruptSSZ", func(t *testing.T) {
-		block := validEPBSBeaconBlock()
+		block := validBidBeaconBlock()
 		sszBody, err := block.MarshalSSZ()
 		require.NoError(t, err)
 
-		_, err = s.epbsProposalFromResponse(ctx, &httpResponse{
+		_, err = s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeSSZ,
 			consensusVersion: spec.DataVersionGloas,
 			body:             sszBody[:len(sszBody)-1],
 			headers:          map[string]string{"Eth-Execution-Payload-Included": "false"},
 		})
-		require.ErrorContains(t, err, "failed to decode gloas SSZ epbs proposal")
+		require.ErrorContains(t, err, "failed to decode gloas SSZ bid proposal")
 	})
 }
 
-// TestAssertEPBSProposalMatchesRequest covers the checks made on what the node
+// TestAssertBidProposalMatchesRequest covers the checks made on what the node
 // returned.  The faults cannot be provoked against a live node — one that
 // honours the request cannot be made to answer with the wrong slot, mode or
 // RANDAO reveal — so this is the only place they are exercised.
 // BuilderBidExcludesRequestedPayload is the other side of that: a divergence
 // the guard has to let through rather than reject.
-func TestAssertEPBSProposalMatchesRequest(t *testing.T) {
+func TestAssertBidProposalMatchesRequest(t *testing.T) {
 	s := &Service{}
 
 	includePayload := true
 	reveal := phase0.BLSSignature{0x0a, 0x0b, 0x0c}
 
-	// Matches validEPBSBeaconBlock, so the request and the response agree.
-	matchingOpts := func() *api.EPBSProposalOpts {
+	// Matches validBidBeaconBlock, so the request and the response agree.
+	matchingOpts := func() *api.BidProposalOpts {
 		want := includePayload
 
-		return &api.EPBSProposalOpts{
+		return &api.BidProposalOpts{
 			Slot:           60300,
 			RandaoReveal:   reveal,
 			IncludePayload: &want,
 		}
 	}
 
-	matchingProposal := func() *api.VersionedEPBSProposal {
-		return &api.VersionedEPBSProposal{
+	matchingProposal := func() *api.VersionedBidProposal {
+		return &api.VersionedBidProposal{
 			Version:                  spec.DataVersionGloas,
 			ExecutionPayloadIncluded: true,
-			GloasContents:            validEPBSBlockContents(),
+			GloasContents:            validBidBlockContents(),
 		}
 	}
 
 	t.Run("Matching", func(t *testing.T) {
-		require.NoError(t, s.assertEPBSProposalMatchesRequest(matchingProposal(), matchingOpts()))
+		require.NoError(t, s.assertBidProposalMatchesRequest(matchingProposal(), matchingOpts()))
 	})
 
 	t.Run("WrongSlot", func(t *testing.T) {
 		opts := matchingOpts()
 		opts.Slot = 60301
 
-		err := s.assertEPBSProposalMatchesRequest(matchingProposal(), opts)
+		err := s.assertBidProposalMatchesRequest(matchingProposal(), opts)
 		require.ErrorIs(t, err, client.ErrInconsistentResult)
 		require.ErrorContains(t, err, "for slot 60300; expected 60301")
 	})
@@ -573,7 +573,7 @@ func TestAssertEPBSProposalMatchesRequest(t *testing.T) {
 		opts := matchingOpts()
 		opts.IncludePayload = &exclude
 
-		err := s.assertEPBSProposalMatchesRequest(matchingProposal(), opts)
+		err := s.assertBidProposalMatchesRequest(matchingProposal(), opts)
 		require.ErrorIs(t, err, client.ErrInconsistentResult)
 		require.ErrorContains(t, err, "execution payload included true; expected false")
 	})
@@ -587,9 +587,9 @@ func TestAssertEPBSProposalMatchesRequest(t *testing.T) {
 	// agreeing with a hand-made value.
 	t.Run("BuilderBidExcludesRequestedPayload", func(t *testing.T) {
 		ctx := context.Background()
-		body, _ := epbsProposalJSONBody(t, false, validEPBSBeaconBlock())
+		body, _ := bidProposalJSONBody(t, false, validBidBeaconBlock())
 
-		response, err := s.epbsProposalFromResponse(ctx, &httpResponse{
+		response, err := s.bidProposalFromResponse(ctx, &httpResponse{
 			statusCode:       http.StatusOK,
 			contentType:      ContentTypeJSON,
 			consensusVersion: spec.DataVersionGloas,
@@ -599,14 +599,14 @@ func TestAssertEPBSProposalMatchesRequest(t *testing.T) {
 		require.NoError(t, err)
 		require.False(t, response.Data.ExecutionPayloadIncluded)
 
-		require.NoError(t, s.assertEPBSProposalMatchesRequest(response.Data, matchingOpts()))
+		require.NoError(t, s.assertBidProposalMatchesRequest(response.Data, matchingOpts()))
 	})
 
 	t.Run("WrongRandaoReveal", func(t *testing.T) {
 		opts := matchingOpts()
 		opts.RandaoReveal = phase0.BLSSignature{0xff}
 
-		err := s.assertEPBSProposalMatchesRequest(matchingProposal(), opts)
+		err := s.assertBidProposalMatchesRequest(matchingProposal(), opts)
 		require.ErrorIs(t, err, client.ErrInconsistentResult)
 		require.ErrorContains(t, err, "RANDAO reveal")
 	})
@@ -620,11 +620,11 @@ func TestAssertEPBSProposalMatchesRequest(t *testing.T) {
 		opts := matchingOpts()
 		opts.RandaoReveal = phase0.BLSSignature{0xff}
 
-		require.NoError(t, dvt.assertEPBSProposalMatchesRequest(matchingProposal(), opts))
+		require.NoError(t, dvt.assertBidProposalMatchesRequest(matchingProposal(), opts))
 
 		opts.Slot = 60301
 		require.ErrorIs(t,
-			dvt.assertEPBSProposalMatchesRequest(matchingProposal(), opts),
+			dvt.assertBidProposalMatchesRequest(matchingProposal(), opts),
 			client.ErrInconsistentResult,
 		)
 	})

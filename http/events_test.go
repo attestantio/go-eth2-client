@@ -90,7 +90,7 @@ func TestEvents(t *testing.T) {
 	}
 }
 
-// gloasEventTopics are the SSE topics introduced by the Gloas (ePBS) fork.
+// gloasEventTopics are the SSE topics introduced by the Gloas fork.
 var gloasEventTopics = []string{
 	"execution_payload",
 	"execution_payload_available",

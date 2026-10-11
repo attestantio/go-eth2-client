@@ -26,27 +26,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestEPBSProposalOptsValidation covers the options the endpoint refuses before
+// TestBidProposalOptsValidation covers the options the endpoint refuses before
 // it reaches the network.  The payload-inclusion case is the one that matters
 // most: the spec marks the parameter required with no default, and the two modes
 // carry different operational constraints, so an unset value has to be rejected
 // rather than resolved on the caller's behalf.
-func TestEPBSProposalOptsValidation(t *testing.T) {
+func TestBidProposalOptsValidation(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	service := testService(ctx, t).(client.Service)
-	provider := service.(client.EPBSProposalProvider)
+	provider := service.(client.BidProposalProvider)
 
 	includePayload := true
 
 	t.Run("NilOpts", func(t *testing.T) {
-		_, err := provider.EPBSProposal(ctx, nil)
+		_, err := provider.BidProposal(ctx, nil)
 		require.ErrorIs(t, err, client.ErrNoOptions)
 	})
 
 	t.Run("NoSlot", func(t *testing.T) {
-		_, err := provider.EPBSProposal(ctx, &api.EPBSProposalOpts{
+		_, err := provider.BidProposal(ctx, &api.BidProposalOpts{
 			IncludePayload: &includePayload,
 		})
 		require.ErrorIs(t, err, client.ErrInvalidOptions)
@@ -58,13 +58,13 @@ func TestEPBSProposalOptsValidation(t *testing.T) {
 	// also be the publisher — so a Go bool's zero value would quietly commit the
 	// caller to stateful operation.
 	t.Run("NoIncludePayload", func(t *testing.T) {
-		_, err := provider.EPBSProposal(ctx, &api.EPBSProposalOpts{Slot: 1})
+		_, err := provider.BidProposal(ctx, &api.BidProposalOpts{Slot: 1})
 		require.ErrorIs(t, err, client.ErrInvalidOptions)
 		require.ErrorContains(t, err, "no payload inclusion specified")
 	})
 
 	t.Run("SkipRandaoVerificationWithoutInfinity", func(t *testing.T) {
-		_, err := provider.EPBSProposal(ctx, &api.EPBSProposalOpts{
+		_, err := provider.BidProposal(ctx, &api.BidProposalOpts{
 			Slot:                   1,
 			IncludePayload:         &includePayload,
 			SkipRandaoVerification: true,
@@ -75,14 +75,14 @@ func TestEPBSProposalOptsValidation(t *testing.T) {
 	})
 }
 
-// TestEPBSProposal exercises the endpoint against a live node, across both
+// TestBidProposal exercises the endpoint against a live node, across both
 // payload-inclusion modes and both encodings.
 //
 // The RANDAO reveal is the point at infinity with skip_randao_verification set,
 // which is what lets a test produce a block without holding a validator key: the
 // node then returns the reveal it was given, so the endpoint's own consistency
 // check still has something to verify.
-func TestEPBSProposal(t *testing.T) {
+func TestBidProposal(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -135,8 +135,8 @@ func TestEPBSProposal(t *testing.T) {
 				builderConfig = builderRequestedConfig(slot)
 			}
 
-			response, err := test.service.(client.EPBSProposalProvider).EPBSProposal(ctx,
-				&api.EPBSProposalOpts{
+			response, err := test.service.(client.BidProposalProvider).BidProposal(ctx,
+				&api.BidProposalOpts{
 					Slot:                   slot,
 					RandaoReveal:           infinity,
 					IncludePayload:         &includePayload,

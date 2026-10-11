@@ -1176,23 +1176,23 @@ func (s *Erroring) SubmitExecutionPayloadEnvelope(ctx context.Context, opts *api
 	return next.SubmitExecutionPayloadEnvelope(ctx, opts)
 }
 
-// EPBSProposal fetches an ePBS proposal for signing.
-func (s *Erroring) EPBSProposal(ctx context.Context,
-	opts *api.EPBSProposalOpts,
+// BidProposal fetches a bid proposal for signing.
+func (s *Erroring) BidProposal(ctx context.Context,
+	opts *api.BidProposalOpts,
 ) (
-	*api.Response[*api.VersionedEPBSProposal],
+	*api.Response[*api.VersionedBidProposal],
 	error,
 ) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
 
-	next, isNext := s.next.(consensusclient.EPBSProposalProvider)
+	next, isNext := s.next.(consensusclient.BidProposalProvider)
 	if !isNext {
 		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 
-	return next.EPBSProposal(ctx, opts)
+	return next.BidProposal(ctx, opts)
 }
 
 // ExecutionPayloadEnvelope obtains the cached execution payload envelope for the

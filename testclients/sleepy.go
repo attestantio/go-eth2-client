@@ -902,21 +902,21 @@ func (s *Sleepy) SubmitExecutionPayloadEnvelope(ctx context.Context, opts *api.S
 	return next.SubmitExecutionPayloadEnvelope(ctx, opts)
 }
 
-// EPBSProposal fetches an ePBS proposal for signing.
-func (s *Sleepy) EPBSProposal(ctx context.Context,
-	opts *api.EPBSProposalOpts,
+// BidProposal fetches a bid proposal for signing.
+func (s *Sleepy) BidProposal(ctx context.Context,
+	opts *api.BidProposalOpts,
 ) (
-	*api.Response[*api.VersionedEPBSProposal],
+	*api.Response[*api.VersionedBidProposal],
 	error,
 ) {
 	s.sleep(ctx)
 
-	next, isNext := s.next.(consensusclient.EPBSProposalProvider)
+	next, isNext := s.next.(consensusclient.BidProposalProvider)
 	if !isNext {
 		return nil, errors.New("next does not support this call")
 	}
 
-	return next.EPBSProposal(ctx, opts)
+	return next.BidProposal(ctx, opts)
 }
 
 // ExecutionPayloadEnvelope obtains the cached execution payload envelope for the

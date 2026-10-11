@@ -38,7 +38,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestEPBSProposalCustomSpec verifies that an ePBS proposal decoded against a
+// TestBidProposalCustomSpec verifies that a bid proposal decoded against a
 // custom (minimal) preset is accepted and yields the correct roots.
 //
 // The request wire contract is pinned to beacon-APIs 159622d983a703eb03a8a37bb1edeab7ffc3b6bc:
@@ -55,7 +55,7 @@ import (
 // generated HashTreeRoot.  Before the fix, the transport compared that
 // correct envelope root against the generated (wrong) block root and
 // rejected every such response as inconsistent.
-func TestEPBSProposalCustomSpec(t *testing.T) {
+func TestBidProposalCustomSpec(t *testing.T) {
 	ctx := context.Background()
 	dynamicSSZ := dynssz.NewDynSsz(map[string]any{
 		"SYNC_COMMITTEE_SIZE": uint64(32),
@@ -203,7 +203,7 @@ func TestEPBSProposalCustomSpec(t *testing.T) {
 	require.NoError(t, err)
 
 	includePayload := true
-	response, err := service.(client.EPBSProposalProvider).EPBSProposal(ctx, &api.EPBSProposalOpts{
+	response, err := service.(client.BidProposalProvider).BidProposal(ctx, &api.BidProposalOpts{
 		Slot:           slot,
 		RandaoReveal:   randaoReveal,
 		Graffiti:       graffiti,

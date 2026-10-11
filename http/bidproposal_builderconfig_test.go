@@ -31,7 +31,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func validEPBSBuilderConfig() *gloas.BuilderConfig {
+func validBidBuilderConfig() *gloas.BuilderConfig {
 	return &gloas.BuilderConfig{
 		Builders: []*gloas.BuilderEntry{{
 			URL: []byte("https://builder.example"),
@@ -44,7 +44,7 @@ func validEPBSBuilderConfig() *gloas.BuilderConfig {
 	}
 }
 
-func TestEPBSProposalJSONRequest(t *testing.T) {
+func TestBidProposalJSONRequest(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/eth/v1/node/syncing":
@@ -75,19 +75,19 @@ func TestEPBSProposalJSONRequest(t *testing.T) {
 	require.NoError(t, err)
 
 	includePayload := true
-	_, err = service.(client.EPBSProposalProvider).EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+	_, err = service.(client.BidProposalProvider).BidProposal(context.Background(), &api.BidProposalOpts{
 		Slot:           123,
-		BuilderConfig:  validEPBSBuilderConfig(),
+		BuilderConfig:  validBidBuilderConfig(),
 		IncludePayload: &includePayload,
 	})
 	require.Error(t, err)
 }
 
-func TestEPBSProposalJSONResponseAcceptsBareBuilderWin(t *testing.T) {
+func TestBidProposalJSONResponseAcceptsBareBuilderWin(t *testing.T) {
 	mockService, err := mock.New(context.Background())
 	require.NoError(t, err)
 	excludePayload := false
-	mockResponse, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+	mockResponse, err := mockService.BidProposal(context.Background(), &api.BidProposalOpts{
 		Slot:           123,
 		IncludePayload: &excludePayload,
 	})
@@ -127,9 +127,9 @@ func TestEPBSProposalJSONResponseAcceptsBareBuilderWin(t *testing.T) {
 	require.NoError(t, err)
 
 	includePayload := true
-	response, err := service.(client.EPBSProposalProvider).EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+	response, err := service.(client.BidProposalProvider).BidProposal(context.Background(), &api.BidProposalOpts{
 		Slot:           123,
-		BuilderConfig:  validEPBSBuilderConfig(),
+		BuilderConfig:  validBidBuilderConfig(),
 		IncludePayload: &includePayload,
 	})
 	require.NoError(t, err)
@@ -138,7 +138,7 @@ func TestEPBSProposalJSONResponseAcceptsBareBuilderWin(t *testing.T) {
 	require.Nil(t, response.Data.GloasContents)
 }
 
-func TestEPBSProposalRejectsNonUTF8BuilderURL(t *testing.T) {
+func TestBidProposalRejectsNonUTF8BuilderURL(t *testing.T) {
 	var blockRequests atomic.Uint64
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -167,10 +167,10 @@ func TestEPBSProposalRejectsNonUTF8BuilderURL(t *testing.T) {
 	require.NoError(t, err)
 
 	includePayload := true
-	config := validEPBSBuilderConfig()
+	config := validBidBuilderConfig()
 	config.Builders[0].URL = []byte{0xff}
 
-	_, err = service.(client.EPBSProposalProvider).EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+	_, err = service.(client.BidProposalProvider).BidProposal(context.Background(), &api.BidProposalOpts{
 		Slot:           123,
 		BuilderConfig:  config,
 		IncludePayload: &includePayload,
