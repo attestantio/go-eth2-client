@@ -18,13 +18,13 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-// EPBSProposalOpts are the options for obtaining ePBS block proposals.
+// BidProposalOpts are the options for obtaining bid proposals.
 //
 // Post-Gloas there is no blinded proposal: proposers commit to an execution
 // payload bid rather than to a payload, so the axis that replaced blinded versus
 // unblinded is IncludePayload — whether the execution payload envelope travels
 // with the block or stays cached on the producing node.
-type EPBSProposalOpts struct {
+type BidProposalOpts struct {
 	Common CommonOpts
 
 	// Slot is the slot for which the proposal should be fetched.
@@ -46,7 +46,7 @@ type EPBSProposalOpts struct {
 	// This is what multiple-beacon-node, distributed-validator and failover setups
 	// require.  It is a request rather than a guarantee: a block built on an
 	// external builder's bid comes back with
-	// VersionedEPBSProposal.ExecutionPayloadIncluded false whatever was asked for,
+	// VersionedBidProposal.ExecutionPayloadIncluded false whatever was asked for,
 	// because the node does not hold the builder's payload, so those setups must
 	// read that field rather than assume this one describes what arrived.
 	//

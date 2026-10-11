@@ -51,7 +51,7 @@ func (s *Service) PayloadAttestationData(ctx context.Context,
 	endpoint := "/eth/v1/validator/payload_attestation_data"
 	query := fmt.Sprintf("slot=%d", opts.Slot)
 
-	httpResponse, err := s.getWithResponseLimit(ctx, endpoint, query, &opts.Common, true, maxEPBSResponseSize)
+	httpResponse, err := s.getWithResponseLimit(ctx, endpoint, query, &opts.Common, true, maxGloasResponseSize)
 	if err != nil {
 		return nil, err
 	}

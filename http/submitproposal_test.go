@@ -70,13 +70,13 @@ func TestSubmitProposalGloas(t *testing.T) {
 	// has no custom spec support, so on the minimal preset this devnet runs it
 	// would fail to decode the block the node sends back over SSZ, and this test
 	// would never reach the publish path it exists to exercise.
-	produced, err := jsonService.(client.EPBSProposalProvider).EPBSProposal(ctx, &api.EPBSProposalOpts{
+	produced, err := jsonService.(client.BidProposalProvider).BidProposal(ctx, &api.BidProposalOpts{
 		Slot:                   headSlot(ctx, t, service) + 1,
 		RandaoReveal:           infinity,
 		IncludePayload:         &includePayload,
 		SkipRandaoVerification: true,
 		// Only a block to submit is wanted here, so no builder bids are
-		// solicited; the builder-request body is covered by TestEPBSProposal.
+		// solicited; the builder-request body is covered by TestBidProposal.
 		BuilderConfig: localPreferredBuilderConfig(),
 	})
 	require.NoError(t, err)

@@ -20,15 +20,15 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 )
 
-// EPBSProposal fetches an ePBS proposal for signing.
-func (s *Service) EPBSProposal(ctx context.Context,
-	opts *api.EPBSProposalOpts,
+// BidProposal fetches a bid proposal for signing.
+func (s *Service) BidProposal(ctx context.Context,
+	opts *api.BidProposalOpts,
 ) (
-	*api.Response[*api.VersionedEPBSProposal],
+	*api.Response[*api.VersionedBidProposal],
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		proposal, err := client.(consensusclient.EPBSProposalProvider).EPBSProposal(ctx, opts)
+		proposal, err := client.(consensusclient.BidProposalProvider).BidProposal(ctx, opts)
 		if err != nil {
 			return nil, err
 		}
@@ -39,7 +39,7 @@ func (s *Service) EPBSProposal(ctx context.Context,
 		return nil, err
 	}
 
-	response, isResponse := res.(*api.Response[*api.VersionedEPBSProposal])
+	response, isResponse := res.(*api.Response[*api.VersionedBidProposal])
 	if !isResponse {
 		return nil, ErrIncorrectType
 	}

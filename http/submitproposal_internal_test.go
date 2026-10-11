@@ -45,7 +45,7 @@ func gloasSignedProposal() *api.VersionedSignedProposal {
 	return &api.VersionedSignedProposal{
 		Version: spec.DataVersionGloas,
 		Gloas: &gloas.SignedBeaconBlock{
-			Message:   validEPBSBeaconBlock(),
+			Message:   validBidBeaconBlock(),
 			Signature: phase0.BLSSignature{0x0a, 0x0b, 0x0c},
 		},
 	}

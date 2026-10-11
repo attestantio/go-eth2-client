@@ -1,3 +1,6 @@
+dev:
+  - rename the ePBS proposal API to bid proposal: VersionedEPBSProposal, EPBSProposalOpts, EPBSProposalProvider and EPBSProposal() are now VersionedBidProposal, BidProposalOpts, BidProposalProvider and BidProposal() (breaking)
+
 0.30.0:
    - support Gloas consensus types and versioned helpers
    - add execution payload envelope retrieval and bid/envelope submission APIs

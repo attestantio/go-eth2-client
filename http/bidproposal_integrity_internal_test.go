@@ -29,7 +29,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAssertIncludedEPBSProposalEnvelopeMatchesBlock(t *testing.T) {
+func TestAssertIncludedBidProposalEnvelopeMatchesBlock(t *testing.T) {
 	block := &gloas.BeaconBlock{
 		Body: &gloas.BeaconBlockBody{
 			ETH1Data:                  &phase0.ETH1Data{},
@@ -50,7 +50,7 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlock(t *testing.T) {
 	require.NoError(t, err)
 	root := phase0.Root(bodyRoot)
 
-	proposal := &api.VersionedEPBSProposal{
+	proposal := &api.VersionedBidProposal{
 		Version:                  spec.DataVersionGloas,
 		ExecutionPayloadIncluded: true,
 		GloasContents:            contents,
@@ -63,10 +63,10 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlock(t *testing.T) {
 	executionRequestsRoot, err := dynssz.GetGlobalDynSsz().HashTreeRoot(contents.ExecutionPayloadEnvelope.ExecutionRequests)
 	require.NoError(t, err)
 	contents.Block.Body.SignedExecutionPayloadBid.Message.ExecutionRequestsRoot = phase0.Root(executionRequestsRoot)
-	require.NoError(t, assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal, dynssz.GetGlobalDynSsz()))
+	require.NoError(t, assertIncludedBidProposalEnvelopeMatchesBlock(proposal, dynssz.GetGlobalDynSsz()))
 
 	contents.ExecutionPayloadEnvelope.BeaconBlockRoot = phase0.Root{0xff}
-	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal, dynssz.GetGlobalDynSsz())
+	err = assertIncludedBidProposalEnvelopeMatchesBlock(proposal, dynssz.GetGlobalDynSsz())
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 
 	// A proposal whose body root was never retained must not fall back to
@@ -74,7 +74,7 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlock(t *testing.T) {
 	// must error rather than pass.
 	contents.ExecutionPayloadEnvelope.BeaconBlockRoot = blockRoot
 	proposal.BeaconBlockBodyRoot = nil
-	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal, dynssz.GetGlobalDynSsz())
+	err = assertIncludedBidProposalEnvelopeMatchesBlock(proposal, dynssz.GetGlobalDynSsz())
 	require.Error(t, err)
 	require.NotErrorIs(t, err, client.ErrInconsistentResult)
 }

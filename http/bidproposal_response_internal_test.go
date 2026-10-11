@@ -26,11 +26,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestDecodeEPBSProposalJSONAcceptsBareBuilderWin(t *testing.T) {
+func TestDecodeBidProposalJSONAcceptsBareBuilderWin(t *testing.T) {
 	service, err := mock.New(context.Background())
 	require.NoError(t, err)
 	includePayload := false
-	response, err := service.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+	response, err := service.BidProposal(context.Background(), &api.BidProposalOpts{
 		Slot:           123,
 		IncludePayload: &includePayload,
 	})
@@ -42,8 +42,8 @@ func TestDecodeEPBSProposalJSONAcceptsBareBuilderWin(t *testing.T) {
 	body := append([]byte(`{"execution_payload_included":false,"data":`), data...)
 	body = append(body, '}')
 
-	proposal := &api.VersionedEPBSProposal{Version: spec.DataVersionGloas}
-	metadata, err := decodeEPBSProposalJSON(body, proposal)
+	proposal := &api.VersionedBidProposal{Version: spec.DataVersionGloas}
+	metadata, err := decodeBidProposalJSON(body, proposal)
 	require.NoError(t, err)
 	require.Equal(t, false, metadata["execution_payload_included"])
 	require.False(t, proposal.ExecutionPayloadIncluded)
@@ -51,11 +51,11 @@ func TestDecodeEPBSProposalJSONAcceptsBareBuilderWin(t *testing.T) {
 	require.Nil(t, proposal.GloasContents)
 }
 
-func TestDecodeEPBSProposalJSONRejectsNullPayloadInclusion(t *testing.T) {
+func TestDecodeBidProposalJSONRejectsNullPayloadInclusion(t *testing.T) {
 	service, err := mock.New(context.Background())
 	require.NoError(t, err)
 	includePayload := false
-	response, err := service.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+	response, err := service.BidProposal(context.Background(), &api.BidProposalOpts{
 		Slot:           123,
 		IncludePayload: &includePayload,
 	})
@@ -65,12 +65,12 @@ func TestDecodeEPBSProposalJSONRejectsNullPayloadInclusion(t *testing.T) {
 	body := append([]byte(`{"execution_payload_included":null,"data":`), data...)
 	body = append(body, '}')
 
-	proposal := &api.VersionedEPBSProposal{Version: spec.DataVersionGloas}
-	_, err = decodeEPBSProposalJSON(body, proposal)
+	proposal := &api.VersionedBidProposal{Version: spec.DataVersionGloas}
+	_, err = decodeBidProposalJSON(body, proposal)
 	require.EqualError(t, err, "execution_payload_included cannot be null")
 }
 
-func TestDecodeEPBSProposalJSONRejectsMissingOrMalformedMetadata(t *testing.T) {
+func TestDecodeBidProposalJSONRejectsMissingOrMalformedMetadata(t *testing.T) {
 	tests := []struct {
 		name string
 		body string
@@ -79,7 +79,7 @@ func TestDecodeEPBSProposalJSONRejectsMissingOrMalformedMetadata(t *testing.T) {
 		{
 			name: "MissingPayloadInclusion",
 			body: `{"data":{}}`,
-			err:  "no execution_payload_included in epbs proposal response",
+			err:  "no execution_payload_included in bid proposal response",
 		},
 		{
 			name: "MalformedPayloadInclusion",
@@ -89,25 +89,25 @@ func TestDecodeEPBSProposalJSONRejectsMissingOrMalformedMetadata(t *testing.T) {
 		{
 			name: "MissingData",
 			body: `{"execution_payload_included":false}`,
-			err:  "no gloas epbs proposal in response",
+			err:  "no gloas bid proposal in response",
 		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			proposal := &api.VersionedEPBSProposal{Version: spec.DataVersionGloas}
-			_, err := decodeEPBSProposalJSON([]byte(test.body), proposal)
+			proposal := &api.VersionedBidProposal{Version: spec.DataVersionGloas}
+			_, err := decodeBidProposalJSON([]byte(test.body), proposal)
 			require.EqualError(t, err, test.err)
 		})
 	}
 }
 
-func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedBuilderIndex(t *testing.T) {
+func TestAssertIncludedBidProposalEnvelopeMatchesBlockRejectsMismatchedBuilderIndex(t *testing.T) {
 	mockService, err := mock.New(context.Background())
 	require.NoError(t, err)
 
 	includePayload := true
-	response, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+	response, err := mockService.BidProposal(context.Background(), &api.BidProposalOpts{
 		Slot:           123,
 		IncludePayload: &includePayload,
 	})
@@ -118,17 +118,17 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedBuilderI
 	response.Data.GloasContents.Block.Body.SignedExecutionPayloadBid.Message.BuilderIndex = 1
 	response.Data.GloasContents.ExecutionPayloadEnvelope.BuilderIndex = 2
 
-	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
+	err = assertIncludedBidProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
 	require.ErrorContains(t, err, "execution payload envelope builder index does not match bid")
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
-func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedBlockHash(t *testing.T) {
+func TestAssertIncludedBidProposalEnvelopeMatchesBlockRejectsMismatchedBlockHash(t *testing.T) {
 	mockService, err := mock.New(context.Background())
 	require.NoError(t, err)
 
 	includePayload := true
-	response, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+	response, err := mockService.BidProposal(context.Background(), &api.BidProposalOpts{
 		Slot:           123,
 		IncludePayload: &includePayload,
 	})
@@ -139,17 +139,17 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedBlockHas
 	response.Data.GloasContents.Block.Body.SignedExecutionPayloadBid.Message.BlockHash[0] = 1
 	response.Data.GloasContents.ExecutionPayloadEnvelope.Payload.BlockHash[0] = 2
 
-	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
+	err = assertIncludedBidProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
 	require.ErrorContains(t, err, "execution payload block hash does not match bid")
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
-func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedParentRoot(t *testing.T) {
+func TestAssertIncludedBidProposalEnvelopeMatchesBlockRejectsMismatchedParentRoot(t *testing.T) {
 	mockService, err := mock.New(context.Background())
 	require.NoError(t, err)
 
 	includePayload := true
-	response, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+	response, err := mockService.BidProposal(context.Background(), &api.BidProposalOpts{
 		Slot:           123,
 		IncludePayload: &includePayload,
 	})
@@ -159,17 +159,17 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedParentRo
 	response.Data.GloasContents.ExecutionPayloadEnvelope.BeaconBlockRoot = blockRoot
 	response.Data.GloasContents.ExecutionPayloadEnvelope.ParentBeaconBlockRoot[0] = 1
 
-	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
+	err = assertIncludedBidProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
 	require.ErrorContains(t, err, "execution payload envelope parent root does not match bid")
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
-func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedExecutionRequests(t *testing.T) {
+func TestAssertIncludedBidProposalEnvelopeMatchesBlockRejectsMismatchedExecutionRequests(t *testing.T) {
 	mockService, err := mock.New(context.Background())
 	require.NoError(t, err)
 
 	includePayload := true
-	response, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+	response, err := mockService.BidProposal(context.Background(), &api.BidProposalOpts{
 		Slot:           123,
 		IncludePayload: &includePayload,
 	})
@@ -179,49 +179,49 @@ func TestAssertIncludedEPBSProposalEnvelopeMatchesBlockRejectsMismatchedExecutio
 	response.Data.GloasContents.ExecutionPayloadEnvelope.BeaconBlockRoot = blockRoot
 	response.Data.GloasContents.Block.Body.SignedExecutionPayloadBid.Message.ExecutionRequestsRoot[0] = 1
 
-	err = assertIncludedEPBSProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
+	err = assertIncludedBidProposalEnvelopeMatchesBlock(response.Data, dynssz.GetGlobalDynSsz())
 	require.ErrorContains(t, err, "execution payload envelope requests do not match bid")
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
-func TestAssertEPBSProposalMatchesRequestAllowsBareBuilderWin(t *testing.T) {
+func TestAssertBidProposalMatchesRequestAllowsBareBuilderWin(t *testing.T) {
 	mockService, err := mock.New(context.Background())
 	require.NoError(t, err)
 
 	payloadIncluded := false
-	response, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+	response, err := mockService.BidProposal(context.Background(), &api.BidProposalOpts{
 		Slot:           123,
 		IncludePayload: &payloadIncluded,
 	})
 	require.NoError(t, err)
 
 	requestedIncluded := true
-	require.NoError(t, (&Service{}).assertEPBSProposalMatchesRequest(response.Data, &api.EPBSProposalOpts{
+	require.NoError(t, (&Service{}).assertBidProposalMatchesRequest(response.Data, &api.BidProposalOpts{
 		Slot:           123,
 		IncludePayload: &requestedIncluded,
 	}))
 }
 
-func TestAssertEPBSProposalMatchesRequestRejectsUnexpectedContents(t *testing.T) {
+func TestAssertBidProposalMatchesRequestRejectsUnexpectedContents(t *testing.T) {
 	mockService, err := mock.New(context.Background())
 	require.NoError(t, err)
 
 	payloadIncluded := true
-	response, err := mockService.EPBSProposal(context.Background(), &api.EPBSProposalOpts{
+	response, err := mockService.BidProposal(context.Background(), &api.BidProposalOpts{
 		Slot:           123,
 		IncludePayload: &payloadIncluded,
 	})
 	require.NoError(t, err)
 
 	requestedIncluded := false
-	err = (&Service{}).assertEPBSProposalMatchesRequest(response.Data, &api.EPBSProposalOpts{
+	err = (&Service{}).assertBidProposalMatchesRequest(response.Data, &api.BidProposalOpts{
 		Slot:           123,
 		IncludePayload: &requestedIncluded,
 	})
-	require.EqualError(t, err, "epbs beacon block proposal has execution payload included true; expected false\ninconsistent result")
+	require.EqualError(t, err, "bid proposal has execution payload included true; expected false\ninconsistent result")
 }
 
-func TestEPBSPayloadIncludedFromHeaders(t *testing.T) {
+func TestBidPayloadIncludedFromHeaders(t *testing.T) {
 	tests := []struct {
 		name     string
 		headers  map[string]string
@@ -236,7 +236,7 @@ func TestEPBSPayloadIncludedFromHeaders(t *testing.T) {
 		{
 			name:    "Missing",
 			headers: map[string]string{},
-			err:     "no Eth-Execution-Payload-Included header in epbs proposal response",
+			err:     "no Eth-Execution-Payload-Included header in bid proposal response",
 		},
 		{
 			name:    "Malformed",
@@ -247,7 +247,7 @@ func TestEPBSPayloadIncludedFromHeaders(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			included, err := epbsPayloadIncludedFromHeaders(test.headers)
+			included, err := bidPayloadIncludedFromHeaders(test.headers)
 			if test.err == "" {
 				require.NoError(t, err)
 				require.Equal(t, test.included, included)

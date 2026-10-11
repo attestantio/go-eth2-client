@@ -22,7 +22,7 @@ import (
 )
 
 // TestMarshalRequestBody pins the request-body content-type negotiation shared
-// by the ePBS submitters: SSZ by default, JSON when enforced, and the error
+// by the Gloas submitters: SSZ by default, JSON when enforced, and the error
 // wrapping of each arm.
 //
 // This needs no beacon node. The negotiation is pure logic given a Service:

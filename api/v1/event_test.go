@@ -167,7 +167,7 @@ func TestEventUnmarshalHeadV2Typed(t *testing.T) {
 }
 
 // TestSupportedEventTopicsGloas confirms SupportedEventTopics lists the event
-// topics introduced by the Gloas (ePBS) fork. It is built from the topic list
+// topics introduced by the Gloas fork. It is built from the topic list
 // the clients subscribe and dispatch from, so a topic missing from it when the
 // package loads is missing from that list too. Callers can edit the map
 // afterwards, which changes nothing the clients do.

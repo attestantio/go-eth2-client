@@ -40,16 +40,16 @@ import (
 // generous room for any real value while keeping a hostile one cheap to reject.
 const maxProposalValueDigits = 40
 
-// maxEPBSResponseSize bounds the bodies of the ePBS fetch endpoints and, via
+// maxGloasResponseSize bounds the bodies of the Gloas fetch endpoints and, via
 // post() (see http.go), every POST response body across the library.  Those
 // bodies are an execution payload envelope, a payload-attestation datum or
 // pool, or a small acknowledgement or error, so 64MiB is orders of magnitude
 // above any legitimate response while capping a hostile or runaway one.  Block
 // production is the one endpoint whose response can be far larger, and it
 // passes its own limit below rather than raising this one for everybody.
-const maxEPBSResponseSize = 64 * 1024 * 1024
+const maxGloasResponseSize = 64 * 1024 * 1024
 
-// maxEPBSProposalResponseSize bounds a full SSZ payload-included block
+// maxBidProposalResponseSize bounds a full SSZ payload-included block
 // production response.  It is an allocation budget, not the protocol's static
 // maximum: readResponseBody has to buffer a body in full before it can reject
 // it, so a limit derived from the pinned Gloas worst case -- 4096 128KiB blobs
@@ -58,30 +58,30 @@ const maxEPBSResponseSize = 64 * 1024 * 1024
 // live preset proposes orders of magnitude below this.  A legitimate response
 // refused here fails loudly with the limit in the message, so a future preset
 // that genuinely outgrows it needs this raised deliberately;
-// TestEPBSProposalResponseLimitsAreSurvivable holds the ceiling it must respect.
-const maxEPBSProposalResponseSize = 256 * 1024 * 1024
+// TestBidProposalResponseLimitsAreSurvivable holds the ceiling it must respect.
+const maxBidProposalResponseSize = 256 * 1024 * 1024
 
-// maxEPBSProposalJSONResponseSize covers the same response as JSON, whose hex
+// maxBidProposalJSONResponseSize covers the same response as JSON, whose hex
 // costs slightly over two bytes per SSZ byte.  It is therefore a marginally
 // tighter bound on the payload than its SSZ counterpart rather than an equal
 // one, which the headroom above makes immaterial.
-const maxEPBSProposalJSONResponseSize = 512 * 1024 * 1024
+const maxBidProposalJSONResponseSize = 512 * 1024 * 1024
 
-// EPBSProposal fetches a potential ePBS beacon block for signing.
-func (s *Service) EPBSProposal(ctx context.Context,
-	opts *api.EPBSProposalOpts,
+// BidProposal fetches a potential bid proposal for signing.
+func (s *Service) BidProposal(ctx context.Context,
+	opts *api.BidProposalOpts,
 ) (
-	*api.Response[*api.VersionedEPBSProposal],
+	*api.Response[*api.VersionedBidProposal],
 	error,
 ) {
-	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "EPBSProposal")
+	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "BidProposal")
 	defer span.End()
 
 	if err := s.assertIsSynced(ctx); err != nil {
 		return nil, err
 	}
 
-	query, err := epbsProposalQuery(opts)
+	query, err := bidProposalQuery(opts)
 	if err != nil {
 		return nil, err
 	}
@@ -101,9 +101,9 @@ func (s *Service) EPBSProposal(ctx context.Context,
 		"Eth-Consensus-Version": spec.DataVersionGloas.String(),
 	}
 
-	responseLimit := maxEPBSProposalResponseSize
+	responseLimit := maxBidProposalResponseSize
 	if contentType == ContentTypeJSON {
-		responseLimit = maxEPBSProposalJSONResponseSize
+		responseLimit = maxBidProposalJSONResponseSize
 	}
 
 	httpResponse, err := s.postWithResponseLimit(
@@ -117,18 +117,18 @@ func (s *Service) EPBSProposal(ctx context.Context,
 		responseLimit,
 	)
 	if err != nil {
-		return nil, errors.Join(errors.New("failed to request epbs beacon block proposal"), err)
+		return nil, errors.Join(errors.New("failed to request bid proposal"), err)
 	}
 	if err := populateConsensusVersionFromHeaders(httpResponse); err != nil {
 		return nil, err
 	}
 
-	response, err := s.epbsProposalFromResponse(ctx, httpResponse)
+	response, err := s.bidProposalFromResponse(ctx, httpResponse)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := s.assertEPBSProposalMatchesRequest(response.Data, opts); err != nil {
+	if err := s.assertBidProposalMatchesRequest(response.Data, opts); err != nil {
 		return nil, err
 	}
 	builderURL := headerValue(httpResponse.headers, "Eth-Builder-Url")
@@ -136,16 +136,16 @@ func (s *Service) EPBSProposal(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	if err := validateEPBSProposalExecutionValue(response.Data, opts.BuilderConfig, builderURL, selfBuildIndex); err != nil {
+	if err := validateBidProposalExecutionValue(response.Data, opts.BuilderConfig, builderURL, selfBuildIndex); err != nil {
 		return nil, err
 	}
 
 	return response, nil
 }
 
-// assertEPBSProposalMatchesRequest checks the returned proposal matches the request.
-func (s *Service) assertEPBSProposalMatchesRequest(proposal *api.VersionedEPBSProposal,
-	opts *api.EPBSProposalOpts,
+// assertBidProposalMatchesRequest checks the returned proposal matches the request.
+func (s *Service) assertBidProposalMatchesRequest(proposal *api.VersionedBidProposal,
+	opts *api.BidProposalOpts,
 ) error {
 	blockSlot, err := proposal.Slot()
 	if err != nil {
@@ -154,7 +154,7 @@ func (s *Service) assertEPBSProposalMatchesRequest(proposal *api.VersionedEPBSPr
 
 	if blockSlot != opts.Slot {
 		return errors.Join(
-			fmt.Errorf("epbs beacon block proposal for slot %d; expected %d", blockSlot, opts.Slot),
+			fmt.Errorf("bid proposal for slot %d; expected %d", blockSlot, opts.Slot),
 			client.ErrInconsistentResult,
 		)
 	}
@@ -162,7 +162,7 @@ func (s *Service) assertEPBSProposalMatchesRequest(proposal *api.VersionedEPBSPr
 	// A node must not include a payload that was not requested.
 	if proposal.ExecutionPayloadIncluded && !*opts.IncludePayload {
 		return errors.Join(
-			fmt.Errorf("epbs beacon block proposal has execution payload included %t; expected %t",
+			fmt.Errorf("bid proposal has execution payload included %t; expected %t",
 				proposal.ExecutionPayloadIncluded, *opts.IncludePayload),
 			client.ErrInconsistentResult,
 		)
@@ -181,7 +181,7 @@ func (s *Service) assertEPBSProposalMatchesRequest(proposal *api.VersionedEPBSPr
 
 	if !bytes.Equal(blockRandaoReveal[:], opts.RandaoReveal[:]) {
 		return errors.Join(
-			fmt.Errorf("epbs beacon block proposal has RANDAO reveal %#x; expected %#x",
+			fmt.Errorf("bid proposal has RANDAO reveal %#x; expected %#x",
 				blockRandaoReveal[:], opts.RandaoReveal[:]),
 			client.ErrInconsistentResult,
 		)
@@ -222,13 +222,13 @@ func (s *Service) builderIndexSelfBuild(ctx context.Context) (gloas.BuilderIndex
 	return gloas.BuilderIndex(value), nil
 }
 
-// validateEPBSProposalExecutionValue checks the bid a proposal commits to against
+// validateBidProposalExecutionValue checks the bid a proposal commits to against
 // the policy that was requested, and checks the execution value the node reported
 // against the bid that is signed in the block.  A value the block gives no way to
 // check -- because the winning builder cannot be identified, or the bid is
 // self-built -- is cleared rather than passed on, so a caller ranking proposals
 // never treats an unverified number as a verified one.
-func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
+func validateBidProposalExecutionValue(proposal *api.VersionedBidProposal,
 	config *gloas.BuilderConfig,
 	builderURL string,
 	selfBuildIndex gloas.BuilderIndex,
@@ -334,10 +334,10 @@ func headerValue(headers map[string]string, name string) string {
 	return ""
 }
 
-// epbsProposalQuery validates the options and builds the endpoint's query
+// bidProposalQuery validates the options and builds the endpoint's query
 // string.  Both required parameters are checked here, before anything reaches
 // the network.
-func epbsProposalQuery(opts *api.EPBSProposalOpts) (string, error) {
+func bidProposalQuery(opts *api.BidProposalOpts) (string, error) {
 	if opts == nil {
 		return "", client.ErrNoOptions
 	}
@@ -426,28 +426,28 @@ func populateConsensusVersionFromHeaders(res *httpResponse) error {
 		return nil
 	}
 
-	return errors.New("no Eth-Consensus-Version header in epbs proposal response")
+	return errors.New("no Eth-Consensus-Version header in bid proposal response")
 }
 
-// epbsProposalFromResponse decodes a fetched ePBS block-production response.
+// bidProposalFromResponse decodes a fetched bid proposal block-production response.
 // It is separate from the fetch so that the paths a live node will not produce
 // on demand remain testable without one.
-func (s *Service) epbsProposalFromResponse(ctx context.Context,
+func (s *Service) bidProposalFromResponse(ctx context.Context,
 	res *httpResponse,
 ) (
-	*api.Response[*api.VersionedEPBSProposal],
+	*api.Response[*api.VersionedBidProposal],
 	error,
 ) {
 	if res.consensusVersion != spec.DataVersionGloas {
-		return nil, fmt.Errorf("epbs proposal not available for version %s", res.consensusVersion)
+		return nil, fmt.Errorf("bid proposal not available for version %s", res.consensusVersion)
 	}
 
-	proposal := &api.VersionedEPBSProposal{
+	proposal := &api.VersionedBidProposal{
 		Version: res.consensusVersion,
 	}
 	metadata := metadataFromHeaders(res.headers)
 
-	if err := populateEPBSProposalValuesFromHeaders(proposal, res.headers); err != nil {
+	if err := populateBidProposalValuesFromHeaders(proposal, res.headers); err != nil {
 		return nil, err
 	}
 
@@ -463,7 +463,7 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 
 	switch res.contentType {
 	case ContentTypeSSZ:
-		included, err := epbsPayloadIncludedFromHeaders(res.headers)
+		included, err := bidPayloadIncludedFromHeaders(res.headers)
 		if err != nil {
 			return nil, err
 		}
@@ -480,15 +480,15 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 
 		if err != nil {
 			return nil, errors.Join(
-				fmt.Errorf("failed to decode %s SSZ epbs proposal", res.consensusVersion),
+				fmt.Errorf("failed to decode %s SSZ bid proposal", res.consensusVersion),
 				err,
 			)
 		}
 	case ContentTypeJSON:
-		jsonMetadata, err := decodeEPBSProposalJSON(res.body, proposal)
+		jsonMetadata, err := decodeBidProposalJSON(res.body, proposal)
 		if err != nil {
 			return nil, errors.Join(
-				fmt.Errorf("failed to decode %s JSON epbs proposal", res.consensusVersion),
+				fmt.Errorf("failed to decode %s JSON bid proposal", res.consensusVersion),
 				err,
 			)
 		}
@@ -502,7 +502,7 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 	// Returning success here would hand back a value whose every accessor
 	// errors, discovered only by whichever the caller reaches first.
 	if proposal.IsEmpty() {
-		return nil, fmt.Errorf("no %s epbs proposal in response", res.consensusVersion)
+		return nil, fmt.Errorf("no %s bid proposal in response", res.consensusVersion)
 	}
 
 	block := proposal.Gloas
@@ -514,7 +514,7 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 		return nil, fmt.Errorf("no %s beacon block body in response", res.consensusVersion)
 	}
 	if block.Body.SignedExecutionPayloadBid == nil || block.Body.SignedExecutionPayloadBid.Message == nil {
-		return nil, errors.Join(errors.New("no execution payload bid in epbs proposal response"), client.ErrInconsistentResult)
+		return nil, errors.Join(errors.New("no execution payload bid in bid proposal response"), client.ErrInconsistentResult)
 	}
 
 	builderIndex := block.Body.SignedExecutionPayloadBid.Message.BuilderIndex
@@ -527,26 +527,26 @@ func (s *Service) epbsProposalFromResponse(ctx context.Context,
 	// mainnet-baked Body.HashTreeRoot().
 	bodyRootRaw, err := ds.HashTreeRoot(block.Body)
 	if err != nil {
-		return nil, errors.Join(errors.New("failed to compute epbs proposal body root"), err)
+		return nil, errors.Join(errors.New("failed to compute bid proposal body root"), err)
 	}
 
 	bodyRoot := phase0.Root(bodyRootRaw)
 	proposal.BeaconBlockBodyRoot = &bodyRoot
 
 	if proposal.ExecutionPayloadIncluded {
-		if err := assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal, ds); err != nil {
+		if err := assertIncludedBidProposalEnvelopeMatchesBlock(proposal, ds); err != nil {
 			return nil, err
 		}
 	}
 
-	return &api.Response[*api.VersionedEPBSProposal]{
+	return &api.Response[*api.VersionedBidProposal]{
 		Data:     proposal,
 		Metadata: metadata,
 	}, nil
 }
 
-// populateEPBSProposalValuesFromHeaders reads the value components from response headers.
-func populateEPBSProposalValuesFromHeaders(proposal *api.VersionedEPBSProposal,
+// populateBidProposalValuesFromHeaders reads the value components from response headers.
+func populateBidProposalValuesFromHeaders(proposal *api.VersionedBidProposal,
 	headers map[string]string,
 ) error {
 	for k, v := range headers {
@@ -587,13 +587,13 @@ func populateEPBSProposalValuesFromHeaders(proposal *api.VersionedEPBSProposal,
 	return nil
 }
 
-// epbsPayloadIncludedFromHeaders reads the payload-inclusion flag from the
+// bidPayloadIncludedFromHeaders reads the payload-inclusion flag from the
 // Eth-Execution-Payload-Included response header, which is the only place it
 // appears when the body is SSZ.  A missing or malformed value is an error
 // rather than a default: it selects which container the body holds, so guessing
 // would decode block contents as a bare block and discard the envelope, blobs
 // and proofs the caller needs to publish.
-func epbsPayloadIncludedFromHeaders(headers map[string]string) (bool, error) {
+func bidPayloadIncludedFromHeaders(headers map[string]string) (bool, error) {
 	for k, v := range headers {
 		if !strings.EqualFold(k, "Eth-Execution-Payload-Included") {
 			continue
@@ -610,22 +610,22 @@ func epbsPayloadIncludedFromHeaders(headers map[string]string) (bool, error) {
 		return included, nil
 	}
 
-	return false, errors.New("no Eth-Execution-Payload-Included header in epbs proposal response")
+	return false, errors.New("no Eth-Execution-Payload-Included header in bid proposal response")
 }
 
-// decodeEPBSProposalJSON reads the payload-inclusion flag from a JSON response
+// decodeBidProposalJSON reads the payload-inclusion flag from a JSON response
 // body and decodes the data into the container it selects.  The flag selects
 // which of the two containers the data field carries, so it has to be read
 // before the data itself can be decoded.
-func decodeEPBSProposalJSON(body []byte, proposal *api.VersionedEPBSProposal) (map[string]any, error) {
+func decodeBidProposalJSON(body []byte, proposal *api.VersionedBidProposal) (map[string]any, error) {
 	response := make(map[string]json.RawMessage)
 	if err := json.Unmarshal(body, &response); err != nil {
-		return nil, errors.Join(errors.New("failed to parse epbs proposal response"), err)
+		return nil, errors.Join(errors.New("failed to parse bid proposal response"), err)
 	}
 
 	raw, exists := response["execution_payload_included"]
 	if !exists {
-		return nil, errors.New("no execution_payload_included in epbs proposal response")
+		return nil, errors.New("no execution_payload_included in bid proposal response")
 	}
 	var included *bool
 	if err := json.Unmarshal(raw, &included); err != nil {
@@ -638,7 +638,7 @@ func decodeEPBSProposalJSON(body []byte, proposal *api.VersionedEPBSProposal) (m
 
 	data, exists := response["data"]
 	if !exists || string(data) == "null" {
-		return nil, fmt.Errorf("no %s epbs proposal in response", proposal.Version)
+		return nil, fmt.Errorf("no %s bid proposal in response", proposal.Version)
 	}
 	if proposal.ExecutionPayloadIncluded {
 		proposal.GloasContents = new(apiv1gloas.BlockContents)
@@ -667,7 +667,7 @@ func decodeEPBSProposalJSON(body []byte, proposal *api.VersionedEPBSProposal) (m
 	return metadata, nil
 }
 
-// assertIncludedEPBSProposalEnvelopeMatchesBlock checks that the execution
+// assertIncludedBidProposalEnvelopeMatchesBlock checks that the execution
 // payload envelope that travelled with a proposal is for the block it
 // travelled with.  It uses proposal.Root() rather than
 // proposal.GloasContents.Block.HashTreeRoot(): the latter is the generated,
@@ -675,15 +675,15 @@ func decodeEPBSProposalJSON(body []byte, proposal *api.VersionedEPBSProposal) (m
 // calling it here would let the exact bug back in through the guard meant to
 // catch it.  Root() shares its computation with every other consumer of the
 // block root, so the guard and a proposer's signature cannot disagree.
-func assertIncludedEPBSProposalEnvelopeMatchesBlock(proposal *api.VersionedEPBSProposal, ds *dynssz.DynSsz) error {
+func assertIncludedBidProposalEnvelopeMatchesBlock(proposal *api.VersionedBidProposal, ds *dynssz.DynSsz) error {
 	contents := proposal.GloasContents
 	if contents == nil || contents.Block == nil || contents.ExecutionPayloadEnvelope == nil {
-		return errors.New("no block contents in epbs proposal response")
+		return errors.New("no block contents in bid proposal response")
 	}
 
 	blockRoot, err := proposal.Root()
 	if err != nil {
-		return errors.Join(errors.New("failed to hash epbs proposal block"), err)
+		return errors.Join(errors.New("failed to hash bid proposal block"), err)
 	}
 	if contents.ExecutionPayloadEnvelope.BeaconBlockRoot != blockRoot {
 		return errors.Join(errors.New("execution payload envelope is for a different block"), client.ErrInconsistentResult)

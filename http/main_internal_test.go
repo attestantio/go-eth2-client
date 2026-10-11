@@ -43,8 +43,8 @@ var timeout = 60 * time.Second
 // passing its own would drop the Authorization header again. Nothing does today.
 //
 // The call sites this replaced were every one package http had, from gopls references
-// on New: epbsguardwiring_internal_test.go (disagreeingService),
-// epbsproposal_internal_test.go (customSpecService) and events_internal_test.go
+// on New: bidguardwiring_internal_test.go (disagreeingService),
+// bidproposal_internal_test.go (customSpecService) and events_internal_test.go
 // (twice, one arm per bearer-token branch). Two of the four omitted the token. The
 // same query now answers with a single hit in package http, the New call below.
 func newTestService(ctx context.Context,

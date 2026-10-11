@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestEPBSProposal verifies that the mock's default proposal follows the
+// TestBidProposal verifies that the mock's default proposal follows the
 // payload-inclusion option and that what it hands back can actually be used.
 //
 // The marshaling assertions are a smoke check that the mock's output is
@@ -34,7 +34,7 @@ import (
 // the payload's JSON marshaler substitutes a zero for a nil one, so a nil there
 // serialises quietly rather than failing.  That is asserted directly instead,
 // where a consumer reading the field rather than the JSON would trip over it.
-func TestEPBSProposal(t *testing.T) {
+func TestBidProposal(t *testing.T) {
 	ctx := context.Background()
 
 	service, err := mock.New(ctx)
@@ -44,7 +44,7 @@ func TestEPBSProposal(t *testing.T) {
 	excludePayload := false
 
 	t.Run("PayloadIncluded", func(t *testing.T) {
-		response, err := service.EPBSProposal(ctx, &api.EPBSProposalOpts{
+		response, err := service.BidProposal(ctx, &api.BidProposalOpts{
 			Slot:           123,
 			RandaoReveal:   phase0.BLSSignature{0x01, 0x02},
 			IncludePayload: &includePayload,
@@ -95,7 +95,7 @@ func TestEPBSProposal(t *testing.T) {
 	})
 
 	t.Run("PayloadExcluded", func(t *testing.T) {
-		response, err := service.EPBSProposal(ctx, &api.EPBSProposalOpts{
+		response, err := service.BidProposal(ctx, &api.BidProposalOpts{
 			Slot:           123,
 			IncludePayload: &excludePayload,
 		})
@@ -127,15 +127,15 @@ func TestEPBSProposal(t *testing.T) {
 		mockService, err := mock.New(ctx)
 		require.NoError(t, err)
 
-		mockService.EPBSProposalFunc = func(context.Context, *api.EPBSProposalOpts) (
-			*api.Response[*api.VersionedEPBSProposal], error,
+		mockService.BidProposalFunc = func(context.Context, *api.BidProposalOpts) (
+			*api.Response[*api.VersionedBidProposal], error,
 		) {
-			return &api.Response[*api.VersionedEPBSProposal]{
-				Data: &api.VersionedEPBSProposal{Version: spec.DataVersionGloas},
+			return &api.Response[*api.VersionedBidProposal]{
+				Data: &api.VersionedBidProposal{Version: spec.DataVersionGloas},
 			}, nil
 		}
 
-		response, err := mockService.EPBSProposal(ctx, &api.EPBSProposalOpts{
+		response, err := mockService.BidProposal(ctx, &api.BidProposalOpts{
 			Slot:           123,
 			IncludePayload: &includePayload,
 		})

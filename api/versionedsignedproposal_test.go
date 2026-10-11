@@ -27,7 +27,7 @@ import (
 // reports the execution block hash its proposer committed to.  Post-Gloas that
 // hash lives in the execution payload bid rather than in a payload or a payload
 // header, so a wrapper that recognised every earlier fork but not this one would
-// refuse every single post-ePBS proposal.
+// refuse every single post-Gloas proposal.
 //
 // The absent-data cases matter for a subtler reason: they must fail as missing
 // data, not as an unsupported version.  A caller distinguishes "this node gave

@@ -25,34 +25,34 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidateEPBSProposalExecutionValueRejectsMismatchedP2PHeader(t *testing.T) {
-	proposal := epbsProposalWithBid(1, 10, 0, 11_000_000_000)
+func TestValidateBidProposalExecutionValueRejectsMismatchedP2PHeader(t *testing.T) {
+	proposal := bidProposalWithBid(1, 10, 0, 11_000_000_000)
 
-	err := validateEPBSProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "", staticBuilderIndexSelfBuild)
+	err := validateBidProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "", staticBuilderIndexSelfBuild)
 	require.Error(t, err)
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
-func TestValidateEPBSProposalExecutionValueRejectsP2PBelowMinimum(t *testing.T) {
-	proposal := epbsProposalWithBid(1, 9, 0, 9_000_000_000)
+func TestValidateBidProposalExecutionValueRejectsP2PBelowMinimum(t *testing.T) {
+	proposal := bidProposalWithBid(1, 9, 0, 9_000_000_000)
 
-	err := validateEPBSProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "", staticBuilderIndexSelfBuild)
+	err := validateBidProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "", staticBuilderIndexSelfBuild)
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
-func TestValidateEPBSProposalExecutionValueRejectsMismatchedDirectHeader(t *testing.T) {
-	proposal := epbsProposalWithBid(1, 10, 5, 15_000_000_000)
+func TestValidateBidProposalExecutionValueRejectsMismatchedDirectHeader(t *testing.T) {
+	proposal := bidProposalWithBid(1, 10, 5, 15_000_000_000)
 	config := &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{{
 		URL:                 []byte("https://builder.example"),
 		MaxExecutionPayment: 2,
 		MinBid:              12,
 	}}}
 
-	err := validateEPBSProposalExecutionValue(proposal, config, "https://builder.example", staticBuilderIndexSelfBuild)
+	err := validateBidProposalExecutionValue(proposal, config, "https://builder.example", staticBuilderIndexSelfBuild)
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
-func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
+func TestValidateBidProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 	duplicateURLs := &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{
 		{URL: []byte("https://duplicate.example"), MaxExecutionPayment: 2},
 		{URL: []byte("https://duplicate.example"), MaxExecutionPayment: 3},
@@ -64,7 +64,7 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 	}
 	tests := []struct {
 		name     string
-		proposal *api.VersionedEPBSProposal
+		proposal *api.VersionedBidProposal
 		config   *gloas.BuilderConfig
 		url      string
 		err      bool
@@ -72,44 +72,44 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 	}{
 		{
 			name:     "NoHeader",
-			proposal: epbsProposalWithoutValue(1, 10, 0),
+			proposal: bidProposalWithoutValue(1, 10, 0),
 			config:   &gloas.BuilderConfig{MinBid: 10},
 			unknown:  true,
 		},
 		{
 			name:     "NoHeaderBelowMinimum",
-			proposal: epbsProposalWithoutValue(1, 9, 0),
+			proposal: bidProposalWithoutValue(1, 9, 0),
 			config:   &gloas.BuilderConfig{MinBid: 10},
 			err:      true,
 		},
 		{
 			name:     "P2PPaymentUncheckable",
-			proposal: epbsProposalWithBid(1, 10, 3, 13_000_000_000),
+			proposal: bidProposalWithBid(1, 10, 3, 13_000_000_000),
 			config:   &gloas.BuilderConfig{MinBid: 10},
 			unknown:  true,
 		},
 		{
 			name:     "DuplicateBuilderURL",
-			proposal: epbsProposalWithBid(1, 10, 0, 10_000_000_000),
+			proposal: bidProposalWithBid(1, 10, 0, 10_000_000_000),
 			config:   duplicateURLs,
 			url:      "https://duplicate.example",
 			unknown:  true,
 		},
 		{
 			name:     "SelfBuild",
-			proposal: epbsProposalWithBid(staticBuilderIndexSelfBuild, 0, 7, 7_000_000_000),
+			proposal: bidProposalWithBid(staticBuilderIndexSelfBuild, 0, 7, 7_000_000_000),
 			config:   duplicateURLs,
 			unknown:  true,
 		},
 		{
 			name:     "SelfBuildNonZeroBid",
-			proposal: epbsProposalWithBid(staticBuilderIndexSelfBuild, 1, 0, 1_000_000_000),
+			proposal: bidProposalWithBid(staticBuilderIndexSelfBuild, 1, 0, 1_000_000_000),
 			config:   duplicateURLs,
 			err:      true,
 		},
 		{
 			name:     "DirectBelowMinimum",
-			proposal: epbsProposalWithBid(1, 10, 2, 12_000_000_000),
+			proposal: bidProposalWithBid(1, 10, 2, 12_000_000_000),
 			config:   direct(2, 13),
 			url:      "https://direct.example",
 			err:      true,
@@ -119,24 +119,24 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 		// and anything outside it is not.
 		{
 			name:     "P2PValueMatches",
-			proposal: epbsProposalWithBid(1, 10, 0, 10_000_000_000),
+			proposal: bidProposalWithBid(1, 10, 0, 10_000_000_000),
 			config:   &gloas.BuilderConfig{MinBid: 10},
 		},
 		{
 			name:     "DirectValueWithoutPayment",
-			proposal: epbsProposalWithBid(1, 10, 3, 10_000_000_000),
+			proposal: bidProposalWithBid(1, 10, 3, 10_000_000_000),
 			config:   direct(5, 10),
 			url:      "https://direct.example",
 		},
 		{
 			name:     "DirectValueWithPayment",
-			proposal: epbsProposalWithBid(1, 10, 3, 13_000_000_000),
+			proposal: bidProposalWithBid(1, 10, 3, 13_000_000_000),
 			config:   direct(5, 10),
 			url:      "https://direct.example",
 		},
 		{
 			name:     "DirectValueWithUncappedPayment",
-			proposal: epbsProposalWithBid(1, 10, 3, 13_000_000_000),
+			proposal: bidProposalWithBid(1, 10, 3, 13_000_000_000),
 			config:   direct(2, 10),
 			url:      "https://direct.example",
 			err:      true,
@@ -145,7 +145,7 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			value := test.proposal.ExecutionValue
-			err := validateEPBSProposalExecutionValue(test.proposal, test.config, test.url, staticBuilderIndexSelfBuild)
+			err := validateBidProposalExecutionValue(test.proposal, test.config, test.url, staticBuilderIndexSelfBuild)
 			if test.err {
 				require.ErrorIs(t, err, client.ErrInconsistentResult)
 
@@ -162,12 +162,12 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 	}
 }
 
-func epbsProposalWithBid(builderIndex gloas.BuilderIndex,
+func bidProposalWithBid(builderIndex gloas.BuilderIndex,
 	value phase0.Gwei,
 	executionPayment phase0.Gwei,
 	executionValue uint64,
-) *api.VersionedEPBSProposal {
-	return &api.VersionedEPBSProposal{
+) *api.VersionedBidProposal {
+	return &api.VersionedBidProposal{
 		Version:        spec.DataVersionGloas,
 		ExecutionValue: new(big.Int).SetUint64(executionValue),
 		Gloas: &gloas.BeaconBlock{Body: &gloas.BeaconBlockBody{
@@ -180,11 +180,11 @@ func epbsProposalWithBid(builderIndex gloas.BuilderIndex,
 	}
 }
 
-func epbsProposalWithoutValue(builderIndex gloas.BuilderIndex,
+func bidProposalWithoutValue(builderIndex gloas.BuilderIndex,
 	value phase0.Gwei,
 	executionPayment phase0.Gwei,
-) *api.VersionedEPBSProposal {
-	proposal := epbsProposalWithBid(builderIndex, value, executionPayment, 0)
+) *api.VersionedBidProposal {
+	proposal := bidProposalWithBid(builderIndex, value, executionPayment, 0)
 	proposal.ExecutionValue = nil
 
 	return proposal

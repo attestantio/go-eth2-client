@@ -91,10 +91,10 @@ func disagreeingService(ctx context.Context,
 	return newTestService(ctx, t, true, WithEnforceJSON(true), WithAddress(server.URL))
 }
 
-// TestEPBSProposalRejectsADisagreeingNode verifies that the request-consistency
-// guard is reached from EPBSProposal, by asking a node that includes an
+// TestBidProposalRejectsADisagreeingNode verifies that the request-consistency
+// guard is reached from BidProposal, by asking a node that includes an
 // execution payload that was not requested.
-func TestEPBSProposalRejectsADisagreeingNode(t *testing.T) {
+func TestBidProposalRejectsADisagreeingNode(t *testing.T) {
 	ctx := context.Background()
 
 	const slot = 60300
@@ -105,7 +105,7 @@ func TestEPBSProposalRejectsADisagreeingNode(t *testing.T) {
 	// assertion in the handler's goroutine calls runtime.Goexit outside the test's
 	// own goroutine, which abandons the request half-answered and reports the
 	// failure as a transport error naming nothing.
-	contents := validEPBSBlockContents()
+	contents := validBidBlockContents()
 	contents.Block.Slot = slot
 	contents.Block.Body.RANDAOReveal = reveal
 	root, err := contents.Block.HashTreeRoot()
@@ -128,7 +128,7 @@ func TestEPBSProposalRejectsADisagreeingNode(t *testing.T) {
 
 	includePayload := false
 
-	_, err = s.EPBSProposal(ctx, &api.EPBSProposalOpts{
+	_, err = s.BidProposal(ctx, &api.BidProposalOpts{
 		Slot:           slot,
 		RandaoReveal:   reveal,
 		BuilderConfig:  &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{}},
