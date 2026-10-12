@@ -1,3 +1,6 @@
+0.30.1:
+   - bump dynamic-ssz to v1.4.0
+
 0.30.0:
    - support Gloas consensus types and versioned helpers
    - add execution payload envelope retrieval and bid/envelope submission APIs
