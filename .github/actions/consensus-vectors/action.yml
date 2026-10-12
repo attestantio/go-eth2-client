@@ -1,0 +1,45 @@
+name: Consensus-spec vectors
+description: Verify one fork against a checksummed mainnet release archive
+inputs:
+  version:
+    description: Exact consensus-spec release tag
+    required: true
+  fork:
+    description: Fork package to verify
+    required: true
+outputs:
+  result:
+    description: pass, fail, or not-run when setup or execution evidence is missing
+    value: ${{ steps.result.outputs.result }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+      with:
+        go-version-file: go.mod
+        cache: false
+    - name: Download and verify vectors
+      id: verify
+      continue-on-error: true
+      shell: bash
+      env:
+        VERSION: ${{ inputs.version }}
+        FORK: ${{ inputs.fork }}
+      run: |
+        python3 .github/scripts/consensus_vectors.py "$VERSION" "$FORK" "$RUNNER_TEMP/consensus-vectors" \
+          2>&1 | tee "$RUNNER_TEMP/consensus-vectors.log"
+    - name: Publish vector result
+      id: result
+      if: always()
+      shell: bash
+      env:
+        RESULT: ${{ steps.verify.outputs.result || 'not-run' }}
+      run: |
+        echo "result=$RESULT" >> "$GITHUB_OUTPUT"
+    - name: Preserve vector log
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: consensus-spec-${{ inputs.fork }}-${{ inputs.version }}-${{ github.job }}-log
+        path: ${{ runner.temp }}/consensus-vectors.log
+        if-no-files-found: warn

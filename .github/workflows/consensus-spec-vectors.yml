@@ -1,0 +1,53 @@
+name: consensus-spec-vectors
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  helpers:
+    name: Consensus-spec CI helper tests
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Test CI helpers
+        run: |
+          node --test .github/scripts/consensus-spec-release.test.cjs
+          python3 -m unittest discover -s .github/scripts -p 'test_*.py'
+
+  gloas:
+    name: Supported Gloas consensus-spec vectors
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Read supported Gloas version
+        id: supported
+        run: |
+          node -e 'const fs = require("node:fs"); const {supportedVersion} = require("./.github/scripts/consensus-spec-release.cjs"); fs.appendFileSync(process.env.GITHUB_OUTPUT, "version=" + supportedVersion(require("./.github/consensus-spec-versions.json"), "gloas") + "\n");'
+      - uses: ./.github/actions/consensus-vectors
+        id: vectors
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          version: ${{ steps.supported.outputs.version }}
+          fork: gloas
+      - name: Require an executed, passing vector suite
+        if: always()
+        env:
+          RESULT: ${{ steps.vectors.outputs.result || 'not-run' }}
+        run: test "$RESULT" = pass

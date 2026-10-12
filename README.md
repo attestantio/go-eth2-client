@@ -37,6 +37,8 @@ go get github.com/attestantio/go-eth2-client
   - [Prysm](https://github.com/prysmaticlabs/prysm) minimum version ?
   - [Teku](https://github.com/consensys/teku) minimum version 21.9.2
 
+Consensus-spec support is declared per fork. See [the supported versions and vector checks](docs/consensus-spec-tests.md).
+
 ## Usage
 
 Please read the [Go documentation for this library](https://godoc.org/github.com/attestantio/go-eth2-client) for interface information.
