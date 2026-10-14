@@ -156,7 +156,8 @@ func bind[T any, H ~func(context.Context, *T)](field func(opts *api.EventsOpts) 
 	}
 }
 
-// bindGeneric binds a topic that has only the generic handler.
+// bindGeneric binds a topic that has only the generic handler.  It has no typed handler field in
+// api.EventsOpts, so ValidateEventsOpts requires opts.Handler to subscribe to it.
 func bindGeneric[T any]() namedTopicHandler {
 	topic := eventtopic.Lookup[T]()
 	name := topic.Name()
@@ -165,15 +166,21 @@ func bindGeneric[T any]() namedTopicHandler {
 		name: name,
 		handler: topicHandler{
 			isSet: func(*api.EventsOpts) bool { return false },
-			handle: func(_ context.Context, opts *api.EventsOpts, input []byte) error {
+			handle: func(ctx context.Context, opts *api.EventsOpts, input []byte) error {
 				data, err := topic.Decode(input)
 				if err != nil {
 					return err
 				}
 
-				if opts.Handler != nil {
-					opts.Handler(&apiv1.Event{Topic: name, Data: data})
+				if opts.Handler == nil {
+					// Matches bind: an unsolicited event from a node is worth a
+					// line at debug level rather than being dropped silently.
+					zerolog.Ctx(ctx).Debug().Str("topic", name).Msg("No generic handler supplied; ignoring")
+
+					return nil
 				}
+
+				opts.Handler(&apiv1.Event{Topic: name, Data: data})
 
 				return nil
 			},

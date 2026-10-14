@@ -1,3 +1,10 @@
+dev:
+   - add ExecutionOptimistic to HeadEvent, ChainReorgEvent and FinalizedCheckpointEvent, so a decoded event keeps the value the node sent
+     - these events now always include execution_optimistic when marshalled, with false when the node omitted it
+   - add spec.VersionedAttestation.MarshalJSON, which emits the attestation of the populated fork rather than the struct's own layout
+     - this changes the JSON of api.Response values holding a VersionedAttestation; it never includes ValidatorIndex
+   - generic light-client event handling logs events that arrive with no handler, as typed topics do
+
 0.30.1:
    - bump dynamic-ssz to v1.4.0
 
