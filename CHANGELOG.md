@@ -1,5 +1,5 @@
 dev:
-  - hash Gloas builder API types as regular, not progressive, SSZ containers
+  - hash Gloas BuilderRequestAuth, SignedBuilderRequestAuth, BuilderEntry and BuilderConfig as regular, not progressive, SSZ containers; this changes their HashTreeRoot, and so signatures over BuilderRequestAuth under DOMAIN_BUILDER_REQUEST_AUTH
 
 0.30.1:
    - bump dynamic-ssz to v1.4.0
