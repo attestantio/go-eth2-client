@@ -17,29 +17,29 @@ import "github.com/attestantio/go-eth2-client/spec/phase0"
 
 // BuilderRequestAuth authorizes a builder bid request for a proposal slot.
 type BuilderRequestAuth struct {
-	Data []byte      `ssz-index:"0" ssz-max:"4096"`
-	Slot phase0.Slot `ssz-index:"1"`
+	Data []byte `ssz-max:"4096"`
+	Slot phase0.Slot
 }
 
 // SignedBuilderRequestAuth is a signed builder bid request authorization.
 type SignedBuilderRequestAuth struct {
-	Message   *BuilderRequestAuth `ssz-index:"0"`
-	Signature phase0.BLSSignature `ssz-index:"1" ssz-size:"96"`
+	Message   *BuilderRequestAuth
+	Signature phase0.BLSSignature `ssz-size:"96"`
 }
 
 // BuilderEntry configures one direct builder bid request.
 type BuilderEntry struct {
-	URL                 []byte                    `ssz-index:"0" ssz-max:"2048"`
-	Auth                *SignedBuilderRequestAuth `ssz-index:"1"`
-	BuilderPubkeys      []phase0.BLSPubKey        `ssz-index:"2" ssz-max:"64"   ssz-size:"?,48"`
-	MaxExecutionPayment phase0.Gwei               `ssz-index:"3"`
-	MinBid              phase0.Gwei               `ssz-index:"4"`
-	BuilderBoostFactor  uint64                    `ssz-index:"5"`
+	URL                 []byte `ssz-max:"2048"`
+	Auth                *SignedBuilderRequestAuth
+	BuilderPubkeys      []phase0.BLSPubKey `ssz-max:"64" ssz-size:"?,48"`
+	MaxExecutionPayment phase0.Gwei
+	MinBid              phase0.Gwei
+	BuilderBoostFactor  uint64
 }
 
 // BuilderConfig configures P2P and direct builder bid selection for one proposal.
 type BuilderConfig struct {
-	MinBid             phase0.Gwei     `ssz-index:"0"`
-	BuilderBoostFactor uint64          `ssz-index:"1"`
-	Builders           []*BuilderEntry `ssz-index:"2" ssz-max:"64"`
+	MinBid             phase0.Gwei
+	BuilderBoostFactor uint64
+	Builders           []*BuilderEntry `ssz-max:"64"`
 }

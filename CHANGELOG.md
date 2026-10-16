@@ -1,3 +1,6 @@
+dev:
+  - hash Gloas builder API types as regular, not progressive, SSZ containers
+
 0.30.1:
    - bump dynamic-ssz to v1.4.0
 
