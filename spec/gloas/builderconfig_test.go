@@ -14,7 +14,7 @@
 package gloas_test
 
 import (
-	"encoding/hex"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -310,10 +310,16 @@ func TestBuilderConfigJSON(t *testing.T) {
 	}`, config.Builders[0].Auth.Signature), string(data))
 }
 
-// TestBuilderRequestAuthHashTreeRoot pins the roots of the builder request
-// authorization, which the builder API defines as regular SSZ containers, not
-// progressive ones.
-func TestBuilderRequestAuthHashTreeRoot(t *testing.T) {
+// TestBuilderAPIContainerHashTreeRoots pins the roots of the builder API
+// types, which are regular SSZ containers rather than progressive ones:
+// BuilderRequestAuth and SignedBuilderRequestAuth as defined in builder-specs
+// at commit 61aeca42d9ba8eb467ae230d191ebc1c3f38107d, and BuilderEntry and
+// BuilderConfig as defined in beacon-APIs at commit
+// 01e99a6530b22941f619bde525cbf8bb61991d42.  The expected roots were
+// independently calculated with eth-ssz-specs 0.1.0, the SSZ library of the
+// consensus-specs PySpec, rather than this repository's generated
+// dynamic-ssz codec.
+func TestBuilderAPIContainerHashTreeRoots(t *testing.T) {
 	auth := &gloas.SignedBuilderRequestAuth{
 		Message: &gloas.BuilderRequestAuth{
 			Data: []byte("builder.example.com"),
@@ -321,12 +327,59 @@ func TestBuilderRequestAuthHashTreeRoot(t *testing.T) {
 		},
 		Signature: phase0.BLSSignature{0x01, 0x02, 0x03},
 	}
+	var pubkeyA, pubkeyB phase0.BLSPubKey
+	copy(pubkeyA[:], bytes.Repeat([]byte{0xaa}, len(pubkeyA)))
+	copy(pubkeyB[:], bytes.Repeat([]byte{0xbb}, len(pubkeyB)))
+	entry := &gloas.BuilderEntry{
+		URL:                 []byte("https://builder.example.com"),
+		Auth:                auth,
+		BuilderPubkeys:      []phase0.BLSPubKey{pubkeyA, pubkeyB},
+		MaxExecutionPayment: 7,
+		MinBid:              5,
+		BuilderBoostFactor:  100,
+	}
 
-	messageRoot, err := auth.Message.HashTreeRoot()
-	require.NoError(t, err)
-	require.Equal(t, "6ad33c944510322cf6c8f8148a2e60a5b199367c6ef7ab4f0a98133f9c9fd6c9", hex.EncodeToString(messageRoot[:]))
+	tests := []struct {
+		name  string
+		value interface{ HashTreeRoot() ([32]byte, error) }
+		root  string
+	}{
+		{
+			name:  "BuilderRequestAuth",
+			value: auth.Message,
+			root:  "6ad33c944510322cf6c8f8148a2e60a5b199367c6ef7ab4f0a98133f9c9fd6c9",
+		},
+		{
+			name:  "SignedBuilderRequestAuth",
+			value: auth,
+			root:  "f15386db9a7a1961f761390f93b14eebbe9c81e29b32cc3307d6fade2fa5dbe0",
+		},
+		{
+			name:  "BuilderEntry",
+			value: entry,
+			root:  "51483a4d4a92ea225fdb5bf8defc8b75d4fcc6647d7d7f3bafc53045b4154fa4",
+		},
+		{
+			name: "BuilderConfig",
+			value: &gloas.BuilderConfig{
+				MinBid:             3,
+				BuilderBoostFactor: 110,
+				Builders:           []*gloas.BuilderEntry{entry, entry},
+			},
+			root: "5c505a24cf3775610a58ecdaa64a972abe7e1513a92c82d0ced248f4e972ae10",
+		},
+		{
+			name:  "EmptyBuilderConfig",
+			value: &gloas.BuilderConfig{BuilderBoostFactor: 100},
+			root:  "c5a7f486b2ebcc77b77b49d8714b489535e4435b7a4a3223ecfc480a83e5da91",
+		},
+	}
 
-	signedRoot, err := auth.HashTreeRoot()
-	require.NoError(t, err)
-	require.Equal(t, "f15386db9a7a1961f761390f93b14eebbe9c81e29b32cc3307d6fade2fa5dbe0", hex.EncodeToString(signedRoot[:]))
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root, err := test.value.HashTreeRoot()
+			require.NoError(t, err)
+			require.Equal(t, rootFromHex(t, test.root), root)
+		})
+	}
 }
