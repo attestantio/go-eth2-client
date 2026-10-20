@@ -21,6 +21,7 @@ import (
 	"io"
 	nethttp "net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -108,8 +109,8 @@ func TestSubmitBuilderPreferencesAllowsEmptyList(t *testing.T) {
 	}
 }
 
-// TestSubmitBuilderPreferencesReportsRejectedEntries covers a node that submitted
-// every entry and reports, by index, the ones their builders rejected.  The
+// TestSubmitBuilderPreferencesReportsRejectedEntries covers a node that reports,
+// by index, the entries it failed to submit.  The
 // bodies are shaped as Prysm, Lighthouse and Teku answered on 2026-10-20; Teku
 // sends the index as a string rather than the spec's number.
 func TestSubmitBuilderPreferencesReportsRejectedEntries(t *testing.T) {
@@ -186,6 +187,8 @@ func TestSubmitBuilderPreferencesRejectsInvalidOptions(t *testing.T) {
 	noAuth.Auth = nil
 	noAuthMessage := builderPreferencesEntry(0x01, "https://builder.example.com", 1)
 	noAuthMessage.Auth.Message = nil
+	oversizedAuthData := builderPreferencesEntry(0x01, "https://builder.example.com", 1)
+	oversizedAuthData.Auth.Message.Data = make([]byte, 4097)
 
 	for _, test := range []struct {
 		name string
@@ -198,13 +201,25 @@ func TestSubmitBuilderPreferencesRejectsInvalidOptions(t *testing.T) {
 			name: "NilEntry",
 			opts: &api.SubmitBuilderPreferencesOpts{Entries: []*gloas.BuilderPreferencesEntry{nil}},
 			err:  client.ErrInvalidOptions,
-			msg:  "nil builder preferences entry supplied",
+			msg:  "builder preferences entry 0 is nil",
 		},
 		{
 			name: "EmptyURL",
 			opts: &api.SubmitBuilderPreferencesOpts{Entries: []*gloas.BuilderPreferencesEntry{builderPreferencesEntry(0x01, "", 1)}},
 			err:  client.ErrInvalidOptions,
-			msg:  "builder preferences entry 0 has no URL",
+			msg:  "builder preferences entry 0 URL length 0 is invalid",
+		},
+		{
+			name: "OversizedURL",
+			opts: &api.SubmitBuilderPreferencesOpts{Entries: []*gloas.BuilderPreferencesEntry{builderPreferencesEntry(0x01, "https://"+strings.Repeat("a", 2041), 1)}},
+			err:  client.ErrInvalidOptions,
+			msg:  "builder preferences entry 0 URL length 2049 is invalid",
+		},
+		{
+			name: "OversizedAuthData",
+			opts: &api.SubmitBuilderPreferencesOpts{Entries: []*gloas.BuilderPreferencesEntry{oversizedAuthData}},
+			err:  client.ErrInvalidOptions,
+			msg:  "builder preferences entry 0 authorization data exceeds 4096 bytes",
 		},
 		{
 			name: "NilAuth",
@@ -240,15 +255,16 @@ func TestSubmitBuilderPreferencesRejectsInvalidOptions(t *testing.T) {
 }
 
 // TestSubmitBuilderPreferencesEnforcesLimit covers the limit of
-// MAX_BUILDER_ENTRIES * (MIN_SEED_LOOKAHEAD + 1) * SLOTS_PER_EPOCH entries.
+// MAX_BUILDER_ENTRIES * (MIN_SEED_LOOKAHEAD + 1) * SLOTS_PER_EPOCH entries, with
+// the node's spec giving 64 * (1 + 1) * 2 = 256, not the mainnet 4096.
 func TestSubmitBuilderPreferencesEnforcesLimit(t *testing.T) {
 	for _, test := range []struct {
 		name  string
 		count int
 		err   string
 	}{
-		{name: "AtLimit", count: 4096},
-		{name: "OneOverLimit", count: 4097, err: "too many builder preferences entries"},
+		{name: "AtLimit", count: 256},
+		{name: "OneOverLimit", count: 257, err: "too many builder preferences entries"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			received := false
@@ -335,7 +351,7 @@ func builderPreferencesServer(t *testing.T, handler nethttp.HandlerFunc) *httpte
 		case "/eth/v1/node/syncing":
 			_, _ = w.Write([]byte(`{"data":{"is_syncing":false,"is_optimistic":false,"el_offline":false,"head_slot":"1","sync_distance":"0"}}`))
 		case "/eth/v1/config/spec":
-			_, _ = w.Write([]byte(`{"data":{"MIN_SEED_LOOKAHEAD":"1","SLOTS_PER_EPOCH":"32"}}`))
+			_, _ = w.Write([]byte(`{"data":{"MIN_SEED_LOOKAHEAD":"1","SLOTS_PER_EPOCH":"2"}}`))
 		case "/eth/v1/validator/builder_preferences":
 			handler(w, r)
 		default:

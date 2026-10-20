@@ -31,8 +31,14 @@ import (
 
 type builderPreferencesList []*gloas.BuilderPreferencesEntry
 
-// maxBuilderEntries is MAX_BUILDER_ENTRIES, the number of builders per proposer.
-const maxBuilderEntries = 64
+// MAX_BUILDER_ENTRIES and MAX_BUILDER_URL_SIZE from beacon-APIs
+// types/gloas/builder_entry.yaml, and MAX_BUILDER_AUTH_DATA_SIZE from
+// builder-specs gloas/builder.md.
+const (
+	maxBuilderEntries             = 64
+	maxBuilderURLSize             = 2048
+	maxBuilderRequestAuthDataSize = 4096
+)
 
 // MarshalSSZ encodes the list as an SSZ list of variable-size elements: a
 // 4-byte offset per element, then the elements' own encodings.
@@ -59,9 +65,10 @@ func (p builderPreferencesList) MarshalSSZ() ([]byte, error) {
 }
 
 // SubmitBuilderPreferences submits builder preferences, which the node forwards
-// to each entry's builder.  If some builders reject their entries the returned
-// error wraps an *api.IndexedError naming them by index; any other failure,
-// including a node that does not serve the endpoint, wraps only an *api.Error.
+// to each entry's builder.  When the node reports failed entries, with a 400
+// carrying failures, the returned error wraps an *api.IndexedError naming them
+// by index as well as the *api.Error.  A node that does not serve the endpoint
+// returns an *api.Error with status 404 and no *api.IndexedError.
 func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.SubmitBuilderPreferencesOpts) error {
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
@@ -71,22 +78,27 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 		return client.ErrNoOptions
 	}
 
-	// The limit is MAX_BUILDER_ENTRIES times the proposer lookahead length,
-	// compared by division so the product cannot overflow.
+	// The limit is MAX_BUILDER_ENTRIES times the proposer lookahead length, which
+	// proposerPreferencesLimit returns, compared by division so the product
+	// cannot overflow.
 	if (uint64(len(opts.Entries))+maxBuilderEntries-1)/maxBuilderEntries > s.proposerPreferencesLimit(ctx) {
 		return errors.Join(errors.New("too many builder preferences entries"), client.ErrInvalidOptions)
 	}
+	// Invalid entries fail as ErrInvalidOptions so that multi does not fail over.
 	for i, entry := range opts.Entries {
 		if entry == nil {
-			return errors.Join(errors.New("nil builder preferences entry supplied"), client.ErrInvalidOptions)
+			return errors.Join(fmt.Errorf("builder preferences entry %d is nil", i), client.ErrInvalidOptions)
 		}
-		if len(entry.URL) == 0 {
-			return errors.Join(fmt.Errorf("builder preferences entry %d has no URL", i), client.ErrInvalidOptions)
+		if len(entry.URL) == 0 || len(entry.URL) > maxBuilderURLSize {
+			return errors.Join(fmt.Errorf("builder preferences entry %d URL length %d is invalid", i, len(entry.URL)), client.ErrInvalidOptions)
 		}
 		// SSZ marshaling substitutes zero values for nil, which would submit an
 		// unsigned authorization.
 		if entry.Auth == nil || entry.Auth.Message == nil {
 			return errors.Join(fmt.Errorf("builder preferences entry %d has no authorization", i), client.ErrInvalidOptions)
+		}
+		if len(entry.Auth.Message.Data) > maxBuilderRequestAuthDataSize {
+			return errors.Join(fmt.Errorf("builder preferences entry %d authorization data exceeds %d bytes", i, maxBuilderRequestAuthDataSize), client.ErrInvalidOptions)
 		}
 	}
 
