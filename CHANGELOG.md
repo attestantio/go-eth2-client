@@ -1,4 +1,5 @@
 dev:
+  - fix ePBS proposal validation so no Eth-Builder-Url or execution_payment skips the minimum bid; keep self-built execution values; VersionedEPBSProposal.Value() no longer returns nil; add VersionedEPBSProposal.ExecutionPayloadBid()
   - hash Gloas BuilderRequestAuth, SignedBuilderRequestAuth, BuilderEntry and BuilderConfig as regular, not progressive, SSZ containers; this changes their HashTreeRoot, and so signatures over BuilderRequestAuth under DOMAIN_BUILDER_REQUEST_AUTH
 
 0.30.1:
