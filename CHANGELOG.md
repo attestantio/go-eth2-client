@@ -1,6 +1,8 @@
 dev:
   - add SubmitBuilderPreferences with JSON and SSZ support in http, multi and mock clients, reporting per-entry rejections as api.IndexedError
     - add the Gloas BuilderPreferencesEntry type with JSON and SSZ support
+  - add BuildersProvider for POST /eth/v1/beacon/states/{state_id}/builders in http, multi and mock clients
+  - encode the Gloas Builder JSON version as a decimal string, per beacon-APIs; the numeric form is no longer accepted
 
 0.30.2:
   - hash Gloas BuilderRequestAuth, SignedBuilderRequestAuth, BuilderEntry and BuilderConfig as regular, not progressive, SSZ containers; this changes their HashTreeRoot, and so signatures over BuilderRequestAuth under DOMAIN_BUILDER_REQUEST_AUTH
