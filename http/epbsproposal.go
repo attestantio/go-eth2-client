@@ -135,7 +135,9 @@ func (s *Service) EPBSProposal(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	if err := validateEPBSProposalExecutionValue(response.Data, opts.BuilderConfig, builderURL, selfBuildIndex, response.Metadata); err != nil {
+	if err := validateEPBSProposalExecutionValue(
+		response.Data, opts.BuilderConfig, builderURL, selfBuildIndex, response.Metadata,
+	); err != nil {
 		return nil, err
 	}
 
