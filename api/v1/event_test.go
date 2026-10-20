@@ -63,15 +63,15 @@ func TestEvent(t *testing.T) {
 		{
 			name:  "GoodPhase0Attestation",
 			input: []byte(`{"topic":"attestation","data":{"aggregation_bits":"0x010203","data":{"beacon_block_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","index":"1","slot":"100","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}},"signature":"0x606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf"}}`),
-			// spec.VersionedAttestation has no MarshalJSON, so it re-marshals as its own struct
-			// layout rather than the bare attestation the node sent.  Pinned, not endorsed.
+			// spec.VersionedAttestation intentionally has no MarshalJSON, so it re-marshals as its
+			// own struct layout rather than the bare attestation the node sent.
 			expected: `{"topic":"attestation","data":{"Altair":null,"Bellatrix":null,"Capella":null,"Deneb":null,"Electra":null,"Fulu":null,"Gloas":null,"Phase0":{"aggregation_bits":"0x010203","data":{"beacon_block_root":"0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f","index":"1","slot":"100","source":{"epoch":"1","root":"0x202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"},"target":{"epoch":"2","root":"0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f"}},"signature":"0x606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebf"},"ValidatorIndex":null,"Version":"phase0"}}`,
 		},
 		{
 			name:  "GoodElectraAttestation",
 			input: []byte(`{"topic":"attestation","data":{"aggregation_bits":"0xf77ffffffdfbfffffffdbfffffe5fff71f","data":{"slot":"98106","index":"0","beacon_block_root":"0xf8df02ed08b9adcb88a22cb22cd2a6074b184128ae6a240e3172109fdfacaa7b","source":{"epoch":"3064","root":"0x19ffd95e92753046cf63b4298f859e1fb1271a160ef0139ea1eb9f06d45d3b93"},"target":{"epoch":"3065","root":"0xffac9506e2262991ed19b1804bec9f7a1c4c4e61eb37444e6c8826bb362716d6"}},"signature":"0xb4f12c02e0f1a5db07999ceb8c1a4ccd41a3cb46ca15abe1c145337f1287360c49d5780fb7b44dfebeb96f3898824605008c9d458bdd2413358da3edf1b181d4e98edfe90d5fd016ac8f6aebc6646b2da83ab98722a7b4ee5264506bf6ae08e9","committee_bits":"0x0040000000000000"}}`),
-			// spec.VersionedAttestation has no MarshalJSON, so it re-marshals as its own struct
-			// layout rather than the bare attestation the node sent.  Pinned, not endorsed.
+			// spec.VersionedAttestation intentionally has no MarshalJSON, so it re-marshals as its
+			// own struct layout rather than the bare attestation the node sent.
 			expected: `{"topic":"attestation","data":{"Altair":null,"Bellatrix":null,"Capella":null,"Deneb":null,"Electra":{"aggregation_bits":"0xf77ffffffdfbfffffffdbfffffe5fff71f","committee_bits":"0x0040000000000000","data":{"beacon_block_root":"0xf8df02ed08b9adcb88a22cb22cd2a6074b184128ae6a240e3172109fdfacaa7b","index":"0","slot":"98106","source":{"epoch":"3064","root":"0x19ffd95e92753046cf63b4298f859e1fb1271a160ef0139ea1eb9f06d45d3b93"},"target":{"epoch":"3065","root":"0xffac9506e2262991ed19b1804bec9f7a1c4c4e61eb37444e6c8826bb362716d6"}},"signature":"0xb4f12c02e0f1a5db07999ceb8c1a4ccd41a3cb46ca15abe1c145337f1287360c49d5780fb7b44dfebeb96f3898824605008c9d458bdd2413358da3edf1b181d4e98edfe90d5fd016ac8f6aebc6646b2da83ab98722a7b4ee5264506bf6ae08e9"},"Fulu":null,"Gloas":null,"Phase0":null,"ValidatorIndex":null,"Version":"electra"}}`,
 		},
 		{
