@@ -118,6 +118,26 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			url:      "https://unknown.example",
 			err:      true,
 		},
+		{
+			name:     "DuplicateBuilderURLStillChecksMinimum",
+			proposal: epbsProposalWithBid(1, 1, 0, 1_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 1_000_000_000, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://duplicate.example")},
+				{URL: []byte("https://duplicate.example")},
+			}},
+			url: "https://duplicate.example",
+			err: true,
+		},
+		// A header sent twice reaches the validator joined with ";".
+		{
+			name:     "JoinedBuilderURLStillChecksMinimum",
+			proposal: epbsProposalWithBid(1, 1, 0, 1_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 1_000_000_000, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://direct.example")},
+			}},
+			url: "https://direct.example;https://direct.example",
+			err: true,
+		},
 		// Nor must a p2p builder disable the floor by attaching a token
 		// execution payment that cannot be capped.
 		{
