@@ -677,10 +677,12 @@ func TestVersionedEPBSProposalContents(t *testing.T) {
 	})
 }
 
-// TestVersionedEPBSProposalValue verifies the total is unknown -- nil -- unless
-// the execution value arrived, and that a missing consensus value counts as
-// zero rather than poisoning a known execution value.  Both components are
-// populated from response headers that a node may omit.
+// TestVersionedEPBSProposalValue verifies the total is always available -- a
+// component the node omitted, or one that was withheld because it could not be
+// checked against the signed bid, counts as zero rather than making the whole
+// total nil.  Both components are populated from response headers a node may
+// omit, and callers rank proposals with Value().Cmp, so a nil return here is a
+// panic in the caller.
 func TestVersionedEPBSProposalValue(t *testing.T) {
 	tests := []struct {
 		name      string
@@ -689,8 +691,8 @@ func TestVersionedEPBSProposalValue(t *testing.T) {
 		expected  *big.Int
 	}{
 		{name: "Both", consensus: big.NewInt(3), execution: big.NewInt(4), expected: big.NewInt(7)},
-		{name: "NeitherSet"},
-		{name: "ConsensusOnly", consensus: big.NewInt(5)},
+		{name: "NeitherSet", expected: big.NewInt(0)},
+		{name: "ConsensusOnly", consensus: big.NewInt(5), expected: big.NewInt(5)},
 		{name: "ExecutionZero", execution: big.NewInt(0), expected: big.NewInt(0)},
 		{name: "ExecutionOnly", execution: big.NewInt(6), expected: big.NewInt(6)},
 	}
@@ -702,7 +704,98 @@ func TestVersionedEPBSProposalValue(t *testing.T) {
 				ExecutionValue: test.execution,
 			}
 
-			require.Equal(t, test.expected, proposal.Value())
+			value := proposal.Value()
+			require.NotNil(t, value)
+			require.Zero(t, test.expected.Cmp(value))
+		})
+	}
+}
+
+// TestVersionedEPBSProposalValueIsRankable pins the property callers depend on:
+// two proposals can always be compared without either side being nil-checked.
+func TestVersionedEPBSProposalValueIsRankable(t *testing.T) {
+	selfBuilt := &api.VersionedEPBSProposal{ConsensusValue: big.NewInt(50)}
+	builderBid := &api.VersionedEPBSProposal{ConsensusValue: big.NewInt(1), ExecutionValue: big.NewInt(9)}
+
+	require.NotPanics(t, func() {
+		require.Positive(t, selfBuilt.Value().Cmp(builderBid.Value()))
+	})
+}
+
+// TestVersionedEPBSProposalExecutionPayloadBid verifies the walk to the bid
+// errors rather than panicking at each point it can come up short.
+func TestVersionedEPBSProposalExecutionPayloadBid(t *testing.T) {
+	bid := &gloas.ExecutionPayloadBid{BuilderIndex: 7}
+
+	tests := []struct {
+		name     string
+		proposal *api.VersionedEPBSProposal
+		err      string
+	}{
+		{
+			name:     "NoBlock",
+			proposal: &api.VersionedEPBSProposal{Version: spec.DataVersionGloas},
+			err:      "no gloas beacon block",
+		},
+		{
+			name: "NoBody",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+				Gloas:   &gloas.BeaconBlock{},
+			},
+			err: "no gloas beacon block body",
+		},
+		{
+			name: "NoSignedBid",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+				Gloas:   &gloas.BeaconBlock{Body: &gloas.BeaconBlockBody{}},
+			},
+			err: "no gloas execution payload bid",
+		},
+		{
+			name: "NoBidMessage",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+				Gloas: &gloas.BeaconBlock{Body: &gloas.BeaconBlockBody{
+					SignedExecutionPayloadBid: &gloas.SignedExecutionPayloadBid{},
+				}},
+			},
+			err: "no gloas execution payload bid",
+		},
+		{
+			name: "Excluded",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+				Gloas: &gloas.BeaconBlock{Body: &gloas.BeaconBlockBody{
+					SignedExecutionPayloadBid: &gloas.SignedExecutionPayloadBid{Message: bid},
+				}},
+			},
+		},
+		{
+			name: "Included",
+			proposal: &api.VersionedEPBSProposal{
+				Version:                  spec.DataVersionGloas,
+				ExecutionPayloadIncluded: true,
+				GloasContents: &apiv1gloas.BlockContents{Block: &gloas.BeaconBlock{
+					Body: &gloas.BeaconBlockBody{
+						SignedExecutionPayloadBid: &gloas.SignedExecutionPayloadBid{Message: bid},
+					},
+				}},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := test.proposal.ExecutionPayloadBid()
+			if test.err != "" {
+				require.EqualError(t, err, test.err)
+
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, bid, got)
 		})
 	}
 }

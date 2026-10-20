@@ -28,7 +28,7 @@ import (
 func TestValidateEPBSProposalExecutionValueRejectsMismatchedP2PHeader(t *testing.T) {
 	proposal := epbsProposalWithBid(1, 10, 0, 11_000_000_000)
 
-	err := validateEPBSProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "", staticBuilderIndexSelfBuild)
+	err := validateEPBSProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "", staticBuilderIndexSelfBuild, nil)
 	require.Error(t, err)
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
@@ -36,7 +36,7 @@ func TestValidateEPBSProposalExecutionValueRejectsMismatchedP2PHeader(t *testing
 func TestValidateEPBSProposalExecutionValueRejectsP2PBelowMinimum(t *testing.T) {
 	proposal := epbsProposalWithBid(1, 9, 0, 9_000_000_000)
 
-	err := validateEPBSProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "", staticBuilderIndexSelfBuild)
+	err := validateEPBSProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "", staticBuilderIndexSelfBuild, nil)
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
@@ -48,7 +48,7 @@ func TestValidateEPBSProposalExecutionValueRejectsMismatchedDirectHeader(t *test
 		MinBid:              12,
 	}}}
 
-	err := validateEPBSProposalExecutionValue(proposal, config, "https://builder.example", staticBuilderIndexSelfBuild)
+	err := validateEPBSProposalExecutionValue(proposal, config, "https://builder.example", staticBuilderIndexSelfBuild, nil)
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
 }
 
@@ -95,17 +95,90 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			url:      "https://duplicate.example",
 			unknown:  true,
 		},
+		// A self-build has no signed bid the reported value could contradict,
+		// and bid.Value is zero by construction, so the node's figure is the
+		// only signal of what the block is worth and is kept.
 		{
-			name:     "SelfBuild",
+			name:     "SelfBuildKeepsReportedValue",
 			proposal: epbsProposalWithBid(staticBuilderIndexSelfBuild, 0, 7, 7_000_000_000),
 			config:   duplicateURLs,
-			unknown:  true,
 		},
 		{
 			name:     "SelfBuildNonZeroBid",
 			proposal: epbsProposalWithBid(staticBuilderIndexSelfBuild, 1, 0, 1_000_000_000),
 			config:   duplicateURLs,
 			err:      true,
+		},
+		// An Eth-Builder-Url the config does not name is the node's to choose,
+		// so it must not buy the bid an exemption from the configured floor.
+		{
+			name:     "UnmatchedBuilderURLStillChecksMinimum",
+			proposal: epbsProposalWithBid(1, 1, 0, 1_000_000_000),
+			config:   &gloas.BuilderConfig{MinBid: 1_000_000_000},
+			url:      "https://unknown.example",
+			err:      true,
+		},
+		{
+			name:     "DuplicateBuilderURLStillChecksMinimum",
+			proposal: epbsProposalWithBid(1, 1, 0, 1_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 1_000_000_000, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://duplicate.example")},
+				{URL: []byte("https://duplicate.example")},
+			}},
+			url: "https://duplicate.example",
+			err: true,
+		},
+		// A header sent twice reaches the validator joined with ";".
+		{
+			name:     "JoinedBuilderURLStillChecksMinimum",
+			proposal: epbsProposalWithBid(1, 1, 0, 1_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 1_000_000_000, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://direct.example")},
+			}},
+			url: "https://direct.example;https://direct.example",
+			err: true,
+		},
+		// Nor must a p2p builder disable the floor by attaching a token
+		// execution payment that cannot be capped.
+		{
+			name:     "P2PPaymentStillChecksMinimum",
+			proposal: epbsProposalWithBid(1, 1, 1, 1_000_000_000),
+			config:   &gloas.BuilderConfig{MinBid: 1_000_000_000},
+			err:      true,
+		},
+		// The per-entry minimum is an additional constraint on that builder,
+		// so leaving it unset must not drop the config-wide floor.
+		{
+			name:     "UnsetEntryMinimumKeepsConfigMinimum",
+			proposal: epbsProposalWithBid(1, 1, 0, 1_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 1_000_000_000, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://direct.example")},
+			}},
+			url: "https://direct.example",
+			err: true,
+		},
+		// Where the bid cannot be attributed the payment counts up to the most
+		// permissive cap the config allows, which can only admit bids that a
+		// resolvable cap would also have admitted.
+		{
+			name:     "UnattributedBidUsesMostPermissiveCap",
+			proposal: epbsProposalWithBid(1, 6, 5, 11_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 10, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://a.example"), MaxExecutionPayment: 1},
+				{URL: []byte("https://b.example"), MaxExecutionPayment: 5},
+			}},
+			unknown: true,
+		},
+		// A matched entry's own cap applies, not the largest one in the config.
+		{
+			name:     "MatchedEntryUsesItsOwnCap",
+			proposal: epbsProposalWithBid(1, 6, 5, 11_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 10, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://a.example"), MaxExecutionPayment: 1},
+				{URL: []byte("https://b.example"), MaxExecutionPayment: 5},
+			}},
+			url: "https://a.example",
+			err: true,
 		},
 		{
 			name:     "DirectBelowMinimum",
@@ -145,7 +218,14 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			value := test.proposal.ExecutionValue
-			err := validateEPBSProposalExecutionValue(test.proposal, test.config, test.url, staticBuilderIndexSelfBuild)
+			// Metadata holds every response header and, for JSON, every top-level
+			// body key, so a withheld figure has to go from all of them.
+			metadata := map[string]any{}
+			if value != nil {
+				metadata["Eth-Execution-Payload-Value"] = value.String()
+				metadata["execution_payload_value"] = value.String()
+			}
+			err := validateEPBSProposalExecutionValue(test.proposal, test.config, test.url, staticBuilderIndexSelfBuild, metadata)
 			if test.err {
 				require.ErrorIs(t, err, client.ErrInconsistentResult)
 
@@ -154,10 +234,54 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			require.NoError(t, err)
 			if test.unknown {
 				require.Nil(t, test.proposal.ExecutionValue)
+				require.NotContains(t, metadata, "Eth-Execution-Payload-Value")
+				require.NotContains(t, metadata, "execution_payload_value")
 
 				return
 			}
 			require.Equal(t, value, test.proposal.ExecutionValue)
+			if value != nil {
+				require.Contains(t, metadata, "Eth-Execution-Payload-Value")
+			}
+		})
+	}
+}
+
+// TestValidateEPBSProposalExecutionValueRejectsAnAbsentBid covers the walk to the
+// bid, which reaches this function from one caller today but panicked rather than
+// errored if it were ever reached from another.
+func TestValidateEPBSProposalExecutionValueRejectsAnAbsentBid(t *testing.T) {
+	tests := []struct {
+		name     string
+		proposal *api.VersionedEPBSProposal
+	}{
+		{
+			name:     "NoBlock",
+			proposal: &api.VersionedEPBSProposal{Version: spec.DataVersionGloas},
+		},
+		{
+			name: "NoBody",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+				Gloas:   &gloas.BeaconBlock{},
+			},
+		},
+		{
+			name: "NoBid",
+			proposal: &api.VersionedEPBSProposal{
+				Version: spec.DataVersionGloas,
+				Gloas:   &gloas.BeaconBlock{Body: &gloas.BeaconBlockBody{}},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			require.NotPanics(t, func() {
+				err := validateEPBSProposalExecutionValue(test.proposal,
+					&gloas.BuilderConfig{}, "", staticBuilderIndexSelfBuild, nil)
+				require.ErrorIs(t, err, client.ErrInconsistentResult)
+			})
 		})
 	}
 }
