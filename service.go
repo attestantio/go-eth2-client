@@ -24,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -243,6 +244,17 @@ type BlockRewardsProvider interface {
 		opts *api.BlockRewardsOpts,
 	) (
 		*api.Response[*apiv1.BlockRewards],
+		error,
+	)
+}
+
+// BuildersProvider is the interface for providing builder information.
+type BuildersProvider interface {
+	// Builders provides the builders, with their status, for the given options.
+	Builders(ctx context.Context,
+		opts *api.BuildersOpts,
+	) (
+		*api.Response[map[gloas.BuilderIndex]*apiv1.Builder],
 		error,
 	)
 }
