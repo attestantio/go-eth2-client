@@ -40,6 +40,11 @@ func TestHeadEventV2JSONErrors(t *testing.T) {
 			err:   "version missing",
 		},
 		{
+			name:  "VersionUnrecognised",
+			input: []byte(`{"version":"notafork","data":{}}`),
+			err:   `invalid JSON: unrecognised data version "notafork"`,
+		},
+		{
 			name:  "DataMissing",
 			input: []byte(`{"version":"gloas"}`),
 			err:   "data missing",

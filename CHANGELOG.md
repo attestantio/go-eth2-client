@@ -1,5 +1,8 @@
 dev:
   - hash Gloas BuilderRequestAuth, SignedBuilderRequestAuth, BuilderEntry and BuilderConfig as regular, not progressive, SSZ containers; this changes their HashTreeRoot, and so signatures over BuilderRequestAuth under DOMAIN_BUILDER_REQUEST_AUTH
+  - add ExecutionOptimistic to HeadEvent, ChainReorgEvent and FinalizedCheckpointEvent, so a decoded event keeps the value the node sent
+    - these events now always include execution_optimistic when marshalled, with false when the node omitted it
+  - generic light-client event handling logs events that arrive with no handler, as typed topics do
 
 0.30.1:
    - bump dynamic-ssz to v1.4.0
