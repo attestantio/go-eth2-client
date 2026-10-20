@@ -169,6 +169,17 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			}},
 			unknown: true,
 		},
+		// A matched entry's own cap applies, not the largest one in the config.
+		{
+			name:     "MatchedEntryUsesItsOwnCap",
+			proposal: epbsProposalWithBid(1, 6, 5, 11_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 10, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://a.example"), MaxExecutionPayment: 1},
+				{URL: []byte("https://b.example"), MaxExecutionPayment: 5},
+			}},
+			url: "https://a.example",
+			err: true,
+		},
 		{
 			name:     "DirectBelowMinimum",
 			proposal: epbsProposalWithBid(1, 10, 2, 12_000_000_000),
@@ -207,11 +218,12 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			value := test.proposal.ExecutionValue
-			// metadataFromHeaders puts every response header here, so a figure
-			// the node did report has to be withheld from both places at once.
+			// Metadata holds every response header and, for JSON, every top-level
+			// body key, so a withheld figure has to go from all of them.
 			metadata := map[string]any{}
 			if value != nil {
 				metadata["Eth-Execution-Payload-Value"] = value.String()
+				metadata["execution_payload_value"] = value.String()
 			}
 			err := validateEPBSProposalExecutionValue(test.proposal, test.config, test.url, staticBuilderIndexSelfBuild, metadata)
 			if test.err {
@@ -223,6 +235,7 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			if test.unknown {
 				require.Nil(t, test.proposal.ExecutionValue)
 				require.NotContains(t, metadata, "Eth-Execution-Payload-Value")
+				require.NotContains(t, metadata, "execution_payload_value")
 
 				return
 			}

@@ -329,11 +329,13 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 }
 
 // clearExecutionValue withholds an execution value that could not be checked
-// against the signed bid.  metadataFromHeaders copies every response header into
-// the response metadata, so dropping the typed field alone would leave the same
-// unverified number reachable through Metadata with nothing marking it unchecked.
+// against the signed bid.  The response metadata holds every response header and,
+// for JSON, every top-level body key, so dropping the typed field alone would leave
+// the same unverified number reachable through Metadata with nothing marking it
+// unchecked.
 func clearExecutionValue(proposal *api.VersionedEPBSProposal, metadata map[string]any) {
 	proposal.ExecutionValue = nil
+	delete(metadata, "execution_payload_value")
 
 	for key := range metadata {
 		if strings.EqualFold(key, "Eth-Execution-Payload-Value") {
