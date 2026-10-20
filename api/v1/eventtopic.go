@@ -46,6 +46,9 @@ var eventTopics = []eventtopic.Descriptor{
 	eventtopic.New[FastConfirmationEvent]("fast_confirmation"),
 	eventtopic.New[FinalizedCheckpointEvent]("finalized_checkpoint"),
 	eventtopic.New[HeadEvent]("head"),
+	// Not NewVersioned: head_v2 has one shape for every fork, so no fork check is needed, and a
+	// fixed fork would drop every head_v2 event of another fork. HeadEventV2 unwraps itself, keeps
+	// the parsed version and rejects a missing or unrecognised one, as the light-client topics do.
 	eventtopic.New[HeadEventV2]("head_v2"),
 	eventtopic.New[LightClientFinalityUpdateEvent]("light_client_finality_update"),
 	eventtopic.New[LightClientOptimisticUpdateEvent]("light_client_optimistic_update"),

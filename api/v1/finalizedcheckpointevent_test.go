@@ -103,8 +103,13 @@ func TestFinalizedCheckpointEventJSON(t *testing.T) {
 			err:   "invalid value for epoch: strconv.ParseUint: parsing \"-1\": invalid syntax",
 		},
 		{
+			name:  "ExecutionOptimisticWrongType",
+			input: []byte(`{"block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","state":"0x749a95b1355828b758864ea601c007e69aabed7b34a0f2084c43c26242f77e28","epoch":"2","execution_optimistic":"true"}`),
+			err:   "invalid JSON: json: cannot unmarshal string into Go struct field finalizedCheckpointEventJSON.execution_optimistic of type bool",
+		},
+		{
 			name:  "Good",
-			input: []byte(`{"block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","state":"0x749a95b1355828b758864ea601c007e69aabed7b34a0f2084c43c26242f77e28","epoch":"2"}`),
+			input: []byte(`{"block":"0x99e3f24aab3dd084045a0c927a33b8463eb5c7b17eeadfecdcf4e4badf7b6028","state":"0x749a95b1355828b758864ea601c007e69aabed7b34a0f2084c43c26242f77e28","epoch":"2","execution_optimistic":true}`),
 		},
 	}
 
