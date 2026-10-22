@@ -48,8 +48,8 @@ func (s *Service) monitor(ctx context.Context) {
 // recheck checks clients to update their state.
 func (s *Service) recheck(ctx context.Context) {
 	// Fetch all clients.
-	clients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
 	s.clientsMu.RLock()
+	clients := make([]consensusclient.Service, 0, len(s.activeClients)+len(s.inactiveClients))
 	activeClients := len(s.activeClients)
 	clients = append(clients, s.activeClients...)
 	clients = append(clients, s.inactiveClients...)

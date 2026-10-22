@@ -142,3 +142,38 @@ func TestRecheck(t *testing.T) {
 	// Should re-activate in recheck so not return an error.
 	require.NoError(t, err)
 }
+
+// TestRecheckMulti ensures that calls to recheck concurrent with calls to
+// deactivateClient read the lists of clients under clientsMu, which the race
+// detector checks, and keep each client on exactly one of them.
+func TestRecheckMulti(t *testing.T) {
+	ctx := context.Background()
+
+	consensusClient, err := mock.New(ctx)
+	require.NoError(t, err)
+
+	s, err := New(ctx,
+		WithLogLevel(zerolog.Disabled),
+		WithClients([]consensusclient.Service{
+			consensusClient,
+		}),
+	)
+	require.NoError(t, err)
+	multi := s.(*Service)
+
+	var wg sync.WaitGroup
+	starter := make(chan any)
+	for i := 0; i < 256; i++ {
+		wg.Add(1)
+		go func() {
+			<-starter
+			defer wg.Done()
+			multi.recheck(ctx)
+			multi.deactivateClient(ctx, consensusClient)
+		}()
+	}
+	close(starter)
+	wg.Wait()
+
+	require.Equal(t, 1, len(multi.activeClients)+len(multi.inactiveClients))
+}
