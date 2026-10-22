@@ -35,7 +35,7 @@ import (
 )
 
 // defaultUserAgent is sent with requests if no other user agent has been supplied.
-const defaultUserAgent = "go-eth2-client/0.30.2"
+const defaultUserAgent = "go-eth2-client/0.30.3"
 
 // post sends an HTTP post request and returns the body.
 //
