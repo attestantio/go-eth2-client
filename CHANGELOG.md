@@ -1,6 +1,8 @@
 dev:
   - add SubmitBuilderPreferences with JSON and SSZ support in http, multi and mock clients, reporting per-entry rejections as api.IndexedError
     - add the Gloas BuilderPreferencesEntry type with JSON and SSZ support
+
+0.30.2:
   - hash Gloas BuilderRequestAuth, SignedBuilderRequestAuth, BuilderEntry and BuilderConfig as regular, not progressive, SSZ containers; this changes their HashTreeRoot, and so signatures over BuilderRequestAuth under DOMAIN_BUILDER_REQUEST_AUTH
   - add ExecutionOptimistic to HeadEvent, ChainReorgEvent and FinalizedCheckpointEvent, so a decoded event keeps the value the node sent
     - these events now always include execution_optimistic when marshalled, with false when the node omitted it

@@ -24,6 +24,10 @@ import (
 )
 
 // VersionedAttestation contains a versioned attestation.
+//
+// It has an UnmarshalJSON that reads the attestation as a node sends it, but intentionally no
+// MarshalJSON: json.Marshal emits the struct layout, which carries no fork and no ValidatorIndex,
+// and does not decode back to the same value.
 type VersionedAttestation struct {
 	Version        DataVersion
 	ValidatorIndex *phase0.ValidatorIndex
