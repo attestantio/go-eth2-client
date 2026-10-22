@@ -52,7 +52,7 @@ func (s *Service) post(ctx context.Context,
 	*httpResponse,
 	error,
 ) {
-	return s.postWithResponseLimit(ctx, endpoint, query, opts, body, contentType, headers, 0)
+	return s.postWithResponseLimit(ctx, endpoint, query, opts, body, contentType, headers, responseLimit{})
 }
 
 // postWithResponseLimit sends an HTTP POST request and bounds its response body when requested.
@@ -63,7 +63,7 @@ func (s *Service) postWithResponseLimit(ctx context.Context,
 	body io.Reader,
 	contentType ContentType,
 	headers map[string]string,
-	responseLimit int,
+	limit responseLimit,
 ) (
 	*httpResponse,
 	error,
@@ -145,7 +145,7 @@ func (s *Service) postWithResponseLimit(ctx context.Context,
 	}
 	populateHeaders(res, resp)
 
-	res.body, err = readResponseBody(resp.Body, responseLimit)
+	res.body, err = readResponseBody(resp, limit)
 	if err != nil {
 		switch {
 		case errors.Is(err, context.Canceled):
@@ -246,12 +246,26 @@ type httpResponse struct {
 	body             []byte
 }
 
-func readResponseBody(body io.Reader, limit int) ([]byte, error) {
+// responseLimit bounds a response body by its encoding.  Zero leaves that encoding unbounded.
+type responseLimit struct {
+	ssz  int
+	json int
+}
+
+func readResponseBody(resp *http.Response, limits responseLimit) ([]byte, error) {
+	// An unknown content type is later treated as JSON, so it gets the JSON limit.
+	limit := limits.json
+	if contentType, err := ParseFromMediaType(resp.Header.Get("Content-Type")); err == nil && contentType == ContentTypeSSZ {
+		limit = limits.ssz
+	}
 	if limit <= 0 {
-		return io.ReadAll(body)
+		return io.ReadAll(resp.Body)
+	}
+	if resp.ContentLength > int64(limit) {
+		return nil, fmt.Errorf("response body exceeds %d bytes", limit)
 	}
 
-	data, err := io.ReadAll(io.LimitReader(body, int64(limit)+1))
+	data, err := io.ReadAll(io.LimitReader(resp.Body, int64(limit)+1))
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +286,7 @@ func (s *Service) get(ctx context.Context,
 	*httpResponse,
 	error,
 ) {
-	return s.getWithResponseLimit(ctx, endpoint, query, opts, supportsSSZ, 0)
+	return s.getWithResponseLimit(ctx, endpoint, query, opts, supportsSSZ, responseLimit{})
 }
 
 //nolint:revive
@@ -281,7 +295,7 @@ func (s *Service) getWithResponseLimit(ctx context.Context,
 	query string,
 	opts *api.CommonOpts,
 	supportsSSZ bool,
-	responseLimit int,
+	limit responseLimit,
 ) (
 	*httpResponse,
 	error,
@@ -355,7 +369,7 @@ func (s *Service) getWithResponseLimit(ctx context.Context,
 	// require the calling function to be aware that it needs to close the body
 	// once it is done with it.  To avoid that complexity, we read here and store the
 	// body as a byte array.
-	res.body, err = readResponseBody(resp.Body, responseLimit)
+	res.body, err = readResponseBody(resp, limit)
 	if err != nil {
 		switch {
 		case errors.Is(err, context.Canceled):
