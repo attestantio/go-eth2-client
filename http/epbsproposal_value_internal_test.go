@@ -146,16 +146,15 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			config:   &gloas.BuilderConfig{MinBid: 1_000_000_000},
 			err:      true,
 		},
-		// The per-entry minimum is an additional constraint on that builder,
-		// so leaving it unset must not drop the config-wide floor.
+		// An attributed bid is judged against its entry's minimum only; the
+		// config-wide minimum is the floor for unattributed bids.
 		{
-			name:     "UnsetEntryMinimumKeepsConfigMinimum",
-			proposal: epbsProposalWithBid(1, 1, 0, 1_000_000_000),
+			name:     "AttributedBidUsesOnlyEntryMinimum",
+			proposal: epbsProposalWithBid(1, 5, 0, 5_000_000_000),
 			config: &gloas.BuilderConfig{MinBid: 1_000_000_000, Builders: []*gloas.BuilderEntry{
-				{URL: []byte("https://direct.example")},
+				{URL: []byte("https://direct.example"), MinBid: 5},
 			}},
 			url: "https://direct.example",
-			err: true,
 		},
 		// Where the bid cannot be attributed the payment counts up to the most
 		// permissive cap the config allows, which can only admit bids that a
