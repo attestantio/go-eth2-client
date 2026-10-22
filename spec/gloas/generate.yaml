@@ -25,6 +25,8 @@ types:
     output: builderentry_ssz.go
   - name: BuilderConfig
     output: builderconfig_ssz.go
+  - name: BuilderPreferencesEntry
+    output: builderpreferencesentry_ssz.go
   - name: BuilderPendingPayment
     output: builderpendingpayment_ssz.go
   - name: BuilderPendingWithdrawal
