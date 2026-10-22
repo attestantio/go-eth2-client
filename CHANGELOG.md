@@ -1,5 +1,5 @@
 dev:
- - 
+ - fix a data race in the multi client, which read its lists of clients outside their lock when rechecking them
 
 0.30.3:
  - stop bounding all post response sizes and only filter for new epbs endpoints 
