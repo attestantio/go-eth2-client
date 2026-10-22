@@ -90,7 +90,10 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 			return errors.Join(fmt.Errorf("builder preferences entry %d is nil", i), client.ErrInvalidOptions)
 		}
 		if len(entry.URL) == 0 || len(entry.URL) > maxBuilderURLSize {
-			return errors.Join(fmt.Errorf("builder preferences entry %d URL length %d is invalid", i, len(entry.URL)), client.ErrInvalidOptions)
+			return errors.Join(
+				fmt.Errorf("builder preferences entry %d URL length %d is invalid", i, len(entry.URL)),
+				client.ErrInvalidOptions,
+			)
 		}
 		// SSZ marshaling substitutes zero values for nil, which would submit an
 		// unsigned authorization.
@@ -98,7 +101,10 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 			return errors.Join(fmt.Errorf("builder preferences entry %d has no authorization", i), client.ErrInvalidOptions)
 		}
 		if len(entry.Auth.Message.Data) > maxBuilderRequestAuthDataSize {
-			return errors.Join(fmt.Errorf("builder preferences entry %d authorization data exceeds %d bytes", i, maxBuilderRequestAuthDataSize), client.ErrInvalidOptions)
+			return errors.Join(
+				fmt.Errorf("builder preferences entry %d authorization data exceeds %d bytes", i, maxBuilderRequestAuthDataSize),
+				client.ErrInvalidOptions,
+			)
 		}
 	}
 
