@@ -228,14 +228,14 @@ func (s *Service) builderIndexSelfBuild(ctx context.Context) (gloas.BuilderIndex
 // the policy that was requested, and checks the execution value the node reported
 // against the bid that is signed in the block.
 //
-// The minimum-bid check runs on every path.  Where the winning builder cannot be
-// identified the cap on the execution payment is unresolvable, so the most
-// permissive cap the config allows is used instead: that can only make the check
-// more permissive, never falsely reject, and it leaves the node no way to opt out
-// of the proposer's floor.  A reported value that the block gives no way to tie to
-// a specific builder entry is cleared -- from the typed field and from the response
-// metadata alike -- so a caller ranking proposals never treats an unverified number
-// as a verified one.
+// The minimum-bid check runs on every path.  A bid attributed to a builder entry
+// is held to that entry's minimum only; any other bid is held to the config-wide
+// minimum.  Where the winning builder cannot be identified the cap on the
+// execution payment is unresolvable, so the most permissive cap the config allows
+// is used instead: that leaves the node no way to opt out of the proposer's floor.
+// A reported value that the block gives no way to tie to a specific builder entry
+// is cleared -- from the typed field and from the response metadata alike -- so a
+// caller ranking proposals never treats an unverified number as a verified one.
 func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 	config *gloas.BuilderConfig,
 	builderURL string,
@@ -276,10 +276,9 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 		// unrecognised value leaves the bid unattributed rather than unchecked.
 		if entry := builderEntryForURL(config, builderURL); entry != nil {
 			// A builder-API bid is judged against the entry it was solicited
-			// under as well as the config-wide minimum: the per-entry value is
-			// an additional constraint on that builder, not a replacement, so
-			// leaving it unset does not remove the global floor.
-			minBid = max(config.MinBid, entry.MinBid)
+			// under only, as builder-specs and beacon-APIs define it; the
+			// config-wide minimum gates unattributed bids.
+			minBid = entry.MinBid
 			maxPayment = entry.MaxExecutionPayment
 			attributed = true
 		}
