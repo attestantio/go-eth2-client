@@ -143,9 +143,9 @@ func TestRecheck(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// TestRecheckMulti ensures that calls to recheck concurrent with calls to
-// deactivateClient read the lists of clients under clientsMu, which the race
-// detector checks, and keep each client on exactly one of them.
+// TestRecheckMulti runs recheck concurrently with deactivateClient so the
+// race detector can check that both access the lists of clients under
+// clientsMu.
 func TestRecheckMulti(t *testing.T) {
 	ctx := context.Background()
 
@@ -175,5 +175,6 @@ func TestRecheckMulti(t *testing.T) {
 	close(starter)
 	wg.Wait()
 
-	require.Equal(t, 1, len(multi.activeClients)+len(multi.inactiveClients))
+	require.Empty(t, multi.activeClients)
+	require.Len(t, multi.inactiveClients, 1)
 }
