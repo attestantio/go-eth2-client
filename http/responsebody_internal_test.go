@@ -41,7 +41,7 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 		err           string
 	}{
 		{
-			name:        "SSZWithinLimit",
+			name:        "SSZAtLimit",
 			contentType: "application/octet-stream",
 			body:        "1234",
 		},
@@ -55,6 +55,11 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 			name:        "JSONAboveSSZLimit",
 			contentType: "application/json",
 			body:        `{"a":1}`,
+		},
+		{
+			name:        "JSONAtLimit",
+			contentType: "application/json",
+			body:        `{"a":12}`,
 		},
 		{
 			name:        "JSONExceedsLimit",
