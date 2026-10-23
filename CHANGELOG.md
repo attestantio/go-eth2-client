@@ -1,5 +1,7 @@
 dev:
  - fix a data race in the multi client, which read its lists of clients outside their lock when rechecking them
+ - pick the response size limit for ePBS endpoints from the encoding the node returned, so a JSON block production response to an SSZ request gets the JSON limit
+ - reject a response whose declared Content-Length is above its size limit before reading the body
 
 0.30.3:
  - stop bounding all post response sizes and only filter for new epbs endpoints 
