@@ -143,9 +143,70 @@ func TestSubmitBuilderPreferencesReportsRejectedEntries(t *testing.T) {
 	}
 }
 
-// TestSubmitBuilderPreferencesReportsUnindexedErrors covers failures that are not
-// per-entry rejections, such as a node that does not serve the endpoint, which
-// must not look like a rejected entry.
+// TestSubmitBuilderPreferencesKeepsUsableFailures covers malformed failure
+// reports: each failure whose index is not an in-range integer is dropped, the
+// rest are kept, and a malformed top-level code or message does not discard the
+// report.  Two entries
+// are submitted, so only indices 0 and 1 are in range.
+func TestSubmitBuilderPreferencesKeepsUsableFailures(t *testing.T) {
+	for _, test := range []struct {
+		name     string
+		body     string
+		failures []api.IndexedFailure
+	}{
+		{
+			name:     "MissingIndex",
+			body:     `{"code":400,"message":"m","failures":[{"index":0,"message":"a"},{"message":"b"}]}`,
+			failures: []api.IndexedFailure{{Index: 0, Message: "a"}},
+		},
+		{
+			name:     "FloatIndex",
+			body:     `{"code":400,"message":"m","failures":[{"index":1.0,"message":"a"},{"index":1,"message":"b"}]}`,
+			failures: []api.IndexedFailure{{Index: 1, Message: "b"}},
+		},
+		{
+			name:     "OutOfRangeIndex",
+			body:     `{"code":400,"message":"m","failures":[{"index":2,"message":"a"},{"index":0,"message":"b"}]}`,
+			failures: []api.IndexedFailure{{Index: 0, Message: "b"}},
+		},
+		{
+			name:     "NegativeIndex",
+			body:     `{"code":400,"message":"m","failures":[{"index":-1,"message":"a"},{"index":1,"message":"b"}]}`,
+			failures: []api.IndexedFailure{{Index: 1, Message: "b"}},
+		},
+		{
+			name:     "NumericMessage",
+			body:     `{"code":400,"message":1,"failures":[{"index":0,"message":"a"}]}`,
+			failures: []api.IndexedFailure{{Index: 0, Message: "a"}},
+		},
+		{
+			// Guards against reintroducing a strictly typed code field.
+			name:     "StringCode",
+			body:     `{"code":"400","message":"m","failures":[{"index":0,"message":"a"}]}`,
+			failures: []api.IndexedFailure{{Index: 0, Message: "a"}},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			server := builderPreferencesServer(t, func(w nethttp.ResponseWriter, _ *nethttp.Request) {
+				w.WriteHeader(nethttp.StatusBadRequest)
+				_, _ = w.Write([]byte(test.body))
+			})
+			defer server.Close()
+
+			err := submitTwoBuilderPreferences(t, server.URL)
+			var indexedErr *api.IndexedError
+			require.ErrorAs(t, err, &indexedErr)
+			require.Equal(t, test.failures, indexedErr.Failures)
+			var apiErr *api.Error
+			require.ErrorAs(t, err, &apiErr)
+			require.JSONEq(t, test.body, string(apiErr.Data))
+		})
+	}
+}
+
+// TestSubmitBuilderPreferencesReportsUnindexedErrors covers errors that carry no
+// usable per-entry failure, such as a node that does not serve the endpoint,
+// which must not look like a rejected entry.
 func TestSubmitBuilderPreferencesReportsUnindexedErrors(t *testing.T) {
 	for _, test := range []struct {
 		name   string
@@ -154,6 +215,13 @@ func TestSubmitBuilderPreferencesReportsUnindexedErrors(t *testing.T) {
 	}{
 		{name: "NotFound", status: nethttp.StatusNotFound},
 		{name: "BadRequestWithoutFailures", status: nethttp.StatusBadRequest, body: `{"code":400,"message":"No data submitted"}`},
+		{name: "BadRequestEmptyFailures", status: nethttp.StatusBadRequest, body: `{"code":400,"message":"m","failures":[]}`},
+		{name: "BadRequestNotJSON", status: nethttp.StatusBadRequest, body: `bad request`},
+		{
+			name:   "BadRequestWithoutUsableFailures",
+			status: nethttp.StatusBadRequest,
+			body:   `{"code":400,"message":"m","failures":[{"index":2,"message":"a"},{"message":"b"}]}`,
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			server := builderPreferencesServer(t, func(w nethttp.ResponseWriter, _ *nethttp.Request) {

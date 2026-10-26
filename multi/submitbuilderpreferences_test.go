@@ -26,9 +26,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// invalidOptionsBuilderPreferencesClient rejects every submission as the HTTP
-// service does: ErrNoOptions for nil options, else ErrInvalidOptions as for a nil
-// or incomplete entry.
+// invalidOptionsBuilderPreferencesClient rejects every submission with a
+// caller error: ErrNoOptions for nil options, else ErrInvalidOptions.
 type invalidOptionsBuilderPreferencesClient struct {
 	name  string
 	calls int

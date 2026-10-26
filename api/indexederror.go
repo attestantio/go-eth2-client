@@ -22,7 +22,9 @@ import (
 
 // IndexedFailure is the failure of one item of a submitted list.
 type IndexedFailure struct {
-	// Index is the index of the item in the submitted list.
+	// Index is the index of the item in the submitted list, as the node sent it.
+	// http.Service.SubmitBuilderPreferences keeps only failures whose index is
+	// within the submitted list.
 	Index int `json:"index"`
 	// Message describes the failure.
 	Message string `json:"message"`
@@ -50,9 +52,9 @@ func (f *IndexedFailure) UnmarshalJSON(input []byte) error {
 }
 
 // IndexedError is a node's report that some items of a submitted list failed,
-// decoded from the beacon API IndexedErrorMessage.
+// decoded from the beacon API IndexedErrorMessage.  The HTTP status code is on
+// the accompanying *Error.
 type IndexedError struct {
-	Code     int              `json:"code"`
 	Message  string           `json:"message"`
 	Failures []IndexedFailure `json:"failures"`
 }

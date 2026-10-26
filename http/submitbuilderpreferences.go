@@ -33,11 +33,13 @@ type builderPreferencesList []*gloas.BuilderPreferencesEntry
 
 // MAX_BUILDER_ENTRIES and MAX_BUILDER_URL_SIZE from beacon-APIs
 // types/gloas/builder_entry.yaml, and MAX_BUILDER_AUTH_DATA_SIZE from
-// builder-specs gloas/builder.md.
+// builder-specs gloas/builder.md.  beacon-APIs also makes a zero-length url
+// (types/gloas/builder_preferences_entry.yaml) and zero-length auth data
+// (types/gloas/request_auth.yaml) invalid.
 const (
-	maxBuilderEntries             = 64
-	maxBuilderURLSize             = 2048
-	maxBuilderRequestAuthDataSize = 4096
+	maxBuilderEntries      = 64
+	maxBuilderURLSize      = 2048
+	maxBuilderAuthDataSize = 4096
 )
 
 // MarshalSSZ encodes the list as an SSZ list of variable-size elements: a
@@ -65,10 +67,13 @@ func (p builderPreferencesList) MarshalSSZ() ([]byte, error) {
 }
 
 // SubmitBuilderPreferences submits builder preferences, which the node forwards
-// to each entry's builder.  When the node reports failed entries, with a 400
-// carrying failures, the returned error wraps an *api.IndexedError naming them
-// by index as well as the *api.Error.  A node that does not serve the endpoint
-// returns an *api.Error with status 404 and no *api.IndexedError.
+// to each entry's builder.  When the node answers 400 with failures, the
+// returned error wraps an *api.IndexedError as well as the *api.Error.  It holds
+// only the failures whose entry decodes with an index within opts.Entries, so
+// every Index is safe to use on opts.Entries; if none qualifies there is no
+// *api.IndexedError, and the raw body is always on the *api.Error.  A node that
+// does not serve the endpoint returns an *api.Error with status 404 and no
+// *api.IndexedError.
 func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.SubmitBuilderPreferencesOpts) error {
 	if err := s.assertIsSynced(ctx); err != nil {
 		return err
@@ -100,7 +105,7 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 		if entry.Auth == nil || entry.Auth.Message == nil {
 			return errors.Join(fmt.Errorf("builder preferences entry %d has no authorization", i), client.ErrInvalidOptions)
 		}
-		if len(entry.Auth.Message.Data) == 0 || len(entry.Auth.Message.Data) > maxBuilderRequestAuthDataSize {
+		if len(entry.Auth.Message.Data) == 0 || len(entry.Auth.Message.Data) > maxBuilderAuthDataSize {
 			return errors.Join(
 				fmt.Errorf("builder preferences entry %d authorization data length %d is invalid", i, len(entry.Auth.Message.Data)),
 				client.ErrInvalidOptions,
@@ -128,8 +133,7 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 	if err != nil {
 		var apiErr *api.Error
 		if errors.As(err, &apiErr) && apiErr.StatusCode == nethttp.StatusBadRequest {
-			indexedErr := &api.IndexedError{}
-			if json.Unmarshal(apiErr.Data, indexedErr) == nil && len(indexedErr.Failures) > 0 {
+			if indexedErr := decodeIndexedError(apiErr.Data, len(opts.Entries)); indexedErr != nil {
 				return errors.Join(errors.New("failed to submit builder preferences"), indexedErr, err)
 			}
 		}
@@ -144,4 +148,32 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 	}
 
 	return nil
+}
+
+// decodeIndexedError decodes an IndexedErrorMessage body, keeping only the
+// failures that decode as an IndexedFailure with an index within the submitted
+// list, so that callers can index their entries with it.  One malformed failure
+// does not discard the others.  It returns nil if no failure is usable.
+func decodeIndexedError(data []byte, entries int) *api.IndexedError {
+	var body struct {
+		Message  string            `json:"message"`
+		Failures []json.RawMessage `json:"failures"`
+	}
+	// The error is ignored: a field of the wrong type is left empty and decoding
+	// carries on, and a body that is not JSON leaves no failures.
+	_ = json.Unmarshal(data, &body)
+
+	indexedErr := &api.IndexedError{Message: body.Message}
+	for _, raw := range body.Failures {
+		var failure api.IndexedFailure
+		if err := json.Unmarshal(raw, &failure); err != nil || failure.Index < 0 || failure.Index >= entries {
+			continue
+		}
+		indexedErr.Failures = append(indexedErr.Failures, failure)
+	}
+	if len(indexedErr.Failures) == 0 {
+		return nil
+	}
+
+	return indexedErr
 }
