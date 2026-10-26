@@ -189,6 +189,8 @@ func TestSubmitBuilderPreferencesRejectsInvalidOptions(t *testing.T) {
 	noAuthMessage.Auth.Message = nil
 	oversizedAuthData := builderPreferencesEntry(0x01, "https://builder.example.com", 1)
 	oversizedAuthData.Auth.Message.Data = make([]byte, 4097)
+	emptyAuthData := builderPreferencesEntry(0x01, "https://builder.example.com", 1)
+	emptyAuthData.Auth.Message.Data = nil
 
 	for _, test := range []struct {
 		name string
@@ -219,7 +221,13 @@ func TestSubmitBuilderPreferencesRejectsInvalidOptions(t *testing.T) {
 			name: "OversizedAuthData",
 			opts: &api.SubmitBuilderPreferencesOpts{Entries: []*gloas.BuilderPreferencesEntry{oversizedAuthData}},
 			err:  client.ErrInvalidOptions,
-			msg:  "builder preferences entry 0 authorization data exceeds 4096 bytes",
+			msg:  "builder preferences entry 0 authorization data length 4097 is invalid",
+		},
+		{
+			name: "EmptyAuthData",
+			opts: &api.SubmitBuilderPreferencesOpts{Entries: []*gloas.BuilderPreferencesEntry{emptyAuthData}},
+			err:  client.ErrInvalidOptions,
+			msg:  "builder preferences entry 0 authorization data length 0 is invalid",
 		},
 		{
 			name: "NilAuth",

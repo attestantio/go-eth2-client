@@ -31,8 +31,8 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 		return true, nil
 	}, func(_ context.Context, _ consensusclient.Service, err error) (bool, error) {
 		// Invalid input is invalid for every client, so neither fail over nor
-		// deactivate a healthy client because the caller supplied bad entries.
-		return !errors.Is(err, consensusclient.ErrInvalidOptions), err
+		// deactivate a healthy client because the caller supplied bad or no options.
+		return !errors.Is(err, consensusclient.ErrInvalidOptions) && !errors.Is(err, consensusclient.ErrNoOptions), err
 	})
 
 	return err

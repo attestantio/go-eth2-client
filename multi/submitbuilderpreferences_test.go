@@ -26,8 +26,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// invalidOptionsBuilderPreferencesClient rejects every submission with
-// ErrInvalidOptions, as the HTTP service does for a nil or incomplete entry.
+// invalidOptionsBuilderPreferencesClient rejects every submission as the HTTP
+// service does: ErrNoOptions for nil options, else ErrInvalidOptions as for a nil
+// or incomplete entry.
 type invalidOptionsBuilderPreferencesClient struct {
 	name  string
 	calls int
@@ -39,9 +40,12 @@ func (*invalidOptionsBuilderPreferencesClient) IsActive() bool    { return true 
 func (*invalidOptionsBuilderPreferencesClient) IsSynced() bool    { return true }
 
 func (c *invalidOptionsBuilderPreferencesClient) SubmitBuilderPreferences(_ context.Context,
-	_ *api.SubmitBuilderPreferencesOpts,
+	opts *api.SubmitBuilderPreferencesOpts,
 ) error {
 	c.calls++
+	if opts == nil {
+		return consensusclient.ErrNoOptions
+	}
 
 	return errors.Join(errors.New("nil builder preferences entry supplied"), consensusclient.ErrInvalidOptions)
 }
@@ -68,21 +72,31 @@ func TestSubmitBuilderPreferences(t *testing.T) {
 // TestSubmitBuilderPreferencesDoesNotFailOverOnInvalidOptions ensures that a
 // caller-side error neither reaches a second client nor deactivates the first.
 func TestSubmitBuilderPreferencesDoesNotFailOverOnInvalidOptions(t *testing.T) {
-	ctx := context.Background()
+	for _, test := range []struct {
+		name string
+		opts *api.SubmitBuilderPreferencesOpts
+		err  error
+	}{
+		{name: "InvalidOptions", opts: &api.SubmitBuilderPreferencesOpts{}, err: consensusclient.ErrInvalidOptions},
+		{name: "NoOptions", err: consensusclient.ErrNoOptions},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := context.Background()
 
-	client1 := &invalidOptionsBuilderPreferencesClient{name: "invalid 1"}
-	client2 := &invalidOptionsBuilderPreferencesClient{name: "invalid 2"}
+			client1 := &invalidOptionsBuilderPreferencesClient{name: "invalid 1"}
+			client2 := &invalidOptionsBuilderPreferencesClient{name: "invalid 2"}
 
-	multiClient, err := multi.New(ctx,
-		multi.WithLogLevel(zerolog.Disabled),
-		multi.WithClients([]consensusclient.Service{client1, client2}),
-	)
-	require.NoError(t, err)
+			multiClient, err := multi.New(ctx,
+				multi.WithLogLevel(zerolog.Disabled),
+				multi.WithClients([]consensusclient.Service{client1, client2}),
+			)
+			require.NoError(t, err)
 
-	err = multiClient.(consensusclient.BuilderPreferencesSubmitter).
-		SubmitBuilderPreferences(ctx, &api.SubmitBuilderPreferencesOpts{})
-	require.ErrorIs(t, err, consensusclient.ErrInvalidOptions)
-	require.Equal(t, 1, client1.calls)
-	require.Equal(t, 0, client2.calls)
-	require.Equal(t, "invalid 1", multiClient.Address())
+			err = multiClient.(consensusclient.BuilderPreferencesSubmitter).SubmitBuilderPreferences(ctx, test.opts)
+			require.ErrorIs(t, err, test.err)
+			require.Equal(t, 1, client1.calls)
+			require.Equal(t, 0, client2.calls)
+			require.Equal(t, "invalid 1", multiClient.Address())
+		})
+	}
 }

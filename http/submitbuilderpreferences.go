@@ -100,9 +100,9 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 		if entry.Auth == nil || entry.Auth.Message == nil {
 			return errors.Join(fmt.Errorf("builder preferences entry %d has no authorization", i), client.ErrInvalidOptions)
 		}
-		if len(entry.Auth.Message.Data) > maxBuilderRequestAuthDataSize {
+		if len(entry.Auth.Message.Data) == 0 || len(entry.Auth.Message.Data) > maxBuilderRequestAuthDataSize {
 			return errors.Join(
-				fmt.Errorf("builder preferences entry %d authorization data exceeds %d bytes", i, maxBuilderRequestAuthDataSize),
+				fmt.Errorf("builder preferences entry %d authorization data length %d is invalid", i, len(entry.Auth.Message.Data)),
 				client.ErrInvalidOptions,
 			)
 		}
