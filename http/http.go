@@ -35,9 +35,12 @@ import (
 )
 
 // defaultUserAgent is sent with requests if no other user agent has been supplied.
-const defaultUserAgent = "go-eth2-client/0.30.2"
+const defaultUserAgent = "go-eth2-client/0.30.3"
 
 // post sends an HTTP post request and returns the body.
+//
+// The response body is not bounded, matching get().  An endpoint that wants a
+// bound passes it through postWithResponseLimit, as EPBSProposal does.
 func (s *Service) post(ctx context.Context,
 	endpoint string,
 	query string,
@@ -49,7 +52,7 @@ func (s *Service) post(ctx context.Context,
 	*httpResponse,
 	error,
 ) {
-	return s.postWithResponseLimit(ctx, endpoint, query, opts, body, contentType, headers, maxEPBSResponseSize)
+	return s.postWithResponseLimit(ctx, endpoint, query, opts, body, contentType, headers, 0)
 }
 
 // postWithResponseLimit sends an HTTP POST request and bounds its response body when requested.
