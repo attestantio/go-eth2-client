@@ -81,6 +81,21 @@ func TestBuilderPreferencesEntryYAML(t *testing.T) {
 	require.Equal(t, fromJSON, fromYAML)
 }
 
+// TestBuilderPreferencesEntryYAMLQuotes round-trips URLs holding the characters
+// that YAML quoting has to escape.
+func TestBuilderPreferencesEntryYAMLQuotes(t *testing.T) {
+	for _, url := range []string{`https://b.example/?q="x"`, `https://b.example/?q='x'`} {
+		entry := validBuilderPreferencesEntry()
+		entry.URL = []byte(url)
+
+		data, err := yaml.Marshal(entry)
+		require.NoError(t, err)
+		var decoded gloas.BuilderPreferencesEntry
+		require.NoError(t, yaml.Unmarshal(data, &decoded), url)
+		require.Equal(t, entry, &decoded, url)
+	}
+}
+
 func TestBuilderPreferencesEntryUnmarshalJSONRejectsBadInput(t *testing.T) {
 	valid, err := json.Marshal(validBuilderPreferencesEntry())
 	require.NoError(t, err)
