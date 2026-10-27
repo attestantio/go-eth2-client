@@ -22,6 +22,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/goccy/go-yaml"
 	"github.com/stretchr/testify/require"
 )
 
@@ -54,6 +55,30 @@ func TestBuilderPreferencesEntryJSON(t *testing.T) {
 	var decoded gloas.BuilderPreferencesEntry
 	require.NoError(t, json.Unmarshal(data, &decoded))
 	require.Equal(t, entry, &decoded)
+}
+
+// TestBuilderPreferencesEntryYAML round-trips an entry through YAML.  The URL's
+// "://" must survive as a quoted scalar.  The YAML and JSON marshalers each
+// build their own representation, so the test checks they carry the same values.
+func TestBuilderPreferencesEntryYAML(t *testing.T) {
+	entry := validBuilderPreferencesEntry()
+
+	data, err := yaml.Marshal(entry)
+	require.NoError(t, err)
+	require.Contains(t, string(data), "url: 'https://builder.example.com'")
+	require.Contains(t, string(data), "max_execution_payment: '1000000000'")
+	require.Equal(t, entry.String(), string(data))
+
+	var decoded gloas.BuilderPreferencesEntry
+	require.NoError(t, yaml.Unmarshal(data, &decoded))
+	require.Equal(t, entry, &decoded)
+
+	jsonData, err := json.Marshal(entry)
+	require.NoError(t, err)
+	var fromYAML, fromJSON map[string]any
+	require.NoError(t, yaml.Unmarshal(data, &fromYAML))
+	require.NoError(t, json.Unmarshal(jsonData, &fromJSON))
+	require.Equal(t, fromJSON, fromYAML)
 }
 
 func TestBuilderPreferencesEntryUnmarshalJSONRejectsBadInput(t *testing.T) {

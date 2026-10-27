@@ -1,7 +1,7 @@
 dev:
  - fix a data race in the multi client, which read its lists of clients outside their lock when rechecking them
   - add SubmitBuilderPreferences with JSON and SSZ support in http, multi and mock clients, reporting per-entry rejections as api.IndexedError
-    - add the Gloas BuilderPreferencesEntry type with JSON and SSZ support
+    - add the Gloas BuilderPreferencesEntry type with JSON, YAML and SSZ support
 
 0.30.3:
  - stop bounding all post response sizes and only filter for new epbs endpoints 
