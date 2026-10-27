@@ -23,19 +23,19 @@ import (
 // IndexedFailure is the failure of one item of a submitted list.
 type IndexedFailure struct {
 	// Index is the index of the item in the submitted list, as the node sent it.
-	// http.Service.SubmitBuilderPreferences keeps only failures whose index is
-	// within the submitted list.
+	// Decoding does not check it against the length of that list.
 	Index int `json:"index"`
 	// Message describes the failure.
 	Message string `json:"message"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler.  It accepts the index as a string
-// as well as the spec's number, because Teku sends a string.
+// as well as the spec's number, because Teku sends a string.  A message that is
+// not a string is left empty rather than failing the decode.
 func (f *IndexedFailure) UnmarshalJSON(input []byte) error {
 	var data struct {
-		Index   json.Number `json:"index"`
-		Message string      `json:"message"`
+		Index   json.Number     `json:"index"`
+		Message json.RawMessage `json:"message"`
 	}
 	if err := json.Unmarshal(input, &data); err != nil {
 		return err
@@ -44,9 +44,11 @@ func (f *IndexedFailure) UnmarshalJSON(input []byte) error {
 	if err != nil {
 		return fmt.Errorf("invalid index: %w", err)
 	}
+	var message string
+	_ = json.Unmarshal(data.Message, &message)
 
 	f.Index = index
-	f.Message = data.Message
+	f.Message = message
 
 	return nil
 }
@@ -57,6 +59,37 @@ func (f *IndexedFailure) UnmarshalJSON(input []byte) error {
 type IndexedError struct {
 	Message  string           `json:"message"`
 	Failures []IndexedFailure `json:"failures"`
+}
+
+// UnmarshalJSON implements json.Unmarshaler.  It keeps every failure that
+// decodes and skips the rest, so one malformed failure does not discard the
+// others.  A message that is not a string is left empty.  It fails if the input
+// is not JSON, is a JSON value other than an object or null, or has failures
+// that is neither an array nor null.
+func (e *IndexedError) UnmarshalJSON(input []byte) error {
+	var data struct {
+		Message  json.RawMessage   `json:"message"`
+		Failures []json.RawMessage `json:"failures"`
+	}
+	if err := json.Unmarshal(input, &data); err != nil {
+		return err
+	}
+
+	var message string
+	_ = json.Unmarshal(data.Message, &message)
+
+	failures := make([]IndexedFailure, 0, len(data.Failures))
+	for _, raw := range data.Failures {
+		var failure IndexedFailure
+		if json.Unmarshal(raw, &failure) == nil {
+			failures = append(failures, failure)
+		}
+	}
+
+	e.Message = message
+	e.Failures = failures
+
+	return nil
 }
 
 func (e *IndexedError) Error() string {

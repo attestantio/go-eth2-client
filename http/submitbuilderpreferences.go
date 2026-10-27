@@ -151,25 +151,18 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 }
 
 // decodeIndexedError decodes an IndexedErrorMessage body, keeping only the
-// failures that decode as an IndexedFailure with an index within the submitted
-// list, so that callers can index their entries with it.  One malformed failure
-// does not discard the others.  It returns nil if no failure is usable.
-func decodeIndexedError(data []byte, entries int) *api.IndexedError {
-	var body struct {
-		Message  string            `json:"message"`
-		Failures []json.RawMessage `json:"failures"`
-	}
-	// The error is ignored: a field of the wrong type is left empty and decoding
-	// carries on, and a body that is not JSON leaves no failures.
-	_ = json.Unmarshal(data, &body)
+// failures with an index within the submitted list, so that callers can index
+// their entries with it.  It returns nil if no failure is usable.
+func decodeIndexedError(data []byte, entryCount int) *api.IndexedError {
+	// A body that is not an IndexedErrorMessage leaves no failures.
+	var decoded api.IndexedError
+	_ = json.Unmarshal(data, &decoded)
 
-	indexedErr := &api.IndexedError{Message: body.Message}
-	for _, raw := range body.Failures {
-		var failure api.IndexedFailure
-		if err := json.Unmarshal(raw, &failure); err != nil || failure.Index < 0 || failure.Index >= entries {
-			continue
+	indexedErr := &api.IndexedError{Message: decoded.Message}
+	for _, failure := range decoded.Failures {
+		if failure.Index >= 0 && failure.Index < entryCount {
+			indexedErr.Failures = append(indexedErr.Failures, failure)
 		}
-		indexedErr.Failures = append(indexedErr.Failures, failure)
 	}
 	if len(indexedErr.Failures) == 0 {
 		return nil
