@@ -35,8 +35,9 @@ type buildersBody struct {
 }
 
 // Builders provides the builders, with their status, for the given options.
-// A failure wraps an *api.Error carrying the node's status code.  A 404 means
-// either the node does not serve the endpoint or it does not know the state.
+// A non-2xx response returns an error wrapping an *api.Error with the node's
+// status code.  A 404 means either the node does not serve the endpoint or it
+// does not know the state.
 func (s *Service) Builders(ctx context.Context,
 	opts *api.BuildersOpts,
 ) (
