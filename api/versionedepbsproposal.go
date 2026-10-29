@@ -203,19 +203,42 @@ func (v *VersionedEPBSProposal) Blobs() ([]deneb.Blob, error) {
 	return contents.Blobs, nil
 }
 
-// Value returns the total value of the proposal, or nil when its execution
-// value was not supplied by the beacon node.
+// Value returns the total value of the proposal: the consensus value the node
+// reported plus the execution value, the latter as verified against the signed
+// execution payload bid.  A component the node did not supply, or that could not
+// be checked against the bid and so was withheld, counts as zero, so this never
+// returns nil and proposals can be compared without a nil check.  Read
+// ConsensusValue and ExecutionValue directly to tell "not supplied" from "zero".
 func (v *VersionedEPBSProposal) Value() *big.Int {
-	if v.ExecutionValue == nil {
-		return nil
-	}
-
 	value := big.NewInt(0)
 	if v.ConsensusValue != nil {
 		value.Add(value, v.ConsensusValue)
 	}
+	if v.ExecutionValue != nil {
+		value.Add(value, v.ExecutionValue)
+	}
 
-	return value.Add(value, v.ExecutionValue)
+	return value
+}
+
+// ExecutionPayloadBid returns the execution payload bid the proposal commits to,
+// or an error explaining why there is none.  It funnels through block() so that
+// the version, arm-selection and nil checks cannot drift from the other
+// accessors, and so that callers walking to the bid do not have to repeat them.
+func (v *VersionedEPBSProposal) ExecutionPayloadBid() (*gloas.ExecutionPayloadBid, error) {
+	block, err := v.block()
+	if err != nil {
+		return nil, err
+	}
+
+	if block.Body == nil {
+		return nil, errors.New("no gloas beacon block body")
+	}
+	if block.Body.SignedExecutionPayloadBid == nil || block.Body.SignedExecutionPayloadBid.Message == nil {
+		return nil, errors.New("no gloas execution payload bid")
+	}
+
+	return block.Body.SignedExecutionPayloadBid.Message, nil
 }
 
 // IsEmpty returns true if no proposal is populated.

@@ -1,5 +1,6 @@
 dev:
  - fix a data race in the multi client, which read its lists of clients outside their lock when rechecking them
+ - fix ePBS proposal validation so no Eth-Builder-Url or execution_payment skips the minimum bid; keep self-built execution values; VersionedEPBSProposal.Value() no longer returns nil; add VersionedEPBSProposal.ExecutionPayloadBid()
 
 0.30.3:
  - stop bounding all post response sizes and only filter for new epbs endpoints 
