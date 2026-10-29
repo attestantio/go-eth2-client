@@ -38,5 +38,7 @@ func TestBuilderStatus(t *testing.T) {
 	require.Equal(t, "unknown", api.BuilderStatus(99).String())
 
 	var decoded api.BuilderStatus
+	require.NoError(t, json.Unmarshal([]byte(`"ACTIVE"`), &decoded))
+	require.Equal(t, api.BuilderStatusActive, decoded)
 	require.EqualError(t, json.Unmarshal([]byte(`"active_ongoing"`), &decoded), `unrecognised builder status "active_ongoing"`)
 }

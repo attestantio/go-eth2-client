@@ -15,6 +15,7 @@ package v1
 
 import (
 	"fmt"
+	"strings"
 )
 
 // BuilderStatus defines the status of a Gloas builder.
@@ -45,7 +46,7 @@ func (v BuilderStatus) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (v *BuilderStatus) UnmarshalJSON(input []byte) error {
-	switch string(input) {
+	switch strings.ToLower(string(input)) {
 	case `"unknown"`:
 		*v = BuilderStatusUnknown
 	case `"pending"`:
