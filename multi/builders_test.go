@@ -15,6 +15,7 @@ package multi_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
@@ -52,4 +53,49 @@ func TestBuilders(t *testing.T) {
 	require.NoError(t, err)
 	require.Same(t, opts, received)
 	require.Equal(t, builders, res.Data)
+}
+
+// TestBuildersDoesNotFailOverOnInvalidOptions ensures that invalid or missing
+// options neither fail over nor deactivate a client.
+func TestBuildersDoesNotFailOverOnInvalidOptions(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		opts *api.BuildersOpts
+		err  error
+	}{
+		{name: "InvalidOptions", opts: &api.BuildersOpts{}, err: consensusclient.ErrInvalidOptions},
+		{name: "NoOptions", err: consensusclient.ErrNoOptions},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			calls := map[string]int{}
+			newClient := func(name string) *mock.Service {
+				client, err := mock.New(ctx, mock.WithName(name))
+				require.NoError(t, err)
+				client.BuildersFunc = func(_ context.Context, opts *api.BuildersOpts) (*api.Response[map[gloas.BuilderIndex]*apiv1.Builder], error) {
+					calls[name]++
+					if opts == nil {
+						return nil, consensusclient.ErrNoOptions
+					}
+
+					return nil, errors.Join(errors.New("no state specified"), consensusclient.ErrInvalidOptions)
+				}
+
+				return client
+			}
+
+			multiClient, err := multi.New(ctx,
+				multi.WithLogLevel(zerolog.Disabled),
+				multi.WithClients([]consensusclient.Service{newClient("mock 1"), newClient("mock 2")}),
+			)
+			require.NoError(t, err)
+
+			_, err = multiClient.(consensusclient.BuildersProvider).Builders(ctx, test.opts)
+			require.ErrorIs(t, err, test.err)
+			require.Equal(t, map[string]int{"mock 1": 1}, calls)
+			// The first client is still active, so it remains the multi client's address.
+			require.Equal(t, "mock 1", multiClient.Address())
+		})
+	}
 }

@@ -15,6 +15,7 @@ package multi
 
 import (
 	"context"
+	"errors"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -36,7 +37,11 @@ func (s *Service) Builders(ctx context.Context,
 		}
 
 		return builders, nil
-	}, nil)
+	}, func(_ context.Context, _ consensusclient.Service, err error) (bool, error) {
+		// Invalid input is invalid for every client, so neither fail over nor
+		// deactivate a healthy client because the caller supplied bad or no options.
+		return !errors.Is(err, consensusclient.ErrInvalidOptions) && !errors.Is(err, consensusclient.ErrNoOptions), err
+	})
 	if err != nil {
 		return nil, err
 	}
