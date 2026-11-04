@@ -32,22 +32,33 @@ def validate_inputs(tag, fork):
 def extract_vectors(archive, fork, destination):
     prefix = f'tests/mainnet/{fork}/ssz_static/'
     cases = {}
+    directories = set()
+    ancestors = {()}
     with tarfile.open(archive, 'r|gz') as tar:
         for member in tar:
-            if not member.name.startswith(prefix) or member.isdir():
+            if not member.name.startswith(prefix):
                 continue
-            if not member.isfile() or '..' in Path(member.name).parts:
+            if not (member.isfile() or member.isdir()) or '..' in Path(member.name).parts:
                 raise ValueError(f'Unsafe vector archive member: {member.name}')
             parts = Path(member.name[len(prefix):]).parts
-            if (len(parts) != 4 or parts[1] != 'ssz_random'
+            if member.isdir() and len(parts) < 3:
+                directories.add(parts)
+                continue
+            if (len(parts) != (3 if member.isdir() else 4) or parts[1] != 'ssz_random'
                     or not all(re.fullmatch(r'[A-Za-z0-9_-]+', name) for name in (parts[0], parts[2]))):
                 raise ValueError(f'Unrecognized vector case layout: {member.name}')
             case = f'TestConsensusSpec/{parts[0]}/{parts[2]}'
-            cases.setdefault(case, set()).add(parts[3])
+            ancestors.update((parts[:1], parts[:2]))
+            files = cases.setdefault(case, set())
+            if member.isdir():
+                continue
+            files.add(parts[3])
             path = Path(destination) / member.name
             path.parent.mkdir(parents=True, exist_ok=True)
             with tar.extractfile(member) as source, path.open('wb') as target:
                 shutil.copyfileobj(source, target)
+    if directories - ancestors:
+        raise ValueError(f'Empty or unrecognized vector directories: {sorted(directories - ancestors)}')
     if not cases:
         raise ValueError(f'No mainnet static vectors found for {fork}')
     required = {'value.yaml', 'roots.yaml', 'serialized.ssz_snappy'}
@@ -153,8 +164,9 @@ def main():
     ], text=True))
     asset = select_asset(release)
     archive = args.destination / 'mainnet.tar.gz'
-    subprocess.run(['curl', '--fail', '--location', '--retry', '3', '--silent', '--show-error',
-                    '--output', str(archive), asset['browser_download_url']], check=True)
+    subprocess.run(['curl', '--fail', '--location', '--retry', '3', '--retry-all-errors',
+                    '--connect-timeout', '30', '--max-time', '300', '--retry-max-time', '300',
+                    '--silent', '--show-error', '--output', str(archive), asset['browser_download_url']], check=True)
     verify_digest(archive, asset['digest'])
     cases = extract_vectors(archive, args.fork, args.destination)
     archive.unlink()

@@ -14,7 +14,11 @@ native `go test -json` terminal events with the extracted case inventory. Go com
 diagnostics remain on stderr and do not enter the JSON classifier.
 A genuine failed covered case reports `fail`, even if other cases did not execute.
 Setup failures, malformed evidence and otherwise incomplete execution report `not-run`.
-Missing or empty required type directories also fail the Go test itself.
+Missing or empty required type directories also fail the Go test itself in every
+fork harness. Fulu reads its own vector tree, not Electra's; these test repairs do
+not declare support for older forks. Explicit empty case directories enter the
+archive inventory and fail the required-file check, rather than disappearing.
+Structural type and suite directories must contain case descendants.
 
 The approved Gloas exclusions are explicit in
 [the runner](../.github/scripts/consensus_vectors.py), never inferred from executed tests:
@@ -79,7 +83,9 @@ gh variable get CONSENSUS_SPEC_FORK
 ## Local verification
 
 Requires Go, Python 3.12+, GitHub CLI authenticated for public API access, and curl.
-The runner uses native `go test -json`; CI selects Go from the checked-out `go.mod`.
+The runner uses native `go test -json`; CI uses setup-go v7 to select the checked-out
+`go.mod` toolchain and disables automatic switching after setup. The ordinary test
+workflow uses the same action major and module toolchain source.
 Run from the target checkout:
 
 ```sh
@@ -95,14 +101,21 @@ GOTOOLCHAIN=auto python3 .github/scripts/consensus_vectors.py \
 The runner downloads the exact release's `mainnet.tar.gz`, verifies GitHub's
 published SHA-256 digest, and extracts only the selected fork's `ssz_static`
 files. Allow approximately 1 GB for the download, plus extracted files.
-CI retains the log artifact. The local snippet removes temporary files on exit;
-redirect stdout and stderr to a file to keep evidence.
+The download has a 30-second connection timeout and a five-minute limit per
+attempt. Curl retries all transfer errors up to three times within a five-minute
+retry window; an attempt already in progress can finish after that window.
+Retries restart the download. A transfer failure remains `not-run`, not a failed
+vector case. CI retains the log artifact. The local snippet removes temporary
+files on exit; redirect stdout and stderr to a file to keep evidence.
 
 The release-review issue includes reproduction for arbitrary targets. It fetches
 the recorded automation commit explicitly and copies its runner before creating
 an owned temporary detached worktree from the fetched target. This supports targets
 without CI files and preserves the caller's branch, HEAD and dirty files. Cleanup
-removes the worktree registration and temporary files on success or failure.
+removes the owned worktree registration, including a lock, and temporary files on
+success or failure. If Git cannot remove that worktree, cleanup reports an error
+and retains its directory for recovery instead of leaving registration pointing
+to a deleted directory.
 
 Use a branch, tag or full commit SHA, not an abbreviated SHA. For local-only
 targets, use `TARGET_REMOTE=.` and resolve abbreviated SHAs with `git rev-parse`

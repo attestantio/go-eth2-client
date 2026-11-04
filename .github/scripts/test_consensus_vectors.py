@@ -10,7 +10,7 @@ import tarfile
 import tempfile
 import unittest
 
-from consensus_vectors import validate_inputs, extract_vectors, covered_cases, classify_result, select_asset, verify_digest, go_test_environment, run_vectors
+from consensus_vectors import EXCLUDED_TYPES, validate_inputs, extract_vectors, covered_cases, classify_result, select_asset, verify_digest, go_test_environment, run_vectors
 
 
 class ConsensusVectorsTest(unittest.TestCase):
@@ -27,6 +27,10 @@ class ConsensusVectorsTest(unittest.TestCase):
             archive = root / 'vectors.tar.gz'
             with tarfile.open(archive, 'w:gz') as tar:
                 for fork in ['gloas', 'fulu']:
+                    for path in ['', 'BeaconState/', 'BeaconState/ssz_random/', 'BeaconState/ssz_random/case_0/']:
+                        member = tarfile.TarInfo(f'tests/mainnet/{fork}/ssz_static/{path}')
+                        member.type = tarfile.DIRTYPE
+                        tar.addfile(member)
                     for name in ['value.yaml', 'roots.yaml', 'serialized.ssz_snappy']:
                         member = tarfile.TarInfo(f'tests/mainnet/{fork}/ssz_static/BeaconState/ssz_random/case_0/{name}')
                         member.size = 6
@@ -36,6 +40,44 @@ class ConsensusVectorsTest(unittest.TestCase):
             self.assertEqual(len(list(destination.rglob('*.*'))), 3)
             self.assertFalse((destination / 'tests/mainnet/fulu').exists())
             self.assertEqual((destination / 'tests/mainnet/gloas/ssz_static/BeaconState/ssz_random/case_0/value.yaml').read_bytes(), b'vector')
+
+    def test_rejects_empty_case_directories_even_with_other_complete_cases(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / 'vectors.tar.gz'
+            with tarfile.open(archive, 'w:gz') as tar:
+                for name in ['value.yaml', 'roots.yaml', 'serialized.ssz_snappy']:
+                    tar.addfile(tarfile.TarInfo(f'tests/mainnet/gloas/ssz_static/Fork/ssz_random/case_0/{name}'))
+                empty = tarfile.TarInfo('tests/mainnet/gloas/ssz_static/Fork/ssz_random/case_9/')
+                empty.type = tarfile.DIRTYPE
+                tar.addfile(empty)
+            with self.assertRaisesRegex(ValueError, 'Incomplete vector case TestConsensusSpec/Fork/case_9'):
+                extract_vectors(archive, 'gloas', root / 'extracted')
+
+    def test_rejects_type_and_suite_directories_without_cases(self):
+        for path in ['FutureContainer/', 'FutureContainer/ssz_random/', 'Fork/ssz_other/']:
+            with self.subTest(path=path), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                archive = root / 'vectors.tar.gz'
+                with tarfile.open(archive, 'w:gz') as tar:
+                    for name in ['value.yaml', 'roots.yaml', 'serialized.ssz_snappy']:
+                        tar.addfile(tarfile.TarInfo(f'tests/mainnet/gloas/ssz_static/Fork/ssz_random/case_0/{name}'))
+                    empty = tarfile.TarInfo(f'tests/mainnet/gloas/ssz_static/{path}')
+                    empty.type = tarfile.DIRTYPE
+                    tar.addfile(empty)
+                with self.assertRaises(ValueError):
+                    extract_vectors(archive, 'gloas', root / 'extracted')
+
+    def test_rejects_unrecognized_empty_case_directory_layouts(self):
+        for case in ['Fork/ssz_other/case_0', 'Fork/ssz_random/case 0', 'Fork/ssz_random/case_0/nested']:
+            with self.subTest(case=case), tempfile.TemporaryDirectory() as directory:
+                archive = Path(directory) / 'vectors.tar.gz'
+                with tarfile.open(archive, 'w:gz') as tar:
+                    member = tarfile.TarInfo(f'tests/mainnet/gloas/ssz_static/{case}/')
+                    member.type = tarfile.DIRTYPE
+                    tar.addfile(member)
+                with self.assertRaisesRegex(ValueError, 'Unrecognized vector case layout'):
+                    extract_vectors(archive, 'gloas', Path(directory) / 'extracted')
 
     def test_rejects_missing_vectors_traversal_and_links(self):
         for name, kind in [
@@ -111,6 +153,7 @@ class ConsensusVectorsTest(unittest.TestCase):
                           'LightClientOptimisticUpdate', 'LightClientUpdate', 'MatrixEntry',
                           'NewPayloadRequest', 'PartialDataColumnGroupID', 'PartialDataColumnPartsMetadata',
                           'PartialDataColumnSidecar', 'PowBlock', 'SigningData'}
+        self.assertEqual(EXCLUDED_TYPES, {'gloas': excluded_types})
         included = {'TestConsensusSpec/Fork/case_0', 'TestConsensusSpec/FutureContainer/case_0'}
         all_cases = included | {f'TestConsensusSpec/{name}/case_0' for name in excluded_types}
         output = io.StringIO()
@@ -172,6 +215,34 @@ class ConsensusVectorsTest(unittest.TestCase):
             self.assertIn('matched no packages', process.stderr)
             self.assertNotIn('matched no packages', process.stdout)
             self.assertEqual(classify_result(process.returncode, process.stdout, set()), 'not-run')
+
+    def test_cli_bounds_download_attempts_and_reports_transfer_failure_as_not_run(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'spec/gloas').mkdir(parents=True)
+            release = {'assets': [{'name': 'mainnet.tar.gz', 'digest': 'sha256:' + 'a' * 64,
+                                   'browser_download_url': 'https://github.com/ethereum/consensus-specs/releases/download/v1.7.0-beta.4/mainnet.tar.gz'}]}
+            gh = root / 'gh'
+            gh.write_text('#!/bin/sh\nprintf \'%s\\n\' \'' + json.dumps(release) + '\'\n')
+            gh.chmod(0o700)
+            curl = root / 'curl'
+            curl.write_text('#!/bin/sh\nprintf \'%s\\n\' "$@" > "$CURL_ARGUMENTS"\nexit 28\n')
+            curl.chmod(0o700)
+            output = root / 'output'
+            arguments = root / 'arguments'
+            process = subprocess.run([sys.executable, str(Path(__file__).resolve().with_name('consensus_vectors.py')),
+                                      'v1.7.0-beta.4', 'gloas', str(root / 'vectors')],
+                                     cwd=root, capture_output=True, text=True,
+                                     env={**os.environ, 'PATH': str(root) + os.pathsep + os.environ['PATH'],
+                                          'GITHUB_OUTPUT': str(output), 'CURL_ARGUMENTS': str(arguments)})
+            self.assertNotEqual(process.returncode, 0)
+            self.assertEqual(output.read_text(), 'result=not-run\n')
+            args = arguments.read_text().splitlines()
+            for option, value in [('--connect-timeout', '30'), ('--max-time', '300'),
+                                  ('--retry-max-time', '300'), ('--retry', '3')]:
+                self.assertIn(option, args)
+                self.assertEqual(args[args.index(option) + 1], value)
+            self.assertIn('--retry-all-errors', args)
 
     def test_cli_rejects_invalid_inputs_and_reports_no_conformance_result(self):
         with tempfile.TemporaryDirectory() as directory:

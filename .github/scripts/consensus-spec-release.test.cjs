@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
 const { execFileSync } = require('node:child_process');
-const { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } = require('node:fs');
+const { existsSync, mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
 const { selectRelease, reviewIssue, alreadyReported, supportedVersion, issueBody } = require('./consensus-spec-release.cjs');
@@ -163,27 +163,55 @@ test('reproduction fetches the automation commit and tests the fetched target ra
         .replace("TARGET='<branch-tag-or-commit>'", `TARGET='${ref}'`)
         .replace("TARGET_REMOTE='<repository-url-or-origin>'", `TARGET_REMOTE='${remote}'`);
       // Exercise the real Git preflight without downloading vectors or running Go.
-      for (const failure of [false, true]) {
+      for (const [failure, locked, removeFailure] of [[false, false, false], [true, false, false],
+        [false, true, false], [true, true, false], [false, false, true], [true, false, true]]) {
         const preflight = snippet.split('GOTOOLCHAIN=auto python3')[0]
+          + (locked ? 'git worktree lock "$runner/target"\n' : '')
+          + (removeFailure ? 'git() { case "$*" in *"worktree remove"*) return 1 ;; *) command git "$@" ;; esac; }\n' : '')
+          + 'printf "Temporary runner: %s\\n" "$runner"\n'
           + `test "$(cat "$runner/consensus_vectors.py")" = 'print("runner")'\n`
-          + `test "$(cat README)" = '${content}'\n${failure ? 'exit 1\n' : ''})\n`;
+          + `test "$(cat README)" = '${content}'\n${failure ? `exit ${removeFailure ? 42 : 1}\n` : ''})\n`;
         let output;
+        let status = 0;
+        let stderr = '';
         try {
           output = execFileSync('sh', ['-c', preflight],
             { cwd: target, env, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
-          assert.equal(failure, false);
         } catch (error) {
-          assert.equal(failure, true);
-          assert.equal(error.status, 1);
+          status = error.status;
+          stderr = error.stderr;
           output = error.stdout;
         }
+        assert.equal(status, failure ? (removeFailure ? 42 : 1) : (removeFailure ? 1 : 0));
+        if (removeFailure) assert.ok(stderr.includes('Could not remove temporary worktree'));
         assert.equal(git(target, 'rev-parse', 'HEAD'), localSHA);
         assert.equal(git(target, 'symbolic-ref', 'HEAD'), originalBranch);
         assert.equal(git(target, 'status', '--porcelain'), originalStatus);
+        if (removeFailure) {
+          const retained = /Temporary runner: (.+)/.exec(output)[1];
+          assert.ok(existsSync(join(retained, 'target')), 'retains the registered worktree after cleanup failure');
+          git(target, 'worktree', 'remove', '--force', '--force', join(retained, 'target'));
+          rmSync(retained, { recursive: true, force: true });
+        }
         assert.equal(git(target, 'worktree', 'list', '--porcelain').split('\n').filter(line => line.startsWith('worktree ')).length, 1);
         assert.ok(output.includes(expected), 'prints the tested commit');
       }
     }
+    const body = issueBody({ fork: 'gloas', tag: 'v1.7.0-beta.3', supported: 'v1.7.0-beta.2',
+      sha, runURL: 'https://example.com/run', result: 'fail' });
+    const earlyFailure = /```sh\n([\s\S]*?)```/.exec(body)[1]
+      .replace("TARGET='<branch-tag-or-commit>'", "TARGET='refs/heads/missing-target'")
+      .replace("TARGET_REMOTE='<repository-url-or-origin>'", "TARGET_REMOTE='origin'")
+      .replace('runner="$(mktemp -d)"', 'runner="$(mktemp -d)"\nprintf "Temporary runner: %s\\n" "$runner"');
+    assert.throws(() => execFileSync('sh', ['-c', earlyFailure],
+      { cwd: target, env, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }), error => {
+      assert.notEqual(error.status, 0);
+      const temporary = /Temporary runner: (.+)/.exec(error.stdout)[1];
+      assert.equal(existsSync(temporary), false, 'cleans temporary files before worktree creation');
+      return true;
+    });
+    assert.equal(git(target, 'status', '--porcelain'), originalStatus);
+    assert.equal(git(target, 'worktree', 'list', '--porcelain').split('\n').filter(line => line.startsWith('worktree ')).length, 1);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
@@ -193,6 +221,17 @@ test('workflow policy cancels superseded PR runs without cancelling master or ma
   const workflow = readFileSync(join(__dirname, '../workflows/consensus-spec-vectors.yml'), 'utf8');
   assert.ok(workflow.includes("cancel-in-progress: ${{ github.event_name == 'pull_request' }}"));
   assert.ok(workflow.includes("group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || github.run_id }}"));
+});
+
+test('vector Go setup matches the ordinary workflow major and selects the module toolchain', () => {
+  const ordinary = readFileSync(join(__dirname, '../workflows/test.yml'), 'utf8');
+  const major = /actions\/setup-go@v(\d+)/.exec(ordinary)[1];
+  assert.ok(ordinary.includes('go-version-file: go.mod'));
+  assert.ok(!ordinary.includes('go-version:'));
+  const composite = readFileSync(join(__dirname, '../actions/consensus-vectors/action.yml'), 'utf8');
+  assert.match(composite, new RegExp(`actions/setup-go@[a-f0-9]{40} # v${major}\\b`));
+  assert.ok(composite.includes('go-version-file: go.mod'));
+  assert.ok(!composite.includes('go-version:'));
 });
 
 test('ignores drafts and never proposes an equal or older version', () => {

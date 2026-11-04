@@ -76,8 +76,16 @@ TARGET='<branch-tag-or-commit>'
 TARGET_REMOTE='<repository-url-or-origin>'
 repo="$(git rev-parse --show-toplevel)"
 runner="$(mktemp -d)"
+worktree_added=false
 cleanup() {
-  git -C "$repo" worktree remove --force "$runner/target" >/dev/null 2>&1 || true
+  status=$?
+  if [ "$worktree_added" = true ]; then
+    if ! git -C "$repo" worktree remove --force --force "$runner/target"; then
+      echo "Could not remove temporary worktree; retained $runner" >&2
+      if [ "$status" -eq 0 ]; then status=1; fi
+      exit "$status"
+    fi
+  fi
   rm -rf "$runner"
 }
 trap cleanup EXIT
@@ -86,6 +94,7 @@ git fetch origin ${sha}
 git show FETCH_HEAD:.github/scripts/consensus_vectors.py > "$runner/consensus_vectors.py"
 git fetch "$TARGET_REMOTE" "$TARGET"
 git worktree add --detach "$runner/target" FETCH_HEAD
+worktree_added=true
 cd "$runner/target"
 echo "Tested go-eth2-client commit: $(git rev-parse HEAD)"
 GOTOOLCHAIN=auto python3 "$runner/consensus_vectors.py" ${tag} ${fork} "$runner/vectors"
