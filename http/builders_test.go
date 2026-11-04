@@ -144,6 +144,15 @@ func TestBuildersErrors(t *testing.T) {
 		require.NoError(t, err)
 		require.Empty(t, response.Data)
 	})
+
+	t.Run("NullBuilder", func(t *testing.T) {
+		var body string
+		provider := buildersTestServer(t, http.StatusOK, `{"execution_optimistic":false,"finalized":false,"data":[null]}`, &body)
+
+		response, err := provider.Builders(context.Background(), &api.BuildersOpts{State: "head"})
+		require.Nil(t, response)
+		require.EqualError(t, err, "builder 0 is null")
+	})
 }
 
 func TestBuildersOpts(t *testing.T) {
