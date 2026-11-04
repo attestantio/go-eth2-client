@@ -226,6 +226,8 @@ test('workflow policy cancels superseded PR runs without cancelling master or ma
 test('vector Go setup matches the ordinary workflow major and selects the module toolchain', () => {
   const ordinary = readFileSync(join(__dirname, '../workflows/test.yml'), 'utf8');
   const major = /actions\/setup-go@v(\d+)/.exec(ordinary)[1];
+  assert.ok(ordinary.indexOf('actions/checkout@') < ordinary.indexOf('actions/setup-go@'),
+    'checkout must provide go.mod before setup-go reads it');
   assert.ok(ordinary.includes('go-version-file: go.mod'));
   assert.ok(!ordinary.includes('go-version:'));
   const composite = readFileSync(join(__dirname, '../actions/consensus-vectors/action.yml'), 'utf8');
