@@ -4,7 +4,7 @@ dev:
     - add the Gloas BuilderPreferencesEntry type with JSON, YAML and SSZ support
   - stop multi SubmitProposerPreferences failing over and deactivating clients when called with nil options
   - add BuildersProvider for POST /eth/v1/beacon/states/{state_id}/builders in http, multi and mock clients
-  - encode the Gloas Builder JSON version as a decimal string, per beacon-APIs; the numeric form is no longer accepted
+  - encode the Gloas Builder JSON version as a decimal string, per beacon-APIs; the numeric form is no longer accepted, and a missing version now fails to decode in JSON and YAML
 
 0.30.3:
  - stop bounding all post response sizes and only filter for new epbs endpoints 
