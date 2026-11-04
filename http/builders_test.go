@@ -235,7 +235,8 @@ func TestBuildersGloas(t *testing.T) {
 	t.Run("PreGloasState", func(t *testing.T) {
 		spec, err := service.(client.SpecProvider).Spec(ctx, &api.SpecOpts{})
 		require.NoError(t, err)
-		if spec.Data["GLOAS_FORK_EPOCH"] == phase0.Epoch(0) {
+		// The spec decoder returns a zero integer as uint64(0).
+		if spec.Data["GLOAS_FORK_EPOCH"] == uint64(0) {
 			t.Skip("the chain starts on gloas, so it has no pre-gloas state")
 		}
 
