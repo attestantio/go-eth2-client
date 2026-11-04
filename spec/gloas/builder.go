@@ -127,7 +127,7 @@ func (v *Builder) unpack(builderJSON *builderJSON) error {
 
 	balance, err := strconv.ParseUint(builderJSON.Balance, 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for effective balance")
+		return errors.Wrap(err, "invalid value for balance")
 	}
 
 	v.Balance = phase0.Gwei(balance)
