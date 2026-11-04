@@ -2,7 +2,7 @@
 
 The supported release is declared per fork in
 [`.github/consensus-spec-versions.json`](../.github/consensus-spec-versions.json).
-Only Gloas declares support for v1.7.0-beta.2. This declaration covers mainnet
+Only Gloas declares support for v1.7.0-beta.4. This declaration covers mainnet
 static-vector YAML/SSZ encodings and hash-tree roots, not consensus state
 transitions, gossip validation, live HTTP compatibility, older forks or the minimal preset.
 
@@ -28,11 +28,16 @@ PartialDataColumnSidecar, PowBlock, SigningData
 ```
 
 These types were already untested. Their exclusion is not a claim that their
-production types are absent. The beta.2 archive contains 365 Gloas cases across
+production types are absent. The beta.4 archive contains 365 Gloas cases across
 73 types: 75 cases across these 15 types are excluded, leaving 290 required cases
 across 58 types. The log records declared exclusion names and included/excluded
 case counts. New or renamed types are required unless separately approved as
 exclusions; they cannot silently disappear from coverage.
+
+The [beta.2-to-beta.4 delta](https://github.com/ethereum/consensus-specs/compare/v1.7.0-beta.2...v1.7.0-beta.4)
+changes no Gloas serialized container layout. The beta.3 proposer-preferences
+signing-domain correction uses the proposal epoch's fork version; static encoding
+and hash-tree-root checks do not validate a caller's signing-domain choice.
 
 ## CI
 
@@ -83,7 +88,7 @@ set -eu
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 GOTOOLCHAIN=auto python3 .github/scripts/consensus_vectors.py \
-  v1.7.0-beta.2 gloas "$work/vectors"
+  v1.7.0-beta.4 gloas "$work/vectors"
 )
 ```
 
