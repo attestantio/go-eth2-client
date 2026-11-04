@@ -121,3 +121,9 @@ func TestBuilderYAMLUnquotedVersion(t *testing.T) {
 	require.NoError(t, builder.UnmarshalYAML(input))
 	require.Equal(t, uint8(7), builder.Version)
 }
+
+func TestBuilderJSONShortExecutionAddress(t *testing.T) {
+	input := []byte(`{"pubkey":"0x863917c482adda67fba8305a8ef2cce39cfcd0d13311c86c0cb5b648102b6a481d0b25931d7cfbb5fa3e21c114ec0951","version":"0","execution_address":"0x6756","balance":"1","deposit_epoch":"1","withdrawable_epoch":"1"}`)
+	var builder gloas.Builder
+	require.EqualError(t, json.Unmarshal(input, &builder), "incorrect length 2 for execution address")
+}

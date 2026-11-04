@@ -116,14 +116,10 @@ func (v *Builder) unpack(builderJSON *builderJSON) error {
 	}
 
 	if len(executionAddress) != bellatrix.ExecutionAddressLength {
-		return errors.New("incorrect length for fee recipient")
+		return fmt.Errorf("incorrect length %d for execution address", len(executionAddress))
 	}
 
 	copy(v.ExecutionAddress[:], executionAddress)
-
-	if len(executionAddress) != bellatrix.ExecutionAddressLength {
-		return fmt.Errorf("incorrect length %d for execution address", len(executionAddress))
-	}
 
 	if builderJSON.Balance == "" {
 		return errors.New("balance missing")
