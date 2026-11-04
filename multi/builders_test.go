@@ -99,3 +99,31 @@ func TestBuildersDoesNotFailOverOnInvalidOptions(t *testing.T) {
 		})
 	}
 }
+
+// TestBuildersFailsOver ensures that an ordinary error from one client moves
+// the call on to the next.
+func TestBuildersFailsOver(t *testing.T) {
+	ctx := context.Background()
+
+	client1, err := mock.New(ctx, mock.WithName("mock 1"))
+	require.NoError(t, err)
+	client1.BuildersFunc = func(_ context.Context, _ *api.BuildersOpts) (*api.Response[map[gloas.BuilderIndex]*apiv1.Builder], error) {
+		return nil, errors.New("node failure")
+	}
+	client2, err := mock.New(ctx, mock.WithName("mock 2"))
+	require.NoError(t, err)
+	expected := &api.Response[map[gloas.BuilderIndex]*apiv1.Builder]{Data: map[gloas.BuilderIndex]*apiv1.Builder{}, Metadata: map[string]any{}}
+	client2.BuildersFunc = func(_ context.Context, _ *api.BuildersOpts) (*api.Response[map[gloas.BuilderIndex]*apiv1.Builder], error) {
+		return expected, nil
+	}
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{client1, client2}),
+	)
+	require.NoError(t, err)
+
+	res, err := multiClient.(consensusclient.BuildersProvider).Builders(ctx, &api.BuildersOpts{State: "head"})
+	require.NoError(t, err)
+	require.Same(t, expected, res)
+}

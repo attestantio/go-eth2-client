@@ -19,6 +19,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -61,6 +62,9 @@ func buildersTestServer(t *testing.T, status int, response string, body *string)
 			w.WriteHeader(status)
 			_, _ = w.Write([]byte(response))
 		default:
+			if strings.HasSuffix(r.URL.Path, "/builders") {
+				*body = "unexpected request to " + r.URL.Path
+			}
 			http.NotFound(w, r)
 		}
 	}))
@@ -145,6 +149,20 @@ func TestBuildersErrors(t *testing.T) {
 		require.Empty(t, response.Data)
 	})
 
+	for name, response := range map[string]string{
+		"NoData":   `{"execution_optimistic":false,"finalized":false}`,
+		"NullData": `{"execution_optimistic":false,"finalized":false,"data":null}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			var body string
+			provider := buildersTestServer(t, http.StatusOK, response, &body)
+
+			response, err := provider.Builders(context.Background(), &api.BuildersOpts{State: "head"})
+			require.Nil(t, response)
+			require.EqualError(t, err, "no builders in response")
+		})
+	}
+
 	t.Run("NullBuilder", func(t *testing.T) {
 		var body string
 		provider := buildersTestServer(t, http.StatusOK, `{"execution_optimistic":false,"finalized":false,"data":[null]}`, &body)
@@ -215,7 +233,13 @@ func TestBuildersGloas(t *testing.T) {
 	})
 
 	t.Run("PreGloasState", func(t *testing.T) {
-		_, err := provider.Builders(ctx, &api.BuildersOpts{State: "genesis"})
+		spec, err := service.(client.SpecProvider).Spec(ctx, &api.SpecOpts{})
+		require.NoError(t, err)
+		if spec.Data["GLOAS_FORK_EPOCH"] == phase0.Epoch(0) {
+			t.Skip("the chain starts on gloas, so it has no pre-gloas state")
+		}
+
+		_, err = provider.Builders(ctx, &api.BuildersOpts{State: "genesis"})
 		var apiErr *api.Error
 		require.True(t, errors.As(err, &apiErr))
 		// Teku answers 404 here, as it does not serve the genesis state.
