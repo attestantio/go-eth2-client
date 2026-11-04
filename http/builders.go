@@ -37,7 +37,8 @@ type buildersBody struct {
 // Builders provides the builders, with their status, for the given options.
 // A non-2xx response returns an error wrapping an *api.Error with the node's
 // status code.  A 404 means either the node does not serve the endpoint or it
-// does not know the state.
+// does not know the state.  Without filters the node returns every builder,
+// which on a large registry can need a longer opts.Common.Timeout.
 func (s *Service) Builders(ctx context.Context,
 	opts *api.BuildersOpts,
 ) (
@@ -84,9 +85,14 @@ func (s *Service) Builders(ctx context.Context,
 		return nil, errors.Join(errors.New("failed to request builders"), err)
 	}
 
-	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*apiv1.Builder{})
+	// Seeded with a nil slice so that a body with no data, or null data, is
+	// distinguishable from an empty list of builders.
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(httpResponse.body), []*apiv1.Builder(nil))
 	if err != nil {
 		return nil, err
+	}
+	if data == nil {
+		return nil, errors.New("no builders in response")
 	}
 
 	// Data is returned as an array but we want it as a map.
