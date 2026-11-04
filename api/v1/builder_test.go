@@ -65,3 +65,9 @@ func TestBuilderJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestBuilderJSONMaxIndex(t *testing.T) {
+	var res api.Builder
+	require.NoError(t, json.Unmarshal([]byte(`{"index":"18446744073709551615","status":"active","builder":`+builderExample+`}`), &res))
+	require.Equal(t, gloas.BuilderIndex(18446744073709551615), res.Index)
+}
