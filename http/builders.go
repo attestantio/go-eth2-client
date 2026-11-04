@@ -91,7 +91,10 @@ func (s *Service) Builders(ctx context.Context,
 
 	// Data is returned as an array but we want it as a map.
 	mapData := make(map[gloas.BuilderIndex]*apiv1.Builder, len(data))
-	for _, builder := range data {
+	for i, builder := range data {
+		if builder == nil {
+			return nil, fmt.Errorf("builder %d is null", i)
+		}
 		mapData[builder.Index] = builder
 	}
 
