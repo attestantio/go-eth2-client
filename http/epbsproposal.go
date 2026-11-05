@@ -365,32 +365,23 @@ func maxConfiguredExecutionPayment(config *gloas.BuilderConfig) phase0.Gwei {
 	return maximum
 }
 
-// builderEntriesForURL returns the entries the returned Eth-Builder-Url names.
-// Exact matches win; failing those the URLs are compared normalised, because
-// Lighthouse returns the URL re-serialised from a parsed form.
+// builderEntriesForURL returns the entries the returned Eth-Builder-Url names:
+// those whose URL matches it exactly or once both are normalised, because
+// Lighthouse returns the URL re-serialised from a parsed form and so returns
+// the same string for entries that differ only in that form.
 func builderEntriesForURL(config *gloas.BuilderConfig, builderURL string) []*gloas.BuilderEntry {
-	entries := builderEntriesMatching(config, func(entryURL string) bool { return entryURL == builderURL })
-	if len(entries) > 0 {
-		return entries
-	}
-
 	normalized, valid := normalizedBuilderURL(builderURL)
-	if !valid {
-		return nil
-	}
 
-	return builderEntriesMatching(config, func(entryURL string) bool {
-		candidate, isValid := normalizedBuilderURL(entryURL)
-
-		return isValid && candidate == normalized
-	})
-}
-
-func builderEntriesMatching(config *gloas.BuilderConfig, matches func(entryURL string) bool) []*gloas.BuilderEntry {
 	var entries []*gloas.BuilderEntry
-	for _, candidate := range config.Builders {
-		if matches(string(candidate.URL)) {
-			entries = append(entries, candidate)
+	for _, entry := range config.Builders {
+		entryURL := string(entry.URL)
+		if entryURL == builderURL {
+			entries = append(entries, entry)
+
+			continue
+		}
+		if candidate, isValid := normalizedBuilderURL(entryURL); valid && isValid && candidate == normalized {
+			entries = append(entries, entry)
 		}
 	}
 

@@ -219,6 +219,27 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			url: "https://shared.example:443",
 			err: "execution payload bid below minimum",
 		},
+		// A URL with no host cannot be normalised, but still matches exactly.
+		{
+			name:     "UnparseableBuilderURLMatchesExactly",
+			proposal: epbsProposalWithBid(1, 5, 0, 5_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 10, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("builder.example"), MinBid: 1},
+			}},
+			url: "builder.example",
+		},
+		// Lighthouse returns the same form for both entries, so an exact match
+		// does not say which won, and both apply.
+		{
+			name:     "ExactAndNormalisedMatchesBothApply",
+			proposal: epbsProposalWithBid(1, 5, 0, 5_000_000_000),
+			config: &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{
+				{URL: []byte("http://builder.example:8080"), MinBid: 6},
+				{URL: []byte("http://builder.example:8080/"), MinBid: 1},
+			}},
+			url: "http://builder.example:8080/",
+			err: "execution payload bid below minimum",
+		},
 		// Lighthouse returns Eth-Builder-Url re-serialised from a parsed URL, so a
 		// URL that differs from its entry only in that form still attributes to it.
 		{

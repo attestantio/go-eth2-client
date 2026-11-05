@@ -1,7 +1,7 @@
 dev:
  - fix a data race in the multi client, which read its lists of clients outside their lock when rechecking them
  - fix ePBS proposal validation so neither Eth-Builder-Url nor execution_payment can skip the minimum bid
-   - Eth-Builder-Url matches an entry exactly, or else after normalising scheme and host case, default port and an empty path, as Lighthouse returns it
+   - Eth-Builder-Url names every entry whose URL matches it exactly or after normalising scheme and host case, default port and an empty path, as Lighthouse returns it
    - a builder bid from a URL several entries share must clear every one of their min_bid values, each with its own payment cap
    - any other builder bid is held to the top-level min_bid, with its payment counted up to the largest cap in the config
  - reject an ePBS builder config in which two entries share both URL and authorization data
