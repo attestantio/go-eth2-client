@@ -48,6 +48,11 @@ const maxProposalValueDigits = 40
 // own limit below rather than raising this one for everybody.
 const maxEPBSResponseSize = 64 * 1024 * 1024
 
+// maxEPBSJSONResponseSize covers the same responses as JSON, whose hex costs
+// slightly over two bytes per SSZ byte, so a node's choice of encoding does not
+// change how much data is accepted.
+const maxEPBSJSONResponseSize = 2 * maxEPBSResponseSize
+
 // maxEPBSProposalResponseSize bounds a full SSZ payload-included block
 // production response.  It is an allocation budget, not the protocol's static
 // maximum: readResponseBody has to buffer a body without a declared length in
@@ -57,7 +62,7 @@ const maxEPBSResponseSize = 64 * 1024 * 1024
 // is no better.  Every live preset proposes orders of magnitude below this.  A
 // legitimate response refused here fails loudly with the limit in the message,
 // so a future preset that genuinely outgrows it needs this raised deliberately;
-// TestEPBSProposalResponseLimitsAreSurvivable holds the ceiling it must respect.
+// TestEPBSResponseLimits holds the ceiling it must respect.
 const maxEPBSProposalResponseSize = 256 * 1024 * 1024
 
 // maxEPBSProposalJSONResponseSize covers the same response as JSON, whose hex
@@ -67,7 +72,7 @@ const maxEPBSProposalResponseSize = 256 * 1024 * 1024
 const maxEPBSProposalJSONResponseSize = 512 * 1024 * 1024
 
 var (
-	epbsResponseLimit         = responseLimit{ssz: maxEPBSResponseSize, json: maxEPBSResponseSize}
+	epbsResponseLimit         = responseLimit{ssz: maxEPBSResponseSize, json: maxEPBSJSONResponseSize}
 	epbsProposalResponseLimit = responseLimit{ssz: maxEPBSProposalResponseSize, json: maxEPBSProposalJSONResponseSize}
 )
 

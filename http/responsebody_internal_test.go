@@ -155,33 +155,38 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 	}
 }
 
-// TestEPBSProposalResponseLimitsAreSurvivable pins the property that makes the
-// block-production limits a defence rather than a comment.  For a body without
-// a declared length, readResponseBody reaches its length check only after
-// io.ReadAll has buffered the whole body, and ReadAll grows its buffer
-// geometrically, so peak allocation is close to twice the limit.  A limit taken from the protocol's theoretical maximum
-// (~2GiB of SSZ, ~5GiB of JSON hex) is therefore never reached -- the process
-// dies first -- and a body admitted just under one is equally fatal.
+// TestEPBSResponseLimits pins two properties of every ePBS limit pair.
 //
-// The ceiling below is an allocation budget, not a protocol bound: every live
-// preset produces a payload-included response orders of magnitude smaller, so
-// the JSON limit sitting exactly at half the budget is the deliberate ceiling
-// rather than a coincidence.  Raising either limit past it is the regression
-// this test exists to catch.
-func TestEPBSProposalResponseLimitsAreSurvivable(t *testing.T) {
-	const maxProposalResponsePeakAllocation = 1024 * 1024 * 1024
+// Survivable: for a body without a declared length, readResponseBody reaches
+// its length check only after io.ReadAll has buffered the whole body, and
+// ReadAll grows its buffer geometrically, so peak allocation is close to twice
+// the limit.  A limit taken from the protocol's theoretical maximum (~2GiB of
+// SSZ, ~5GiB of JSON hex) is therefore never reached -- the process dies first
+// -- and a body admitted just under one is equally fatal.  The ceiling below is
+// an allocation budget, not a protocol bound: every live preset produces a
+// payload-included response orders of magnitude smaller, so the proposal JSON
+// limit sitting exactly at half the budget is the deliberate ceiling rather
+// than a coincidence.  Raising any limit past it is a regression.
+//
+// One budget for the data: JSON hex costs slightly over two bytes per SSZ
+// byte, so a JSON limit below twice its SSZ limit would accept less data when
+// a node chooses to answer in JSON.
+func TestEPBSResponseLimits(t *testing.T) {
+	const maxResponsePeakAllocation = 1024 * 1024 * 1024
 
 	tests := []struct {
 		name  string
-		limit int
+		limit responseLimit
 	}{
-		{name: "SSZ", limit: maxEPBSProposalResponseSize},
-		{name: "JSON", limit: maxEPBSProposalJSONResponseSize},
+		{name: "Fetch", limit: epbsResponseLimit},
+		{name: "Proposal", limit: epbsProposalResponseLimit},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			require.LessOrEqual(t, 2*test.limit, maxProposalResponsePeakAllocation)
+			require.LessOrEqual(t, 2*test.limit.ssz, maxResponsePeakAllocation)
+			require.LessOrEqual(t, 2*test.limit.json, maxResponsePeakAllocation)
+			require.GreaterOrEqual(t, test.limit.json, 2*test.limit.ssz)
 		})
 	}
 }
