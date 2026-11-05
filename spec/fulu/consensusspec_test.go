@@ -17,12 +17,12 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/fulu"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -77,24 +77,12 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &fulu.BeaconState{},
 		},
 		{
-			name: "BlobIdentifier",
-			s:    &deneb.BlobIdentifier{},
-		},
-		{
-			name: "BlobSidecar",
-			s:    &deneb.BlobSidecar{},
-		},
-		{
 			name: "BLSToExecutionChange",
 			s:    &capella.BLSToExecutionChange{},
 		},
 		{
 			name: "Checkpoint",
 			s:    &phase0.Checkpoint{},
-		},
-		{
-			name: "Consolidation",
-			s:    &electra.Consolidation{},
 		},
 		{
 			name: "ConsolidationRequest",
@@ -143,10 +131,6 @@ func TestConsensusSpec(t *testing.T) {
 		{
 			name: "IndexedAttestation",
 			s:    &electra.IndexedAttestation{},
-		},
-		{
-			name: "PendingAttestation",
-			s:    &phase0.PendingAttestation{},
 		},
 		{
 			name: "PendingDeposit",
@@ -222,16 +206,18 @@ func TestConsensusSpec(t *testing.T) {
 		},
 	}
 
-	baseDir := filepath.Join(os.Getenv("CONSENSUS_SPEC_TESTS_DIR"), "tests", "mainnet", "electra", "ssz_static")
+	baseDir := filepath.Join(os.Getenv("CONSENSUS_SPEC_TESTS_DIR"), "tests", "mainnet", "fulu", "ssz_static")
 	for _, test := range tests {
 		dir := filepath.Join(baseDir, test.name, "ssz_random")
+		cases := 0
 		require.NoError(t, filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+			require.NoError(t, err)
 			if path == dir {
 				// Only interested in subdirectories.
 				return nil
 			}
-			require.NoError(t, err)
 			if info.IsDir() {
+				cases++
 				t.Run(fmt.Sprintf("%s/%s", test.name, info.Name()), func(t *testing.T) {
 					s1 := clone.Clone(test.s)
 					// Obtain the struct from the YAML.
@@ -274,6 +260,32 @@ func TestConsensusSpec(t *testing.T) {
 
 			return nil
 		}))
+		require.Positive(t, cases, "No vector cases for %s", test.name)
+	}
+}
+
+func TestConsensusSpecRequiresVectorDirectories(t *testing.T) {
+	tests := []struct {
+		name  string
+		empty bool
+		err   string
+	}{
+		{name: "Missing", err: "fulu/ssz_static/AggregateAndProof/ssz_random"},
+		{name: "Empty", empty: true, err: "No vector cases for AggregateAndProof"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			directory := t.TempDir()
+			if test.empty {
+				require.NoError(t, os.MkdirAll(filepath.Join(directory,
+					"tests/mainnet/fulu/ssz_static/AggregateAndProof/ssz_random"), 0o700))
+			}
+			t.Setenv("CONSENSUS_SPEC_TESTS_DIR", directory)
+			command := exec.Command(os.Args[0], "-test.run=^TestConsensusSpec$", "-test.v")
+			output, err := command.CombinedOutput()
+			require.Error(t, err, string(output))
+			require.Contains(t, string(output), test.err)
+		})
 	}
 }
 
