@@ -21,7 +21,9 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 )
 
-// SubmitBuilderPreferences submits builder preferences.
+// SubmitBuilderPreferences submits builder preferences.  A 4xx from a client,
+// including a 404 from a node that does not serve the endpoint, is returned
+// without trying the next client.
 func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.SubmitBuilderPreferencesOpts) error {
 	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		if err := client.(consensusclient.BuilderPreferencesSubmitter).SubmitBuilderPreferences(ctx, opts); err != nil {
