@@ -29,8 +29,8 @@ func TestValidateEPBSProposalExecutionValueRejectsMismatchedP2PHeader(t *testing
 	proposal := epbsProposalWithBid(1, 10, 0, 11_000_000_000)
 
 	err := validateEPBSProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "", staticBuilderIndexSelfBuild, nil)
-	require.Error(t, err)
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
+	require.ErrorContains(t, err, "execution payload value does not match bid")
 }
 
 func TestValidateEPBSProposalExecutionValueRejectsP2PBelowMinimum(t *testing.T) {
@@ -38,6 +38,7 @@ func TestValidateEPBSProposalExecutionValueRejectsP2PBelowMinimum(t *testing.T) 
 
 	err := validateEPBSProposalExecutionValue(proposal, &gloas.BuilderConfig{MinBid: 10}, "", staticBuilderIndexSelfBuild, nil)
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
+	require.ErrorContains(t, err, "execution payload bid below minimum")
 }
 
 func TestValidateEPBSProposalExecutionValueRejectsMismatchedDirectHeader(t *testing.T) {
@@ -50,6 +51,7 @@ func TestValidateEPBSProposalExecutionValueRejectsMismatchedDirectHeader(t *test
 
 	err := validateEPBSProposalExecutionValue(proposal, config, "https://builder.example", staticBuilderIndexSelfBuild, nil)
 	require.ErrorIs(t, err, client.ErrInconsistentResult)
+	require.ErrorContains(t, err, "execution payload value does not match bid")
 }
 
 func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
@@ -62,12 +64,16 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			{URL: []byte("https://direct.example"), MaxExecutionPayment: maxPayment, MinBid: minBid},
 		}}
 	}
+	twoCaps := &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{
+		{URL: []byte("https://a.example"), MaxExecutionPayment: 1, MinBid: 10},
+		{URL: []byte("https://b.example"), MaxExecutionPayment: 5, MinBid: 10},
+	}}
 	tests := []struct {
 		name     string
 		proposal *api.VersionedEPBSProposal
 		config   *gloas.BuilderConfig
 		url      string
-		err      bool
+		err      string
 		unknown  bool
 	}{
 		{
@@ -80,7 +86,7 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			name:     "NoHeaderBelowMinimum",
 			proposal: epbsProposalWithoutValue(1, 9, 0),
 			config:   &gloas.BuilderConfig{MinBid: 10},
-			err:      true,
+			err:      "execution payload bid below minimum",
 		},
 		{
 			name:     "P2PPaymentUncheckable",
@@ -88,26 +94,52 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			config:   &gloas.BuilderConfig{MinBid: 10},
 			unknown:  true,
 		},
+		// With no execution payment there is no cap to resolve, so the value is
+		// checkable against the bid whatever URL the node returned.
 		{
-			name:     "DuplicateBuilderURL",
+			name:     "SharedBuilderURLWithoutPaymentKeepsValue",
 			proposal: epbsProposalWithBid(1, 10, 0, 10_000_000_000),
+			config:   duplicateURLs,
+			url:      "https://duplicate.example",
+		},
+		{
+			name:     "UnmatchedBuilderURLWithoutPaymentKeepsValue",
+			proposal: epbsProposalWithBid(1, 10, 0, 10_000_000_000),
+			config:   &gloas.BuilderConfig{MinBid: 10},
+			url:      "https://unknown.example",
+		},
+		{
+			name:     "UnmatchedBuilderURLWithoutPaymentChecksValue",
+			proposal: epbsProposalWithBid(1, 10, 0, 11_000_000_000),
+			config:   &gloas.BuilderConfig{MinBid: 10},
+			url:      "https://unknown.example",
+			err:      "execution payload value does not match bid",
+		},
+		{
+			name:     "SharedBuilderURLWithPaymentUncheckable",
+			proposal: epbsProposalWithBid(1, 10, 3, 13_000_000_000),
 			config:   duplicateURLs,
 			url:      "https://duplicate.example",
 			unknown:  true,
 		},
-		// A self-build has no signed bid the reported value could contradict,
-		// and bid.Value is zero by construction, so the node's figure is the
+		// A self-build's bid commits to no value, so the node's figure is the
 		// only signal of what the block is worth and is kept.
 		{
 			name:     "SelfBuildKeepsReportedValue",
 			proposal: epbsProposalWithBid(staticBuilderIndexSelfBuild, 0, 7, 7_000_000_000),
 			config:   duplicateURLs,
 		},
+		// A local build is not a bid, so no floor applies to it.
+		{
+			name:     "SelfBuildIgnoresMinimum",
+			proposal: epbsProposalWithBid(staticBuilderIndexSelfBuild, 0, 0, 7_000_000_000),
+			config:   &gloas.BuilderConfig{MinBid: 1_000_000_000},
+		},
 		{
 			name:     "SelfBuildNonZeroBid",
 			proposal: epbsProposalWithBid(staticBuilderIndexSelfBuild, 1, 0, 1_000_000_000),
 			config:   duplicateURLs,
-			err:      true,
+			err:      "self-built execution payload bid has non-zero value",
 		},
 		// An Eth-Builder-Url the config does not name is the node's to choose,
 		// so it must not buy the bid an exemption from the configured floor.
@@ -116,17 +148,28 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			proposal: epbsProposalWithBid(1, 1, 0, 1_000_000_000),
 			config:   &gloas.BuilderConfig{MinBid: 1_000_000_000},
 			url:      "https://unknown.example",
-			err:      true,
+			err:      "execution payload bid below minimum",
+		},
+		// Entries may share a URL, so a bid from it is held to every sharing
+		// entry's own floor and cap rather than to the config-wide minimum.
+		{
+			name:     "SharedBuilderURLUsesEntryMinimums",
+			proposal: epbsProposalWithBid(1, 5, 0, 5_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 1_000_000_000, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://shared.example"), MinBid: 1},
+				{URL: []byte("https://shared.example"), MinBid: 5},
+			}},
+			url: "https://shared.example",
 		},
 		{
-			name:     "DuplicateBuilderURLStillChecksMinimum",
-			proposal: epbsProposalWithBid(1, 1, 0, 1_000_000_000),
-			config: &gloas.BuilderConfig{MinBid: 1_000_000_000, Builders: []*gloas.BuilderEntry{
-				{URL: []byte("https://duplicate.example")},
-				{URL: []byte("https://duplicate.example")},
+			name:     "SharedBuilderURLChecksEveryEntryMinimum",
+			proposal: epbsProposalWithBid(1, 5, 0, 5_000_000_000),
+			config: &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://shared.example"), MinBid: 1},
+				{URL: []byte("https://shared.example"), MinBid: 6},
 			}},
-			url: "https://duplicate.example",
-			err: true,
+			url: "https://shared.example",
+			err: "execution payload bid below minimum",
 		},
 		// A header sent twice reaches the validator joined with ";".
 		{
@@ -136,7 +179,7 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 				{URL: []byte("https://direct.example")},
 			}},
 			url: "https://direct.example;https://direct.example",
-			err: true,
+			err: "execution payload bid below minimum",
 		},
 		// Nor must a p2p builder disable the floor by attaching a token
 		// execution payment that cannot be capped.
@@ -144,7 +187,7 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			name:     "P2PPaymentStillChecksMinimum",
 			proposal: epbsProposalWithBid(1, 1, 1, 1_000_000_000),
 			config:   &gloas.BuilderConfig{MinBid: 1_000_000_000},
-			err:      true,
+			err:      "execution payload bid below minimum",
 		},
 		// An attributed bid is judged against its entry's minimum only; the
 		// config-wide minimum is the floor for unattributed bids.
@@ -156,9 +199,56 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			}},
 			url: "https://direct.example",
 		},
+		{
+			name:     "SharedBuilderURLUsesEachEntryCap",
+			proposal: epbsProposalWithBid(1, 6, 5, 11_000_000_000),
+			config: &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://shared.example"), MinBid: 10, MaxExecutionPayment: 5},
+				{URL: []byte("https://shared.example"), MinBid: 10, MaxExecutionPayment: 1},
+			}},
+			url: "https://shared.example",
+			err: "execution payload bid below minimum",
+		},
+		{
+			name:     "NormalisedSharedBuilderURLChecksEveryEntryMinimum",
+			proposal: epbsProposalWithBid(1, 5, 0, 5_000_000_000),
+			config: &gloas.BuilderConfig{Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://shared.example"), MinBid: 1},
+				{URL: []byte("https://SHARED.example/"), MinBid: 6},
+			}},
+			url: "https://shared.example:443",
+			err: "execution payload bid below minimum",
+		},
+		// Lighthouse returns Eth-Builder-Url re-serialised from a parsed URL, so a
+		// URL that differs from its entry only in that form still attributes to it.
+		{
+			name:     "TrailingSlashBuilderURLAttributesBid",
+			proposal: epbsProposalWithBid(1, 5, 0, 5_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 10, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://lh.example"), MinBid: 1},
+			}},
+			url: "https://lh.example/",
+		},
+		{
+			name:     "CaseAndDefaultPortBuilderURLAttributesBid",
+			proposal: epbsProposalWithBid(1, 5, 0, 5_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 10, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://lh.example/"), MinBid: 1},
+			}},
+			url: "HTTPS://LH.Example:443",
+		},
+		{
+			name:     "DifferentPathBuilderURLIsUnmatched",
+			proposal: epbsProposalWithBid(1, 5, 0, 5_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 10, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("https://lh.example/v1"), MinBid: 1},
+			}},
+			url: "https://lh.example/v2",
+			err: "execution payload bid below minimum",
+		},
 		// Where the bid cannot be attributed the payment counts up to the most
-		// permissive cap the config allows, which can only admit bids that a
-		// resolvable cap would also have admitted.
+		// permissive cap the config allows, so any bid an entry's own cap would
+		// admit is admitted too.
 		{
 			name:     "UnattributedBidUsesMostPermissiveCap",
 			proposal: epbsProposalWithBid(1, 6, 5, 11_000_000_000),
@@ -169,22 +259,27 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			unknown: true,
 		},
 		// A matched entry's own cap applies, not the largest one in the config.
+		// The floor decides it, so it holds without a value header too.
 		{
 			name:     "MatchedEntryUsesItsOwnCap",
 			proposal: epbsProposalWithBid(1, 6, 5, 11_000_000_000),
-			config: &gloas.BuilderConfig{MinBid: 10, Builders: []*gloas.BuilderEntry{
-				{URL: []byte("https://a.example"), MaxExecutionPayment: 1},
-				{URL: []byte("https://b.example"), MaxExecutionPayment: 5},
-			}},
-			url: "https://a.example",
-			err: true,
+			config:   twoCaps,
+			url:      "https://a.example",
+			err:      "execution payload bid below minimum",
+		},
+		{
+			name:     "MatchedEntryUsesItsOwnCapWithoutHeader",
+			proposal: epbsProposalWithoutValue(1, 6, 5),
+			config:   twoCaps,
+			url:      "https://a.example",
+			err:      "execution payload bid below minimum",
 		},
 		{
 			name:     "DirectBelowMinimum",
 			proposal: epbsProposalWithBid(1, 10, 2, 12_000_000_000),
 			config:   direct(2, 13),
 			url:      "https://direct.example",
-			err:      true,
+			err:      "execution payload bid below minimum",
 		},
 		// beacon-APIs does not say whether the reported value includes the
 		// execution payment, so both ends of the bid-bound bracket are accepted
@@ -211,7 +306,7 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			proposal: epbsProposalWithBid(1, 10, 3, 13_000_000_000),
 			config:   direct(2, 10),
 			url:      "https://direct.example",
-			err:      true,
+			err:      "execution payload value does not match bid",
 		},
 	}
 	for _, test := range tests {
@@ -225,8 +320,9 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 				metadata["execution_payload_value"] = value.String()
 			}
 			err := validateEPBSProposalExecutionValue(test.proposal, test.config, test.url, staticBuilderIndexSelfBuild, metadata)
-			if test.err {
+			if test.err != "" {
 				require.ErrorIs(t, err, client.ErrInconsistentResult)
+				require.ErrorContains(t, err, test.err)
 
 				return
 			}

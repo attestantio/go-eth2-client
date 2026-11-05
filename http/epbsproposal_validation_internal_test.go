@@ -119,6 +119,32 @@ func TestValidateBuilderConfig(t *testing.T) {
 			config: tooManyPubkeys,
 			err:    "builder 0 has too many public keys",
 		},
+		{
+			// beacon-APIs lets entries share a url with different auth data,
+			// but no two may share both.
+			name: "SharedURLWithDifferentAuthorizationData",
+			config: func() *gloas.BuilderConfig {
+				config := validBuilderConfigForValidation()
+				second := *config.Builders[0]
+				second.Auth = &gloas.SignedBuilderRequestAuth{
+					Message: &gloas.BuilderRequestAuth{Data: []byte{0x03}, Slot: requestSlot},
+				}
+				config.Builders = append(config.Builders, &second)
+
+				return config
+			}(),
+		},
+		{
+			name: "SharedURLAndAuthorizationData",
+			config: func() *gloas.BuilderConfig {
+				config := validBuilderConfigForValidation()
+				second := *config.Builders[0]
+				config.Builders = append(config.Builders, &second)
+
+				return config
+			}(),
+			err: "builder 1 has the same URL and authorization data as builder 0",
+		},
 	}
 
 	for _, test := range tests {

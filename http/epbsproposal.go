@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"maps"
 	"math/big"
+	"net/url"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -228,14 +229,17 @@ func (s *Service) builderIndexSelfBuild(ctx context.Context) (gloas.BuilderIndex
 // the policy that was requested, and checks the execution value the node reported
 // against the bid that is signed in the block.
 //
-// The minimum-bid check runs on every path.  A bid attributed to a builder entry
-// is held to that entry's minimum only; any other bid is held to the config-wide
-// minimum.  Where the winning builder cannot be identified the cap on the
-// execution payment is unresolvable, so the most permissive cap the config allows
-// is used instead: that leaves the node no way to opt out of the proposer's floor.
-// A reported value that the block gives no way to tie to a specific builder entry
-// is cleared -- from the typed field and from the response metadata alike -- so a
-// caller ranking proposals never treats an unverified number as a verified one.
+// Every bid except a self-build is checked against a minimum, so neither the
+// Eth-Builder-Url header nor the execution payment can switch the check off.  A
+// bid whose URL names entries is held to each of their minimums and caps; any
+// other bid is held to the config-wide minimum, with its payment counted up to
+// the largest cap in the config.  Counting at that cap means an unattributed
+// payment can still lift a bid over the floor, although nothing binds the builder
+// to pay it.
+//
+// A reported value that cannot be checked against the signed bid is cleared --
+// from the typed field and from the response metadata alike -- so a caller
+// ranking proposals never treats an unverified number as a verified one.
 func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 	config *gloas.BuilderConfig,
 	builderURL string,
@@ -255,53 +259,43 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 			return errors.Join(errors.New("self-built execution payload bid has non-zero value"), client.ErrInconsistentResult)
 		}
 
-		// A self-build has no signed bid the reported value could contradict,
-		// and since bid.Value is zero by construction that value is the only
-		// signal of what the block is worth.  Clearing it here would make every
-		// locally built proposal unrankable, so it is left in place.
+		// A self-build's bid commits to no value, so nothing in the block can
+		// confirm or contradict the reported one, and that figure is the only
+		// signal of what the block is worth.  It is kept unchecked: clearing it
+		// would make every locally built proposal unrankable.
 		return nil
 	}
 
-	// minBid is the floor the bid has to clear and maxPayment the cap the
-	// execution payment counts up to.  Both start at the config-wide values,
-	// which is what applies when the bid cannot be attributed to an entry.
-	minBid := config.MinBid
-	maxPayment := maxConfiguredExecutionPayment(config)
-	attributed := false
-
-	switch {
-	case builderURL != "":
-		// builderEntryForURL returns nil for a URL that matches no entry or
-		// more than one, and the header is the node's to choose, so an
-		// unrecognised value leaves the bid unattributed rather than unchecked.
-		if entry := builderEntryForURL(config, builderURL); entry != nil {
-			// A builder-API bid is judged against the entry it was solicited
-			// under only, as builder-specs and beacon-APIs define it; the
-			// config-wide minimum gates unattributed bids.
-			minBid = entry.MinBid
-			maxPayment = entry.MaxExecutionPayment
-			attributed = true
+	// Each policy is a floor and the cap the execution payment counts up to,
+	// and the bid has to clear every one of them.  With no entry to attribute
+	// the bid to, that is the config-wide floor with the most permissive cap
+	// the config allows.  Entries sharing the returned URL each apply in full,
+	// so one entry's floor is never paired with another's cap.
+	//
+	// The reported value is checkable against the bid when there is a single
+	// policy, or when there is no execution payment and so no cap to resolve.
+	policies := []*gloas.BuilderEntry{{MinBid: config.MinBid, MaxExecutionPayment: maxConfiguredExecutionPayment(config)}}
+	checkable := bid.ExecutionPayment == 0
+	if builderURL != "" {
+		// The header is the node's to choose, so a URL that names no entry
+		// leaves the bid on the config-wide policy rather than unchecked.
+		if entries := builderEntriesForURL(config, builderURL); len(entries) > 0 {
+			policies = entries
+			checkable = checkable || len(entries) == 1
 		}
-	case bid.ExecutionPayment == 0:
-		// No builder URL means p2p or self-build.  With no payment to cap there
-		// is nothing left to resolve, so the value is checkable against the bid.
-		maxPayment = 0
-		attributed = true
-	default:
-		// A p2p bid with a payment: the cap that applies is the one for the
-		// entry whose pubkeys include the bidding builder's, and the block
-		// carries no pubkey to resolve the builder index against.
 	}
-
-	payment := min(bid.ExecutionPayment, maxPayment)
 
 	value := new(big.Int).SetUint64(uint64(bid.Value))
-	total := new(big.Int).Add(value, new(big.Int).SetUint64(uint64(payment)))
-	if total.Cmp(new(big.Int).SetUint64(uint64(minBid))) < 0 {
-		return errors.Join(errors.New("execution payload bid below minimum"), client.ErrInconsistentResult)
+	var total *big.Int
+	for _, policy := range policies {
+		payment := min(bid.ExecutionPayment, policy.MaxExecutionPayment)
+		total = new(big.Int).Add(value, new(big.Int).SetUint64(uint64(payment)))
+		if total.Cmp(new(big.Int).SetUint64(uint64(policy.MinBid))) < 0 {
+			return errors.Join(errors.New("execution payload bid below minimum"), client.ErrInconsistentResult)
+		}
 	}
 
-	if !attributed {
+	if !checkable {
 		clearExecutionValue(proposal, metadata)
 
 		return nil
@@ -358,19 +352,54 @@ func maxConfiguredExecutionPayment(config *gloas.BuilderConfig) phase0.Gwei {
 	return maximum
 }
 
-func builderEntryForURL(config *gloas.BuilderConfig, builderURL string) *gloas.BuilderEntry {
-	var entry *gloas.BuilderEntry
-	for _, candidate := range config.Builders {
-		if string(candidate.URL) == builderURL {
-			if entry != nil {
-				return nil
-			}
+// builderEntriesForURL returns the entries the returned Eth-Builder-Url names.
+// Exact matches win; failing those the URLs are compared normalised, because
+// Lighthouse returns the URL re-serialised from a parsed form.
+func builderEntriesForURL(config *gloas.BuilderConfig, builderURL string) []*gloas.BuilderEntry {
+	entries := builderEntriesMatching(config, func(entryURL string) bool { return entryURL == builderURL })
+	if len(entries) > 0 {
+		return entries
+	}
 
-			entry = candidate
+	normalized, valid := normalizedBuilderURL(builderURL)
+	if !valid {
+		return nil
+	}
+
+	return builderEntriesMatching(config, func(entryURL string) bool {
+		candidate, isValid := normalizedBuilderURL(entryURL)
+
+		return isValid && candidate == normalized
+	})
+}
+
+func builderEntriesMatching(config *gloas.BuilderConfig, matches func(entryURL string) bool) []*gloas.BuilderEntry {
+	var entries []*gloas.BuilderEntry
+	for _, candidate := range config.Builders {
+		if matches(string(candidate.URL)) {
+			entries = append(entries, candidate)
 		}
 	}
 
-	return entry
+	return entries
+}
+
+// normalizedBuilderURL lowercases the scheme and host, drops the scheme's
+// default port and writes an empty path as a slash, which is the form
+// Lighthouse returns.  Path, query and userinfo are compared as they are.
+func normalizedBuilderURL(builderURL string) (string, bool) {
+	parsed, err := url.Parse(builderURL)
+	if err != nil || parsed.Host == "" {
+		return "", false
+	}
+	parsed.Scheme = strings.ToLower(parsed.Scheme)
+	parsed.Host = strings.ToLower(parsed.Host)
+	parsed.Host = strings.TrimSuffix(parsed.Host, map[string]string{"http": ":80", "https": ":443"}[parsed.Scheme])
+	if parsed.Path == "" {
+		parsed.Path = "/"
+	}
+
+	return parsed.String(), true
 }
 
 func headerValue(headers map[string]string, name string) string {
@@ -456,6 +485,15 @@ func validateBuilderConfig(config *gloas.BuilderConfig, slot phase0.Slot) error 
 		}
 		if len(builder.BuilderPubkeys) > 64 {
 			return errors.Join(fmt.Errorf("builder %d has too many public keys", i), client.ErrInvalidOptions)
+		}
+		// beacon-APIs lets entries share a url, but not both a url and auth data.
+		for j, earlier := range config.Builders[:i] {
+			if bytes.Equal(earlier.URL, builder.URL) && bytes.Equal(earlier.Auth.Message.Data, auth.Message.Data) {
+				return errors.Join(
+					fmt.Errorf("builder %d has the same URL and authorization data as builder %d", i, j),
+					client.ErrInvalidOptions,
+				)
+			}
 		}
 	}
 
