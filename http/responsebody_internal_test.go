@@ -36,6 +36,8 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 		name          string
 		contentType   string
 		contentLength string
+		// duplicateType sends the Content-Type header twice.
+		duplicateType bool
 		body          string
 		limit         *responseLimit
 		err           string
@@ -97,6 +99,13 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 			err:   "response body exceeds 4 bytes",
 		},
 		{
+			name:          "DuplicateContentTypeUsesSmallerLimit",
+			contentType:   "application/json",
+			duplicateType: true,
+			body:          "12345",
+			err:           "response body exceeds 4 bytes",
+		},
+		{
 			name:        "UnrecognisedContentTypeUsesSmallerLimit",
 			contentType: "text/plain",
 			body:        "12345",
@@ -145,6 +154,9 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 		server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			if test.contentType != "" {
 				w.Header().Set("Content-Type", test.contentType)
+				if test.duplicateType {
+					w.Header().Add("Content-Type", test.contentType)
+				}
 			} else {
 				// Stop net/http sniffing a content type for the body.
 				w.Header()["Content-Type"] = nil
