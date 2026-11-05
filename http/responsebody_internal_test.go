@@ -208,12 +208,13 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 // TestEPBSResponseLimits pins two properties of every ePBS limit pair.
 //
 // Survivable: for a body without a declared length, readResponseBody reaches
-// its length check only after io.ReadAll has buffered the whole body, and
-// ReadAll grows its buffer geometrically, so peak allocation is close to twice
-// the limit.  A limit taken from the protocol's theoretical maximum (~2GiB of
-// SSZ, ~5GiB of JSON hex) is therefore never reached -- the process dies first
-// -- and a body admitted just under one is equally fatal.  The ceiling below is
-// an allocation budget, not a protocol bound: every live preset produces a
+// its length check only after io.ReadAll has buffered the whole body.  Peak
+// allocation is about twice the limit from Go 1.26, and up to about 2.25 times
+// on Go 1.25, whose ReadAll grows one buffer by about a quarter at a time.  A
+// limit taken from the protocol's theoretical maximum (~2GiB of SSZ, ~5GiB of
+// JSON hex) is therefore never reached -- the process dies first -- and a body
+// admitted just under one is equally fatal.  The ceiling below is an
+// allocation budget, not a protocol bound: every live preset produces a
 // payload-included response orders of magnitude smaller, so the proposal JSON
 // limit sitting exactly at half the budget is the deliberate ceiling rather
 // than a coincidence.  Raising any limit past it is a regression.
