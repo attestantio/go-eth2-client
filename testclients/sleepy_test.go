@@ -75,6 +75,17 @@ func TestSleepyBuilders(t *testing.T) {
 	require.Same(t, expected, response)
 }
 
+func TestSleepyBuildersUnsupported(t *testing.T) {
+	ctx := context.Background()
+
+	service, err := testclients.NewSleepy(ctx, time.Millisecond, 2*time.Millisecond, &nameOnlyService{})
+	require.NoError(t, err)
+
+	response, err := service.(consensusclient.BuildersProvider).Builders(ctx, &api.BuildersOpts{State: "head"})
+	require.Nil(t, response)
+	require.Error(t, err)
+}
+
 func TestSleepyNew(t *testing.T) {
 	ctx := context.Background()
 

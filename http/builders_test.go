@@ -157,11 +157,20 @@ func TestBuildersErrors(t *testing.T) {
 			var body string
 			provider := buildersTestServer(t, http.StatusOK, response, &body)
 
-			response, err := provider.Builders(context.Background(), &api.BuildersOpts{State: "head"})
-			require.Nil(t, response)
+			res, err := provider.Builders(context.Background(), &api.BuildersOpts{State: "head"})
+			require.Nil(t, res)
 			require.EqualError(t, err, "no builders in response")
 		})
 	}
+
+	t.Run("MalformedBody", func(t *testing.T) {
+		var body string
+		provider := buildersTestServer(t, http.StatusOK, `{"data":[`, &body)
+
+		response, err := provider.Builders(context.Background(), &api.BuildersOpts{State: "head"})
+		require.Nil(t, response)
+		require.ErrorContains(t, err, "failed to parse JSON")
+	})
 
 	t.Run("NullBuilder", func(t *testing.T) {
 		var body string
