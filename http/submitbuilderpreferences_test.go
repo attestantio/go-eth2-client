@@ -330,6 +330,19 @@ func TestSubmitBuilderPreferencesRejectsInvalidOptions(t *testing.T) {
 	}
 }
 
+func TestSubmitBuilderPreferencesChecksOptionsBeforeSync(t *testing.T) {
+	server := syncingNodeServer(t)
+	defer server.Close()
+
+	service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL))
+	require.NoError(t, err)
+	err = service.(client.BuilderPreferencesSubmitter).SubmitBuilderPreferences(context.Background(), nil)
+	require.ErrorIs(t, err, client.ErrNoOptions)
+	err = service.(client.BuilderPreferencesSubmitter).SubmitBuilderPreferences(context.Background(),
+		&api.SubmitBuilderPreferencesOpts{Entries: []*gloas.BuilderPreferencesEntry{nil}})
+	require.ErrorIs(t, err, client.ErrInvalidOptions)
+}
+
 // TestSubmitBuilderPreferencesEnforcesLimit covers the limit of
 // MAX_BUILDER_ENTRIES * (MIN_SEED_LOOKAHEAD + 1) * SLOTS_PER_EPOCH entries, with
 // the node's spec giving 64 * (1 + 1) * 2 = 256, not the mainnet 4096.
@@ -415,6 +428,22 @@ func decodeBuilderPreferencesSSZ(t *testing.T, body []byte) []*gloas.BuilderPref
 	}
 
 	return entries
+}
+
+// syncingNodeServer is a node that reports itself as syncing.
+func syncingNodeServer(t *testing.T) *httptest.Server {
+	t.Helper()
+
+	return httptest.NewServer(nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		switch r.URL.Path {
+		case "/eth/v1/node/version":
+			_, _ = w.Write([]byte(`{"data":{"version":"test"}}`))
+		case "/eth/v1/node/syncing":
+			_, _ = w.Write([]byte(`{"data":{"is_syncing":true,"is_optimistic":false,"el_offline":false,"head_slot":"1","sync_distance":"100"}}`))
+		default:
+			w.WriteHeader(nethttp.StatusNotFound)
+		}
+	}))
 }
 
 func builderPreferencesServer(t *testing.T, handler nethttp.HandlerFunc) *httptest.Server {

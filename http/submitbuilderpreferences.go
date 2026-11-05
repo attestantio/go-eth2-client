@@ -75,10 +75,6 @@ func (p builderPreferencesList) MarshalSSZ() ([]byte, error) {
 // does not serve the endpoint returns an *api.Error with status 404 and no
 // *api.IndexedError.
 func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.SubmitBuilderPreferencesOpts) error {
-	if err := s.assertIsSynced(ctx); err != nil {
-		return err
-	}
-
 	if opts == nil {
 		return client.ErrNoOptions
 	}
@@ -111,6 +107,12 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 				client.ErrInvalidOptions,
 			)
 		}
+	}
+
+	// Options are checked first so that invalid options never fail over in multi,
+	// whatever the state of the node.
+	if err := s.assertIsSynced(ctx); err != nil {
+		return err
 	}
 
 	requestEntries := builderPreferencesList(opts.Entries)
