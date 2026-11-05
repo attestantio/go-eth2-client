@@ -135,10 +135,26 @@ func TestValidateBuilderConfig(t *testing.T) {
 			}(),
 		},
 		{
+			// Vouch's default auth data is the builder's hostname, so entries
+			// for two paths on one host carry the same data.
+			name: "SameAuthorizationDataWithDifferentURL",
+			config: func() *gloas.BuilderConfig {
+				config := validBuilderConfigForValidation()
+				second := *config.Builders[0]
+				second.URL = []byte("https://builder.example/v2")
+				config.Builders = append(config.Builders, &second)
+
+				return config
+			}(),
+		},
+		{
 			name: "SharedURLAndAuthorizationData",
 			config: func() *gloas.BuilderConfig {
 				config := validBuilderConfigForValidation()
 				second := *config.Builders[0]
+				second.Auth = &gloas.SignedBuilderRequestAuth{
+					Message: &gloas.BuilderRequestAuth{Data: []byte{0x01}, Slot: requestSlot},
+				}
 				config.Builders = append(config.Builders, &second)
 
 				return config

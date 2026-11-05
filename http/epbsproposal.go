@@ -234,8 +234,9 @@ func (s *Service) builderIndexSelfBuild(ctx context.Context) (gloas.BuilderIndex
 // bid whose URL names entries is held to each of their minimums and caps; any
 // other bid is held to the config-wide minimum, with its payment counted up to
 // the largest cap in the config.  Counting at that cap means an unattributed
-// payment can still lift a bid over the floor, although nothing binds the builder
-// to pay it.
+// payment can lift a bid over the floor although no configured cap is known to
+// cover its builder.  The bid carries a builder index rather than a public key,
+// so an entry's builder_pubkeys cannot be checked here.
 //
 // A reported value that cannot be checked against the signed bid is cleared --
 // from the typed field and from the response metadata alike -- so a caller
@@ -262,35 +263,40 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 		// A self-build's bid commits to no value, so nothing in the block can
 		// confirm or contradict the reported one, and that figure is the only
 		// signal of what the block is worth.  It is kept unchecked: clearing it
-		// would make every locally built proposal unrankable.
+		// would make every self-built proposal unrankable.
 		return nil
 	}
 
-	// Each policy is a floor and the cap the execution payment counts up to,
-	// and the bid has to clear every one of them.  With no entry to attribute
-	// the bid to, that is the config-wide floor with the most permissive cap
-	// the config allows.  Entries sharing the returned URL each apply in full,
-	// so one entry's floor is never paired with another's cap.
+	// The bid has to clear every policy.  With no entry to attribute the bid
+	// to, that is the config-wide floor with the most permissive cap the config
+	// allows.  Entries sharing the returned URL each apply in full, so one
+	// entry's floor is never paired with another's cap.
 	//
-	// The reported value is checkable against the bid when there is a single
-	// policy, or when there is no execution payment and so no cap to resolve.
-	policies := []*gloas.BuilderEntry{{MinBid: config.MinBid, MaxExecutionPayment: maxConfiguredExecutionPayment(config)}}
+	// The reported value is checkable against the bid when the URL names
+	// exactly one entry, or when there is no execution payment and so no cap to
+	// resolve.
+	policies := []bidPolicy{{minBid: config.MinBid, maxPayment: maxConfiguredExecutionPayment(config)}}
 	checkable := bid.ExecutionPayment == 0
 	if builderURL != "" {
 		// The header is the node's to choose, so a URL that names no entry
 		// leaves the bid on the config-wide policy rather than unchecked.
 		if entries := builderEntriesForURL(config, builderURL); len(entries) > 0 {
-			policies = entries
+			policies = make([]bidPolicy, 0, len(entries))
+			for _, entry := range entries {
+				policies = append(policies, bidPolicy{minBid: entry.MinBid, maxPayment: entry.MaxExecutionPayment})
+			}
 			checkable = checkable || len(entries) == 1
 		}
 	}
 
+	// When the value is checkable, total ends as the one policy's sum, or as
+	// the bare value when there is no payment, so it bounds the bracket below.
 	value := new(big.Int).SetUint64(uint64(bid.Value))
 	var total *big.Int
 	for _, policy := range policies {
-		payment := min(bid.ExecutionPayment, policy.MaxExecutionPayment)
+		payment := min(bid.ExecutionPayment, policy.maxPayment)
 		total = new(big.Int).Add(value, new(big.Int).SetUint64(uint64(payment)))
-		if total.Cmp(new(big.Int).SetUint64(uint64(policy.MinBid))) < 0 {
+		if total.Cmp(new(big.Int).SetUint64(uint64(policy.minBid))) < 0 {
 			return errors.Join(errors.New("execution payload bid below minimum"), client.ErrInconsistentResult)
 		}
 	}
@@ -319,6 +325,13 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 	}
 
 	return nil
+}
+
+// bidPolicy is a floor a bid has to clear and the cap its execution payment
+// counts up to.
+type bidPolicy struct {
+	minBid     phase0.Gwei
+	maxPayment phase0.Gwei
 }
 
 // clearExecutionValue withholds an execution value that could not be checked

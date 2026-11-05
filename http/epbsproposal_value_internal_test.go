@@ -129,7 +129,7 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			proposal: epbsProposalWithBid(staticBuilderIndexSelfBuild, 0, 7, 7_000_000_000),
 			config:   duplicateURLs,
 		},
-		// A local build is not a bid, so no floor applies to it.
+		// A self-build's bid commits to no value, so no floor applies to it.
 		{
 			name:     "SelfBuildIgnoresMinimum",
 			proposal: epbsProposalWithBid(staticBuilderIndexSelfBuild, 0, 0, 7_000_000_000),
