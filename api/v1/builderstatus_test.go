@@ -36,9 +36,13 @@ func TestBuilderStatus(t *testing.T) {
 	require.Equal(t, "active", api.BuilderStatusActive.String())
 	require.Equal(t, "exited", api.BuilderStatusExited.String())
 	require.Equal(t, "unknown", api.BuilderStatus(99).String())
+	require.Equal(t, "unknown", api.BuilderStatus(-1).String())
 
 	var decoded api.BuilderStatus
 	require.NoError(t, json.Unmarshal([]byte(`"ACTIVE"`), &decoded))
+	require.Equal(t, api.BuilderStatusActive, decoded)
+	// An escaped letter is the same JSON string.
+	require.NoError(t, json.Unmarshal([]byte(`"\u0061ctive"`), &decoded))
 	require.Equal(t, api.BuilderStatusActive, decoded)
 	require.EqualError(t, json.Unmarshal([]byte(`"active_ongoing"`), &decoded), `unrecognised builder status "active_ongoing"`)
 }

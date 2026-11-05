@@ -15,6 +15,7 @@ package gloas_test
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
@@ -60,8 +61,8 @@ func TestBuilderVersionUnmarshal(t *testing.T) {
 // consensus-spec vectors would catch it, but they are absent, so this is the only
 // guard.
 //
-// YAML keeps the bare integer of the consensus-spec vectors; JSON quotes it, per
-// beacon-APIs (see TestBuilderJSONVersionIsString).
+// YAML writes version as a bare integer. JSON quotes it, as beacon-APIs types
+// it Uint8 (see TestBuilderJSONVersionIsString).
 func TestBuilderVersionYAML(t *testing.T) {
 	builder := testBuilder()
 
@@ -94,22 +95,33 @@ func TestBuilderJSONVersionIsString(t *testing.T) {
 	require.Equal(t, builder, decoded)
 }
 
-func TestBuilderJSONVersionErrors(t *testing.T) {
+// builderJSONInput and builderYAMLInput are complete builders that the error
+// tests below vary one field at a time.
+const (
+	builderJSONInput = `{"pubkey":"0x863917c482adda67fba8305a8ef2cce39cfcd0d13311c86c0cb5b648102b6a481d0b25931d7cfbb5fa3e21c114ec0951","version":"0","execution_address":"0x67565aa29bcf60c3fdcd0b79a36cd85cc13c7a91","balance":"1","deposit_epoch":"1","withdrawable_epoch":"1"}`
+	builderYAMLInput = `{pubkey: '0x863917c482adda67fba8305a8ef2cce39cfcd0d13311c86c0cb5b648102b6a481d0b25931d7cfbb5fa3e21c114ec0951', version: 7, execution_address: '0x67565aa29bcf60c3fdcd0b79a36cd85cc13c7a91', balance: 1, deposit_epoch: 2, withdrawable_epoch: 3}`
+)
+
+func TestBuilderJSONErrors(t *testing.T) {
 	tests := []struct {
-		name    string
-		version string
-		err     string
+		name string
+		old  string
+		new  string
+		err  string
 	}{
-		{name: "Missing", version: ``, err: "version missing"},
-		{name: "Number", version: `,"version":0`, err: "invalid JSON: json: cannot unmarshal number into Go struct field builderJSON.version of type string"},
-		{name: "Max", version: `,"version":"255"`},
-		{name: "Overflow", version: `,"version":"256"`, err: "invalid value for version: strconv.ParseUint: parsing \"256\": value out of range"},
+		{name: "VersionMissing", old: `"version":"0",`, err: "version missing"},
+		{name: "VersionNumber", old: `"version":"0"`, new: `"version":0`, err: "invalid JSON: json: cannot unmarshal number into Go struct field builderJSON.version of type string"},
+		{name: "VersionMax", old: `"version":"0"`, new: `"version":"255"`},
+		{name: "VersionOverflow", old: `"version":"0"`, new: `"version":"256"`, err: "invalid value for version: strconv.ParseUint: parsing \"256\": value out of range"},
+		{name: "ExecutionAddressShort", old: `"0x67565aa29bcf60c3fdcd0b79a36cd85cc13c7a91"`, new: `"0x6756"`, err: "incorrect length 2 for execution address"},
+		{name: "BalanceInvalid", old: `"balance":"1"`, new: `"balance":"abc"`, err: `invalid value for balance: strconv.ParseUint: parsing "abc": invalid syntax`},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			input := []byte(`{"pubkey":"0x863917c482adda67fba8305a8ef2cce39cfcd0d13311c86c0cb5b648102b6a481d0b25931d7cfbb5fa3e21c114ec0951"` + test.version + `,"execution_address":"0x67565aa29bcf60c3fdcd0b79a36cd85cc13c7a91","balance":"1","deposit_epoch":"1","withdrawable_epoch":"1"}`)
+			input := strings.Replace(builderJSONInput, test.old, test.new, 1)
+			require.NotEqual(t, builderJSONInput, input)
 			var builder gloas.Builder
-			err := json.Unmarshal(input, &builder)
+			err := json.Unmarshal([]byte(input), &builder)
 			if test.err == "" {
 				require.NoError(t, err)
 				require.Equal(t, uint8(255), builder.Version)
@@ -120,30 +132,17 @@ func TestBuilderJSONVersionErrors(t *testing.T) {
 	}
 }
 
-// TestBuilderYAMLUnquotedVersion verifies the consensus-spec YAML form, which
-// writes version as a bare integer, still decodes.
+// TestBuilderYAMLUnquotedVersion verifies that YAML with version as a bare
+// integer, the form MarshalYAML writes, still decodes.
 func TestBuilderYAMLUnquotedVersion(t *testing.T) {
-	input := []byte(`{pubkey: '0x863917c482adda67fba8305a8ef2cce39cfcd0d13311c86c0cb5b648102b6a481d0b25931d7cfbb5fa3e21c114ec0951', version: 7, execution_address: '0x67565aa29bcf60c3fdcd0b79a36cd85cc13c7a91', balance: 1, deposit_epoch: 2, withdrawable_epoch: 3}`)
-
 	var builder gloas.Builder
-	require.NoError(t, builder.UnmarshalYAML(input))
+	require.NoError(t, builder.UnmarshalYAML([]byte(builderYAMLInput)))
 	require.Equal(t, uint8(7), builder.Version)
 }
 
-func TestBuilderJSONShortExecutionAddress(t *testing.T) {
-	input := []byte(`{"pubkey":"0x863917c482adda67fba8305a8ef2cce39cfcd0d13311c86c0cb5b648102b6a481d0b25931d7cfbb5fa3e21c114ec0951","version":"0","execution_address":"0x6756","balance":"1","deposit_epoch":"1","withdrawable_epoch":"1"}`)
-	var builder gloas.Builder
-	require.EqualError(t, json.Unmarshal(input, &builder), "incorrect length 2 for execution address")
-}
-
 func TestBuilderYAMLMissingVersion(t *testing.T) {
-	input := []byte(`{pubkey: '0x863917c482adda67fba8305a8ef2cce39cfcd0d13311c86c0cb5b648102b6a481d0b25931d7cfbb5fa3e21c114ec0951', execution_address: '0x67565aa29bcf60c3fdcd0b79a36cd85cc13c7a91', balance: 1, deposit_epoch: 2, withdrawable_epoch: 3}`)
+	input := strings.Replace(builderYAMLInput, "version: 7, ", "", 1)
+	require.NotEqual(t, builderYAMLInput, input)
 	var builder gloas.Builder
-	require.EqualError(t, yaml.Unmarshal(input, &builder), "version missing")
-}
-
-func TestBuilderJSONInvalidBalance(t *testing.T) {
-	input := []byte(`{"pubkey":"0x863917c482adda67fba8305a8ef2cce39cfcd0d13311c86c0cb5b648102b6a481d0b25931d7cfbb5fa3e21c114ec0951","version":"0","execution_address":"0x67565aa29bcf60c3fdcd0b79a36cd85cc13c7a91","balance":"abc","deposit_epoch":"1","withdrawable_epoch":"1"}`)
-	var builder gloas.Builder
-	require.EqualError(t, json.Unmarshal(input, &builder), `invalid value for balance: strconv.ParseUint: parsing "abc": invalid syntax`)
+	require.EqualError(t, yaml.Unmarshal([]byte(input), &builder), "version missing")
 }

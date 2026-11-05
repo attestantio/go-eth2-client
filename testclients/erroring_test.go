@@ -74,6 +74,17 @@ func TestErroringBuilders(t *testing.T) {
 	require.Same(t, expected, response)
 }
 
+func TestErroringBuildersUnsupported(t *testing.T) {
+	ctx := context.Background()
+
+	service, err := testclients.NewErroring(ctx, 0, &nameOnlyService{})
+	require.NoError(t, err)
+
+	response, err := service.(consensusclient.BuildersProvider).Builders(ctx, &api.BuildersOpts{State: "head"})
+	require.Nil(t, response)
+	require.Error(t, err)
+}
+
 func TestErroringNew(t *testing.T) {
 	ctx := context.Background()
 
