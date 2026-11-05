@@ -73,11 +73,28 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 			body:        `{"a":1}`,
 		},
 		{
+			name:        "MixedCaseJSONUsesJSONLimit",
+			contentType: "Application/JSON",
+			body:        `{"a":1}`,
+		},
+		{
+			name:        "SSZAboveJSONLimit",
+			contentType: "application/octet-stream",
+			limit:       &responseLimit{ssz: 8, json: 4},
+			body:        "12345",
+		},
+		{
 			// An unlabelled body could be either encoding, so it gets the
 			// smaller limit to bound memory.
 			name: "MissingContentTypeUsesSmallerLimit",
 			body: "12345",
 			err:  "response body exceeds 4 bytes",
+		},
+		{
+			name:  "MissingContentTypeUsesSmallerJSONLimit",
+			limit: &responseLimit{ssz: 8, json: 4},
+			body:  "12345",
+			err:   "response body exceeds 4 bytes",
 		},
 		{
 			name:        "UnrecognisedContentTypeUsesSmallerLimit",
@@ -90,6 +107,23 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 			limit: &responseLimit{json: 4},
 			body:  "12345",
 			err:   "response body exceeds 4 bytes",
+		},
+		{
+			name:  "MissingContentTypeUsesOnlySetSSZLimit",
+			limit: &responseLimit{ssz: 4},
+			body:  "12345",
+			err:   "response body exceeds 4 bytes",
+		},
+		{
+			name:  "MissingContentTypeUnboundedWhenZero",
+			limit: &responseLimit{},
+			body:  `{"a":"` + strings.Repeat("1", 1024) + `"}`,
+		},
+		{
+			name:          "DeclaredLengthAtLimit",
+			contentType:   "application/octet-stream",
+			contentLength: "4",
+			body:          "1234",
 		},
 		{
 			// The declared length is rejected before the body is read, so the
@@ -117,6 +151,10 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 			}
 			if test.contentLength != "" {
 				w.Header().Set("Content-Length", test.contentLength)
+			} else {
+				// Flushing first sends the body chunked, without a declared
+				// length, so the limit is enforced while reading the body.
+				w.(http.Flusher).Flush()
 			}
 			_, _ = w.Write([]byte(test.body))
 		}))
