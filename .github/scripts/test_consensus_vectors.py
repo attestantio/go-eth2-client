@@ -238,11 +238,59 @@ class ConsensusVectorsTest(unittest.TestCase):
             self.assertNotEqual(process.returncode, 0)
             self.assertEqual(output.read_text(), 'result=not-run\n')
             args = arguments.read_text().splitlines()
-            for option, value in [('--connect-timeout', '30'), ('--max-time', '300'),
-                                  ('--retry-max-time', '300'), ('--retry', '3')]:
+            for option, value in [('--connect-timeout', '30'), ('--speed-limit', '1024'),
+                                  ('--speed-time', '60'), ('--retry-max-time', '300'), ('--retry', '3')]:
                 self.assertIn(option, args)
                 self.assertEqual(args[args.index(option) + 1], value)
             self.assertIn('--retry-all-errors', args)
+            self.assertNotIn('--max-time', args)
+
+    def test_cli_checks_download_digest_before_testing_and_filters_the_test_environment(self):
+        probe = ['GH_TOKEN', 'GITHUB_TOKEN', 'ACTIONS_RUNTIME_TOKEN', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN',
+                 'GITHUB_OUTPUT', 'GITHUB_ENV', 'GITHUB_PATH', 'GITHUB_STEP_SUMMARY', 'GITHUB_STATE']
+        for valid_digest in [False, True]:
+            with self.subTest(valid_digest=valid_digest), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                (root / 'spec/gloas').mkdir(parents=True)
+                archive = root / 'source.tar.gz'
+                with tarfile.open(archive, 'w:gz') as tar:
+                    for name in ['value.yaml', 'roots.yaml', 'serialized.ssz_snappy']:
+                        tar.addfile(tarfile.TarInfo(f'tests/mainnet/gloas/ssz_static/Fork/ssz_random/case_0/{name}'))
+                digest = hashlib.sha256(archive.read_bytes()).hexdigest() if valid_digest else '0' * 64
+                release = {'assets': [{'name': 'mainnet.tar.gz', 'digest': 'sha256:' + digest,
+                                       'browser_download_url': 'https://github.com/ethereum/consensus-specs/releases/download/v1.7.0-beta.4/mainnet.tar.gz'}]}
+                gh = root / 'gh'
+                gh.write_text('#!/bin/sh\nprintf \'%s\\n\' \'' + json.dumps(release) + '\'\n')
+                gh.chmod(0o700)
+                curl = root / 'curl'
+                curl.write_text('#!/bin/sh\nwhile [ "$#" -gt 0 ]; do\n'
+                                'if [ "$1" = --output ]; then cp "$SOURCE_ARCHIVE" "$2"; exit 0; fi\nshift\ndone\nexit 1\n')
+                curl.chmod(0o700)
+                events = '\n'.join(json.dumps({'Package': 'fixture', 'Action': 'pass', 'Test': name})
+                                   for name in ['TestConsensusSpec/Fork/case_0', 'TestConsensusSpec', ''])
+                go = root / 'go'
+                go.write_text('#!/usr/bin/env python3\nimport json, os\nfrom pathlib import Path\n'
+                              + f'probe = {probe!r}\n'
+                              + 'Path(os.environ["GO_OBSERVED"]).write_text(json.dumps({key: os.environ.get(key) for key in probe}))\n'
+                              + f'print({events!r})\n')
+                go.chmod(0o700)
+                output, observed = root / 'output', root / 'observed'
+                process = subprocess.run([sys.executable, str(Path(__file__).resolve().with_name('consensus_vectors.py')),
+                                          'v1.7.0-beta.4', 'gloas', str(root / 'vectors')],
+                                         cwd=root, capture_output=True, text=True,
+                                         env={**os.environ, **{key: 'synthetic' for key in probe},
+                                              'PATH': str(root) + os.pathsep + os.environ['PATH'],
+                                              'GITHUB_OUTPUT': str(output), 'SOURCE_ARCHIVE': str(archive),
+                                              'GO_OBSERVED': str(observed)})
+                if valid_digest:
+                    self.assertEqual(process.returncode, 0, process.stderr)
+                    self.assertEqual(json.loads(observed.read_text()), {key: None for key in probe})
+                    self.assertTrue(output.read_text().endswith('result=pass\n'))
+                else:
+                    self.assertNotEqual(process.returncode, 0)
+                    self.assertIn('checksum mismatch', process.stderr)
+                    self.assertFalse(observed.exists())
+                    self.assertEqual(output.read_text(), 'result=not-run\n')
 
     def test_cli_rejects_invalid_inputs_and_reports_no_conformance_result(self):
         with tempfile.TemporaryDirectory() as directory:

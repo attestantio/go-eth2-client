@@ -72,12 +72,10 @@ jobs:
           CURRENT_TOOLCHAIN=$(grep -E "^toolchain" go.mod | awk '{print $2}')
 
           CURRENT_WORKFLOW_VERSION_LINT=$(grep "go-version:" .github/workflows/golangci-lint.yml | awk '{print $2}' | tr -d "'^\"")
-          CURRENT_WORKFLOW_VERSION_TEST=$(grep "go-version:" .github/workflows/test.yml | awk '{print $2}' | tr -d "'^\"")
 
           echo "Current go.mod go version: $CURRENT_GO_VERSION"
           echo "Current go.mod toolchain: $CURRENT_TOOLCHAIN"
           echo "Current golangci-lint workflow version: $CURRENT_WORKFLOW_VERSION_LINT"
-          echo "Current test workflow version: $CURRENT_WORKFLOW_VERSION_TEST"
 
           NEEDS_UPDATE=false
 
@@ -96,16 +94,10 @@ jobs:
             NEEDS_UPDATE=true
           fi
 
-          if [ "$CURRENT_WORKFLOW_VERSION_TEST" != "${{ steps.fetch-version.outputs.short_version }}" ]; then
-            echo "test workflow needs update"
-            NEEDS_UPDATE=true
-          fi
-
           echo "needs_update=$NEEDS_UPDATE" >> $GITHUB_OUTPUT
           echo "current_go_version=$CURRENT_GO_VERSION" >> $GITHUB_OUTPUT
           echo "current_toolchain=$CURRENT_TOOLCHAIN" >> $GITHUB_OUTPUT
           echo "current_workflow_version_lint=$CURRENT_WORKFLOW_VERSION_LINT" >> $GITHUB_OUTPUT
-          echo "current_workflow_version_test=$CURRENT_WORKFLOW_VERSION_TEST" >> $GITHUB_OUTPUT
 
       - name: Exit if no updates needed
         if: steps.check-versions.outputs.needs_update != 'true'
@@ -154,7 +146,7 @@ jobs:
           echo "Updating workflow files..."
 
           # Update all workflow files with go-version (handles both single and double quotes)
-          for WF in golangci-lint.yml test.yml http-tests.yml revive.yml; do
+          for WF in golangci-lint.yml http-tests.yml revive.yml; do
             FILE=".github/workflows/$WF"
             if [ -f "$FILE" ]; then
               # Handle double-quoted: go-version: "X.Y"
@@ -223,7 +215,7 @@ jobs:
               echo "- **go.mod**: Updated \`toolchain\` directive from \`${{ steps.check-versions.outputs.current_toolchain }}\` to \`${{ steps.fetch-version.outputs.toolchain_version }}\`"
             fi
 
-            if [ "${{ steps.check-versions.outputs.current_workflow_version_lint }}" != "${{ steps.fetch-version.outputs.short_version }}" ] || [ "${{ steps.check-versions.outputs.current_workflow_version_test }}" != "${{ steps.fetch-version.outputs.short_version }}" ]; then
+            if [ "${{ steps.check-versions.outputs.current_workflow_version_lint }}" != "${{ steps.fetch-version.outputs.short_version }}" ]; then
               echo "- **Workflow files**: Updated Go version to \`${{ steps.fetch-version.outputs.short_version }}\`"
             fi
 

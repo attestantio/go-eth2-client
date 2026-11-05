@@ -16,7 +16,9 @@ A genuine failed covered case reports `fail`, even if other cases did not execut
 Setup failures, malformed evidence and otherwise incomplete execution report `not-run`.
 Missing or empty required type directories also fail the Go test itself in every
 fork harness. Fulu reads its own vector tree, not Electra's; these test repairs do
-not declare support for older forks. Explicit empty case directories enter the
+not declare support for older forks. Obsolete older-fork table entries with no
+beta.4 archive cases were removed, rather than treating them as missing required
+vectors. Explicit empty case directories enter the
 archive inventory and fail the required-file check, rather than disappearing.
 Structural type and suite directories must contain case descendants.
 
@@ -70,8 +72,9 @@ Manual dispatch can select another branch with `--ref`. PR checks do not require
 that default-branch placement. Vector caching and paths exclusions are deferred.
 
 Test jobs have read-only permissions; issue writing runs in a separate job.
-The test subprocess does not inherit GitHub credentials or writable Actions
-file-command variables. This is environment hygiene, not a sandbox for arbitrary code.
+The test subprocess removes the known Actions credentials and writable file-command
+variables listed in the runner. Other credential names are not scrubbed. This is
+environment hygiene, not a sandbox for arbitrary code.
 
 Set or inspect the watcher variable with:
 
@@ -101,10 +104,11 @@ GOTOOLCHAIN=auto python3 .github/scripts/consensus_vectors.py \
 The runner downloads the exact release's `mainnet.tar.gz`, verifies GitHub's
 published SHA-256 digest, and extracts only the selected fork's `ssz_static`
 files. Allow approximately 1 GB for the download, plus extracted files.
-The download has a 30-second connection timeout and a five-minute limit per
-attempt. Curl retries all transfer errors up to three times within a five-minute
-retry window; an attempt already in progress can finish after that window.
-Retries restart the download. A transfer failure remains `not-run`, not a failed
+The download has a 30-second connection timeout and aborts if throughput remains
+below 1,024 bytes per second for 60 seconds. It has no fixed transfer deadline;
+the 30-minute CI job timeout bounds the overall run. Curl retries transfer errors
+up to three times within a five-minute retry window, which does not interrupt an
+active transfer. Retries restart the download. A transfer failure remains `not-run`, not a failed
 vector case. CI retains the log artifact. The local snippet removes temporary
 files on exit; redirect stdout and stderr to a file to keep evidence.
 
@@ -124,4 +128,5 @@ prints the tested commit. The automation commit must remain available from origi
 if GitHub no longer serves it, restore it before reproducing.
 
 After release review and any fixes, change only the verified fork's version through
-a PR. The baseline workflow verifies the new declaration; the watcher never updates it.
+a PR. The baseline workflow verifies the Gloas declaration; adding another fork
+requires a corresponding baseline job. The watcher never updates support.

@@ -93,10 +93,6 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &phase0.Checkpoint{},
 		},
 		{
-			name: "Consolidation",
-			s:    &electra.Consolidation{},
-		},
-		{
 			name: "ConsolidationRequest",
 			s:    &electra.ConsolidationRequest{},
 		},
@@ -143,10 +139,6 @@ func TestConsensusSpec(t *testing.T) {
 		{
 			name: "IndexedAttestation",
 			s:    &electra.IndexedAttestation{},
-		},
-		{
-			name: "PendingAttestation",
-			s:    &phase0.PendingAttestation{},
 		},
 		{
 			name: "PendingDeposit",

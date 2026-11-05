@@ -123,10 +123,6 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &phase0.IndexedAttestation{},
 		},
 		{
-			name: "PendingAttestation",
-			s:    &phase0.PendingAttestation{},
-		},
-		{
 			name: "ProposerSlashing",
 			s:    &phase0.ProposerSlashing{},
 		},

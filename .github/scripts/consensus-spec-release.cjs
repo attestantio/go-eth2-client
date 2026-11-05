@@ -78,12 +78,12 @@ repo="$(git rev-parse --show-toplevel)"
 runner="$(mktemp -d)"
 worktree_added=false
 cleanup() {
-  status=$?
+  cleanup_status=$?
   if [ "$worktree_added" = true ]; then
     if ! git -C "$repo" worktree remove --force --force "$runner/target"; then
       echo "Could not remove temporary worktree; retained $runner" >&2
-      if [ "$status" -eq 0 ]; then status=1; fi
-      exit "$status"
+      if [ "$cleanup_status" -eq 0 ]; then cleanup_status=1; fi
+      exit "$cleanup_status"
     fi
   fi
   rm -rf "$runner"

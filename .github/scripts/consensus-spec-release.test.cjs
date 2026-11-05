@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const { test } = require('node:test');
-const { execFileSync } = require('node:child_process');
+const { execFileSync, spawnSync } = require('node:child_process');
 const { existsSync, mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join } = require('node:path');
@@ -155,8 +155,9 @@ test('reproduction fetches the automation commit and tests the fetched target ra
     const originalBranch = git(target, 'symbolic-ref', 'HEAD');
     const originalStatus = git(target, 'status', '--porcelain');
 
-    for (const [remote, ref, expected, content] of [[fork, 'feature', forkSHA, 'fork-only change'],
-      ['origin', 'feature', originSHA, 'updated origin'], ['.', localSHA, localSHA, 'local-only change']]) {
+    for (const [remote, ref, expected, content, shell] of [[fork, 'feature', forkSHA, 'fork-only change', 'sh'],
+      ['origin', 'feature', originSHA, 'updated origin', 'sh'], ['.', localSHA, localSHA, 'local-only change', 'sh'],
+      [fork, 'feature', forkSHA, 'fork-only change', 'zsh']]) {
       const body = issueBody({ fork: 'gloas', tag: 'v1.7.0-beta.3', supported: 'v1.7.0-beta.2',
         sha, runURL: 'https://example.com/run', result: 'fail' });
       const snippet = /```sh\n([\s\S]*?)```/.exec(body)[1]
@@ -175,7 +176,7 @@ test('reproduction fetches the automation commit and tests the fetched target ra
         let status = 0;
         let stderr = '';
         try {
-          output = execFileSync('sh', ['-c', preflight],
+          output = execFileSync(shell, ['-c', preflight],
             { cwd: target, env, encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] });
         } catch (error) {
           status = error.status;
@@ -217,6 +218,29 @@ test('reproduction fetches the automation commit and tests the fetched target ra
   }
 });
 
+test('Go version updater accepts a test workflow following the module toolchain', () => {
+  const root = mkdtempSync(join(tmpdir(), 'consensus-go-version-'));
+  try {
+    mkdirSync(join(root, '.github/workflows'), { recursive: true });
+    writeFileSync(join(root, 'go.mod'), 'module example.com/fixture\n\ngo 1.25\ntoolchain go1.25.2\n');
+    writeFileSync(join(root, '.github/workflows/golangci-lint.yml'), 'go-version: "1.25"\n');
+    writeFileSync(join(root, '.github/workflows/test.yml'),
+      readFileSync(join(__dirname, '../workflows/test.yml')));
+    const workflow = readFileSync(join(__dirname, '../workflows/update-go-version.yml'), 'utf8');
+    const script = workflow.split('      - name: Check current versions\n')[1]
+      .split('      - name: Exit if no updates needed\n')[0].split('        run: |\n')[1]
+      .replace(/^          /gm, '')
+      .replaceAll('${{ steps.fetch-version.outputs.short_version }}', '1.25')
+      .replaceAll('${{ steps.fetch-version.outputs.toolchain_version }}', 'go1.25.2');
+    const output = join(root, 'output');
+    execFileSync('bash', ['-e', '-c', script], { cwd: root,
+      env: { ...process.env, GITHUB_OUTPUT: output }, stdio: 'pipe' });
+    assert.ok(readFileSync(output, 'utf8').includes('needs_update=false'));
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('workflow policy cancels superseded PR runs without cancelling master or manual runs', () => {
   const workflow = readFileSync(join(__dirname, '../workflows/consensus-spec-vectors.yml'), 'utf8');
   assert.ok(workflow.includes("cancel-in-progress: ${{ github.event_name == 'pull_request' }}"));
@@ -234,6 +258,50 @@ test('vector Go setup matches the ordinary workflow major and selects the module
   assert.match(composite, new RegExp(`actions/setup-go@[a-f0-9]{40} # v${major}\\b`));
   assert.ok(composite.includes('go-version-file: go.mod'));
   assert.ok(!composite.includes('go-version:'));
+});
+
+test('baseline version step writes the checked-out Gloas declaration', () => {
+  const root = mkdtempSync(join(tmpdir(), 'consensus-baseline-output-'));
+  try {
+    const workflow = readFileSync(join(__dirname, '../workflows/consensus-spec-vectors.yml'), 'utf8');
+    const command = workflow.split('      - name: Read supported Gloas version\n')[1]
+      .split('      - uses: ./.github/actions/consensus-vectors')[0];
+    const script = /node -e '([^\n]+)'/.exec(command)[1];
+    const output = join(root, 'output');
+    execFileSync('node', ['-e', script], { cwd: join(__dirname, '../..'),
+      env: { ...process.env, GITHUB_OUTPUT: output }, stdio: 'pipe' });
+    const versions = JSON.parse(readFileSync(join(__dirname, '../consensus-spec-versions.json'), 'utf8'));
+    assert.equal(readFileSync(output, 'utf8'), `version=${versions.gloas}\n`);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('release precedence orders alpha, beta, rc and stable by version', () => {
+  for (const [lower, higher] of [['v1.7.0-alpha.9', 'v1.7.0-beta.1'],
+    ['v1.7.0-beta.9', 'v1.7.0-rc.1'], ['v1.7.0-rc.9', 'v1.7.0'],
+    ['v1.7.9', 'v1.8.0-alpha.1']]) {
+    for (const tags of [[lower, higher], [higher, lower]]) {
+      const releases = tags.map(tag_name => ({ tag_name, draft: false }));
+      assert.equal(selectRelease(releases, 'v1.6.0').tag_name, higher);
+    }
+  }
+});
+
+test('workflow verdict defaults and cancellation guards fail closed', () => {
+  const action = readFileSync(join(__dirname, '../actions/consensus-vectors/action.yml'), 'utf8');
+  const watcher = readFileSync(join(__dirname, '../workflows/consensus-spec-release.yml'), 'utf8');
+  const baseline = readFileSync(join(__dirname, '../workflows/consensus-spec-vectors.yml'), 'utf8');
+  assert.ok(action.includes("RESULT: ${{ steps.verify.outputs.result || 'not-run' }}"));
+  assert.ok(watcher.includes("RESULT: ${{ needs.check.outputs.result || 'not-run' }}"));
+  assert.ok(watcher.includes("if: always() && needs.check.result != 'cancelled' && needs.check.outputs.version != ''"));
+  assert.ok(baseline.includes("RESULT: ${{ steps.vectors.outputs.result || 'not-run' }}"));
+  const gate = baseline.split('      - name: Require an executed, passing vector suite\n')[1];
+  const command = /        run: (.+)/.exec(gate)[1];
+  for (const verdict of ['pass', 'fail', 'not-run', '']) {
+    const result = spawnSync('bash', ['-e', '-c', command], { env: { ...process.env, RESULT: verdict } });
+    assert.equal(result.status, verdict === 'pass' ? 0 : 1, verdict);
+  }
 });
 
 test('ignores drafts and never proposes an equal or older version', () => {

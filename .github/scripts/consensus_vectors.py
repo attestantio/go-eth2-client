@@ -165,7 +165,7 @@ def main():
     asset = select_asset(release)
     archive = args.destination / 'mainnet.tar.gz'
     subprocess.run(['curl', '--fail', '--location', '--retry', '3', '--retry-all-errors',
-                    '--connect-timeout', '30', '--max-time', '300', '--retry-max-time', '300',
+                    '--connect-timeout', '30', '--speed-limit', '1024', '--speed-time', '60', '--retry-max-time', '300',
                     '--silent', '--show-error', '--output', str(archive), asset['browser_download_url']], check=True)
     verify_digest(archive, asset['digest'])
     cases = extract_vectors(archive, args.fork, args.destination)

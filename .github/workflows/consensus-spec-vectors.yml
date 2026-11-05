@@ -22,6 +22,8 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+      - name: Install zsh for reproduction checks
+        run: sudo apt-get update && sudo apt-get install --yes zsh
       - name: Test CI helpers
         run: |
           node --test .github/scripts/consensus-spec-release.test.cjs

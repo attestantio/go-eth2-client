@@ -23,7 +23,6 @@ import (
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
 	"github.com/attestantio/go-eth2-client/spec/fulu"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -78,24 +77,12 @@ func TestConsensusSpec(t *testing.T) {
 			s:    &fulu.BeaconState{},
 		},
 		{
-			name: "BlobIdentifier",
-			s:    &deneb.BlobIdentifier{},
-		},
-		{
-			name: "BlobSidecar",
-			s:    &deneb.BlobSidecar{},
-		},
-		{
 			name: "BLSToExecutionChange",
 			s:    &capella.BLSToExecutionChange{},
 		},
 		{
 			name: "Checkpoint",
 			s:    &phase0.Checkpoint{},
-		},
-		{
-			name: "Consolidation",
-			s:    &electra.Consolidation{},
 		},
 		{
 			name: "ConsolidationRequest",
@@ -144,10 +131,6 @@ func TestConsensusSpec(t *testing.T) {
 		{
 			name: "IndexedAttestation",
 			s:    &electra.IndexedAttestation{},
-		},
-		{
-			name: "PendingAttestation",
-			s:    &phase0.PendingAttestation{},
 		},
 		{
 			name: "PendingDeposit",
