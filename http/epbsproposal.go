@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"maps"
 	"math/big"
+	"net/url"
 	"strconv"
 	"strings"
 	"unicode/utf8"
@@ -135,7 +136,9 @@ func (s *Service) EPBSProposal(ctx context.Context,
 	if err != nil {
 		return nil, err
 	}
-	if err := validateEPBSProposalExecutionValue(response.Data, opts.BuilderConfig, builderURL, selfBuildIndex); err != nil {
+	if err := validateEPBSProposalExecutionValue(
+		response.Data, opts.BuilderConfig, builderURL, selfBuildIndex, response.Metadata,
+	); err != nil {
 		return nil, err
 	}
 
@@ -192,8 +195,9 @@ func (s *Service) assertEPBSProposalMatchesRequest(proposal *api.VersionedEPBSPr
 // staticBuilderIndexSelfBuild is the mainnet value of the BUILDER_INDEX_SELF_BUILD
 // spec constant, the bid builder index that marks a proposer self-build.  It is
 // a configurable spec value rather than a fixed sentinel, so a custom preset can
-// move it; builderIndexSelfBuild reads it from the node in that case.
-const staticBuilderIndexSelfBuild = gloas.BuilderIndex(^uint64(0))
+// move it; builderIndexSelfBuild reads it from the node in that case.  The value
+// itself is defined once, in the spec package.
+const staticBuilderIndexSelfBuild = gloas.BuilderIndexSelfBuild
 
 // builderIndexSelfBuild returns the builder index that marks a self-built bid.
 func (s *Service) builderIndexSelfBuild(ctx context.Context) (gloas.BuilderIndex, error) {
@@ -223,20 +227,30 @@ func (s *Service) builderIndexSelfBuild(ctx context.Context) (gloas.BuilderIndex
 
 // validateEPBSProposalExecutionValue checks the bid a proposal commits to against
 // the policy that was requested, and checks the execution value the node reported
-// against the bid that is signed in the block.  A value the block gives no way to
-// check -- because the winning builder cannot be identified, or the bid is
-// self-built -- is cleared rather than passed on, so a caller ranking proposals
-// never treats an unverified number as a verified one.
+// against the bid that is signed in the block.
+//
+// Every bid except a self-build is checked against a minimum, so neither the
+// Eth-Builder-Url header nor the execution payment can switch the check off.  A
+// bid whose URL names entries is held to each of their minimums and caps; any
+// other bid is held to the config-wide minimum, with its payment counted up to
+// the largest cap in the config.  Counting at that cap means an unattributed
+// payment can lift a bid over the floor although no configured cap is known to
+// cover its builder.  The bid carries a builder index rather than a public key,
+// so an entry's builder_pubkeys cannot be checked here.
+//
+// A reported value that cannot be checked against the signed bid is cleared --
+// from the typed field and from the response metadata alike -- so a caller
+// ranking proposals never treats an unverified number as a verified one.
 func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 	config *gloas.BuilderConfig,
 	builderURL string,
 	selfBuildIndex gloas.BuilderIndex,
+	metadata map[string]any,
 ) error {
-	block := proposal.Gloas
-	if proposal.ExecutionPayloadIncluded {
-		block = proposal.GloasContents.Block
+	bid, err := proposal.ExecutionPayloadBid()
+	if err != nil {
+		return errors.Join(err, client.ErrInconsistentResult)
 	}
-	bid := block.Body.SignedExecutionPayloadBid.Message
 
 	// The bid checks below run whether or not the node sent a value header.
 	// They are statements about the block, and the header is the node's to
@@ -245,47 +259,52 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 		if bid.Value != 0 {
 			return errors.Join(errors.New("self-built execution payload bid has non-zero value"), client.ErrInconsistentResult)
 		}
-		proposal.ExecutionValue = nil
 
+		// A self-build's bid commits to no value, so nothing in the block can
+		// confirm or contradict the reported one, and that figure is the only
+		// signal of what the block is worth.  It is kept unchecked: clearing it
+		// would make every self-built proposal unrankable.
 		return nil
 	}
 
-	policy := config
+	// The bid has to clear every policy.  With no entry to attribute the bid
+	// to, that is the config-wide floor with the most permissive cap the config
+	// allows.  Entries sharing the returned URL each apply in full, so one
+	// entry's floor is never paired with another's cap.
+	//
+	// The reported value is checkable against the bid when the URL names
+	// exactly one entry, or when there is no execution payment and so no cap to
+	// resolve.
+	policies := []bidPolicy{{minBid: config.MinBid, maxPayment: maxConfiguredExecutionPayment(config)}}
+	checkable := bid.ExecutionPayment == 0
 	if builderURL != "" {
-		entry := builderEntryForURL(config, builderURL)
-		if entry == nil {
-			proposal.ExecutionValue = nil
-
-			return nil
+		// The header is the node's to choose, so a URL that names no entry
+		// leaves the bid on the config-wide policy rather than unchecked.
+		if entries := builderEntriesForURL(config, builderURL); len(entries) > 0 {
+			policies = make([]bidPolicy, 0, len(entries))
+			for _, entry := range entries {
+				policies = append(policies, bidPolicy{minBid: entry.MinBid, maxPayment: entry.MaxExecutionPayment})
+			}
+			checkable = checkable || len(entries) == 1
 		}
+	}
 
-		// A builder-API bid is judged against the entry it was solicited
-		// under, not the config-wide minimum, which gates p2p bids only.
-		policy = &gloas.BuilderConfig{MinBid: entry.MinBid, Builders: []*gloas.BuilderEntry{entry}}
-	} else if bid.ExecutionPayment != 0 {
-		// No builder URL means p2p or self-build.  The cap a p2p payment
-		// counts up to is the maximum over the configured entries whose
-		// pubkeys include the bidding builder's, and the block carries no
-		// pubkey to resolve the builder index against, so the payment -- and
-		// with it the value -- cannot be checked here.
-		proposal.ExecutionValue = nil
+	// When the value is checkable, total ends as the one policy's sum, or as
+	// the bare value when there is no payment, so it bounds the bracket below.
+	value := new(big.Int).SetUint64(uint64(bid.Value))
+	var total *big.Int
+	for _, policy := range policies {
+		payment := min(bid.ExecutionPayment, policy.maxPayment)
+		total = new(big.Int).Add(value, new(big.Int).SetUint64(uint64(payment)))
+		if total.Cmp(new(big.Int).SetUint64(uint64(policy.minBid))) < 0 {
+			return errors.Join(errors.New("execution payload bid below minimum"), client.ErrInconsistentResult)
+		}
+	}
+
+	if !checkable {
+		clearExecutionValue(proposal, metadata)
 
 		return nil
-	}
-
-	// The proposer's take counts the execution payment only up to the cap of
-	// the entry the bid was solicited under.  A p2p bid has no such entry, and
-	// the payment check above is what makes a zero cap right for it.
-	maxPayment := phase0.Gwei(0)
-	if len(policy.Builders) == 1 {
-		maxPayment = policy.Builders[0].MaxExecutionPayment
-	}
-	payment := min(bid.ExecutionPayment, maxPayment)
-
-	value := new(big.Int).SetUint64(uint64(bid.Value))
-	total := new(big.Int).Add(value, new(big.Int).SetUint64(uint64(payment)))
-	if total.Cmp(new(big.Int).SetUint64(uint64(policy.MinBid))) < 0 {
-		return errors.Join(errors.New("execution payload bid below minimum"), client.ErrInconsistentResult)
 	}
 
 	if proposal.ExecutionValue == nil {
@@ -299,8 +318,8 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 	// are bound to the signed bid, so a value inside it is accepted rather than
 	// failing the proposal over a reading of an ambiguous sentence.
 	gwei := big.NewInt(1_000_000_000)
-	low := value.Mul(value, gwei)
-	high := total.Mul(total, gwei)
+	low := new(big.Int).Mul(value, gwei)
+	high := new(big.Int).Mul(total, gwei)
 	if proposal.ExecutionValue.Cmp(low) < 0 || proposal.ExecutionValue.Cmp(high) > 0 {
 		return errors.Join(errors.New("execution payload value does not match bid"), client.ErrInconsistentResult)
 	}
@@ -308,19 +327,83 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 	return nil
 }
 
-func builderEntryForURL(config *gloas.BuilderConfig, builderURL string) *gloas.BuilderEntry {
-	var entry *gloas.BuilderEntry
-	for _, candidate := range config.Builders {
-		if string(candidate.URL) == builderURL {
-			if entry != nil {
-				return nil
-			}
+// bidPolicy is a floor a bid has to clear and the cap its execution payment
+// counts up to.
+type bidPolicy struct {
+	minBid     phase0.Gwei
+	maxPayment phase0.Gwei
+}
 
-			entry = candidate
+// clearExecutionValue withholds an execution value that could not be checked
+// against the signed bid.  The response metadata holds every response header and,
+// for JSON, every top-level body key, so dropping the typed field alone would leave
+// the same unverified number reachable through Metadata with nothing marking it
+// unchecked.
+func clearExecutionValue(proposal *api.VersionedEPBSProposal, metadata map[string]any) {
+	proposal.ExecutionValue = nil
+	delete(metadata, "execution_payload_value")
+
+	for key := range metadata {
+		if strings.EqualFold(key, "Eth-Execution-Payload-Value") {
+			delete(metadata, key)
+		}
+	}
+}
+
+// maxConfiguredExecutionPayment returns the largest execution payment any entry
+// in the config permits, which is an upper bound on what the proposer can collect
+// from a bid that cannot be attributed to one of them.  It is 0 when no builders
+// are configured, since then no payment is permitted at all.
+func maxConfiguredExecutionPayment(config *gloas.BuilderConfig) phase0.Gwei {
+	maximum := phase0.Gwei(0)
+	for _, entry := range config.Builders {
+		if entry != nil && entry.MaxExecutionPayment > maximum {
+			maximum = entry.MaxExecutionPayment
 		}
 	}
 
-	return entry
+	return maximum
+}
+
+// builderEntriesForURL returns the entries the returned Eth-Builder-Url names:
+// those whose URL matches it exactly or once both are normalised, because
+// Lighthouse returns the URL re-serialised from a parsed form and so returns
+// the same string for entries that differ only in that form.
+func builderEntriesForURL(config *gloas.BuilderConfig, builderURL string) []*gloas.BuilderEntry {
+	normalized, valid := normalizedBuilderURL(builderURL)
+
+	var entries []*gloas.BuilderEntry
+	for _, entry := range config.Builders {
+		entryURL := string(entry.URL)
+		if entryURL == builderURL {
+			entries = append(entries, entry)
+
+			continue
+		}
+		if candidate, isValid := normalizedBuilderURL(entryURL); valid && isValid && candidate == normalized {
+			entries = append(entries, entry)
+		}
+	}
+
+	return entries
+}
+
+// normalizedBuilderURL lowercases the scheme and host, drops the scheme's
+// default port and writes an empty path as a slash, which is the form
+// Lighthouse returns.  Path, query and userinfo are compared as they are.
+func normalizedBuilderURL(builderURL string) (string, bool) {
+	parsed, err := url.Parse(builderURL)
+	if err != nil || parsed.Host == "" {
+		return "", false
+	}
+	parsed.Scheme = strings.ToLower(parsed.Scheme)
+	parsed.Host = strings.ToLower(parsed.Host)
+	parsed.Host = strings.TrimSuffix(parsed.Host, map[string]string{"http": ":80", "https": ":443"}[parsed.Scheme])
+	if parsed.Path == "" {
+		parsed.Path = "/"
+	}
+
+	return parsed.String(), true
 }
 
 func headerValue(headers map[string]string, name string) string {
@@ -406,6 +489,15 @@ func validateBuilderConfig(config *gloas.BuilderConfig, slot phase0.Slot) error 
 		}
 		if len(builder.BuilderPubkeys) > 64 {
 			return errors.Join(fmt.Errorf("builder %d has too many public keys", i), client.ErrInvalidOptions)
+		}
+		// beacon-APIs lets entries share a url, but not both a url and auth data.
+		for j, earlier := range config.Builders[:i] {
+			if bytes.Equal(earlier.URL, builder.URL) && bytes.Equal(earlier.Auth.Message.Data, auth.Message.Data) {
+				return errors.Join(
+					fmt.Errorf("builder %d has the same URL and authorization data as builder %d", i, j),
+					client.ErrInvalidOptions,
+				)
+			}
 		}
 	}
 
