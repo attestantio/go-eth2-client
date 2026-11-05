@@ -37,7 +37,7 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 		contentType   string
 		contentLength string
 		body          string
-		unbounded     bool
+		limit         *responseLimit
 		err           string
 	}{
 		{
@@ -68,8 +68,28 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 			err:         "response body exceeds 8 bytes",
 		},
 		{
-			name: "MissingContentTypeUsesJSONLimit",
-			body: `{"a":1}`,
+			name:        "JSONWithParametersUsesJSONLimit",
+			contentType: "application/json; charset=utf-8",
+			body:        `{"a":1}`,
+		},
+		{
+			// An unlabelled body could be either encoding, so it gets the
+			// smaller limit to bound memory.
+			name: "MissingContentTypeUsesSmallerLimit",
+			body: "12345",
+			err:  "response body exceeds 4 bytes",
+		},
+		{
+			name:        "UnrecognisedContentTypeUsesSmallerLimit",
+			contentType: "text/plain",
+			body:        "12345",
+			err:         "response body exceeds 4 bytes",
+		},
+		{
+			name:  "MissingContentTypeUsesOnlySetLimit",
+			limit: &responseLimit{json: 4},
+			body:  "12345",
+			err:   "response body exceeds 4 bytes",
 		},
 		{
 			// The declared length is rejected before the body is read, so the
@@ -82,7 +102,7 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 		{
 			name:        "UnboundedWhenZero",
 			contentType: "application/octet-stream",
-			unbounded:   true,
+			limit:       &responseLimit{},
 			body:        strings.Repeat("1", 1024),
 		},
 	}
@@ -107,8 +127,8 @@ func TestResponseLimitFollowsResponseEncoding(t *testing.T) {
 		s := &Service{log: zerolog.Nop(), base: base, client: server.Client(), timeout: time.Second}
 
 		testLimit := limit
-		if test.unbounded {
-			testLimit = responseLimit{}
+		if test.limit != nil {
+			testLimit = *test.limit
 		}
 
 		requests := map[string]func() (*httpResponse, error){

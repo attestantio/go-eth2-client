@@ -253,10 +253,20 @@ type responseLimit struct {
 }
 
 func readResponseBody(resp *http.Response, limits responseLimit) ([]byte, error) {
-	// An unknown content type is later treated as JSON, so it gets the JSON limit.
-	limit := limits.json
-	if contentType, err := ParseFromMediaType(resp.Header.Get("Content-Type")); err == nil && contentType == ContentTypeSSZ {
+	var limit int
+	contentType, _ := ParseFromMediaType(resp.Header.Get("Content-Type"))
+	switch contentType {
+	case ContentTypeSSZ:
 		limit = limits.ssz
+	case ContentTypeJSON:
+		limit = limits.json
+	default:
+		// The body could be either encoding, so bound memory by the smaller
+		// limit, ignoring an encoding left unbounded.
+		limit = min(limits.ssz, limits.json)
+		if limit <= 0 {
+			limit = max(limits.ssz, limits.json)
+		}
 	}
 	if limit <= 0 {
 		return io.ReadAll(resp.Body)
