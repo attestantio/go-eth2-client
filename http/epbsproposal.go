@@ -40,8 +40,8 @@ import (
 // generous room for any real value while keeping a hostile one cheap to reject.
 const maxProposalValueDigits = 40
 
-// maxEPBSResponseSize bounds the bodies of the ePBS fetch endpoints that pass
-// it explicitly.  Those bodies are an execution payload envelope or a
+// maxEPBSResponseSize bounds the SSZ bodies of the ePBS fetch endpoints, which
+// pass it through epbsResponseLimit.  Those bodies are an execution payload envelope or a
 // payload-attestation datum or pool, so 64MiB is orders of magnitude above any
 // legitimate response while capping a hostile or runaway one.  Block production
 // is the one ePBS endpoint whose response can be far larger, and it passes its
@@ -49,8 +49,8 @@ const maxProposalValueDigits = 40
 const maxEPBSResponseSize = 64 * 1024 * 1024
 
 // maxEPBSJSONResponseSize covers the same responses as JSON, whose hex costs
-// slightly over two bytes per SSZ byte, so a node's choice of encoding does not
-// change how much data is accepted.
+// slightly over two bytes per SSZ byte.  Like the proposal pair below, it is a
+// marginally tighter bound on the data than its SSZ counterpart.
 const maxEPBSJSONResponseSize = 2 * maxEPBSResponseSize
 
 // maxEPBSProposalResponseSize bounds a full SSZ payload-included block

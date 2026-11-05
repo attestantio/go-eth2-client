@@ -234,6 +234,9 @@ func TestEPBSResponseLimits(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			// Zero would leave the encoding unbounded.
+			require.Positive(t, test.limit.ssz)
+			require.Positive(t, test.limit.json)
 			require.LessOrEqual(t, 2*test.limit.ssz, maxResponsePeakAllocation)
 			require.LessOrEqual(t, 2*test.limit.json, maxResponsePeakAllocation)
 			require.GreaterOrEqual(t, test.limit.json, 2*test.limit.ssz)
