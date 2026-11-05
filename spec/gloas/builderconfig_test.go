@@ -315,10 +315,13 @@ func TestBuilderConfigJSON(t *testing.T) {
 // BuilderRequestAuth and SignedBuilderRequestAuth as defined in builder-specs
 // at commit 61aeca42d9ba8eb467ae230d191ebc1c3f38107d, and BuilderEntry and
 // BuilderConfig as defined in beacon-APIs at commit
-// 01e99a6530b22941f619bde525cbf8bb61991d42.  The expected roots were
-// independently calculated with eth-ssz-specs 0.1.0, the SSZ library of the
-// consensus-specs PySpec, rather than this repository's generated
-// dynamic-ssz codec.
+// 01e99a6530b22941f619bde525cbf8bb61991d42, and BuilderPreferencesEntry as
+// defined in beacon-APIs at commit 159622d983a703eb03a8a37bb1edeab7ffc3b6bc.
+// The expected roots were independently calculated, rather than with this
+// repository's generated dynamic-ssz codec: with eth-ssz-specs 0.1.0, the SSZ
+// library of the consensus-specs PySpec, and for BuilderPreferencesEntry with
+// remerkleable 0.1.28, which reproduces the BuilderRequestAuth and
+// SignedBuilderRequestAuth roots below.
 func TestBuilderAPIContainerHashTreeRoots(t *testing.T) {
 	auth := &gloas.SignedBuilderRequestAuth{
 		Message: &gloas.BuilderRequestAuth{
@@ -367,6 +370,11 @@ func TestBuilderAPIContainerHashTreeRoots(t *testing.T) {
 				Builders:           []*gloas.BuilderEntry{entry, entry},
 			},
 			root: "5c505a24cf3775610a58ecdaa64a972abe7e1513a92c82d0ced248f4e972ae10",
+		},
+		{
+			name:  "BuilderPreferencesEntry",
+			value: validBuilderPreferencesEntry(),
+			root:  "895c37789bba97bd876dbee401dbd053eb704e85cb7cbb7d3bc37afbeca8448d",
 		},
 		{
 			name:  "EmptyBuilderConfig",
