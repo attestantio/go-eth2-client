@@ -1,0 +1,52 @@
+# golangci-lint configuration for test files
+# Documentation: https://golangci-lint.run/usage/configuration/
+#
+# .golangci.yml sets run.tests to false, so none of its linters see a _test.go
+# file. This config loads tests and reports issues from test files only. CI runs
+# it as a second step with the same custom binary:
+#
+#   ./custom-gcl run --config=.golangci.tests.yml
+
+version: "2"
+run:
+  modules-download-mode: readonly
+
+  # Load test files, which .golangci.yml leaves out.
+  tests: true
+
+  allow-parallel-runners: true
+output:
+  formats:
+    text:
+      path: stderr
+issues:
+  # Report every finding. The defaults stop at 50 per linter and 3 per message.
+  max-issues-per-linter: 0
+  max-same-issues: 0
+linters:
+  # Enable only the linters listed below.
+  default: none
+  enable:
+    - testpackage # foo_test.go must declare foo_test; *_internal_test.go and export_test.go are exempt
+    - testifylint
+    - thelper
+    - usetesting
+  settings:
+    testifylint:
+      disable-all: true
+      enable:
+        - require-error
+        - error-nil
+        - error-is-as
+        - useless-assert
+    usetesting:
+      # Pin these settings, so a golangci-lint default change cannot flip them.
+      # t.Setenv restores the variable when the test ends, os.Setenv does not.
+      os-setenv: true
+      # Tests here use context.Background, so the context checks stay off.
+      context-background: false
+      context-todo: false
+  exclusions:
+    # Report issues from test files only.
+    paths-except:
+      - _test\.go$
