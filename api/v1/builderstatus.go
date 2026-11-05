@@ -14,6 +14,7 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -46,14 +47,20 @@ func (v BuilderStatus) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON implements json.Unmarshaler.
 func (v *BuilderStatus) UnmarshalJSON(input []byte) error {
-	switch strings.ToLower(string(input)) {
-	case `"unknown"`:
+	// Decode the string first, so escaped letters compare as the letters they encode.
+	var status string
+	if err := json.Unmarshal(input, &status); err != nil {
+		return fmt.Errorf("unrecognised builder status %s", string(input))
+	}
+
+	switch strings.ToLower(status) {
+	case "unknown":
 		*v = BuilderStatusUnknown
-	case `"pending"`:
+	case "pending":
 		*v = BuilderStatusPending
-	case `"active"`:
+	case "active":
 		*v = BuilderStatusActive
-	case `"exited"`:
+	case "exited":
 		*v = BuilderStatusExited
 	default:
 		return fmt.Errorf("unrecognised builder status %s", string(input))
