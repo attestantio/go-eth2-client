@@ -55,6 +55,8 @@ func TestBlobsSidecars(t *testing.T) {
 	require.NoError(t, err)
 
 	assertBlobs := func(t *testing.T, response *api.Response[[]*deneb.BlobSidecar], err error) {
+		t.Helper()
+
 		require.NoError(t, err)
 		require.NotNil(t, response)
 		require.NotNil(t, response.Data)
@@ -97,6 +99,8 @@ func TestBlobsSidecars(t *testing.T) {
 				Block: "invalid",
 			},
 			assert: func(t *testing.T, response *api.Response[[]*deneb.BlobSidecar], err error) {
+				t.Helper()
+
 				var apiError *api.Error
 				if errors.As(err, &apiError) {
 					require.Equal(t, 400, apiError.StatusCode)
@@ -109,6 +113,8 @@ func TestBlobsSidecars(t *testing.T) {
 				Block: fmt.Sprintf("%d", math.MaxInt64),
 			},
 			assert: func(t *testing.T, response *api.Response[[]*deneb.BlobSidecar], err error) {
+				t.Helper()
+
 				var apiError *api.Error
 				if errors.As(err, &apiError) {
 					require.Equal(t, 404, apiError.StatusCode)

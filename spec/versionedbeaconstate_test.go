@@ -39,6 +39,8 @@ func readFile(fileName string) ([]byte, error) {
 }
 
 func readVersionedBeaconState(t *testing.T, fileName string, version spec.DataVersion) (*spec.VersionedBeaconState, error) {
+	t.Helper()
+
 	// Read the state from the file
 	// To download state files for testing, run the following command:
 	// curl -X GET "https://<beacon-node-url>/eth/v2/debug/beacon/states/{slot_id}" -H "accept: application/octet-stream" > {netowrkname}_beaconstate_{slot_id}.ssz

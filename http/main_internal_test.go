@@ -104,6 +104,8 @@ func TestInternalTestServicesAuthenticate(t *testing.T) {
 			// Called directly, as the event-handler test does.
 			name: "NewTestService",
 			build: func(ctx context.Context, t *testing.T) *Service {
+				t.Helper()
+
 				return newTestService(ctx, t, false)
 			},
 		},
@@ -116,6 +118,8 @@ func TestInternalTestServicesAuthenticate(t *testing.T) {
 			// under inspection.
 			name: "DisagreeingService",
 			build: func(ctx context.Context, t *testing.T) *Service {
+				t.Helper()
+
 				return disagreeingService(ctx, t, "/never-requested", func(http.ResponseWriter, *http.Request) {})
 			},
 		},

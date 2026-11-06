@@ -62,6 +62,8 @@ func TestAttestationPool(t *testing.T) {
 				Slot: slotptr(1),
 			},
 			assert: func(t *testing.T, response *api.Response[[]*spec.VersionedAttestation]) {
+				t.Helper()
+
 				require.NotNil(t, response)
 				require.Equal(t, len(response.Data), 0)
 			},
@@ -70,6 +72,8 @@ func TestAttestationPool(t *testing.T) {
 			name: "Default options (current slot and all committee indices)",
 			opts: &api.AttestationPoolOpts{},
 			assert: func(t *testing.T, response *api.Response[[]*spec.VersionedAttestation]) {
+				t.Helper()
+
 				require.NotNil(t, response)
 				require.Greater(t, len(response.Data), 0, "Beacon node probably returned no attestations. Try again.")
 
@@ -92,6 +96,8 @@ func TestAttestationPool(t *testing.T) {
 				Slot: slotptr(currentSlot - 1), // Get the previous slot to decrease the chance of getting an empty pool
 			},
 			assert: func(t *testing.T, response *api.Response[[]*spec.VersionedAttestation]) {
+				t.Helper()
+
 				require.NotNil(t, response)
 				require.Greater(t, len(response.Data), 0, "Beacon node probably returned no attestations. Try again.")
 				data, err := response.Data[0].Data()
