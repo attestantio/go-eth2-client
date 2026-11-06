@@ -52,12 +52,13 @@ func TestBlobIndexUnmarshalJSON(t *testing.T) {
 
 	// Run tests
 	for _, tt := range tests {
-		err := tt.expected.UnmarshalJSON(tt.input)
+		var blobIndex deneb.BlobIndex
+		err := blobIndex.UnmarshalJSON(tt.input)
 		if tt.wantErr {
 			require.Error(t, err, tt.name)
 		} else {
 			require.NoError(t, err, tt.name)
-			require.Equal(t, tt.expected, tt.expected, tt.name)
 		}
+		require.Equal(t, tt.expected, blobIndex, tt.name)
 	}
 }
