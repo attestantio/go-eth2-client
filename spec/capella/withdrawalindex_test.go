@@ -64,10 +64,10 @@ func TestWithdrawalIndexUnmarshalJSON(t *testing.T) {
 			var withdrawalIndex capella.WithdrawalIndex
 			err := withdrawalIndex.UnmarshalJSON(tt.input)
 			if tt.wantErr {
-				require.NotNil(t, err, "UnmarshalJSON() did not return an error")
+				require.Error(t, err, "UnmarshalJSON() did not return an error")
 				require.Equal(t, tt.expected, withdrawalIndex, "UnmarshalJSON() returned incorrect value")
 			} else {
-				require.Nil(t, err, "UnmarshalJSON() returned an error")
+				require.NoError(t, err, "UnmarshalJSON() returned an error")
 				require.Equal(t, tt.expected, withdrawalIndex, "UnmarshalJSON() returned incorrect value")
 			}
 		})

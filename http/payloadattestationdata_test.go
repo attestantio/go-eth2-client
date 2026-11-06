@@ -15,7 +15,6 @@ package http_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -51,7 +50,7 @@ func TestPayloadAttestationData(t *testing.T) {
 		require.Error(t, err)
 
 		var apiErr *api.Error
-		require.True(t, errors.As(err, &apiErr), "expected a typed api.Error, got %v", err)
+		require.ErrorAs(t, err, &apiErr, "expected a typed api.Error, got %v", err)
 		require.Equal(t, 400, apiErr.StatusCode)
 	})
 }
