@@ -1,9 +1,10 @@
-package v1
+package v1_test
 
 import (
 	"encoding/json"
 	"testing"
 
+	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/stretchr/testify/assert"
 	require "github.com/stretchr/testify/require"
 )
@@ -44,7 +45,7 @@ func TestNodePeerJSON(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res Peer
+			var res api.Peer
 			err := json.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)
