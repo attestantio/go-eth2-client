@@ -1,4 +1,4 @@
-package testclients
+package testclients_test
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
+	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/stretchr/testify/require"
 )
 
@@ -70,9 +71,9 @@ func TestForkPosture(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			require.Equal(t, test.knowsGloas, KnowsGloas(context.Background(), test.service))
-			require.Equal(t, test.onGloas, OnGloas(context.Background(), test.service))
-			require.Equal(t, test.head, HeadVersion(context.Background(), test.service))
+			require.Equal(t, test.knowsGloas, testclients.KnowsGloas(context.Background(), test.service))
+			require.Equal(t, test.onGloas, testclients.OnGloas(context.Background(), test.service))
+			require.Equal(t, test.head, testclients.HeadVersion(context.Background(), test.service))
 		})
 	}
 }

@@ -110,5 +110,5 @@ func TestBeaconBlockRootTimeout(t *testing.T) {
 		},
 		Block: "0",
 	})
-	require.True(t, errors.Is(err, context.DeadlineExceeded))
+	require.ErrorIs(t, err, context.DeadlineExceeded)
 }

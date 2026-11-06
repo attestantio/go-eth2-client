@@ -2,7 +2,6 @@ package http_test
 
 import (
 	"context"
-	"errors"
 	nethttp "net/http"
 	"net/http/httptest"
 	"testing"
@@ -40,7 +39,7 @@ func TestError(t *testing.T) {
 	require.EqualError(t, err, "failed to request genesis\nGET failed with status 418: data")
 
 	var apiError *api.Error
-	require.True(t, errors.As(err, &apiError))
+	require.ErrorAs(t, err, &apiError)
 	require.Equal(t, defaultStatus, apiError.StatusCode)
 	require.Equal(t, defaultResponse, apiError.Data)
 	require.Equal(t, nethttp.MethodGet, apiError.Method)
@@ -81,6 +80,6 @@ func TestClientShouldSendExtraHeadersWhenProvided(t *testing.T) {
 	_, err = svc.(consensusclient.GenesisProvider).Genesis(ctx, &api.GenesisOpts{})
 	require.Error(t, err)
 	var apiError *api.Error
-	require.True(t, errors.As(err, &apiError))
+	require.ErrorAs(t, err, &apiError)
 	require.Equal(t, nethttp.StatusTeapot, apiError.StatusCode)
 }

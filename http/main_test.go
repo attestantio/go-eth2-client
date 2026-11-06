@@ -116,6 +116,8 @@ func initGlobalHTTPService() {
 // test execution, preventing endpoint overload. The semaphore is automatically
 // released when the test completes via t.Cleanup().
 func testService(ctx context.Context, t *testing.T) any {
+	t.Helper()
+
 	if os.Getenv("HTTP_ADDRESS") == "" {
 		t.Skip("HTTP_ADDRESS not set")
 	}

@@ -15,7 +15,6 @@ package http_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	client "github.com/attestantio/go-eth2-client"
@@ -49,7 +48,7 @@ func TestSignedBeaconBlock(t *testing.T) {
 			if err != nil {
 				// The beacon node we are talking to may not have the block.
 				var apiError *api.Error
-				require.True(t, errors.As(err, &apiError))
+				require.ErrorAs(t, err, &apiError)
 				require.Equal(t, 404, apiError.StatusCode)
 			} else {
 				require.NoError(t, err)
