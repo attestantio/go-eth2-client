@@ -56,10 +56,8 @@ func newTestService(ctx context.Context,
 
 	address := os.Getenv("HTTP_ADDRESS")
 	if address == "" {
-		// Belt only, and worth knowing it is: the one TestMain governing both
-		// packages lives in main_test.go and returns without running anything at
-		// all when this is unset, so nothing currently reaches this skip. It
-		// starts mattering if that is ever fixed.
+		// TestMain still runs every test when HTTP_ADDRESS is unset, so a test that
+		// builds a service here reaches this skip.
 		t.Skip("HTTP_ADDRESS not set")
 	}
 
