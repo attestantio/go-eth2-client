@@ -31,3 +31,16 @@ jobs:
           version: v2.13.1
           args: "--timeout=60m"
           only-new-issues: true
+
+      # .golangci.yml sets run.tests: false, so the step above skips test files.
+      # This step lints them with .golangci.tests.yml, and runs even when the
+      # step above fails, so one run reports both. Pass the config as
+      # --config=<file>: the action verifies the config named that way, and any
+      # other form (-c, --config <file>) makes it verify .golangci.yml instead.
+      - name: golangci-lint (tests)
+        if: ${{ !cancelled() }}
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.13.1
+          args: "--config=.golangci.tests.yml --timeout=60m"
+          only-new-issues: true
