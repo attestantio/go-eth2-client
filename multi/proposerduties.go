@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	nethttp "net/http"
+	"strings"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -47,16 +48,13 @@ func (s *Service) ProposerDutiesV2(ctx context.Context,
 		duties, err := provider.ProposerDutiesV2(ctx, opts)
 		if err != nil {
 			// *http.Service implements the provider whether or not the node
-			// behind it serves /eth/v2/validator/duties/proposer, so in
-			// production the "no v2 endpoint" case arrives here as a 404
-			// rather than failing the assertion above.  doCall returns 4xx to
-			// the caller without failing over, so on a mixed cluster the first
-			// client without v2 would otherwise answer for all of them.
+			// serves the route, so a missing route arrives as 404 or 405 on
+			// that path.  A 404 from a later call, such as the spec fetch,
+			// is a different failure and must not be rewritten.
 			var apiErr *api.Error
-			if errors.As(err, &apiErr) &&
-				(apiErr.StatusCode == nethttp.StatusNotFound || apiErr.StatusCode == nethttp.StatusMethodNotAllowed) {
+			if errors.As(err, &apiErr) && missingProposerDutiesV2(apiErr) {
 				return nil, fmt.Errorf("%s@%s does not serve proposer duties v2: %w",
-					client.Name(), client.Address(), ErrCallNotSupported)
+					client.Name(), client.Address(), errors.Join(ErrCallNotSupported, err))
 			}
 
 			return nil, err
@@ -74,6 +72,17 @@ func (s *Service) ProposerDutiesV2(ctx context.Context,
 	}
 
 	return response, nil
+}
+
+// missingProposerDutiesV2 reports a 404 or 405 from the v2 duties route itself.
+// Other 404s, including one from the spec endpoint after a duties response,
+// are not a missing route.
+func missingProposerDutiesV2(apiErr *api.Error) bool {
+	if apiErr.StatusCode != nethttp.StatusNotFound && apiErr.StatusCode != nethttp.StatusMethodNotAllowed {
+		return false
+	}
+
+	return strings.HasPrefix(apiErr.Endpoint, "/eth/v2/validator/duties/proposer")
 }
 
 // ProposerDuties obtains proposer duties for the given epoch.

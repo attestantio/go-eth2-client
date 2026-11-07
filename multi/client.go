@@ -170,8 +170,9 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 	}
 
 	var (
-		err error
-		res any
+		err     error
+		res     any
+		callErr error
 	)
 
 	for _, client := range activeClients {
@@ -185,6 +186,12 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 			switch {
 			case errors.Is(err, ErrCallNotSupported):
 				log.Trace().Err(err).Msg("Client cannot serve this call; trying the next without deactivating it")
+
+				// Keep an earlier failure. The sentinel means no client could serve
+				// the call, which is false if one of them failed for another reason.
+				if callErr == nil {
+					callErr = err
+				}
 
 				continue
 			case errors.As(err, &apiErr) && statusCodeFamily(apiErr.StatusCode) == 4:
@@ -209,6 +216,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 			if failover {
 				log.Debug().Err(err).Msg("Deactivating client on error")
 				s.deactivateClient(ctx, client)
+				callErr = err
 
 				continue
 			}
@@ -219,7 +227,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 
 		if res == nil {
 			// No response from this client; try the next.
-			err = errors.New("empty response")
+			callErr = errors.New("empty response")
 
 			continue
 		}
@@ -227,7 +235,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		return res, nil
 	}
 
-	return nil, err
+	return nil, callErr
 }
 
 // providerInfo returns information on the provider.

@@ -139,6 +139,147 @@ func TestProposerDutiesV2WithNoSupportingClient(t *testing.T) {
 	require.True(t, multiClient.IsActive())
 }
 
+func TestProposerDutiesV2StatusClassification(t *testing.T) {
+	ctx := context.Background()
+	duties := []*v1.ProposerDuty{{ValidatorIndex: 7, Slot: 65}}
+
+	tests := []struct {
+		name     string
+		status   int
+		endpoint string
+		failOver bool
+	}{
+		{name: "MethodNotAllowed", status: 405, endpoint: "/eth/v2/validator/duties/proposer/1", failOver: true},
+		{name: "BadRequest", status: 400, endpoint: "/eth/v2/validator/duties/proposer/1", failOver: false},
+		{name: "SpecNotFound", status: 404, endpoint: "/eth/v1/config/spec", failOver: false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var secondCalls int
+			first, err := mock.New(ctx, mock.WithName("first"))
+			require.NoError(t, err)
+			first.ProposerDutiesV2Func = func(context.Context, *api.ProposerDutiesOpts) (*api.Response[[]*v1.ProposerDuty], error) {
+				return nil, &api.Error{Method: "GET", Endpoint: test.endpoint, StatusCode: test.status}
+			}
+			second, err := mock.New(ctx, mock.WithName("second"))
+			require.NoError(t, err)
+			second.ProposerDutiesV2Func = func(context.Context, *api.ProposerDutiesOpts) (*api.Response[[]*v1.ProposerDuty], error) {
+				secondCalls++
+
+				return &api.Response[[]*v1.ProposerDuty]{Data: duties, Metadata: map[string]any{}}, nil
+			}
+
+			multiClient, err := multi.New(ctx,
+				multi.WithLogLevel(zerolog.Disabled),
+				multi.WithClients([]consensusclient.Service{first, second}),
+			)
+			require.NoError(t, err)
+
+			response, err := multiClient.(consensusclient.ProposerDutiesV2Provider).ProposerDutiesV2(ctx, &api.ProposerDutiesOpts{})
+			if test.failOver {
+				require.NoError(t, err)
+				require.Equal(t, duties, response.Data)
+				require.Equal(t, 1, secondCalls)
+			} else {
+				require.Error(t, err)
+				require.NotErrorIs(t, err, multi.ErrCallNotSupported)
+				var apiErr *api.Error
+				require.ErrorAs(t, err, &apiErr)
+				require.Equal(t, test.status, apiErr.StatusCode)
+				require.Equal(t, 0, secondCalls)
+			}
+			require.Equal(t, "first", multiClient.Address())
+			require.True(t, multiClient.IsActive())
+		})
+	}
+}
+
+func TestProposerDutiesV2WithNoServingEndpoint(t *testing.T) {
+	ctx := context.Background()
+
+	client, err := mock.New(ctx, mock.WithName("no-endpoint"))
+	require.NoError(t, err)
+	client.ProposerDutiesV2Func = func(context.Context, *api.ProposerDutiesOpts) (*api.Response[[]*v1.ProposerDuty], error) {
+		return nil, &api.Error{
+			Method:     "GET",
+			Endpoint:   "/eth/v2/validator/duties/proposer/1",
+			StatusCode: 404,
+			Data:       []byte(`{"message":"not found"}`),
+		}
+	}
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{client}),
+	)
+	require.NoError(t, err)
+
+	_, err = multiClient.(consensusclient.ProposerDutiesV2Provider).ProposerDutiesV2(ctx, &api.ProposerDutiesOpts{})
+	require.ErrorIs(t, err, multi.ErrCallNotSupported)
+	var apiErr *api.Error
+	require.ErrorAs(t, err, &apiErr)
+	require.Equal(t, 404, apiErr.StatusCode)
+	require.True(t, multiClient.IsActive())
+	require.Equal(t, "no-endpoint", multiClient.Address())
+}
+
+func TestProposerDutiesV2KeepsARealFailureAheadOfAnUnsupportedClient(t *testing.T) {
+	ctx := context.Background()
+
+	failed, err := mock.New(ctx, mock.WithName("failed"))
+	require.NoError(t, err)
+	failed.ProposerDutiesV2Func = func(context.Context, *api.ProposerDutiesOpts) (*api.Response[[]*v1.ProposerDuty], error) {
+		return nil, &api.Error{Method: "GET", Endpoint: "/eth/v2/validator/duties/proposer/1", StatusCode: 503}
+	}
+	skipped, err := mock.New(ctx, mock.WithName("skipped"))
+	require.NoError(t, err)
+	skipped.ProposerDutiesV2Func = func(context.Context, *api.ProposerDutiesOpts) (*api.Response[[]*v1.ProposerDuty], error) {
+		return nil, &api.Error{Method: "GET", Endpoint: "/eth/v2/validator/duties/proposer/1", StatusCode: 404}
+	}
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{failed, skipped}),
+	)
+	require.NoError(t, err)
+
+	_, err = multiClient.(consensusclient.ProposerDutiesV2Provider).ProposerDutiesV2(ctx, &api.ProposerDutiesOpts{})
+	require.NotErrorIs(t, err, multi.ErrCallNotSupported)
+	var apiErr *api.Error
+	require.ErrorAs(t, err, &apiErr)
+	require.Equal(t, 503, apiErr.StatusCode)
+	require.Equal(t, "skipped", multiClient.Address())
+	require.True(t, multiClient.IsActive())
+}
+
+func TestProposerDutiesV2DeactivatesAnErroringClient(t *testing.T) {
+	ctx := context.Background()
+
+	inner, err := mock.New(ctx, mock.WithName("erroring"))
+	require.NoError(t, err)
+	erroring, err := testclients.NewErroring(ctx, 1, inner)
+	require.NoError(t, err)
+	serving, err := mock.New(ctx, mock.WithName("serving"))
+	require.NoError(t, err)
+	serving.ProposerDutiesV2Func = func(context.Context, *api.ProposerDutiesOpts) (*api.Response[[]*v1.ProposerDuty], error) {
+		return &api.Response[[]*v1.ProposerDuty]{
+			Data:     []*v1.ProposerDuty{{ValidatorIndex: 7, Slot: 65}},
+			Metadata: map[string]any{},
+		}, nil
+	}
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{erroring, serving}),
+	)
+	require.NoError(t, err)
+
+	_, err = multiClient.(consensusclient.ProposerDutiesV2Provider).ProposerDutiesV2(ctx, &api.ProposerDutiesOpts{})
+	require.NoError(t, err)
+	require.Equal(t, "serving", multiClient.Address())
+}
+
 func TestProposerDutiesV2(t *testing.T) {
 	ctx := context.Background()
 	root := phase0.Root{0xaa}

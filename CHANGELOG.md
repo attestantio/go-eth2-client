@@ -1,4 +1,8 @@
 dev:
+ - stop the multi client treating a missing proposer-duties v2 route, or ErrNoOptions on proposer preferences, as node ill-health
+   - a client that does not implement v2, or answers 404 or 405 on that route, is skipped and stays active; the error still carries the node's response
+   - a real failure from another client is not replaced by "call not supported"
+   - a 404 from a different call, such as the spec fetch, is not treated as a missing v2 route
  - fix a data race in the multi client, which read its lists of clients outside their lock when rechecking them
  - fix ePBS proposal validation so neither Eth-Builder-Url nor execution_payment can skip the minimum bid
    - Eth-Builder-Url names every entry whose URL matches it exactly or after normalising scheme and host case, default port and an empty path, as Lighthouse returns it
