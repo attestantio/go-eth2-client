@@ -1,4 +1,4 @@
-// Copyright © 2024 Attestant Limited.
+// Copyright © 2024 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -13,15 +13,17 @@
 
 package multi
 
-import "errors"
+import (
+	"errors"
+
+	consensusclient "github.com/attestantio/go-eth2-client"
+)
 
 // ErrIncorrectType is returned when the multi client obtain a response type it is not expecting.
 var ErrIncorrectType = errors.New("incorrect response type")
 
-// ErrCallNotSupported marks an error as saying that a client cannot serve this
-// particular call -- it does not implement the provider interface, or the node
-// behind it does not serve the endpoint.  That is a static property of the
-// client rather than a health signal, so doCall moves on to the next client
-// without deactivating this one: lacking an optional endpoint must not cost a
-// healthy client its place in the rotation for every other call.
-var ErrCallNotSupported = errors.New("client does not support this call")
+// ErrCallNotSupported is client.ErrCallNotSupported. Wrappers outside this
+// package return the root value, and doCall skips it instead of deactivating
+// the client. A skip is not remembered, so the next call probes that client
+// again. The error doCall returns names the active clients only.
+var ErrCallNotSupported = consensusclient.ErrCallNotSupported

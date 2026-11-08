@@ -556,7 +556,7 @@ func (s *Sleepy) ProposerDutiesV2(ctx context.Context,
 
 	next, isNext := s.next.(consensusclient.ProposerDutiesV2Provider)
 	if !isNext {
-		return nil, errors.New("next does not support this call")
+		return nil, fmt.Errorf("next does not support this call: %w", consensusclient.ErrCallNotSupported)
 	}
 
 	return next.ProposerDutiesV2(ctx, opts)

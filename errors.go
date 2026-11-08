@@ -33,4 +33,8 @@ var (
 	ErrNoExecutionPayloadEnvelope = errors.New("no execution payload envelope available")
 	// ErrNoPayloadAttestationData is returned when the node has no payload attestation data for a slot.
 	ErrNoPayloadAttestationData = errors.New("no payload attestation data available")
+	// ErrCallNotSupported is returned when a client cannot serve this call.
+	// It does not implement the provider, or the node behind it does not serve
+	// the endpoint. That is not a health signal.
+	ErrCallNotSupported = errors.New("client does not support this call")
 )

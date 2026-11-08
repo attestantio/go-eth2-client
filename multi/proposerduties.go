@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -28,10 +28,10 @@ import (
 // ProposerDutiesV2 obtains proposer duties for the given epoch using the v2 API.
 // If opts.Indices is empty all duties are returned, otherwise only matching duties are returned.
 //
-// v2 is an optional endpoint, so a client that cannot serve it is skipped rather
-// than deactivated: support is a static property of the node, not a sign that it
-// is unhealthy, and evicting it here would take it out of the rotation for every
-// other call until the next recheck.
+// v2 is optional. A client that does not implement it, or that answers 404 or
+// 405 on /eth/v2/validator/duties/proposer, is skipped and stays active. A
+// skipped client is probed again on the next call. The error covers the active
+// clients only.
 func (s *Service) ProposerDutiesV2(ctx context.Context,
 	opts *api.ProposerDutiesOpts,
 ) (
@@ -53,8 +53,8 @@ func (s *Service) ProposerDutiesV2(ctx context.Context,
 			// is a different failure and must not be rewritten.
 			var apiErr *api.Error
 			if errors.As(err, &apiErr) && missingProposerDutiesV2(apiErr) {
-				return nil, fmt.Errorf("%s@%s does not serve proposer duties v2: %w",
-					client.Name(), client.Address(), errors.Join(ErrCallNotSupported, err))
+				return nil, fmt.Errorf("%s@%s does not serve proposer duties v2: %w: %w",
+					client.Name(), client.Address(), ErrCallNotSupported, err)
 			}
 
 			return nil, err

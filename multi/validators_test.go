@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,12 +19,60 @@ import (
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
+	"github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/mock"
 	"github.com/attestantio/go-eth2-client/multi"
+	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
+
+// TestValidatorsCallerErrorDoesNotDeactivate covers a method with no errHandler.
+// Nil or invalid options are the caller's mistake, so the first client stays
+// active and the second is not called.
+func TestValidatorsCallerErrorDoesNotDeactivate(t *testing.T) {
+	ctx := context.Background()
+
+	tests := []struct {
+		name string
+		err  error
+	}{
+		{name: "NoOptions", err: consensusclient.ErrNoOptions},
+		{name: "InvalidOptions", err: consensusclient.ErrInvalidOptions},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var firstCalls, secondCalls int
+			first, err := mock.New(ctx, mock.WithName("first"))
+			require.NoError(t, err)
+			first.ValidatorsFunc = func(context.Context, *api.ValidatorsOpts) (*api.Response[map[phase0.ValidatorIndex]*v1.Validator], error) {
+				firstCalls++
+
+				return nil, test.err
+			}
+			second, err := mock.New(ctx, mock.WithName("second"))
+			require.NoError(t, err)
+			second.ValidatorsFunc = func(context.Context, *api.ValidatorsOpts) (*api.Response[map[phase0.ValidatorIndex]*v1.Validator], error) {
+				secondCalls++
+
+				return nil, test.err
+			}
+
+			multiClient, err := multi.New(ctx,
+				multi.WithLogLevel(zerolog.Disabled),
+				multi.WithClients([]consensusclient.Service{first, second}),
+			)
+			require.NoError(t, err)
+
+			_, err = multiClient.(consensusclient.ValidatorsProvider).Validators(ctx, nil)
+			require.ErrorIs(t, err, test.err)
+			require.Equal(t, 1, firstCalls)
+			require.Equal(t, 0, secondCalls)
+			require.Equal(t, "first", multiClient.Address())
+		})
+	}
+}
 
 func TestValidators(t *testing.T) {
 	ctx := context.Background()
