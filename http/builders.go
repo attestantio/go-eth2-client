@@ -48,16 +48,18 @@ func (s *Service) Builders(ctx context.Context,
 	ctx, span := otel.Tracer("attestantio.go-eth2-client.http").Start(ctx, "Builders")
 	defer span.End()
 
-	if err := s.assertIsActive(ctx); err != nil {
-		return nil, err
-	}
-
 	if opts == nil {
 		return nil, client.ErrNoOptions
 	}
 
 	if opts.State == "" {
 		return nil, errors.Join(errors.New("no state specified"), client.ErrInvalidOptions)
+	}
+
+	// Check the node after the options. A caller bug must not look like an
+	// inactive node, or multi fails over and deactivates a healthy client.
+	if err := s.assertIsActive(ctx); err != nil {
+		return nil, err
 	}
 
 	body := &buildersBody{}

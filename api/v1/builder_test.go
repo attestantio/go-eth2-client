@@ -68,6 +68,11 @@ func TestBuilderJSON(t *testing.T) {
 
 func TestBuilderJSONMaxIndex(t *testing.T) {
 	var res api.Builder
-	require.NoError(t, json.Unmarshal([]byte(`{"index":"18446744073709551615","status":"active","builder":`+builderExample+`}`), &res))
+	input := `{"index":"18446744073709551615","status":"active","builder":` + builderExample + `}`
+	require.NoError(t, json.Unmarshal([]byte(input), &res))
 	require.Equal(t, gloas.BuilderIndex(18446744073709551615), res.Index)
+
+	out, err := json.Marshal(&res)
+	require.NoError(t, err)
+	require.Contains(t, string(out), `"index":"18446744073709551615"`)
 }

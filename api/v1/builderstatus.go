@@ -49,9 +49,7 @@ func (v BuilderStatus) MarshalJSON() ([]byte, error) {
 func (v *BuilderStatus) UnmarshalJSON(input []byte) error {
 	// Decode the string first, so escaped letters compare as the letters they encode.
 	var status string
-	if err := json.Unmarshal(input, &status); err != nil {
-		return fmt.Errorf("unrecognised builder status %s", string(input))
-	}
+	_ = json.Unmarshal(input, &status)
 
 	switch strings.ToLower(status) {
 	case "unknown":

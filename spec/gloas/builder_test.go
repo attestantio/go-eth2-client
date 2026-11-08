@@ -114,6 +114,7 @@ func TestBuilderJSONErrors(t *testing.T) {
 		{name: "VersionMax", old: `"version":"0"`, new: `"version":"255"`},
 		{name: "VersionOverflow", old: `"version":"0"`, new: `"version":"256"`, err: "invalid value for version: strconv.ParseUint: parsing \"256\": value out of range"},
 		{name: "ExecutionAddressShort", old: `"0x67565aa29bcf60c3fdcd0b79a36cd85cc13c7a91"`, new: `"0x6756"`, err: "incorrect length 2 for execution address"},
+		{name: "ExecutionAddressLong", old: `"0x67565aa29bcf60c3fdcd0b79a36cd85cc13c7a91"`, new: `"0x67565aa29bcf60c3fdcd0b79a36cd85cc13c7a91aa"`, err: "incorrect length 21 for execution address"},
 		{name: "BalanceInvalid", old: `"balance":"1"`, new: `"balance":"abc"`, err: `invalid value for balance: strconv.ParseUint: parsing "abc": invalid syntax`},
 	}
 	for _, test := range tests {
@@ -125,6 +126,9 @@ func TestBuilderJSONErrors(t *testing.T) {
 			if test.err == "" {
 				require.NoError(t, err)
 				require.Equal(t, uint8(255), builder.Version)
+				out, err := json.Marshal(&builder)
+				require.NoError(t, err)
+				require.Contains(t, string(out), `"version":"255"`)
 				return
 			}
 			require.EqualError(t, err, test.err)

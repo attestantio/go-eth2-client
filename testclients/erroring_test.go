@@ -82,7 +82,7 @@ func TestErroringBuildersUnsupported(t *testing.T) {
 
 	response, err := service.(consensusclient.BuildersProvider).Builders(ctx, &api.BuildersOpts{State: "head"})
 	require.Nil(t, response)
-	require.Error(t, err)
+	require.EqualError(t, err, "name only@localhost does not support this call")
 }
 
 func TestErroringNew(t *testing.T) {

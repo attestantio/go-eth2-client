@@ -16,6 +16,7 @@ package multi
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -24,6 +25,8 @@ import (
 )
 
 // Builders provides the builders, with their status, for the given options.
+// A 4xx from a client, including a 404 from a node that does not serve the
+// endpoint, is returned without trying the next client.
 func (s *Service) Builders(ctx context.Context,
 	opts *api.BuildersOpts,
 ) (
@@ -31,7 +34,12 @@ func (s *Service) Builders(ctx context.Context,
 	error,
 ) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		builders, err := client.(consensusclient.BuildersProvider).Builders(ctx, opts)
+		provider, supported := client.(consensusclient.BuildersProvider)
+		if !supported {
+			return nil, fmt.Errorf("%s@%s does not support this call", client.Name(), client.Address())
+		}
+
+		builders, err := provider.Builders(ctx, opts)
 		if err != nil {
 			return nil, err
 		}

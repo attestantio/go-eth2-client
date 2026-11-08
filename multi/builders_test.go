@@ -127,3 +127,25 @@ func TestBuildersFailsOver(t *testing.T) {
 	require.NoError(t, err)
 	require.Same(t, expected, res)
 }
+
+func TestBuildersFallsBackFromUnsupportedClient(t *testing.T) {
+	ctx := context.Background()
+
+	unsupported, err := mock.New(ctx, mock.WithName("unsupported"))
+	require.NoError(t, err)
+	supported, err := mock.New(ctx, mock.WithName("supported"))
+	require.NoError(t, err)
+
+	multiClient, err := multi.New(ctx,
+		multi.WithLogLevel(zerolog.Disabled),
+		multi.WithClients([]consensusclient.Service{
+			&proposerDutiesV1Only{Service: unsupported},
+			supported,
+		}),
+	)
+	require.NoError(t, err)
+
+	_, err = multiClient.(consensusclient.BuildersProvider).Builders(ctx, &api.BuildersOpts{State: "head"})
+	require.NoError(t, err)
+	require.Equal(t, "supported", multiClient.Address())
+}

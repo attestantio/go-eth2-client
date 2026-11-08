@@ -70,7 +70,7 @@ func buildersTestServer(t *testing.T, status int, response string, body *string)
 	}))
 	t.Cleanup(server.Close)
 
-	service, err := eth2http.New(context.Background(),
+	service, err := eth2http.New(t.Context(),
 		eth2http.WithAddress(server.URL),
 		eth2http.WithAllowDelayedStart(true),
 		eth2http.WithLogLevel(zerolog.Disabled),
@@ -97,11 +97,11 @@ func TestBuildersRequest(t *testing.T) {
 			name: "Filtered",
 			opts: &api.BuildersOpts{
 				State:           "head",
-				Indices:         []gloas.BuilderIndex{3},
+				Indices:         []gloas.BuilderIndex{3, 16},
 				PubKeys:         []phase0.BLSPubKey{{0x86}},
 				BuilderStatuses: []apiv1.BuilderStatus{apiv1.BuilderStatusActive, apiv1.BuilderStatusExited},
 			},
-			body: `{"ids":["3","0x860000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"],"statuses":["active","exited"]}`,
+			body: `{"ids":["3","16","0x860000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"],"statuses":["active","exited"]}`,
 		},
 	}
 
@@ -146,6 +146,7 @@ func TestBuildersErrors(t *testing.T) {
 
 		response, err := provider.Builders(context.Background(), &api.BuildersOpts{State: "head"})
 		require.NoError(t, err)
+		require.NotNil(t, response.Data)
 		require.Empty(t, response.Data)
 	})
 
@@ -180,6 +181,58 @@ func TestBuildersErrors(t *testing.T) {
 		require.Nil(t, response)
 		require.EqualError(t, err, "builder 0 is null")
 	})
+}
+
+func TestBuildersChecksOptionsBeforeActive(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/eth/v1/node/version" {
+			_, _ = w.Write([]byte(`{"data":{"version":"test"}}`))
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	t.Cleanup(server.Close)
+
+	service, err := eth2http.New(t.Context(),
+		eth2http.WithAddress(server.URL),
+		eth2http.WithAllowDelayedStart(true),
+		eth2http.WithLogLevel(zerolog.Disabled),
+	)
+	require.NoError(t, err)
+	provider := service.(client.BuildersProvider)
+
+	_, err = provider.Builders(t.Context(), nil)
+	require.ErrorIs(t, err, client.ErrNoOptions)
+	_, err = provider.Builders(t.Context(), &api.BuildersOpts{})
+	require.ErrorIs(t, err, client.ErrInvalidOptions)
+}
+
+func TestBuildersUsesStateInPath(t *testing.T) {
+	var path string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/eth/v1/node/version":
+			_, _ = w.Write([]byte(`{"data":{"version":"test"}}`))
+		case "/eth/v1/node/syncing":
+			_, _ = w.Write([]byte(`{"data":{"head_slot":"0","sync_distance":"0","is_optimistic":false,"is_syncing":false}}`))
+		default:
+			path = r.URL.Path
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"execution_optimistic":false,"finalized":true,"data":[]}`))
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	service, err := eth2http.New(t.Context(),
+		eth2http.WithAddress(server.URL),
+		eth2http.WithAllowDelayedStart(true),
+		eth2http.WithLogLevel(zerolog.Disabled),
+	)
+	require.NoError(t, err)
+
+	_, err = service.(client.BuildersProvider).Builders(t.Context(), &api.BuildersOpts{State: "finalized"})
+	require.NoError(t, err)
+	require.Equal(t, "/eth/v1/beacon/states/finalized/builders", path)
 }
 
 func TestBuildersOpts(t *testing.T) {

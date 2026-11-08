@@ -83,7 +83,7 @@ func TestSleepyBuildersUnsupported(t *testing.T) {
 
 	response, err := service.(consensusclient.BuildersProvider).Builders(ctx, &api.BuildersOpts{State: "head"})
 	require.Nil(t, response)
-	require.Error(t, err)
+	require.EqualError(t, err, "next does not support this call")
 }
 
 func TestSleepyNew(t *testing.T) {
