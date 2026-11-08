@@ -21,6 +21,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -233,6 +234,35 @@ func TestBuildersUsesStateInPath(t *testing.T) {
 	_, err = service.(client.BuildersProvider).Builders(t.Context(), &api.BuildersOpts{State: "finalized"})
 	require.NoError(t, err)
 	require.Equal(t, "/eth/v1/beacon/states/finalized/builders", path)
+}
+
+func TestBuildersTimeout(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/eth/v1/node/version":
+			_, _ = w.Write([]byte(`{"data":{"version":"test"}}`))
+		case "/eth/v1/node/syncing":
+			_, _ = w.Write([]byte(`{"data":{"head_slot":"0","sync_distance":"0","is_optimistic":false,"is_syncing":false}}`))
+		default:
+			time.Sleep(400 * time.Millisecond)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"execution_optimistic":false,"finalized":false,"data":[]}`))
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	service, err := eth2http.New(t.Context(),
+		eth2http.WithAddress(server.URL),
+		eth2http.WithAllowDelayedStart(true),
+		eth2http.WithLogLevel(zerolog.Disabled),
+	)
+	require.NoError(t, err)
+
+	_, err = service.(client.BuildersProvider).Builders(context.Background(), &api.BuildersOpts{
+		Common: api.CommonOpts{Timeout: 20 * time.Millisecond},
+		State:  "head",
+	})
+	require.ErrorIs(t, err, context.DeadlineExceeded)
 }
 
 func TestBuildersOpts(t *testing.T) {

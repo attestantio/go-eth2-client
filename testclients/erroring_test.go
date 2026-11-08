@@ -74,6 +74,25 @@ func TestErroringBuilders(t *testing.T) {
 	require.Same(t, expected, response)
 }
 
+func TestErroringBuildersErrorsBeforeForwarding(t *testing.T) {
+	ctx := context.Background()
+
+	client, err := mock.New(ctx)
+	require.NoError(t, err)
+	client.BuildersFunc = func(context.Context, *api.BuildersOpts) (*api.Response[map[gloas.BuilderIndex]*apiv1.Builder], error) {
+		t.Fatal("next client called")
+
+		return nil, nil
+	}
+
+	service, err := testclients.NewErroring(ctx, 1, client)
+	require.NoError(t, err)
+
+	response, err := service.(consensusclient.BuildersProvider).Builders(ctx, &api.BuildersOpts{State: "head"})
+	require.Nil(t, response)
+	require.EqualError(t, err, "error")
+}
+
 func TestErroringBuildersUnsupported(t *testing.T) {
 	ctx := context.Background()
 
