@@ -124,7 +124,7 @@ func TestBuildersRequest(t *testing.T) {
 }
 
 // TestBuildersErrors checks failures reach the caller as an api.Error with the
-// node's status code: 404 when the node has no route (Nimbus), as distinct from
+// node's status code: 404 when the node has no route (Nimbus before v26.10.2), as distinct from
 // an empty result, and 400 for a pre-Gloas state.
 func TestBuildersErrors(t *testing.T) {
 	for _, status := range []int{http.StatusNotFound, http.StatusBadRequest} {
@@ -289,7 +289,7 @@ func TestBuildersGloas(t *testing.T) {
 	all, err := provider.Builders(ctx, &api.BuildersOpts{State: "head"})
 	var apiErr *api.Error
 	if errors.As(err, &apiErr) && apiErr.StatusCode == http.StatusNotFound {
-		// Nimbus 26.10 has no route for this endpoint.
+		// Nimbus before v26.10.2 has no route for this endpoint.
 		gate(t, "node does not serve the builders endpoint")
 	}
 	require.NoError(t, err)

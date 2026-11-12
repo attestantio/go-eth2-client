@@ -24,6 +24,9 @@ type BuilderStatus int
 
 const (
 	// BuilderStatusUnknown means no information can be found about the builder.
+	// It is the zero value and not part of the beacon-APIs BuilderStatus enum, so
+	// Builder decoding rejects it as "status missing", and Builders sends it as the
+	// filter string "unknown" if a caller passes it.
 	BuilderStatusUnknown BuilderStatus = iota
 	// BuilderStatusPending means the builder has not exited and is not yet active.
 	BuilderStatusPending
