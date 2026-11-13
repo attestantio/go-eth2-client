@@ -21,6 +21,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/mock"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
@@ -46,6 +47,61 @@ func TestErroringProposerDutiesV2(t *testing.T) {
 	response, err := provider.ProposerDutiesV2(ctx, &api.ProposerDutiesOpts{Epoch: 2})
 	require.NoError(t, err)
 	require.Same(t, expected, response)
+}
+
+func TestErroringBuilders(t *testing.T) {
+	ctx := context.Background()
+	opts := &api.BuildersOpts{State: "head"}
+	expected := &api.Response[map[gloas.BuilderIndex]*apiv1.Builder]{
+		Data: map[gloas.BuilderIndex]*apiv1.Builder{3: {Index: 3}},
+	}
+
+	client, err := mock.New(ctx)
+	require.NoError(t, err)
+	client.BuildersFunc = func(_ context.Context, received *api.BuildersOpts) (*api.Response[map[gloas.BuilderIndex]*apiv1.Builder], error) {
+		require.Same(t, opts, received)
+
+		return expected, nil
+	}
+
+	service, err := testclients.NewErroring(ctx, 0, client)
+	require.NoError(t, err)
+	provider, supported := service.(consensusclient.BuildersProvider)
+	require.True(t, supported)
+
+	response, err := provider.Builders(ctx, opts)
+	require.NoError(t, err)
+	require.Same(t, expected, response)
+}
+
+func TestErroringBuildersErrorsBeforeForwarding(t *testing.T) {
+	ctx := context.Background()
+
+	client, err := mock.New(ctx)
+	require.NoError(t, err)
+	client.BuildersFunc = func(context.Context, *api.BuildersOpts) (*api.Response[map[gloas.BuilderIndex]*apiv1.Builder], error) {
+		t.Fatal("next client called")
+
+		return nil, nil
+	}
+
+	service, err := testclients.NewErroring(ctx, 1, client)
+	require.NoError(t, err)
+
+	response, err := service.(consensusclient.BuildersProvider).Builders(ctx, &api.BuildersOpts{State: "head"})
+	require.Nil(t, response)
+	require.EqualError(t, err, "error")
+}
+
+func TestErroringBuildersUnsupported(t *testing.T) {
+	ctx := context.Background()
+
+	service, err := testclients.NewErroring(ctx, 0, &nameOnlyService{})
+	require.NoError(t, err)
+
+	response, err := service.(consensusclient.BuildersProvider).Builders(ctx, &api.BuildersOpts{State: "head"})
+	require.Nil(t, response)
+	require.EqualError(t, err, "name only@localhost does not support this call")
 }
 
 func TestErroringNew(t *testing.T) {
