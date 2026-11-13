@@ -1,4 +1,9 @@
 dev:
+ - fail over proposer duties v2 when a client does not implement it, or answers 404 or 405 on that route, and leave that client active
+   - the error kept is the first skipped client's
+   - a real failure from another client is not replaced by "client does not support this call"
+   - a 404 from a different call, such as the spec fetch, is not treated as a missing v2 route
+ - treat ErrNoOptions and ErrInvalidOptions as caller errors in the multi client, so they do not deactivate a client or fail over
  - fix a data race in the multi client, which read its lists of clients outside their lock when rechecking them
  - fix ePBS proposal validation so neither Eth-Builder-Url nor execution_payment can skip the minimum bid
    - Eth-Builder-Url names every entry whose URL matches it exactly or after normalising scheme and host case, default port and an empty path, as Lighthouse returns it

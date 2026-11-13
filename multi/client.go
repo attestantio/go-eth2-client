@@ -1,4 +1,4 @@
-// Copyright © 2021 - 2024 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -170,8 +170,9 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 	}
 
 	var (
-		err error
-		res any
+		err     error
+		res     any
+		callErr error
 	)
 
 	for _, client := range activeClients {
@@ -183,6 +184,15 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 
 			var apiErr *api.Error
 			switch {
+			case errors.Is(err, ErrCallNotSupported):
+				log.Trace().Err(err).Msg("Client cannot serve this call; trying the next without deactivating it")
+
+				// Keep an earlier failure. A later skip must not replace it.
+				if callErr == nil {
+					callErr = err
+				}
+
+				continue
 			case errors.As(err, &apiErr) && statusCodeFamily(apiErr.StatusCode) == 4:
 				log.Trace().Err(err).Msg("Not deactivating client on user error")
 
@@ -195,6 +205,12 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 				log.Trace().Msg("Not deactivating client on context deadline exceeded")
 
 				return res, err
+			case errors.Is(err, consensusclient.ErrNoOptions) || errors.Is(err, consensusclient.ErrInvalidOptions):
+				log.Trace().Err(err).Msg("Not deactivating client on caller error")
+
+				return res, err
+			default:
+				// Not a caller or transport outcome. Fail over below.
 			}
 
 			failover := true
@@ -205,6 +221,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 			if failover {
 				log.Debug().Err(err).Msg("Deactivating client on error")
 				s.deactivateClient(ctx, client)
+				callErr = err
 
 				continue
 			}
@@ -215,7 +232,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 
 		if res == nil {
 			// No response from this client; try the next.
-			err = errors.New("empty response")
+			callErr = errors.New("empty response")
 
 			continue
 		}
@@ -223,7 +240,7 @@ func (s *Service) doCall(ctx context.Context, call callFunc, errHandler errHandl
 		return res, nil
 	}
 
-	return nil, err
+	return nil, callErr
 }
 
 // providerInfo returns information on the provider.
