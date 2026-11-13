@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 
 	client "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -62,17 +63,28 @@ func (s *Service) Builders(ctx context.Context,
 		return nil, err
 	}
 
+	// The spec requires unique ids and statuses; Nimbus rejects duplicates with 400.
 	body := &buildersBody{}
+	seenIDs := make(map[string]struct{})
+	addID := func(id string) {
+		if _, exists := seenIDs[id]; !exists {
+			seenIDs[id] = struct{}{}
+			body.IDs = append(body.IDs, id)
+		}
+	}
+
 	for i := range opts.Indices {
-		body.IDs = append(body.IDs, fmt.Sprintf("%d", opts.Indices[i]))
+		addID(fmt.Sprintf("%d", opts.Indices[i]))
 	}
 
 	for i := range opts.PubKeys {
-		body.IDs = append(body.IDs, opts.PubKeys[i].String())
+		addID(opts.PubKeys[i].String())
 	}
 
 	for i := range opts.BuilderStatuses {
-		body.Statuses = append(body.Statuses, opts.BuilderStatuses[i].String())
+		if status := opts.BuilderStatuses[i].String(); !slices.Contains(body.Statuses, status) {
+			body.Statuses = append(body.Statuses, status)
+		}
 	}
 
 	reqData, err := json.Marshal(body)

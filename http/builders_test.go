@@ -104,6 +104,17 @@ func TestBuildersRequest(t *testing.T) {
 			},
 			body: `{"ids":["3","16","0x860000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"],"statuses":["active","exited"]}`,
 		},
+		{
+			// Nimbus rejects duplicate ids with 400.
+			name: "Duplicates",
+			opts: &api.BuildersOpts{
+				State:           "head",
+				Indices:         []gloas.BuilderIndex{3, 16, 3},
+				PubKeys:         []phase0.BLSPubKey{{0x86}, {0x86}},
+				BuilderStatuses: []apiv1.BuilderStatus{apiv1.BuilderStatusActive, apiv1.BuilderStatusActive},
+			},
+			body: `{"ids":["3","16","0x860000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"],"statuses":["active"]}`,
+		},
 	}
 
 	for _, test := range tests {
@@ -306,6 +317,12 @@ func TestBuildersGloas(t *testing.T) {
 		require.NoError(t, err)
 		require.Len(t, res.Data, 1)
 		require.Equal(t, first.Builder.PublicKey, res.Data[first.Index].Builder.PublicKey)
+	})
+
+	t.Run("DuplicateIDs", func(t *testing.T) {
+		res, err := provider.Builders(ctx, &api.BuildersOpts{State: "head", Indices: []gloas.BuilderIndex{first.Index, first.Index}})
+		require.NoError(t, err)
+		require.Len(t, res.Data, 1)
 	})
 
 	t.Run("ByPubKey", func(t *testing.T) {
