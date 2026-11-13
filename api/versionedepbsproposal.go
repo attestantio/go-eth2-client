@@ -206,10 +206,11 @@ func (v *VersionedEPBSProposal) Blobs() ([]deneb.Blob, error) {
 // Value returns the total value of the proposal: the consensus value the node
 // reported plus the execution value.  As returned by the http client, the
 // execution value has been checked against the signed execution payload bid,
-// except for a self-build, whose bid commits to no value.  A component the node did not supply, or that could not
-// be checked against the bid and so was withheld, counts as zero, so this never
-// returns nil and proposals can be compared without a nil check.  Read
-// ConsensusValue and ExecutionValue directly to tell "not supplied" from "zero".
+// except for a self-build, whose bid commits to no value.  A component the node
+// did not supply, or that could not be checked against the bid and so was
+// withheld, counts as zero, so this never returns nil and proposals can be
+// compared without a nil check.  Read ConsensusValue and ExecutionValue directly
+// to tell "not supplied" from "zero".
 func (v *VersionedEPBSProposal) Value() *big.Int {
 	value := big.NewInt(0)
 	if v.ConsensusValue != nil {
