@@ -151,12 +151,23 @@ func TestAttestationSSZCustomPreset(t *testing.T) {
 	require.Equal(t, rootFromHex(t, "2c107e8672069142b8bfa7924cdb90be0fd9f7ebb61c6157f8f40fc608df5bf5"), root)
 }
 
-// TestExecutionPayloadEnvelopeHashTreeRootMinimalPreset verifies generated
-// hashing against dynamic SSZ with the canonical minimal preset value relevant
-// to this envelope.  MAX_EXTRA_DATA_BYTES is 32 for both mainnet and minimal;
-// its payload and execution request lists are progressive, and
-// BlobKZGCommitments is not an envelope field.
-func TestExecutionPayloadEnvelopeHashTreeRootMinimalPreset(t *testing.T) {
+// TestExecutionPayloadEnvelopeHashTreeRootAgainstReflection verifies the
+// generated hasher against dynamic SSZ's reflective one.
+//
+// WithNoFastSsz is what makes the comparison mean anything.  Without it the
+// reflective hasher delegates to the type's own fastssz method whenever it sees
+// no deviation from the compiled-in preset, so both sides of the assertion are
+// produced by the generated code and are equal by construction.  The envelope
+// has no preset-dependent field to deviate -- MAX_EXTRA_DATA_BYTES is 32 on both
+// mainnet and minimal, its payload and execution request lists are progressive,
+// and BlobKZGCommitments is not an envelope field -- so passing a spec map here,
+// as this test used to, could never produce one.  The name said "MinimalPreset"
+// for the same reason: there was nothing preset-specific to exercise.
+//
+// With the delegation off, a regression in the generated HashTreeRoot -- wrong
+// field order, wrong progressive-container index, a dropped field -- moves one
+// side of the comparison and not the other.
+func TestExecutionPayloadEnvelopeHashTreeRootAgainstReflection(t *testing.T) {
 	envelope := &gloas.ExecutionPayloadEnvelope{
 		Payload:           testExecutionPayload(),
 		ExecutionRequests: testExecutionRequests(),
@@ -167,11 +178,9 @@ func TestExecutionPayloadEnvelopeHashTreeRootMinimalPreset(t *testing.T) {
 	generatedRoot, err := envelope.HashTreeRoot()
 	require.NoError(t, err)
 
-	dynamicRoot, err := dynssz.NewDynSsz(map[string]any{
-		"MAX_EXTRA_DATA_BYTES": uint64(32),
-	}).HashTreeRoot(envelope)
+	reflectiveRoot, err := dynssz.NewDynSsz(nil, dynssz.WithNoFastSsz()).HashTreeRoot(envelope)
 	require.NoError(t, err)
-	require.Equal(t, generatedRoot, dynamicRoot)
+	require.Equal(t, generatedRoot, reflectiveRoot)
 }
 
 func rootFromHex(t *testing.T, input string) [32]byte {
