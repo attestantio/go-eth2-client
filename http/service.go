@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2024 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -197,12 +197,21 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 		synced = wasSynced
 	} else {
 		response, err := s.NodeSyncing(ctx, &api.NodeSyncingOpts{})
-		if err != nil {
+		switch {
+		case err != nil && ctx.Err() != nil:
+			// The caller's context is done, which says nothing about the node, so leave the
+			// connection state as it was.  The probe can run with the context of a request
+			// that has since completed.
+			s.pingSem.Release(1)
+			log.Debug().Err(err).Msg("Context done before sync state obtained from node; connection state unchanged")
+
+			return
+		case err != nil:
 			log.Debug().Err(err).Msg("Failed to obtain sync state from node")
 
 			active = false
 			synced = false
-		} else {
+		default:
 			active = true
 			synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
 		}
@@ -215,9 +224,15 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 
 		// Check connection to DVT middleware.
 		if err := s.checkDVT(ctx); err != nil {
-			log.Error().Err(err).Msg("Failed to check DVT connection on client activation; returning to inactive")
+			if ctx.Err() == nil {
+				log.Error().Err(err).Msg("Failed to check DVT connection on client activation; returning to inactive")
+			}
 
+			// The client was not active, so remaining inactive leaves its state as it was.  It is
+			// not synced either, else the synced hook fires for an inactive client and does not
+			// fire again when it becomes active.
 			active = false
+			synced = false
 		}
 	}
 
