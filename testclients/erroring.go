@@ -709,7 +709,8 @@ func (s *Erroring) ProposerDutiesV2(ctx context.Context,
 
 	next, isNext := s.next.(consensusclient.ProposerDutiesV2Provider)
 	if !isNext {
-		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+		return nil, fmt.Errorf("%s@%s does not support this call: %w",
+			s.next.Name(), s.next.Address(), consensusclient.ErrCallNotSupported)
 	}
 
 	return next.ProposerDutiesV2(ctx, opts)

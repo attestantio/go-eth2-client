@@ -15,7 +15,7 @@ package multi
 
 import (
 	"context"
-	"errors"
+	"fmt"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -24,16 +24,17 @@ import (
 // SubmitProposerPreferences submits signed proposer preferences.
 func (s *Service) SubmitProposerPreferences(ctx context.Context, opts *api.SubmitProposerPreferencesOpts) error {
 	_, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
-		if err := client.(consensusclient.ProposerPreferencesSubmitter).SubmitProposerPreferences(ctx, opts); err != nil {
+		provider, supported := client.(consensusclient.ProposerPreferencesSubmitter)
+		if !supported {
+			return nil, fmt.Errorf("%s@%s does not implement proposer preferences: %w",
+				client.Name(), client.Address(), ErrCallNotSupported)
+		}
+		if err := provider.SubmitProposerPreferences(ctx, opts); err != nil {
 			return nil, err
 		}
 
 		return true, nil
-	}, func(_ context.Context, _ consensusclient.Service, err error) (bool, error) {
-		// Invalid input is invalid for every client, so neither fail over nor
-		// deactivate a healthy client because the caller supplied bad preferences.
-		return !errors.Is(err, consensusclient.ErrInvalidOptions), err
-	})
+	}, nil)
 
 	return err
 }

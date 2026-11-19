@@ -1,4 +1,4 @@
-// Copyright © 2021 Attestant Limited.
+// Copyright © 2021 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,7 +15,10 @@ package multi
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	nethttp "net/http"
+	"strings"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
 	"github.com/attestantio/go-eth2-client/api"
@@ -24,6 +27,11 @@ import (
 
 // ProposerDutiesV2 obtains proposer duties for the given epoch using the v2 API.
 // If opts.Indices is empty all duties are returned, otherwise only matching duties are returned.
+//
+// v2 is optional. A client that does not implement it, or that answers 404 or
+// 405 on /eth/v2/validator/duties/proposer, is skipped and stays active. A
+// skipped client is probed again on the next call. The error covers the active
+// clients only.
 func (s *Service) ProposerDutiesV2(ctx context.Context,
 	opts *api.ProposerDutiesOpts,
 ) (
@@ -33,11 +41,22 @@ func (s *Service) ProposerDutiesV2(ctx context.Context,
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (any, error) {
 		provider, supported := client.(consensusclient.ProposerDutiesV2Provider)
 		if !supported {
-			return nil, fmt.Errorf("%s@%s does not support this call", client.Name(), client.Address())
+			return nil, fmt.Errorf("%s@%s does not implement proposer duties v2: %w",
+				client.Name(), client.Address(), ErrCallNotSupported)
 		}
 
 		duties, err := provider.ProposerDutiesV2(ctx, opts)
 		if err != nil {
+			// *http.Service implements the provider whether or not the node
+			// serves the route, so a missing route arrives as 404 or 405 on
+			// that path.  A 404 from a later call, such as the spec fetch,
+			// is a different failure and must not be rewritten.
+			var apiErr *api.Error
+			if errors.As(err, &apiErr) && missingProposerDutiesV2(apiErr) {
+				return nil, fmt.Errorf("%s@%s does not serve proposer duties v2: %w: %w",
+					client.Name(), client.Address(), ErrCallNotSupported, err)
+			}
+
 			return nil, err
 		}
 
@@ -53,6 +72,17 @@ func (s *Service) ProposerDutiesV2(ctx context.Context,
 	}
 
 	return response, nil
+}
+
+// missingProposerDutiesV2 reports a 404 or 405 from the v2 duties route itself.
+// Other 404s, including one from the spec endpoint after a duties response,
+// are not a missing route.
+func missingProposerDutiesV2(apiErr *api.Error) bool {
+	if apiErr.StatusCode != nethttp.StatusNotFound && apiErr.StatusCode != nethttp.StatusMethodNotAllowed {
+		return false
+	}
+
+	return strings.HasPrefix(apiErr.Endpoint, "/eth/v2/validator/duties/proposer")
 }
 
 // ProposerDuties obtains proposer duties for the given epoch.
