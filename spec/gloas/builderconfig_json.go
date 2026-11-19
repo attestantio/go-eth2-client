@@ -123,8 +123,8 @@ func (b *BuilderRequestAuth) UnmarshalJSON(input []byte) error {
 	if len(authData) == 0 {
 		return errors.New("authorization data empty")
 	}
-	if len(authData) > 4096 {
-		return errors.New("authorization data exceeds 4096 bytes")
+	if len(authData) > MaxBuilderAuthDataSize {
+		return fmt.Errorf("authorization data exceeds %d bytes", MaxBuilderAuthDataSize)
 	}
 
 	slot, err := strconv.ParseUint(data.Slot, 10, 64)
@@ -171,8 +171,8 @@ func (b *BuilderEntry) UnmarshalJSON(input []byte) error {
 	if data.URL == "" {
 		return errors.New("builder URL missing")
 	}
-	if len(data.URL) > 2048 {
-		return errors.New("builder URL exceeds 2048 bytes")
+	if len(data.URL) > MaxBuilderURLSize {
+		return fmt.Errorf("builder URL exceeds %d bytes", MaxBuilderURLSize)
 	}
 	if data.Auth == nil || data.Auth.Message == nil {
 		return errors.New("builder authorization missing")
@@ -240,7 +240,7 @@ func (b *BuilderConfig) UnmarshalJSON(input []byte) error {
 	if data.Builders == nil {
 		return errors.New("builders missing")
 	}
-	if len(data.Builders) > 64 {
+	if len(data.Builders) > MaxBuilderEntries {
 		return errors.New("too many builders")
 	}
 

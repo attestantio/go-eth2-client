@@ -15,6 +15,7 @@ package gloas_test
 
 import (
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec/gloas"
@@ -107,6 +108,34 @@ func TestGloasSSZFieldAnnotations(t *testing.T) {
 			field:    "ParentBeaconBlockRoot",
 			tag:      "ssz-size",
 			expected: "32",
+		},
+		{
+			name:     "BuilderRequestAuthDataMax",
+			typ:      reflect.TypeFor[gloas.BuilderRequestAuth](),
+			field:    "Data",
+			tag:      "ssz-max",
+			expected: strconv.Itoa(gloas.MaxBuilderAuthDataSize),
+		},
+		{
+			name:     "BuilderEntryURLMax",
+			typ:      reflect.TypeFor[gloas.BuilderEntry](),
+			field:    "URL",
+			tag:      "ssz-max",
+			expected: strconv.Itoa(gloas.MaxBuilderURLSize),
+		},
+		{
+			name:     "BuilderConfigBuildersMax",
+			typ:      reflect.TypeFor[gloas.BuilderConfig](),
+			field:    "Builders",
+			tag:      "ssz-max",
+			expected: strconv.Itoa(gloas.MaxBuilderEntries),
+		},
+		{
+			name:     "BuilderPreferencesEntryURLMax",
+			typ:      reflect.TypeFor[gloas.BuilderPreferencesEntry](),
+			field:    "URL",
+			tag:      "ssz-max",
+			expected: strconv.Itoa(gloas.MaxBuilderURLSize),
 		},
 	}
 

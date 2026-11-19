@@ -31,17 +31,6 @@ import (
 
 type builderPreferencesList []*gloas.BuilderPreferencesEntry
 
-// MAX_BUILDER_ENTRIES and MAX_BUILDER_URL_SIZE from beacon-APIs
-// types/gloas/builder_entry.yaml, and MAX_BUILDER_AUTH_DATA_SIZE from
-// builder-specs gloas/builder.md.  beacon-APIs also makes a zero-length url
-// (types/gloas/builder_preferences_entry.yaml) and zero-length auth data
-// (types/gloas/request_auth.yaml) invalid.
-const (
-	maxBuilderEntries      = 64
-	maxBuilderURLSize      = 2048
-	maxBuilderAuthDataSize = 4096
-)
-
 // MarshalSSZ encodes the list as an SSZ list of variable-size elements: a
 // 4-byte offset per element, then the elements' own encodings.
 func (p builderPreferencesList) MarshalSSZ() ([]byte, error) {
@@ -80,11 +69,13 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 	}
 
 	// Invalid entries fail as ErrInvalidOptions so that multi does not fail over.
+	// beacon-APIs makes a zero-length url (types/gloas/builder_preferences_entry.yaml)
+	// and zero-length auth data (types/gloas/request_auth.yaml) invalid.
 	for i, entry := range opts.Entries {
 		if entry == nil {
 			return errors.Join(fmt.Errorf("builder preferences entry %d is nil", i), client.ErrInvalidOptions)
 		}
-		if len(entry.URL) == 0 || len(entry.URL) > maxBuilderURLSize {
+		if len(entry.URL) == 0 || len(entry.URL) > gloas.MaxBuilderURLSize {
 			return errors.Join(
 				fmt.Errorf("builder preferences entry %d URL length %d is invalid", i, len(entry.URL)),
 				client.ErrInvalidOptions,
@@ -95,7 +86,7 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 		if entry.Auth == nil || entry.Auth.Message == nil {
 			return errors.Join(fmt.Errorf("builder preferences entry %d has no authorization", i), client.ErrInvalidOptions)
 		}
-		if len(entry.Auth.Message.Data) == 0 || len(entry.Auth.Message.Data) > maxBuilderAuthDataSize {
+		if len(entry.Auth.Message.Data) == 0 || len(entry.Auth.Message.Data) > gloas.MaxBuilderAuthDataSize {
 			return errors.Join(
 				fmt.Errorf("builder preferences entry %d authorization data length %d is invalid", i, len(entry.Auth.Message.Data)),
 				client.ErrInvalidOptions,
@@ -107,7 +98,7 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 	// It is MAX_BUILDER_ENTRIES times the proposer lookahead length, which
 	// proposerPreferencesLimit returns, compared by division so the product
 	// cannot overflow.
-	if (uint64(len(opts.Entries))+maxBuilderEntries-1)/maxBuilderEntries > s.proposerPreferencesLimit(ctx) {
+	if (uint64(len(opts.Entries))+gloas.MaxBuilderEntries-1)/gloas.MaxBuilderEntries > s.proposerPreferencesLimit(ctx) {
 		return errors.Join(errors.New("too many builder preferences entries"), client.ErrInvalidOptions)
 	}
 
