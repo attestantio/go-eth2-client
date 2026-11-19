@@ -153,26 +153,31 @@ func TestSubmitBuilderPreferencesKeepsUsableFailures(t *testing.T) {
 		name     string
 		body     string
 		failures []api.IndexedFailure
+		dropped  int
 	}{
 		{
 			name:     "MissingIndex",
 			body:     `{"code":400,"message":"m","failures":[{"index":0,"message":"a"},{"message":"b"}]}`,
 			failures: []api.IndexedFailure{{Index: 0, Message: "a"}},
+			dropped:  1,
 		},
 		{
 			name:     "FloatIndex",
 			body:     `{"code":400,"message":"m","failures":[{"index":1.0,"message":"a"},{"index":1,"message":"b"}]}`,
 			failures: []api.IndexedFailure{{Index: 1, Message: "b"}},
+			dropped:  1,
 		},
 		{
 			name:     "OutOfRangeIndex",
 			body:     `{"code":400,"message":"m","failures":[{"index":2,"message":"a"},{"index":0,"message":"b"}]}`,
 			failures: []api.IndexedFailure{{Index: 0, Message: "b"}},
+			dropped:  1,
 		},
 		{
 			name:     "NegativeIndex",
 			body:     `{"code":400,"message":"m","failures":[{"index":-1,"message":"a"},{"index":1,"message":"b"}]}`,
 			failures: []api.IndexedFailure{{Index: 1, Message: "b"}},
+			dropped:  1,
 		},
 		{
 			name:     "NumericMessage",
@@ -197,6 +202,7 @@ func TestSubmitBuilderPreferencesKeepsUsableFailures(t *testing.T) {
 			var indexedErr *api.IndexedError
 			require.ErrorAs(t, err, &indexedErr)
 			require.Equal(t, test.failures, indexedErr.Failures)
+			require.Equal(t, test.dropped, indexedErr.Dropped)
 			var apiErr *api.Error
 			require.ErrorAs(t, err, &apiErr)
 			require.JSONEq(t, test.body, string(apiErr.Data))

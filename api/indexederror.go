@@ -59,13 +59,17 @@ func (f *IndexedFailure) UnmarshalJSON(input []byte) error {
 type IndexedError struct {
 	Message  string           `json:"message"`
 	Failures []IndexedFailure `json:"failures"`
+	// Dropped counts the failures the node reported that Failures does not
+	// hold.  When it is not zero, an item missing from Failures may also have
+	// failed.
+	Dropped int `json:"-"`
 }
 
 // UnmarshalJSON implements json.Unmarshaler.  It keeps every failure that
-// decodes and skips the rest, so one malformed failure does not discard the
-// others.  A message that is not a string is left empty.  It fails if the input
-// is not JSON, is a JSON value other than an object or null, or has failures
-// that is neither an array nor null.
+// decodes and counts the rest in Dropped, so one malformed failure does not
+// discard the others.  A message that is not a string is left empty.  It fails
+// if the input is not JSON, is a JSON value other than an object or null, or
+// has failures that is neither an array nor null.
 func (e *IndexedError) UnmarshalJSON(input []byte) error {
 	var data struct {
 		Message  json.RawMessage   `json:"message"`
@@ -88,14 +92,19 @@ func (e *IndexedError) UnmarshalJSON(input []byte) error {
 
 	e.Message = message
 	e.Failures = failures
+	e.Dropped = len(data.Failures) - len(failures)
 
 	return nil
 }
 
 func (e *IndexedError) Error() string {
-	failures := make([]string, len(e.Failures))
-	for i, failure := range e.Failures {
-		failures[i] = fmt.Sprintf("index %d: %s", failure.Index, failure.Message)
+	failures := make([]string, 0, len(e.Failures)+1)
+	for _, failure := range e.Failures {
+		failures = append(failures, fmt.Sprintf("index %d: %s", failure.Index, failure.Message))
+	}
+
+	if e.Dropped > 0 {
+		failures = append(failures, fmt.Sprintf("%d dropped", e.Dropped))
 	}
 
 	return fmt.Sprintf("%s (%s)", e.Message, strings.Join(failures, "; "))

@@ -70,10 +70,10 @@ func (p builderPreferencesList) MarshalSSZ() ([]byte, error) {
 // to each entry's builder.  When the node answers 400 with failures, the
 // returned error wraps an *api.IndexedError as well as the *api.Error.  It holds
 // only the failures whose entry decodes with an index within opts.Entries, so
-// every Index is safe to use on opts.Entries; if none qualifies there is no
-// *api.IndexedError, and the raw body is always on the *api.Error.  A node that
-// does not serve the endpoint returns an *api.Error with status 404 and no
-// *api.IndexedError.
+// every Index is safe to use on opts.Entries, and counts the others in Dropped;
+// if none qualifies there is no *api.IndexedError, and the raw body is always on
+// the *api.Error.  A node that does not serve the endpoint returns an
+// *api.Error with status 404 and no *api.IndexedError.
 func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.SubmitBuilderPreferencesOpts) error {
 	if opts == nil {
 		return client.ErrNoOptions
@@ -154,16 +154,19 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 
 // decodeIndexedError decodes an IndexedErrorMessage body, keeping only the
 // failures with an index within the submitted list, so that callers can index
-// their entries with it.  It returns nil if no failure is usable.
+// their entries with it, and counting the rest as dropped.  It returns nil if no
+// failure is usable.
 func decodeIndexedError(data []byte, entryCount int) *api.IndexedError {
 	// A body that is not an IndexedErrorMessage leaves no failures.
 	var decoded api.IndexedError
 	_ = json.Unmarshal(data, &decoded)
 
-	indexedErr := &api.IndexedError{Message: decoded.Message}
+	indexedErr := &api.IndexedError{Message: decoded.Message, Dropped: decoded.Dropped}
 	for _, failure := range decoded.Failures {
 		if failure.Index >= 0 && failure.Index < entryCount {
 			indexedErr.Failures = append(indexedErr.Failures, failure)
+		} else {
+			indexedErr.Dropped++
 		}
 	}
 	if len(indexedErr.Failures) == 0 {

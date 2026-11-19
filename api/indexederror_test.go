@@ -30,6 +30,7 @@ func TestIndexedErrorUnmarshalJSONKeepsUsableFailures(t *testing.T) {
 		input    string
 		message  string
 		failures []api.IndexedFailure
+		dropped  int
 	}{
 		{
 			name:     "StringIndex",
@@ -42,18 +43,21 @@ func TestIndexedErrorUnmarshalJSONKeepsUsableFailures(t *testing.T) {
 			input:    `{"code":400,"message":"m","failures":[{"index":0,"message":"a"},{"message":"b"}]}`,
 			message:  "m",
 			failures: []api.IndexedFailure{{Index: 0, Message: "a"}},
+			dropped:  1,
 		},
 		{
 			name:     "FloatIndex",
 			input:    `{"code":400,"message":"m","failures":[{"index":1.5,"message":"a"},{"index":1,"message":"b"}]}`,
 			message:  "m",
 			failures: []api.IndexedFailure{{Index: 1, Message: "b"}},
+			dropped:  1,
 		},
 		{
 			name:     "NonObjectFailure",
 			input:    `{"code":400,"message":"m","failures":["x",{"index":2,"message":"b"}]}`,
 			message:  "m",
 			failures: []api.IndexedFailure{{Index: 2, Message: "b"}},
+			dropped:  1,
 		},
 		{
 			name:     "NumericMessage",
@@ -85,6 +89,7 @@ func TestIndexedErrorUnmarshalJSONKeepsUsableFailures(t *testing.T) {
 			require.NoError(t, json.Unmarshal([]byte(test.input), &indexedErr))
 			require.Equal(t, test.message, indexedErr.Message)
 			require.Equal(t, test.failures, indexedErr.Failures)
+			require.Equal(t, test.dropped, indexedErr.Dropped)
 		})
 	}
 }
@@ -96,4 +101,9 @@ func TestIndexedErrorUnmarshalJSONRejectsMalformedInput(t *testing.T) {
 		var indexedErr api.IndexedError
 		require.Error(t, json.Unmarshal([]byte(input), &indexedErr), input)
 	}
+}
+
+func TestIndexedErrorErrorNotesDropped(t *testing.T) {
+	indexedErr := &api.IndexedError{Message: "m", Failures: []api.IndexedFailure{{Index: 0, Message: "a"}}, Dropped: 2}
+	require.Equal(t, "m (index 0: a; 2 dropped)", indexedErr.Error())
 }
