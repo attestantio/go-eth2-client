@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -34,7 +35,6 @@ func TestProposerDutiesV2Transport(t *testing.T) {
 	ctx := context.Background()
 	currentEpochRoot := phase0.Root{0xaa}
 	nextEpochRoot := phase0.Root{0xbb}
-	headRoot := phase0.Root{0xcc}
 	legacyRoot := phase0.Root{0xdd}
 	pubkey := phase0.BLSPubKey{0xee}
 
@@ -48,6 +48,19 @@ func TestProposerDutiesV2Transport(t *testing.T) {
 			fmt.Fprint(w, `{"data":{"head_slot":"64","sync_distance":"0","is_syncing":false,"is_optimistic":false}}`)
 		case "/eth/v1/config/spec":
 			fmt.Fprint(w, `{"data":{"SLOTS_PER_EPOCH":"32"}}`)
+		case "/eth/v1/validator/duties/proposer/2", "/eth/v1/validator/duties/proposer/3":
+			// v1 is served too so the assertion below compares the two
+			// endpoints rather than comparing v2 against a root the stub never
+			// sends.  Per beacon-APIs the v2 dependent root is taken one epoch
+			// earlier than v1's, so they differ for the same epoch, and a
+			// caller that swaps v1 for v2 while still matching the root against
+			// a v1 `head` event re-fetches duties on every head event.
+			slot := 65
+			if strings.HasSuffix(r.URL.Path, "/3") {
+				slot = 97
+			}
+			fmt.Fprintf(w, `{"dependent_root":"%s","execution_optimistic":true,"data":[{"pubkey":"%s","validator_index":"7","slot":"%d"}]}`,
+				legacyRoot.String(), pubkey.String(), slot)
 		case "/eth/v2/validator/duties/proposer/2":
 			if r.Method != http.MethodGet {
 				t.Errorf("unexpected request method %s", r.Method)
@@ -77,6 +90,9 @@ func TestProposerDutiesV2Transport(t *testing.T) {
 	require.NoError(t, err)
 
 	provider, supported := service.(client.ProposerDutiesV2Provider)
+	require.True(t, supported)
+
+	legacyProvider, supported := service.(client.ProposerDutiesProvider)
 	require.True(t, supported)
 
 	tests := []struct {
@@ -110,9 +126,16 @@ func TestProposerDutiesV2Transport(t *testing.T) {
 			}}, response.Data)
 			require.Equal(t, test.root, response.Metadata["dependent_root"])
 			require.NotEqual(t, phase0.Root{}, response.Metadata["dependent_root"])
-			require.NotEqual(t, headRoot, response.Metadata["dependent_root"])
-			require.NotEqual(t, legacyRoot, response.Metadata["dependent_root"])
 			require.Equal(t, true, response.Metadata["execution_optimistic"])
+
+			// The v1 and v2 dependent roots for the same epoch are different
+			// values, which is the semantic difference between the endpoints
+			// and the reason they are not interchangeable to a caller matching
+			// the root against a head event.
+			legacyResponse, err := legacyProvider.ProposerDuties(ctx, &api.ProposerDutiesOpts{Epoch: test.epoch})
+			require.NoError(t, err)
+			require.Equal(t, legacyRoot, legacyResponse.Metadata["dependent_root"])
+			require.NotEqual(t, legacyResponse.Metadata["dependent_root"], response.Metadata["dependent_root"])
 		})
 	}
 }
