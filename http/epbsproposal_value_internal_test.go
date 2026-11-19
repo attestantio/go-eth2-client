@@ -267,6 +267,26 @@ func TestValidateEPBSProposalExecutionValueUnknownAndSelfBuild(t *testing.T) {
 			url: "https://lh.example/v2",
 			err: "execution payload bid below minimum",
 		},
+		// Normalisation keeps an empty query and a fragment, so either leaves the
+		// bid on the top-level floor.
+		{
+			name:     "EmptyQueryBuilderURLIsUnmatched",
+			proposal: epbsProposalWithBid(1, 5, 0, 5_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 10, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("http://lh.example:8080"), MinBid: 1},
+			}},
+			url: "http://lh.example:8080?",
+			err: "execution payload bid below minimum",
+		},
+		{
+			name:     "FragmentBuilderURLIsUnmatched",
+			proposal: epbsProposalWithBid(1, 5, 0, 5_000_000_000),
+			config: &gloas.BuilderConfig{MinBid: 10, Builders: []*gloas.BuilderEntry{
+				{URL: []byte("http://lh.example:8080"), MinBid: 1},
+			}},
+			url: "http://lh.example:8080#x",
+			err: "execution payload bid below minimum",
+		},
 		// Where the bid cannot be attributed the payment counts up to the most
 		// permissive cap the config allows, so any bid an entry's own cap would
 		// admit is admitted too.
