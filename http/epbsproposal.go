@@ -376,6 +376,9 @@ func builderEntriesForURL(config *gloas.BuilderConfig, builderURL string) []*glo
 
 	var entries []*gloas.BuilderEntry
 	for _, entry := range config.Builders {
+		if entry == nil {
+			continue
+		}
 		entryURL := string(entry.URL)
 		if entryURL == builderURL {
 			entries = append(entries, entry)
