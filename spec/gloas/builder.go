@@ -40,7 +40,7 @@ type Builder struct {
 // builderJSON is the spec representation of the struct.
 type builderJSON struct {
 	PublicKey         string `json:"pubkey"`
-	Version           uint8  `json:"version"`
+	Version           string `json:"version"`
 	ExecutionAddress  string `json:"execution_address"`
 	Balance           string `json:"balance"`
 	DepositEpoch      string `json:"deposit_epoch"`
@@ -61,7 +61,7 @@ type builderYAML struct {
 func (v *Builder) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&builderJSON{
 		PublicKey:         fmt.Sprintf("%#x", v.PublicKey),
-		Version:           v.Version,
+		Version:           fmt.Sprintf("%d", v.Version),
 		ExecutionAddress:  v.ExecutionAddress.String(),
 		Balance:           fmt.Sprintf("%d", v.Balance),
 		DepositEpoch:      fmt.Sprintf("%d", v.DepositEpoch),
@@ -95,7 +95,16 @@ func (v *Builder) unpack(builderJSON *builderJSON) error {
 
 	copy(v.PublicKey[:], publicKey)
 
-	v.Version = builderJSON.Version
+	if builderJSON.Version == "" {
+		return errors.New("version missing")
+	}
+
+	version, err := strconv.ParseUint(builderJSON.Version, 10, 8)
+	if err != nil {
+		return errors.Wrap(err, "invalid value for version")
+	}
+
+	v.Version = uint8(version)
 
 	if builderJSON.ExecutionAddress == "" {
 		return errors.New("execution address missing")
@@ -107,14 +116,10 @@ func (v *Builder) unpack(builderJSON *builderJSON) error {
 	}
 
 	if len(executionAddress) != bellatrix.ExecutionAddressLength {
-		return errors.New("incorrect length for fee recipient")
+		return fmt.Errorf("incorrect length %d for execution address", len(executionAddress))
 	}
 
 	copy(v.ExecutionAddress[:], executionAddress)
-
-	if len(executionAddress) != bellatrix.ExecutionAddressLength {
-		return fmt.Errorf("incorrect length %d for execution address", len(executionAddress))
-	}
 
 	if builderJSON.Balance == "" {
 		return errors.New("balance missing")
@@ -122,7 +127,7 @@ func (v *Builder) unpack(builderJSON *builderJSON) error {
 
 	balance, err := strconv.ParseUint(builderJSON.Balance, 10, 64)
 	if err != nil {
-		return errors.Wrap(err, "invalid value for effective balance")
+		return errors.Wrap(err, "invalid value for balance")
 	}
 
 	v.Balance = phase0.Gwei(balance)

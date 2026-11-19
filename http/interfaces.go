@@ -38,6 +38,7 @@ var (
 	_ client.AttesterSlashingSubmitter             = (*Service)(nil)
 	_ client.AttesterDutiesProvider                = (*Service)(nil)
 	_ client.BlockRewardsProvider                  = (*Service)(nil)
+	_ client.BuildersProvider                      = (*Service)(nil)
 	_ client.DepositContractProvider               = (*Service)(nil)
 	_ client.SyncCommitteeDutiesProvider           = (*Service)(nil)
 	_ client.SyncCommitteeMessagesSubmitter        = (*Service)(nil)

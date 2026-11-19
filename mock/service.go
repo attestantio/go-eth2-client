@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -60,6 +61,7 @@ type Service struct {
 	BeaconStateRandaoFunc              func(context.Context, *api.BeaconStateRandaoOpts) (*api.Response[*phase0.Root], error)
 	BeaconStateRootFunc                func(context.Context, *api.BeaconStateRootOpts) (*api.Response[*phase0.Root], error)
 	BlockRewardsFunc                   func(context.Context, *api.BlockRewardsOpts) (*api.Response[*apiv1.BlockRewards], error)
+	BuildersFunc                       func(context.Context, *api.BuildersOpts) (*api.Response[map[gloas.BuilderIndex]*apiv1.Builder], error)
 	DepositContractFunc                func(context.Context, *api.DepositContractOpts) (*api.Response[*apiv1.DepositContract], error)
 	EPBSProposalFunc                   func(context.Context, *api.EPBSProposalOpts) (*api.Response[*api.VersionedEPBSProposal], error)
 	EventsFunc                         func(context.Context, *api.EventsOpts) error

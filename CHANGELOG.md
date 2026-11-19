@@ -5,6 +5,9 @@ dev:
   - add gloas.MaxBuilderEntries, MaxBuilderURLSize and MaxBuilderAuthDataSize, used by the builder config and builder preferences validation
   - stop multi SubmitProposerPreferences failing over and deactivating clients when called with nil options
     - http SubmitProposerPreferences now checks its options before checking the node is synced, so nil or invalid options return ErrNoOptions or ErrInvalidOptions rather than ErrNotSynced or ErrNotActive
+  - add BuildersProvider for POST /eth/v1/beacon/states/{state_id}/builders in http, multi and mock clients
+    - http Builders checks its options before checking the node is active, so nil or invalid options return ErrNoOptions or ErrInvalidOptions rather than ErrNotActive
+  - breaking: encode the Gloas Builder JSON version as a decimal string, per beacon-APIs; Builder JSON written by v0.30.0 to v0.30.3, which used a number, no longer decodes, and a missing version now fails to decode in JSON and YAML
 
 0.30.3:
  - stop bounding all post response sizes and only filter for new epbs endpoints 

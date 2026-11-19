@@ -22,6 +22,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/mock"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/testclients"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
@@ -47,6 +48,58 @@ func TestSleepyProposerDutiesV2(t *testing.T) {
 	response, err := provider.ProposerDutiesV2(ctx, &api.ProposerDutiesOpts{Epoch: 2})
 	require.NoError(t, err)
 	require.Same(t, expected, response)
+}
+
+func TestSleepyBuilders(t *testing.T) {
+	ctx := context.Background()
+	opts := &api.BuildersOpts{State: "head"}
+	expected := &api.Response[map[gloas.BuilderIndex]*apiv1.Builder]{
+		Data: map[gloas.BuilderIndex]*apiv1.Builder{3: {Index: 3}},
+	}
+
+	client, err := mock.New(ctx)
+	require.NoError(t, err)
+	client.BuildersFunc = func(_ context.Context, received *api.BuildersOpts) (*api.Response[map[gloas.BuilderIndex]*apiv1.Builder], error) {
+		require.Same(t, opts, received)
+
+		return expected, nil
+	}
+
+	service, err := testclients.NewSleepy(ctx, time.Millisecond, 2*time.Millisecond, client)
+	require.NoError(t, err)
+	provider, supported := service.(consensusclient.BuildersProvider)
+	require.True(t, supported)
+
+	response, err := provider.Builders(ctx, opts)
+	require.NoError(t, err)
+	require.Same(t, expected, response)
+}
+
+func TestSleepyBuildersSleeps(t *testing.T) {
+	ctx := context.Background()
+	minSleep := 100 * time.Millisecond
+
+	client, err := mock.New(ctx)
+	require.NoError(t, err)
+
+	service, err := testclients.NewSleepy(ctx, minSleep, 200*time.Millisecond, client)
+	require.NoError(t, err)
+
+	started := time.Now()
+	_, err = service.(consensusclient.BuildersProvider).Builders(ctx, &api.BuildersOpts{State: "head"})
+	require.NoError(t, err)
+	require.GreaterOrEqual(t, time.Since(started), minSleep)
+}
+
+func TestSleepyBuildersUnsupported(t *testing.T) {
+	ctx := context.Background()
+
+	service, err := testclients.NewSleepy(ctx, time.Millisecond, 2*time.Millisecond, &nameOnlyService{})
+	require.NoError(t, err)
+
+	response, err := service.(consensusclient.BuildersProvider).Builders(ctx, &api.BuildersOpts{State: "head"})
+	require.Nil(t, response)
+	require.EqualError(t, err, "next does not support this call")
 }
 
 func TestSleepyNew(t *testing.T) {

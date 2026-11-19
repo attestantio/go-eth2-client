@@ -27,6 +27,7 @@ import (
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/electra"
+	"github.com/attestantio/go-eth2-client/spec/gloas"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -1147,6 +1148,25 @@ func (s *Erroring) SubmitExecutionPayloadBid(ctx context.Context, opts *api.Subm
 	}
 
 	return next.SubmitExecutionPayloadBid(ctx, opts)
+}
+
+// Builders provides the builders, with their status, for the given options.
+func (s *Erroring) Builders(ctx context.Context,
+	opts *api.BuildersOpts,
+) (
+	*api.Response[map[gloas.BuilderIndex]*apiv1.Builder],
+	error,
+) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+
+	next, isNext := s.next.(consensusclient.BuildersProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+
+	return next.Builders(ctx, opts)
 }
 
 // SubmitBuilderPreferences submits builder preferences.

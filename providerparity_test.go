@@ -64,6 +64,12 @@ var (
 	_ client.BuilderPreferencesSubmitter = (*testclients.Erroring)(nil)
 	_ client.BuilderPreferencesSubmitter = (*testclients.Sleepy)(nil)
 
+	_ client.BuildersProvider = (*http.Service)(nil)
+	_ client.BuildersProvider = (*multi.Service)(nil)
+	_ client.BuildersProvider = (*mock.Service)(nil)
+	_ client.BuildersProvider = (*testclients.Erroring)(nil)
+	_ client.BuildersProvider = (*testclients.Sleepy)(nil)
+
 	_ client.EPBSProposalProvider = (*http.Service)(nil)
 	_ client.EPBSProposalProvider = (*multi.Service)(nil)
 	_ client.EPBSProposalProvider = (*mock.Service)(nil)
