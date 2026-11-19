@@ -289,13 +289,10 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 		}
 	}
 
-	// When the value is checkable, total ends as the one policy's sum, or as
-	// the bare value when there is no payment, so it bounds the bracket below.
 	value := new(big.Int).SetUint64(uint64(bid.Value))
-	var total *big.Int
 	for _, policy := range policies {
 		payment := min(bid.ExecutionPayment, policy.maxPayment)
-		total = new(big.Int).Add(value, new(big.Int).SetUint64(uint64(payment)))
+		total := new(big.Int).Add(value, new(big.Int).SetUint64(uint64(payment)))
 		if total.Cmp(new(big.Int).SetUint64(uint64(policy.minBid))) < 0 {
 			return errors.Join(errors.New("execution payload bid below minimum"), client.ErrInconsistentResult)
 		}
@@ -317,9 +314,14 @@ func validateEPBSProposalExecutionValue(proposal *api.VersionedEPBSProposal,
 	// the payment the proposer actually collects.  Both ends of that bracket
 	// are bound to the signed bid, so a value inside it is accepted rather than
 	// failing the proposal over a reading of an ambiguous sentence.
+	//
+	// A checkable bid has one policy, or no payment for a cap to limit, so the
+	// first policy's cap gives the upper bound.
+	payment := min(bid.ExecutionPayment, policies[0].maxPayment)
 	gwei := big.NewInt(1_000_000_000)
 	low := new(big.Int).Mul(value, gwei)
-	high := new(big.Int).Mul(total, gwei)
+	high := new(big.Int).Add(value, new(big.Int).SetUint64(uint64(payment)))
+	high.Mul(high, gwei)
 	if proposal.ExecutionValue.Cmp(low) < 0 || proposal.ExecutionValue.Cmp(high) > 0 {
 		return errors.Join(errors.New("execution payload value does not match bid"), client.ErrInconsistentResult)
 	}
