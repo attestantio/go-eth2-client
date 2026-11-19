@@ -125,6 +125,19 @@ func TestSubmitProposerPreferencesRequiresOptions(t *testing.T) {
 	require.False(t, received)
 }
 
+func TestSubmitProposerPreferencesChecksOptionsBeforeSync(t *testing.T) {
+	server := syncingNodeServer(t)
+	defer server.Close()
+
+	service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL))
+	require.NoError(t, err)
+	err = service.(client.ProposerPreferencesSubmitter).SubmitProposerPreferences(context.Background(), nil)
+	require.ErrorIs(t, err, client.ErrNoOptions)
+	err = service.(client.ProposerPreferencesSubmitter).SubmitProposerPreferences(context.Background(),
+		&api.SubmitProposerPreferencesOpts{Preferences: []*gloas.SignedProposerPreferences{nil}})
+	require.ErrorIs(t, err, client.ErrInvalidOptions)
+}
+
 func TestSubmitProposerPreferencesRequiresExactStatusOK(t *testing.T) {
 	ctx := context.Background()
 	server := proposerPreferencesServer(t, nethttp.StatusNoContent, nil)

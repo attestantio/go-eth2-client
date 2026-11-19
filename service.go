@@ -805,6 +805,11 @@ type PayloadAttestationMessagesSubmitter interface {
 	SubmitPayloadAttestationMessages(ctx context.Context, opts *api.SubmitPayloadAttestationMessagesOpts) error
 }
 
+// BuilderPreferencesSubmitter is the interface for submitting builder preferences.
+type BuilderPreferencesSubmitter interface {
+	SubmitBuilderPreferences(ctx context.Context, opts *api.SubmitBuilderPreferencesOpts) error
+}
+
 // ProposerPreferencesSubmitter is the interface for submitting proposer preferences.
 type ProposerPreferencesSubmitter interface {
 	SubmitProposerPreferences(ctx context.Context, opts *api.SubmitProposerPreferencesOpts) error

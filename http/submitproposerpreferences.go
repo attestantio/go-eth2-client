@@ -80,10 +80,6 @@ func (p proposerPreferencesList) MarshalSSZ() ([]byte, error) {
 
 // SubmitProposerPreferences submits signed proposer preferences.
 func (s *Service) SubmitProposerPreferences(ctx context.Context, opts *api.SubmitProposerPreferencesOpts) error {
-	if err := s.assertIsSynced(ctx); err != nil {
-		return err
-	}
-
 	if opts == nil {
 		return client.ErrNoOptions
 	}
@@ -101,6 +97,12 @@ func (s *Service) SubmitProposerPreferences(ctx context.Context, opts *api.Submi
 		if preference.Message == nil {
 			return errors.Join(errors.New("nil proposer preference message supplied"), client.ErrInvalidOptions)
 		}
+	}
+
+	// Options are checked first so that invalid options never fail over in multi,
+	// whatever the state of the node.
+	if err := s.assertIsSynced(ctx); err != nil {
+		return err
 	}
 
 	requestPreferences := proposerPreferencesList(opts.Preferences)

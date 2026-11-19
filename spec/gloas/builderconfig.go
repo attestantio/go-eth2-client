@@ -15,6 +15,19 @@ package gloas
 
 import "github.com/attestantio/go-eth2-client/spec/phase0"
 
+// The ssz-max tags below repeat these limits, as a tag cannot name a constant.
+const (
+	// MaxBuilderEntries is MAX_BUILDER_ENTRIES from beacon-APIs
+	// types/gloas/builder_entry.yaml: the most builder entries for one proposal.
+	MaxBuilderEntries = 64
+	// MaxBuilderURLSize is MAX_BUILDER_URL_SIZE from beacon-APIs
+	// types/gloas/builder_entry.yaml: the most bytes in a builder URL.
+	MaxBuilderURLSize = 2048
+	// MaxBuilderAuthDataSize is MAX_BUILDER_AUTH_DATA_SIZE from builder-specs
+	// gloas/builder.md: the most bytes of builder authorization data.
+	MaxBuilderAuthDataSize = 4096
+)
+
 // BuilderRequestAuth authorizes a builder bid request for a proposal slot.
 type BuilderRequestAuth struct {
 	Data []byte `ssz-max:"4096"`

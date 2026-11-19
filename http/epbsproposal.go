@@ -378,7 +378,7 @@ func validateBuilderConfig(config *gloas.BuilderConfig, slot phase0.Slot) error 
 	// bids, leaving only p2p ones -- so only the endpoint's maximum is enforced
 	// here.  A nil slice says the same thing as an empty one and encodes
 	// identically in both JSON and SSZ, so it is accepted too.
-	if len(config.Builders) > 64 {
+	if len(config.Builders) > gloas.MaxBuilderEntries {
 		return errors.Join(errors.New("too many builders supplied"), client.ErrInvalidOptions)
 	}
 
@@ -386,11 +386,12 @@ func validateBuilderConfig(config *gloas.BuilderConfig, slot phase0.Slot) error 
 		if builder == nil {
 			return errors.Join(fmt.Errorf("builder %d missing", i), client.ErrInvalidOptions)
 		}
-		if len(builder.URL) == 0 || len(builder.URL) > 2048 || !utf8.Valid(builder.URL) {
+		if len(builder.URL) == 0 || len(builder.URL) > gloas.MaxBuilderURLSize || !utf8.Valid(builder.URL) {
 			return errors.Join(fmt.Errorf("builder %d has invalid URL", i), client.ErrInvalidOptions)
 		}
 		auth := builder.Auth
-		if auth == nil || auth.Message == nil || len(auth.Message.Data) == 0 || len(auth.Message.Data) > 4096 {
+		if auth == nil || auth.Message == nil ||
+			len(auth.Message.Data) == 0 || len(auth.Message.Data) > gloas.MaxBuilderAuthDataSize {
 			return errors.Join(fmt.Errorf("builder %d has invalid authorization", i), client.ErrInvalidOptions)
 		}
 		// The authorization slot is verified by the builder rather than by the

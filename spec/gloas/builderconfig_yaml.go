@@ -77,15 +77,29 @@ func (b *SignedBuilderRequestAuth) UnmarshalYAML(input []byte) error {
 	return b.UnmarshalJSON(marshaled)
 }
 
-// yamlQuotedString renders as an explicitly single-quoted YAML scalar.  A
+// yamlQuotedString renders as an explicitly quoted YAML scalar.  A
 // builder URL carries "://", which goccy emits as a plain scalar; in the flow
 // style this package marshals with, the embedded colon then makes the enclosing
 // document re-parse the value as a nested mapping and lose the URL.
 type yamlQuotedString string
 
-// MarshalYAML implements yaml.BytesMarshaler.
+// MarshalYAML implements yaml.BytesMarshaler.  A value holding a single quote
+// or a line feed is double-quoted instead: goccy mangles the doubled-quote
+// escape of a single-quoted scalar when it re-encodes the returned bytes, and
+// YAML folds a line feed in a single-quoted scalar into a space.  Other control
+// characters survive single quotes.  BuilderEntry and BuilderConfig replace
+// every double quote in their output with a single quote, which undoes this, so
+// a value holding a quote or a line feed does not round-trip through them.
+//
+// shortcut: goccy v1.9.2 cannot round-trip a carriage return, nor a tab or BEL
+// in a double-quoted value, as it re-encodes them as escapes its decoder does
+// not read; upgrade goccy if a URL ever needs them.
 func (q yamlQuotedString) MarshalYAML() ([]byte, error) {
-	return []byte("'" + strings.ReplaceAll(string(q), "'", "''") + "'"), nil
+	if strings.ContainsAny(string(q), "'\n") {
+		return json.Marshal(string(q))
+	}
+
+	return []byte("'" + string(q) + "'"), nil
 }
 
 // builderEntryYAML mirrors builderEntryJSON with the URL forced to a quoted

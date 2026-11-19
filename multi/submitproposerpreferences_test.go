@@ -27,8 +27,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// invalidOptionsPreferencesClient rejects every submission with ErrInvalidOptions,
-// as the HTTP service does when the caller supplies too many or nil preferences.
+// invalidOptionsPreferencesClient rejects every submission with a caller error:
+// ErrNoOptions for nil options, else ErrInvalidOptions.
 type invalidOptionsPreferencesClient struct {
 	name  string
 	calls int
@@ -40,9 +40,12 @@ func (*invalidOptionsPreferencesClient) IsActive() bool    { return true }
 func (*invalidOptionsPreferencesClient) IsSynced() bool    { return true }
 
 func (c *invalidOptionsPreferencesClient) SubmitProposerPreferences(_ context.Context,
-	_ *api.SubmitProposerPreferencesOpts,
+	opts *api.SubmitProposerPreferencesOpts,
 ) error {
 	c.calls++
+	if opts == nil {
+		return consensusclient.ErrNoOptions
+	}
 
 	return errors.Join(errors.New("too many proposer preferences"), consensusclient.ErrInvalidOptions)
 }
@@ -69,27 +72,42 @@ func TestSubmitProposerPreferences(t *testing.T) {
 }
 
 // TestSubmitProposerPreferencesDoesNotFailOverOnInvalidOptions ensures that a
-// caller-side error is not treated as a provider failure: invalid input is
-// invalid everywhere, so neither client should be tried twice or deactivated.
+// caller-side error is not treated as a provider failure: invalid or missing
+// input is invalid everywhere, so neither client should be tried twice or
+// deactivated.
 func TestSubmitProposerPreferencesDoesNotFailOverOnInvalidOptions(t *testing.T) {
-	ctx := context.Background()
+	for _, test := range []struct {
+		name string
+		opts *api.SubmitProposerPreferencesOpts
+		err  error
+	}{
+		{
+			name: "InvalidOptions",
+			opts: &api.SubmitProposerPreferencesOpts{
+				Preferences: []*gloas.SignedProposerPreferences{{Message: &gloas.ProposerPreferences{}}},
+			},
+			err: consensusclient.ErrInvalidOptions,
+		},
+		{name: "NoOptions", err: consensusclient.ErrNoOptions},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			ctx := context.Background()
 
-	client1 := &invalidOptionsPreferencesClient{name: "invalid 1"}
-	client2 := &invalidOptionsPreferencesClient{name: "invalid 2"}
+			client1 := &invalidOptionsPreferencesClient{name: "invalid 1"}
+			client2 := &invalidOptionsPreferencesClient{name: "invalid 2"}
 
-	multiClient, err := multi.New(ctx,
-		multi.WithLogLevel(zerolog.Disabled),
-		multi.WithClients([]consensusclient.Service{client1, client2}),
-	)
-	require.NoError(t, err)
+			multiClient, err := multi.New(ctx,
+				multi.WithLogLevel(zerolog.Disabled),
+				multi.WithClients([]consensusclient.Service{client1, client2}),
+			)
+			require.NoError(t, err)
 
-	err = multiClient.(consensusclient.ProposerPreferencesSubmitter).
-		SubmitProposerPreferences(ctx, &api.SubmitProposerPreferencesOpts{
-			Preferences: []*gloas.SignedProposerPreferences{{Message: &gloas.ProposerPreferences{}}},
+			err = multiClient.(consensusclient.ProposerPreferencesSubmitter).SubmitProposerPreferences(ctx, test.opts)
+			require.ErrorIs(t, err, test.err)
+			require.Equal(t, 1, client1.calls)
+			require.Equal(t, 0, client2.calls)
+			// The first client is still active, so it remains the multi client's address.
+			require.Equal(t, "invalid 1", multiClient.Address())
 		})
-	require.ErrorIs(t, err, consensusclient.ErrInvalidOptions)
-	require.Equal(t, 1, client1.calls)
-	require.Equal(t, 0, client2.calls)
-	// The first client is still active, so it remains the multi client's address.
-	require.Equal(t, "invalid 1", multiClient.Address())
+	}
 }
