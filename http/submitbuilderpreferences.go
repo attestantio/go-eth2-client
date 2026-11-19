@@ -79,12 +79,6 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 		return client.ErrNoOptions
 	}
 
-	// The limit is MAX_BUILDER_ENTRIES times the proposer lookahead length, which
-	// proposerPreferencesLimit returns, compared by division so the product
-	// cannot overflow.
-	if (uint64(len(opts.Entries))+maxBuilderEntries-1)/maxBuilderEntries > s.proposerPreferencesLimit(ctx) {
-		return errors.Join(errors.New("too many builder preferences entries"), client.ErrInvalidOptions)
-	}
 	// Invalid entries fail as ErrInvalidOptions so that multi does not fail over.
 	for i, entry := range opts.Entries {
 		if entry == nil {
@@ -107,6 +101,14 @@ func (s *Service) SubmitBuilderPreferences(ctx context.Context, opts *api.Submit
 				client.ErrInvalidOptions,
 			)
 		}
+	}
+
+	// The limit is checked after the entries because it may need a spec fetch.
+	// It is MAX_BUILDER_ENTRIES times the proposer lookahead length, which
+	// proposerPreferencesLimit returns, compared by division so the product
+	// cannot overflow.
+	if (uint64(len(opts.Entries))+maxBuilderEntries-1)/maxBuilderEntries > s.proposerPreferencesLimit(ctx) {
+		return errors.Join(errors.New("too many builder preferences entries"), client.ErrInvalidOptions)
 	}
 
 	// Options are checked first so that invalid options never fail over in multi,

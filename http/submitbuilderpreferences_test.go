@@ -349,6 +349,33 @@ func TestSubmitBuilderPreferencesChecksOptionsBeforeSync(t *testing.T) {
 	require.ErrorIs(t, err, client.ErrInvalidOptions)
 }
 
+// TestSubmitBuilderPreferencesChecksEntriesBeforeLimit covers an invalid entry,
+// which must fail without the spec fetch the limit needs.
+func TestSubmitBuilderPreferencesChecksEntriesBeforeLimit(t *testing.T) {
+	specFetched := false
+	server := httptest.NewServer(nethttp.HandlerFunc(func(w nethttp.ResponseWriter, r *nethttp.Request) {
+		switch r.URL.Path {
+		case "/eth/v1/node/version":
+			_, _ = w.Write([]byte(`{"data":{"version":"test"}}`))
+		case "/eth/v1/node/syncing":
+			_, _ = w.Write([]byte(`{"data":{"is_syncing":false,"is_optimistic":false,"el_offline":false,"head_slot":"1","sync_distance":"0"}}`))
+		case "/eth/v1/config/spec":
+			specFetched = true
+			_, _ = w.Write([]byte(`{"data":{"MIN_SEED_LOOKAHEAD":"1","SLOTS_PER_EPOCH":"2"}}`))
+		default:
+			w.WriteHeader(nethttp.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	service, err := clienthttp.New(context.Background(), clienthttp.WithAddress(server.URL))
+	require.NoError(t, err)
+	err = service.(client.BuilderPreferencesSubmitter).SubmitBuilderPreferences(context.Background(),
+		&api.SubmitBuilderPreferencesOpts{Entries: []*gloas.BuilderPreferencesEntry{nil}})
+	require.ErrorIs(t, err, client.ErrInvalidOptions)
+	require.False(t, specFetched)
+}
+
 // TestSubmitBuilderPreferencesEnforcesLimit covers the limit of
 // MAX_BUILDER_ENTRIES * (MIN_SEED_LOOKAHEAD + 1) * SLOTS_PER_EPOCH entries, with
 // the node's spec giving 64 * (1 + 1) * 2 = 256, not the mainnet 4096.
