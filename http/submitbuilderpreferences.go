@@ -34,17 +34,19 @@ type builderPreferencesList []*gloas.BuilderPreferencesEntry
 // MarshalSSZ encodes the list as an SSZ list of variable-size elements: a
 // 4-byte offset per element, then the elements' own encodings.
 func (p builderPreferencesList) MarshalSSZ() ([]byte, error) {
-	size := 4 * len(p)
-	for _, entry := range p {
-		size += entry.SizeSSZ()
-	}
-
-	body := make([]byte, 0, size)
+	offsets := make([]byte, 0, 4*len(p))
 	offset := 4 * len(p)
 	for _, entry := range p {
-		body = binary.LittleEndian.AppendUint32(body, uint32(offset))
-		offset += entry.SizeSSZ()
+		size := entry.SizeSSZ()
+		if size < 0 {
+			return nil, errors.New("builder preferences entry is too large to encode")
+		}
+		offsets = binary.LittleEndian.AppendUint32(offsets, uint32(offset))
+		offset += size
 	}
+
+	// offset is now the size of the whole body.
+	body := append(make([]byte, 0, offset), offsets...)
 	for _, entry := range p {
 		var err error
 		if body, err = entry.MarshalSSZTo(body); err != nil {
