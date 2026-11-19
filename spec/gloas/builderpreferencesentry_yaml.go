@@ -22,7 +22,7 @@ import (
 )
 
 // builderPreferencesEntryYAML mirrors builderPreferencesEntryJSON with every
-// string forced to a single-quoted scalar; see yamlQuotedString.  Quoting here,
+// string forced to a quoted scalar; see yamlQuotedString.  Quoting here,
 // rather than replacing double quotes in the output as sibling types do, keeps
 // a double quote inside the URL intact.
 type builderPreferencesEntryYAML struct {

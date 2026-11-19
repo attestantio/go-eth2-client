@@ -82,9 +82,12 @@ func TestBuilderPreferencesEntryYAML(t *testing.T) {
 }
 
 // TestBuilderPreferencesEntryYAMLQuotes round-trips URLs holding the characters
-// that YAML quoting has to escape.
+// that YAML quoting has to escape, or that a single-quoted scalar folds.
 func TestBuilderPreferencesEntryYAMLQuotes(t *testing.T) {
-	for _, url := range []string{`https://b.example/?q="x"`, `https://b.example/?q='x'`} {
+	for _, url := range []string{
+		`https://b.example/?q="x"`, `https://b.example/?q='x'`, `https://b.example/?q='\x'`,
+		"https://b.example/a\nb", "https://b.example/a\tb", "https://b.example/a\x00\x07\x7f\u0085b",
+	} {
 		entry := validBuilderPreferencesEntry()
 		entry.URL = []byte(url)
 

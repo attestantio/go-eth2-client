@@ -84,13 +84,18 @@ func (b *SignedBuilderRequestAuth) UnmarshalYAML(input []byte) error {
 type yamlQuotedString string
 
 // MarshalYAML implements yaml.BytesMarshaler.  A value holding a single quote
-// is double-quoted instead, because goccy mangles the doubled-quote escape of a
-// single-quoted scalar when it re-encodes the returned bytes.  BuilderEntry and
-// BuilderConfig replace every double quote in their output with a single
-// quote, which undoes this, so a value holding either quote does not
-// round-trip through them.
+// or a line feed is double-quoted instead: goccy mangles the doubled-quote
+// escape of a single-quoted scalar when it re-encodes the returned bytes, and
+// YAML folds a line feed in a single-quoted scalar into a space.  Other control
+// characters survive single quotes.  BuilderEntry and BuilderConfig replace
+// every double quote in their output with a single quote, which undoes this, so
+// a value holding a quote or a line feed does not round-trip through them.
+//
+// shortcut: goccy v1.9.2 cannot round-trip a carriage return, nor a tab or BEL
+// in a double-quoted value, as it re-encodes them as escapes its decoder does
+// not read; upgrade goccy if a URL ever needs them.
 func (q yamlQuotedString) MarshalYAML() ([]byte, error) {
-	if strings.Contains(string(q), "'") {
+	if strings.ContainsAny(string(q), "'\n") {
 		return json.Marshal(string(q))
 	}
 
