@@ -1,8 +1,6 @@
 dev:
- - serialize complete HTTP activation checks and let concurrent first-use callers wait with context cancellation
- - prevent activation requests from recursively scheduling further activation checks after transport failures
- - add WithDeferredStart to defer the initial HTTP connection check until first use or background refresh
- - avoid recursive HTTP connection checks when an unavailable syncing URL contains a query string
+ - avoid recursive connection checks for syncing URLs with query strings
+ - prevent readiness request failures from scheduling more connection checks
  - 
 
 0.30.3:

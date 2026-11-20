@@ -135,12 +135,12 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		customSpecSupport:   parameters.customSpecSupport,
 	}
 
-	// A deferred-start client checks availability on first use or background refresh.
-	if !parameters.deferredStart {
-		s.CheckConnectionState(ctx)
-		if !s.IsActive() && !parameters.allowDelayedStart {
-			return nil, client.ErrNotActive
-		}
+	// Ping the client to see if it is ready to serve requests.
+	s.CheckConnectionState(ctx)
+	active := s.IsActive()
+
+	if !active && !parameters.allowDelayedStart {
+		return nil, client.ErrNotActive
 	}
 
 	// Periodically refetch static values in case of client update.
@@ -174,20 +174,12 @@ func (s *Service) Address() string {
 	return s.address
 }
 
+// close closes the service, freeing up resources.
+
 // CheckConnectionState checks the connection state for the client, potentially updating
 // its activation and sync states.
 // This will call hooks supplied when creating the client if the state changes.
 func (s *Service) CheckConnectionState(ctx context.Context) {
-	if ctx.Err() != nil {
-		return
-	}
-	if !s.pingSem.TryAcquire(1) {
-		if err := s.pingSem.Acquire(ctx, 1); err == nil {
-			s.pingSem.Release(1)
-		}
-		return
-	}
-	defer s.pingSem.Release(1)
 	checkCtx := context.WithValue(ctx, connectionCheckContextKey{}, true)
 	log := zerolog.Ctx(ctx)
 
@@ -201,12 +193,24 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 		synced bool
 	)
 
-	response, err := s.NodeSyncing(checkCtx, &api.NodeSyncingOpts{})
-	if err != nil {
-		log.Debug().Err(err).Msg("Failed to obtain sync state from node")
+	acquired := s.pingSem.TryAcquire(1)
+	if !acquired {
+		// Means there is another ping running, just use current info.
+		active = wasActive
+		synced = wasSynced
 	} else {
-		active = true
-		synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
+		response, err := s.NodeSyncing(checkCtx, &api.NodeSyncingOpts{})
+		if err != nil {
+			log.Debug().Err(err).Msg("Failed to obtain sync state from node")
+
+			active = false
+			synced = false
+		} else {
+			active = true
+			synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
+		}
+
+		s.pingSem.Release(1)
 	}
 
 	if !wasActive && active {
@@ -217,11 +221,7 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 			log.Error().Err(err).Msg("Failed to check DVT connection on client activation; returning to inactive")
 
 			active = false
-			synced = false
 		}
-	}
-	if ctx.Err() != nil {
-		return
 	}
 
 	if wasActive && !active {
@@ -380,9 +380,6 @@ func (s *Service) assertIsActive(ctx context.Context) error {
 	}
 
 	s.CheckConnectionState(ctx)
-	if err := ctx.Err(); err != nil {
-		return err
-	}
 
 	active = s.IsActive()
 	if !active {
@@ -399,9 +396,6 @@ func (s *Service) assertIsSynced(ctx context.Context) error {
 	}
 
 	s.CheckConnectionState(ctx)
-	if err := ctx.Err(); err != nil {
-		return err
-	}
 
 	active := s.IsActive()
 	if !active {

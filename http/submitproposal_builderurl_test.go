@@ -34,9 +34,6 @@ func TestSubmitProposalEchoesBuilderURL(t *testing.T) {
 			w.Header().Set("Content-Type", "application/json")
 			_, err := w.Write([]byte(`{"data":{"head_slot":"0","sync_distance":"0","is_optimistic":false,"is_syncing":false}}`))
 			require.NoError(t, err)
-		case "/eth/v1/node/version":
-			_, err := w.Write([]byte(`{"data":{"version":"Lighthouse/v8.0.0"}}`))
-			require.NoError(t, err)
 		case "/eth/v2/beacon/blocks":
 			require.Equal(t, http.MethodPost, r.Method)
 			require.Equal(t, "https://builder.example", r.Header.Get("Eth-Builder-Url"))
