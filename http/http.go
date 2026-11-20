@@ -329,7 +329,7 @@ func (s *Service) getWithResponseLimit(ctx context.Context,
 			// We don't consider context canceled to be a potential connection issue, as the user canceled the context.
 		case errors.Is(err, context.DeadlineExceeded):
 			// We don't consider context deadline exceeded to be a potential connection issue, as the user selected the deadline.
-		case strings.HasSuffix(callURL.String(), "/node/syncing"):
+		case strings.HasSuffix(callURL.Path, "/node/syncing"):
 			// Special case; if we have called the syncing endpoint and it failed then we don't check the connection status, as
 			// that calls the syncing endpoint itself and so we find ourselves in an endless loop.
 		default:

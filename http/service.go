@@ -133,12 +133,12 @@ func New(ctx context.Context, params ...Parameter) (client.Service, error) {
 		customSpecSupport:   parameters.customSpecSupport,
 	}
 
-	// Ping the client to see if it is ready to serve requests.
-	s.CheckConnectionState(ctx)
-	active := s.IsActive()
-
-	if !active && !parameters.allowDelayedStart {
-		return nil, client.ErrNotActive
+	// A deferred-start client checks availability on first use or background refresh.
+	if !parameters.deferredStart {
+		s.CheckConnectionState(ctx)
+		if !s.IsActive() && !parameters.allowDelayedStart {
+			return nil, client.ErrNotActive
+		}
 	}
 
 	// Periodically refetch static values in case of client update.

@@ -1,4 +1,6 @@
 dev:
+ - add WithDeferredStart to defer the initial HTTP connection check until first use or background refresh
+ - avoid recursive HTTP connection checks when an unavailable syncing URL contains a query string
  - 
 
 0.30.3:

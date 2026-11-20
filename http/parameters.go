@@ -32,6 +32,7 @@ type parameters struct {
 	extraHeaders       map[string]string
 	enforceJSON        bool
 	allowDelayedStart  bool
+	deferredStart      bool
 	hooks              *Hooks
 	reducedMemoryUsage bool
 	customSpecSupport  bool
@@ -109,6 +110,15 @@ func WithEnforceJSON(enforceJSON bool) Parameter {
 func WithAllowDelayedStart(allowDelayedStart bool) Parameter {
 	return parameterFunc(func(p *parameters) {
 		p.allowDelayedStart = allowDelayedStart
+	})
+}
+
+// WithDeferredStart skips the initial connection check. Availability is checked
+// on the first request or periodic background refresh. WithAllowDelayedStart
+// still performs its initial check synchronously.
+func WithDeferredStart(deferredStart bool) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.deferredStart = deferredStart
 	})
 }
 
