@@ -30,6 +30,10 @@ import (
 func TestSubmitProposalEchoesBuilderURL(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
+		case "/eth/v1/node/version":
+			w.Header().Set("Content-Type", "application/json")
+			_, err := w.Write([]byte(`{"data":{"version":"test"}}`))
+			require.NoError(t, err)
 		case "/eth/v1/node/syncing":
 			w.Header().Set("Content-Type", "application/json")
 			_, err := w.Write([]byte(`{"data":{"head_slot":"0","sync_distance":"0","is_optimistic":false,"is_syncing":false}}`))

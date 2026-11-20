@@ -1,4 +1,4 @@
-// Copyright © 2020 - 2024 Attestant Limited.
+// Copyright © 2020 - 2026 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -196,28 +196,48 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 		active = wasActive
 		synced = wasSynced
 	} else {
+		started := time.Now()
 		response, err := s.NodeSyncing(ctx, &api.NodeSyncingOpts{})
-		if err != nil {
+		s.pingSem.Release(1)
+		switch {
+		case s.failedForCaller(ctx, started, err):
+			// The caller's context ended the probe, which says nothing about the node, so leave
+			// the connection state as it was.  The probe can run with the context of a request
+			// that has since completed.
+			log.Debug().Err(err).Msg("Context done before sync state obtained from node; connection state unchanged")
+
+			return
+		case err != nil:
 			log.Debug().Err(err).Msg("Failed to obtain sync state from node")
 
 			active = false
 			synced = false
-		} else {
+		default:
 			active = true
 			synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
 		}
-
-		s.pingSem.Release(1)
 	}
 
 	if !wasActive && active {
 		// Switched from not active to active.
 
 		// Check connection to DVT middleware.
+		started := time.Now()
 		if err := s.checkDVT(ctx); err != nil {
+			if s.failedForCaller(ctx, started, err) {
+				// As above, this says nothing about the node.  The semaphore has been released, so
+				// another probe may have updated the connection state since, and this one must not
+				// overwrite it.
+				log.Debug().Err(err).Msg("Context done before DVT connection checked; connection state unchanged")
+
+				return
+			}
 			log.Error().Err(err).Msg("Failed to check DVT connection on client activation; returning to inactive")
 
+			// The client is not synced either, else the synced hook fires for an inactive client
+			// and does not fire again when it becomes active.
 			active = false
+			synced = false
 		}
 	}
 
@@ -348,6 +368,31 @@ func (s *Service) clearStaticValues() {
 	s.nodeVersionMutex.Lock()
 	s.nodeVersion = ""
 	s.nodeVersionMutex.Unlock()
+}
+
+// failedForCaller returns true if err, from a request to the node started at started, was caused
+// by the caller's context being done rather than by the node or by the client's own timeout.
+func (s *Service) failedForCaller(ctx context.Context, started time.Time, err error) bool {
+	if err == nil {
+		return false
+	}
+
+	ctxErr := ctx.Err()
+	if ctxErr == nil || !errors.Is(err, ctxErr) {
+		// Either the caller's context is live, or the request failed for another reason, such
+		// as an error status from the node, before or regardless of the caller's context ending.
+		return false
+	}
+
+	if errors.Is(ctxErr, context.DeadlineExceeded) {
+		// The client's own timeout also ends a request with a deadline error, so this is the
+		// caller's deadline only if it came no later than the client's timeout.
+		deadline, _ := ctx.Deadline()
+
+		return !deadline.After(started.Add(s.timeout))
+	}
+
+	return true
 }
 
 // checkDVT checks if connected to DVT middleware and sets

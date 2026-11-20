@@ -1,5 +1,7 @@
 dev:
  - fix a data race in the multi client, which read its lists of clients outside their lock when rechecking them
+ - leave the connection state unchanged when the caller's context, rather than the node or the client's own timeout, ends a connection check, instead of marking the client inactive
+ - mark a client that fails the DVT check on activation as not synced as well as not active, so the synced hook fires when it becomes active
 
 0.30.3:
  - stop bounding all post response sizes and only filter for new epbs endpoints 
