@@ -34,6 +34,8 @@ import (
 	"golang.org/x/sync/semaphore"
 )
 
+type connectionCheckContextKey struct{}
+
 // Service is an Ethereum 2 client service.
 type Service struct {
 	// log is a service-wide logger.
@@ -172,12 +174,21 @@ func (s *Service) Address() string {
 	return s.address
 }
 
-// close closes the service, freeing up resources.
-
 // CheckConnectionState checks the connection state for the client, potentially updating
 // its activation and sync states.
 // This will call hooks supplied when creating the client if the state changes.
 func (s *Service) CheckConnectionState(ctx context.Context) {
+	if ctx.Err() != nil {
+		return
+	}
+	if !s.pingSem.TryAcquire(1) {
+		if err := s.pingSem.Acquire(ctx, 1); err == nil {
+			s.pingSem.Release(1)
+		}
+		return
+	}
+	defer s.pingSem.Release(1)
+	checkCtx := context.WithValue(ctx, connectionCheckContextKey{}, true)
 	log := zerolog.Ctx(ctx)
 
 	s.connectionMu.Lock()
@@ -190,35 +201,27 @@ func (s *Service) CheckConnectionState(ctx context.Context) {
 		synced bool
 	)
 
-	acquired := s.pingSem.TryAcquire(1)
-	if !acquired {
-		// Means there is another ping running, just use current info.
-		active = wasActive
-		synced = wasSynced
+	response, err := s.NodeSyncing(checkCtx, &api.NodeSyncingOpts{})
+	if err != nil {
+		log.Debug().Err(err).Msg("Failed to obtain sync state from node")
 	} else {
-		response, err := s.NodeSyncing(ctx, &api.NodeSyncingOpts{})
-		if err != nil {
-			log.Debug().Err(err).Msg("Failed to obtain sync state from node")
-
-			active = false
-			synced = false
-		} else {
-			active = true
-			synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
-		}
-
-		s.pingSem.Release(1)
+		active = true
+		synced = (!response.Data.IsSyncing) || (response.Data.HeadSlot == 0 && response.Data.SyncDistance <= 1)
 	}
 
 	if !wasActive && active {
 		// Switched from not active to active.
 
 		// Check connection to DVT middleware.
-		if err := s.checkDVT(ctx); err != nil {
+		if err := s.checkDVT(checkCtx); err != nil {
 			log.Error().Err(err).Msg("Failed to check DVT connection on client activation; returning to inactive")
 
 			active = false
+			synced = false
 		}
+	}
+	if ctx.Err() != nil {
+		return
 	}
 
 	if wasActive && !active {
@@ -377,6 +380,9 @@ func (s *Service) assertIsActive(ctx context.Context) error {
 	}
 
 	s.CheckConnectionState(ctx)
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 
 	active = s.IsActive()
 	if !active {
@@ -393,6 +399,9 @@ func (s *Service) assertIsSynced(ctx context.Context) error {
 	}
 
 	s.CheckConnectionState(ctx)
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 
 	active := s.IsActive()
 	if !active {
